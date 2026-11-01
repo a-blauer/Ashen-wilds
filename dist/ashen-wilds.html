@@ -2443,41 +2443,108 @@ function restTavern(T){
 }
 function ui(){$('pty').innerHTML=party.map((c,i)=>card(c,i,i==0)).join('');$('fuseBtn').disabled=party.length<2||!!foe;$('bagBtn').disabled=!!foe;sync()}
 // ---------- Effects ----------
-const NP=700,pa=new Float32Array(NP*3),pcol=new Float32Array(NP*3),pv=new Float32Array(NP*3),pbase=new Float32Array(NP*3),plf=new Float32Array(NP),pmx=new Float32Array(NP).fill(1);let pix=0;
-const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));pg.setAttribute('color',new THREE.BufferAttribute(pcol,3));
-const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.4,map:SPR,vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
+// v186 (owner, Nov 1 2026: "improve the visual effects on all of our character spells and abilities significantly"): every
+// spell draws through these few shapes (burst, ring, arc, bolt; kqsPillar / kqsBeam in 1000), so they were rebuilt:
+//  * particles: each one has its own size, is born white-hot and cools to its colour, then fades to a dark ember; a share
+//    of every burst are small fast sparks that fly further and hang longer; puffs swell and slow down (drag) as they fade;
+//    a big burst also gives a short soft flash at its centre (pooled sprites);
+//  * ring: a soft shockwave (bright leading edge with a glow trailing inside, eased out) plus a second thin echo and a
+//    ground glow that fades quickly;  arc: a swept crescent, bright at the outer edge, with a white-hot core line and sparks;
+//  * bolt: crossed glowing ribbons (a white core in a coloured glow) that re-strike twice during their life, with forks.
+// Signatures, the co-op relay (MPV.FX) and the evolved wrappers (2700) are unchanged.
+var FX186={tex:{},fl:[],fi:0,dot:null};
+function fx186Tex(k){if(FX186.tex[k])return FX186.tex[k];const S=k=='beam'?64:128,c=document.createElement('canvas');c.width=c.height=S;const g=c.getContext('2d'),C=S/2;
+  if(k=='ring'){// transparent middle, a glow rising to a sharp bright rim at .94, a quick fall outside
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.05)');gr.addColorStop(.8,'rgba(255,255,255,.35)');
+    gr.addColorStop(.92,'rgba(255,255,255,1)');gr.addColorStop(.96,'rgba(255,255,255,.7)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
+  else if(k=='zone'){// a lingering field: a faint fill, a soft inner swirl of rays, a bright rim
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.18)');gr.addColorStop(.7,'rgba(255,255,255,.22)');gr.addColorStop(.88,'rgba(255,255,255,.55)');
+    gr.addColorStop(.95,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S);
+    g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=2;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;g.beginPath();g.arc(C,C,C*(.3+.08*(i%3)),a,a+.7);g.stroke()}}
+  else if(k=='thin'){const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.86,'rgba(255,255,255,0)');gr.addColorStop(.93,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
+  else if(k=='soft'){const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.25,'rgba(255,255,255,.6)');gr.addColorStop(.6,'rgba(255,255,255,.15)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
+  else if(k=='beam'){const gr=g.createLinearGradient(0,0,0,S);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.38,'rgba(255,255,255,.35)');gr.addColorStop(.5,'rgba(255,255,255,1)');gr.addColorStop(.62,'rgba(255,255,255,.35)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
+  else if(k=='vgrad'){const gr=g.createLinearGradient(0,S,0,0);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.6)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
+  const t=new THREE.CanvasTexture(c);return FX186.tex[k]=t}
+function fx186Mat(col,map,op){return new THREE.MeshBasicMaterial({color:col,map:map||null,transparent:true,opacity:op==null?1:op,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})}
+var G_FXDISC=null,G_FXQ=null,G_FXCYL=null;
+function fx186Disc(){return G_FXDISC||(G_FXDISC=(()=>{const g=new THREE.PlaneGeometry(2,2);g.rotateX(-Math.PI/2);return g})())}
+// a short soft flash at p (pooled sprites: nothing to free)
+function fx186Flash(p,col,s,ms){if(!p)return;try{if(typeof ABX!='undefined'&&ABX.ctx)return}catch(_){} // the pooled sprites live in the world scene, never on the preview stage
+if(FX186.fl.length<14){const m=new THREE.SpriteMaterial({map:fx186Tex('soft'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0});
+    const sp=new THREE.Sprite(m);sp.userData.lpsSkip=1;sp.renderOrder=35;sp.visible=false;FX186.fl.push({sp,t:0})}
+  const f=FX186.fl[FX186.fi++%FX186.fl.length],sp=f.sp,c=new THREE.Color(col);c.lerp(new THREE.Color(0xffffff),.35);sp.material.color.copy(c);sp.position.set(p.x,p.y,p.z);sp.visible=true;
+  if(sp.parent!==scene)THREE.Object3D.prototype.add.call(scene,sp);const id=++f.t;ms=ms||160;s=s||1;
+  tw(ms,k=>{if(f.t!==id)return;const u=k<.2?k/.2:1;sp.scale.setScalar(s*(.55+.45*u)*(1+k*.3));sp.material.opacity=.85*(1-k)*(1-k)},()=>{if(f.t===id){sp.visible=false;sp.material.opacity=0}})}
+const NP=900,pa=new Float32Array(NP*3),pcol=new Float32Array(NP*3),pv=new Float32Array(NP*3),pbase=new Float32Array(NP*3),plf=new Float32Array(NP),pmx=new Float32Array(NP).fill(1),psz=new Float32Array(NP),ps0=new Float32Array(NP),pty=new Uint8Array(NP);let pix=0;
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));pg.setAttribute('color',new THREE.BufferAttribute(pcol,3));pg.setAttribute('psz',new THREE.BufferAttribute(psz,1));
+const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.5,map:SPR,vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
+// per-particle size: gl_PointSize × psz
+pts.material.onBeforeCompile=sh=>{sh.vertexShader='attribute float psz;\n'+sh.vertexShader.replace('gl_PointSize = size;','gl_PointSize = size * psz;')};
+pts.material.customProgramCacheKey=()=>'fx186pts';
 function burst(p,col,n,sp,up,life){
-  const c=new THREE.Color(col);
-  for(let i=0;i<n;i++){const j=pix++%NP,a=Math.random()*6.28,r=Math.random()*sp;
-    pa.set([p.x,p.y,p.z],j*3);pv.set([Math.cos(a)*r,up*(.3+Math.random()),Math.sin(a)*r],j*3);pbase.set([c.r,c.g,c.b],j*3);plf[j]=pmx[j]=life*(.6+Math.random()*.4)}
+  const c=new THREE.Color(col);n=n|0;
+  for(let i=0;i<n;i++){const j=pix++%NP,a=Math.random()*6.28,spark=Math.random()<.24,r=Math.random()*sp*(spark?1.45:1),L=life*(.6+Math.random()*.4)*(spark?1.35:1);
+    pa[j*3]=p.x;pa[j*3+1]=p.y;pa[j*3+2]=p.z;pv[j*3]=Math.cos(a)*r;pv[j*3+1]=up*(.3+Math.random())*(spark?1.25:1);pv[j*3+2]=Math.sin(a)*r;
+    pbase[j*3]=c.r;pbase[j*3+1]=c.g;pbase[j*3+2]=c.b;plf[j]=pmx[j]=L;pty[j]=spark?1:0;ps0[j]=spark?.3+Math.random()*.25:.6+Math.random()*.9;psz[j]=0}
+  if(n>=10)fx186Flash(p,col,Math.min(2.8,.7+sp*.38),Math.min(240,120+n*3));
 }
-function fxStep(dt){
+function fxStep(dt){const dr=Math.max(0,1-dt*2.4);
   for(let j=0;j<NP;j++){
-    if(plf[j]<=0){pcol[j*3]=pcol[j*3+1]=pcol[j*3+2]=0;continue}
-    plf[j]-=dt;const k=Math.max(0,plf[j]/pmx[j]);
-    for(let a=0;a<3;a++){pa[j*3+a]+=pv[j*3+a]*dt;pcol[j*3+a]=pbase[j*3+a]*k}
-    pv[j*3+1]-=1.5*dt;
+    if(plf[j]<=0){if(psz[j]){pcol[j*3]=pcol[j*3+1]=pcol[j*3+2]=0;psz[j]=0}continue}
+    plf[j]-=dt;const k=Math.max(0,plf[j]/pmx[j]),sp=pty[j];
+    // born white-hot, cools to its colour, fades to a dark ember
+    const hot=k>.78?(k-.78)/.22:0,fade=sp?Math.pow(k,.6):Math.pow(k,.85),w=hot*(sp?.7:.45);
+    for(let a=0;a<3;a++){pa[j*3+a]+=pv[j*3+a]*dt;const b=pbase[j*3+a];pcol[j*3+a]=(b+(1-b)*w)*fade*(sp?1.15:1)}
+    if(sp){pv[j*3+1]-=1.1*dt;psz[j]=ps0[j]*(.6+.4*k)}
+    else{pv[j*3+1]-=1.5*dt;pv[j*3]*=dr;pv[j*3+2]*=dr;psz[j]=ps0[j]*(k>.85?.55+.45*(1-k)/.15:1+.45*(1-k))}
   }
-  pg.attributes.position.needsUpdate=true;pg.attributes.color.needsUpdate=true;
+  pg.attributes.position.needsUpdate=true;pg.attributes.color.needsUpdate=true;pg.attributes.psz.needsUpdate=true;
 }
 const addMat=c=>new THREE.MeshBasicMaterial({color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-// one shared ring shape (it only scales); each ring's own material is freed when it fades out
+// one shared ring shape (it only scales); each ring's own materials are freed when it fades out
 var G_RING=null;
-function ring(pos,col,r,ms){G_RING=G_RING||new THREE.RingGeometry(.4,.55,32);
-  const m=new THREE.Mesh(G_RING,addMat(col));m.rotation.x=-Math.PI/2;m.position.copy(gY(pos,.12));scene.add(m);
-  tw(ms,k=>{m.scale.setScalar(1+k*r);m.material.opacity=1-k},()=>{scene.remove(m);m.material.dispose()});
+function ring(pos,col,r,ms){G_RING=G_RING||(()=>{const g=new THREE.PlaneGeometry(2,2);return g})();
+  const m=new THREE.Mesh(G_RING,fx186Mat(col,fx186Tex('ring'))),R1=.55*(1+r),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.5);m.rotation.x=-Math.PI/2;m.position.copy(gY(pos,.12));m.userData.lpsSkip=1;m.renderOrder=31;scene.add(m);
+  const e=new THREE.Mesh(fx186Disc(),fx186Mat(c2,fx186Tex('thin'),0)),d=new THREE.Mesh(fx186Disc(),fx186Mat(col,fx186Tex('soft'),0));e.position.y=d.position.y=.01;m.add(e,d);
+  e.rotation.x=d.rotation.x=Math.PI/2;e.userData.lpsSkip=d.userData.lpsSkip=1;
+  // a bigger ring also raises a low wall of light that thins as it spreads (volume, not just a decal)
+  let w=null;if(r>=1.5){G_FXCYL=G_FXCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,40,1,true);g.translate(0,.5,0);return g})();w=new THREE.Mesh(G_FXCYL,fx186Mat(col,fx186Tex('vgrad'),0));w.userData.lpsSkip=1;w.renderOrder=31;w.position.copy(gY(pos,.05));scene.add(w)}
+  tw(ms,k=>{const ez=1-Math.pow(1-k,2.6),rr=.45+(R1-.45)*ez;m.scale.setScalar(rr);m.material.opacity=Math.pow(1-k,1.4);
+    const k2=Math.max(0,(k-.12)/.88);e.scale.setScalar(.82);e.material.opacity=k2>0?.9*(1-k2):0;
+    d.scale.setScalar(.7);d.material.opacity=.55*Math.max(0,1-k/.38);
+    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(1.1,.25+R1*.12)*(1-k*.8),rw);w.material.opacity=.45*Math.pow(1-k,1.6)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
 }
+// the crescent's colour: dark at the inner edge, bright at the outer, the trailing end fading
 function arc(pos,d,col,r,ms){
-  const g=new THREE.Group(),m=new THREE.Mesh(new THREE.RingGeometry(r*.55,r,20,1,-.9,1.8),addMat(col));
-  m.rotation.x=-Math.PI/2;g.add(m);g.rotation.y=Math.atan2(-d.z,d.x);g.position.copy(gY(pos,.5));scene.add(g);
-  tw(ms,k=>{m.material.opacity=1-k;g.scale.setScalar(.8+k*.4)},()=>{scene.remove(g);m.geometry.dispose();m.material.dispose()});
+  const geo=new THREE.RingGeometry(r*.5,r,24,4,-.95,1.9),P=geo.attributes.position,cl=[];for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),rr=Math.hypot(x,y),u=(rr-r*.5)/(r*.5),a=(Math.atan2(y,x)+.95)/1.9;
+    const v=Math.pow(Math.max(0,u),1.6)*(.35+.65*Math.min(1,a*1.3));cl.push(v,v,v)}geo.setAttribute('color',new THREE.Float32BufferAttribute(cl,3));
+  const g=new THREE.Group(),m=new THREE.Mesh(geo,addMat(col));m.material.vertexColors=true;
+  const cg=new THREE.RingGeometry(r*.94,r*1.0,24,1,-.8,1.6),c=new THREE.Mesh(cg,addMat(new THREE.Color(col).lerp(new THREE.Color(0xffffff),.65)));
+  m.rotation.x=c.rotation.x=-Math.PI/2;m.userData.lpsSkip=c.userData.lpsSkip=1;g.add(m,c);g.rotation.y=Math.atan2(-d.z,d.x);g.position.copy(gY(pos,.5));scene.add(g);
+  // sparks thrown off the outer edge
+  try{const a0=Math.atan2(-d.z,d.x);for(let i=0;i<3;i++){const a=a0+(i-1)*.6,q=new THREE.Vector3(pos.x+Math.cos(a)*r,0,pos.z-Math.sin(a)*r);q.y=GH(q.x,q.z)+.5;burst(q,col,3,1.2,1.2,.45)}}catch(_){}
+  tw(ms,k=>{m.material.opacity=Math.pow(1-k,1.2);c.material.opacity=(1-k)*(1-k);g.scale.setScalar(.8+(1-Math.pow(1-k,2))*.45);g.rotation.z=0},()=>{scene.remove(g);geo.dispose();cg.dispose();m.material.dispose();c.material.dispose()});
 }
+// v186 lightning: crossed ribbons along a jagged path (a white core in a coloured glow), forks, re-strikes twice
+function fx186Path(a,b,n,amp){const P=[];for(let i=0;i<=n;i++){const p=a.clone().lerp(b,i/n);if(i&&i<n){const e=Math.sin(i/n*Math.PI);p.x+=(Math.random()-.5)*amp*e;p.z+=(Math.random()-.5)*amp*e;p.y+=(Math.random()-.5)*amp*.55*e}P.push(p)}return P}
+function fx186Ribbon(P,w,pos,uv){// two crossed strips per segment (horizontal + vertical), 6 vertices each
+  for(let i=0;i<P.length-1;i++){const A=P[i],B=P[i+1],dx=B.x-A.x,dz=B.z-A.z,l=Math.hypot(dx,dz)||1,sx=-dz/l*w,sz=dx/l*w;
+    [[sx,0,sz],[0,w,0]].forEach(o=>{const a0=[A.x-o[0],A.y-o[1],A.z-o[2]],a1=[A.x+o[0],A.y+o[1],A.z+o[2]],b0=[B.x-o[0],B.y-o[1],B.z-o[2]],b1=[B.x+o[0],B.y+o[1],B.z+o[2]];
+      pos.push(...a0,...a1,...b1,...a0,...b1,...b0);uv.push(0,0,0,1,1,1,0,0,1,1,1,0)})}}
 function bolt(a,b,col){
-  for(let t=0;t<2;t++){
-    const pts2=[];for(let i=0;i<=9;i++){const p=a.clone().lerp(b,i/9);if(i&&i<9){p.x+=(Math.random()-.5)*.8;p.z+=(Math.random()-.5)*.8;p.y+=(Math.random()-.5)*.4}pts2.push(p)}
-    const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),new THREE.LineBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-    scene.add(l);tw(240,k=>l.material.opacity=1-k,()=>{scene.remove(l);l.geometry.dispose();l.material.dispose()});
-  }
+  const L=a.distanceTo(b),n=Math.max(6,Math.min(16,Math.round(L*2.2))),amp=Math.min(.9,.25+L*.08),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.75);
+  const geo=new THREE.BufferGeometry(),gc=new THREE.BufferGeometry(),mG=fx186Mat(col,fx186Tex('beam'),.9),mC=fx186Mat(c2,fx186Tex('beam'),1),o=new THREE.Group();
+  const mk=()=>{const P=fx186Path(a,b,n,amp),pos=[],uv=[],pc=[],uc=[];fx186Ribbon(P,.2,pos,uv);fx186Ribbon(P,.055,pc,uc);
+    // one or two forks from the middle
+    for(let f=0;f<(L>3?2:1);f++){const i=1+((Math.random()*(P.length-2))|0),s=P[i],e=s.clone().add(new THREE.Vector3((Math.random()-.5)*1.6,(Math.random()-.3)*.8,(Math.random()-.5)*1.6).multiplyScalar(Math.min(1.4,.4+L*.12)));
+      const F=fx186Path(s,e,4,.35);fx186Ribbon(F,.11,pos,uv);fx186Ribbon(F,.03,pc,uc)}
+    // re-strikes write into the same buffers (a replaced attribute would leave its GPU buffer behind)
+    const put=(G,k,A,n)=>{const q=G.attributes[k];if(q&&q.array.length==A.length){q.array.set(A);q.needsUpdate=true}else G.setAttribute(k,new THREE.Float32BufferAttribute(A,n))};
+    put(geo,'position',pos,3);put(geo,'uv',uv,2);put(gc,'position',pc,3);put(gc,'uv',uc,2)};
+  mk();const g1=new THREE.Mesh(geo,mG),g2=new THREE.Mesh(gc,mC);g1.frustumCulled=g2.frustumCulled=false;g1.userData.lpsSkip=g2.userData.lpsSkip=1;g1.renderOrder=g2.renderOrder=33;o.add(g1,g2);scene.add(o);
+  try{burst(b,col,5,1.6,1.4,.35)}catch(_){}
+  let st=0;tw(300,k=>{const s=k<.33?0:k<.66?1:2;if(s!=st){st=s;mk()}const f=(1-k)*(s==st?.75+.25*Math.random():1);mG.opacity=.9*f;mC.opacity=f},()=>{scene.remove(o);geo.dispose();gc.dispose();mG.dispose();mC.dispose()});
 }
 
 // ---------- Combat ----------
@@ -3203,15 +3270,16 @@ function heroTick(dt,now){
   if(hero.sh>0&&now>hero.shT)hero.sh=0;
   hero.buffs=hero.buffs.filter(b=>b.t>now);
   if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3)}if(c.t<=0){hero.chan=null;pl.sw=0}}
-  for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh)z.mesh.position.copy(gY(z.p,.14));
+  for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh){z.mesh.position.copy(gY(z.p,.14));z.mesh.rotation.z+=dt*.35;const f=Math.min(1,z.t/.4);if(f<1&&z.mesh.material)z.mesh.material.opacity=.62*Math.max(0,f)}
     if(z.ti<=0&&z.n>0){z.ti=z.iv;z.n--;if(z.cc)enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,z.p)<z.R)compHit(z.cc,e,z.mm,z.fx)});else area(z.p,z.R,z.raw,{mt:z.mt,col:z.col,proc:false},null,0);for(let k=0;k<6;k++){const a=Math.random()*6.28,r=Math.random()*z.R;burst(gY(V(z.p.x+Math.cos(a)*r,0,z.p.z+Math.sin(a)*r),.3+Math.random()*1.5),z.col,1,.3,-1.5,.4)}}
-    if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose()}zones.splice(i,1)}}
+    if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose();if(z.mesh.material&&z.mesh.material.dispose)z.mesh.material.dispose()}zones.splice(i,1)}}
   for(let i=traps.length-1;i>=0;i--){const tp=traps[i];tp.t-=dt;const vic=enemies.filter(e=>!e.dead&&d2(e.m.position,tp.p)<1.1);
     if(vic.length){enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,tp.p)<2){heroHit(e,tp.raw,'p',{proc:false});eStatus(e,{root:tp.root},0)}});ring(tp.p,0xc0a060,2.4,400);burst(gY(tp.p,.3),0xc0a060,24,2,1.5,.5);tp.t=0}
     if(tp.t<=0){scene.remove(tp.mesh);traps.splice(i,1)}}
 }
 function zoneAt(p,R,raw,mt,col,ticks,iv,o){
-  o=o||{};const mesh=new THREE.Mesh(new THREE.CircleGeometry(R,40),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));mesh.rotation.x=-Math.PI/2;mesh.position.copy(gY(p,.14));scene.add(mesh);
+  o=o||{};const mesh=new THREE.Mesh(new THREE.CircleGeometry(R,40),new THREE.MeshBasicMaterial({color:col,map:typeof fx186Tex=='function'?fx186Tex('zone'):null,transparent:true,opacity:.62,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));mesh.userData.lpsSkip=1; // v186: a soft field with a bright edge (was a flat disc)
+  mesh.rotation.x=-Math.PI/2;mesh.position.copy(gY(p,.14));scene.add(mesh);
   zones.push(Object.assign({p:p.clone(),R,raw,mt,col,n:ticks,iv,ti:0,t:ticks*iv+1,mesh},o));
 }
 // ---------------- class basic attacks ----------------
@@ -7465,6 +7533,9 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 // (SPEC[n].bones), so the shared rigAnim walk/fly/attack animation keeps working unchanged.
 // A creature registers itself in LPR[rigName] = {geo, kit, post, back, head, sc}; see zzE_*.js.
 var LPR={},LPG={},LPMT={},LPSG={};
+// v186: own size factor of the largest species (measured heights / lengths at stage 3; the hero is ~1.5 m)
+var SZ186={Rocsovereign:.85,Stormtalon:.88,Skollmaw:.9,Titanshell:.85,Elderdrake:.8,Pyrewing:.8,Duskwing:.85,Soulwarden:.82,Sporelord:.8,Lumenwisp:.85,
+  Gloomcap:.85,Wispling:.9,Hivemother:.88,Widowqueen:.9,Lichbone:.92,Venomcoil:.85,Bogmaw:.92};
 // fur/skin colour muted toward earth brown (the painterly Valheim palette)
 function lpMain(C,k){return new THREE.Color(C).lerp(new THREE.Color(0x5a4636),k==null?.18:k)}
 function lpHex(c){return c.isColor?c.getHex():c}
@@ -7587,7 +7658,10 @@ function lpRig(c,n,D){
   }
   if(c.tr=='Bulky')b.scale.set(1.15,1.08,1.08);
   g.rig=(now,mv,sp)=>rigAnim(x,now,mv,sp);
-  g.bs=(D.sc||S.sc||1)*(1+.04*(c.f||0))*(c.z||1)*(SP2[c.g[0]]?1+.12*(SP2[c.g[0]][1]-1):1)*(1+.06*(c.evo||0));g.scale.setScalar(g.bs);return g;
+  // v186 (owner: "companions get too big. Reduce growth size significantly and reduce some of our larger companions"):
+  // tier +5% (was +12%) per tier, evolution +2.5% (was +6%) per stage, fusion +1.2% (was +4%) per point up to 10, and the
+  // largest species scaled down on their own (SZ186)
+  g.bs=(D.sc||S.sc||1)*(SZ186[c.g[0]]||1)*(1+.012*Math.min(10,c.f||0))*(c.z||1)*(SP2[c.g[0]]?1+.05*(SP2[c.g[0]][1]-1):1)*(1+.025*(c.evo||0));g.scale.setScalar(g.bs);return g;
 }
 {const f=crRig;crRig=function(c,n){const D=LPR[n];if(D&&SPEC[n]){try{return lpRig(c,n,D)}catch(e){console.error('low-poly rig failed',n,e)}}return f.apply(this,arguments)}}
 
@@ -9084,7 +9158,12 @@ mkWpn=function(type,col,r){
 // ---------------- projectiles: low-poly arrows and glowing shards ----------------
 var LGSH={};
 function shotMesh(col,arrow){
-  if(!arrow){const g=LGSH['o'+col]||(LGSH['o'+col]=lgLump('shot',.13,.2,5));const m=new THREE.Mesh(g,addMat(col));m.userData.lpsSkip=1;return m}
+  if(!arrow){const g=LGSH['o'+col]||(LGSH['o'+col]=lgLump('shot',.13,.2,5));const m=new THREE.Mesh(g,addMat(col));m.userData.lpsSkip=1;
+    // v186: a glowing halo and a white-hot heart (shared per colour: nothing to free)
+    try{const K=FX186.shm||(FX186.shm={}),k=String(col),M=K[k]||(K[k]={h:new THREE.SpriteMaterial({map:fx186Tex('soft'),color:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}),
+        c:new THREE.SpriteMaterial({map:fx186Tex('soft'),color:new THREE.Color(col).lerp(new THREE.Color(0xffffff),.7),transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false})});
+      const h=new THREE.Sprite(M.h),c=new THREE.Sprite(M.c);h.scale.setScalar(1.7);c.scale.setScalar(.55);h.userData.lpsSkip=c.userData.lpsSkip=1;h.userData.kqsKeep=c.userData.kqsKeep=1;M.h.userData.evxS=M.c.userData.evxS=1;M.h.userData.fxbS=M.c.userData.fxbS=1;h.renderOrder=c.renderOrder=34;m.add(h,c)}catch(_){}
+    return m}
   return lgGroup('LSA',k=>{k.L('','c',0xb89a6a,[0,0,-.4],[0,0,.38],.016,.016,4);k.p('','cone4','m',0x6c7078,0,0,.44,.034,.11,.012,Math.PI/2,0,0);
     [0,1,2].forEach(i=>{const a=i/3*Math.PI*2;k.p('',lgSlab('flt',[[0,0],[.05,.04],[.05,.14],[0,.17]],.002),'c',i?0xd8d0c0:0x8a2a1a,Math.cos(a)*.012,Math.sin(a)*.012,-.36,1,1,1,Math.PI/2,0,a+Math.PI/2)})},.1)}
 
@@ -12628,7 +12707,15 @@ function kqsDecal(p,R,col,op,edge){const f=kqsDrapeM(new THREE.RingGeometry(.001
 function kqsWarn(p,R,col,delay,cb){const D=kqsDecal(p,R,col,.12,.8),in_=kqsDrapeM(new THREE.RingGeometry(.001,1,32,2),kqsDMat(col,.3));
   kqsObj({life:delay,tick:(dt,now,o)=>{const k=Math.min(1,o.age/delay);kqsDrape(in_,(u,v)=>[p.x+u*R*k,p.z-v*R*k],.16)},end:o=>{kqsRm(in_);D.rm(200);if(!o.abort)cb&&cb()}})}
 function kqsLob(from,to,mesh,ms,h,cb){scene.add(mesh);const a=gY(from,1.2),b=gY(to,.3);tw(ms,k=>{mesh.position.lerpVectors(a,b,k);mesh.position.y+=Math.sin(k*Math.PI)*(h||2.4);mesh.rotation.x+=.3;mesh.rotation.z+=.2},()=>{if(mesh.userData.kqsShared){if(mesh.parent)mesh.parent.remove(mesh)}else kqsRm(mesh);cb&&cb()})}
-function kqsPillar(p,col,h,ms,w){const m=kqsMesh(new THREE.CylinderGeometry(w||.5,w||.5,h||8,10,1,true),kqsAdd(col));m.position.copy(gY(p,(h||8)/2));scene.add(m);tw(ms||420,k=>{m.material.opacity=.85*(1-k);m.scale.set(1+k*.6,1,1+k*.6)},()=>kqsRm(m))}
+// v186: a pillar of light is a soft column fading upward (vertical gradient) round a white-hot core, with a ground glow and
+// embers rising through it (was one flat additive tube)
+var G_KQSCYL=null;
+function kqsPillar(p,col,h,ms,w){h=h||8;w=w||.5;ms=ms||420;G_KQSCYL=G_KQSCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,16,1,true);g.translate(0,.5,0);return g})();
+  const g=new THREE.Group(),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.7),o=kqsMesh(G_KQSCYL,fx186Mat(col,fx186Tex('vgrad'),.75)),c=kqsMesh(G_KQSCYL,fx186Mat(c2,fx186Tex('vgrad'),1)),d=kqsMesh(fx186Disc(),fx186Mat(col,fx186Tex('soft'),.6));
+  o.userData.kqsKeep=c.userData.kqsKeep=d.userData.kqsKeep=1;g.add(o,c,d);g.position.copy(gY(p,0));d.position.y=.06;scene.add(g);
+  try{burst(gY(p,.4),col,Math.min(26,8+h*1.6),w*1.2,h*.75,.9)}catch(_){}
+  tw(ms,k=>{const u=k<.14?1-Math.pow(1-k/.14,3):1,f=Math.pow(1-k,1.3),ww=w*(1+k*.55);o.scale.set(ww*1.15,h*u,ww*1.15);c.scale.set(ww*.34*(1-k*.5),h*u*1.04,ww*.34*(1-k*.5));d.scale.setScalar(w*2.4*(.6+.4*u));
+    o.material.opacity=.75*f;c.material.opacity=f;d.material.opacity=.6*f},()=>{scene.remove(g);[o,c,d].forEach(q=>q.material.dispose())})}
 function kqsSpark(a,b,col){try{bolt(a,b,col)}catch(_){}}
 
 // ---------------- simple low-poly models for summons and props ----------------
@@ -12815,7 +12902,12 @@ var KQH={
 function kqsLunge(t){const d=kqsDir(pl.position,t.m.position),L=d2(pl.position,t.m.position)-1.5-(t.boss?1.2:0);face(d);if(L<=.25)return 0;const T=L/16;hero.dash={x:d.x,z:d.z,t:T};hero.iv=Math.max(hero.iv||0,T*.5);return Math.round(T*1000)}
 function kqsSpike(p,col,h,ice){const m=kqsMesh(new THREE.ConeGeometry(.28,h||1,5),ice?kqsStd(col,.6,.85):kqsStd(col,.08));m.position.copy(gY(p,-(h||1)/2));scene.add(m);const y0=m.position.y;tw(140,k=>m.position.y=y0+k*(h||1)*.9,()=>setTimeout(()=>tw(380,k=>m.position.y=y0+(1-k)*(h||1)*.9,()=>kqsRm(m)),450))}
 function kqsChain(a,b,col,ms){const n=Math.max(3,Math.round(a.distanceTo(b)/.35)),g=new THREE.Group(),m=kqsStd(col,.25);for(let j=0;j<n;j++){const l=kqsMesh(new THREE.TorusGeometry(.1,.03,4,8),m);l.position.lerpVectors(a,b,j/(n-1));l.rotation.y=j%2?Math.PI/2:0;l.lookAt(b);if(j%2)l.rotateZ(Math.PI/2);g.add(l)}scene.add(g);setTimeout(()=>kqsFade(g,200),ms||250)}
-function kqsBeam(a,b,col,w,ms){const L=a.distanceTo(b),m=kqsMesh(new THREE.CylinderGeometry(w,w,L,6,1,true),kqsAdd(col));m.position.lerpVectors(a,b,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());scene.add(m);tw(ms||200,k=>{m.material.opacity=.9*(1-k)},()=>kqsRm(m))}
+// v186: a beam is a soft glowing shaft round a thin white core that flares in and thins out, sparks at its end
+function kqsBeam(a,b,col,w,ms){const L=a.distanceTo(b);if(L<.01)return;G_KQSCYL=G_KQSCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,16,1,true);g.translate(0,.5,0);return g})();
+  const g=new THREE.Group(),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.75),o=kqsMesh(G_KQSCYL,fx186Mat(col,null,.55)),c=kqsMesh(G_KQSCYL,fx186Mat(c2,null,1));o.userData.kqsKeep=c.userData.kqsKeep=1;
+  g.add(o,c);g.position.copy(a);g.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());scene.add(g);ms=ms||200;
+  try{burst(b,col,6,1.4,1.2,.35);fx186Flash(b,col,Math.min(1.8,.5+w*3),ms*.8)}catch(_){}
+  tw(ms,k=>{const u=k<.15?.5+.5*k/.15:1,f=1-k;o.scale.set(w*1.6*u*(1+k*.5),L,w*1.6*u*(1+k*.5));c.scale.set(w*.45*(1-k*.6),L,w*.45*(1-k*.6));o.material.opacity=.55*f;c.material.opacity=f},()=>{scene.remove(g);o.material.dispose();c.material.dispose()})}
 function kqsPose(p,ms){try{const T=kqsPoseT(p);if(T&&T[0]&&typeof haPlay=='function'){haPlay(ms||T[1],T[0],2,null,.15)}}catch(_){}}
 // traps: arm, then fire when an enemy steps within `trig`
 function kqsTrap(t){let armed=0;return kqsObj({life:t.life,tick:(dt,now,o)=>{if(t.blink)t.blink.material.emissiveIntensity=.6+Math.sin(now/(armed?120:60))*.6;if(o.age<t.arm)return;armed=1;if(kqsFoes(t.p,t.trig).length){t.fire();return false}},end:()=>{kqsFade(t.mesh,250);if(t.deco)t.deco.rm(250)}})}
@@ -19937,7 +20029,7 @@ function evo100Bake(E){
 function evo100Wing(geo,L,P,key,o){
   if(EVO100.wing[key])return EVO100.wing[key];o=o||{};
   const pa=geo.attributes.position.array,ca=geo.attributes.color.array,nT=pa.length/9,hub=[pa[0],pa[1],pa[2]],P0=[],C0=[],R=dkRng(13),c=new THREE.Color(),c2=new THREE.Color();
-  const sc=1+(o.grow||.05)*L,isHub=t=>Math.abs(pa[t*9]-hub[0])+Math.abs(pa[t*9+1]-hub[1])+Math.abs(pa[t*9+2]-hub[2])<1e-6;
+  const sc=1+(o.grow||.05)*L*.35,isHub=t=>Math.abs(pa[t*9]-hub[0])+Math.abs(pa[t*9+1]-hub[1])+Math.abs(pa[t*9+2]-hub[2])<1e-6;
   let mx=0;for(let t=0;t<nT;t++)if(isHub(t))for(let k=1;k<3;k++)mx=Math.max(mx,Math.hypot(pa[t*9+k*3]-hub[0],pa[t*9+k*3+2]-hub[2]));
   const accent=new THREE.Color(o.accent!=null?o.accent:P.mainD).lerp(new THREE.Color(P.glowD),.35).multiplyScalar(.7),edge=new THREE.Color(o.edge!=null?o.edge:P.dark),glow=new THREE.Color(P.glow);
   const put=(p,cc)=>{P0.push(p[0]*sc,p[1]*sc,p[2]*sc);C0.push(cc.r,cc.g,cc.b)};
@@ -58208,7 +58300,7 @@ ST179.ss165zealot=Object.assign({},ST179.ss165zealot,{lz:-.05});ST179.ss165calle
 // wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
 // (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
-// Evolution: the wing grows 6% per level (as before) and gains darker covert edges, bright flight-feather tips and a trimmed
+// Evolution: the wing grows 2% per level (v186; was 6%) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
 var BW184={lv:10,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
@@ -58249,7 +58341,7 @@ function bw184Push(T,x,y,z,clr){const z0=T[0][0];let zh=T[T.length-1][0];for(let
 // ---------------- the wing ----------------
 // builds the three key shapes of the right wing in the shoulder's space: {P:[spread, half, folded] Float32Arrays, C, piv}
 function bw184Build(sp,C,L,P){
-  const D=BW184.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw184Cols(sp,C),sc=1+.06*L;
+  const D=BW184.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw184Cols(sp,C),sc=1+.02*L; // v186: 2% per level (was 6%: companions grew too big)
   const q=dh150At(T,D.zs),piv=[q.w*.62,q.y+q.a*.62,D.zs];
   // evolution colours
   if(L>=2){K.covEdge=K.covD.clone().lerp(new THREE.Color(P.dark),.45)}
@@ -61043,4 +61135,367 @@ function ep185MergeTex(g){if(!g||!EP185S)return 0;const mats=new Set(Object.valu
     const me=new THREE.Mesh(bg,mat);me.castShadow=false;me.receiveShadow=!mat.transparent;me.matrixAutoUpdate=false;me.updateMatrix();g.add(me)});
   return n}
 {const f=buildCamp;buildCamp=function(C){const had=C&&C.g;const r=f.apply(this,arguments);if(C&&C.g&&!had)try{ep185MergeTex(C.g)}catch(e){console.warn('v185 merge',e)}return r}}
+// ================= v186: companion bodies remodelled with the detail recipe (owner, Nov 1 2026) =================
+// Owner: "We recently improved your modeling technique and I want to update our companions with your new methods."
+// The companions were lofts of 6-8 sided rings with a random brightness per vertex (lpGeo, 0610): boxy bodies, stick legs and
+// speckled colour. docs/MODEL_DETAIL_RECIPE.md: detail from colour, shading and good bends, not triangles. For the 12 companion
+// skeletons (every species and colour variant, never an enemy: their keys start with E137) the loft is now built by lp186Geo:
+//  * smoother outline and bends: each ring band gets a ring in between (Catmull-Rom along the loft, never thinner than the
+//    straight line, its weights the mix of both neighbours: up to 4 bones), and 6-10 sided lofts get twice the sides
+//    (the faceted look stays: flat shading, ~4x the faces of a 300-700 triangle body);
+//  * seated limbs (recipe 4b): a leg loft that grows from the chest / pelvis starts with a shoulder or haunch mass sunk into
+//    the body, so the leg no longer leaves the flank as a stick;
+//  * baked shading instead of random speckle (recipe 2.1/2.2): top light, darker toward the feet and underneath, cool in
+//    the shadows, crease / ridge from the welded surface (cavity), no per-vertex noise.
+// Paint functions still get the ORIGINAL ring index (their stripes and spots stay where they were designed).
+var LP186={on:true,rigs:null,split:2,sides:2,seat:1,stat:{},
+  // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
+  // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
+  grade:{def:[.5,.56],Gloomcap:[.34,.4],Sporelord:[.36,.4],Mossfrog:[.4,.42],Bogmaw:[.4,.4],Drakelet:[.4,.42],Venomcoil:[.38,.4],Pyrewing:[.5,.45],Gravewyrm:[.42,.46],
+    Hivemother:[.5,.42],Lumenwisp:[.3,.62],Foxlet:[.62,.5],Emberlynx:[.55,.48],Skyhawk:[.45,.5],Stormtalon:[.45,.5]}};
+var LP186H={};
+function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
+function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
+function lp186Grade(n){const sp=lp186Sp(n);return LP186.grade[sp]||LP186.grade[n]||LP186.grade.def}
+function lp186Comp(key,n){if(!LP186.on||!key||/^E137/.test(key))return false;
+  if(!LP186.rigs){try{LP186.rigs=new Set(SPK.map(s=>rigOf(s)))}catch(e){return false}}return LP186.rigs.has(n)}
+// ring weights → {bone: w}
+function lp186W(r){const b=r.b,o={};if(r.w4)return Object.assign({},r.w4);o[b[0]]=(o[b[0]]||0)+1-(b[2]||0);if(b[2])o[b[1]]=(o[b[1]]||0)+b[2];return o}
+function lp186Mix(a,b,t){const o={};for(const k in a)o[k]=(o[k]||0)+a[k]*(1-t);for(const k in b)o[k]=(o[k]||0)+b[k]*t;return o}
+function lp186CR(p0,p1,p2,p3,t){const t2=t*t,t3=t2*t;return .5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3)}
+// the leg's first ring is skinned to the body (chest / pelvis / spine) and the second to a limb bone ending in 0
+function lp186IsLeg(L){const r=L.rings;if(!r||r.length<3||!r[0].b)return false;const b0=r[0].b[0],b1=r[0].b[1]||'';return /^(chest|pelvis|spine|hips|body|torso)$/.test(b0)&&/0$/.test(b1)}
+function lp186Refine(L){
+  const R=L.rings,N=R.length;R.forEach((r,i)=>{if(r._oi==null)r._oi=i});
+  let out=R;
+  // seat a leg: one ring above the first, sunk up into the body (hidden inside it), so the leg grows out of the body mass
+  // instead of starting at a cut-off disc; the old first ring swells a little (the muscle where the limb joins)
+  if(LP186.seat&&lp186IsLeg(L)){const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(...d)||1,u=d.map(x=>x/l),k=Math.min(.45*l,(a.rx||.05)*.8);
+    const seat=Object.assign({},a,{p:[a.p[0]+u[0]*k-Math.sign(a.p[0]||0)*a.rx*.3,a.p[1]+u[1]*k,a.p[2]+u[2]*k],rx:a.rx*.92,ryT:(a.ryT==null?a.rx:a.ryT)*1.02,ryB:(a.ryB==null?a.rx:a.ryB)*1.02,
+      w4:(()=>{const w=lp186W(a),o={};for(const k2 in w)o[k2]=w[k2];const body=a.b[0];o[body]=(o[body]||0)+.6;const s=Object.values(o).reduce((x,y)=>x+y,0);for(const k2 in o)o[k2]/=s;return o})(),_oi:0,_seat:1});
+    const inx=-Math.sign(a.p[0]||0)*a.rx*.3;seat.p[0]+=inx*.5;
+    out=[seat,Object.assign({},a,{p:[a.p[0]+inx,a.p[1],a.p[2]],rx:a.rx*1.04,ryT:(a.ryT==null?a.rx:a.ryT)*1.06,ryB:(a.ryB==null?a.rx:a.ryB)*1.06})].concat(R.slice(1))}
+  if(!LP186.split||out.length<2)return Object.assign({},L,{rings:out});
+  const M=out.length,res=[],NS=Math.max(1,LP186.split|0);
+  for(let i=0;i<M;i++){res.push(out[i]);if(i==M-1)break;const a=out[i],b=out[i+1],p=out[Math.max(0,i-1)],q=out[Math.min(M-1,i+2)];
+    // a tiny cap ring (nose tip, tail tip) keeps a straight taper
+    const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);
+    for(let s2=1;s2<=NS;s2++){const t=s2/(NS+1);
+      const P=[0,1,2].map(j=>lp186CR(p.p[j],a.p[j],b.p[j],q.p[j],t)),rad=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f],vp=p[f]==null?p.rx:p[f],vq=q[f]==null?q.rx:q[f],li=va+(vb-va)*t;
+        return Math.max(li*.95,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
+      const m=Object.assign({},t<.5?a:b,{p:tip?a.p.map((x,j)=>x+(b.p[j]-x)*t):P,rx:tip?lin('rx'):rad('rx'),ryT:tip?lin('ryT'):rad('ryT'),ryB:tip?lin('ryB'):rad('ryB'),
+        w4:lp186Mix(lp186W(a),lp186W(b),t),_oi:(t<.5?a:b)._oi,_mid:1,j:0,_seat:0,_ra:a,_rb:b,_t:t});
+      if(a.sqB||b.sqB)m.sqB=a.sqB&&b.sqB?a.sqB+(b.sqB-a.sqB)*t:0;res.push(m)}}
+  return Object.assign({},L,{rings:res})}
+// welded cavity per vertex: <1 in creases, >1 on ridges (recipe 2.2); positions welded across lofts at 1 mm
+function lp186Cavity(P,IX){const n=P.length/3,key=new Map(),id=new Int32Array(n);let u=0;
+  for(let i=0;i<n;i++){const k=Math.round(P[i*3]*1000)+','+Math.round(P[i*3+1]*1000)+','+Math.round(P[i*3+2]*1000);let v=key.get(k);if(v==null){v=u++;key.set(k,v)}id[i]=v}
+  const U=new Float32Array(u*3),cnt=new Float32Array(u),Nn=new Float32Array(u*3),nb=Array.from({length:u},()=>new Set());
+  for(let i=0;i<n;i++){const v=id[i];U[v*3]+=P[i*3];U[v*3+1]+=P[i*3+1];U[v*3+2]+=P[i*3+2];cnt[v]++}
+  for(let v=0;v<u;v++){U[v*3]/=cnt[v];U[v*3+1]/=cnt[v];U[v*3+2]/=cnt[v]}
+  for(let t=0;t<IX.length;t+=3){const a=id[IX[t]],b=id[IX[t+1]],c=id[IX[t+2]];if(a==b||b==c||a==c)continue;
+    const ax=U[a*3],ay=U[a*3+1],az=U[a*3+2],e1=[U[b*3]-ax,U[b*3+1]-ay,U[b*3+2]-az],e2=[U[c*3]-ax,U[c*3+1]-ay,U[c*3+2]-az],
+      nx=e1[1]*e2[2]-e1[2]*e2[1],ny=e1[2]*e2[0]-e1[0]*e2[2],nz=e1[0]*e2[1]-e1[1]*e2[0];
+    [a,b,c].forEach(v=>{Nn[v*3]+=nx;Nn[v*3+1]+=ny;Nn[v*3+2]+=nz});nb[a].add(b);nb[a].add(c);nb[b].add(a);nb[b].add(c);nb[c].add(a);nb[c].add(b)}
+  let T=new Float32Array(u);
+  for(let v=0;v<u;v++){const ln=Math.hypot(Nn[v*3],Nn[v*3+1],Nn[v*3+2])||1;let dx=0,dy=0,dz=0;nb[v].forEach(j=>{const x=U[j*3]-U[v*3],y=U[j*3+1]-U[v*3+1],z=U[j*3+2]-U[v*3+2],l=Math.hypot(x,y,z)||1;dx+=x/l;dy+=y/l;dz+=z/l});
+    const l=Math.hypot(dx,dy,dz);if(l<1e-6){T[v]=.5;continue}const c=(Nn[v*3]*dx+Nn[v*3+1]*dy+Nn[v*3+2]*dz)/(ln*l);T[v]=Math.acos(Math.max(-1,Math.min(1,c)))/Math.PI}
+  for(let k=0;k<4;k++){const T2=new Float32Array(u);for(let v=0;v<u;v++){let s=T[v];nb[v].forEach(j=>s+=T[j]);T2[v]=s/(nb[v].size+1)}T=T2}
+  const out=new Float32Array(n);for(let i=0;i<n;i++){const x=T[id[i]];out[i]=x<.5?1-Math.min(.16,(.5-x)*.7):1+Math.min(.05,(x-.5)*.3)}
+  return out}
+function lp186Geo(key,n,lofts,seed){
+  const O=Object.keys(SPEC[n].bones),P=[],Cc=[],SI=[],SW=[],IX=[],R=dkRng(seed||77),V=THREE.Vector3,tmp=new THREE.Color();
+  const bi=b=>{const i=O.indexOf(b);if(i<0)throw new Error('lp: no bone '+b+' in '+n);return i};
+  const skin=r=>{const w=lp186W(r),e=Object.keys(w).map(k=>[bi(k),w[k]]).filter(q=>q[1]>.015).sort((a,b)=>b[1]-a[1]).slice(0,4),s=e.reduce((x,q)=>x+q[1],0)||1;
+    while(e.length<4)e.push([0,0]);SI.push(e[0][0],e[1][0],e[2][0],e[3][0]);SW.push(e[0][1]/s,e[1][1]/s,e[2][1]/s,e[3][1]/s)};
+  lofts.map(L=>lp186Refine(L)).forEach(L=>{
+    const rings=L.rings,seg0=L.seg||8,seg=(LP186.sides>1&&seg0>=6&&seg0<=10)?seg0*LP186.sides:seg0,ref=new V(...(L.ref||[0,1,0])),base=P.length/3,pts=rings.map(r=>new V(r.p[0],r.p[1],r.p[2]));
+    const ka=k=>{const a=Math.PI/2+(L.rot||0)+k/seg*Math.PI*2;return [Math.sin(a),Math.cos(a)]},tA=new THREE.Color(),tB=new THREE.Color(),tA2=new THREE.Color(),tB2=new THREE.Color();
+    const colAt=(r,sc,out)=>{if(r._ra){L.paint(tA,r._ra,sc[0],sc[1],r._ra._oi);L.paint(tB,r._rb,sc[0],sc[1],r._rb._oi);return out.copy(tA).lerp(tB,r._t)}L.paint(out,r,sc[0],sc[1],r._oi);return out};
+    rings.forEach((r,i)=>{
+      const tg=pts[Math.min(i+1,pts.length-1)].clone().sub(pts[Math.max(i-1,0)]).normalize(),U=ref.clone().sub(tg.clone().multiplyScalar(ref.dot(tg))).normalize(),Sd=new V().crossVectors(U,tg);
+      for(let k=0;k<seg;k++){
+        const a=Math.PI/2+(L.rot||0)+k/seg*Math.PI*2,c=Math.cos(a),s=Math.sin(a),ry=s>0?(r.ryT==null?r.rx:r.ryT):(r.ryB==null?r.rx:r.ryB),j=r.j?1+(R()-.5)*r.j*.6:1;
+        const q2=s<0&&r.sqB?2/r.sqB:0,cq=q2?Math.sign(c)*Math.abs(c)**q2:c,sq=q2?-(Math.abs(s)**q2):s;
+        P.push(pts[i].x+(Sd.x*cq*r.rx+U.x*sq*ry)*j,pts[i].y+(Sd.y*cq*r.rx+U.y*sq*ry)*j,pts[i].z+(Sd.z*cq*r.rx+U.z*sq*ry)*j);
+        // the colour is the ORIGINAL design's colour at this spot: painted at the original rings and the original sides and
+        // blended between them (a paint that hashes the ring index would otherwise smear into stripes along the new rings)
+        if(seg!==seg0&&k%2){colAt(r,ka(k-1),tA2);colAt(r,ka(k+1),tB2);tmp.copy(tA2).lerp(tB2,.5)}else colAt(r,ka(k),tmp);
+        Cc.push(tmp.r,tmp.g,tmp.b);skin(r)}});
+    for(let i=0;i<rings.length-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg,b2=a+seg,b3=a1+seg;IX.push(a,a1,b2,b2,a1,b3)}
+    [[L.capA,0],[L.capB,rings.length-1]].forEach(q=>{if(!q[0])return;const r=rings[q[1]],ci=P.length/3;P.push(pts[q[1]].x,pts[q[1]].y,pts[q[1]].z);
+      const o=base+q[1]*seg;L.paint(tmp,r,q[1]?1:-1,0,r._oi);Cc.push(tmp.r,tmp.g,tmp.b);skin(r);
+      for(let k=0;k<seg;k++){const a=o+k,a1=o+(k+1)%seg;if(q[1])IX.push(ci,a,a1);else IX.push(ci,a1,a)}});
+  });
+  const G=new THREE.BufferGeometry();
+  G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW,4));
+  G.setIndex(IX);G.computeVertexNormals();
+  // baked shading: value = top light x height x cavity, a cool shift into the shadows (all kept inside .5..1.1)
+  const N=G.attributes.normal.array,nv=P.length/3;let y0=1e9,y1=-1e9;for(let i=0;i<nv;i++){y0=Math.min(y0,P[i*3+1]);y1=Math.max(y1,P[i*3+1])}
+  const GR=lp186Grade(n);for(let i=0;i<nv;i++){tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]);lp186GradeC(tmp,GR);Cc[i*3]=tmp.r;Cc[i*3+1]=tmp.g;Cc[i*3+2]=tmp.b}
+  const H=Math.max(.05,y1-y0),cav=lp186Cavity(P,IX),cool=new THREE.Color(0x3a4258),warm=new THREE.Color(0xffe2c0);
+  for(let i=0;i<nv;i++){const ny=N[i*3+1],h=Math.max(0,Math.min(1,(P[i*3+1]-y0)/H)),hs=h*h*(3-2*h);
+    let f=(.84+.2*(.5*ny+.5))*(.74+.26*Math.min(1,hs*1.6))*cav[i];f=Math.max(.5,Math.min(1.12,f));
+    tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]).multiplyScalar(f);
+    const sh=Math.max(0,-ny)*.22+(1-Math.min(1,hs*1.8))*.08;if(sh>0)tmp.lerp(cool.clone().multiplyScalar(tmp.r*.3+tmp.g*.59+tmp.b*.11+.05),Math.min(.25,sh));
+    if(ny>.55)tmp.lerp(warm.clone().multiplyScalar(tmp.r*.3+tmp.g*.59+tmp.b*.11),(ny-.55)*.1);
+    Cc[i*3]=tmp.r;Cc[i*3+1]=tmp.g;Cc[i*3+2]=tmp.b}
+  G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));G.computeBoundingSphere();
+  LP186.stat[key]=IX.length/3;return G}
+{const f=lpGeo;lpGeo=function(key,n,lofts,seed){if(!lp186Comp(key,n))return f.apply(this,arguments);if(LPG[key])return LPG[key];
+  try{return LPG[key]=lp186Geo(key,n,lofts,seed)}catch(e){console.error('lp186',key,e);return f.apply(this,arguments)}}}
+// the painted kit (eyes, warts, teeth, horns, ears: the 'c' layer of LP| bakes) gets the same grade; glow and metal keep theirs.
+// Tapered parts (fur tufts, manes, horns, spines, claws) are shaded along their length: darker at the root where they leave
+// the body, lighter toward the tip (recipe 4b: smooth per-corner colour on fur instead of one flat colour per clump).
+// feathers and fur: neighbouring blades / tufts of similar colour blend 40% toward their local mean (the alternating
+// light / dark feathers read as a checkerboard of blocks; v184's "lumpy feathers"), parts of clearly different colour
+// (teeth against lips, a cream bib against the back) keep theirs
+function lp186IsFeather(g){try{return typeof BD184!='undefined'&&BD184.G&&Object.values(BD184.G).indexOf(g)>=0}catch(e){return false}}
+function lp186IsTuft(g){const pr=g&&g.parameters;return !!(pr&&pr.radiusBottom!=null&&pr.height>0&&pr.radiusBottom>pr.radiusTop*2.5&&pr.height>pr.radiusBottom*2)}
+function lp186Smooth(P){const Q=P.filter(p=>p.t==='c'&&p.col!=null&&(lp186IsFeather(p.geo)||lp186IsTuft(p.geo)));if(Q.length<4)return P;
+  const C=Q.map(p=>new THREE.Color(p.col)),X=Q.map(p=>[p.m.elements[12],p.m.elements[13],p.m.elements[14]]),out=new Map(),R2=.07*.07;
+  Q.forEach((p,i)=>{let r=0,g=0,b=0,w=0;for(let j=0;j<Q.length;j++){const dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1],dz=X[i][2]-X[j][2];if(dx*dx+dy*dy+dz*dz>R2)continue;
+      const dc=Math.abs(C[i].r-C[j].r)+Math.abs(C[i].g-C[j].g)+Math.abs(C[i].b-C[j].b);if(dc>.55)continue;r+=C[j].r;g+=C[j].g;b+=C[j].b;w++}
+    if(w>1){const c=C[i].clone().lerp(new THREE.Color(r/w,g/w,b/w),.4);out.set(p,c.getHex())}});
+  return P.map(p=>out.has(p)?Object.assign({},p,{col:out.get(p)}):p)}
+function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material===M.c);if(!m)return;const G=m.geometry;if(G.userData.lp186)return;G.userData.lp186=1;
+    const C=G.attributes.color;let off=0;P.filter(p=>p.t==='c').forEach(p=>{const g=p.geo,pa=g.attributes.position,n=pa.count,pr=g.parameters;
+      if(pr&&pr.radiusBottom!=null&&pr.height>0&&pr.radiusBottom>pr.radiusTop*1.6&&pr.height>pr.radiusBottom*1.4){const h=pr.height;
+        for(let i=0;i<n;i++){const t=Math.max(0,Math.min(1,pa.getY(i)/h+.5)),k=.66+.46*Math.pow(t,.8);C.setXYZ(off+i,C.getX(off+i)*k,C.getY(off+i)*k,C.getZ(off+i)*k)}}
+      else if(lp186IsFeather(g)){for(let i=0;i<n;i++){const t=Math.max(0,Math.min(1,pa.getY(i))),k=.74+.32*t;C.setXYZ(off+i,C.getX(off+i)*k,C.getY(off+i)*k,C.getZ(off+i)*k)}}
+      off+=n});C.needsUpdate=true}catch(e){}}
+{const f=dkBake;dkBake=function(P,O,key){if(key&&/^LP\|/.test(key)&&LP186.on){const n=key.split('|')[1];if(lp186Comp('LP|',n)){const fresh=!(DKBK&&DKBK[key]);
+    if(fresh){const GR=lp186Grade(n),c=new THREE.Color();P=P.map(p=>{if(p.t!=='c'||p.col==null)return p;c.set(p.col);lp186GradeC(c,GR);return Object.assign({},p,{col:c.getHex()})});P=lp186Smooth(P)}
+    const r=f.call(this,P,O,key);if(fresh)lp186TaperShade(r,P);return r}}return f.call(this,P,O,key)}}
+// ---------------- evolution looks: fewer, more cohesive pieces (owner: "reduce visual clutter from traits and evolution
+// accessories - make them more cohesive") ----------------
+// Applied to every species' evolution design through its kit E (the designs in 1720-1770, 2600, 3110-3140, 3390, 3397):
+//  * no hanging charms (teeth, bones and gems on strings dangled from collars and harnesses on most species);
+//  * runes only from look level 3, at most two per creature, laid in the darker glow (they read as glowing noise);
+//  * no thin rings round the legs (cuffs and rune bands on wrists and ankles); collars and harness straps stay;
+//  * one set gem at most; every part takes its exact palette colour (no random brightness per piece);
+//  * spike rows (EVO100_M.ridge) 20% shorter.
+var EVO186={on:true};
+{const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
+  const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
+  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2)return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
+  E.gem=function(h,sz,col,o){if(run.gem>=1)return E;run.gem++;return gem.apply(E,arguments)};
+  E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
+  // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
+  const dimG=new THREE.Color(P.glowD).lerp(new THREE.Color(P.mainD),.6).getHex();
+  const fix=k=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
+      if(q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>14){q.t='c';q.col=dimG}}}return r};
+  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0);
+  // near-black armour shells read as holes in the body: they take the dark body colour instead
+  const sh0=E.shell,dk2=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.65).getHex();
+  // a shell coloured triangle by triangle in turn (i%2, i%3: a checkerboard) takes the average of its colours instead
+  E.shell=function(sel,off,t,col,o){if(col===P.dark)col=dk2;else if(typeof col=='function'){const f0=col,smp=[];for(let i=0;i<6;i++)smp.push(f0(.05,.4,.05,i));
+      if(smp.some(v=>v!==smp[0])&&f0(.05,.4,.05,0)===f0(-.1,.3,-.2,0)){const m=new THREE.Color(0);smp.forEach(v=>m.add(new THREE.Color(v===P.dark?dk2:v)));col=m.multiplyScalar(1/6).getHex()}
+      else col=function(){const v=f0.apply(this,arguments);return v===P.dark?dk2:v}}
+    return sh0.call(E,sel,off,t,col,o)};
+  return E}}
+{const ch=EVO100_M.charm;EVO100_M.charm=function(E){return EVO186.on?E:ch.apply(this,arguments)}}
+{const rg=EVO100_M.ridge;EVO100_M.ridge=function(E,zs,t,col,lean,x,tipCol,o){if(EVO186.on)zs=zs.map(q=>[q[0],q[1]*.8,q[2]*.9]);return rg.call(this,E,zs,t,col,lean,x,tipCol,o)}}
+// one palette for the gear: iron and leather lean toward the creature's own dark colour, gold trim only on the last looks
+{const f=evo100Pal;evo100Pal=function(c,n,L){const P=f.apply(this,arguments);if(!EVO186.on)return P;const mix=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t).getHex();
+  P.metal=mix(P.metal,P.mainD,.3);P.iron=mix(P.iron,P.mainD,.35);P.leather=mix(P.leather,P.mainD,.35);if(L<4)P.trim=mix(P.trim,P.metal,.45);P.bone=mix(P.bone,0x8a8070,.25);return P}}
+// ================= v186: companions that looked cartoony, remodelled (owner, Nov 1 2026) =================
+// Owner: "I'd also like to remodel companions that look too cartoony or childish." Same skeletons, bones, animations,
+// evolution designs and gameplay; new bodies and painted detail (docs/MODEL_DETAIL_RECIPE.md: colour follows form, smooth
+// mottling instead of random speckle, geometry only where it changes the outline).
+// A paint point on a loft ring: x across, y up (default ref), the ring's z.
+function rm186Pt(r,s,c){const ry=s>0?(r.ryT==null?r.rx:r.ryT):(r.ryB==null?r.rx:r.ryB);return [c*r.rx+(r.p[0]||0),r.p[1]+s*ry,r.p[2]]}
+function rm186Sp(rig,c){try{return rv137(rig,c)||rig}catch(e){return rig}}
+
+// ===================================================================== Mossfrog =====================================================================
+// Was a round green blob with hexagonal chips for warts, white smile and random dark speckles. Now a squat bog toad: a broad
+// flat skull that runs straight into the body (no neck), a low hump over the shoulders, the belly sagging between the legs,
+// heavy folded thighs; dull olive-brown hide, darker blotches that follow the body (smooth noise), a dark stripe down each
+// flank, a pale dirty belly; low warts the colour of the skin, a dark mouth seam instead of the white lip.
+var MF186={
+  body:[[.48,.255,.03,.02,.02,['head','head',0],'snout'],[.455,.262,.13,.05,.04,['head','head',0],'snout'],[.41,.27,.2,.075,.06,['head','head',0],'hd'],
+    [.35,.28,.235,.1,.08,['head','head',0],'hd'],[.28,.288,.25,.13,.105,['neck','head',.5]],[.18,.29,.265,.165,.14,['chest','chest',0]],
+    [.06,.29,.27,.18,.16,['spine','spine',0]],[-.07,.29,.255,.17,.15,['spine','pelvis',.6]],[-.17,.29,.215,.145,.12,['pelvis','pelvis',0]],
+    [-.25,.288,.15,.1,.08,['pelvis','tail0',.3]],[-.3,.285,.06,.05,.04,['pelvis','tail0',.5]],[-.32,.285,.012,.012,.012,['tail0','tail0',0]]],
+  cols(C){const skin=lpMain(C,.5).lerp(new THREE.Color(0x4a4a2a),.35).multiplyScalar(.85);return {skin,back:skin.clone().multiplyScalar(.7),blot:skin.clone().lerp(new THREE.Color(0x16180e),.62),
+    stripe:skin.clone().lerp(new THREE.Color(0x1a1610),.55),belly:new THREE.Color(0x9a9470),mouth:new THREE.Color(0x2a1a14),gland:skin.clone().lerp(new THREE.Color(0x6a5a3a),.35)}}};
+function mf186Geo(C){const K=MF186.cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd);
+  const paint=(o,r,s,c)=>{const p=rm186Pt(r,s,c);o.copy(K.skin);
+    if(r.k=='snout'&&s<.2){o.lerp(K.mouth,.25)}
+    if(s>.3)o.lerp(K.back,(s-.3)*.9);
+    // blotches on the back and flanks (smooth, follow the body), the flank stripe, the belly
+    const b=sn(p,13,3);if(s>-.2&&b>.6)o.lerp(K.blot,Math.min(1,(b-.6)*4)*.8);
+    if(s>-.15&&s<.12&&r.p[2]<.3&&r.p[2]>-.22)o.lerp(K.stripe,.55*(1-Math.abs(s+.02)/.14));
+    if(s<-.3){const t=Math.min(1,(-.3-s)*3);o.lerp(K.belly,t*.85);if(sn(p,24,7)>.65)o.lerp(K.blot,.25*t)}};
+  const body={rings:MF186.body.map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[5],k:q[6]||'b'})),seg:10,capA:1,capB:1,paint};
+  // the lower jaw: a thin plate under the snout (moves with the jaw bone)
+  const jaw={rings:[[.42,.235,.18,.016,.02,['head','jaw',.6]],[.45,.236,.13,.014,.016,['jaw','jaw',0]],[.475,.24,.04,.01,.01,['jaw','jaw',0]]].map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[5],k:'jaw'})),
+    seg:10,capB:1,paint:(o,r,s)=>{o.copy(s>0?K.mouth:K.belly).lerp(K.skin,s>0?.1:.3)}};
+  const legs=[].concat(...[-1,1].map(s=>{const F=s<0?'fl':'fr',H=s<0?'hl':'hr';return [
+    // front legs: elbows out, short and thick
+    [[s*.16,.25,.16,.06,['chest',F+'0',.5]],[s*.2,.16,.17,.046,[F+'0',F+'1',.6]],[s*.19,.08,.155,.036,[F+'1',F+'1',0]],[s*.18,.03,.16,.03,[F+'2',F+'2',0]]],
+    // hind legs: a fat folded thigh, the shin back down, the long foot
+    [[s*.15,.28,-.14,.1,['pelvis',H+'0',.5]],[s*.22,.2,-.1,.088,[H+'0',H+'0',0]],[s*.235,.13,-.07,.06,[H+'0',H+'1',.6]],[s*.215,.08,-.15,.05,[H+'1',H+'1',0]],[s*.2,.04,-.21,.04,[H+'1',H+'2',.5]],[s*.19,.02,-.245,.032,[H+'2',H+'2',0]]]]}));
+  return lpGeo('MF186|'+C,'Mossfrog',[body,jaw].concat(legs.map(L=>({rings:L.map(q=>({p:[q[0],q[1],q[2]],rx:q[3],ryT:q[3]*1.12,ryB:q[3]*1.12,b:q[4],k:'leg'})),seg:7,ref:[0,0,1],capB:1,
+    paint:(o,r,sn2,c)=>{const p=rm186Pt(r,sn2,c);o.copy(K.skin);if(sn(p,15,5)>.62)o.lerp(K.blot,.6);if(r.p[1]<.06)o.multiplyScalar(.82)}}))),41)}
+function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.skin.clone().multiplyScalar(.72).getHex(),lid=K.skin.clone().multiplyScalar(.88).getHex(),gl=K.gland.getHex(),eye=red?0xff2a2a:0xc8a030;
+  [-1,1].forEach(s=>{
+    // small hooded eyes high on the skull, a horizontal pupil, a heavy lid
+    k.p('head','sph2','c',lid,s*.13,.36,.36,.05,.042,.05);
+    k.p('head','sph2','g',new THREE.Color(eye).multiplyScalar(.75).getHex(),s*.142,.364,.383,.028,.022,.018,0,s*.5,0);
+    k.p('head','box','c',0x050505,s*.147,.364,.398,.022,.006,.006,0,s*.5,0);
+    k.p('head','box','c',dk,s*.128,.392,.368,.066,.018,.05,.14,s*.3,s*.3);
+    // the parotoid gland behind each eye: a long low swelling with a few pores
+    k.p('head','sph','c',gl,s*.16,.355,.27,.05,.03,.08,0,s*.25,s*.3);
+    [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
+    k.p('head','box','c',0x0a0c08,s*.035,.28,.47,.01,.006,.008)});
+  // the mouth seam: a dark line round the snout where the jaw meets it
+  for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.2,z=.41+Math.cos(a)*.06;k.p('head','box','c',0x140c0a,x,.243,z,.06,.006,.008,0,a,0)}
+  // low warts the colour of the skin over the back and flanks (lumps, not chips)
+  [[.09,.45,.14],[-.1,.452,.09],[.13,.44,-.03],[-.14,.432,-.07],[.05,.458,-.12],[-.05,.448,.2],[.19,.4,.06],[-.2,.39,.02],[.17,.4,-.14],[-.16,.41,.13],[.0,.46,.02],[.22,.36,-.06],[-.22,.355,-.05],[.08,.44,-.2]]
+    .forEach((q,i)=>{const r=.016+(i%3)*.004;k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','sph','c',i%2?dk:K.skin.clone().multiplyScalar(1.06).getHex(),q[0],q[1]-.006,q[2],r,r*.45,r)});
+  // webbed feet: three long toes, the webbing a thin dark plate
+  [['fl2',-.18,.16,1],['fr2',.18,.16,1],['hl2',-.19,-.245,1.35],['hr2',.19,-.245,1.35]].forEach(f=>{
+    k.p(f[0],'box','c',dk,f[1],.01,f[2]+.03*f[3],.075*f[3],.008,.055*f[3]);
+    [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.07*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
+      k.L(f[0],'c',dk,[f[1],.014,f[2]],[x,.01,z],.012,.008,4);k.p(f[0],'sph','c',lid,x,.011,z,.011,.008,.011)})})}
+{const B=LPR.Mossfrog,g0=B.geo,k0=B.kit;
+  B.geo=function(C,c){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Geo(C);return g0.apply(this,arguments)};
+  B.kit=function(k,c,C,red){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Kit(k,c,C,red);return k0.apply(this,arguments)};
+  if(typeof EVO100!='undefined'&&EVO100.surf)delete EVO100.surf.Mossfrog}
+// Mossfrog evolution (one theme, a bog elder; was pustules + runes + a moss cloak with strands + a reed crown + a tooth
+// necklace + brow spurs + an angler lure + glowing eye rings + a moss beard + spines): L1 a few dim pustules in the blotches,
+// L2 a moss mantle over the back, L3 bony brow ridges and a glowing seam along the flank stripe, L4 the angler lure,
+// L5 short glowing spines along the spine line
+{const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
+  const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
+  [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
+  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.008,'c',(x,y,z)=>n3Sn(x,y,z,18,4)>.5?moss:mossD,{rimCol:mossD});
+  if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
+    [-1,1].forEach(s=>{const pts=[];[.22,.12,.02,-.08,-.17].forEach(z=>{const h=E.on([s*.6,.29,z],[-s,0,0]);if(h)pts.push(E.add(h.p,h.n,.002))});
+      for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.004,.004,'g',P.glowD,3,{vs:1})})}
+  if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
+    E.chain([[0,b,.3],[0,b+.07,.33],[0,b+.1,.39],[0,b+.08,.44]],.012,.006,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.06,.45],[0,1,0],.022,null,{bn:'head'})}
+  if(L>=5)[.12,.0,-.12].forEach(z=>{const t=E.top(0,z);if(t)E.L(E.add(t.p,t.n,-.006),E.add(t.p,E.nrm([0,1,-.6]),.055),.012,.002,'g',P.glow2,4)})}}
+
+// ===================================================================== Emberlynx =====================================================================
+// Was covered in 44 raised round spot discs over painted polka dots and eleven glowing stripe sets (flanks, legs, brow): it
+// read as a toy leopard. Now the lynx coat: the spots are painted, small and soft, denser on the haunches and fading toward
+// the belly (smooth noise, never a raised disc); the embers are two short smouldering seams over each shoulder and the brow
+// mark; the cheek ruff, tufted ears and big paws stay.
+function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd);
+  const paint=(o,r,s,cc,i)=>{const p=rm186Pt(r,s,cc);
+    if(r.k=='nose')return o.copy(K.nose);if(r.k=='paw'){o.copy(K.main).lerp(K.cream,.35);if(s<0)o.lerp(K.cream,.5);return}
+    if(r.k=='ank'){o.copy(K.main).lerp(K.cream,.2);return}
+    if(r.k=='leg'){o.copy(K.main);if(s<-.2)o.lerp(K.cream,.35);const n=sn(p,34,5);if(n>.7)o.lerp(K.spot,.35*Math.min(1,(n-.7)*5));return}
+    if(r.k=='jaw')return o.copy(s>.3?new THREE.Color(0x5a1a1a):K.cream);
+    if(r.k=='tip')return o.copy(K.black);if(r.k=='tail'){o.copy(K.main);if(s<-.4)o.lerp(K.cream,.5);return}
+    if(r.k=='muz'){o.copy(K.cream).lerp(K.main,.25);if(s>.4)o.lerp(K.main,.55);return}
+    o.copy(K.main);if(s>.6)o.lerp(K.back,.5);
+    if(r.k=='hd'){if(s<-.15)o.lerp(K.cream,.75);if(r.z>.55&&s<.3)o.lerp(K.cream,.4);return}
+    if(s<-.4){o.lerp(K.cream,.7);return}
+    // soft painted spots: more on the haunches, fewer toward the belly and the shoulders
+    const n=sn(p,30,11),w=.55+.25*Math.max(0,-r.p[2]*2.5)-.2*Math.max(0,-s);if(n>.86-w*.18)o.lerp(K.spot,.5*Math.min(1,(n-(.86-w*.18))*6))};
+  const lofts=[{rings:bz150Rows(EL150.body),seg:10,capA:1,capB:1,paint},{rings:bz150Rows(EL150.jaw),seg:7,capA:1,capB:1,paint},bz150Tail(EL150.tail,paint,7)]
+    .concat(bz150Legs('Foxlet',[.054,.036,.028,.048],[.068,.04,.029,.048],paint,{toe:.07,foot:.03,seg:7}));
+  return lpGeo('EL186|'+C,'Foxlet',lofts,73)}
+{const f=el150Kit;el150Kit=function(k,c,C,red){const K=el150Cols(C),sp=K.spot.getHex(),p0=k.p,L0=k.L;let st=0;
+  k.p=function(bn,geo,t,col){if(geo=='sph'&&t=='c'&&col===sp&&/^(chest|spine|pelvis)$/.test(bn))return k;return p0.apply(k,arguments)};
+  // keep the first flank stripe set (the shoulder seams, 3 strokes per side) and the brow mark; drop the rest of the glow strokes
+  k.L=function(bn,t,col){if(t=='g'){st++;const brow=bn=='head';if(!brow&&st>6)return k}return L0.apply(k,arguments)};
+  try{return f.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
+
+// ===================================================================== Gloomcap / Sporelord =====================================================================
+// Were a candy-pink toadstool with white polka-dot warts on a cream pear of a stem (Gloomcap) and a teal morel with a bright
+// white lace net (Sporelord). The palette grade (3430) takes the candy out; here the stem loses its pot belly and turns a
+// dirty, bruised bone colour with dark fibres and rot patches, the cap gets bruise blotches and a darker, wetter rim, the
+// polka dots become a few low scabs in the cap's own colour, and the Sporelord's veil is a dull, half-rotted lace.
+{const f=lpGeo;lpGeo=function(key,n,lofts,seed){if(!/^GC137\|/.test(key))return f.apply(this,arguments);
+  const sp=key.split('|')[1],sn=(p,fq,sd)=>n3Sn(p[0],p[1],p[2],fq,sd),bone=new THREE.Color(sp=='Sporelord'?0x8e8470:0x8a7e6a),rot=new THREE.Color(0x3a2e22),bruise=new THREE.Color(0x2a1a22),fib=new THREE.Color(0x4a3e30);
+  const L2=lofts.map((L,i)=>{if(i==0){// the stem
+      const rings=L.rings.map(r=>{const k=r.p[1]<.45?.86+.14*Math.max(0,(r.p[1]-.05)/.4):1;return Object.assign({},r,{rx:r.rx*k,ryT:(r.ryT==null?r.rx:r.ryT)*k,ryB:(r.ryB==null?r.rx:r.ryB)*k})});
+      return Object.assign({},L,{rings,paint:(o,r,s,c,ii)=>{L.paint(o,r,s,c,ii);const p=rm186Pt(r,s,c);o.lerp(bone,.55);if(Math.abs(Math.sin(Math.atan2(c,s)*9+r.p[1]*14))>.82)o.lerp(fib,.35);
+        const n=sn(p,16,2);if(n>.66)o.lerp(rot,.45*Math.min(1,(n-.66)*5))}})}
+    if(i==2)return Object.assign({},L,{paint:(o,r,s,c,ii)=>{L.paint(o,r,s,c,ii);const p=rm186Pt(r,s,c);const n=sn(p,11,6);if(n>.6)o.lerp(bruise,.4*Math.min(1,(n-.6)*4));
+        if(ii<=1)o.lerp(bruise,.25);o.multiplyScalar(.9)}});
+    return L});
+  return f.call(this,key+'|186',n,L2,seed)}}
+{const G=LPR.Gloomcap,k0=G.kit;G.kit=function(k,c,C,red){const sp=gc137Sp(c),cap=new THREE.Color(lpMain(C,.12)),scab=cap.clone().lerp(new THREE.Color(0x8a7a6a),.35).getHex(),p0=k.p,L0=k.L;let w=0;
+  k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(geo=='dod'&&t=='c'&&bn=='head'){if(++w>7)return k;return p0.call(k,bn,geo,t,scab,x,y-.004,z,sx*.9,sy*.4,sz*.9,rx,ry,rz)}return p0.apply(k,arguments)};
+  k.L=function(bn,t,col){if(sp=='Sporelord'&&col===0xe8e0c8){const a=Array.prototype.slice.call(arguments);a[2]=0x7a7262;return L0.apply(k,a)}return L0.apply(k,arguments)};
+  try{return k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
+
+// ===================================================================== Bogmaw =====================================================================
+// Six big glowing yellow eyes read as a cartoon; 36 warts plus pustules was noise. The eyes are now small dim embers sunk in
+// their lids (the four rear ones barely lit), and half the warts are gone.
+{const f=er150BogKit;er150BogKit=function(k,C,red){const p0=k.p;let w=0,e=0;const eyeHex=red?0xff2a2a:0xd8e040,dimE=new THREE.Color(eyeHex).lerp(new THREE.Color(0x3a2a10),.45).getHex();
+  k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){
+    if(t=='g'&&col===eyeHex&&bn=='head'){e++;return p0.call(k,bn,geo,t,e<=2?dimE:new THREE.Color(dimE).multiplyScalar(.55).getHex(),x,y-sy*.15,z,sx*.62,sy*.55,sz*.62,rx,ry,rz)}
+    if((geo=='ico'||geo=='sph')&&t=='c'&&bn!='head'&&bn!='jaw'&&sx<.04&&sx>.012){if((w++)%2)return k}
+    return p0.apply(k,arguments)};
+  try{return f.apply(this,arguments)}finally{k.p=p0}}}
+
+// ===================================================================== Skyhawk evolution =====================================================================
+// The two tail streamers ran half a metre past the tail on thin shafts and read as antennae; they are now two short outer
+// tail feathers, a little longer than the fan, and the bead cord in the crest is gone.
+{const f=bd184EvoSky;bd184EvoSky=function(E,L,P,c){const pd0=E.pd,L0=E.L;
+  E.pd=function(geo,t,col,pos,dir,s,fwd,o){if(o&&o.bn=='tail3'&&Array.isArray(s)&&s[1]>.2){s=[s[0],s[1]*.42,s[2]];pos=E.add(pos,dir,.02)}
+    else if(o&&o.bn=='tail3'&&Array.isArray(s)){pos=E.add(pos,dir,-.26)}
+    if(o&&o.bn=='head'&&geo=='sph'&&Array.isArray(dir)&&s===.012)return E;return pd0.call(E,geo,t,col,pos,dir,s,fwd,o)};
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(o&&o.bn=='head'&&col===P.leather)return E;return L0.apply(E,arguments)};
+  try{return f.apply(this,arguments)}finally{E.pd=pd0;E.L=L0}}}
+
+// ===================================================================== Wispling / Lumenwisp / Soulwarden evolution =====================================================================
+// The floating rune halo over the hood (a ring of glow on three threads, with glowing beads) read as a UI marker; it is gone.
+// The circlet on the hood, the flames of the last look and everything else stay.
+{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const L0=E.L,pd0=E.pd;
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(t=='g'&&o&&o.bn=='head'&&r1<=.008&&Math.max(a[1],b[1])>1.17)return E;return L0.apply(E,arguments)};
+  E.pd=function(geo,t,col,pos){if(geo=='oct'&&t=='g'&&pos&&pos[1]>1.18)return E;return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
+// the Lichbone's soul-fire halo on threads over its crown, the same marker look: gone (the brow rune and horn bands stay)
+{const f=lb150Evo;lb150Evo=function(E,L,P){const L0=E.L,pd0=E.pd,c=boneP([0,.95,.5]);
+  const near=p=>Math.abs(p[1]-c[1])<.03&&Math.hypot(p[0]-c[0],p[2]-c[2])<.14;
+  E.L=function(a,b,r1,r2,t,col,seg,o){if(t=='g'&&r1<=.008&&(near(a)||near(b)))return E;return L0.apply(E,arguments)};
+  E.pd=function(geo,t,col,pos){if(geo=='oct'&&t=='g'&&pos&&near(pos))return E;return pd0.apply(E,arguments)};
+  try{return f.apply(this,arguments)}finally{E.L=L0;E.pd=pd0}}}
+// the spirits' L2 mantle alternated two colours triangle by triangle (a checkerboard): one dark cloth now
+{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;
+  E.shell=function(sel,off,t,col,o){if(typeof col=='function'&&t=='c'){const a=col(0,0,0,0),b=col(0,0,0,1);if(a!==b){const m=new THREE.Color(a).lerp(new THREE.Color(b),.5).getHex();col=m}}return s0.call(E,sel,off,t,col,o)};
+  try{return b0.apply(this,arguments)}finally{E.shell=s0}}}
+// Gloomcap / Sporelord evolution: the twelve glowing dots and eight glow motes scattered over the cap (polka dots again) are
+// gone; the glowing gills, bracket fungi, little toadstools, hanging moss, spore stalks and glowing rim stay
+{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){const pd0=E.pd;
+  E.pd=function(geo,t,col,pos,dir,s){if(t=='g'&&((geo=='sph'&&Array.isArray(s)&&s[1]<=.006)||(geo=='ico'&&s===.014)))return E;return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+// ================= v186: evolved spells stay a step above the (now richer) standard ones =================
+// Owner (Nov 1 2026): "improve the visual effects on all of our character spells and abilities significantly (evolved spells
+// should still look even cooler than standard spell)". The standard shapes were rebuilt in 0107 (burst, ring, arc, bolt) and
+// 1000 (kqsPillar, kqsBeam). An evolved cast adds the ev137 layer on top (2700 / 2710); this file enriches that layer so the
+// gap stays: every evolved shockwave leaves a slow-fading scorch glow and throws two-colour embers, flares get a horizontal
+// lens streak and a colour halo, columns get a rising double helix of motes, lances crackle along their length.
+// Everything is shared geometry / textures with per-effect materials freed at the end (evxRm), and partners see it (the
+// MPV wrappers on ev137* from 2710 sit inside these).
+function ev186C2(col){const E=typeof EV137!='undefined'&&EV137.cur;return E&&E.c2!=null?evxCol(E.c2):evxLerp(col,0xffffff,.5)}
+// a glowing scorch on the ground that lingers after the blast
+function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(col,0,evxTex('soft'))),h=evxMesh(evxDisk(),evxAdd(evxLerp(col,0x200800,.5),0,evxTex('glyph')));
+  const b=evxGY(p,.06);g.position.copy(b);h.position.copy(b);h.position.y+=.01;g.scale.setScalar(R);h.scale.setScalar(R*.8);h.rotation.y=Math.random()*6.28;scene.add(g,h);
+  tw(ms,k=>{const f=k<.1?k/.1:Math.pow(1-(k-.1)/.9,1.6);g.material.opacity=.45*f;h.material.opacity=.3*f;h.rotation.y+=.004},()=>{evxRm(g);evxRm(h)})}
+{const f=ev137Shock;ev137Shock=function(p,col,R,ms){const r=f.apply(this,arguments);try{if(p){R=Math.max(.8,Math.min(14,R||3));col=evxCol(col);const c2=ev186C2(col),b=evxGY(p,.15);
+  ev186Scorch(p,col,R*.55,(ms||520)*2.6);
+  // embers in both colours flung low and wide, then drifting up
+  for(let i=0;i<12;i++){const a=Math.random()*6.28,v=R*evxRand(1.2,2.4);evxPuff(new THREE.Vector3(b.x,b.y,b.z),{spr:1,col:i%2?c2:col,r0:.16,r1:0,life:.6+Math.random()*.5,op:1,v:[Math.cos(a)*v,evxRand(.6,2.2),Math.sin(a)*v],g:-1.2,drag:2.4,fin:.03})}}}catch(_){}return r}}
+{const f=ev137Flare;ev137Flare=function(p,col,s,ms){const r=f.apply(this,arguments);try{if(p){s=s||1.5;ms=ms||360;col=evxCol(col);const c2=ev186C2(col);
+  const st=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:evxLerp(col,0xffffff,.55),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})),
+    hl=new THREE.Sprite(new THREE.SpriteMaterial({map:fx186Tex('ring'),color:c2,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  st.userData.lpsSkip=hl.userData.lpsSkip=1;st.renderOrder=hl.renderOrder=35;st.position.set(p.x,p.y,p.z);hl.position.copy(st.position);scene.add(st,hl);
+  tw(ms*1.1,k=>{const u=k<.12?k/.12:1,f2=Math.pow(1-k,1.6);st.scale.set(s*6*(.5+.5*u),s*.32,1);st.material.opacity=.85*f2;hl.scale.setScalar(s*(1.2+k*2.4));hl.material.opacity=.7*f2},()=>{evxRm(st);evxRm(hl)})}}catch(_){}return r}}
+{const f=ev137Column;ev137Column=function(p,col,h,rr,ms){const r=f.apply(this,arguments);try{if(p){h=h||7;rr=rr||.7;ms=ms||600;col=evxCol(col);const c2=ev186C2(col),b=evxGY(p,0);
+  // a double helix of motes winding up the column
+  for(let i=0;i<14;i++){const s=i%2,a0=s*Math.PI+i*.45,y0=i/14*h*.35;setTimeout(()=>{const ph=Math.random()*.3;evxPuff(new THREE.Vector3(b.x+Math.cos(a0)*rr*1.3,b.y+y0,b.z+Math.sin(a0)*rr*1.3),
+    {spr:1,col:s?c2:0xffffff,r0:.2,r1:.02,life:.7,op:1,v:[-Math.sin(a0)*rr*3,h*.9,Math.cos(a0)*rr*3],drag:.8,fin:.04})},i*ms*.02)}
+  ev186Scorch(p,col,rr*2.2,ms*2)}}catch(_){}return r}}
+{const f=ev137Lance;ev137Lance=function(a,b,col,w,ms){const r=f.apply(this,arguments);try{if(a&&b){col=evxCol(col);const c2=ev186C2(col),L=a.distanceTo(b);
+  // crackle: short sparks jumping off the lance along its length, and a flash where it lands
+  for(let i=0;i<Math.min(10,Math.ceil(L*1.2));i++){const q=a.clone().lerp(b,Math.random());evxPuff(q,{col:i%2?c2:0xffffff,add:1,geo:'tet',r0:.06,r1:0,life:.25+Math.random()*.2,op:1,v:[(Math.random()-.5)*5,(Math.random()-.2)*4,(Math.random()-.5)*5],g:6,drag:1.5,spin:14,fin:.02})}
+  fx186Flash(b,c2,Math.min(2.2,.7+(w||.12)*6),(ms||300)*.7)}}catch(_){}return r}}
 </script></body></html>
