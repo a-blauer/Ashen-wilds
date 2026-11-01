@@ -60785,11 +60785,14 @@ function lp186Refine(L){
       w4:(()=>{const w=lp186W(a),o={};for(const k2 in w)o[k2]=w[k2];const body=a.b[0];o[body]=(o[body]||0)+.6;const s=Object.values(o).reduce((x,y)=>x+y,0);for(const k2 in o)o[k2]/=s;return o})(),_oi:0,_seat:1});
     const inx=0;
     out=[seat,Object.assign({},a,{p:[a.p[0]+inx,a.p[1],a.p[2]],rx:a.rx*1.04,ryT:(a.ryT==null?a.rx:a.ryT)*1.06,ryB:(a.ryB==null?a.rx:a.ryB)*1.06})].concat(R.slice(1))}
+  // a leg ends in a sole ring a little lower and narrower than its last ring: the paw / hoof kit pieces were set against
+  // the old flat end cap, and the smoother, re-oriented end ring lifted it a few mm off them
+  if(lp186IsLeg(L)&&out.length>=3){const z=out[out.length-1];out=out.concat([Object.assign({},z,{p:[z.p[0],z.p[1]-.008,z.p[2]],rx:z.rx*.9,ryT:(z.ryT==null?z.rx:z.ryT)*.9,ryB:(z.ryB==null?z.rx:z.ryB)*.9,_sole:1})])}
   if(!LP186.split||out.length<2)return Object.assign({},L,{rings:out});
   const M=out.length,res=[],NS=Math.max(1,LP186.split|0);
   for(let i=0;i<M;i++){res.push(out[i]);if(i==M-1)break;const a=out[i],b=out[i+1],p=out[Math.max(0,i-1)],q=out[Math.min(M-1,i+2)];
     // a tiny cap ring (nose tip, tail tip) keeps a straight taper
-    const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);
+    const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);if(b._sole)continue;
     for(let s2=1;s2<=NS;s2++){const t=s2/(NS+1);
       const P=[0,1,2].map(j=>lp186CR(p.p[j],a.p[j],b.p[j],q.p[j],t)),rad=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f],vp=p[f]==null?p.rx:p[f],vq=q[f]==null?q.rx:q[f],li=va+(vb-va)*t;
         return Math.max(li,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
@@ -60885,7 +60888,7 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 //  * no thin rings round the legs (cuffs and rune bands on wrists and ankles); collars and harness straps stay;
 //  * one set gem at most; every part takes its exact palette colour (no random brightness per piece); glowing strokes
 //    and flames are capped at 16, the rest drawn in the dark body colour;
-//  * spike rows (EVO100_M.ridge) 20% shorter.
+//  * spike rows (EVO100_M.ridge) 20% shorter; no gold crown spikes.
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
   const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
@@ -60897,7 +60900,9 @@ var EVO186={on:true};
   // (only strokes and flames, E.L, count: set marks such as an eclipse ring or a gem keep their glow)
   const fix=(k,cap)=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
       if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>16){q.t='c';q.col=dimG}}}return r};
-  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0,1);
+  E.p=fix(push0);E.L=fix(L0,1);
+  // gold crown spikes (rows of small gold cones on brows and helms) are gone
+  {const pdf=fix(pd0);E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&col===P.gold)return E;return pdf.apply(E,arguments)}}
   // near-black armour shells read as holes in the body: they take the dark body colour instead
   const sh0=E.shell,dk2=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.65).getHex();
   // a shell coloured triangle by triangle in turn (i%2, i%3: a checkerboard) takes the average of its colours instead
@@ -60985,15 +60990,15 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
     k.p('head','box','c',0x0a0c08,s*.035,.28,.47,.01,.006,.008)});
   // the mouth seam: a dark line round the snout where the jaw meets it
-  for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.2,z=.41+Math.cos(a)*.06;k.p('head','box','c',0x140c0a,x,.243,z,.06,.006,.008,0,a,0)}
+  for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.18,z=.405+Math.cos(a)*.062;k.p('head','box','c',0x140c0a,x,.245,z,.058,.006,.008,0,a,0)}
   // low warts the colour of the skin over the back and flanks (lumps, not chips)
   [[.09,.45,.14],[-.1,.452,.09],[.13,.44,-.03],[-.14,.432,-.07],[.05,.458,-.12],[-.05,.448,.2],[.19,.4,.06],[-.2,.39,.02],[.17,.4,-.14],[-.16,.41,.13],[.0,.46,.02],[.22,.36,-.06],[-.22,.355,-.05],[.08,.44,-.2]]
-    .forEach((q,i)=>{const r=.016+(i%3)*.004;k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','sph','c',i%2?dk:K.skin.clone().multiplyScalar(1.06).getHex(),q[0],q[1]-.006,q[2],r,r*.45,r)});
+    .forEach((q,i)=>{const r=.016+(i%3)*.004;k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','sph','c',i%2?dk:K.skin.clone().multiplyScalar(1.06).getHex(),q[0],q[1]-.02-Math.abs(q[0])*.12-Math.max(0,-q[2]-.1)*.25,q[2],r,r*.55,r)});
   // webbed feet: three long toes, the webbing a thin dark plate
   [['fl2',-.18,.16,1],['fr2',.18,.16,1],['hl2',-.19,-.245,1.35],['hr2',.19,-.245,1.35]].forEach(f=>{
-    k.p(f[0],'box','c',dk,f[1],.01,f[2]+.03*f[3],.075*f[3],.008,.055*f[3]);
-    [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.07*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
-      k.L(f[0],'c',dk,[f[1],.014,f[2]],[x,.01,z],.012,.008,4);k.p(f[0],'sph','c',lid,x,.011,z,.011,.008,.011)})})}
+    k.p(f[0],'box','c',dk,f[1],.016,f[2]+.02*f[3],.07*f[3],.012,.05*f[3]);
+    [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.065*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
+      k.L(f[0],'c',dk,[f[1],.02,f[2]],[x,.012,z],.013,.009,4);k.p(f[0],'sph','c',lid,x,.012,z,.011,.008,.011)})})}
 {const B=LPR.Mossfrog,g0=B.geo,k0=B.kit;
   B.geo=function(C,c){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Geo(C);return g0.apply(this,arguments)};
   B.kit=function(k,c,C,red){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Kit(k,c,C,red);return k0.apply(this,arguments)};

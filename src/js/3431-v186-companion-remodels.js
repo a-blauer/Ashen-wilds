@@ -49,15 +49,15 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
     k.p('head','box','c',0x0a0c08,s*.035,.28,.47,.01,.006,.008)});
   // the mouth seam: a dark line round the snout where the jaw meets it
-  for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.2,z=.41+Math.cos(a)*.06;k.p('head','box','c',0x140c0a,x,.243,z,.06,.006,.008,0,a,0)}
+  for(let i=-3;i<=3;i++){const a=i/3*1.05,x=Math.sin(a)*.18,z=.405+Math.cos(a)*.062;k.p('head','box','c',0x140c0a,x,.245,z,.058,.006,.008,0,a,0)}
   // low warts the colour of the skin over the back and flanks (lumps, not chips)
   [[.09,.45,.14],[-.1,.452,.09],[.13,.44,-.03],[-.14,.432,-.07],[.05,.458,-.12],[-.05,.448,.2],[.19,.4,.06],[-.2,.39,.02],[.17,.4,-.14],[-.16,.41,.13],[.0,.46,.02],[.22,.36,-.06],[-.22,.355,-.05],[.08,.44,-.2]]
-    .forEach((q,i)=>{const r=.016+(i%3)*.004;k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','sph','c',i%2?dk:K.skin.clone().multiplyScalar(1.06).getHex(),q[0],q[1]-.006,q[2],r,r*.45,r)});
+    .forEach((q,i)=>{const r=.016+(i%3)*.004;k.p(q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis','sph','c',i%2?dk:K.skin.clone().multiplyScalar(1.06).getHex(),q[0],q[1]-.02-Math.abs(q[0])*.12-Math.max(0,-q[2]-.1)*.25,q[2],r,r*.55,r)});
   // webbed feet: three long toes, the webbing a thin dark plate
   [['fl2',-.18,.16,1],['fr2',.18,.16,1],['hl2',-.19,-.245,1.35],['hr2',.19,-.245,1.35]].forEach(f=>{
-    k.p(f[0],'box','c',dk,f[1],.01,f[2]+.03*f[3],.075*f[3],.008,.055*f[3]);
-    [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.07*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
-      k.L(f[0],'c',dk,[f[1],.014,f[2]],[x,.01,z],.012,.008,4);k.p(f[0],'sph','c',lid,x,.011,z,.011,.008,.011)})})}
+    k.p(f[0],'box','c',dk,f[1],.016,f[2]+.02*f[3],.07*f[3],.012,.05*f[3]);
+    [-1,0,1].forEach(i=>{const a=i*.5+(f[1]<0?-.2:.2),L=.065*f[3],x=f[1]+Math.sin(a)*L,z=f[2]+Math.cos(a)*L;
+      k.L(f[0],'c',dk,[f[1],.02,f[2]],[x,.012,z],.013,.009,4);k.p(f[0],'sph','c',lid,x,.012,z,.011,.008,.011)})})}
 {const B=LPR.Mossfrog,g0=B.geo,k0=B.kit;
   B.geo=function(C,c){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Geo(C);return g0.apply(this,arguments)};
   B.kit=function(k,c,C,red){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Kit(k,c,C,red);return k0.apply(this,arguments)};

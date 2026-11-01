@@ -41,11 +41,14 @@ function lp186Refine(L){
       w4:(()=>{const w=lp186W(a),o={};for(const k2 in w)o[k2]=w[k2];const body=a.b[0];o[body]=(o[body]||0)+.6;const s=Object.values(o).reduce((x,y)=>x+y,0);for(const k2 in o)o[k2]/=s;return o})(),_oi:0,_seat:1});
     const inx=0;
     out=[seat,Object.assign({},a,{p:[a.p[0]+inx,a.p[1],a.p[2]],rx:a.rx*1.04,ryT:(a.ryT==null?a.rx:a.ryT)*1.06,ryB:(a.ryB==null?a.rx:a.ryB)*1.06})].concat(R.slice(1))}
+  // a leg ends in a sole ring a little lower and narrower than its last ring: the paw / hoof kit pieces were set against
+  // the old flat end cap, and the smoother, re-oriented end ring lifted it a few mm off them
+  if(lp186IsLeg(L)&&out.length>=3){const z=out[out.length-1];out=out.concat([Object.assign({},z,{p:[z.p[0],z.p[1]-.008,z.p[2]],rx:z.rx*.9,ryT:(z.ryT==null?z.rx:z.ryT)*.9,ryB:(z.ryB==null?z.rx:z.ryB)*.9,_sole:1})])}
   if(!LP186.split||out.length<2)return Object.assign({},L,{rings:out});
   const M=out.length,res=[],NS=Math.max(1,LP186.split|0);
   for(let i=0;i<M;i++){res.push(out[i]);if(i==M-1)break;const a=out[i],b=out[i+1],p=out[Math.max(0,i-1)],q=out[Math.min(M-1,i+2)];
     // a tiny cap ring (nose tip, tail tip) keeps a straight taper
-    const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);
+    const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);if(b._sole)continue;
     for(let s2=1;s2<=NS;s2++){const t=s2/(NS+1);
       const P=[0,1,2].map(j=>lp186CR(p.p[j],a.p[j],b.p[j],q.p[j],t)),rad=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f],vp=p[f]==null?p.rx:p[f],vq=q[f]==null?q.rx:q[f],li=va+(vb-va)*t;
         return Math.max(li,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
@@ -141,7 +144,7 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 //  * no thin rings round the legs (cuffs and rune bands on wrists and ankles); collars and harness straps stay;
 //  * one set gem at most; every part takes its exact palette colour (no random brightness per piece); glowing strokes
 //    and flames are capped at 16, the rest drawn in the dark body colour;
-//  * spike rows (EVO100_M.ridge) 20% shorter.
+//  * spike rows (EVO100_M.ridge) 20% shorter; no gold crown spikes.
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
   const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
@@ -153,7 +156,9 @@ var EVO186={on:true};
   // (only strokes and flames, E.L, count: set marks such as an eclipse ring or a gem keep their glow)
   const fix=(k,cap)=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
       if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>16){q.t='c';q.col=dimG}}}return r};
-  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0,1);
+  E.p=fix(push0);E.L=fix(L0,1);
+  // gold crown spikes (rows of small gold cones on brows and helms) are gone
+  {const pdf=fix(pd0);E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&col===P.gold)return E;return pdf.apply(E,arguments)}}
   // near-black armour shells read as holes in the body: they take the dark body colour instead
   const sh0=E.shell,dk2=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.65).getHex();
   // a shell coloured triangle by triangle in turn (i%2, i%3: a checkerboard) takes the average of its colours instead
