@@ -711,10 +711,27 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   No jumps (owner, Nov 2026: weapons flipped round in the hand before the swing): the forearm turn is tracked continuously
   (it wrapped past 180° and flipped the hand), the edge window ramps in once the head moves toward the target (the blade is
   turned for the downswing during the coil), a two-edged blade picks its side once per swing, each frame starts from the last
-  frame's hand, and `FA_RATE` caps per 1/30 s the aim, the hand's turn and the blade's spin about its handle. The test checks
-  every game tick (FPS=60 too): weapon turn <= 40° (70° in the blow's 3 fastest ticks), spin <= 25°, no back-and-forth.
-  Off hand on a two-handed haft (`faOffQ`): from the body's side of the shaft, palm mirroring the weapon hand's, knuckles out;
-  tested for the staff casts (FAIL) and the two-handed melee grips (WARN).
+  frame's hand, and `FA_RATE` caps the aim, the hand's turn and the blade's spin about its handle (per 1/30 s, scaled by the
+  frame's real length). The test checks every game tick (FPS=60 too): weapon turn <= 40° (70° in the blow's 3 fastest ticks),
+  spin <= 25°, no back-and-forth.
+  Same motion at any frame rate (Nov 2026): the solver's "stay close to last frame" cost is per second, not per frame; timed
+  events run on game time (the off hand's release, the slam's rest, the smoothing); the arm may swap to its other way of holding
+  the weapon only early in the blow, never in the last frames into the hit; outside the blow the hand follows its solved turn
+  through a 35 ms smoothing (no turning back and forth between two equal solutions); the edge window opens only once the real
+  head (not just the keys) moves toward the target; hand targets stay inside 95 % of the arm's reach (a locked-straight arm
+  has no elbow to turn on). Keys follow the fist's own geometry (a fist holds its handle across the forearm, never along it):
+  the slams were re-authored (head behind over the top, standing up over a forward-reaching forearm, landing level in front of
+  hands pulled down and in), and so was the dagger slash. Slams land on the ground at full speed: `faTrack` option `brk`
+  (the landing key arrives at speed and stops dead), the hand placed so the head's keyed angle puts it on the ground in front
+  (`ah` on a slam, `S.slm`), and the weapon then rests where it struck (`S.Dimp`) until the recovery lifts it. A strike's `ah`
+  shifts the whole blow by what the hit needs (`S.ahH`), so the slash keeps its shape. Rainfire's hit is at s 2 (`S.tHit`).
+  Off hand on a two-handed haft (`faOffQ`): from the body's side of the shaft, palm facing from the body out to the shaft
+  (staffs: mirroring the weapon hand's palm), followed on game time (40 ms) so it can't flip round the shaft in a frame; the
+  elbow placed from what the hand needs; if the wrist can't turn the whole way the arm is solved again so the grip point is
+  still on the shaft; the fist holds fully until it really lets go. The off fist slides along the haft toward the weapon hand
+  (`oc` channel) at a two-hander's coil, the big diagonal's follow-through, the slam's landing (as a sledgehammer is swung)
+  and the halberd's turn from the carry. Tested for the staff casts (FAIL) and the two-handed melee grips (WARN: the coil's
+  rising frames, the halberd's first frames and the hammer slam's landing still leave the off fist off the haft or turned).
 - **Eleven enemies rebuilt (v181, `3390`–`3392`)**: the owner found the Yeti, Stormborn Jotun, the three naga, both harpies, the
   Vampire Thrall, Blood Knight, Blood Magister, Crimson Executioner and Nosferatu too simple, goofy or badly proportioned.
   * Toolkit (`3390`): `a181TRings(kind)` torso shapes (brute / knight / lean / gaunt) and `a181Torso`; `a181Arm` (deltoid, biceps,
