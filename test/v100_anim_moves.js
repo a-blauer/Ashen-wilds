@@ -128,7 +128,7 @@ window.V100M=(function(){
   M.axes2=strike({ph:offAll(over({h:0}),{lx:-.6,ly:.1,lz:-.25,le:-1.25,lw:.3}),tm:'snap'});
   {const R=over({h:1}),L=mapPh(over({h:1}),q=>{if(q.p){q.p=mx(q.p);q.d=mx(q.d)}return q});
     M.axes3=strike({ph:mapPh(R,(q,n)=>{q.L={p:L[n].p,d:L[n].d};delete q.off;return q}),tm:'heavy'})}
-  // ---------------- daggers: low, quick, compact; slash, off-hand backhand, stab, rising X ----------------
+  // ---------------- daggers: low, quick, compact; slash, off-hand backhand, stab, overhead stab (v186; was a rising X) ----------------
   const dag=x=>reach(x,.86,-.04);
   M.dag0=strike({ph:bodyAdd(offAll(dag(fore()),OFF.guard),{c:.08,sx:.04}),tm:'snap'});
   M.dag1=strike({mirror:1,ph:bodyAdd(offAll(dag(fore()),OFF.guard),{c:.08,sx:.04}),tm:'snap'});
@@ -141,11 +141,18 @@ window.V100M=(function(){
     follow:{...V([.08,1.02,.48*rch],[-.02,-.05,1]),b:{f:1,py:-.36,sy:-.16,sx:.3,c:.32,w:1.25},off:OFF.back},
     rec:{...V([.18,1.0,.2],[0,.5,.85]),b:{f:.5,py:-.1,sy:-.05,sx:.1,c:.15},off:OFF.low}}}
   M.dag2=strike({ph:stab(),tm:'snap'});
-  {// rising X: both blades low and crossed, then up and out
-    const R={start:{...V([.12,.86,.3],[.4,-.4,.8]),b:{f:.3,c:.3}},coil:{...V([.06,.8,.3],[.3,-.7,.6]),b:{f:.3,c:.62,sx:.3,hx:-.15}},hold:{...V([.04,.78,.28],[.25,-.75,.6]),b:{f:.3,c:.68,sx:.32,hx:-.18}},
-      accel:{...V([.12,1.0,.4],[.2,.3,1]),b:{f:.6,c:.36,sx:.12}},hit:{...V([.2,1.28,.44],[.3,.75,.6]),b:{f:.8,c:.18,sx:-.02,dy:.02}},thru:{...V([.3,1.5,.3],[.45,.85,.1]),b:{f:.8,c:.12,sx:-.1,dy:.02}},
-      follow:{...V([.34,1.55,.2],[.5,.85,-.1]),b:{f:.8,c:.1,sx:-.1}},rec:{...V([.2,1.1,.25],[.1,.9,.3]),b:{f:.5,c:.12,sx:.05}}};
-    M.dag3=strike({ph:mapPh(R,q=>{q.L={p:mx(q.p),d:mx(q.d)};return q}),tm:'heavy'})}
+  {// v186 finisher (owner: "an overhead stab rather than an uppercut stab"): the dagger rises high over the weapon shoulder,
+    // the body rising and leaning back, point forward and up; then the fist drives straight down in front, the point turning down
+    // into the target at the hit, the body dropping into a deep lunge and following through low. The off hand aims, then swings back.
+    const R={start:{...V([.2,1.1,.25],[0,.3,.95]),b:{f:.4,c:.15}},
+      coil:{...V([.2,1.5,-.02],[0,.5,.86]),b:{f:.1,py:.28,sy:.3,sx:-.2,c:.06,hx:.1},off:OFF.reach},
+      hold:{...V([.19,1.54,-.05],[0,.4,.92]),b:{f:.05,py:.3,sy:.33,sx:-.25,c:.05,hx:.12},off:OFF.reach},
+      accel:{...V([.15,1.42,.2],[0,-.05,1]),b:{f:.55,py:.06,sy:.1,sx:.1,c:.18},off:OFF.guard},
+      hit:{...V([.09,1.02,.46],[0,-.8,.6]),b:{f:.95,py:-.2,sy:-.1,sx:.42,c:.4,w:1.15},off:OFF.back},
+      thru:{...V([.08,.86,.43],[0,-.94,.34]),b:{f:1,py:-.22,sy:-.12,sx:.5,c:.48,w:1.15},off:OFF.back},
+      follow:{...V([.08,.8,.4],[0,-.97,.24]),b:{f:1,py:-.22,sy:-.12,sx:.52,c:.5,w:1.15},off:OFF.back},
+      rec:{...V([.18,1.0,.25],[0,.5,.85]),b:{f:.5,sx:.12,c:.15},off:OFF.low}};
+    M.dag3=strike({ph:R,tm:'heavy'})}
   // ---------------- claws: raking swipes that dip low, alternating hands; finisher = crouch and spring, both claws ----------------
   const rake=()=>{const P=reach(fore({lo:.1}),.9,-.03);return bodyAdd(offAll(P,{lx:-.75,ly:.1,lz:-.3,le:-1.5,lw:.4}),{c:.1,sx:.05})};
   M.claw0=strike({ph:rake(),tm:'snap',claw:1});M.claw1=strike({mirror:1,ph:rake(),tm:'snap',claw:1});

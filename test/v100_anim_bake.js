@@ -15,10 +15,10 @@ window.V100B=(function(){
   let b=null,y0=0,root=null;
   const strike={q:new QT().setFromEuler(new THREE.Euler(-1,0,0)),p:new V3(0,-.03,.02)};
   const strikeClaw={q:new QT().setFromEuler(new THREE.Euler(-.2,0,0)),p:new V3(0,-.02,.02)};
-  let SG=strike;
+  let SG0=strike;   // v186: may be {R,L} (claws fitted to each paw: window.V100B_CLAW)
   function set(P){for(const c in BS){const s=BS[c],v=P[c]!=null?P[c]:(REST[c]||0);b[s[0]].rotation[s[1]]=v}b.pelvis.position.y=y0+(P.dy||0);root.updateMatrixWorld(true)}
   const _m=new THREE.Matrix4(),_q=new QT(),_v=new V3(),_v2=new V3();
-  function grip(side,out){const h=b[side=='R'?'aR2':'aL2'];out.p=SG.p.clone().applyMatrix4(h.matrixWorld);root.worldToLocal(out.p);
+  function grip(side,out){const h=b[side=='R'?'aR2':'aL2'],SG=SG0[side]||SG0;out.p=SG.p.clone().applyMatrix4(h.matrixWorld);root.worldToLocal(out.p);
     h.getWorldQuaternion(_q);const rq=root.getWorldQuaternion(new QT()).invert();out.d=new V3(0,-1,0).applyQuaternion(SG.q).applyQuaternion(_q).applyQuaternion(rq);return out}
   function palm(side){const h=b[side=='R'?'aR2':'aL2'];const p=new V3(0,-.035,.01).applyMatrix4(h.matrixWorld);return root.worldToLocal(p)}
   // torso penetration of a point (root frame): elliptic capsule around the spine/chest
@@ -65,7 +65,7 @@ window.V100B=(function(){
   function norm(d){const l=Math.hypot(d[0],d[1],d[2])||1;return [d[0]/l,d[1]/l,d[2]/l]}
   // spec key: {k, e?, b:{body channels}, R:{p,d,two?}|{ch}, L:'two'|{p,d}|{ch}, two:offset along the blade (− = toward the pommel)}
   function bakeMove(spec,report){
-    SG=spec.claw?strikeClaw:strike;
+    SG0=spec.claw?(window.V100B_CLAW||strikeClaw):strike;
     const out=[],prev={};CH.forEach(c=>prev[c]=REST[c]||0);
     spec.keys.forEach((K,ki)=>{
       const P={};CH.forEach(c=>P[c]=REST[c]||0);Object.assign(P,K.b||{});
@@ -96,7 +96,7 @@ window.V100B=(function(){
       if(K.post)for(const c in K.post)P[c]=(P[c]||0)+K.post[c];
       out.push([K.k,K.e||0].concat(CH.map(c=>+(+P[c]).toFixed(3))));
       if(report)report.push(rep)});
-    SG=strike;return out}
+    SG0=strike;return out}
   function mirrorKey(K){
     const M={};const b2={};const B=K.b||{};
     const neg={sy:1,sz:1,py:1,pz:1,cy:1,hy:1};
