@@ -920,7 +920,9 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   * How a cast becomes evolved: the outermost `cast` wrapper puts the evolved copy (`ev137Sk`: `Object.create` of the ability, same `n`)
     into the loadout slot for the call, so every layer (ground targeting, fxA/fxB, `cast_base`, `KQH` handlers) uses it; `EV137.cur` is
     carried into timers, tweens, `kqsObj` and `kqsChan` callbacks made during the cast. `aimPoint` honours an evolved `rng`.
-  * Look: every evolved cast draws a turning rune circle, a light column and orbiting sparks; while `EV137.cur` is set the old effects
+  * Look (since v186, `3450`): no generic layer any more (no rune circle / light column / orbit on every cast, no ground glyph under
+    area hits, no crystal spikes, no evolved pose swap): each evolution draws its base signature at `lvl` 1 (bigger, brighter, the
+    class's second colour) plus its own themed follow-up. Before v186: every evolved cast drew a turning rune circle, a light column and orbiting sparks; while `EV137.cur` is set the old effects
     get evolved companions (ring → `ev137Shock`, big burst → `ev137Flare`, area hit → glyph, bolt → `ev137Lance`, pillar → `ev137Column`;
     rate limited by `evxLimit`); shots get class models (`ev137Proj`: mage astral comet, ranger spectral arrow, assassin shadow star),
     a wake (`ev137Trail`) and an impact (`ev137Impact`). New cast poses replace cast/raise/nova/flex (`EV137.poseMap`, `kindPose`).
@@ -929,6 +931,17 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   Tests: `v137_evolve.py` (PART=checks,cast,sheets · CLS= · ONLY=): coverage of all 85, Evolve rules / cost / save / reset / window,
   mechanics measured in game (projectile counts, Frost Nova reach, Chain Lightning jumps, Cleave crescent and damage), every evolved
   ability cast for every class with no errors and no scene leftovers, preview sheets `out/v137_evolve_<cls>.jpg`.
+- **Ability signatures (v186, `3450`)**: every ability has its own pose and its own themed effect, distinct from the basic attack.
+  * Poses: `SGP` (ATK-style tracks: sgChop, sgGuillo, sgBash, sgSmite, sgRip, sgGarrote, sgKneel, sgDisc, sgHook, sgTackle, sgRoar…),
+    assigned by name in `SG_POSE`; buffs / shields / heals play theirs after the cast; `SG_LEGS` poses bend the legs fully.
+  * Effects `sg*` (shared geometry / textures, own materials freed, pooled fxA puffs for streaks, smoke, dust, blood, feathers,
+    embers; all in `MPV.FX`; `lvl` 1 = evolved): blade trails (`sgTrail`, horizontal or vertical / diagonal), fissures (`sgCrack`),
+    light falling from the sky (`sgFall`), sunburst rays, sonic waves, shield of light, shells, halo, crosshair mark, guillotine,
+    garrote wire, a real chain with a hook (`sgChain`, Chain Hook), the Whirlwind vortex (`sgVortex`: blade trails all round the
+    hero for the whole channel; the channel tick in 0130 no longer draws cone arcs), charge bow waves (`sgWedge`).
+  * Hooks: KQH handlers in 1000 call their signature (`sgSkull`, `sgExec`, `sgBash`…); old kinds go through `sgOld(sk…)` in 0130
+    cast_base (true = the kind's generic ring / burst / arc is skipped; `SG_OLD` by name). Damage and timings are unchanged.
+  * Pictures: `test/sg186_shots.py` (CLS= ONLY= T= NORM=1 SPOT= TAG=) → `out/sg186_<TAG>.jpg` (base row, evolved row).
 - **New gear (v137, `2750`–`2790`)**: 150 templates appended to `ITPL` after the 200 older ones (`ITPL_V137` = 200; never insert
   before them, saves store indices): 50 weapons (3–4 per class weapon type), 8 Paladin shields, 72 armour pieces (`A137L`: 24 lines
   of helm + chest + boots, 6 per armour type, each with a palette in `MD_SETPAL`, a base shape per slot and a motif), 10 amulets,

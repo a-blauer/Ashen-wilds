@@ -61,7 +61,7 @@ function sgSparks(p,col,n,sp,up,yaw,spread,len,life,g){for(let i=0;i<n;i++){cons
 function sgDust(p,n,R,col,up){for(let i=0;i<n;i++){const a=Math.random()*6.283,v=(R||1.5)*(.5+Math.random());sgPuff(new THREE.Vector3(p.x+Math.cos(a)*.3,p.y+.15,p.z+Math.sin(a)*.3),
   {col:col||0x7a6650,geo:'dod',r0:.22,r1:.7+Math.random()*.4,life:.7+Math.random()*.5,op:.42,v:[Math.cos(a)*v,(up||.6)*Math.random(),Math.sin(a)*v],drag:2.2,fin:.08})}}
 function sgSmoke(p,n,R,col,life,op){for(let i=0;i<n;i++){const a=Math.random()*6.283,r=Math.random()*R;sgPuff(new THREE.Vector3(p.x+Math.cos(a)*r,p.y+Math.random()*.8,p.z+Math.sin(a)*r),
-  {col:col||0x2a2630,geo:'dod',r0:.35,r1:.9+Math.random()*.7,life:(life||1.4)*(.7+Math.random()*.5),op:op||.55,v:[Math.cos(a)*.6,.35+Math.random()*.5,Math.sin(a)*.6],drag:1.2,fin:.12})}}
+  {col:col||0x2a2630,geo:'dod',r0:.3,r1:.6+Math.random()*.45,life:(life||1.4)*(.7+Math.random()*.5),op:op||.55,v:[Math.cos(a)*.6,.35+Math.random()*.5,Math.sin(a)*.6],drag:1.2,fin:.12})}}
 function sgBlood(p,n,sp,yaw,spread){for(let i=0;i<n;i++){const a=yaw==null?Math.random()*6.283:yaw+(Math.random()-.5)*(spread||1.4),v=(sp||2.5)*(.4+Math.random());
   sgPuff(new THREE.Vector3(p.x,p.y,p.z),{col:i%3?0x6a0608:0x9a1010,geo:'ico',r0:.05+Math.random()*.05,r1:.03,life:.7+Math.random()*.3,op:.95,v:[Math.sin(a)*v,1+Math.random()*2.5,Math.cos(a)*v],g:10,drag:.4,bounce:.15,fin:.02})}}
 function sgEmbers(p,col,n,R,up,life){for(let i=0;i<n;i++){const a=Math.random()*6.283,r=Math.random()*(R||.6);sgPuff(new THREE.Vector3(p.x+Math.cos(a)*r,p.y+Math.random()*.4,p.z+Math.sin(a)*r),
@@ -96,7 +96,7 @@ function sgFall(p,col,h,w,ms,lvl){if(!p)return;h=h||10;w=w||.55;ms=ms||650;lvl=l
   const g=new THREE.Group(),o=sgMesh(G,sgMat(col,fx186Tex('vgrad'),.8)),c=sgMesh(G,sgMat(c2,fx186Tex('vgrad'),1)),T=110/ms;g.add(o,c);let o2=null;if(lvl){o2=sgMesh(G,sgMat(sgC2(col),fx186Tex('vgrad'),.5));g.add(o2)}
   g.position.copy(b);scene.add(g);let hit=0;
   sgT(ms,k=>{const u=k<T?Math.pow(k/T,2):1,f=k<T?1:Math.pow(1-(k-T)/(1-T),1.5),ww=w*(1+(k>T?(k-T)*.8:0))*(1+lvl*.35);
-    [o,c,o2].forEach((m,j)=>{if(!m)return;const s=j==1?.32:j==2?1.9:1;m.position.y=h*(1-u);m.scale.set(ww*s,h*u,ww*s);m.material.opacity=(j==1?1:j==2?.45:.8)*f});
+    [o,c,o2].forEach((m,j)=>{if(!m)return;const s=j==1?.32:j==2?1.9:1;m.position.y=h*(1-u);m.scale.set(ww*s,h*u,ww*s);m.material.opacity=(j==1?.85:j==2?.3:.5)*f});
     if(!hit&&k>=T){hit=1;const q=gY(p,.4);fx186Flash(gY(p,1),col,2.2+lvl,240);burst(q,col,24+lvl*16,1.8+lvl,2.6,.7);ring(p,col,2.4+lvl*1.4,380);sgEmbers(q,c2,10+lvl*8,.8,3.5,.9)}},()=>sgRm(g))}
 // sonic waves: bands of force racing out from p at chest height (shouts), n waves 90 ms apart
 function sgWaves(p,col,R,ms,n,y,hgt){if(!p)return;R=R||5;ms=ms||520;n=n||3;y=y==null?1.2:y;const G=sgG('band',()=>new THREE.CylinderGeometry(1,1,1,40,1,true));
@@ -110,12 +110,12 @@ function sgShieldFx(p,yaw,col,s,ms,dist){if(!p)return;s=s||1.2;ms=ms||320;dist=d
     r.scale.setScalar(s*(.3+1.4*e));r.material.opacity=.9*Math.pow(1-k,1.6)},()=>sgRm(g))}
 // a protective shell flashing round the hero: faceted dome + bright edges (kind 0 steel, 1 holy, 2 arcane, 3 stone)
 function sgShell(p,col,r,ms,kind,lvl){if(!p)return;r=r||1.35;ms=ms||700;lvl=lvl|0;const G=sgG('ico',()=>new THREE.IcosahedronGeometry(1,1)),E=sgG('icoE',()=>new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1,1)));
-  const g=new THREE.Group(),f=sgMesh(G,sgMat(col,null,0)),l=new THREE.LineSegments(E,new THREE.LineBasicMaterial({color:sgLerp(col,0xffffff,.5),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+  const g=new THREE.Group(),f=sgMesh(G,kind==3?new THREE.MeshStandardMaterial({color:0x8a8272,roughness:.95,flatShading:true,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}):sgMat(col,null,0)),l=new THREE.LineSegments(E,new THREE.LineBasicMaterial({color:sgLerp(col,0xffffff,.15),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
   l.userData.lpsSkip=1;l.frustumCulled=false;l.renderOrder=34;g.add(f,l);g.position.copy(gY(p,1));scene.add(g);let l2=null;
   if(lvl){l2=new THREE.LineSegments(E,new THREE.LineBasicMaterial({color:sgC2(col),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));l2.userData.lpsSkip=1;l2.frustumCulled=false;g.add(l2)}
   const sp=kind==2?1.6:kind==1?.6:.25;
   sgT(ms,k=>{const u=k<.18?ATK_E.out(k/.18):1,fd=k<.5?1:1-(k-.5)/.5,pul=1+Math.sin(k*30)*.02*(1-k);g.scale.set(r*u*pul,r*1.08*u*pul,r*u*pul);g.rotation.y=k*sp;
-    f.material.opacity=(kind==3?.28:.16)*fd*(1+(k<.18?(1-k/.18)*2:0));l.material.opacity=.9*fd;if(l2){l2.material.opacity=.7*fd;l2.scale.setScalar(1.12+.05*Math.sin(k*20));l2.rotation.y=-k*sp*2}},()=>sgRm(g))}
+    f.material.opacity=(kind==3?.5:.16)*fd*(kind==3?1:1+(k<.18?(1-k/.18)*2:0));l.material.opacity=(kind==3?.3:.75)*fd;if(l2){l2.material.opacity=.7*fd;l2.scale.setScalar(1.12+.05*Math.sin(k*20));l2.rotation.y=-k*sp*2}},()=>sgRm(g))}
 // a halo / sun disc behind the hero's shoulders (holy and focus buffs)
 function sgHalo(p,col,s,ms,lvl){if(!p)return;s=s||1.4;ms=ms||900;lvl=lvl|0;const a=new THREE.Sprite(new THREE.SpriteMaterial({map:sgTex('rays'),color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false})),
   b=new THREE.Sprite(new THREE.SpriteMaterial({map:fx186Tex('ring'),color:sgLerp(col,0xffffff,.5),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -203,12 +203,12 @@ function sgExec(p,yaw,col,low,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const b=gY
 function sgBash(p,yaw,col,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const q=gY(p,1.1);sgShieldFx(q,yaw,col,1.3+lvl*.5,340+lvl*80,1.3+lvl*.8);
   if(lvl)sgLater(70,()=>sgShieldFx(q,yaw,sgC2(col),1.9,360,2.4));fx186Flash(q,col,1.8+lvl,200);sgSparks(q,col,12+lvl*8,7,1.5,yaw,1.2,7,.35,4);sgDust(gY(p,0),5,1.6)})}
 // Holy Smite: a column of light falls on the paladin, sunburst rays race over the ground, a radiant wave
-function sgSmite(p,col,R,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{sgFall(p,col,12,.7+lvl*.25,620+lvl*200,lvl);
+function sgSmite(p,col,R,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{sgFall(p,col,12,.42+lvl*.12,560+lvl*160,lvl);
   sgLater(110,()=>{sgRays(p,col,R*1.15+lvl,700+lvl*300,.85);ring(p,col,R*2.1,420);ring(p,0xffffff,R*1.3,280);sgWaves(p,col,R*1.1,420,1+lvl,.4,.45);
     sgSparks(gY(p,.5),0xfff4c8,14+lvl*10,R*2.2,1.2,null,6.3,6,.45,2);if(lvl){sgEmbers(gY(p,.2),sgC2(col),16,R,2.5,1.2)}})})}
 // Eviscerate: two crossing rips through the target, a magenta flash and a spray (pips = combo points spent)
 function sgEvisc(p,yaw,col,pips,lvl){if(!p)return;lvl=lvl|0;pips=pips|0;sgBusy(()=>{const b=gY(p,1.1),bk=new THREE.Vector3(b.x-Math.sin(yaw)*.4,b.y,b.z-Math.cos(yaw)*.4);
-  sgTrail(bk,yaw+.2,col,1.05,260,1,-.9,1.9,.32,.75,.35);sgLater(60,()=>sgTrail(bk,yaw-.2,sgLerp(col,0xffffff,.3),1.05,260,1,-.9,1.9,.32,-.75,.35));
+  sgTrail(bk,yaw+.2,col,1.4+lvl*.3,300,1,-.9,1.9,.42,.75,.35);sgTrail(bk,yaw+.2,0xffffff,1.3+lvl*.3,220,1,-.9,1.9,.14,.75,.35);sgLater(70,()=>{sgTrail(bk,yaw-.2,sgLerp(col,0xffffff,.3),1.4+lvl*.3,300,1,-.9,1.9,.42,-.75,.35);sgTrail(bk,yaw-.2,0xffffff,1.3+lvl*.3,220,1,-.9,1.9,.14,-.75,.35)});
   fx186Flash(b,col,1.2+pips*.25+lvl,200);sgBlood(b,6+pips*3,2.6,yaw,1.4);sgSparks(b,col,6+pips*2,5,1.5,yaw,1.6,6,.3,3);
   if(pips>=5||lvl)sgLater(120,()=>{ring(p,col,1.6,280);sgEmbers(b,col,10,.4,2,.7)})})}
 // Garrote: a wire from the hands to the throat, a noose tightening, blood
@@ -246,8 +246,8 @@ function sgPenance(p,col,R,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const n=4+lvl
     sgFall(kqsV(p.x+Math.cos(a)*r,p.z+Math.sin(a)*r),col,7,.18+lvl*.06,380,0)}ring(p,col,R*1.9,420);sgEmbers(gY(p,.2),0xfff0b0,6+lvl*4,R*.6,1.6,.8)})}
 // Smoke Bomb: a flash at the feet, then a thick bank of smoke rolling outward
 function sgSmokeBomb(p,col,R,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const b=gY(p,0);fx186Flash(gY(p,.4),0xffffff,2.2,140);ring(p,col,R*1.8,360);
-  for(let i=0;i<22+lvl*12;i++){const a=Math.random()*6.283,v=R*(.6+Math.random()*.7);sgPuff(new THREE.Vector3(b.x,b.y+.3+Math.random()*.6,b.z),
-    {col:i%3?0x3a3442:0x5a5068,geo:'dod',r0:.4,r1:1.2+Math.random()*.8+lvl*.3,life:1.3+Math.random()*.8+lvl*.6,op:.62,v:[Math.cos(a)*v,.3+Math.random()*.6,Math.sin(a)*v],drag:2.2,fin:.06})}
+  for(let i=0;i<18+lvl*10;i++){const a=Math.random()*6.283,v=R*(.8+Math.random()*.8);sgPuff(new THREE.Vector3(b.x,b.y+.3+Math.random()*.6,b.z),
+    {col:i%3?0x3a3442:0x5a5068,geo:'dod',r0:.3,r1:.75+Math.random()*.45+lvl*.2,life:1.3+Math.random()*.8+lvl*.6,op:.5,v:[Math.cos(a)*v,.3+Math.random()*.6,Math.sin(a)*v],drag:2.2,fin:.06})}
   sgSparks(gY(p,.4),0xd8c8ff,8,5,1,null,6.3,4,.25)})}
 // Vanish: a swirl of dark wisps folding in on the assassin
 function sgVanish(p,col,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const b=gY(p,0);for(let i=0;i<18+lvl*10;i++){const a=i/18*6.283,r=1.4+Math.random()*.4;
@@ -426,7 +426,8 @@ var SG_POSE={'Skull Splitter':'sgChop',Execute:'sgGuillo','Shield Bash':'sgBash'
   'Chain Hook':'sgHook','Bull Rush':'sgTackle',"Crusader's Charge":'sgCrusade','War Cry':'sgRoar','Intimidating Shout':'sgBellow',Bloodrage:'sgBeat','Iron Skin':'sgBrace',Unbreakable:'sgStone',
   Aegis:'sgShieldUp','Divine Barrier':'sgWard','Mana Shield':'sgWard','Blessed Hammers':'sgWard','Lay on Hands':'sgPray','Divine Intervention':'sgPray',Consecration:'sgPlant','War Banner':'sgPlant',
   'Beacon of Light':'sgPlant','Seal of Light':'sgSeal','Poison Blades':'sgCoat','Shadow Dance':'sgDance',Vanish:'sgCloak','Smoke Bomb':'sgDrop',Envenom:'sgClench','Hawk Dive':'sgHawk',
-  'Entangling Roots':'sgGround',"Dragon's Breath":'sgBreath',"Hunter’s Focus":'sgFocus',Earthshatter:'sgQuake',Cleave:'sgSweep','Seismic Rupture':'sgQuake','Death Mark':'point'};
+  'Entangling Roots':'sgGround',"Dragon's Breath":'sgBreath',"Hunter’s Focus":'sgFocus',Earthshatter:'sgQuake',Cleave:'sgSweep','Seismic Rupture':'sgQuake','Death Mark':'point',
+  Multishot:'bow',Barrage:'bow','Shuriken Volley':'throw','Snare Trap':'sgDrop'};
 var SG_LEGS={sgChop:1,sgGuillo:1,sgBash:1,sgSmite:1,sgRip:1,sgKneel:1,sgTackle:1,sgCrusade:1,sgBrace:1,sgStone:1,sgPlant:1,sgDrop:1,sgGround:1,sgQuake:1,sgSweep:1,sgBreath:1,sgPray:1};
 (function(){const A=[SKB,typeof SKX!='undefined'?SKX:{},KQN];A.forEach(T=>Object.keys(T).forEach(c=>(T[c]||[]).forEach(s=>{const p=SG_POSE[s.n];if(p)s.pose=p})))})();
 {const f=kqsPoseT;kqsPoseT=function(p){const m=SGP[p];if(m&&m[0])return m;return f.apply(this,arguments)}}

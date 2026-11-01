@@ -35,7 +35,7 @@ Object.assign(EVO137,{
  "Avenger's Shield":{en:'Aegis Storm',d:'Hurl two shields one after the other: each bounces between up to 5 enemies.',
   run(c,f){const r=f(c);if(r===false)return false;setTimeout(()=>{try{f(c)}catch(_){}},260);return r}},
  'Penance':{en:'Litany of Light',d:'Pray for 4s instead of 2.5s, and the searing light reaches 5 tiles.',mod:{dur:4,r:5},
-  post(c){const C=evC();ev137Column(pl.position,C.c2,9,.7,1200)}},
+  post(c){const C=evC();ev137Column(pl.position,C.c2,9,.4,900)}},
  'Seal of Light':{en:'Seal of the Sun',d:'For 18s your basic attacks deal 50% more damage, your magic attack is 25% higher and you heal for 10% of the damage you deal.',mod:{dur:18},
   post(c){evBuff('Seal of Light',kqrB(c.sk,{basicP:.5,maP:.25,ls:.1}),18);const C=evC();sgLater(250,()=>sgHalo(pl.position,C.c2,1.9,1400,1))}},
  'Divine Intervention':{en:'Ascension',d:'Untouchable for 4.5s while spears of light strike enemies around you, then a 6-tile holy nova.',mod:{dur:4.5,r:6},
