@@ -14,7 +14,7 @@ function fx186Tex(k){if(FX186.tex[k])return FX186.tex[k];const S=k=='beam'?64:12
     const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.55,'rgba(255,255,255,.05)');gr.addColorStop(.8,'rgba(255,255,255,.35)');
     gr.addColorStop(.92,'rgba(255,255,255,1)');gr.addColorStop(.96,'rgba(255,255,255,.7)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
   else if(k=='zone'){// a lingering field: a faint fill, a soft inner swirl of rays, a bright rim
-    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.18)');gr.addColorStop(.7,'rgba(255,255,255,.22)');gr.addColorStop(.88,'rgba(255,255,255,.55)');
+    const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,.08)');gr.addColorStop(.7,'rgba(255,255,255,.12)');gr.addColorStop(.88,'rgba(255,255,255,.45)');
     gr.addColorStop(.95,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S);
     g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=2;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;g.beginPath();g.arc(C,C,C*(.3+.08*(i%3)),a,a+.7);g.stroke()}}
   else if(k=='thin'){const gr=g.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.86,'rgba(255,255,255,0)');gr.addColorStop(.93,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
