@@ -139,7 +139,8 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 //  * no hanging charms (teeth, bones and gems on strings dangled from collars and harnesses on most species);
 //  * runes only from look level 3, at most two per creature, laid in the darker glow (they read as glowing noise);
 //  * no thin rings round the legs (cuffs and rune bands on wrists and ankles); collars and harness straps stay;
-//  * one set gem at most; every part takes its exact palette colour (no random brightness per piece);
+//  * one set gem at most; every part takes its exact palette colour (no random brightness per piece); glowing strokes
+//    and flames are capped at 16, the rest drawn in the dark body colour;
 //  * spike rows (EVO100_M.ridge) 20% shorter.
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
@@ -149,9 +150,10 @@ var EVO186={on:true};
   E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
   // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
   const dimG=new THREE.Color(P.glowD).lerp(new THREE.Color(P.mainD),.6).getHex();
-  const fix=k=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
-      if(q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>14){q.t='c';q.col=dimG}}}return r};
-  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0);
+  // (only strokes and flames, E.L, count: set marks such as an eclipse ring or a gem keep their glow)
+  const fix=(k,cap)=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
+      if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>16){q.t='c';q.col=dimG}}}return r};
+  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0,1);
   // near-black armour shells read as holes in the body: they take the dark body colour instead
   const sh0=E.shell,dk2=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.65).getHex();
   // a shell coloured triangle by triangle in turn (i%2, i%3: a checkerboard) takes the average of its colours instead

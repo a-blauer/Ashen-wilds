@@ -63,13 +63,13 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
   B.kit=function(k,c,C,red){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Kit(k,c,C,red);return k0.apply(this,arguments)};
   if(typeof EVO100!='undefined'&&EVO100.surf)delete EVO100.surf.Mossfrog}
 // Mossfrog evolution (one theme, a bog elder; was pustules + runes + a moss cloak with strands + a reed crown + a tooth
-// necklace + brow spurs + an angler lure + glowing eye rings + a moss beard + spines): L1 a few dim pustules in the blotches,
-// L2 a moss mantle over the back, L3 bony brow ridges and a glowing seam along the flank stripe, L4 the angler lure,
+// necklace + brow spurs + an angler lure + glowing eye rings + a moss beard + spines): L1 a few dim pustules in the blotches
+// (a fourth from L2; a moss mantle over the back read as a blocky plate and is gone), L3 bony brow ridges and a glowing seam along the flank stripe, L4 the angler lure,
 // L5 short glowing spines along the spine line
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.003,'c',moss,{rimCol:moss});
+
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
   }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
