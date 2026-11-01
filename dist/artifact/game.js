@@ -60896,7 +60896,8 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
   const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
-  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2)return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
+  const onLeg=h=>{try{const k=evo100Skin(E.S,h.p);const b=E.S.O[k[4]>=k[5]?k[0]:k[1]]||'';return /^(fl|fr|hl|hr)\d/.test(b)}catch(e){return false}};
+  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2||!h||onLeg(h))return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
   E.gem=function(h,sz,col,o){if(run.gem>=1)return E;run.gem++;return gem.apply(E,arguments)};
   E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
   // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
@@ -61075,8 +61076,8 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 // their lids (the four rear ones barely lit), and half the warts are gone.
 {const f=er150BogKit;er150BogKit=function(k,C,red){const p0=k.p;let w=0,e=0;const eyeHex=red?0xff2a2a:0xd8e040,dimE=new THREE.Color(eyeHex).lerp(new THREE.Color(0x3a2a10),.45).getHex();
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){
-    if(t=='g'&&col===eyeHex&&bn=='head'){e++;return p0.call(k,bn,geo,t,e<=2?dimE:new THREE.Color(dimE).multiplyScalar(.55).getHex(),x,y-sy*.15,z,sx*.62,sy*.55,sz*.62,rx,ry,rz)}
-    if((geo=='ico'||geo=='sph')&&t=='c'&&bn!='head'&&bn!='jaw'&&sx<.04&&sx>.012){if((w++)%2)return k}
+    if(t=='g'&&col===eyeHex&&bn=='head'){e++;return p0.call(k,bn,geo,t,e<=2?dimE:new THREE.Color(dimE).multiplyScalar(.55).getHex(),x,y,z,sx,sy,sz,rx,ry,rz)}
+    if((geo=='ico'||geo=='sph')&&t=='c'&&bn!='head'&&bn!='jaw'&&sx<.04&&sx>.012&&col!==0x8a8a50&&col!==0xb0a860){if((w++)%2)return k}
     return p0.apply(k,arguments)};
   try{return f.apply(this,arguments)}finally{k.p=p0}}}
 
@@ -61139,8 +61140,9 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
   try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0}}}
 // the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
-{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.shell=s0}}}
+{const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};const pd1=E.pd;
+  E.pd=function(geo,t,col,pos,dir,sc,fwd,o){if(geo=='ico'&&t=='g'&&o&&o.bn=='chest')return E;return pd1.apply(E,arguments)};   // the soul motes sat on that mantle
+  try{return b0.apply(this,arguments)}finally{E.shell=s0;E.pd=pd1}}}
 // Foxlet's extra tails fan wider (they passed through each other and the rump)
 {const t0=EVO100_M.tail;EVO100_M.tail=function(E,T,root,a,up,k,cB,cT,tg,gc){return t0.call(this,E,T,root,a*1.45,up+.06,k,cB,cT,tg,gc)}}
 // Gloomcap L4: three spore stalks instead of five (a pincushion)

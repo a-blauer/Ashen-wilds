@@ -152,7 +152,8 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
   const run={rune:0,gem:0,glow:0},rune=E.rune,gem=E.gem,band=E.band,push0=E.p,pd0=E.pd,L0=E.L;
-  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2)return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
+  const onLeg=h=>{try{const k=evo100Skin(E.S,h.p);const b=E.S.O[k[4]>=k[5]?k[0]:k[1]]||'';return /^(fl|fr|hl|hr)\d/.test(b)}catch(e){return false}};
+  E.rune=function(h,fwd,sz,col,o){if(L<3||run.rune>=2||!h||onLeg(h))return E;run.rune++;return rune.call(E,h,fwd,sz*.9,col==null||col===P.glow?P.glowD:col,o)};
   E.gem=function(h,sz,col,o){if(run.gem>=1)return E;run.gem++;return gem.apply(E,arguments)};
   E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
   // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
