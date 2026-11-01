@@ -43,7 +43,7 @@ FOES=[('brigand','strike'),('orc','strike'),('orc','slam'),('troll','strike'),('
   ('yeti','strike'),('amalgam','strike'),('saltgolem','strike'),('colossus','strike'),('drowned','strike')]
 if os.environ.get('ONLY'):
     keep=os.environ['ONLY'].split(',');FOES=[f for f in FOES if f[0] in keep]
-JS=r"""([k,n,rep2,hr,FPS])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
+JS=r"""([k,n,rep2,hr,FPS])=>{/* deterministic: the same random stream for every foe move (builders, idle fidgets) */{let sd=20261101;Math.random=()=>{sd=(sd*16807)%2147483647;return (sd-1)/2147483646}}const V=THREE.Vector3,P=o=>new V().setFromMatrixPosition(o.matrixWorld);
  const c=enemyC(k,20,{}),g=cr(c);scene.add(g);let T=5000;const step=ms=>{T+=ms;animC(g,T,false,0);g.position.set(0,0,0);g.rotation.y=0;g.updateMatrixWorld(true)};for(let i=0;i<40;i++)step(16);
  const out={k,n,err:[]},b=g.h&&g.h.bones;if(!b){out.err.push('no bones');scene.remove(g);return out}
  const bb=new THREE.Box3().setFromObject(g),H=bb.max.y-bb.min.y;out.H=H;
