@@ -61459,9 +61459,9 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   // round 2 (owner: they lost their identity): the lynx spots back, as small dark patches lying flush on the coat (the painted
   // spots vanish at the faceted ring density), thicker on the haunches, none on the belly
   const T=EL150.body.map(q=>q.slice(0,5));
-  [[-.27,.5],[-.24,1.0],[-.2,.25],[-.17,.75],[-.12,1.15],[-.09,.45],[-.03,.9],[.02,.3],[.08,.7],[.14,1.05],[.18,.4]].forEach(([z,a],i)=>[-1,1].forEach(sd=>{
-    const A=sd>0?a:Math.PI-a,q=v150Surf(T,z+(sd>0?0:.02),A,-.003),n=[Math.cos(A),Math.sin(A),0],r=hm186Rot(n),sz=.017+(i%3)*.004-(z>.05?.003:0);
-    p0.call(k,z<-.1?'pelvis':z<.1?'spine':'chest','sph','c',sp,q[0],q[1],q[2],sz,.007,sz*.75,r[0],r[1],r[2])}));return R0}}
+  [[-.27,.5],[-.25,.95],[-.2,.3],[-.16,.72],[-.12,1.1],[-.08,.42],[-.03,.85],[.02,.32],[.08,.66],[.15,.48]].forEach(([z,a],i)=>[-1,1].forEach(sd=>{
+    const A=sd>0?a:Math.PI-a,q=v150Surf(T,z+(sd>0?0:.02),A,-.003),n=[Math.cos(A),Math.sin(A),0],r=hm186Rot(n),sz=.012+((i*7+(sd>0?0:2))%4)*.003-(z>.05?.002:0);
+    p0.call(k,z<-.1?'pelvis':z<.1?'spine':'chest','sph','c',sp,q[0],q[1],q[2],sz,.007,sz*1.25,r[0],r[1],r[2])}));return R0}}
 
 // ===================================================================== Gloomcap / Sporelord =====================================================================
 // Were a candy-pink toadstool with white polka-dot warts on a cream pear of a stem (Gloomcap) and a teal morel with a bright
