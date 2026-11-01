@@ -35,6 +35,8 @@ function sg2Merge(list){let n=0;const G=list.map(([g,c])=>{const q=g.index?g.toN
 // a replaced ability handler keeps the evolved extras (2700 wraps every KQH handler at load: pre, run, post)
 function sg2Ev(f){return function(c){const sk=c&&c.sk,E=sk&&sk.ev137&&typeof ev137Def=='function'&&ev137Def(sk);if(!E)return f.apply(this,arguments);
   if(E.pre)try{E.pre(c)}catch(err){console.error(err)}const r=E.run?E.run(c,f):f.apply(this,arguments);if(r!==false&&E.post&&!E.run)try{E.post(c)}catch(err){console.error('evolved '+sk.n,err)}return r}}
+// remove an effect: sgRm, plus the instance buffers of instanced meshes
+function sg2Rm(o){if(!o)return;o.traverse(q=>{if(q.isInstancedMesh&&q.dispose)try{q.dispose()}catch(_){}});sgRm(o)}
 function sg2Std(o){const m=new THREE.MeshStandardMaterial(Object.assign({flatShading:true,roughness:.6,metalness:.2},o));return m}
 // a per-frame driver on top of sgT: fn(k, dt seconds) (dt from k, so a pause never jumps)
 function sg2T(ms,fn,done){let kp=0;sgT(ms,k=>{const dt=Math.max(0,(k-kp)*ms/1000);kp=k;fn(k,dt)},done)}
@@ -86,7 +88,7 @@ function sgHeadsman(p,yaw,col,low,lvl,land){if(!p)return;lvl=lvl|0;land=Math.max
     wood=sg2Std({vertexColors:true,roughness:.85,metalness:.15,emissive:0x1a0404,transparent:true,opacity:0}),
     em=sgMat(sgLerp(col,0xff0000,.35),null,0);
   const hd=sgMesh(G.head,iron,31),hf=sgMesh(G.haft,wood,31),ed=sgMesh(G.edge,em,33);arm.add(hf,hd,ed);
-  const glow=sg2Spr(fx186Tex('soft'),col,0);glow.position.set(0,A.hy,.6);glow.scale.setScalar(3.2);arm.add(glow);
+  const glow=sg2Spr(fx186Tex('soft'),col,0);glow.position.set(0,A.hy,1.05);glow.scale.setScalar(2.2);arm.add(glow);
   // the slash: a ribbon in the swing plane lit behind the edge as it sweeps (synced to the real swing, not eased on its own)
   const R1=Math.hypot(A.hy,A.eu+.08)*s,R0=R1*.66,a0=Math.PI/2-A.p0,a1=Math.PI/2-A.pi,n=40,rg=new THREE.RingGeometry(R0,R1,n,1,a1,a0-a1),N=rg.attributes.position.count,cl=new Float32Array(N*3);
   rg.setAttribute('color',new THREE.BufferAttribute(cl,3));const tm=sgMat(0xffffff,null,1);tm.vertexColors=true;const tr=sgMesh(rg,tm,34);tr.userData.sgOwnG=1;tr.rotation.y=-Math.PI/2;piv.add(tr);
@@ -95,11 +97,11 @@ function sgHeadsman(p,yaw,col,low,lvl,land){if(!p)return;lvl=lvl|0;land=Math.max
   const paint=(ac,f)=>{for(let i=0;i<N;i++){const j=i%(n+1),rad=i>n?1:0,u=a1+(a0-a1)*j/n;let I=0,h=0;if(u>=ac-.02){const g=u-ac;I=Math.exp(-g*2.4)*(rad?1:.3)*f;h=Math.max(0,1-g*6)}
     cl[i*3]=(cR.r+(cH.r-cR.r)*h)*I;cl[i*3+1]=(cR.g+(cH.g-cR.g)*h)*I;cl[i*3+2]=(cR.b+(cH.b-cR.b)*h)*I}rg.attributes.color.needsUpdate=true};paint(a0+1,0);
   sg2T(ms,(k,dt)=>{const t=k*ms;
-    if(t<t0){const u=t0>1?t/t0:1;ph=A.p0+(1-ATK_E.out(Math.min(1,u)))*.5;const op=Math.min(1,t/110);iron.opacity=.95*op;wood.opacity=.95*op;em.opacity=.55*op;glow.material.opacity=.25*op}
-    else if(t<land){const u=(t-t0)/Tsw,e=u*u*(1.6-.6*u);ph=A.p0+(A.pi-A.p0)*e;iron.opacity=wood.opacity=.95;em.opacity=.9;glow.material.opacity=.5;paint(Math.PI/2-ph,1);
+    if(t<t0){const u=t0>1?t/t0:1;ph=A.p0+(1-ATK_E.out(Math.min(1,u)))*.5;const op=Math.min(1,t/110);iron.opacity=.95*op;wood.opacity=.95*op;em.opacity=.55*op;glow.material.opacity=.12*op}
+    else if(t<land){const u=(t-t0)/Tsw,e=u*u*(1.6-.6*u);ph=A.p0+(A.pi-A.p0)*e;iron.opacity=wood.opacity=.95;em.opacity=.9;glow.material.opacity=.28;paint(Math.PI/2-ph,1);
       piv.updateMatrixWorld(true);sgStreak(arm.localToWorld(new THREE.Vector3(0,A.hy,A.eu)),0,-2,0,0xff3020,5,.05,.2,0)}
     else{ph=A.pi+.05*Math.exp(-(t-land)/60)*Math.sin((t-land)/18);fade=t<land+300?0:Math.min(1,(t-land-300)/460);const f=1-fade;
-      iron.opacity=.95*f;wood.opacity=.95*f;em.opacity=(.95-.5*Math.min(1,(t-land)/300))*f;glow.material.opacity=.4*f*Math.max(0,1-(t-land)/400);paint(a1,Math.max(0,1-(t-land)/260));
+      iron.opacity=.95*f;wood.opacity=.95*f;em.opacity=(.95-.5*Math.min(1,(t-land)/300))*f;glow.material.opacity=.25*f*Math.max(0,1-(t-land)/400);paint(a1,Math.max(0,1-(t-land)/260));
       arm.position.y=-.45*fade*fade;if(fade>0&&++pt%3==0)sgPuff(gY(p,.3+Math.random()*.8),{col:0x4a0608,geo:'dod',r0:.25,r1:.7,life:.8,op:.45,v:[(Math.random()-.5)*.6,.9,(Math.random()-.5)*.6],drag:1.2,fin:.1})}
     arm.rotation.x=ph;
     if(!hit&&t>=land){hit=1;const q=gY(p,1);fx186Flash(q,0xff1a10,2.8+lvl,280);sgBlood(q,18+lvl*12,3.2,null);sgBlood(gY(p,.4),10,2.4,yaw,1.2);sgSparks(gY(p,.3),0xffd0a0,10+lvl*6,6,2.5,yaw,2.4,6,.4);
@@ -136,7 +138,7 @@ function sgArrowRain(p,R,ms,lvl,col){if(!p)return;lvl=lvl|0;R=R||3;ms=Math.max(8
         // stuck: head buried, shaft quivering for a moment, then sunk away as the volley ends
         const qv=Math.max(0,1-(u-1)*Tf/.25)*Math.sin((u-1)*Tf*70)*.05;Dv.x+=qv;Dv.z+=q.tilt*.2;Dv.normalize();Q.setFromUnitVectors(Z,Dv);
         Pv.copy(q.e).addScaledVector(Dv,(1-fo)*.75);M4.compose(Pv,Q,S3.setScalar(1.15*q.sc*(fo>.02?1:0)));im.setMatrixAt(i,M4)}}
-    im.instanceMatrix.needsUpdate=true;sg.attributes.position.needsUpdate=true;mat.opacity=fo;sl.material.opacity=.55*fo},()=>sgRm(g))}
+    im.instanceMatrix.needsUpdate=true;sg.attributes.position.needsUpdate=true;mat.opacity=fo;sl.material.opacity=.55*fo},()=>sg2Rm(g))}
 
 // ======================= 8. Blizzard / Eternal Winter: a real ice storm over the whole area =======================
 // Driving snow (streaks blown along the wind and round the eye of the storm), swirling wind bands, ice shards falling and
@@ -179,7 +181,7 @@ function sgBlizzard(p,R,ms,lvl,col){if(!p)return;lvl=lvl|0;R=R||3.4;ms=Math.max(
     im.instanceMatrix.needsUpdate=true;im.material.opacity=.92*f;
     // low mist dragged along the wind
     if(f>.3&&Math.random()<(lvl?.5:.32)){const a=Math.random()*6.283,r=Math.sqrt(Math.random())*R;sgPuff(new THREE.Vector3(p.x+Math.cos(a)*r,b.y+.25+Math.random()*.4,p.z+Math.sin(a)*r),{col:0xc8e8f8,geo:'dod',r0:.4,r1:1+Math.random()*.6,life:1.2,op:.22,v:[wx*W*.4,.15,wz*W*.4],drag:.6,fin:.25})}
-  },()=>{sgRm(g);sgRm(fr);if(fr2)sgRm(fr2)})}
+  },()=>{sg2Rm(g);sgRm(fr);if(fr2)sgRm(fr2)})}
 
 // ======================= 9. Meteor / Cataclysm: a flaming rock with a fire trail and smoke, then the impact =======================
 function sg2RockGeo(){return sgG('sg2rock',()=>{const q=new THREE.DodecahedronGeometry(1,1),P=q.attributes.position,rnd=sg2Rnd(5),C=new Float32Array(P.count*3),seen={};
@@ -252,7 +254,7 @@ function sgSingularity(p,R,ms,lvl){if(!p)return;lvl=lvl|0;R=R||5;ms=Math.max(600
     // the collapse: a white burst, light rays, a ring of force and sparks flung out
     if(!live&&!coll){coll=1;const q=new THREE.Vector3(b.x,cy,b.z);fx186Flash(q,0xffffff,4+lvl*1.5,320);fx186Flash(q,0x8a6aff,R*.9+lvl,600);sgRays(p,0xb8a0ff,R*1.2+lvl,700+lvl*300,.9);ring(p,0xb08aff,R*2,420);ring(p,0xffffff,R*1.2,300);
       sgWaves(p,0x9ae8ff,R*1.1,520,2+lvl,1.7,.7);sgSparks(q,0xe8f8ff,26+lvl*16,R*2.4,1,null,6.3,7,.5,1);sgSparks(q,c2,12+lvl*10,R*1.8,1.5,null,6.3,6,.45,1);sgDust(gY(p,0),12,R)}
-  },()=>{sgRm(g);sgRm(sw);sgRm(rim);sgRm(im);sgRm(ln)})}
+  },()=>{sgRm(g);sgRm(sw);sgRm(rim);sg2Rm(im);sgRm(ln)})}
 
 // ======================= 10. Disintegrate / Annihilation Ray: a held, steady beam =======================
 // Layered shafts round a white core, two helix strands turning round it, a bright orb between the hands, a splash where it ends
