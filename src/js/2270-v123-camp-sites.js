@@ -148,7 +148,7 @@ function cs123Merge(g){g.updateMatrixWorld(true);const inv=new THREE.Matrix4().c
     e.geo.forEach(q=>{P.set(q.attributes.position.array,off*3);if(q.attributes.normal)N.set(q.attributes.normal.array,off*3);off+=q.attributes.position.count;q.dispose()});
     const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(P,3));bg.setAttribute('normal',new THREE.BufferAttribute(N,3));bg.computeBoundingSphere();
     let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);
-      for(let i=0;i+2<P2.count;i+=3){const q=Math.sin(P2.getX(i)*12.9898+P2.getY(i)*78.233+P2.getZ(i)*37.719)*43758.5453,v=.8+.32*(q-Math.floor(q));for(let k=0;k<9;k++)cl[i*3+k]=v}
+      for(let i=0;i+2<P2.count;i+=3){const v=ep185Mottle(P2.getX(i),P2.getY(i),P2.getZ(i),P2.getX(i+1),P2.getY(i+1),P2.getZ(i+1),P2.getX(i+2),P2.getY(i+2),P2.getZ(i+2));   /* v185: smooth, not a random shade per face */for(let k=0;k<9;k++)cl[i*3+k]=v}
       bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}
     else m=new THREE.Mesh(bg,mat);
     m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)})}
@@ -172,7 +172,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const keep=o=>{o.userData.keep=1;o.castShadow=false;return o};
   const anim=(o,k,a,sp)=>{keep(o);CS123.an.push({C,o,k,a:a||.2,sp:sp||1,y0:o.position.y,x0:o.position.x,z0:o.position.z,ph:rn()*TAU,s0:o.scale.clone()});return o};
   const flame=(x,y,z,col,k,inner)=>{k=k||1;const f1=put(Q.cone,G(col||0xff7a1a),x,y+.2*k,z,.2*k,.55*k,.2*k),f2=put(Q.cone,G(inner||0xffd36a),x,y+.14*k,z,.1*k,.32*k,.1*k);f1.castShadow=f2.castShadow=false;CFL.push(f1,f2);return f1};
-  const halo=(x,z,r,col,op,y)=>{const o=put(Q.disc,T(col,op||.2),x,y||.05,z,r,r,1,-P2);o.castShadow=false;return o};
+  const halo=(x,z,r,col,op,y)=>{const o=put(Q.disc,ep185Soft(col,op||.2),x,y||.05,z,r,r,1,-P2);o.castShadow=false;return o};   // v185: a soft pool of light (was a flat disc with a hard edge)
   // ground decals that follow the terrain (r0..r1 ring, wobbly edge)
   const patch=(x,z,r0,r1,col,op,lift,lob)=>{const geo=new THREE.RingGeometry(r0,r1,22,3),P=geo.attributes.position,sd=rn()*6;
     for(let k=0;k<P.count;k++){const px=P.getX(k),py=P.getY(k),an=Math.atan2(py,px),w=1+.14*Math.sin(an*(lob||5)+sd)+.07*Math.sin(an*11+sd*2),wx=x+px*w,wz=z-py*w;P.setXYZ(k,wx,GH(C.x+wx,C.z+wz)+(lift||.04),wz)}
@@ -199,7 +199,8 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
       put(Q.box,S(col),px,h/2-.3,pz,sl+.04,h+.6,th,0,-a,0);if(cren)put(Q.box,S(col),px,h+.12,pz,sl*.45,.44,th*1.05,0,-a,0)}}; // a = along the wall
   const rubble=(x,z,n,r,col)=>{for(let i=0;i<n;i++){const k=rr(.18,.5);put(Q.box,S(col),x+rr(-r,r),k*.25,z+rr(-r,r),k*rr(.8,1.4),k*rr(.5,1),k,rr(-.4,.4),rr(0,3),rr(-.4,.4))}};
   const obelisk=(x,z,h,col,gl,a)=>{blk(x,z,0);take(x,z,.6);a=a==null?rr(0,6):a;put(CG.tent,S(col),x,h/2,z,.55,h,.55,0,-a+Math.PI/4,0);
-    if(gl){const r=put(Q.box,G(gl),x+Math.cos(a)*.25,h*.45,z+Math.sin(a)*.25,.03,h*.45,.1,0,-a,0);r.castShadow=false}};
+    // v185: the rune lies on the face (it stood upright 2-12 cm off the sloping face: a floating square)
+    if(gl){const ap=.389,y=h*.36,d=ap*(1-y/h)+.012,th=Math.atan2(ap,h);const r=put(Q.box,G(gl),x+Math.cos(a)*d,y,z+Math.sin(a)*d,.02,h*.3,.1,0,-a,th);r.castShadow=false}};
   const runes=(x,z,r,col,n)=>{n=n||5;[1,.62].forEach(k=>{const o=put(Q.ring,G(col),x,.06,z,r*k,r*k,1,-P2);o.castShadow=false});
     for(let i=0;i<n;i++){const a=i/n*TAU,b=(i+2)/n*TAU,x1=Math.cos(a)*r*.62,z1=Math.sin(a)*r*.62,x2=Math.cos(b)*r*.62,z2=Math.sin(b)*r*.62,l=Math.hypot(x2-x1,z2-z1);
       const ln=put(Q.box,G(col),x+(x1+x2)/2,.06,z+(z1+z2)/2,l,.012,.06,0,-Math.atan2(z2-z1,x2-x1),0);ln.castShadow=false}};
@@ -215,10 +216,13 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const banner=(x,z,col,h,a,trim)=>{h=h||2.8;a=a==null?rr(0,TAU):a;const vx=-Math.sin(a),vz=Math.cos(a);blk(x,z,0);take(x,z,.35);put(Q.cyl,S(0x2a2018),x,h/2,z,.05,h,.05);
     put(Q.box,S(0x2a2018),x+vx*.4,h-.12,z+vz*.4,.05,.05,.9,0,-a,0);const b=put(Q.pln,S(col,{side:THREE.DoubleSide,emissive:col,emissiveIntensity:.15}),x+vx*.42,h-.75,z+vz*.42,.75,1.15,1,0,-a+P2,0);b.castShadow=false;
     if(trim)put(Q.box,S(trim),x+vx*.42,h-1.36,z+vz*.42,.03,.08,.76,0,-a,0)};
-  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);put(CG.tent,S(col),x,.9*k,z,1.25*k,1.8*k,1.25*k,0,-a+Math.PI/4,0);
-    put(Q.box,S(0x1a1410),x+Math.cos(a)*.6*k,.42*k,z+Math.sin(a)*.6*k,.06,.8*k,.5*k,0,-a,0);put(Q.cyl,S(0x4a3020),x,1.85*k,z,.04,.4*k,.04)}; // a = the door
-  const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);[-1,1].forEach(s=>TQ(sg,Q.box,S(col),0,.62*k,.52*k*s,len,.06,1.45*k,s*.92,0,0));
-    [-1,1].forEach(s=>TQ(sg,Q.cyl,S(0x3a2818),len/2*s,.65*k,0,.04,1.3*k,.04));TQ(sg,Q.cyl,S(0x3a2818),0,1.3*k,0,.035,len+.2,.035,0,0,P2);TQ(sg,Q.box,S(0x120c08),len/2-.05,.42*k,0,.02,.7*k,.7*k);return sg};
+  // v185: the hide tent (3420 ep185Tent: a real doorway, tied-back flaps, poles, ropes; was a cone with a black box half in its wall)
+  const tent=(x,z,a,col,k)=>{k=k||1;blk(x,z,.95*k);take(x,z,1.4*k);take(x+Math.cos(a)*1.95*k,z+Math.sin(a)*1.95*k,.75*k);   // v185: + the doorway kept clear
+const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotation.y=-a;m.scale.setScalar(k);g.add(m);return m}; // a = the door
+  // v185: the ridge tent (3420 ep185ATent: closed back, a doorway with tied-back flaps in the front; was two slanted boxes, open at
+  // both ends, with a black square box in one end)
+  const aTent=(x,z,a,col,len,k)=>{k=k||1;len=len||2.6;const sg=sub(x,z,a,0);blk(x,z,1*k);take(x,z,len*.6);
+    sg.add(ep185TentMesh(ep185ATent({len:Math.round(len*20)/20,w:Math.round(k*20)/20,h:Math.round(1.3*k*20)/20,hide:col})));return sg};
   const table=(x,z,a,col)=>{const sg=sub(x,z,a,0);blk(x,z,0);take(x,z,.9);TQ(sg,Q.box,S(col||0x5a4028),0,.72,0,1.5,.08,.8);[-1,1].forEach(s=>[-1,1].forEach(t=>TQ(sg,Q.box,S(col||0x5a4028),.62*s,.36,.32*t,.08,.72,.08)));return sg};
   const rack=(x,z,a,wcol)=>{const sg=sub(x,z,a,0),Wd=S(0x4a3220);blk(x,z,.5);take(x,z,1.1);[-1,1].forEach(s=>TQ(sg,Q.cyl,Wd,0,.6,.8*s,.05,1.2,.05));
     [1.1,.45].forEach(y=>TQ(sg,Q.cyl,Wd,0,y,0,.04,1.7,.04,P2,0,0));for(let i=0;i<4;i++){const q=-.55+i*.37;TQ(sg,Q.cyl,S(0x5a4428),.12,.95,q,.025,1.9,.025,0,0,-.2);TQ(sg,Q.cone,S(wcol||0x9a9aa2,{metalness:.7,roughness:.35}),.31,1.94,q,.05,.3,.05,0,0,-.2)}};
@@ -246,8 +250,18 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(open){TQ(sg,Q.box,S(0x0e0a08),0,.43,0,1.6,.02,.46);TQ(sg,Q.box,M,.2,.08,.72,1.8,.08,.6,0,.25,.1)}else TQ(sg,Q.box,M,0,.46,0,1.86,.08,.66);return sg};
   const sarc=(x,z,a,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);TQ(sg,Q.box,M,0,.45,0,2.1,.9,.9);TQ(sg,Q.box,M,0,.95,0,2.2,.14,1);TQ(sg,Q.box,S(tr||0xd8a830,{metalness:.6,roughness:.4}),0,.62,.46,1.8,.08,.02);
     TQ(sg,Q.sph,M,.8,1.12,0,.22,.16,.22);blk(x,z,1);take(x,z,1.3);return sg};
-  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),M=S(col||0x5a3a30);blk(x,z,.6*k);take(x,z,1.3*k);TQ(sg,Q.sph,M,0,.32*k,0,1.1*k,.42*k,.6*k);
-    for(let i=0;i<4;i++)TQ(sg,Q.arc,S(ribCol||0xe0d4b8),(i-1.5)*.34*k,.42*k,0,.5*k,.55*k,.5*k,0,P2,0);[-1,1].forEach(s=>TQ(sg,Q.cyl,M,.4*k*s,.15*k,.55*k,.07*k,.7*k,.07*k,P2-.3,0,0));TQ(sg,Q.sph,M,1.15*k,.28*k,0,.35*k,.25*k,.28*k);return sg};
+  // v185: a slain beast lying on its side, opened: ribs rising out of the wound on top, stiff legs, a head with horns, a dark pool under
+  // it (was a sausage with rib hoops round its outside, the same everywhere)
+  const carcass=(x,z,a,k,col,ribCol)=>{const sg=sub(x,z,a,0),c0=col||0x5a3a30,M=S(c0),RB=S(ribCol||0xd8ccb0),WN=S(0x3a0a0c,{roughness:.35}),HF=S(0x2a201a),v=rn();blk(x,z,.6*k);take(x,z,1.3*k);
+    TQ(sg,Q.disc,S(0x2a0608,{roughness:.25}),0,.025,.1*k,1.25*k,.85*k,1,-P2,0,0);
+    TQ(sg,Q.sph,M,0,.3*k,0,1*k,.36*k,.56*k);TQ(sg,Q.sph,M,-.62*k,.26*k,0,.48*k,.3*k,.46*k);
+    TQ(sg,Q.sph,WN,.05*k,.6*k,0,.62*k,.08*k,.3*k);
+    const R=[.24,.3,.33,.32,.27,.2];R.forEach((r,i)=>TQ(sg,Q.arc,RB,(i-2.5)*.17*k+.05*k,.58*k,0,r*k*(.9+v*.2),r*k*1.05,r*k,0,P2,0));
+    [[.48,.62,-.35,.9,.5],[-.5,.58,-.3,.95,.65],[.42,.12,.4,.5,1.45],[-.55,.12,.38,.55,1.35]].forEach(([lx,ly,lz,ll,rx])=>{const p=TQ(sg,Q.cyl,M,lx*k,ly*k+ll*k*.35,lz*k,.06*k,ll*k,.06*k,rx,0,lz<0?-.25:.2);
+      TQ(sg,Q.cone,HF,lx*k,ly*k+ll*k*.75,lz*k-(lz<0?.12:0)*k,.07*k,.14*k,.07*k,rx,0,0)});
+    TQ(sg,Q.sph,M,1.12*k,.3*k,.05*k,.36*k,.24*k,.26*k,0,.2,-.25);TQ(sg,Q.sph,M,1.42*k,.22*k,.1*k,.2*k,.13*k,.15*k,0,.2,-.4);TQ(sg,Q.sph,WN,1.5*k,.2*k,.14*k,.06*k,.05*k,.06*k);
+    [-1,1].forEach(s=>TQ(sg,Q.cone,RB,1.12*k,.5*k,.05*k+s*.14*k,.05*k,.38*k,.05*k,s*.5,0,-.7));
+    TQ(sg,Q.cyl,M,-1.05*k,.2*k,-.05*k,.04*k,.55*k,.04*k,0,0,1.25);return sg};
   // ---- water ----
   // a flat pool sunk to the lowest ground under it (the shore hides its edge); .userData.Y = its height
   const pool=(x,z,rx,rz,col,glow,op,dy)=>{let mn=1e9;[[0,0],[rx*.6,0],[-rx*.6,0],[0,rz*.6],[0,-rz*.6]].forEach(q=>mn=Math.min(mn,gy(x+q[0],z+q[1])));const y=Math.max(mn+(dy==null?.1:dy),.08)-gy(x,z);
@@ -266,8 +280,16 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     if(tips)tips.push(...T2)};
   const log=(x,z,a,len,rad,col,sink)=>{take(x,z,len*.45);const o=put(Q.cyl,S(col||0x3a3026),x,rad*.8-(sink||0),z,rad,len,rad,0,-a,P2);const nx=Math.cos(a),nz=Math.sin(a);for(let q=-len/2+.4;q<len/2;q+=.9)blk(x+nx*q,z+nz*q,0);return o};
   const stump=(x,z,col,h,k)=>{k=k||1;blk(x,z,0);h=h||rr(1,2.2);put(Q.tcyl,S(col||0x3a3026),x,h/2,z,.24*k,h,.28*k);put(Q.cyl4,S(col||0x3a3026),x+.3*k,h*.75,z,.06,1*k,.06,0,0,-.9);put(Q.cyl4,S(col||0x3a3026),x-.25*k,h*.6,z+.1,.05,.8*k,.05,.3,0,.8)};
-  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,ry=-a+P2,w=put(Q.ring,T(c,.4),x,1.4*k,z,1.3*k,1.3*k,1,0,ry,0);w.castShadow=false;for(let i=0;i<4;i++){const s2=put(Q.box,T(c,.35),x,1.4*k,z,.015,2.6*k,.015,0,ry,i*.785);s2.castShadow=false}
-    const w2=put(Q.ring,T(c,.35),x,1.4*k,z,.6*k,.6*k,1,0,ry,0);w2.castShadow=false};
+  // v185: a web strung between two dead stakes: spokes and rings of thread round a hub, tied to the stakes and the ground (was a flat
+  // ring with four bars standing upright in mid-air, tied to nothing)
+  const web=(x,z,a,k,col)=>{const c=col||0xf0f0f0,TM=T(c,.45),PM=S(0x3a3028),ux=-Math.sin(a),uz=Math.cos(a),V3=THREE.Vector3,Y0=gy(x,z);
+    const P=(u,y)=>new V3(x+ux*u,Y0+y,z+uz*u),seg2=(p,q,r,m)=>{const d=new V3().subVectors(q,p),L=d.length()||.01,o=new THREE.Mesh(Q.cyl4,m);o.position.copy(p).add(q).multiplyScalar(.5);
+      o.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());o.scale.set(r,L,r);o.castShadow=false;g.add(o);return o};
+    const S1=1.55*k,H=2.7*k,t1=P(-S1-.25*k,H),t2=P(S1+.2*k,H*.92);seg2(P(-S1,-.25),t1,.05,PM);seg2(P(S1,-.25),t2,.045,PM);blk(x+ux*(-S1),z+uz*(-S1),0);blk(x+ux*S1,z+uz*S1,0);take(x,z,1.6*k);
+    const Cn=P(0,1.35*k),R=1.05*k,N=8,ring=f=>{const L=[];for(let i=0;i<N;i++){const t=i/N*TAU+.2,rr2=R*f*(1+.12*Math.sin(i*2.3));L.push(new V3(x+ux*Math.cos(t)*rr2,Cn.y+Math.sin(t)*rr2,z+uz*Math.cos(t)*rr2))}return L};
+    const O=ring(1),M1=ring(.66),M2=ring(.34);O.forEach((p,i)=>{seg2(Cn,p,.011,TM);[M1,M2].forEach(L=>seg2(L[i],L[(i+1)%N],.009,TM));seg2(p,O[(i+1)%N],.011,TM)});
+    let li=0,ri=0;O.forEach((p,i)=>{if(p.distanceTo(t1)<O[li].distanceTo(t1))li=i;if(p.distanceTo(t2)<O[ri].distanceTo(t2))ri=i});seg2(O[li],t1,.012,TM);seg2(O[ri],t2,.012,TM);
+    let lo=0;O.forEach((p,i)=>{if(p.y<O[lo].y)lo=i});seg2(O[lo],P(.3*k,0),.012,TM);seg2(O[(lo+N-1)%N],P(-.9*k,0),.012,TM)};
   const cocoon=(x,z,h,col)=>{put(Q.sph,S(col||0xe8e4dc),x,h,z,.25,.48,.25);const o=put(Q.cyl4,T(0xffffff,.5),x,h+.9,z,.01,1.4,.01);o.castShadow=false};
   const egg=(x,z,k,col,glow)=>put(Q.sph,glow?S(col,{emissive:col,emissiveIntensity:.65,roughness:.4}):S(col),x,k*.8,z,k*.6,k*.85,k*.6,rr(-.2,.2),0,rr(-.2,.2));
   const eggs=(x,z,n,k,col,glow)=>{take(x,z,k*1.3);for(let i=0;i<n;i++){const a=rn()*TAU,d=rr(0,k*1.1);egg(x+Math.cos(a)*d,z+Math.sin(a)*d,k*rr(.55,1),col,glow)}};
@@ -319,7 +341,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
     TQ(sg,Q.cyl,S(0x3a2a1a),0,1.05*k,0,.24*k,3.6*k,.24*k,0,0,P2);TQ(sg,Q.cone,S(0x3a3a40,{metalness:.7}),1.95*k,1.05*k,0,.3*k,.5*k,.3*k,0,0,-P2);
     [-1,1].forEach(s=>TQ(sg,Q.box,S(0x5a4a38),0,2.05*k,.45*k*s,2.8*k,.08*k,1.05*k,s*.55,0,0))};
   const mausoleum=(x,z,a,k,col,roof)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.6*k);take(x,z,2.4*k);TQ(sg,Q.box,M,0,.12*k,0,3.4*k,.36*k,3*k);TQ(sg,Q.box,M,-.2*k,1.3*k,0,2.6*k,2.2*k,2.4*k);
-    [-1,1].forEach(s=>TQ(sg,Q.box,S(roof||col),-.2*k,2.72*k,.68*k*s,2.9*k,.14*k,1.65*k,s*.6,0,0));TQ(sg,Q.box,S(0x0a0808),1.11*k,1*k,0,.04,1.5*k,.9*k);
+    [-1,1].forEach(s=>TQ(sg,Q.box,S(roof||col),-.2*k,2.72*k,.68*k*s,2.9*k,.14*k,1.65*k,s*.6,0,0));TQ(sg,Q.box,ep185Grad('door'),1.11*k,1*k,0,.04,1.5*k,.9*k);
     [-1,1].forEach(s=>TQ(sg,Q.cyl,M,1.28*k,1.2*k,.95*k*s,.15*k,2.1*k,.15*k));TQ(sg,Q.box,M,1.24*k,2.35*k,0,.42*k,.3*k,2.3*k);TQ(sg,Q.cone4,M,-.2*k,3.55*k,0,.12*k,.6*k,.12*k);return sg};
   const well=(x,z,k,col,broken)=>{blk(x,z,.8*k);take(x,z,1.2*k);put(Q.cyl,S(col),x,.4*k,z,.8*k,.8*k,.8*k);const d=put(Q.disc,G(0x0a0806),x,.81*k,z,.62*k,.62*k,1,-P2);d.castShadow=false;
     if(broken){put(Q.box,S(0x4a3220),x+.75*k,.9*k,z,.1,1*k,.1,0,0,.3);rubble(x,z+1.1*k,4,.4,col)}else{[-1,1].forEach(s=>put(Q.box,S(0x4a3220),x+s*.75*k,1.2*k,z,.1,1.6*k,.1));put(Q.cyl,S(0x4a3220),x,1.9*k,z,.06,1.7*k,.06,0,0,P2);put(CG.tent,S(0x6a5a40),x,2.25*k,z,1*k,.6*k,.8*k,0,Math.PI/4,0)}};
@@ -329,8 +351,9 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const pylon=(x,z,a,h,col,tr)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,.9);take(x,z,1.3);TQ(sg,Q.box,M,0,h/2-.2,0,1.6,h+.4,2.1);TQ(sg,Q.box,M,0,h+.15,0,1.9,.3,2.4);if(tr)TQ(sg,Q.box,S(tr,{metalness:.6,roughness:.4}),.81,h*.6,0,.03,h*.5,1.4)};
   const throne=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.2*k);take(x,z,1.8*k);TQ(sg,Q.box,M,0,.3*k,0,2.2*k,.6*k,2.2*k);TQ(sg,Q.box,M,.1*k,.95*k,0,1.4*k,.8*k,1.6*k);
     TQ(sg,Q.box,M,-.6*k,2.4*k,0,.4*k,3*k,1.8*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,.1*k,1.6*k,.86*k*s,1.4*k,.5*k,.3*k));TQ(sg,Q.cone4,M,-.6*k,4.25*k,0,.6*k,.9*k,.9*k,0,Math.PI/4,0)};
-  const leanTo=(x,z,a,k,col)=>{const sg=sub(x,z,a,0),M=S(col);blk(x,z,1.3*k);take(x,z,2.4*k);[-1,1].forEach(s=>TQ(sg,Q.box,M,0,1.05*k,.72*k*s,3.4*k,.32*k,2.4*k,s*1.0,0,0));
-    TQ(sg,Q.box,S(0x0a0806),0,.6*k,0,3.2*k,1.2*k,.9*k)};
+  // v185: a ridge tent of hide (3420 ep185ATent), its doorway at the end facing -x (the camps put their fire there); was two thick slabs
+  // leaned together, open at both ends, with a black box inside
+  const leanTo=(x,z,a,k,col)=>{const sg=sub(x,z,a,0);blk(x,z,1.3*k);take(x,z,2.4*k);const m=ep185TentMesh(ep185ATent({len:Math.round(3.2*k*20)/20,w:Math.round(1.25*k*20)/20,h:Math.round(1.55*k*20)/20,hide:col}));m.rotation.y=Math.PI;sg.add(m)};
   const icicles=(x,Y,z,n,len,w,a)=>{const nx=-Math.sin(a),nz=Math.cos(a);for(let i=0;i<n;i++){const q=(n>1?i/(n-1)-.5:0)*w,l=len*rr(.45,1);putY(Q.cone,S(0xd8f0ff,{roughness:.2,emissive:0x6ab0d0,emissiveIntensity:.25}),x+nx*q,Y-l/2,z+nz*q,.08,l,.08,Math.PI,0,0)}};
   const ice=(x,z,k,col,gl)=>{if(k>1.2)blk(x,z,.5);else blk(x,z,0);take(x,z,k*.45);return put(Q.oct,S(col||0xbfe6ff,{roughness:.15,metalness:.1,emissive:gl||0x4a90c0,emissiveIntensity:.35}),x,k*.85,z,k*.32,k*1.1,k*.32,rr(-.15,.15),rr(0,3),rr(-.15,.15))};
   const shell=(x,z,k,col,a,ridge)=>{blk(x,z,k*.7);take(x,z,k*1.1);const sg=sub(x,z,a==null?rr(0,TAU):a,-.05);TQ(sg,Q.hemi,S(col),0,0,0,k*1.2,k*.6,k);
@@ -345,7 +368,7 @@ function cs123Build(C,g){const Q=cs123Geo(),R=C.r;let s=C.seed;
   const scarab=(x,z,a,k,col,gl)=>{const sg=sub(x,z,a,0),M=S(col,{metalness:.5,roughness:.4});blk(x,z,k>1?.6*k:0);take(x,z,.8*k);TQ(sg,Q.box,S(0xb8945a),0,.15*k,0,1.6*k,.3*k,1.2*k);
     TQ(sg,Q.hemi,M,-.1*k,.3*k,0,.7*k,.5*k,.55*k);TQ(sg,Q.sph,M,.55*k,.45*k,0,.22*k,.18*k,.26*k);TQ(sg,Q.box,M,-.1*k,.55*k,0,.9*k,.02,.02);[-1,1].forEach(s=>[-.3,0,.3].forEach(q=>TQ(sg,Q.box,M,q*k,.3*k,.6*k*s,.06*k,.06*k,.3*k,s*.4,0,0)));
     if(gl){const o=TQ(sg,Q.sph,G(gl),.73*k,.5*k,0,.06*k,.06*k,.06*k);o.castShadow=false}};
-  const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,G(0x040302),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
+  const burrowMouth=(x,z,a,k,col)=>{const sg=sub(x,z,a,-.3*k);TQ(sg,Q.arc,S(col),0,0,0,1.1*k,1.2*k,2.6*k,0,P2,0);const d=TQ(sg,Q.disc,ep185Grad('hole'),-.15*k,.05,0,1*k,1*k,1,0,-P2,0);d.castShadow=false;take(x,z,1.3*k);blk(x-Math.cos(a)*.4,z-Math.sin(a)*.4,.6*k)};
   const steam=(x,z,col,k)=>{const o=put(Q.cone,T(col||0xb0ffa0,.18),x,1.1*(k||1),z,.4*(k||1),2.2*(k||1),.4*(k||1),Math.PI,0,0);anim(o,'puff',.25,.8)};
   const wisp=(x,y,z,col,k)=>{k=k||1;const sg=new THREE.Group();sg.position.set(x,gy(x,z)+y,z);TQ(sg,Q.sph,G(col),0,0,0,.09*k,.09*k,.09*k);TQ(sg,Q.sph,T(col,.22),0,0,0,.24*k,.24*k,.24*k);g.add(sg);anim(sg,'bob',.35,rr(.6,1.2));return sg};
   const ladder=(x,z,a,h,col)=>{const sg=sub(x,z,a,0),M=S(col||0x4a3220);take(x,z,.7);[-1,1].forEach(s=>TQ(sg,Q.box,M,.4,h/2,.28*s,.07,h,.07,0,0,-.35));for(let i=1;i<h/.4;i++){const y=i*.4*Math.cos(.35);TQ(sg,Q.box,M,.4+Math.tan(.35)*(y-h/2),y,0,.05,.05,.56)}};   // v177: rungs follow the rails' lean (they leaned the other way, off the ladder)
@@ -485,20 +508,22 @@ function cs123Designs(K){
     out(9,.76,(x,z)=>{rock(x,z,rr(.9,1.5),0x7a7a6a,.55);for(let i=0;i<4;i++)put(Q.hemi,S(0xd8d4c4),x+rr(-.5,.5),.35,z+rr(-.5,.5),.12,.1,.12)});
     scat(6,1,R*.8,.4,(x,z)=>reeds(x,z,0x2a4a3a,4))},
   '1_2_2':()=>{ // Cliffside Lair: a cave mouth in the cliff face, fallen boulders below, a kill at the entrance
-    const [cx,cz]=A(R*.16,0),a=AN+Math.PI,sg=sub(cx,cz,a,0);TQ(sg,Q.arc,S(0x5a5a52),.2,0,0,1.9,2.2,2.6,0,P2,0);const d=TQ(sg,Q.disc,G(0x050404),.6,.6,0,1.7,1.9,1,0,-P2,0);d.castShadow=false;blk(cx,cz,1.4);take(cx,cz,2.6);
+    const [cx,cz]=A(R*.16,0),a=AN+Math.PI,sg=sub(cx,cz,a,0);TQ(sg,Q.arc,S(0x5a5a52),.2,0,0,1.9,2.2,2.6,0,P2,0);const d=TQ(sg,Q.disc,ep185Grad('hole'),.6,.6,0,1.7,1.9,1,0,-P2,0);d.castShadow=false;blk(cx,cz,1.4);take(cx,cz,2.6);
     [-1,1].forEach(s=>{const [x,z]=A(R*.2,s*2.6);rock(x,z,rr(1.6,2.2),0x6a6a60)});
     const [kx,kz]=A(-R*.1,1.2);carcass(kx,kz,AN+1,1.1,0x6a5a48);bones(kx-1,kz+.6,4,.6);
     scat(6,R*.2,R*.8,1,(x,z)=>{const [u]=[x*Math.cos(AN)+z*Math.sin(AN)];if(u<0)rock(x,z,rr(.8,1.6),0x6a6a60)});
     scat(10,R*.3,R*.95,.4,(x,z,a)=>{const [u]=[x*Math.cos(AN)+z*Math.sin(AN)];if(u>2)for(let i=0;i<5;i++)put(Q.cyl4,S(0x8a8a4a),x+rr(-.2,.2),.3,z+rr(-.2,.2),.02,.6,.02,.4,0,.4)})},
   // ======================= Burningeye Summit =======================
   '2_0_0':()=>{ // Troll Den: a lean-to of slabs against the crag, a bone pile, a roasting spit, a stone seat
-    leanTo(0,-4,0,1.5,GRAN);bonePile(-3.2,-2.4,1.3,0xd0c8b0);
+    {const sg=sub(0,-4,0,0),M=S(GRAN),k=1.5;blk(0,-4,1.3*k);take(0,-4,2.4*k);   // v185: slabs leaned together, the back closed by a boulder (no black box inside)
+     [-1,1].forEach(s=>TQ(sg,Q.box,M,0,1.05*k,.72*k*s,3.4*k,.32*k,2.4*k,s*1.0,0,0));TQ(sg,Q.dod,M,1.55*k,.75*k,0,.75*k,1.1*k,1.25*k,.3,.5,0);TQ(sg,Q.dod,M,1.9*k,.3*k,.6*k,.5*k,.5*k,.55*k,1,2,0)}
+    bonePile(-3.2,-2.4,1.3,0xd0c8b0);
     fire(0,1.2,0xff7a2a,1.2);[-1,1].forEach(s=>{put(Q.cyl4,S(0x3a2818),s*1.3,.6,1.2,.06,1.3,.06,0,0,s*.2)});put(Q.cyl,S(0x3a2818),0,1.2,1.2,.04,2.8,.04,0,0,P2);put(Q.sph,S(0x7a4a3a),0,1.15,1.2,.8,.35,.32);
     slab(2.6,.8,1.4,.9,1.2,.3,GRAN);slab(2.4,1.5,1.2,1.8,.35,.3,GRAN);
     [-1,1].forEach(s=>{const sg=sub(s*2.2,-1.4,s>0?0:Math.PI,-.2);TQ(sg,Q.arc,S(0xe8e0c8),0,0,0,1.6,2,1.2,P2*0,0,0)});
     out(6,.82,(x,z)=>rock(x,z,rr(1,1.8),0x5a5e6a));edge(4,(x,z)=>bones(x,z,4,.6))},
   '2_0_1':()=>{ // Yeti Cave: a snowbound cave mouth hung with icicles, drifts, a frozen kill
-    const sg=sub(0,-3.4,P2,0);TQ(sg,Q.hemi,S(0x6a6e78),0,-.3,0,2.6,2.4,2.8);TQ(sg,Q.hemi,S(SNOW),0,1.4,0,2.2,.9,2.4);const d=TQ(sg,Q.disc,G(0x040406),2.55,.6,0,1.25,1.4,1,0,P2,0);d.castShadow=false;blk(0,-3.4,2);take(0,-3.4,2.8);
+    const sg=sub(0,-3.4,P2,0);TQ(sg,Q.hemi,S(0x6a6e78),0,-.3,0,2.6,2.4,2.8);TQ(sg,Q.hemi,S(SNOW),0,1.4,0,2.2,.9,2.4);const d=TQ(sg,Q.disc,ep185Grad('hole'),2.55,.6,0,1.25,1.4,1,0,P2,0);d.castShadow=false;blk(0,-3.4,2);take(0,-3.4,2.8);
     icicles(-1.1,gy(0,-1)+2.1,-1,7,.9,2.2,0);
     out(7,.7,(x,z)=>mound(x,z,rr(.9,1.5),SNOW,.4));carcass(...A(-R*.3,R*.25),AN,1,0x8a9aa8,0xe8f0f8);
     edge(5,(x,z)=>ice(x,z,rr(.6,1.1)));scat(3,R*.3,R*.7,.6,(x,z)=>bones(x,z,3,.5,0xe8ecf0))},
@@ -586,7 +611,7 @@ function cs123Designs(K){
   // ======================= The Dirge =======================
   '4_0_0':()=>{ // Open Crypt: a stone doorway with a stair down into the earth, coffins dragged out
     {const sg=sub(0,4.3,-P2,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.4,1.2*s,.6,2.8,.6));TQ(sg,Q.box,S(GST),0,2.95,0,.8,.5,3.2);TQ(sg,Q.cone4,S(DST),0,3.6,0,.9,.8,1.6,0,Math.PI/4,0);
-      const d=TQ(sg,Q.disc,G(0x040404),-.2,1.2,0,.9,1.2,1,0,-P2,0);d.castShadow=false;blk(-1.2,4.3,0);blk(1.2,4.3,0);take(0,4.3,1.6)}
+      const d=TQ(sg,Q.disc,ep185Grad('hole'),-.2,1.2,0,.9,1.2,1,0,-P2,0);d.castShadow=false;blk(-1.2,4.3,0);blk(1.2,4.3,0);take(0,4.3,1.6)}
     for(let i=0;i<5;i++){const z=3.2-i*.85;put(Q.box,S(DST),0,-.12-i*.04,z,2,.25,.8)}
     out(4,.5,(x,z,a)=>coffin(x,z,a+rr(-.5,.5),0x3a2a20,true));out(9,.78,(x,z,a)=>grave(x,z,a+Math.PI,0x8a8a86));
     [-1,1].forEach(s=>candles(s*1.4,3.2,4,.3,0x9ad8ff));edge(2,(x,z)=>deadTree(x,z,rr(2.8,3.6),0x2a2a30))},
@@ -618,7 +643,7 @@ function cs123Designs(K){
     {const a=AN+3/6*TAU+.52,x=Math.cos(a)*R*.88,z=Math.sin(a)*R*.88,sg=sub(x,z,a,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.4,1.5*s,.8,2.8,.8));for(let q=-1.1;q<=1.1;q+=.28)TQ(sg,Q.cyl4,S(IRON,{metalness:.6}),0,1.1,q,.03,2.2,.03,0,0,q>0?.15:0);TQ(sg,Q.box,S(IRON,{metalness:.6}),0,2.1,0,.08,.08,2.4)}
     out(4,.6,(x,z)=>{chainPost(x,z,7);bones(x+.6,z+.4,3,.4)});for(let i=0;i<2;i++){const p=spot(R*.3,R*.6,.6);if(p)crate(p[0],p[1])}},
   '4_2_0':()=>{ // Colossus Barrow: a barrow mound over a colossus, its bones breaking through, standing stones round it
-    {const [x,z]=A(R*.48,0),sg=sub(x,z,AN,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.3,1.1*s,.7,2.6,.7));TQ(sg,Q.box,S(GST),0,2.75,0,1,.5,3.2);const d=TQ(sg,Q.disc,G(0x040404),-.3,1,0,.8,1.1,1,0,-P2,0);d.castShadow=false;blk(x,z,1);take(x,z,1.8)}
+    {const [x,z]=A(R*.48,0),sg=sub(x,z,AN,0);[-1,1].forEach(s=>TQ(sg,Q.box,S(GST),0,1.3,1.1*s,.7,2.6,.7));TQ(sg,Q.box,S(GST),0,2.75,0,1,.5,3.2);const d=TQ(sg,Q.disc,ep185Grad('hole'),-.3,1,0,.8,1.1,1,0,-P2,0);d.castShadow=false;blk(x,z,1);take(x,z,1.8)}
     femur(...A(-R*.1,R*.2),AN+.6,5,0xd8d4c4,-.3);bigSkull(...A(-R*.45,-R*.35),AN+2.4,2.2,0xd8d4c4,false,-.7);
     for(let i=0;i<4;i++){const [x,z]=A(rr(-R*.3,R*.2),(i<2?-1:1)*R*.48),sg=sub(x,z,AN+P2,-.6);TQ(sg,Q.arc,S(0xd8d4c4),0,0,0,1.8,2.6,1.8,0,P2,0)}
     out(7,.88,(x,z,a)=>slab(x,z,.9,rr(2.4,3.4),.5,a+P2,DST,rr(-.06,.06)));edge(3,(x,z,a)=>grave(x,z,a,0x6a6e70,1))},

@@ -177,7 +177,7 @@ function v112Deco(c){const TH=th112(),{T,def,F,M,cyl,box,ico,dod,cone,oct,tor,do
   const boneSpikes=()=>{const p=[];for(let i=0;i<5;i++){const a=i*1.3,r=i?.3+i*.12:0,h=i?1+((i*37)%10)/10:2.2;p.push(F(cone(.1,h,4),0xe0d8c0,{j:.02},Math.cos(a)*r,h/2,Math.sin(a)*r,Math.cos(a)*.3,0,Math.sin(a)*.3))}return M(p)};
   const barricade=()=>{const p=[F(cyl(.08,.08,3.2,5),0x4a3420,{},0,.55,0,0,0,Math.PI/2)];for(let i=0;i<5;i++){const x=-1.3+i*.65;p.push(F(cyl(.04,.06,1.8,4),0x5a3e26,{},x,.55,0,.75,0,0),F(cyl(.04,.06,1.8,4),0x5a3e26,{},x+.3,.55,0,-.75,0,0))}return M(p)};
   const stake=()=>M([F(cyl(.05,.09,2.6,5),0x4a3420,{j:.02},0,1.3,0,.08,0,.05),skull(0xd8d0b8).translate(.08,2.55,0),F(cone(.05,.3,4),0x3a2a1a,{},.1,2.8,0)]);
-  const tent=(cl)=>M([F(cone(1.6,2.4,4),cl,{j:.08,lo:.7,hi:.4},0,1.2,0,0,Math.PI/4,0),F(cyl(.04,.04,2.9,4),0x3a2a1a,{},0,1.45,0),F(box(.7,.9,.04),0x140c0c,{lo:1,hi:0},0,.45,1.12)]);
+  const tent=(cl)=>ep185Tent({r:1.6,h:2.4,hide:cl,pole:0x3a2a1a}).clone();   // v185: the hide tent (3420; was a cone with a black box half in its wall)
   const catapult=()=>M([F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,.6),F(box(2.4,.18,.18),0x5a3e26,{j:.02},0,.3,-.6),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,.6,0,0,.3),F(box(.18,1.4,.18),0x5a3e26,{},0,.9,-.6,0,0,.3),
     F(cyl(.06,.06,1.4,5),0x3a2a1a,{},.2,1.4,0,Math.PI/2,0,0),F(box(2.8,.12,.14),0x6a4a2e,{},-.6,1.8,0,0,0,.6),F(dome(.35,6),0x3a2a1a,{},-1.7,2.4,0,Math.PI),
     F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},-.9,.42,-.72,0,0,0),F(tor(.42,.06,Math.PI*2,9),0x3a2a1a,{},.9,.42,-.72,0,0,0)]);

@@ -26,6 +26,7 @@ function env177Kind(S){if(S._e176!==undefined)return S._e176;let r=null;
   return S._e176=r}
 // where piece d stands: {x,y,z,q,sx,sy,sz} (sx 0: not drawn); y0 is its old height (ground at its centre plus the kind's lift)
 function env177Seat(S,d,y0){const sc=S.sc||[1,1,1],s=d.s,K=env177Kind(S),V3=THREE.Vector3,o={x:d.x,y:y0,z:d.z,q:new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),d.ry),sx:s*sc[0],sy:s*sc[1],sz:s*sc[2]};
+  if(d.h185){o.sx=o.sy=o.sz=0;return o}   // v185: tidied away (3420 ep185Tidy)
   if(!K)return o;const E=env177();E.n++;
   if(K.decal||K.lean){const r=Math.max(.6,K.w*.45*s),gx=(GH(d.x+r,d.z)-GH(d.x-r,d.z))/(2*r),gz=(GH(d.x,d.z+r)-GH(d.x,d.z-r))/(2*r),n=new V3(-gx,1,-gz).normalize(),up=new V3(0,1,0);
     let a=Math.acos(Math.min(1,n.y))*(K.decal?1:K.lean);a=Math.min(a,K.decal?.7:E.tilt);if(a>.01){const ax=new V3().crossVectors(up,n).normalize();o.q.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,a))}}
@@ -93,4 +94,4 @@ function env177Banks(){try{const T0=performance.now(),R=3.2,D=new Float32Array(W
     for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const d=Math.hypot(dx,dy),k=Y*W+X;if(wet(X,Y)){continue}if(d<land)land=d;if(d<D[k])D[k]=d}
     const k=(y+HPD)*HW+x+HPD;if(land<=1.5){HF[k]=Math.max(HF[k],-.42);n++}else if(land<=2.9)HF[k]=Math.max(HF[k],-.8)}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const d=D[y*W+x];if(d>R||MAP.DW[y*W+x]>=0)continue;const k=(y+HPD)*HW+x+HPD,h=HF[k],t=.14;if(h>t)HF[k]=t+(h-t)*smt(.6,R,d)}
-  env177().banks={n,ms:Math.round(performance.now()-T0)}}catch(e){console.warn('v177 banks',e)}}
+  env177().banks={n,ms:Math.round(performance.now()-T0)};try{if(typeof ep185Ponds=='function')env177().ponds=ep185Ponds()}catch(e){console.warn('v185 ponds',e)}}catch(e){console.warn('v177 banks',e)}}   // v185: round shores (3420)

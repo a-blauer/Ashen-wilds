@@ -104,8 +104,8 @@ function buildCamp(C){
   const fire=(dx,dz,col)=>{ring(7,.55,(x,z)=>put(G_SPH,S(0x5a5650),dx+x,.08,dz+z,.16,.12,.16));
     put(G_CYL,S(0x4a3020),dx,.12,dz,.07,.8,.07,Math.PI/2,.5,0);put(G_CYL,S(0x4a3020),dx,.12,dz,.07,.8,.07,Math.PI/2,-.6,0);
     const f1=put(G_CONE,glowM(col||0xff7a1a),dx,.42,dz,.26,.62,.26),f2=put(G_CONE,glowM(0xffd36a),dx,.34,dz,.14,.38,.14);f1.castShadow=f2.castShadow=false;CFL.push(f1,f2);
-    const gl=put(CG.disc,tm(col||0xff9a3a,.22),dx,.04,dz,1.6,1.6,1,-Math.PI/2);gl.castShadow=false};
-  const tent=(dx,dz,ry,col,sz)=>{sz=sz||1;blk(dx,dz,.95*sz);put(CG.tent,S(col),dx,.9*sz,dz,1.25*sz,1.8*sz,1.25*sz,0,ry+Math.PI/4);put(G_BOX,S(0x1a1410),dx+Math.sin(ry)*.62*sz,.42*sz,dz+Math.cos(ry)*.62*sz,.5*sz,.8*sz,.06,0,ry);put(G_CYL,S(0x4a3020),dx,1.85*sz,dz,.04,.35,.04)};
+    const gl=put(CG.disc,ep185Soft(col||0xff9a3a,.22),dx,.04,dz,1.6,1.6,1,-Math.PI/2);gl.castShadow=false};   // v185: soft (was a hard-edged disc)
+  const tent=(dx,dz,ry,col,sz)=>{sz=sz||1;blk(dx,dz,.95*sz);const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(dx,gy(dx,dz),dz);m.rotation.y=ry-Math.PI/2;m.scale.setScalar(sz);g.add(m)};   // v185: the hide tent (3420)
   const box=(dx,dz,fn)=>{const bg=new THREE.Group();bg.position.set(dx,gy(dx,dz),dz);fn(bg);g.add(bg);(C.boxes=C.boxes||[]).push({g:bg,x:C.x+dx,z:C.z+dz,b:0})};
   const crate=(dx,dz,ry)=>box(dx,dz,bg=>{const k=rr(.5,.68),r0=ry||rr(0,1.5);TQ(bg,G_BOX,S(0x7a5530),0,k/2,0,k,k,k,0,r0);TQ(bg,G_BOX,S(0x4a3220),0,k/2,0,k*1.03,k*.12,k*1.03,0,r0);TQ(bg,G_BOX,S(0x4a3220),0,k/2,0,k*.12,k*1.03,k*1.03,0,r0)});
   const barrel=(dx,dz)=>box(dx,dz,bg=>{TQ(bg,G_CYL,S(0x6a4426),0,.4,0,.28,.8,.28);TQ(bg,G_CYL,S(0x3a3430,{metalness:.5}),0,.6,0,.3,.06,.3);TQ(bg,G_CYL,S(0x3a3430,{metalness:.5}),0,.2,0,.3,.06,.3)});
@@ -202,13 +202,13 @@ function buildCamp(C){
   {const a=rn()*6.283,x=Math.cos(a)*(CAMP_R+.5),z=Math.sin(a)*(CAMP_R+.5);{const sp=twPostG(1.6,1.3,.4);sp.position.set(x,gy(x,z),z);sp.rotation.y=-a+Math.PI/2;g.add(sp)}sign(g,[{t:C.th.n,f:'700 34px'}],1.6,.4,'#5a3d20','#f4e9d0',null,x,gy(x,z)+1.3,z,-a+Math.PI/2)}
   // merge static pieces by material to keep draw calls low
   const keep=new Set(CFL),by=new Map(),rm=[];
-  g.children.forEach(o=>{if(!o.isMesh||keep.has(o)||o.material.map){o.matrixAutoUpdate=false;o.updateMatrix();return}
+  g.children.forEach(o=>{if(!o.isMesh||keep.has(o)||o.material.map||o.userData.keep){o.matrixAutoUpdate=false;o.updateMatrix();return}
     o.updateMatrix();const k=o.material;if(!by.has(k))by.set(k,{geo:[],sh:false});const e=by.get(k),gg=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone());gg.applyMatrix4(o.matrix);e.geo.push(gg);e.sh=e.sh||o.castShadow;rm.push(o)});
   rm.forEach(o=>g.remove(o));
   by.forEach((e,mat)=>{let n=0;e.geo.forEach(q=>n+=q.attributes.position.count);const P=new Float32Array(n*3),N=new Float32Array(n*3);let off=0;
     e.geo.forEach(q=>{P.set(q.attributes.position.array,off*3);if(q.attributes.normal)N.set(q.attributes.normal.array,off*3);off+=q.attributes.position.count;q.dispose()});
     const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(P,3));bg.setAttribute('normal',new THREE.BufferAttribute(N,3));bg.computeBoundingSphere();
-    let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);for(let i=0;i+2<P2.count;i+=3){const q=Math.sin(P2.getX(i)*12.9898+P2.getY(i)*78.233+P2.getZ(i)*37.719)*43758.5453,v=.8+.32*(q-Math.floor(q));for(let k=0;k<9;k++)cl[i*3+k]=v}bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}else m=new THREE.Mesh(bg,mat);m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)});
+    let m;if(!mat.transparent&&!mat.isMeshBasicMaterial){const P2=bg.attributes.position,cl=new Float32Array(P2.count*3);for(let i=0;i+2<P2.count;i+=3){const v=ep185Mottle(P2.getX(i),P2.getY(i),P2.getZ(i),P2.getX(i+1),P2.getY(i+1),P2.getZ(i+1),P2.getX(i+2),P2.getY(i+2),P2.getZ(i+2));   /* v185: smooth, not a random shade per face */for(let k=0;k<9;k++)cl[i*3+k]=v}bg.setAttribute('color',new THREE.BufferAttribute(cl,3));if(!CMC.has(mat)){const c=mat.clone();c.vertexColors=true;c.flatShading=true;c.userData.lps=1;CMC.set(mat,c)}m=new THREE.Mesh(bg,CMC.get(mat))}else m=new THREE.Mesh(bg,mat);m.castShadow=e.sh&&!mat.transparent;m.receiveShadow=true;m.matrixAutoUpdate=false;m.updateMatrix();g.add(m)});
   scene.add(g);C.g=g;
 }
 let campT=0;
