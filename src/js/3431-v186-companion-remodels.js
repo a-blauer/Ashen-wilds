@@ -42,18 +42,17 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     // v186b: big bulging eyes raised on turrets high on the skull (owner: "his eyes arent even showing"): a skin turret, a
     // glowing gold eyeball out the side and front, a black horizontal pupil, a heavy dark lid over the top; a round
     // eardrum behind each eye and a nostril on the snout
-    k.p('head','sph2','c',lid,s*.13,.35,.36,.06,.04,.058);
-    k.p('head','sph','c',red?0x8a2a1a:0x9a6a1a,s*.15,.384,.378,.05,.046,.048);
-    k.p('head','box','c',0x050505,s*.184,.388,.411,.03,.008,.006,0,s*Math.PI/4,0);
-    k.p('head','sph','g',new THREE.Color(eye).multiplyScalar(.6).getHex(),s*.176,.404,.41,.006,.005,.004,0,s*Math.PI/4,0);
-    k.p('head','sph','c',dk,s*.14,.416,.37,.056,.022,.054,.12,s*.3,s*.2);
+    k.p('head','sph2','c',lid,s*.13,.352,.355,.056,.04,.056);
+    k.p('head','sph2','c',red?0x7a2414:0x6a4a14,s*.15,.384,.378,.05,.046,.048);
+    k.p('head','sph2','c',0x050505,s*.18,.387,.402,.03,.014,.012,0,s*Math.PI/4,0);
+    k.p('head','sph','g',new THREE.Color(eye).multiplyScalar(.5).getHex(),s*.172,.404,.405,.005,.004,.004);
+    k.p('head','sph2','c',dk,s*.138,.412,.355,.05,.024,.042,.3,s*.3,s*.15);
     k.p('head','sph','c',dkShade(dk,.8),s*.215,.33,.31,.032,.032,.008,0,s*1.25,0);
     k.p('head','sph','c',0x0a0c08,s*.035,.31,.462,.009,.006,.008);
     // the parotoid gland behind each eye: a long low swelling with a few pores
     k.p('head','sph','c',gl,s*.16,.355,.27,.05,.03,.08,0,s*.25,s*.3);
     [0,1,2].forEach(i=>k.p('head','sph','c',dk,s*(.168+i*.006),.382-i*.006,.3-i*.03,.007,.004,.007));
-    // a dorsolateral fold: a low ridge from behind the eye along the back
-    k.L('chest','c',dk,[s*.13,.4,.27],[s*.15,.43,.1],.022,.02,5);k.L('spine','c',dk,[s*.15,.43,.1],[s*.13,.415,-.1],.02,.014,5)});
+  });
   // moss: low flat clumps of dark green on the back (lumps, not chips)
   [[.04,.464,.06,.05],[-.07,.458,-.04,.045],[.08,.425,-.14,.04],[-.03,.45,.17,.035],[.15,.436,.02,.03]].forEach((q,i)=>{const bn=q[2]>.1?'chest':q[2]>-.1?'spine':'pelvis';
     [[0,0,1],[.6,.4,.7],[-.5,.5,.6],[.2,-.6,.65]].forEach((o,j)=>{const r=q[3]*.42*o[2];k.p(bn,'ico','c',(i+j)%2?0x2a3618:0x3a4a22,q[0]+o[0]*q[3]*.7,q[1]-.004*j,q[2]+o[1]*q[3]*.7,r,r*.55,r,0,i+j,0)})});
@@ -197,10 +196,11 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 // bracers or bands on the legs, no glowing war-paint strokes
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);let m=0;const sh0=E.shell,bd0=E.band,L0=E.L,gm0=E.gem;
   E.gem=function(h){if(h&&h.p&&h.p[1]<.62)return E;return gm0.apply(E,arguments)};   // round 2: the chest gem (its plate is gone) floated
+  const M=EVO100_M,tf0=M.tuft;M.tuft=function(E2,h,d,len,w,col,t){if(t=='g'&&h&&h.p&&Math.abs(h.p[0])>.08)return;return tf0.apply(M,arguments)};   // round 2: no flame tufts on the shoulders (they shredded the mane)
   E.shell=function(sel,off,t,col){if(t=='c'&&col===P.leather)return 0;if(t=='m'){m++;if((m>=4&&m<=6)||m==8)return 0}return sh0.apply(E,arguments)};
   E.band=function(){return []};
   E.L=function(a,b,r1,r2,t){if(t=='g'&&r1===.008&&r2===.003)return E;return L0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0;E.gem=gm0}}}
+  try{return b0.apply(this,arguments)}finally{E.shell=sh0;E.band=bd0;E.L=L0;E.gem=gm0;M.tuft=tf0}}}
 // the spirits' L2 mantle (an opaque dark slab on the see-through ghost) is gone; the hood carries the evolution look
 {const D=EVO100.D.Wispling,b0=D.build;D.build=function(E,L,P,c){const s0=E.shell;E.shell=function(sel,off,t){if(t=='c')return 0;return s0.apply(E,arguments)};const pd1=E.pd;
   E.pd=function(geo,t,col,pos,dir,sc,fwd,o){if(geo=='ico'&&t=='g'&&o&&o.bn=='chest')return E;return pd1.apply(E,arguments)};   // the soul motes sat on that mantle

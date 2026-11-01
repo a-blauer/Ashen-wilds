@@ -15,7 +15,7 @@ var TM186={on:true,
   // crystal clusters [x, z, size] (shared with the evolution)
   xl:[[.17,.1,1],[-.16,-.14,.9],[.05,.2,.75],[-.06,-.24,.8]],
   // the peaks [x, z, half width, height, lean x, lean z, turn]
-  pk:[[-.03,-.06,.17,.3,.06,-.04,.3],[.1,-.02,.09,.22,-.22,.05,.9],[-.13,.06,.08,.17,.28,-.1,.2],[.03,-.19,.08,.17,0,.18,1.3],[-.1,-.13,.06,.12,.2,.2,.6]]};
+  pk:[[-.03,-.06,.17,.33,.06,-.04,.3],[.06,.1,.13,.23,-.15,.1,.9],[-.09,.17,.1,.16,.2,.2,.2],[.02,-.22,.14,.25,0,-.15,1.3],[-.14,-.08,.11,.19,.3,.05,.6],[.14,-.1,.11,.18,-.3,-.05,2.0],[.0,-.35,.09,.13,0,-.3,.4]]};
 {const f=er150TitanKit;er150TitanKit=function(k,C,red){if(!TM186.on)return f.apply(this,arguments);const T=ER150.TI,Y=T.Y,top=T.top,p0=k.p,L0=k.L;
   // drop the town: every part on the dome's top (the shell rim, roots and moss on the slopes, the head and tail stay)
   k.p=function(bn,geo,t,col,x,y,z){if(bn=='spine'&&y>Y-.1)return k;return p0.apply(k,arguments)};
@@ -34,8 +34,8 @@ function tm186Mountain(k,C,red){const T=ER150.TI,Y=T.Y,top=T.top,nz=er150Nz,base
   [[.5,0],[2.3,.4],[3.6,.2],[5.1,.5]].forEach(([a,o],j)=>{for(let i=1;i<=4;i++){const r=.1+i*.075,x=Math.sin(a)*r-.03,z=Math.cos(a)*r-.06,h=.13-i*.022,w=.05-i*.006;
     if(Math.abs(x)>.38||z>.38||z<-.44)continue;P(x,top(x,z)+h*.3,z,w,h,w*.8,Math.cos(a)*.35,a+i,-Math.sin(a)*.35,(i+j)%2?rock:rockD)}});
   // scree and boulders round the foot of the massif
-  for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.3,r=.22+(i%3)*.035,x=Math.sin(a)*r,z=Math.cos(a)*r-.04,s=.045+nz(i,2,5)*.025;
-    if(Math.abs(x)>.4)continue;P(x,top(x,z)+s*.2,z,s,s*.7,s,i,i*.7,0,i%2?scree:rockD,'dod')}
+  for(let i=0;i<9;i++){const a=i/9*Math.PI*2+.3,r=.25+(i%3)*.035,x=Math.sin(a)*r,z=Math.cos(a)*r-.05,s=.05+nz(i,2,5)*.03;
+    if(Math.abs(x)>.4)continue;P(x,top(x,z)+s*.12,z,s,s*.55,s*.8,Math.cos(a)*.3,i*.9,-Math.sin(a)*.3,i%2?scree:rockD)}
   // three dead pines on the slopes: a grey trunk, a broken top, short branches hanging down
   [[.22,.17,.17,.15],[-.24,.03,.15,-.2],[.17,-.26,.13,.3]].forEach(([x,z,h,lean],n)=>{const y=top(x,z)-.015,t=[[x,y,z],[x+lean*.03,y+h*.5,z],[x+lean*.06,y+h,z+.005]];
     k.L('spine','c',wood,t[0],t[1],.014,.01,5);k.L('spine','c',woodD,t[1],t[2],.01,.003,4);
@@ -76,7 +76,7 @@ var HM186={on:true,
       egg:new THREE.Color(C).lerp(new THREE.Color(0xffd870),.4).multiplyScalar(.9),eggD:new THREE.Color(C).lerp(new THREE.Color(0xff8a20),.3).multiplyScalar(.5),crack:new THREE.Color(0x3a1c08).lerp(main,.2)}}};
 // gaunt angular legs: a high peak, the knee by the k1 bone, a long shin to the foot
 {const f=CS150.leg;CS150.leg=function(sp,s,i){if(sp!='Hivemother'||!HM186.on)return f.apply(this,arguments);const z=SPID_LZ[i],dz=SPID_LDZ[i],k=(s<0?'a':'b')+i,g=[1.1,1,1,1.12][i];
-  return {k,P:[[s*.08,.43,z*.9],[s*.32,.86+(i==1||i==2?.03:0),z+dz*.2*g],[s*.42,.62,z+dz*.36*g],[s*.74,.24,z+dz*.84*g],[s*.9,0,z+dz*1.08*g]]}}}
+  return {k,P:[[s*.08,.43,z*.9],[s*.32,.74+(i==1||i==2?.02:0),z+dz*.22*g],[s*.43,.6,z+dz*.36*g],[s*.72,.24,z+dz*.84*g],[s*.86,0,z+dz*1.06*g]]}}}
 function hm186N(a){return [Math.cos(a),Math.sin(a),0]}
 function hm186Rot(d){const l=Math.hypot(...d)||1,e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(d[0]/l,d[1]/l,d[2]/l)));return [e.x,e.y,e.z]}
 cs150HMGeo=function(C,sp){if(!HM186.on)return;const K=HM186.pal(C),AB=HM186.ab,FR=HM186.fr,T=AB.concat(FR);
@@ -94,28 +94,28 @@ cs150HMGeo=function(C,sp){if(!HM186.on)return;const K=HM186.pal(C),AB=HM186.ab,F
       [0,0,0,1,0,0,1,0,0],(o,r,s2)=>{o.copy(K.blk);if(s2>.5)o.copy(K.gloss).multiplyScalar(.85);if(r.jt)o.lerp(K.under,.5);if(s2<-.4)o.lerp(K.under,.3)},6))}));
   return lpGeo('HM186|'+C,'Cryptspider',L,186)};
 // a hatchling clinging to the shell at p (outward normal n), facing f (+1 forward, -1 back)
-function hm186Hatch(k,bn,p,n,f,col,eye){k.p(bn,'sph','c',col,p[0]+n[0]*.012,p[1]+n[1]*.012,p[2]-f*.02,.028,.022,.034);k.p(bn,'sph','c',col,p[0]+n[0]*.01,p[1]+n[1]*.01,p[2]+f*.024,.018,.015,.02);
+function hm186Hatch(k,bn,p,n,f,col,eye){k.p(bn,'sph','c',col,p[0]+n[0]*.014,p[1]+n[1]*.014,p[2]-f*.022,.036,.028,.044);k.p(bn,'sph','c',col,p[0]+n[0]*.012,p[1]+n[1]*.012,p[2]+f*.028,.024,.02,.026);
   k.p(bn,'sph','g',eye,p[0]+n[0]*.02,p[1]+n[1]*.02,p[2]+f*.04,.005);
   for(let l=0;l<4;l++)[-1,1].forEach(sd=>{const tz=p[2]+f*(.03-l*.018),tx=-n[1]*sd,ty=n[0]*sd;
-    k.L(bn,'c',col,[p[0]+n[0]*.01,p[1]+n[1]*.01,tz],[p[0]+tx*.048+n[0]*.016,p[1]+ty*.048+n[1]*.016,tz+f*(.012-l*.012)],.005,.003,3)})}
+    k.L(bn,'c',col,[p[0]+n[0]*.012,p[1]+n[1]*.012,tz],[p[0]+tx*.06+n[0]*.004,p[1]+ty*.06+n[1]*.004,tz+f*(.014-l*.014)],.007,.004,3)})}
 // a break in the shell: a cluster of glowing egg cells sunk in it, jagged black shards round the edge
 function hm186Break(k,q,K,egg,R){const AB=HM186.ab,[z,a]=q,p=v150Surf(AB,z,a,0),n=hm186N(a),t1=[-n[1],n[0],0],t2=[0,0,1];
   [[0,0,.044],[.05,.012,.034],[-.045,.025,.036],[.012,-.05,.032],[-.03,-.04,.03]].forEach(([u,v,r],i)=>{const c=[p[0]+t1[0]*u+n[0]*-.012,p[1]+t1[1]*u+n[1]*-.012,p[2]+v];
-    k.p('tail0','sph','g',i%2?egg:dkShade(egg,1.12),c[0],c[1],c[2],r,r*.9,r*1.1)});
+    k.p('tail0','sph',i%3==1?'c':'g',i%3==1?dkShade(egg,.55):i%2?egg:dkShade(egg,1.12),c[0],c[1],c[2],r,r*.9,r*1.1)});
   for(let j=0;j<7;j++){const b=j/7*Math.PI*2,u=Math.cos(b)*.09,v=Math.sin(b)*.09,c=[p[0]+t1[0]*u,p[1]+t1[1]*u,p[2]+v],d=[n[0]+t1[0]*Math.cos(b)*.9,n[1]+t1[1]*Math.cos(b)*.9,Math.sin(b)*.9],r=hm186Rot(d);
-    k.p('tail0','cone4','c',j%2?K.blk.getHex():K.gloss.getHex(),c[0],c[1],c[2],.034,.06+R()*.03,.014,r[0],r[1],r[2])}}
+    k.p('tail0','cone4','c',j%2?K.blk.getHex():K.gloss.getHex(),c[0],c[1],c[2],.036,.075+R()*.035,.016,r[0],r[1],r[2])}}
 cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex(),gl=K.gloss.getHex(),un=K.under.getHex(),egg=red?0xff4a2a:K.egg.getHex(),eggD=red?0x8a1a10:K.eggD.getHex(),eye=red?0xff3a1a:0xffa020,R=dkRng(186),tb='tail0';
   // the shell cracked open over the brood, and glowing seams joining the breaks
   HM186.br.slice(0,4).forEach(q=>hm186Break(k,q,K,egg,R));
   [[0,1],[1,2],[0,3],[2,0]].forEach(([i,j])=>{const A=HM186.br[i],B=HM186.br[j];let pr=null;for(let s=0;s<=4;s++){const t=s/4,z=A[0]+(B[0]-A[0])*t,a=A[1]+(B[1]-A[1])*t+Math.sin(t*9+i)*.1,p=v150Surf(AB,z,a,.003);
-    if(pr&&s>0&&s<4)k.L(tb,'g',eggD,pr,p,.006,.006,3);pr=p}});
+    if(pr&&s>0&&s<4)k.L(tb,'g',eggD,pr,p,.009,.009,3);pr=p}});
   // a ridge of hooked spines down the top of the abdomen, raised plates along its flanks
   for(let j=0;j<5;j++){const z=-.3-j*.13,p=v150Surf(AB,z,Math.PI/2,-.01);k.p(tb,'cone4','c',j%2?blk:gl,p[0],p[1]+.018,p[2],.022,.08-Math.abs(j-2)*.01,.03,-.7,0,0)}
   [-1,1].forEach(s=>[-.36,-.56,-.76].forEach((z,i)=>{const a=s>0?.25:Math.PI-.25,p=v150Surf(AB,z,a,-.004),r=hm186Rot(hm186N(a));k.p(tb,'dod','c',i%2?blk:gl,p[0],p[1],p[2],.08,.018,.07,r[0],r[1],r[2])}));
   // the stinger: a curved black hook from the tip of the abdomen, a dark red point
-  {const S=[[0,.64,-1.0],[0,.62,-1.08],[0,.56,-1.14],[0,.47,-1.16],[0,.39,-1.12]];k.L(tb,'c',blk,S[0],S[1],.045,.034,6).L(tb,'c',gl,S[1],S[2],.034,.024,6).L(tb,'c',blk,S[2],S[3],.024,.014,5).L(tb,'c',un,S[3],S[4],.014,.002,5)}
+  {const S=[[0,.64,-.99],[0,.62,-1.06],[0,.585,-1.12],[0,.54,-1.16]];k.L(tb,'c',blk,S[0],S[1],.04,.03,6).L(tb,'c',gl,S[1],S[2],.03,.016,6).L(tb,'c',un,S[2],S[3],.016,.002,5)}
   // hatchlings clinging to her back
-  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],-.016);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?blk:0x1a1410,eye)});
+  [[-.62,1.5,1],[-.8,2.35,-1],[-.46,.75,1],[-.88,.95,-1]].forEach((q,n)=>{const p=v150Surf(AB,q[0],q[1],-.016);hm186Hatch(k,tb,p,hm186N(q[1]),q[2],n%2?0x5a3a1a:0x4a2e14,eye)});
   // the carapace: a ridge of short spines, a crest of three long backward spines behind the eyes
   [.25,.17,.09,.02].forEach((z,i)=>k.p(z>.1?'chest':'spine','cone4','c',i%2?blk:gl,0,.53-Math.abs(z-.16)*.25,z,.014,.05,.018,-.6,0,0));
   [-1,0,1].forEach(s=>{const b=[s*.035,.485,.37],m=[s*.07,.58,.3],t=[s*.09,.63,.21];k.L('head','c',blk,b,m,.018-Math.abs(s)*.003,.01,4);k.L('head','c',gl,m,t,.01,.002,4)});
@@ -124,8 +124,8 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
   [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.026,.462,.43,.018);k.p('head','sph','g',eye,s*.028,.465,.438,.012);
     [[.05,.456,.415,.009],[.062,.443,.4,.008],[.016,.472,.418,.008],[.042,.468,.403,.007]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
     // chelicerae with long curved pale fangs (jaw bone: they flare when biting), thin pedipalps
-    k.L('jaw','c',blk,[s*.026,.41,.46],[s*.032,.36,.49],.024,.018,5);k.L('jaw','c',0xd8c8a8,[s*.032,.36,.49],[s*.026,.31,.5],.012,.007,4);k.L('jaw','c',0xd8c8a8,[s*.026,.31,.5],[s*.012,.29,.48],.007,.001,4);
-    k.L('head','c',blk,[s*.05,.41,.44],[s*.09,.39,.52],.012,.01,5);k.L('head','c',un,[s*.09,.39,.52],[s*.1,.35,.55],.011,.01,5);k.L('head','c',blk,[s*.1,.35,.55],[s*.098,.29,.57],.01,.003,5);
+    k.L('jaw','c',blk,[s*.024,.415,.44],[s*.032,.36,.49],.024,.018,5);k.L('jaw','c',0xd8c8a8,[s*.032,.36,.49],[s*.026,.31,.5],.012,.007,4);k.L('jaw','c',0xd8c8a8,[s*.026,.31,.5],[s*.012,.29,.48],.007,.001,4);
+    k.L('head','c',blk,[s*.05,.41,.44],[s*.09,.39,.52],.012,.01,5);k.L('head','c',gl,[s*.09,.39,.52],[s*.1,.35,.55],.011,.01,5);k.L('head','c',blk,[s*.1,.35,.55],[s*.098,.29,.57],.01,.003,5);
     // spurs on the legs: one on each high peak, two along each shin
     [0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i),kk=G.k,P=G.P;k.L(kk+'0','c',gl,[P[1][0],P[1][1]+.02,P[1][2]],[P[1][0]+s*.015,P[1][1]+.08,P[1][2]-.02],.012,.002,4);
       [.3,.62].forEach(t=>{const p=v150Lerp(P[2],P[3],t);k.L(kk+'1','c',blk,[p[0]+s*.02,p[1],p[2]],[p[0]+s*.07,p[1]+.035,p[2]],.011,.002,4)})})});
@@ -134,7 +134,7 @@ cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex()
 // her evolution: the brood ripens (L1 venom on the fangs and the stinger; L2 two more breaks open and the seams brighten;
 // L3 her crest and spurs burn at the tips; L4 more hatchlings, glowing; L5 the whole brood blazes, a glowing seam down her back)
 cs150HMEvo=function(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},tb={bn:'tail0'},AB=HM186.ab,hit=(z,a)=>E.on(v150Surf(AB,z,a,.4),[-Math.cos(a),-Math.sin(a),0]);
-  [-1,1].forEach(s=>E.pd('sph','g',P.glow,[s*.012,.29,.48],[0,1,0],[.008,.014,.008],null,jb));E.pd('sph','g',P.glow,[0,.385,-1.11],[0,1,0],[.012,.02,.012],null,tb);
+  [-1,1].forEach(s=>E.pd('sph','g',P.glow,[s*.012,.29,.48],[0,1,0],[.008,.014,.008],null,jb));
   if(L>=2){HM186.br.slice(4).forEach(q=>{const h=hit(q[0],q[1]);if(!h)return;const n=h.n;[[0,0,.032],[.034,.02,.026],[-.034,-.015,.026]].forEach(([u,v,r],i)=>{const t1=E.nrm([-n[1],n[0],0]);
       E.pd('sph','g',i%2?P.glowD:P.glow,[h.p[0]+t1[0]*u-n[0]*.006,h.p[1]+t1[1]*u-n[1]*.006,h.p[2]+v],n,[r,r*.9,r],null,tb)})});
     HM186.br.slice(0,4).forEach(q=>{const h=hit(q[0],q[1]);if(h)E.pd('sph','g',P.glow2,E.add(h.p,h.n,-.006),h.n,[.03,.024,.03],null,tb)})}
