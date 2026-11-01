@@ -60783,7 +60783,7 @@ function lp186Refine(L){
   if(LP186.seat&&lp186IsLeg(L)){const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(...d)||1,u=d.map(x=>x/l),k=Math.min(.45*l,(a.rx||.05)*.8);
     const seat=Object.assign({},a,{p:[a.p[0]+u[0]*k-Math.sign(a.p[0]||0)*a.rx*.3,a.p[1]+u[1]*k,a.p[2]+u[2]*k],rx:a.rx*.92,ryT:(a.ryT==null?a.rx:a.ryT)*1.02,ryB:(a.ryB==null?a.rx:a.ryB)*1.02,
       w4:(()=>{const w=lp186W(a),o={};for(const k2 in w)o[k2]=w[k2];const body=a.b[0];o[body]=(o[body]||0)+.6;const s=Object.values(o).reduce((x,y)=>x+y,0);for(const k2 in o)o[k2]/=s;return o})(),_oi:0,_seat:1});
-    const inx=-Math.sign(a.p[0]||0)*a.rx*.3;seat.p[0]+=inx*.5;
+    const inx=0;
     out=[seat,Object.assign({},a,{p:[a.p[0]+inx,a.p[1],a.p[2]],rx:a.rx*1.04,ryT:(a.ryT==null?a.rx:a.ryT)*1.06,ryB:(a.ryB==null?a.rx:a.ryB)*1.06})].concat(R.slice(1))}
   if(!LP186.split||out.length<2)return Object.assign({},L,{rings:out});
   const M=out.length,res=[],NS=Math.max(1,LP186.split|0);
@@ -60792,7 +60792,7 @@ function lp186Refine(L){
     const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);
     for(let s2=1;s2<=NS;s2++){const t=s2/(NS+1);
       const P=[0,1,2].map(j=>lp186CR(p.p[j],a.p[j],b.p[j],q.p[j],t)),rad=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f],vp=p[f]==null?p.rx:p[f],vq=q[f]==null?q.rx:q[f],li=va+(vb-va)*t;
-        return Math.max(li*.95,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
+        return Math.max(li,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
       const m=Object.assign({},t<.5?a:b,{p:tip?a.p.map((x,j)=>x+(b.p[j]-x)*t):P,rx:tip?lin('rx'):rad('rx'),ryT:tip?lin('ryT'):rad('ryT'),ryB:tip?lin('ryB'):rad('ryB'),
         w4:lp186Mix(lp186W(a),lp186W(b),t),_oi:(t<.5?a:b)._oi,_mid:1,j:0,_seat:0,_ra:a,_rb:b,_t:t});
       if(a.sqB||b.sqB)m.sqB=a.sqB&&b.sqB?a.sqB+(b.sqB-a.sqB)*t:0;res.push(m)}}
@@ -60883,7 +60883,8 @@ function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material
 //  * no hanging charms (teeth, bones and gems on strings dangled from collars and harnesses on most species);
 //  * runes only from look level 3, at most two per creature, laid in the darker glow (they read as glowing noise);
 //  * no thin rings round the legs (cuffs and rune bands on wrists and ankles); collars and harness straps stay;
-//  * one set gem at most; every part takes its exact palette colour (no random brightness per piece);
+//  * one set gem at most; every part takes its exact palette colour (no random brightness per piece); glowing strokes
+//    and flames are capped at 16, the rest drawn in the dark body colour;
 //  * spike rows (EVO100_M.ridge) 20% shorter.
 var EVO186={on:true};
 {const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EVO186.on)return E;
@@ -60893,9 +60894,10 @@ var EVO186={on:true};
   E.band=function(c,axis,off,r,t,col,N,o){if(r<=.009&&c&&c[1]<.3&&Math.abs(axis[1])>.6)return [];return band.apply(E,arguments)};
   // glow is the accent (recipe: under ~5% of the surface): after 14 glowing pieces the rest are drawn in the dark body colour
   const dimG=new THREE.Color(P.glowD).lerp(new THREE.Color(P.mainD),.6).getHex();
-  const fix=k=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
-      if(q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>14){q.t='c';q.col=dimG}}}return r};
-  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0);
+  // (only strokes and flames, E.L, count: set marks such as an eclipse ring or a gem keep their glow)
+  const fix=(k,cap)=>function(){const n0=E.parts.length,r=k.apply(E,arguments);for(let i=n0;i<E.parts.length;i++){const q=E.parts[i];if(q.j!=null)q.j=0;
+      if(cap&&q.t==='g'&&!q.raw&&!q.tri&&!q.loft){if(++run.glow>16){q.t='c';q.col=dimG}}}return r};
+  E.p=fix(push0);E.pd=fix(pd0);E.L=fix(L0,1);
   // near-black armour shells read as holes in the body: they take the dark body colour instead
   const sh0=E.shell,dk2=new THREE.Color(P.dark).lerp(new THREE.Color(P.mainD),.65).getHex();
   // a shell coloured triangle by triangle in turn (i%2, i%3: a checkerboard) takes the average of its colours instead
@@ -60997,13 +60999,13 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
   B.kit=function(k,c,C,red){if(rm186Sp('Mossfrog',c)=='Mossfrog')return mf186Kit(k,c,C,red);return k0.apply(this,arguments)};
   if(typeof EVO100!='undefined'&&EVO100.surf)delete EVO100.surf.Mossfrog}
 // Mossfrog evolution (one theme, a bog elder; was pustules + runes + a moss cloak with strands + a reed crown + a tooth
-// necklace + brow spurs + an angler lure + glowing eye rings + a moss beard + spines): L1 a few dim pustules in the blotches,
-// L2 a moss mantle over the back, L3 bony brow ridges and a glowing seam along the flank stripe, L4 the angler lure,
+// necklace + brow spurs + an angler lure + glowing eye rings + a moss beard + spines): L1 a few dim pustules in the blotches
+// (a fourth from L2; a moss mantle over the back read as a blocky plate and is gone), L3 bony brow ridges and a glowing seam along the flank stripe, L4 the angler lure,
 // L5 short glowing spines along the spine line
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.003,'c',moss,{rimCol:moss});
+
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
   }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;

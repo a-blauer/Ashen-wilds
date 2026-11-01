@@ -39,7 +39,7 @@ function lp186Refine(L){
   if(LP186.seat&&lp186IsLeg(L)){const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(...d)||1,u=d.map(x=>x/l),k=Math.min(.45*l,(a.rx||.05)*.8);
     const seat=Object.assign({},a,{p:[a.p[0]+u[0]*k-Math.sign(a.p[0]||0)*a.rx*.3,a.p[1]+u[1]*k,a.p[2]+u[2]*k],rx:a.rx*.92,ryT:(a.ryT==null?a.rx:a.ryT)*1.02,ryB:(a.ryB==null?a.rx:a.ryB)*1.02,
       w4:(()=>{const w=lp186W(a),o={};for(const k2 in w)o[k2]=w[k2];const body=a.b[0];o[body]=(o[body]||0)+.6;const s=Object.values(o).reduce((x,y)=>x+y,0);for(const k2 in o)o[k2]/=s;return o})(),_oi:0,_seat:1});
-    const inx=-Math.sign(a.p[0]||0)*a.rx*.3;seat.p[0]+=inx*.5;
+    const inx=0;
     out=[seat,Object.assign({},a,{p:[a.p[0]+inx,a.p[1],a.p[2]],rx:a.rx*1.04,ryT:(a.ryT==null?a.rx:a.ryT)*1.06,ryB:(a.ryB==null?a.rx:a.ryB)*1.06})].concat(R.slice(1))}
   if(!LP186.split||out.length<2)return Object.assign({},L,{rings:out});
   const M=out.length,res=[],NS=Math.max(1,LP186.split|0);
@@ -48,7 +48,7 @@ function lp186Refine(L){
     const tip=(i==M-2&&b.rx<a.rx*.35)||(i==0&&a.rx<b.rx*.35);
     for(let s2=1;s2<=NS;s2++){const t=s2/(NS+1);
       const P=[0,1,2].map(j=>lp186CR(p.p[j],a.p[j],b.p[j],q.p[j],t)),rad=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f],vp=p[f]==null?p.rx:p[f],vq=q[f]==null?q.rx:q[f],li=va+(vb-va)*t;
-        return Math.max(li*.95,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
+        return Math.max(li,Math.min(Math.max(va,vb)*1.06,lp186CR(vp,va,vb,vq,t)))},lin=f=>{const va=a[f]==null?a.rx:a[f],vb=b[f]==null?b.rx:b[f];return va+(vb-va)*t};
       const m=Object.assign({},t<.5?a:b,{p:tip?a.p.map((x,j)=>x+(b.p[j]-x)*t):P,rx:tip?lin('rx'):rad('rx'),ryT:tip?lin('ryT'):rad('ryT'),ryB:tip?lin('ryB'):rad('ryB'),
         w4:lp186Mix(lp186W(a),lp186W(b),t),_oi:(t<.5?a:b)._oi,_mid:1,j:0,_seat:0,_ra:a,_rb:b,_t:t});
       if(a.sqB||b.sqB)m.sqB=a.sqB&&b.sqB?a.sqB+(b.sqB-a.sqB)*t:0;res.push(m)}}
