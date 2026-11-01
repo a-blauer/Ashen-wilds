@@ -17,9 +17,9 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
   for(let i=0;i<12;i++){const a=Math.random()*6.28,v=R*evxRand(1.2,2.4);evxPuff(new THREE.Vector3(b.x,b.y,b.z),{spr:1,col:i%2?c2:col,r0:.16,r1:0,life:.6+Math.random()*.5,op:1,v:[Math.cos(a)*v,evxRand(.6,2.2),Math.sin(a)*v],g:-1.2,drag:2.4,fin:.03})}}}catch(_){}return r}}
 {const f=ev137Flare;ev137Flare=function(p,col,s,ms){const r=f.apply(this,arguments);try{if(p){s=s||1.5;ms=ms||360;col=evxCol(col);const c2=ev186C2(col);
   const st=new THREE.Sprite(new THREE.SpriteMaterial({map:evxTex('soft'),color:evxLerp(col,0xffffff,.55),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})),
-    hl=new THREE.Sprite(new THREE.SpriteMaterial({map:fx186Tex('ring'),color:c2,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  st.userData.lpsSkip=hl.userData.lpsSkip=1;st.renderOrder=hl.renderOrder=35;st.position.set(p.x,p.y,p.z);hl.position.copy(st.position);scene.add(st,hl);
-  tw(ms*1.1,k=>{const u=k<.12?k/.12:1,f2=Math.pow(1-k,1.6);st.scale.set(s*6*(.5+.5*u),s*.32,1);st.material.opacity=.85*f2;hl.scale.setScalar(s*(1.2+k*2.4));hl.material.opacity=.7*f2},()=>{evxRm(st);evxRm(hl)})}}catch(_){}return r}}
+    hl=null; // v186 (3450): no ring bubble round every evolved flare
+  st.userData.lpsSkip=1;st.renderOrder=35;st.position.set(p.x,p.y,p.z);scene.add(st);
+  tw(ms*1.1,k=>{const u=k<.12?k/.12:1,f2=Math.pow(1-k,1.6);st.scale.set(s*6*(.5+.5*u),s*.32,1);st.material.opacity=.85*f2},()=>{evxRm(st)})}}catch(_){}return r}}
 {const f=ev137Column;ev137Column=function(p,col,h,rr,ms){const r=f.apply(this,arguments);try{if(p){h=h||7;rr=rr||.7;ms=ms||600;col=evxCol(col);const c2=ev186C2(col),b=evxGY(p,0);
   // a double helix of motes winding up the column
   for(let i=0;i<14;i++){const s=i%2,a0=s*Math.PI+i*.45,y0=i/14*h*.35;setTimeout(()=>{const ph=Math.random()*.3;evxPuff(new THREE.Vector3(b.x+Math.cos(a0)*rr*1.3,b.y+y0,b.z+Math.sin(a0)*rr*1.3),

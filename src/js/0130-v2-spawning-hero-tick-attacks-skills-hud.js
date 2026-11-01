@@ -38,7 +38,7 @@ function heroTick(dt,now){
   hero.dc=Math.min(s.dash,(hero.dc==null?s.dash:hero.dc)+dt/(2.8*(1-Math.min(.6,s.dashR))));
   if(hero.sh>0&&now>hero.shT)hero.sh=0;
   hero.buffs=hero.buffs.filter(b=>b.t>now);
-  if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3);try{const a=pl.rotation.y;arc(pl.position,V(Math.sin(a),0,Math.cos(a)),c.sk.col,c.R*.9,280)}catch(_){}}if(c.t<=0){hero.chan=null;pl.sw=0}}
+  if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);if(typeof sgVortex!='function'){burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3)}}if(c.t<=0){hero.chan=null;pl.sw=0}}
   for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh){z.mesh.position.copy(gY(z.p,.14));z.mesh.rotation.z+=dt*.35;const f=Math.min(1,z.t/.4);if(f<1&&z.mesh.material)z.mesh.material.opacity=.62*Math.max(0,f)}
     if(z.ti<=0&&z.n>0){z.ti=z.iv;z.n--;if(z.cc)enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,z.p)<z.R)compHit(z.cc,e,z.mm,z.fx)});else area(z.p,z.R,z.raw,{mt:z.mt,col:z.col,proc:false},null,0);for(let k=0;k<6;k++){const a=Math.random()*6.28,r=Math.random()*z.R;burst(gY(V(z.p.x+Math.cos(a)*r,0,z.p.z+Math.sin(a)*r),.3+Math.random()*1.5),z.col,1,.3,-1.5,.4)}}
     if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose();if(z.mesh.material&&z.mesh.material.dispose)z.mesh.material.dispose()}zones.splice(i,1)}}
@@ -95,19 +95,20 @@ function cast_base(i){
   const d=aimDir();face(d);const mt=sk.mt||CLS[hero.cls].mt,raw=atkOf(mt)*(sk.m||0)*(1+s.skillP)*kqrP(sk),Rr=(sk.r||0)*(1+s.aoeP),now=performance.now(),P=pl.position;
   const fx={mt,col:sk.col,stun:sk.stun,burn:sk.burn};
   if(sk.k!='buff'&&sk.k!='heal'&&sk.k!='barrier')castAnim();
+  const SGV=typeof sgOld=='function'&&sgOld(sk,P,d,Rr); // v186: the ability draws its own signature (3450); its kind's generic look is skipped
   switch(typeof fxbCast=='function'&&fxbCast(sk,P,d,raw,mt,fx,s,Rr)?'_fxb':sk.k){
-    case 'cone':arc(P,d,sk.col,Rr,320);burst(gY(P.clone().addScaledVector(d,1.4),.8),sk.col,24,2.5,1.5,.5);area(P,Rr,raw,fx,d,1);shake(.08);break;
-    case 'nova':ring(P,sk.col,Rr*2.2,380);ring(P,0xffffff,Rr*1.6,260);burst(gY(P,.5),sk.col,50,Rr*1.6,3,.7);area(P,Rr,raw,fx,null,0);break;
+    case 'cone':if(!SGV){arc(P,d,sk.col,Rr,320);burst(gY(P.clone().addScaledVector(d,1.4),.8),sk.col,24,2.5,1.5,.5)}area(P,Rr,raw,fx,d,1);shake(.08);break;
+    case 'nova':if(!SGV){ring(P,sk.col,Rr*2.2,380);ring(P,0xffffff,Rr*1.6,260);burst(gY(P,.5),sk.col,50,Rr*1.6,3,.7)}area(P,Rr,raw,fx,null,0);break;
     case 'leap':{const tp=aimPoint(7),o=P.clone();let k0=1;while(k0>0&&plBlocked(o.x+(tp.x-o.x)*k0,o.z+(tp.z-o.z)*k0))k0-=.05;UNS.air=nowP()+480;tp.set(o.x+(tp.x-o.x)*k0,0,o.z+(tp.z-o.z)*k0);hero.iv=Math.max(hero.iv,.5);
-      tw(420,k=>{P.x=o.x+(tp.x-o.x)*k;P.z=o.z+(tp.z-o.z)*k;pl.children[0].position.y=Math.sin(k*Math.PI)*1.6},()=>{pl.children[0].position.y=0;ring(P,sk.col,Rr*2,380);burst(gY(P,.3),0xc8b090,40,Rr*1.5,2,.6);shake(.25);area(P,Rr,raw,fx,null,0)});break}
-    case 'buff':hero.buffs.push({s:kqrB(sk,sk.buff),t:now+sk.dur*1000,n:sk.n,i:sk.i});hsDirty();ring(P,sk.col,3,600);burst(gY(P,1),sk.col,40,2,3,.8);break;
+      tw(420,k=>{P.x=o.x+(tp.x-o.x)*k;P.z=o.z+(tp.z-o.z)*k;pl.children[0].position.y=Math.sin(k*Math.PI)*1.6},()=>{pl.children[0].position.y=0;if(typeof sgLeapLand=='function')sgLeapLand(sk,P,Rr);ring(P,sk.col,Rr*2,380);burst(gY(P,.3),0xc8b090,40,Rr*1.5,2,.6);shake(.25);area(P,Rr,raw,fx,null,0)});break}
+    case 'buff':hero.buffs.push({s:kqrB(sk,sk.buff),t:now+sk.dur*1000,n:sk.n,i:sk.i});hsDirty();if(!SGV){ring(P,sk.col,3,600);burst(gY(P,1),sk.col,40,2,3,.8)}break;
     case 'channel':hero.chan={t:sk.dur,tick:0,sk,raw,R:Rr,mt};pl.sw=1;break;
-    case 'barrier':hero.sh=heroMax()*sk.v*(1+s.shieldP)*kqrP(sk);hero.shT=now+sk.dur*1000;ring(P,sk.col,2.2,600);burst(gY(P,1),sk.col,30,1.5,2,.7);break;
+    case 'barrier':hero.sh=heroMax()*sk.v*(1+s.shieldP)*kqrP(sk);hero.shT=now+sk.dur*1000;if(!SGV){ring(P,sk.col,2.2,600);burst(gY(P,1),sk.col,30,1.5,2,.7)}break;
     case 'rain':{const p=sk.at=='self'?P.clone():aimPoint(10);zoneAt(p,Rr,raw,mt,sk.col,sk.ticks,sk.iv,{follow:sk.at=='self'});break}
-    case 'heal':healHero(heroMax()*sk.v*kqrP(sk));heroCleanseSlow();ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9);break;
+    case 'heal':healHero(heroMax()*sk.v*kqrP(sk));heroCleanseSlow();if(!SGV){ring(P,sk.col,2.6,700);burst(gY(P,1),sk.col,40,1.5,3,.9)}break;
     case 'blink':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);const dv=t?V(t.m.position.x-P.x,0,t.m.position.z-P.z):d.clone().setY(0);const L_=dv.length()||1;dv.multiplyScalar(1/L_);const dist=t?Math.min(8,L_+1.8):5.5;face(dv);hero.iv=Math.max(hero.iv,dist/14+.15);hero.dash={x:dv.x,z:dv.z,t:dist/14};shadowRush(dist,raw,mt,fx,sk);break}
     case 'fan':for(let j=0;j<sk.n2;j++){const a=j/sk.n2*6.283,dd=V(Math.sin(a),0,Math.cos(a));launch(P,dd,16,{col:sk.col,mt,arrow:0},raw,.55)}break;
-    case 'mark':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);if(!t){hero.cd[key]=0;hero.mp+=sk.mp;say('No target in reach.');return}t.mark=sk.dur;t.markV=sk.v*kqrU(sk);heroHit(t,raw,mt,{s:fx});ring(t.m.position,sk.col,1.6,600);dn(t.m.position,'Marked','#ff6a9a',-36,1000);break}
+    case 'mark':{const t=tgt&&!tgt.dead&&d2(tgt.m.position,P)<9?tgt:nearestFront(8);if(!t){hero.cd[key]=0;hero.mp+=sk.mp;say('No target in reach.');return}t.mark=sk.dur;t.markV=sk.v*kqrU(sk);heroHit(t,raw,mt,{s:fx});if(typeof sgMarkFx=='function')sgMarkFx(P.clone(),t.m.position.clone(),sk.col,typeof sgEvo=='function'?sgEvo():0);else ring(t.m.position,sk.col,1.6,600);dn(t.m.position,'Marked','#ff6a9a',-36,1000);break}
     case 'trap':{const mesh=new THREE.Mesh(new THREE.TorusGeometry(.45,.08,6,16),new THREE.MeshStandardMaterial({color:0x8a7a5a,metalness:.6,roughness:.4}));mesh.rotation.x=Math.PI/2;mesh.position.copy(gY(P,.06));scene.add(mesh);traps.push({p:P.clone(),t:20,raw,root:sk.root,mesh});break}
     case 'shot':for(let j=0;j<(sk.n2||1);j++){const n=sk.n2||1,a=(j-(n-1)/2)*.2,co=Math.cos(a),sn=Math.sin(a),dd=V(d.x*co+d.z*sn,0,-d.x*sn+d.z*co);launch(P,dd,sk.arrow?22:13,{col:sk.col,mt,arrow:sk.arrow,big:sk.big,burn:sk.burn,pierce:sk.arrow?s.pierce:0},raw,sk.arrow?.65:1.1)}break;
     case 'beam':{const o=gY(P,.9);bolt(o,o.clone().addScaledVector(d,9),sk.col);bolt(o,o.clone().addScaledVector(d,9),0xffffff);enemies.forEach(e=>{if(e.dead)return;const v=V().subVectors(e.m.position,P).setY(0),a=v.dot(d),w=Math.abs(v.x*d.z-v.z*d.x);if(a>0&&a<9&&w<1.1)heroHit(e,raw,mt,{s:fx})});break}

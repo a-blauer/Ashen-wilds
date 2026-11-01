@@ -9,17 +9,17 @@ Object.assign(EVO137,{
  'Whirlwind':{en:'Bladestorm',d:'Spin for 3.4s in a 35% larger storm of blades that drags nearby enemies into the edge.',mod:{r:'*1.35',dur:3.4},
   post(c){const C=evC();let ti=0,a=0;kqsObj({life:3.6,tick:(dt,now,o)=>{if(!hero.chan)return false;const P=pl.position;a+=dt*11;ti-=dt;
     kqsFoes(P,c.R+2.6).forEach(e=>{if(e.boss)return;const v=kqsV(P.x-e.m.position.x,P.z-e.m.position.z),L=v.length();if(L>c.R*.7)walkM(e.m,v.x/L*2.6*dt,v.z/L*2.6*dt)});
-    if(ti>0)return;ti=.14;ev137Crescent(P,kqsV(Math.sin(a),Math.cos(a)),(Math.random()<.5?C.c1:C.c2),c.R*.55,260);if(Math.random()<.35)ev137Shock(P,C.c1,c.R,300)}})}},
+    if(ti>0)return;ti=.6;ev137Shock(P,C.c1,c.R*1.1,420)}})}},
  'Shockwave':{en:'Earthsplitter',d:'Three shockwaves instead of one: two more rip out to the sides in a fan.',
-  post(c){const C=evC();setTimeout(()=>[-.42,.42].forEach(a=>{const d=evRot(c.d,a);evWave(c,c.P,d,9,2.2,c.raw*.8,26,(q,j)=>{if(j%2)ev137Shards(q,C.c1,4,.5,.9,520);burst(gY(q,.3),0xb08a60,6,1.4,2,.5)})}),300)}},
+  post(c){const C=evC();setTimeout(()=>[-.42,.42].forEach(a=>{const d=evRot(c.d,a);evWave(c,c.P,d,9,2.2,c.raw*.8,26,(q,j)=>{if(j%2)kqsSpike(q,0x7a5a3a,.8+Math.random()*.5);burst(gY(q,.3),0xb08a60,6,1.4,2,.5)});sgCrack(c.P.clone(),sgYaw(d),C.c1,9,1.4,1800)}),300)}},
  'Iron Skin':{en:'Adamant Bulwark',d:'Absorbs 50% of your max health for 8s, and when the shield breaks or ends it bursts into steel shards.',mod:{v:.5,dur:8},
-  post(c){const C=evC();ev137Orbit(pl.position,C.c2,1.2,900);let done=0;const boom=()=>{if(done)return;done=1;const P=pl.position.clone();evSlam(P,C.c2,3.2);evArea(c,P,3.2,c.A*1.6);shake(.2);kqsSnd('thud')};
+  post(c){const C=evC();let done=0;const boom=()=>{if(done)return;done=1;const P=pl.position.clone();ev137Shock(P,0xc8d8ff,3.2,480);sgShell(P,0xc8d8ff,1.7,420,0,1);sgSparks(gY(P,1),0xe8f0ff,26,7,2,null,6.3,7,.45);evArea(c,P,3.2,c.A*1.6);shake(.2);kqsSnd('thud')};
    kqsObj({life:8.2,tick:()=>{if(!(hero.sh>0)||performance.now()>hero.shT){boom();return false}},end:boom})}},
  'Earthshatter':{en:'World Breaker',d:'The crack is 35% wider and stuns for 1.8s, then a second ring of erupting stone bursts further out.',mod:{r:'*1.35',stun:1.8},
-  post(c){const C=evC(),P=c.P.clone();evSlam(P,C.c1,c.R);setTimeout(()=>{ev137Shards(P,C.c1,16,c.R*1.25,1.7,900);ev137Shock(P,C.c2,c.R*1.6,560);evRing(P,c.R*.8,c.R*1.6).forEach(e=>evHit(c,e,c.raw*.6,{stun:.8}));shake(.3);kqsSnd('quake')},300)}},
+  post(c){const C=evC(),P=c.P.clone();ev137Shock(P,C.c1,c.R,520);setTimeout(()=>{sgCrater(P,C.c1,c.R*1.5,1);for(let j=0;j<12;j++){const a=j/12*6.283;kqsSpike(kqsV(P.x+Math.cos(a)*c.R*1.2,P.z+Math.sin(a)*c.R*1.2),0x7a5a3a,1.3+Math.random()*.6)}ev137Shock(P,C.c2,c.R*1.6,560);evRing(P,c.R*.8,c.R*1.6).forEach(e=>evHit(c,e,c.raw*.6,{stun:.8}));shake(.3);kqsSnd('quake')},300)}},
  'Bull Rush':{en:'Juggernaut',d:'Charge 50% further, and the charge ends in a shockwave that stuns everything around you.',
   pre(c){c.evN0=KQS.objs.length},post(c){evStretch(c,1.5);const T=(hero.dash?hero.dash.t:.75)+.05,C=evC();
-   kqsObj({life:T,tick:()=>{if(Math.random()<.5)ev137Flare(gY(pl.position,1),C.c1,.9,200)},end:()=>{const P=pl.position.clone();evSlam(P,C.c1,2.8);evArea(c,P,2.8,c.raw*.6,{stun:.6});shake(.2)}})}},
+   kqsObj({life:T,end:()=>{const P=pl.position.clone();evSlam(P,C.c1,2.8);evArea(c,P,2.8,c.raw*.6,{stun:.6});shake(.2)}})}},
  'Intimidating Shout':{en:'Dread Roar',d:'Reaches 9 tiles instead of 6 and hurls the enemies it terrifies back.',mod:{r:9},
   post(c){const C=evC(),P=c.P;ev137Shock(P,C.c1,c.R,700);setTimeout(()=>ev137Shock(P,C.c2,c.R*.7,500),150);kqsFoes(P,c.R).forEach(e=>{if(e.boss)return;const d=kqsDir(P,e.m.position);e.vx+=d.x*8;e.vz+=d.z*8;eStatus(e,{stun:.6},0)})}},
  'Skull Splitter':{en:'Skullquake',d:'The blow cracks the ground: everything within 3 tiles of the target is hit and starts bleeding.',
@@ -27,19 +27,20 @@ Object.assign(EVO137,{
    evArea(c,p,3,c.raw*.7).forEach(e=>eStatus(e,{bleed:6},c.A*.4))},200+evLungeMs(t))}},
  'Seismic Rupture':{en:'Tectonic Rift',d:'A 15-tile fissure, 45% wider, that erupts a second time half a second later.',mod:{L:15,rng:15,w:3.2},
   post(c){const C=evC(),P=c.P.clone(),d=kqsDir(P,c.gp),L=Math.max(3,Math.min(c.sk.L,d2(P,c.gp)));ev137Rift(P,evAt(P,d,L),C.c1,1600);
-   setTimeout(()=>{evWave(c,P,d,L,c.sk.w,c.raw*.5,30,(q,j)=>{if(j%2==0)ev137Shards(q,C.c1,5,.8,1.4,700);ev137Column(q,C.c2,2.2,.35,360)})},Math.ceil(L)*45+380)}},
+   setTimeout(()=>{evWave(c,P,d,L,c.sk.w,c.raw*.5,30,(q,j)=>{if(j%2==0)kqsSpike(q,0x7a5a3a,1.2+Math.random()*.6);ev137Column(q,C.c1,2.4,.35,380);sgDust(gY(q,0),3,1.4)})},Math.ceil(L)*45+380)}},
  'War Banner':{en:'Standard of the Legion',d:'A 7-tile circle that stands for 18s, and every 2s the banner sends out a burning pulse.',mod:{r:7,dur:18},
-  post(c){const p=c.gp.clone(),C=evC();ev137Column(p,C.c2,9,.8,900);let ti=1.2;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=2;ev137Shock(p,C.c1,c.R,620);ev137Sigil(p,C.c2,c.R,700,1);evArea(c,p,c.R,c.A*.45)}})}},
+  post(c){const p=c.gp.clone(),C=evC();ev137Column(p,C.c2,9,.8,900);let ti=1.2;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=2;ev137Shock(p,C.c1,c.R,620);sgWaves(p,C.c2,c.R,600,2,1.6,.6);evArea(c,p,c.R,c.A*.45)}})}},
  'Bloodrage':{en:'Crimson Frenzy',d:'No longer costs health; lasts 14s with +35% attack speed, +18% physical attack and 15% lifesteal.',mod:{dur:14},
-  pre(c){c.evHp=hero.hp},post(c){if(c.evHp>hero.hp)hero.hp=c.evHp;evBuff('Bloodrage',kqrB(c.sk,{as:.35,paP:.18,ls:.15}),14);const C=evC();ev137Orbit(pl.position,0xff2030,1.2,1200);ev137Column(pl.position,0xff3040,6,.8,700)}},
+  pre(c){c.evHp=hero.hp},post(c){if(c.evHp>hero.hp)hero.hp=c.evHp;evBuff('Bloodrage',kqrB(c.sk,{as:.35,paP:.18,ls:.15}),14);const C=evC();sgWaves(pl.position,0xff2030,4.5,640,3,1.3,.7)}},
  'Chain Hook':{en:'Kraken Chains',d:'Catches enemies in a 4-tile circle up to 13 tiles away, and they are slammed down a second time at your feet.',mod:{r:4,rng:13},
+  pre(c){const P=c.P,p=c.gp,d=kqsDir(P,p),L=d2(P,p);[-.5,.5].forEach(a=>{const q=evAt(P,evRot(d,a),L*.95);sgChain(gY(P,1.3),gY(q,.6),0xb0a090,560,'out')})},
   post(c){setTimeout(()=>{const P=pl.position.clone(),C=evC();evSlam(P,C.c2,2.6);evArea(c,P,2.6,c.raw*.6,{stun:.6})},480)}},
  'Execute':{en:"Headsman's Verdict",d:'Spectral axes fall on up to 2 more enemies nearby; the low-health rule applies to each of them.',
   pre(c){c.evT=kqsNear(5.2)},post(c){const C=evC(),not=new Set([c.evT]);evNearest(pl.position,8,not).slice(0,2).forEach((e,j)=>{const p=e.m.position.clone();setTimeout(()=>{ev137Fall(e.m.position.clone(),C.c1,'axe',480);
    setTimeout(()=>{if(e.dead)return;const low=e.c.h/M(e.c)<.3;evHit(c,e,c.raw*(low?2.4:.8));burst(gY(e.m.position,1),0xff2a1a,low?40:20,2.4,2.4,.5);if(e.dead)popT(e.m.position,'EXECUTED','#ff4a3a',true)},480)},120+j*160)})}},
  'Unbreakable':{en:'Undying Colossus',d:'Lasts 11s, scorches enemies within 2.6 tiles every second, and heals twice as much when it ends.',mod:{dur:11},
-  post(c){const C=evC();let ti=.5;ev137Column(pl.position,C.c2,7,1,800);kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=1;ev137Shock(pl.position,C.c1,2.6,420);evArea(c,pl.position,2.6,c.A*.5)},
-   end:o=>{if(o.abort)return;healHero(heroMax()*.15*c.rk);ev137Orbit(pl.position,0x9affb0,1,800)}})}},
+  post(c){const C=evC();let ti=.5;kqsObj({life:c.sk.dur,tick:dt=>{ti-=dt;if(ti>0)return;ti=1;ev137Shock(pl.position,C.c1,2.6,420);sgDust(gY(pl.position,0),4,2.2,0x6a6258);evArea(c,pl.position,2.6,c.A*.5)},
+   end:o=>{if(o.abort)return;healHero(heroMax()*.15*c.rk);sgShell(pl.position,0x9affb0,1.4,600,3,0)}})}},
  "Titan's Fall":{en:'Worldshaker',d:'Lands in a 6-tile crater from up to 15 tiles away, followed by three aftershocks that rattle further out.',mod:{r:6,rng:15},
-  post(c){setTimeout(()=>{const p=pl.position.clone(),C=evC();evSlam(p,C.c1,c.R);ev137Fall(p,C.c2,'hammer',1);[0,300,600].forEach((t,j)=>setTimeout(()=>{const r=c.R*(1.25+j*.3);ev137Shock(p,j%2?C.c2:C.c1,r,520);ev137Shards(p,C.c1,10,r*.9,1.2,700);evRing(p,c.R*.8,r).forEach(e=>evHit(c,e,c.raw*.35,{stun:.3}));shake(.2)},200+t))},660)}}
+  post(c){setTimeout(()=>{const p=pl.position.clone(),C=evC();evSlam(p,C.c1,c.R);ev137Fall(p,C.c2,'hammer',1);[0,300,600].forEach((t,j)=>setTimeout(()=>{const r=c.R*(1.25+j*.3);ev137Shock(p,j%2?C.c2:C.c1,r,520);sgCracks(gY(p,0),C.c1,4,r*.9,.7,1200);evRing(p,c.R*.8,r).forEach(e=>evHit(c,e,c.raw*.35,{stun:.3}));shake(.2)},200+t))},660)}}
 });
