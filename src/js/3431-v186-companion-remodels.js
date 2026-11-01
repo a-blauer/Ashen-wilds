@@ -43,8 +43,8 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
     // glowing gold eyeball out the side and front, a black horizontal pupil, a heavy dark lid over the top; a round
     // eardrum behind each eye and a nostril on the snout
     k.p('head','sph2','c',lid,s*.13,.35,.36,.06,.04,.058);
-    k.p('head','sph','c',red?0x8a2a1a:0xa8822a,s*.15,.384,.378,.05,.046,.048);
-    k.p('head','sph','c',0x050505,s*.183,.388,.41,.024,.011,.008,0,s*Math.PI/4,0);
+    k.p('head','sph','c',red?0x8a2a1a:0x9a6a1a,s*.15,.384,.378,.05,.046,.048);
+    k.p('head','box','c',0x050505,s*.184,.388,.411,.03,.008,.006,0,s*Math.PI/4,0);
     k.p('head','sph','g',new THREE.Color(eye).multiplyScalar(.6).getHex(),s*.176,.404,.41,.006,.005,.004,0,s*Math.PI/4,0);
     k.p('head','sph','c',dk,s*.14,.416,.37,.056,.022,.054,.12,s*.3,s*.2);
     k.p('head','sph','c',dkShade(dk,.8),s*.215,.33,.31,.032,.032,.008,0,s*1.25,0);

@@ -50,9 +50,9 @@ function bk186Geo(L,w,h,d){const key=[L,w,h,d].map(v=>Math.round(v*1000)).join('
     for(let j=0;j<M;j++){const a=j/M*Math.PI*2,c=Math.cos(a),s=Math.sin(a),top=s>0;
       // keel on top (a ridge), flatter underside
       const y=top?s*sh*(1-.25*Math.abs(c))+sh*.12*(1-Math.abs(c)):s*sh*.45;P.push(c*sw,yc+y,z)}}
-  for(let i=0;i<N;i++)for(let j=0;j<M;j++){const a=i*M+j,b=i*M+(j+1)%M,c2=a+M,dd=b+M;I.push(a,c2,b,b,c2,dd)}
-  const tip=P.length/3;P.push(0,-d-.004,L+.004);for(let j=0;j<M;j++)I.push(N*M+j,tip,N*M+(j+1)%M);
-  const base=P.length/3;P.push(0,h*.15,0);for(let j=0;j<M;j++)I.push(j,(j+1)%M,base);
+  for(let i=0;i<N;i++)for(let j=0;j<M;j++){const a=i*M+j,b=i*M+(j+1)%M,c2=a+M,dd=b+M;I.push(a,b,c2,b,dd,c2)}
+  const tip=P.length/3;P.push(0,-d-.004,L+.004);for(let j=0;j<M;j++)I.push(N*M+j,N*M+(j+1)%M,tip);
+  const base=P.length/3;P.push(0,h*.15,0);for(let j=0;j<M;j++)I.push((j+1)%M,j,base);
   const G=new THREE.BufferGeometry();G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setIndex(I);G.computeVertexNormals();G.userData.bk186={L};
   return BK186[key]=G}
 // darker toward the point (the kit bake hands each part's colour to every vertex; this shades the beak's own range)
