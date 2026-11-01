@@ -23,7 +23,7 @@ function fx186Tex(k){if(FX186.tex[k])return FX186.tex[k];const S=k=='beam'?64:12
   else if(k=='vgrad'){const gr=g.createLinearGradient(0,S,0,0);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.3,'rgba(255,255,255,.6)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,S,S)}
   const t=new THREE.CanvasTexture(c);return FX186.tex[k]=t}
 function fx186Mat(col,map,op){return new THREE.MeshBasicMaterial({color:col,map:map||null,transparent:true,opacity:op==null?1:op,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})}
-var G_FXDISC=null,G_FXQ=null;
+var G_FXDISC=null,G_FXQ=null,G_FXCYL=null;
 function fx186Disc(){return G_FXDISC||(G_FXDISC=(()=>{const g=new THREE.PlaneGeometry(2,2);g.rotateX(-Math.PI/2);return g})())}
 // a short soft flash at p (pooled sprites: nothing to free)
 function fx186Flash(p,col,s,ms){if(!p)return;try{if(typeof ABX!='undefined'&&ABX.ctx)return}catch(_){} // the pooled sprites live in the world scene, never on the preview stage
@@ -34,7 +34,7 @@ if(FX186.fl.length<14){const m=new THREE.SpriteMaterial({map:fx186Tex('soft'),tr
   tw(ms,k=>{if(f.t!==id)return;const u=k<.2?k/.2:1;sp.scale.setScalar(s*(.55+.45*u)*(1+k*.3));sp.material.opacity=.85*(1-k)*(1-k)},()=>{if(f.t===id){sp.visible=false;sp.material.opacity=0}})}
 const NP=900,pa=new Float32Array(NP*3),pcol=new Float32Array(NP*3),pv=new Float32Array(NP*3),pbase=new Float32Array(NP*3),plf=new Float32Array(NP),pmx=new Float32Array(NP).fill(1),psz=new Float32Array(NP),ps0=new Float32Array(NP),pty=new Uint8Array(NP);let pix=0;
 const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));pg.setAttribute('color',new THREE.BufferAttribute(pcol,3));pg.setAttribute('psz',new THREE.BufferAttribute(psz,1));
-const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.4,map:SPR,vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
+const pts=new THREE.Points(pg,new THREE.PointsMaterial({size:.5,map:SPR,vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));pts.frustumCulled=false;scene.add(pts);
 // per-particle size: gl_PointSize × psz
 pts.material.onBeforeCompile=sh=>{sh.vertexShader='attribute float psz;\n'+sh.vertexShader.replace('gl_PointSize = size;','gl_PointSize = size * psz;')};
 pts.material.customProgramCacheKey=()=>'fx186pts';
@@ -43,7 +43,7 @@ function burst(p,col,n,sp,up,life){
   for(let i=0;i<n;i++){const j=pix++%NP,a=Math.random()*6.28,spark=Math.random()<.24,r=Math.random()*sp*(spark?1.45:1),L=life*(.6+Math.random()*.4)*(spark?1.35:1);
     pa[j*3]=p.x;pa[j*3+1]=p.y;pa[j*3+2]=p.z;pv[j*3]=Math.cos(a)*r;pv[j*3+1]=up*(.3+Math.random())*(spark?1.25:1);pv[j*3+2]=Math.sin(a)*r;
     pbase[j*3]=c.r;pbase[j*3+1]=c.g;pbase[j*3+2]=c.b;plf[j]=pmx[j]=L;pty[j]=spark?1:0;ps0[j]=spark?.3+Math.random()*.25:.6+Math.random()*.9;psz[j]=0}
-  if(n>=12)fx186Flash(p,col,Math.min(2.4,.55+sp*.32),Math.min(220,110+n*3));
+  if(n>=10)fx186Flash(p,col,Math.min(2.8,.7+sp*.38),Math.min(240,120+n*3));
 }
 function fxStep(dt){const dr=Math.max(0,1-dt*2.4);
   for(let j=0;j<NP;j++){
@@ -64,9 +64,12 @@ function ring(pos,col,r,ms){G_RING=G_RING||(()=>{const g=new THREE.PlaneGeometry
   const m=new THREE.Mesh(G_RING,fx186Mat(col,fx186Tex('ring'))),R1=.55*(1+r),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.5);m.rotation.x=-Math.PI/2;m.position.copy(gY(pos,.12));m.userData.lpsSkip=1;m.renderOrder=31;scene.add(m);
   const e=new THREE.Mesh(fx186Disc(),fx186Mat(c2,fx186Tex('thin'),0)),d=new THREE.Mesh(fx186Disc(),fx186Mat(col,fx186Tex('soft'),0));e.position.y=d.position.y=.01;m.add(e,d);
   e.rotation.x=d.rotation.x=Math.PI/2;e.userData.lpsSkip=d.userData.lpsSkip=1;
+  // a bigger ring also raises a low wall of light that thins as it spreads (volume, not just a decal)
+  let w=null;if(r>=1.5){G_FXCYL=G_FXCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,40,1,true);g.translate(0,.5,0);return g})();w=new THREE.Mesh(G_FXCYL,fx186Mat(col,fx186Tex('vgrad'),0));w.userData.lpsSkip=1;w.renderOrder=31;w.position.copy(gY(pos,.05));scene.add(w)}
   tw(ms,k=>{const ez=1-Math.pow(1-k,2.6),rr=.45+(R1-.45)*ez;m.scale.setScalar(rr);m.material.opacity=Math.pow(1-k,1.4);
     const k2=Math.max(0,(k-.12)/.88);e.scale.setScalar(.82);e.material.opacity=k2>0?.9*(1-k2):0;
-    d.scale.setScalar(.7);d.material.opacity=.55*Math.max(0,1-k/.38)},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose()});
+    d.scale.setScalar(.7);d.material.opacity=.55*Math.max(0,1-k/.38);
+    if(w){const rw=rr*.96;w.scale.set(rw,Math.min(1.1,.25+R1*.12)*(1-k*.8),rw);w.material.opacity=.45*Math.pow(1-k,1.6)}},()=>{scene.remove(m);m.material.dispose();e.material.dispose();d.material.dispose();if(w){scene.remove(w);w.material.dispose()}});
 }
 // the crescent's colour: dark at the inner edge, bright at the outer, the trailing end fading
 function arc(pos,d,col,r,ms){

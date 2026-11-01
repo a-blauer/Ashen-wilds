@@ -141,7 +141,7 @@ function shotMesh(col,arrow){
     // v186: a glowing halo and a white-hot heart (shared per colour: nothing to free)
     try{const K=FX186.shm||(FX186.shm={}),k=String(col),M=K[k]||(K[k]={h:new THREE.SpriteMaterial({map:fx186Tex('soft'),color:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}),
         c:new THREE.SpriteMaterial({map:fx186Tex('soft'),color:new THREE.Color(col).lerp(new THREE.Color(0xffffff),.7),transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false})});
-      const h=new THREE.Sprite(M.h),c=new THREE.Sprite(M.c);h.scale.setScalar(1.15);c.scale.setScalar(.42);h.userData.lpsSkip=c.userData.lpsSkip=1;h.userData.kqsKeep=c.userData.kqsKeep=1;M.h.userData.evxS=M.c.userData.evxS=1;M.h.userData.fxbS=M.c.userData.fxbS=1;h.renderOrder=c.renderOrder=34;m.add(h,c)}catch(_){}
+      const h=new THREE.Sprite(M.h),c=new THREE.Sprite(M.c);h.scale.setScalar(1.7);c.scale.setScalar(.55);h.userData.lpsSkip=c.userData.lpsSkip=1;h.userData.kqsKeep=c.userData.kqsKeep=1;M.h.userData.evxS=M.c.userData.evxS=1;M.h.userData.fxbS=M.c.userData.fxbS=1;h.renderOrder=c.renderOrder=34;m.add(h,c)}catch(_){}
     return m}
   return lgGroup('LSA',k=>{k.L('','c',0xb89a6a,[0,0,-.4],[0,0,.38],.016,.016,4);k.p('','cone4','m',0x6c7078,0,0,.44,.034,.11,.012,Math.PI/2,0,0);
     [0,1,2].forEach(i=>{const a=i/3*Math.PI*2;k.p('',lgSlab('flt',[[0,0],[.05,.04],[.05,.14],[0,.17]],.002),'c',i?0xd8d0c0:0x8a2a1a,Math.cos(a)*.012,Math.sin(a)*.012,-.36,1,1,1,Math.PI/2,0,a+Math.PI/2)})},.1)}
