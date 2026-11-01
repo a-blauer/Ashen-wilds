@@ -14,8 +14,10 @@
 var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
-  grade:{def:[.5,.56],Gloomcap:[.34,.4],Sporelord:[.36,.4],Mossfrog:[.4,.42],Bogmaw:[.4,.4],Drakelet:[.4,.42],Venomcoil:[.38,.4],Pyrewing:[.5,.45],Gravewyrm:[.42,.46],
-    Hivemother:[.5,.42],Lumenwisp:[.3,.62],Foxlet:[.62,.5],Emberlynx:[.55,.48],Skyhawk:[.34,.46],Stormtalon:[.36,.44],Rocsovereign:[.42,.46],Batwing:[.3,.4],Duskwing:[.32,.4]}};
+  // (the colours are linear and go through ACES, so a linear saturation of .4 still reads strongly on screen)
+  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.24,.36],Sporelord:[.26,.36],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.22,.36],
+    Pyrewing:[.4,.38],Venomcoil:[.25,.32],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
+    Rocsovereign:[.36,.44],Batwing:[.25,.36],Duskwing:[.26,.36]}};
 var LP186H={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
 function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
@@ -165,3 +167,8 @@ var EVO186={on:true};
 // the bird wings and tail fans are built from bw184Cols outside the kit bake: the same grade
 {const f=bw184Cols;bw184Cols=function(sp,C){const K=f.apply(this,arguments);if(!LP186.on)return K;const g=LP186.grade[sp]||LP186.grade.def,o={};
   for(const k in K){const v=K[k];o[k]=v&&v.isColor?lp186GradeC(v.clone(),g):v}return o}}
+// membrane wings (Drakelet, Pyrewing, Elderdrake, Batwing, Duskwing) take the grade of the creature being built
+{const f=lpRig;lpRig=function(c,n,D){const o=LP186.cur;LP186.cur=n;try{return f.apply(this,arguments)}finally{LP186.cur=o}}}
+{const f=lpwWing;lpwWing=function(key,outline,hub,sticks,cA,cB,cS,bands){if(!LP186.on||!LP186.cur||!lp186Comp('LP|',LP186.cur))return f.apply(this,arguments);
+  const g=lp186Grade(LP186.cur),gr=c=>c==null?c:lp186GradeC(new THREE.Color(c),g).getHex();
+  return f.call(this,key+'|g186',outline,hub,sticks,gr(cA),gr(cB),gr(cS),bands)}}
