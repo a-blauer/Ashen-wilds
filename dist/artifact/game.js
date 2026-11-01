@@ -60753,11 +60753,13 @@ function ep185MergeTex(g){if(!g||!EP185S)return 0;const mats=new Set(Object.valu
 //  * baked shading instead of random speckle (recipe 2.1/2.2): top light, darker toward the feet and underneath, cool in
 //    the shadows, crease / ridge from the welded surface (cavity), no per-vertex noise.
 // Paint functions still get the ORIGINAL ring index (their stripes and spots stay where they were designed).
-var LP186={on:true,rigs:null,split:2,sides:2,seat:1,stat:{},
+var LP186={on:true,cav:0,rigs:null,split:2,sides:2,seat:1,stat:{},
   // palette grade (recipe 2.1: "saturated bodies look like toys"): the body and its painted kit keep their hue but are held
   // under a saturation / lightness ceiling [s, l]; per species where the old colours read as candy
-  grade:{def:[.5,.56],Gloomcap:[.34,.4],Sporelord:[.36,.4],Mossfrog:[.4,.42],Bogmaw:[.4,.4],Drakelet:[.4,.42],Venomcoil:[.38,.4],Pyrewing:[.5,.45],Gravewyrm:[.42,.46],
-    Hivemother:[.5,.42],Lumenwisp:[.3,.62],Foxlet:[.62,.5],Emberlynx:[.55,.48],Skyhawk:[.45,.5],Stormtalon:[.45,.5]}};
+  // (the colours are linear and go through ACES, so a linear saturation of .4 still reads strongly on screen)
+  grade:{def:[.38,.5],Foxlet:[.5,.45],Emberlynx:[.45,.42],Gloomcap:[.24,.36],Sporelord:[.26,.36],Mossfrog:[.32,.36],Bogmaw:[.32,.36],Drakelet:[.22,.36],
+    Pyrewing:[.4,.38],Venomcoil:[.25,.32],Gravewyrm:[.3,.4],Hivemother:[.38,.36],Lumenwisp:[.25,.6],Skyhawk:[.25,.42],Stormtalon:[.28,.4],
+    Rocsovereign:[.36,.44],Batwing:[.25,.36],Duskwing:[.26,.36]}};
 var LP186H={};
 function lp186Sp(n){try{return (typeof RV137!='undefined'&&RV137.cur&&RV137.cur[n])||n}catch(e){return n}}
 function lp186GradeC(c,g){c.getHSL(LP186H);let s=LP186H.s,l=LP186H.l;if(s>g[0])s=g[0]+(s-g[0])*.12;if(l>g[1])l=g[1]+(l-g[1])*.22;if(s!==LP186H.s||l!==LP186H.l)c.setHSL(LP186H.h,s,l);return c}
@@ -60838,7 +60840,7 @@ function lp186Geo(key,n,lofts,seed){
   // baked shading: value = top light x height x cavity, a cool shift into the shadows (all kept inside .5..1.1)
   const N=G.attributes.normal.array,nv=P.length/3;let y0=1e9,y1=-1e9;for(let i=0;i<nv;i++){y0=Math.min(y0,P[i*3+1]);y1=Math.max(y1,P[i*3+1])}
   const GR=lp186Grade(n);for(let i=0;i<nv;i++){tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]);lp186GradeC(tmp,GR);Cc[i*3]=tmp.r;Cc[i*3+1]=tmp.g;Cc[i*3+2]=tmp.b}
-  const H=Math.max(.05,y1-y0),cav=lp186Cavity(P,IX),cool=new THREE.Color(0x3a4258),warm=new THREE.Color(0xffe2c0);
+  const H=Math.max(.05,y1-y0),cav=LP186.cav?lp186Cavity(P,IX):new Float32Array(nv).fill(1),cool=new THREE.Color(0x3a4258),warm=new THREE.Color(0xffe2c0);
   for(let i=0;i<nv;i++){const ny=N[i*3+1],h=Math.max(0,Math.min(1,(P[i*3+1]-y0)/H)),hs=h*h*(3-2*h);
     let f=(.84+.2*(.5*ny+.5))*(.74+.26*Math.min(1,hs*1.6))*cav[i];f=Math.max(.5,Math.min(1.12,f));
     tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]).multiplyScalar(f);
@@ -60858,10 +60860,10 @@ function lp186Geo(key,n,lofts,seed){
 function lp186IsFeather(g){try{return typeof BD184!='undefined'&&BD184.G&&Object.values(BD184.G).indexOf(g)>=0}catch(e){return false}}
 function lp186IsTuft(g){const pr=g&&g.parameters;return !!(pr&&pr.radiusBottom!=null&&pr.height>0&&pr.radiusBottom>pr.radiusTop*2.5&&pr.height>pr.radiusBottom*2)}
 function lp186Smooth(P){const Q=P.filter(p=>p.t==='c'&&p.col!=null&&(lp186IsFeather(p.geo)||lp186IsTuft(p.geo)));if(Q.length<4)return P;
-  const C=Q.map(p=>new THREE.Color(p.col)),X=Q.map(p=>[p.m.elements[12],p.m.elements[13],p.m.elements[14]]),out=new Map(),R2=.07*.07;
+  const C=Q.map(p=>new THREE.Color(p.col)),X=Q.map(p=>[p.m.elements[12],p.m.elements[13],p.m.elements[14]]),out=new Map(),R2=.085*.085;
   Q.forEach((p,i)=>{let r=0,g=0,b=0,w=0;for(let j=0;j<Q.length;j++){const dx=X[i][0]-X[j][0],dy=X[i][1]-X[j][1],dz=X[i][2]-X[j][2];if(dx*dx+dy*dy+dz*dz>R2)continue;
       const dc=Math.abs(C[i].r-C[j].r)+Math.abs(C[i].g-C[j].g)+Math.abs(C[i].b-C[j].b);if(dc>.55)continue;r+=C[j].r;g+=C[j].g;b+=C[j].b;w++}
-    if(w>1){const c=C[i].clone().lerp(new THREE.Color(r/w,g/w,b/w),.4);out.set(p,c.getHex())}});
+    if(w>1){const c=C[i].clone().lerp(new THREE.Color(r/w,g/w,b/w),.6);out.set(p,c.getHex())}});
   return P.map(p=>out.has(p)?Object.assign({},p,{col:out.get(p)}):p)}
 function lp186TaperShade(meshes,P){try{const M=dkM(),m=meshes.find(q=>q.material===M.c);if(!m)return;const G=m.geometry;if(G.userData.lp186)return;G.userData.lp186=1;
     const C=G.attributes.color;let off=0;P.filter(p=>p.t==='c').forEach(p=>{const g=p.geo,pa=g.attributes.position,n=pa.count,pr=g.parameters;
@@ -60904,6 +60906,14 @@ var EVO186={on:true};
 // one palette for the gear: iron and leather lean toward the creature's own dark colour, gold trim only on the last looks
 {const f=evo100Pal;evo100Pal=function(c,n,L){const P=f.apply(this,arguments);if(!EVO186.on)return P;const mix=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t).getHex();
   P.metal=mix(P.metal,P.mainD,.3);P.iron=mix(P.iron,P.mainD,.35);P.leather=mix(P.leather,P.mainD,.35);if(L<4)P.trim=mix(P.trim,P.metal,.45);P.bone=mix(P.bone,0x8a8070,.25);return P}}
+// the bird wings and tail fans are built from bw184Cols outside the kit bake: the same grade
+{const f=bw184Cols;bw184Cols=function(sp,C){const K=f.apply(this,arguments);if(!LP186.on)return K;const g=LP186.grade[sp]||LP186.grade.def,o={};
+  for(const k in K){const v=K[k];o[k]=v&&v.isColor?lp186GradeC(v.clone(),g):v}return o}}
+// membrane wings (Drakelet, Pyrewing, Elderdrake, Batwing, Duskwing) take the grade of the creature being built
+{const f=lpRig;lpRig=function(c,n,D){const o=LP186.cur;LP186.cur=n;try{return f.apply(this,arguments)}finally{LP186.cur=o}}}
+{const f=lpwWing;lpwWing=function(key,outline,hub,sticks,cA,cB,cS,bands){if(!LP186.on||!LP186.cur||!lp186Comp('LP|',LP186.cur))return f.apply(this,arguments);
+  const g=lp186Grade(LP186.cur),gr=c=>c==null?c:lp186GradeC(new THREE.Color(c),g).getHex();
+  return f.call(this,key+'|g186',outline,hub,sticks,gr(cA),gr(cB),gr(cS),bands)}}
 // ================= v186: companions that looked cartoony, remodelled (owner, Nov 1 2026) =================
 // Owner: "I'd also like to remodel companions that look too cartoony or childish." Same skeletons, bones, animations,
 // evolution designs and gameplay; new bodies and painted detail (docs/MODEL_DETAIL_RECIPE.md: colour follows form, smooth
@@ -60929,7 +60939,7 @@ function mf186Geo(C){const K=MF186.cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd
     if(r.k=='snout'&&s<.2){o.lerp(K.mouth,.25)}
     if(s>.3)o.lerp(K.back,(s-.3)*.9);
     // blotches on the back and flanks (smooth, follow the body), the flank stripe, the belly
-    const b=sn(p,13,3);if(s>-.2&&b>.6)o.lerp(K.blot,Math.min(1,(b-.6)*4)*.8);
+    const b=sn(p,11,3);if(s>-.2&&b>.52)o.lerp(K.blot,Math.min(1,(b-.52)*5)*.75);
     if(s>-.15&&s<.12&&r.p[2]<.3&&r.p[2]>-.22)o.lerp(K.stripe,.55*(1-Math.abs(s+.02)/.14));
     if(s<-.3){const t=Math.min(1,(-.3-s)*3);o.lerp(K.belly,t*.85);if(sn(p,24,7)>.65)o.lerp(K.blot,.25*t)}};
   const body={rings:MF186.body.map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[5],k:q[6]||'b'})),seg:10,capA:1,capB:1,paint};
@@ -60975,10 +60985,9 @@ function mf186Kit(k,c,C,red){const K=MF186.cols(C),skin=K.skin.getHex(),dk=K.ski
 {const D=EVO100.D.Mossfrog,b0=D.build;D.build=function(E,L,P,c){if((RV137.cur.Mossfrog||'Mossfrog')!='Mossfrog')return b0.apply(this,arguments);
   const moss=0x3a4a22,mossD=0x2a361a,pg=new THREE.Color(P.glow).lerp(new THREE.Color(P.mainD),.35).getHex();
   [[.09,.03],[-.11,-.07],[.12,-.15],[-.05,.13]].slice(0,L>=2?4:3).forEach(q=>{const t=E.top(q[0],q[1]);if(t)E.pd('sph','g',pg,E.add(t.p,t.n,-.003),t.n,[.014,.008,.014])});
-  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.008,'c',(x,y,z)=>n3Sn(x,y,z,18,4)>.5?moss:mossD,{rimCol:mossD});
+  if(L>=2)E.shell((x,y,z,nx,ny)=>ny>.6&&z<.2&&z>-.22&&Math.abs(x)<.2,.006,'c',moss,{rimCol:mossD});
   if(L>=3){[-1,1].forEach(s=>{const h=E.top(s*.13,.33);if(h)E.L(E.add(h.p,h.n,-.008),E.add(E.add(h.p,[0,0,-.06]),h.n,.022),.016,.004,'c',P.boneD,4,{bn:'head'})});
-    [-1,1].forEach(s=>{const pts=[];[.22,.12,.02,-.08,-.17].forEach(z=>{const h=E.on([s*.6,.29,z],[-s,0,0]);if(h)pts.push(E.add(h.p,h.n,.002))});
-      for(let i=0;i<pts.length-1;i++)E.L(pts[i],pts[i+1],.004,.004,'g',P.glowD,3,{vs:1})})}
+  }
   if(L>=4){const lt=E.top(0,.3),b=lt?lt.p[1]-.012:.38;
     E.chain([[0,b,.3],[0,b+.07,.33],[0,b+.1,.39],[0,b+.08,.44]],.012,.006,'c',P.mainD,5,{bn:'head'});E.pd('ico','g',P.glow,[0,b+.06,.45],[0,1,0],.022,null,{bn:'head'})}
   if(L>=5)[.12,.0,-.12].forEach(z=>{const t=E.top(0,z);if(t)E.L(E.add(t.p,t.n,-.006),E.add(t.p,E.nrm([0,1,-.6]),.055),.012,.002,'g',P.glow2,4)})}}
@@ -61041,11 +61050,10 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   try{return f.apply(this,arguments)}finally{k.p=p0}}}
 
 // ===================================================================== Skyhawk evolution =====================================================================
-// The two tail streamers ran half a metre past the tail on thin shafts and read as antennae; they are now two short outer
-// tail feathers, a little longer than the fan, and the bead cord in the crest is gone.
+// The two tail streamers ran half a metre past the tail on thin shafts and read as antennae (and still did when shortened):
+// they are gone, the tail fan carries the look; the bead cord in the crest is gone too.
 {const f=bd184EvoSky;bd184EvoSky=function(E,L,P,c){const pd0=E.pd,L0=E.L;
-  E.pd=function(geo,t,col,pos,dir,s,fwd,o){if(o&&o.bn=='tail3'&&Array.isArray(s)&&s[1]>.2){s=[s[0],s[1]*.42,s[2]];pos=E.add(pos,dir,.02)}
-    else if(o&&o.bn=='tail3'&&Array.isArray(s)){pos=E.add(pos,dir,-.26)}
+  E.pd=function(geo,t,col,pos,dir,s,fwd,o){if(o&&o.bn=='tail3')return E;
     if(o&&o.bn=='head'&&geo=='sph'&&Array.isArray(dir)&&s===.012)return E;return pd0.call(E,geo,t,col,pos,dir,s,fwd,o)};
   E.L=function(a,b,r1,r2,t,col,seg,o){if(o&&o.bn=='head'&&col===P.leather)return E;return L0.apply(E,arguments)};
   try{return f.apply(this,arguments)}finally{E.pd=pd0;E.L=L0}}}
@@ -61072,6 +61080,19 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 {const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){const pd0=E.pd;
   E.pd=function(geo,t,col,pos,dir,s){if(t=='g'&&((geo=='sph'&&Array.isArray(s)&&s[1]<=.006)||(geo=='ico'&&s===.014)))return E;return pd0.apply(E,arguments)};
   try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+// Ashwolf / Direfang war-wolf evolution: the metal spike studs on the saddle plates and the gold crown spikes on the helm are
+// gone (with the ruff, hackles, spikes of the trait and the horns, the back bristled with points from every side)
+{const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);const pd0=E.pd;
+  E.pd=function(geo,t,col){if(geo=='cone4'&&t=='m'&&(col===P.trim||col===P.gold))return E;return pd0.apply(E,arguments)};
+  try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+
+// ===================================================================== Stoneshell =====================================================================
+// The eleven boulders set into the shell stood out as round chips (polka dots of stone); they are now six low slabs in the
+// shell's own stone, sunk flush, so the shell reads as one weathered carapace with a few raised plates; moss and crystals stay.
+{const B=LPR.Stoneshell,k0=B.kit;B.kit=function(k,c,C,red){if((RV137.cur.Stoneshell||'Stoneshell')!='Stoneshell')return k0.apply(this,arguments);
+  const p0=k.p;let n=0;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='spine'&&t=='c'&&(geo=='dod'||geo=='ico')&&sx>=.04&&sx<=.08&&Math.abs(sy-sx*.75)<.002){if((n++)%2)return k;
+      return p0.call(k,bn,geo,t,col,x,y-sx*.12,z,sx*1.25,sx*.32,sz*1.25,0,ry||0,0)}return p0.apply(k,arguments)};
+  try{return k0.apply(this,arguments)}finally{k.p=p0}}}
 // ================= v186: evolved spells stay a step above the (now richer) standard ones =================
 // Owner (Nov 1 2026): "improve the visual effects on all of our character spells and abilities significantly (evolved spells
 // should still look even cooler than standard spell)". The standard shapes were rebuilt in 0107 (burst, ring, arc, bolt) and
