@@ -26,10 +26,11 @@ function fx186Mat(col,map,op){return new THREE.MeshBasicMaterial({color:col,map:
 var G_FXDISC=null,G_FXQ=null;
 function fx186Disc(){return G_FXDISC||(G_FXDISC=(()=>{const g=new THREE.PlaneGeometry(2,2);g.rotateX(-Math.PI/2);return g})())}
 // a short soft flash at p (pooled sprites: nothing to free)
-function fx186Flash(p,col,s,ms){if(!p)return;if(FX186.fl.length<14){const m=new THREE.SpriteMaterial({map:fx186Tex('soft'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0});
+function fx186Flash(p,col,s,ms){if(!p)return;try{if(typeof ABX!='undefined'&&ABX.ctx)return}catch(_){} // the pooled sprites live in the world scene, never on the preview stage
+if(FX186.fl.length<14){const m=new THREE.SpriteMaterial({map:fx186Tex('soft'),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0});
     const sp=new THREE.Sprite(m);sp.userData.lpsSkip=1;sp.renderOrder=35;sp.visible=false;FX186.fl.push({sp,t:0})}
   const f=FX186.fl[FX186.fi++%FX186.fl.length],sp=f.sp,c=new THREE.Color(col);c.lerp(new THREE.Color(0xffffff),.35);sp.material.color.copy(c);sp.position.set(p.x,p.y,p.z);sp.visible=true;
-  if(!sp.parent)scene.add(sp);const id=++f.t;ms=ms||160;s=s||1;
+  if(sp.parent!==scene)THREE.Object3D.prototype.add.call(scene,sp);const id=++f.t;ms=ms||160;s=s||1;
   tw(ms,k=>{if(f.t!==id)return;const u=k<.2?k/.2:1;sp.scale.setScalar(s*(.55+.45*u)*(1+k*.3));sp.material.opacity=.85*(1-k)*(1-k)},()=>{if(f.t===id){sp.visible=false;sp.material.opacity=0}})}
 const NP=900,pa=new Float32Array(NP*3),pcol=new Float32Array(NP*3),pv=new Float32Array(NP*3),pbase=new Float32Array(NP*3),plf=new Float32Array(NP),pmx=new Float32Array(NP).fill(1),psz=new Float32Array(NP),ps0=new Float32Array(NP),pty=new Uint8Array(NP);let pix=0;
 const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pa,3));pg.setAttribute('color',new THREE.BufferAttribute(pcol,3));pg.setAttribute('psz',new THREE.BufferAttribute(psz,1));
