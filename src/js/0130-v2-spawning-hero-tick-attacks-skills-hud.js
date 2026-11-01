@@ -39,15 +39,16 @@ function heroTick(dt,now){
   if(hero.sh>0&&now>hero.shT)hero.sh=0;
   hero.buffs=hero.buffs.filter(b=>b.t>now);
   if(hero.chan){const c=hero.chan;c.t-=dt;c.tick-=dt;pl.rotation.y+=dt*18;if(c.tick<=0){c.tick=.3;area(pl.position,c.R,c.raw,{mt:c.mt,col:c.sk.col},null,0);burst(gY(pl.position,.8),c.sk.col,10,c.R*1.2,.6,.3)}if(c.t<=0){hero.chan=null;pl.sw=0}}
-  for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh)z.mesh.position.copy(gY(z.p,.14));
+  for(let i=zones.length-1;i>=0;i--){const z=zones[i];z.t-=dt;z.ti-=dt;if(z.follow)z.p.copy(pl.position);if(z.mesh){z.mesh.position.copy(gY(z.p,.14));z.mesh.rotation.z+=dt*.35;const f=Math.min(1,z.t/.4);if(f<1&&z.mesh.material)z.mesh.material.opacity=.62*Math.max(0,f)}
     if(z.ti<=0&&z.n>0){z.ti=z.iv;z.n--;if(z.cc)enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,z.p)<z.R)compHit(z.cc,e,z.mm,z.fx)});else area(z.p,z.R,z.raw,{mt:z.mt,col:z.col,proc:false},null,0);for(let k=0;k<6;k++){const a=Math.random()*6.28,r=Math.random()*z.R;burst(gY(V(z.p.x+Math.cos(a)*r,0,z.p.z+Math.sin(a)*r),.3+Math.random()*1.5),z.col,1,.3,-1.5,.4)}}
-    if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose()}zones.splice(i,1)}}
+    if(z.n<=0||z.t<=0){if(z.mesh){scene.remove(z.mesh);z.mesh.geometry.dispose();if(z.mesh.material&&z.mesh.material.dispose)z.mesh.material.dispose()}zones.splice(i,1)}}
   for(let i=traps.length-1;i>=0;i--){const tp=traps[i];tp.t-=dt;const vic=enemies.filter(e=>!e.dead&&d2(e.m.position,tp.p)<1.1);
     if(vic.length){enemies.forEach(e=>{if(!e.dead&&d2(e.m.position,tp.p)<2){heroHit(e,tp.raw,'p',{proc:false});eStatus(e,{root:tp.root},0)}});ring(tp.p,0xc0a060,2.4,400);burst(gY(tp.p,.3),0xc0a060,24,2,1.5,.5);tp.t=0}
     if(tp.t<=0){scene.remove(tp.mesh);traps.splice(i,1)}}
 }
 function zoneAt(p,R,raw,mt,col,ticks,iv,o){
-  o=o||{};const mesh=new THREE.Mesh(new THREE.CircleGeometry(R,40),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.22,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));mesh.rotation.x=-Math.PI/2;mesh.position.copy(gY(p,.14));scene.add(mesh);
+  o=o||{};const mesh=new THREE.Mesh(new THREE.CircleGeometry(R,40),new THREE.MeshBasicMaterial({color:col,map:typeof fx186Tex=='function'?fx186Tex('zone'):null,transparent:true,opacity:.62,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));mesh.userData.lpsSkip=1; // v186: a soft field with a bright edge (was a flat disc)
+  mesh.rotation.x=-Math.PI/2;mesh.position.copy(gY(p,.14));scene.add(mesh);
   zones.push(Object.assign({p:p.clone(),R,raw,mt,col,n:ticks,iv,ti:0,t:ticks*iv+1,mesh},o));
 }
 // ---------------- class basic attacks ----------------

@@ -28,7 +28,15 @@ function kqsDecal(p,R,col,op,edge){const f=kqsDrapeM(new THREE.RingGeometry(.001
 function kqsWarn(p,R,col,delay,cb){const D=kqsDecal(p,R,col,.12,.8),in_=kqsDrapeM(new THREE.RingGeometry(.001,1,32,2),kqsDMat(col,.3));
   kqsObj({life:delay,tick:(dt,now,o)=>{const k=Math.min(1,o.age/delay);kqsDrape(in_,(u,v)=>[p.x+u*R*k,p.z-v*R*k],.16)},end:o=>{kqsRm(in_);D.rm(200);if(!o.abort)cb&&cb()}})}
 function kqsLob(from,to,mesh,ms,h,cb){scene.add(mesh);const a=gY(from,1.2),b=gY(to,.3);tw(ms,k=>{mesh.position.lerpVectors(a,b,k);mesh.position.y+=Math.sin(k*Math.PI)*(h||2.4);mesh.rotation.x+=.3;mesh.rotation.z+=.2},()=>{if(mesh.userData.kqsShared){if(mesh.parent)mesh.parent.remove(mesh)}else kqsRm(mesh);cb&&cb()})}
-function kqsPillar(p,col,h,ms,w){const m=kqsMesh(new THREE.CylinderGeometry(w||.5,w||.5,h||8,10,1,true),kqsAdd(col));m.position.copy(gY(p,(h||8)/2));scene.add(m);tw(ms||420,k=>{m.material.opacity=.85*(1-k);m.scale.set(1+k*.6,1,1+k*.6)},()=>kqsRm(m))}
+// v186: a pillar of light is a soft column fading upward (vertical gradient) round a white-hot core, with a ground glow and
+// embers rising through it (was one flat additive tube)
+var G_KQSCYL=null;
+function kqsPillar(p,col,h,ms,w){h=h||8;w=w||.5;ms=ms||420;G_KQSCYL=G_KQSCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,16,1,true);g.translate(0,.5,0);return g})();
+  const g=new THREE.Group(),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.7),o=kqsMesh(G_KQSCYL,fx186Mat(col,fx186Tex('vgrad'),.75)),c=kqsMesh(G_KQSCYL,fx186Mat(c2,fx186Tex('vgrad'),1)),d=kqsMesh(fx186Disc(),fx186Mat(col,fx186Tex('soft'),.6));
+  o.userData.kqsKeep=c.userData.kqsKeep=d.userData.kqsKeep=1;g.add(o,c,d);g.position.copy(gY(p,0));d.position.y=.06;scene.add(g);
+  try{burst(gY(p,.4),col,Math.min(26,8+h*1.6),w*1.2,h*.75,.9)}catch(_){}
+  tw(ms,k=>{const u=k<.14?1-Math.pow(1-k/.14,3):1,f=Math.pow(1-k,1.3),ww=w*(1+k*.55);o.scale.set(ww*1.15,h*u,ww*1.15);c.scale.set(ww*.34*(1-k*.5),h*u*1.04,ww*.34*(1-k*.5));d.scale.setScalar(w*2.4*(.6+.4*u));
+    o.material.opacity=.75*f;c.material.opacity=f;d.material.opacity=.6*f},()=>{scene.remove(g);[o,c,d].forEach(q=>q.material.dispose())})}
 function kqsSpark(a,b,col){try{bolt(a,b,col)}catch(_){}}
 
 // ---------------- simple low-poly models for summons and props ----------------
@@ -215,7 +223,12 @@ var KQH={
 function kqsLunge(t){const d=kqsDir(pl.position,t.m.position),L=d2(pl.position,t.m.position)-1.5-(t.boss?1.2:0);face(d);if(L<=.25)return 0;const T=L/16;hero.dash={x:d.x,z:d.z,t:T};hero.iv=Math.max(hero.iv||0,T*.5);return Math.round(T*1000)}
 function kqsSpike(p,col,h,ice){const m=kqsMesh(new THREE.ConeGeometry(.28,h||1,5),ice?kqsStd(col,.6,.85):kqsStd(col,.08));m.position.copy(gY(p,-(h||1)/2));scene.add(m);const y0=m.position.y;tw(140,k=>m.position.y=y0+k*(h||1)*.9,()=>setTimeout(()=>tw(380,k=>m.position.y=y0+(1-k)*(h||1)*.9,()=>kqsRm(m)),450))}
 function kqsChain(a,b,col,ms){const n=Math.max(3,Math.round(a.distanceTo(b)/.35)),g=new THREE.Group(),m=kqsStd(col,.25);for(let j=0;j<n;j++){const l=kqsMesh(new THREE.TorusGeometry(.1,.03,4,8),m);l.position.lerpVectors(a,b,j/(n-1));l.rotation.y=j%2?Math.PI/2:0;l.lookAt(b);if(j%2)l.rotateZ(Math.PI/2);g.add(l)}scene.add(g);setTimeout(()=>kqsFade(g,200),ms||250)}
-function kqsBeam(a,b,col,w,ms){const L=a.distanceTo(b),m=kqsMesh(new THREE.CylinderGeometry(w,w,L,6,1,true),kqsAdd(col));m.position.lerpVectors(a,b,.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());scene.add(m);tw(ms||200,k=>{m.material.opacity=.9*(1-k)},()=>kqsRm(m))}
+// v186: a beam is a soft glowing shaft round a thin white core that flares in and thins out, sparks at its end
+function kqsBeam(a,b,col,w,ms){const L=a.distanceTo(b);if(L<.01)return;G_KQSCYL=G_KQSCYL||(()=>{const g=new THREE.CylinderGeometry(1,1,1,16,1,true);g.translate(0,.5,0);return g})();
+  const g=new THREE.Group(),c2=new THREE.Color(col).lerp(new THREE.Color(0xffffff),.75),o=kqsMesh(G_KQSCYL,fx186Mat(col,null,.55)),c=kqsMesh(G_KQSCYL,fx186Mat(c2,null,1));o.userData.kqsKeep=c.userData.kqsKeep=1;
+  g.add(o,c);g.position.copy(a);g.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());scene.add(g);ms=ms||200;
+  try{burst(b,col,6,1.4,1.2,.35);fx186Flash(b,col,Math.min(1.8,.5+w*3),ms*.8)}catch(_){}
+  tw(ms,k=>{const u=k<.15?.5+.5*k/.15:1,f=1-k;o.scale.set(w*1.6*u*(1+k*.5),L,w*1.6*u*(1+k*.5));c.scale.set(w*.45*(1-k*.6),L,w*.45*(1-k*.6));o.material.opacity=.55*f;c.material.opacity=f},()=>{scene.remove(g);o.material.dispose();c.material.dispose()})}
 function kqsPose(p,ms){try{const T=kqsPoseT(p);if(T&&T[0]&&typeof haPlay=='function'){haPlay(ms||T[1],T[0],2,null,.15)}}catch(_){}}
 // traps: arm, then fire when an enemy steps within `trig`
 function kqsTrap(t){let armed=0;return kqsObj({life:t.life,tick:(dt,now,o)=>{if(t.blink)t.blink.material.emissiveIntensity=.6+Math.sin(now/(armed?120:60))*.6;if(o.age<t.arm)return;armed=1;if(kqsFoes(t.p,t.trig).length){t.fire();return false}},end:()=>{kqsFade(t.mesh,250);if(t.deco)t.deco.rm(250)}})}

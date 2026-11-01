@@ -12,7 +12,7 @@
 // wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
 // (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
-// Evolution: the wing grows 6% per level (as before) and gains darker covert edges, bright flight-feather tips and a trimmed
+// Evolution: the wing grows 2% per level (v186; was 6%) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
 var BW184={lv:10,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
@@ -53,7 +53,7 @@ function bw184Push(T,x,y,z,clr){const z0=T[0][0];let zh=T[T.length-1][0];for(let
 // ---------------- the wing ----------------
 // builds the three key shapes of the right wing in the shoulder's space: {P:[spread, half, folded] Float32Arrays, C, piv}
 function bw184Build(sp,C,L,P){
-  const D=BW184.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw184Cols(sp,C),sc=1+.06*L;
+  const D=BW184.sp[sp],T=D.T(),V3=THREE.Vector3,K=bw184Cols(sp,C),sc=1+.02*L; // v186: 2% per level (was 6%: companions grew too big)
   const q=dh150At(T,D.zs),piv=[q.w*.62,q.y+q.a*.62,D.zs];
   // evolution colours
   if(L>=2){K.covEdge=K.covD.clone().lerp(new THREE.Color(P.dark),.45)}

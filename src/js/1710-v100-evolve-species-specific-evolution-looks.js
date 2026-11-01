@@ -220,7 +220,7 @@ function evo100Bake(E){
 function evo100Wing(geo,L,P,key,o){
   if(EVO100.wing[key])return EVO100.wing[key];o=o||{};
   const pa=geo.attributes.position.array,ca=geo.attributes.color.array,nT=pa.length/9,hub=[pa[0],pa[1],pa[2]],P0=[],C0=[],R=dkRng(13),c=new THREE.Color(),c2=new THREE.Color();
-  const sc=1+(o.grow||.05)*L,isHub=t=>Math.abs(pa[t*9]-hub[0])+Math.abs(pa[t*9+1]-hub[1])+Math.abs(pa[t*9+2]-hub[2])<1e-6;
+  const sc=1+(o.grow||.05)*L*.35,isHub=t=>Math.abs(pa[t*9]-hub[0])+Math.abs(pa[t*9+1]-hub[1])+Math.abs(pa[t*9+2]-hub[2])<1e-6;
   let mx=0;for(let t=0;t<nT;t++)if(isHub(t))for(let k=1;k<3;k++)mx=Math.max(mx,Math.hypot(pa[t*9+k*3]-hub[0],pa[t*9+k*3+2]-hub[2]));
   const accent=new THREE.Color(o.accent!=null?o.accent:P.mainD).lerp(new THREE.Color(P.glowD),.35).multiplyScalar(.7),edge=new THREE.Color(o.edge!=null?o.edge:P.dark),glow=new THREE.Color(P.glow);
   const put=(p,cc)=>{P0.push(p[0]*sc,p[1]*sc,p[2]*sc);C0.push(cc.r,cc.g,cc.b)};

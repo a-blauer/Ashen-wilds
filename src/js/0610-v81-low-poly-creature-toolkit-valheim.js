@@ -3,6 +3,9 @@
 // (SPEC[n].bones), so the shared rigAnim walk/fly/attack animation keeps working unchanged.
 // A creature registers itself in LPR[rigName] = {geo, kit, post, back, head, sc}; see zzE_*.js.
 var LPR={},LPG={},LPMT={},LPSG={};
+// v186: own size factor of the largest species (measured heights / lengths at stage 3; the hero is ~1.5 m)
+var SZ186={Rocsovereign:.85,Stormtalon:.88,Skollmaw:.9,Titanshell:.85,Elderdrake:.8,Pyrewing:.8,Duskwing:.85,Soulwarden:.82,Sporelord:.8,Lumenwisp:.85,
+  Gloomcap:.85,Wispling:.9,Hivemother:.88,Widowqueen:.9,Lichbone:.92,Venomcoil:.85,Bogmaw:.92};
 // fur/skin colour muted toward earth brown (the painterly Valheim palette)
 function lpMain(C,k){return new THREE.Color(C).lerp(new THREE.Color(0x5a4636),k==null?.18:k)}
 function lpHex(c){return c.isColor?c.getHex():c}
@@ -125,7 +128,10 @@ function lpRig(c,n,D){
   }
   if(c.tr=='Bulky')b.scale.set(1.15,1.08,1.08);
   g.rig=(now,mv,sp)=>rigAnim(x,now,mv,sp);
-  g.bs=(D.sc||S.sc||1)*(1+.04*(c.f||0))*(c.z||1)*(SP2[c.g[0]]?1+.12*(SP2[c.g[0]][1]-1):1)*(1+.06*(c.evo||0));g.scale.setScalar(g.bs);return g;
+  // v186 (owner: "companions get too big. Reduce growth size significantly and reduce some of our larger companions"):
+  // tier +5% (was +12%) per tier, evolution +2.5% (was +6%) per stage, fusion +1.2% (was +4%) per point up to 10, and the
+  // largest species scaled down on their own (SZ186)
+  g.bs=(D.sc||S.sc||1)*(SZ186[c.g[0]]||1)*(1+.012*Math.min(10,c.f||0))*(c.z||1)*(SP2[c.g[0]]?1+.05*(SP2[c.g[0]][1]-1):1)*(1+.025*(c.evo||0));g.scale.setScalar(g.bs);return g;
 }
 {const f=crRig;crRig=function(c,n){const D=LPR[n];if(D&&SPEC[n]){try{return lpRig(c,n,D)}catch(e){console.error('low-poly rig failed',n,e)}}return f.apply(this,arguments)}}
 
