@@ -20,6 +20,9 @@
 #    of every move the weapon turns at most TURN (40) deg per 1/30 s (TURN_FAST, 70, in the strike's 3 fastest ticks), spins
 #    about its own handle at most SPIN (25), and neither the weapon, its spin nor the hand turns back and forth over 3 ticks
 #    (not the slinger's whirl, which spins the sling round by design);
+#  * the off hand on a two-handed haft (staff cast: FAIL; great axe, greatsword, hammer, halberd: WARN): with the grip on, the shaft runs
+#    through the off fist (within 0.03 x scale of its grip), the palm faces the shaft (> 0.5) and away from the body (the hand
+#    on the body's side of the shaft, knuckles out), and the off forearm stays clear of the shaft;
 #  * the feet stay planted (ankles within a few cm of where they stood), no NaN, the pose returns to the plain stance after;
 #  * one real enemy fight step (mStart / mTick / animC): the system drives the attack and the head lands toward the hero.
 # ONLY=orc,gharial  HEAD_R=.07
@@ -53,7 +56,7 @@ JS=r"""([k,n,rep2,hr,FPS])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPos
  // the alternate strike: one unmeasured attack first, so this one is the foe's second
  if(rep2){for(const [ph,kk] of tl){g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};step(dt*1000)}g.ak=null;for(let i=0;i<6;i++)step(dt*1000)}
  let maxGrip=0,maxFoot=0,nan=0,res=null,driven=0,hitZ=null,recOver=null,headMin=9,headAt=null,fi=0,carryHead=null,recHead=[0,9];const sc=H/1.7;
- let fist={},shF=null,bowF=null,wEdge=0,prevTip=null,prevT=0,face=null,maxBack=null,foeFace=null,upDown=null,tn='';const ang=(a,b)=>Math.acos(Math.max(-1,Math.min(1,a.dot(b)/(a.length()*b.length()||1))))*57.2958;
+ let offG={},fist={},shF=null,bowF=null,wEdge=0,prevTip=null,prevT=0,face=null,maxBack=null,foeFace=null,upDown=null,tn='';const ang=(a,b)=>Math.acos(Math.max(-1,Math.min(1,a.dot(b)/(a.length()*b.length()||1))))*57.2958;
  const fa0=()=>g._fa;
  let tPrv=-dt,rq=null,rh=null,rw=[],fr=0;
  for(const e of tl){const [ph,kk]=e;g.ak={n,ph,k:Math.max(0,Math.min(1,kk))};const tN=tOf(ph,kk);step(Math.max(1,(tN-tPrv)*1000));tPrv=tN;const S=g._fa;if(S&&S.ph>=0)driven=1;
@@ -66,6 +69,15 @@ JS=r"""([k,n,rep2,hr,FPS])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPos
       const dh=hq.clone().multiply(rh.clone().invert());if(dh.w<0){dh.x=-dh.x;dh.y=-dh.y;dh.z=-dh.z;dh.w=-dh.w}const ah=2*Math.acos(Math.min(1,dh.w)),sh=Math.sqrt(Math.max(0,1-dh.w*dh.w)),hv=sh>1e-6?new V(dh.x,dh.y,dh.z).multiplyScalar(ah/sh):new V();
       rw.push({f:fr,ph,k:+kk.toFixed(2),s:+(S.sT||0).toFixed(2),a:an*57.2958,sp:sp*57.2958,h:ah*57.2958,w:wv.toArray(),hv:hv.toArray()})}
     rq=q;rh=hq}}
+  /* THE OFF HAND ON A TWO-HANDED HAFT (owner: it gripped the staff from the far side): with the grip fully on, the shaft runs
+     through the off fist (its grip anchor), the palm faces the shaft, the palm faces away from the body (the hand on the
+     body's side of the shaft, knuckles out) and the off forearm does not cross the shaft */
+  {const S2=g._fa;if(S2&&S2.haft&&S2.we&&S2.T&&S2.sT!=null&&S2.owE>.95){const W=S2.we.W,ob=b[S2.side<0?'aR2':'aL2'],o1b=b[S2.side<0?'aR1':'aL1'],oq=new THREE.Quaternion();ob.matrixWorld.decompose(new V(),oq,new V());
+    const ap=ob.localToWorld(S2.oAn.clone()),pc=ob.localToWorld(new V(S2.oAn.x,S2.oAn.y,S2.oAn.z-.03)),pn=new V(0,0,1).applyQuaternion(oq).normalize(),a0=W.localToWorld(new V(0,.6,0)),a1=W.localToWorld(new V(0,-(W.userData.faLen||.8),0)),ln=new THREE.Line3(a0,a1),cp=new V();
+    ln.closestPointToPoint(ap,false,cp);const dA=ap.distanceTo(cp)/sc;ln.closestPointToPoint(pc,false,cp);const tw=cp.clone().sub(pc),pDot=tw.length()>1e-6?pn.dot(tw.normalize()):1;
+    const ch=P(b.chest),hz=cp.clone().sub(ch),ya=a1.clone().sub(a0).normalize();hz.addScaledVector(ya,-hz.dot(ya));const away=hz.length()>1e-6?pn.dot(hz.normalize()):1;
+    const e0=P(o1b),e1=P(o1b).lerp(P(ob),.75);let dX=9;for(let j=0;j<=8;j++){const pt=e0.clone().lerp(e1,j/8);const c2=new V();new THREE.Line3(a0,a1).closestPointToPoint(pt,true,c2);dX=Math.min(dX,pt.distanceTo(c2)/sc)}
+    if(!offG.n)offG={n:0,dA:[0,0],pDot:[0,9],away:[0,9],dX:[0,9]};offG.n++;if(dA>offG.dA[1])offG.dA=[fi,dA];if(pDot<offG.pDot[1])offG.pDot=[fi,pDot];if(away<offG.away[1])offG.away=[fi,away];if(dX<offG.dX[1])offG.dX=[fi,dX]}}
   b.pelvis.traverse(o=>{if(o.isBone&&(isNaN(o.quaternion.x)||isNaN(o.position.x)))nan=1});
   const side=S&&S.side<0?'L':'R',we=S&&S.we;
   if(we&&we.W.parent){const W=we.W,hd=we.C.hold,hp=W.localToWorld(new V(hd[0],hd[1],hd[2])),gd=g.h._gripD&&g.h._gripD[we.side],an=C=>new V(GRIP_AN[0]+(gd?gd[0]:0),GRIP_AN[1]+(gd?gd[1]:0),GRIP_AN[2]+(gd?gd[2]:0));
@@ -108,7 +120,7 @@ JS=r"""([k,n,rep2,hr,FPS])=>{const V=THREE.Vector3,P=o=>new V().setFromMatrixPos
     }}
  g.ak=null;for(let i=0;i<20;i++)step(16);
  let back=0;for(const x in rot0)back=Math.max(back,2*Math.acos(Math.min(1,Math.abs(rot0[x].dot(b[x].quaternion)))));
- Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt,carryHead,recHead,face,maxBack,foeFace,upDown,tn,edge:wEdge,bowF,shF,fist,rw,errM:g._fa&&g._fa.errM?g._fa.errM*57.2958:0,errS:g._fa&&g._fa.errS});scene.remove(g);return out}"""
+ Object.assign(out,{res,maxGrip,maxFoot,nan,driven,back,sh0:sh0.toArray(),recOver,headMin,headAt,carryHead,recHead,face,maxBack,foeFace,upDown,tn,edge:wEdge,bowF,shF,fist,rw,offG,errM:g._fa&&g._fa.errM?g._fa.errM*57.2958:0,errS:g._fa&&g._fa.errS});scene.remove(g);return out}"""
 JS_GAME=r"""()=>{const V=THREE.Vector3,out={err:[]};const p=pl.position;const e=spawnEnemy_base('orc',p.x,p.z+1.6,5,{agg:1});e.m.scale.setScalar(e.m.bs);
  let now=performance.now();const tick=()=>{now+=16;e.m._ie=e;if(e.atk)mTick(e,.016,now);animC(e.m,now,false,0);e.m.updateMatrixWorld(true)};
  for(let i=0;i<10;i++)tick();mStart(e,pl,'strike');let hitTip=null,drv=0,n=0;
@@ -119,7 +131,7 @@ JS_GAME=r"""()=>{const V=THREE.Vector3,out={err:[]};const p=pl.position;const e=
 def s(pg):
     ev=pg.evaluate;pg.set_default_timeout(3600000);ev("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
-    fails=[];notes=[]
+    fails=[];notes=[];warns=[]
     RUNS=[]
     for k,n in FOES:
         RUNS.append((k,n,False))
@@ -198,6 +210,16 @@ def s(pg):
                         fails.append('%s: the %s flickers back and forth (frames %d-%d, s %.2f, %.0f / %.0f / %.0f deg)'%(tag,nm,a['f'],c['f'],a['s'],a['a' if key=='w' else 'h']*sc30,b2['a' if key=='w' else 'h']*sc30,c['a' if key=='w' else 'h']*sc30))
                 if min(abs(a['sp']),abs(b2['sp']),abs(c['sp']))>fl and a['sp']*b2['sp']<0 and b2['sp']*c['sp']<0:
                     fails.append('%s: the weapon spins back and forth about its handle (frames %d-%d, s %.2f, %.0f / %.0f / %.0f deg)'%(tag,a['f'],c['f'],a['s'],a['sp']*sc30,b2['sp']*sc30,c['sp']*sc30))
+        og=r.get('offG') or {}
+        if og.get('n'):
+            print('   off hand on the haft (%d frames): shaft from the grip %.3f x scale (frame %d), palm toward the shaft %.2f (frame %d), palm away from the body %.2f (frame %d), forearm from the shaft %.3f x scale (frame %d)'%(og['n'],og['dA'][1],og['dA'][0],og['pDot'][1],og['pDot'][0],og['away'][1],og['away'][0],og['dX'][1],og['dX'][0]))
+            # FAIL for the staff casts (the owner's report); the two-handed melee grips are printed (WARN) until their keys are
+            # re-authored for the off arm's reach at the top of the coil
+            ff=fails if n in ('bolt','rainfire') else warns
+            if og['dA'][1]>.03:ff.append('%s: the shaft is not in the off fist (%.3f x scale from its grip, frame %d)'%(tag,og['dA'][1],og['dA'][0]))
+            if og['pDot'][1]<.5:ff.append('%s: the off palm does not face the shaft (%.2f, frame %d)'%(tag,og['pDot'][1],og['pDot'][0]))
+            if og['away'][1]<0:ff.append('%s: the off hand grips the shaft from the far side (palm toward the body %.2f, frame %d)'%(tag,og['away'][1],og['away'][0]))
+            if og['dX'][1]<.025:ff.append('%s: the off forearm crosses the shaft (%.3f x scale from it, frame %d)'%(tag,og['dX'][1],og['dX'][0]))
         if r['recHead'][1]<9:print('   recovery: weapon nearest the head %.3f x scale (frame %d; at the carry %.3f)'%(r['recHead'][1],r['recHead'][0],r['carryHead'] if r['carryHead'] is not None else 9))
         if r['recHead'][1]<min(HEAD_R,(r['carryHead'] if r['carryHead'] is not None else 9)-.01):fails.append('%s: the recovery brings the weapon through the head (%.3f x scale from it, frame %d)'%(tag,r['recHead'][1],r['recHead'][0]))
         if r['headMin']<HEAD_R:fails.append('%s: the weapon passes through the head (%.3f x scale from the head, frame %s)'%(tag,r['headMin'],r['headAt']))
@@ -209,6 +231,7 @@ def s(pg):
         if not g['drv']:fails.append('game: a real orc attack is not driven by the foe-attack system')
         elif not g['hit']:fails.append('game: no hit moment seen')
         elif g['ahead']<.4:fails.append('game: the orc axe head lands %.2f m toward the hero (expected well in front)'%g['ahead'])
+    for f in warns:print('WARN',f)
     for f in fails:print('FAIL',f)
     print('v181_foe_attacks: %d foe moves, %d failures'%(len(FOES),len(fails)))
 play.run(s)

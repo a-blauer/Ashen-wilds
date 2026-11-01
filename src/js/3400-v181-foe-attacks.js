@@ -184,11 +184,12 @@ function faBuild(){
   FA_A.cast=faTrack([Object.assign({},R0,{ow:0}),
     {s:.2,ow:1},
     {s:.5,H:[.14,.1,.12],hs:.75,D:[.22,.95,-.15],E:[0,0,1],P:[.8,-.4,-.4],OP:[-.8,-.4,-.3],py:.2,sy:.1,cy:.05,sx:-.08,sz:-.03,hx:-.06,dy:-.02,fz:-.05},
-    {s:.9,H:[.14,.25,.06],hs:.75,D:[.22,.9,-.3],py:.25,sy:.12,cy:.06,sx:-.12,sz:-.04,hx:-.08,dy:-.03,fz:-.06},
+    {s:.74,H:[.14,.25,.06],hs:.75,D:[.22,.9,-.3],py:.25,sy:.12,cy:.06,sx:-.12,sz:-.04,hx:-.08,dy:-.03,fz:-.06},
     {s:1,H:[-.05,.05,.62],D:[0,.75,.66],P:[.7,-.6,-.1],OP:[-.7,-.6,-.1],py:-.15,sy:-.1,cy:-.04,sx:.2,sz:.02,hx:0,dy:-.05,fz:.08},
     {s:1.3,H:[-.05,.02,.6],D:[0,.78,.62],py:-.18,sy:-.12,sx:.22,dy:-.06,fz:.09},
-    {s:2,H:[-.02,-.1,.48],D:[0,.85,.52],py:-.1,sy:-.06,sx:.15,dy:-.04,fz:.06},
-    {s:2.5,H:[0,-.5,.35],hs:.8,D:[0,.9,.4],P:[.5,-.9,-.3],OP:[-.5,-.9,-.3],py:0,sy:0,cy:0,sx:.04,sz:0,dy:-.01,fz:.01,ow:.6},
+    {s:2,H:[-.02,-.1,.48],D:[0,.85,.52],py:-.1,sy:-.06,sx:.15,dy:-.04,fz:.06,ow:1},
+    /* the off hand lets go of the staff as it comes down */{s:2.2,ow:.5},
+    {s:2.5,H:[0,-.5,.35],hs:.8,D:[0,.9,.4],P:[.5,-.9,-.3],OP:[-.5,-.9,-.3],py:0,sy:0,cy:0,sx:.04,sz:0,dy:-.01,fz:.01,ow:.2},
     Object.assign({},RE,{s:2.8,ow:0}),Object.assign({},RE,{ow:0})]);
   // ---- rainfire (casters; the fire lands at the act's end, s = 2): the staff raised high overhead, the off hand open and
   // lifted, a long gathering call, then staff and hand drive down toward the target
@@ -372,6 +373,16 @@ function faBest(b0,b1,b2,T,poleD,q0,Dw,edH,Ew,ew,eSg,prev,hH,hard,lim,twRef,home
     const p0=best.ph,r0=best.ro;for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)if(i||j)evalAt(p0+i*Math.PI/40,r0+j*Math.PI/40)}
   const pole=new THREE.Vector3().copy(e1).multiplyScalar(Math.cos(best.ph)).addScaledVector(e2,Math.sin(best.ph));
   return {pole,Qh:new THREE.Quaternion().setFromAxisAngle(Dw,best.ro).multiply(q0),c:best.c,ee:best.ee,ph:best.ph,ro:best.ro,tilt:best.tilt}}
+// the off fist's world turn on a two-handed haft (see the off hand in faApply): handle axis as in its own carry grip, palm
+// normal (the hand's +z, where the grip anchor sits) = the weapon hand's palm mirrored across the body, leaning toward the
+// weapon side and away from the body (from the chest out to the grip, square to the handle: up behind the head the hand is
+// under the handle, in front of the chest behind it)
+function faOffQ(S,we,Ww,toW,m2,pw,bc){const ya=new THREE.Vector3(0,1,0).applyQuaternion(Ww).normalize(),hO=new THREE.Vector3(0,1,0).applyQuaternion(S.oC).normalize(),
+    pL=new THREE.Vector3(0,0,1).addScaledVector(hO,-hO.z).normalize();
+  const mq=faWQ(m2,new THREE.Quaternion()),pm=new THREE.Vector3(0,0,1).applyQuaternion(mq),bq=faWQ(S.mA[0].parent,new THREE.Quaternion()),bi=bq.clone().invert();
+  const pb=pm.applyQuaternion(bi);pb.x=-pb.x;const aw=pw.clone().sub(bc);aw.addScaledVector(ya,-aw.dot(ya));if(aw.lengthSq()>1e-8)aw.normalize();const want=pb.applyQuaternion(bq).add(toW([.5,0,0],new THREE.Vector3())).addScaledVector(aw,.5);want.addScaledVector(ya,-want.dot(ya));
+  if(want.lengthSq()<1e-6)want.copy(toW([1,0,0],new THREE.Vector3())).addScaledVector(ya,-ya.dot(toW([1,0,0],new THREE.Vector3())));
+  return faFrameQ(hO,pL,ya,want.normalize(),new THREE.Quaternion()).clone()}
 // turn the weapon in the fist by Rp from its carry grip, keeping the point held in the fist where it is
 function faSetFist(we,Rp){const W=we.W,hd=we.C.hold,h=new THREE.Vector3(hd[0]*W.scale.x,hd[1]*W.scale.y,hd[2]*W.scale.z),ph=h.clone().applyQuaternion(W.quaternion).add(W.position);
   W.quaternion.copy(Rp).multiply(we.C.q);W.position.copy(ph.sub(h.applyQuaternion(W.quaternion)));W.updateMatrixWorld(true)}
@@ -504,8 +515,14 @@ function faApply(g,S,a,now){
   // ---- off hand ----
   if(P.ow>1e-3){let ot=null;
     if(S.haft&&we){
-      // on the haft: the off fist round the handle at weapon point ot, turned as if it carried the weapon itself
-      const Ww=faWQ(we.W,new THREE.Quaternion()),qh=Ww.clone().multiply(S.oC.clone().invert()),pw=we.W.localToWorld(new THREE.Vector3(0,S.ot0+P.ot,0));
+      // on the haft: the off fist round the handle at weapon point ot, closing on it from the near side (owner: the off hand
+      // gripped the staff from the far side, its forearm across the chest). The handle runs through the fist as in the off
+      // hand's own carry (thumb toward the same end); the palm faces the way the weapon hand's palm does, mirrored across
+      // the body (both hands on the body's side of the shaft, palms away from the body, knuckles out, as on a quarterstaff)
+      // (the grip slides along the handle, up to 0.3 weapon units, if the off arm can't reach its point)
+      const Ww=faWQ(we.W,new THREE.Quaternion()),oL=faWP(o0,FA_v[22]).distanceTo(faWP(o1,FA_v[23]))+faWP(o1,FA_v[22]).distanceTo(faWP(o2,FA_v[23]));
+      let pw=null,bc=1e9;for(let k=-6;k<=6;k++){const p2=we.W.localToWorld(new THREE.Vector3(0,S.ot0+P.ot+k*.05,0)),c=10*Math.max(0,p2.distanceTo(so)-.97*oL)+Math.abs(k)*.05*.02;if(c<bc){bc=c;pw=p2}}
+      const qh=faOffQ(S,we,Ww,toW,m2,pw,faWP(S.mA[0].parent,new THREE.Vector3()));
       const an=S.oAn.clone().multiplyScalar(o2.matrixWorld.getMaxScaleOnAxis()).applyQuaternion(qh);ot=pw.sub(an);
       const op=toW(P.OP,new THREE.Vector3()).normalize(),l2o=faWP(o1,FA_v[22]).distanceTo(faWP(o2,FA_v[23])),ei=ot.clone().addScaledVector(o2.position.clone().normalize().applyQuaternion(qh),-l2o).sub(so);
       if(ei.lengthSq()>1e-8)op.multiplyScalar(.35).addScaledVector(ei.normalize(),.65).normalize();
@@ -529,7 +546,7 @@ function faApply(g,S,a,now){
       faIK(o0,o1,o2,ot,toW(P.OP,new THREE.Vector3()).normalize(),1);
       if(P.orw){o2.quaternion.copy(S.base[o2.name]);o2.rotateX(P.orw)}o2.updateMatrixWorld(true)}}
   // ---- blend every touched bone from the earlier layers' pose by w (the off arm by w·ow; the bow arm blends itself) ----
-  const ow=w*Math.min(1,P.ow);
+  const ow=w*Math.min(1,P.ow);S.owE=ow;
   for(const n in S.base){const bn=b[n];if(!bn)continue;let k=w;if(bn===o0||bn===o1||bn===o2)k=ow;
     if(n=='pelvis'||n=='spine'||n=='chest'||n=='head')continue;   // already scaled by w
     if(S.legs&&/^(lh|rh)/.test(n))k=Math.min(1,w*3);   // solved from the weighted pelvis: planted for most of the blend
