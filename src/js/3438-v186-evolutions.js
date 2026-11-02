@@ -154,6 +154,9 @@ EV38.S.Cragback=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,TT=ER150.
   [[.22,.12],[-.24,-.08],[.18,-.27]].slice(0,s).forEach(([x,z])=>T.cluster(R,x,z,.1+.04*s,4,cry,cryD,sb));
   [-1,1].forEach(sd=>T.chain(R,[[sd*.065,.37,.49],[sd*.13,.44+.02*s,.38],[sd*(.16+.02*s),.47+.04*s,.3-.02*s]],.034+.005*s,.004,'c',stone,hb));
   if(s>=2)[-1,1].forEach(sd=>T.chain(R,[[sd*.085,.33,.52],[sd*(.16+.02*s),.34,.46],[sd*(.2+.03*s),.37,.4]],.026,.003,'c',st2,hb))};
+// Cragback kit (all stages): its crystals take one muted blue (the pale cores read busy beside the darker shards)
+{const f=er150CragKit;er150CragKit=function(k,C,red){const L0=k.L;k.L=function(bn,t,col){if(t=='g'&&col===0x9ad8ff){const a=Array.prototype.slice.call(arguments);a[2]=0x5a86a0;return L0.apply(k,a)}return L0.apply(k,arguments)};
+  try{return f.apply(this,arguments)}finally{k.L=L0}}}
 // Titanshell (the living mountain; the crystal crown, the beads on the horns and the floating rim crystals are gone): the
 // mountain itself grows. 0 the crystal veins swell · 1 the peaks rise, the great horns lengthen · 2 higher peaks and longer
 // horns, crystal breaking from the cracks · 3 the summit towers, the horns sweep far forward, the crystal veins burn (dimly)
@@ -180,8 +183,8 @@ EV38.S.Mossfrog=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,skin=T.di
 EV38.S.Bogmaw=function(E,L,P,c,s){const R=E.raw,T=EV38T,hb={bn:'head'},skin=T.dim(P.main,.8),skD=T.dim(skin,.65),wart=T.dim(skin,.5);
   [[.1,.02],[-.12,-.08],[.16,-.18]].forEach(q=>{const t=R.top(q[0],q[1]);if(t)R.pd('sph','g',T.mix(P.glowD,skD,.5),R.add(t.p,t.n,-.002),t.n,[.018,.01,.018])});
   if(!s)return;
-  T.swell(R,[0,.2,.42],[.38,.09,.16],.01+.012*s,(x,y,z)=>T.mix(skD,skin,.4*T.hash(x,y,z)),{sel:(x,y,z,nx,ny)=>ny<.6&&y<.236});
-  [-.14,0,.14].forEach((x,i)=>T.swell(R,[x,.46,-.04],[.04+.008*s,.06,.24],.006+.008*s,(x,y,z,k)=>T.mix(skin,wart,k),{jag:.8}));
+  T.swell(R,[0,.2,.42],[.4,.1,.17],.014+.017*s,(x,y,z)=>T.mix(skD,skin,.4*T.hash(x,y,z)),{sel:(x,y,z,nx,ny)=>ny<.6&&y<.236});
+  [-.14,0,.14].forEach((x,i)=>T.swell(R,[x,.46,-.04],[.05+.01*s,.08,.26],.01+.013*s,(x,y,z,k)=>T.mix(skin,wart,k),{jag:.8}));
   if(s>=2)[-1,1].forEach(sd=>R.horn([sd*.2,.43,.36],[sd*.5,.8,-.3],[0,-.01,-.03],[0,0,.09,.15][s],.022+.004*s,'c',P.boneD,4,hb,T.dim(P.boneD,.7)))};
 ['Stoneshell','Mossfrog'].forEach(ev38Hook);
 // Mossfrog kit (all stages): the eyes looked like coconuts - now a dark eyeball with an amber iris and a black slit pupil under a
@@ -222,7 +225,7 @@ EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s+1>3?3:s+1,1)};
   B.kit=function(k,c,C,red){const kp=k.p;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box'&&t=='g'){const s=Math.sign(x);
       kp.call(k,'head','sph','c',0x070506,x,y,z,.026,.014,.012,rx,ry,rz);return kp.call(k,'head','box','g',red?0x8a1a14:col===0xc070ff?0x6a3a9a:0x9a2418,x+s*.002,y,z+.004,.028,.005,.006,rx,ry,rz)}
     return kp.apply(k,arguments)};try{return k0.apply(this,arguments)}finally{k.p=kp}};
-  B.post=function(x,c){const n0=x.ears?x.ears.length:0,r=p0.apply(this,arguments);try{const s=ev38StC(c),dusk=rv137('Batwing',c)=='Duskwing',g=1+(dusk?.17:.12)*s;
+  B.post=function(x,c){const n0=x.ears?x.ears.length:0,r=p0.apply(this,arguments);try{const s=ev38StC(c),dusk=rv137('Batwing',c)=='Duskwing',g=1+(dusk?.22:.18)*s;
       if(s&&x.ears)x.ears.forEach(p=>{const m=p.children[0];if(m)m.scale.multiplyScalar(g)})}catch(e){}return r}}
 if(EVO100.D.Batwing)EVO100.D.Batwing.wing={grow:.2,claws:false};
 // Skyhawk, Stormtalon, Rocsovereign (the breastplates, bibs, runes and arrows on the chest, the crowns, circlets, gems, beak caps,
@@ -232,20 +235,20 @@ if(EVO100.D.Batwing)EVO100.D.Batwing.wing={grow:.2,claws:false};
 // a heavy mantle down the back.
 EV38.bird=function(E,P,s,o){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s||typeof bd184Fth!='function')return;
   // the crest
-  const n=1+s;for(let i=-n;i<=n;i++){const q=R.top(i*.014,o.z-Math.abs(i)*.006);if(!q||q.p[1]<o.y-.06)continue;const a=R.add(q.p,q.n,-.012),ln=(o.len+.055*s)*(1-Math.abs(i)*.08),
+  const n=1+s;for(let i=-n;i<=n;i++){const q=R.top(i*.014,o.z-Math.abs(i)*.006);if(!q||q.p[1]<o.y-.06)continue;const a=R.add(q.p,q.n,-.012),ln=(o.len+.07*s)*(1-Math.abs(i)*.08),
       b=[a[0]+i*.03,a[1]+ln*o.up,a[2]-ln*.8],d=R.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);bd184Fth(R,a,d,[i*.2,1,.4],ln,.017,'c',Math.abs(i)%2?P.mainD:P.dark,hb);
     if(s>=3&&i%2==0)bd184Fth(R,R.add(a,d,ln-.06),d,[i*.2,1,.4],.065,.009,'g',P.glowD,hb)}
   // hackles round the back of the neck, lying back over the shoulders
   [o.ny,o.ny-.05,o.ny-.1].slice(0,s).forEach((y,k)=>{for(let i=0;i<9;i++){const a=-1.5+i/8*3,h=R.on([Math.sin(a)*.5,y,o.nz-Math.cos(a)*.5],[-Math.sin(a),0,Math.cos(a)]);
-    if(h)bd184Fth(R,R.add(h.p,h.n,-.006),R.nrm([h.n[0]*.6,-.35,-1]),h.n,(.07+.03*s)*(1-k*.12)*(1-Math.abs(a)*.12),.022,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}});
+    if(h)bd184Fth(R,R.add(h.p,h.n,-.006),R.nrm([h.n[0]*.6,-.35,-1]),h.n,(.09+.045*s)*(1-k*.12)*(1-Math.abs(a)*.12),.026,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}});
   if(s>=2){// the mantle over the shoulders (two rows of long feathers)
     for(let k=0;k<2;k++)for(let i=0;i<9;i++){const a=-1.25+i/8*2.5,h=R.on([Math.sin(a)*1.5,o.my-k*.05,o.mz+Math.cos(a)*.3-k*.04],[-Math.sin(a),-.2,-.3]);
-      if(h)bd184Fth(R,R.add(h.p,h.n,-.006),R.nrm([h.n[0]*.5,-.3-o.drape,-1]),h.n,(.09+.04*(s-2))*(1-k*.15),.026,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}
+      if(h)bd184Fth(R,R.add(h.p,h.n,-.006),R.nrm([h.n[0]*.5,-.3-o.drape,-1]),h.n,(.13+.06*(s-2))*(1-k*.15),.032,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}
     // the forked tail: two broad feathers lying along the tail, a little past it
-    const tq=R.top(0,o.tz);if(tq)[-1,1].forEach(sd=>{const a=R.add(tq.p,[sd*.03,-.025,0]),d=R.nrm([sd*.16,-.06,-1]);bd184Fth(R,a,d,[sd*.15,1,0],.24+.07*(s-2),.034,'c',P.dark,{bn:'tail1',kind:'lance'});
-      bd184Fth(R,R.add(a,[sd*.012,.006,-.02]),R.nrm([sd*.08,-.05,-1]),[sd*.15,1,0],.18+.05*(s-2),.028,'c',P.mainD,{bn:'tail1',kind:'lance'})})}};
+    const tq=R.top(0,o.tz);if(tq)[-1,1].forEach(sd=>{const a=R.add(tq.p,[sd*.03,-.025,0]),d=R.nrm([sd*.16,-.06,-1]);bd184Fth(R,a,d,[sd*.15,1,0],.3+.1*(s-2),.04,'c',P.dark,{bn:'tail1',kind:'lance'});
+      bd184Fth(R,R.add(a,[sd*.012,.006,-.02]),R.nrm([sd*.08,-.05,-1]),[sd*.15,1,0],.23+.08*(s-2),.032,'c',P.mainD,{bn:'tail1',kind:'lance'})})}};
 EV38.S.Skyhawk=function(E,L,P,c,s){EV38.bird(E,P,s,{y:.92,z:.37,len:.1,up:.55,ny:.85,nz:.3,my:.8,mz:.25,drape:0,tz:-.27})};
-EV38.S.Stormtalon=function(E,L,P,c,s){EV38.bird(E,P,s+1>3?3:s+1,{y:.92,z:.4,len:.12,up:.35,ny:.84,nz:.3,my:.77,mz:.22,drape:0,tz:-.29})};
+EV38.S.Stormtalon=function(E,L,P,c,s){EV38.bird(E,P,s+1>3?3:s+1,{y:.92,z:.4,len:.15,up:.35,ny:.84,nz:.3,my:.77,mz:.22,drape:0,tz:-.29})};
 EV38.S.Rocsovereign=function(E,L,P,c,s){EV38.bird(E,P,s+1>3?3:s+1,{y:.95,z:.36,len:.12,up:.75,ny:.88,nz:.3,my:.8,mz:.2,drape:.4,tz:-.3})};
 ['Batwing','Skyhawk'].forEach(ev38Hook);
 
@@ -276,7 +279,7 @@ EV38.S.Sporelord=function(E,L,P,c,s){const R=E.raw,T=EV38T,K=FC186.cols(P.C,'Spo
 // 1 its abdomen swells, a row of dark spines down it, longer fangs · 2 a bigger abdomen with bone plates grown into it (painted,
 // flush), bone spurs at the knees, longer fangs · 3 a huge abdomen, curved bone horns on the carapace, the longest fangs
 EV38.S.Cryptspider=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,hb={bn:'head'},chit=0x2a2228,plate=T.mix(P.mainD,0x6a5e54,.35);
-  T.swell(R,[0,.66,-.36],[.2+.02*s,.16+.02*s,.3+.03*s],.01+.011*s,(x,y,z)=>T.mix(P.mainD,P.dark,.4+.3*T.hash(x,y,z)),{});
+  T.swell(R,[0,.66,-.36],[.2+.02*s,.16+.02*s,.3+.03*s],.01+.011*s,(x,y,z)=>T.mix(T.mix(P.mainD,P.dark,.3+.3*T.hash(x,y,z)),0x5a1a22,y>.72?.4:.1),{});
   [-1,1].forEach(sd=>{R.L([sd*.02,.3,.49],[sd*.019,.26-.016*s,.503],.011,.001,'c',0x3a2e2a,4,{bn:'jaw'});R.pd('sph','g',0x4a1a20,[sd*.019,.262-.016*s,.503],[0,1,0],.006,null,{bn:'jaw'})});
   T.crest(R,-.12,-.56,[0,4,6,7][s],t=>(.06+.03*(s-1))*(1-.4*Math.abs(t-.35)),.02,i=>i%2?P.dark:chit,(t,q)=>[q.n[0]*.4,1,-.5]);
   if(s>=2){R.shell((x,y,z,nx,ny)=>ny>.35&&Math.abs(x)<.24&&y>.6&&((z<-.18&&z>-.28)||(z<-.36&&z>-.46)),.004,'c',plate,{rimCol:plate});
@@ -288,9 +291,9 @@ EV38.S.Cryptspider=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,hb={bn
 EV38.S.Widowqueen=function(E,L,P,c,s){const R=E.raw,T=EV38T,jb={bn:'jaw'},blk=0x0c0a0e,red=0x6a1218;
   [-1,1].forEach(sd=>{R.L([sd*.016,.36,.485],[sd*.014,.32-.022*s,.5],.011,.001,'c',0x2a2228,4,jb)});
   if(!s)return;
-  T.swell(R,[0,.92,-.52],[.22+.02*s,.2+.02*s,.36+.04*s],.012+.012*s,(x,y,z)=>T.mix(P.dark,blk,.5+.3*T.hash(x,y,z)),{});
+  T.swell(R,[0,.92,-.52],[.23+.025*s,.21+.025*s,.38+.04*s],.016+.016*s,(x,y,z)=>T.mix(P.dark,blk,.5+.3*T.hash(x,y,z)),{});
   const zc=-.5,ext=.08+.06*s;R.shell((x,y,z,nx,ny)=>ny<-.3&&Math.abs(z-zc)<ext&&Math.abs(x)<(.025+.012*s)*(.6+Math.abs(z-zc)/ext*1.6),.003,'g',red,{rimCol:red});
-  [-1,1].forEach(sd=>{for(let i=0;i<6;i++){const z=-.32-i*.09,x=sd*(.15-Math.abs(i-2.5)*.008),h=R.top(x,z);if(h)T.spike(R,h,[h.n[0]*.5,.35,-1],(.08+.035*(s-1))*(i%2?1.12:1),.022,blk)}});
+  [-1,1].forEach(sd=>{for(let i=0;i<6;i++){const z=-.32-i*.09,x=sd*(.15-Math.abs(i-2.5)*.008),h=R.top(x,z);if(h)T.spike(R,h,[h.n[0]*.5,.35,-1],(.1+.045*(s-1))*(i%2?1.12:1),.024,blk)}});
   if(s>=2)['a0','b0'].forEach(k=>{const a=R.bone(k+'0'),b=R.bone(k+'1'),m=[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2];T.swell(R,m,[.16,.16,.16],.006+.006*s,()=>T.mix(P.dark,blk,.5),{legs:1,bone:/^(a0|b0)/})})};
 // Hivemother (her crowns and gem are gone): the brood queen grows. 0 venom on the fangs, the chevrons smoulder · 1 egg sacs
 // swell along her abdomen, longer fangs · 2 the abdomen and the egg sacs bigger, heavier front legs, a longer stinger ·
@@ -315,8 +318,8 @@ EV38.S.Hivemother=function(E,L,P,c,s){const R=E.raw,T=EV38T,jb={bn:'jaw'},tb={bn
 // 1 a bigger skull and jaw, longer horns, the vertebrae rise into spines · 2 a heavier skull, a second pair of horns, longer
 // spines and a spiked tail · 3 a massive skull and jaw, long curling horns, the tallest spines, bone blades at the tail tip
 EV38.S.Boneling=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,B=boneP,hb={bn:'head'},bone=P.bone,boneD=P.boneD;
-  T.swell(R,[0,.68,.5],[.1,.09,.13],.004+.004*s,()=>bone,{bone:/^head$/});T.swell(R,[0,.56,.6],[.08,.06,.12],.003+.003*s,()=>boneD,{bone:/^jaw$/});
-  [-1,1].forEach(sd=>R.horn(B([sd*.07,.69,.42]),[sd*.35,.55,-1],s>=3?[sd*.02,-.07,-.02]:[0,-.04,-.03],[0,.12,.17,.23][s],.018+.003*s,'c',boneD,5,hb,bone));
+  T.swell(R,[0,.68,.5],[.1,.09,.13],.006+.005*s,()=>bone,{bone:/^head$/});T.swell(R,[0,.56,.6],[.08,.06,.12],.004+.004*s,()=>boneD,{bone:/^jaw$/});
+  [-1,1].forEach(sd=>R.horn(B([sd*.07,.69,.42]),[sd*.35,.55,-1],s>=3?[sd*.02,-.07,-.02]:[0,-.04,-.03],[0,.15,.2,.26][s],.02+.003*s,'c',boneD,5,hb,bone));
   if(s>=2)[-1,1].forEach(sd=>{const q=R.top(sd*.03,B([0,0,.5])[2]);if(q)R.horn(R.add(q.p,q.n,-.008),[sd*.3,1,-.2],[sd*.02,-.01,-.03],.07+.04*(s-2),.013,'c',bone,4,hb,boneD)});
   {const n=[0,6,8,9][s];for(let i=0;i<n;i++){const z=B([0,0,.3-i*.065])[2],q=R.top(0,z);if(!q)continue;T.spike(R,q,[0,1,-.45],(.065+.03*(s-1))*(1-Math.abs(i-n*.4)/n*.6),.012,i%2?boneD:bone)}}
   if(s>=2){const tb=T.box(E,/^tail/);if(tb)for(let i=0;i<3;i++){const q=R.top(0,tb.mx[2]-.12-i*.16);if(q)T.spike(R,q,[0,1,-.6],.05-.008*i+.02*(s-2),.011,bone)}}
@@ -325,7 +328,7 @@ EV38.S.Boneling=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,B=boneP,h
 // tight round the ears instead of arching): the lich hound grows. 0 soul-fire in the ribcage · 1 the horns curl further, a
 // longer jaw and fangs, more spines down the back, the soul-fire stronger · 2 bigger horns and jaw, taller spines · 3 the
 // horns at their fullest spiral, the longest jaw and fangs, the soul-fire filling the ribcage (dark violet throughout)
-var LB38={vio:0x5a2a8a,vio2:0x7a4aa8,
+var LB38={vio:0x3e1c60,vio2:0x5a3480,
   // the ram horn's centre line (template space; boneP maps it): from the side of the skull, back, down round the ear and
   // forward; later stages add the next turns of the spiral
   horn:s=>[[s*.06,.74,.49],[s*.12,.79,.44],[s*.18,.78,.38],[s*.215,.72,.355],[s*.215,.655,.39],[s*.19,.62,.45],[s*.165,.64,.5],[s*.155,.685,.505],[s*.165,.72,.47],[s*.19,.73,.43]],
@@ -336,10 +339,10 @@ EV38.S.Lichbone=function(E,L,P,c,s){const R=E.raw,T=EV38T,B=boneP,hb={bn:'head'}
   R.pd('ico','c',T.mix(v1,0x1a1020,.5),B([0,.45,.12]),[0,1,0],.03+.008*s,null,{bn:'chest'});
   if(!s)return;
   [-1,1].forEach(sd=>{const H=LB38.horn(sd).map(B),n=6+s;for(let i=6;i<n&&i<H.length-1;i++)R.L(H[i],H[i+1],LB38.hr[i]+.002,LB38.hr[i+1]+.002,'c',i%2?T.dim(K.dark.getHex(),1.2):K.dark.getHex(),6,hb);
-    for(let i=0;i<3;i++)R.L(H[i],H[i+1],LB38.hr[i]+.003*s,LB38.hr[i+1]+.003*s,'c',K.dark.getHex(),6,hb);
-    R.L(B([sd*.03,.62,.76]),B([sd*.03,.56-.022*s,.775]),.009,.001,'c',ivory,4,hb)});
-  R.L(B([0,.598,.7]),B([0,.596,.77+.025*s]),.02,.012,'c',bone,5,{bn:'jaw'});
-  T.crest(R,.3,-.3,[0,6,8,9][s],t=>(.05+.03*(s-1))*(1-.4*t),.016,i=>i%2?P.boneD:bone,(t,q)=>[0,1,-.6])};
+    for(let i=0;i<5;i++)R.L(H[i],H[i+1],LB38.hr[i]+.005*s,LB38.hr[i+1]+.005*s,'c',i%2?T.dim(K.dark.getHex(),1.2):K.dark.getHex(),6,hb);
+    R.L(B([sd*.03,.62,.76]),B([sd*.03,.55-.03*s,.775]),.011,.001,'c',ivory,4,hb)});
+  R.L(B([0,.598,.68]),B([0,.596,.77+.035*s]),.024,.014,'c',bone,5,{bn:'jaw'});T.swell(R,B([0,.7,.6]),[.1,.09,.14],.004+.004*s,()=>bone,{bone:/^head$/});
+  T.crest(R,.3,-.3,[0,6,8,10][s],t=>(.06+.04*(s-1))*(1-.4*t),.017,i=>i%2?P.boneD:bone,(t,q)=>[0,1,-.6])};
 {const f=lb150Kit;lb150Kit=function(k,C,red){const p0=k.p,L0=k.L,S0=k.S,K=LB150.cols(C),dark=K.dark.getHex(),dark2=dkShade(dark,1.2),trim=K.trim.getHex(),glow=red?0xff2a2a:K.glow.getHex();
   const hornR=[.034,.03,.026,.021,.015];
   k.S=function(){return k};
