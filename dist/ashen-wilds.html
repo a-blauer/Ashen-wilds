@@ -62747,18 +62747,18 @@ lpExtras=function(){};
 // deep inside and a bony brow ridge over each; the nasal opening is one dark pear-shaped hole on the front of the snout; and
 // the cheekbones sweep back under the sockets.
 function sk186Skull(k,P,o){const dark=0x070505,nrm=v=>{const l=Math.hypot(...v);return v.map(a=>a/l)};
-  [-1,1].forEach(s=>{const n=nrm([s*.72,.3,.62]),c=P([s*o.ex,o.ey,o.ez]),r=hm186Rot(n),q=P([s*(o.ex+.004),o.ey+.004,o.ez+.004]);
+  [-1,1].forEach(s=>{const n=nrm([s*.72,.3,.62]),c=P([s*o.ex,o.ey,o.ez]),r=hm186Rot(n),q=P([s*o.ex+n[0]*.007,o.ey+n[1]*.007,o.ez+n[2]*.007]);
     k.p('head','sph2','c',dark,c[0],c[1],c[2],o.er,.014,o.er*.9,r[0],r[1],r[2]);                                  // the socket
-    k.p('head','sph','g',o.glow,q[0],q[1],q[2],o.er*.28,o.er*.28,o.er*.28);                                    // the soul-fire point
-    const b0=P([s*(o.ex-.03),o.ey+o.er*.85,o.ez-.01]),b1=P([s*(o.ex+.022),o.ey+o.er*.6,o.ez+.005]);k.L('head','c',o.bone,b0,b1,.013,.009,5);  // brow ridge
+    k.p('head','sph','g',o.glow,q[0],q[1],q[2],o.er*.34,o.er*.34,o.er*.34);                                    // the soul-fire point
+    const b0=P([s*(o.ex-.03),o.ey+o.er*.85,o.ez-.01]),b1=P([s*(o.ex+.022),o.ey+o.er*.6,o.ez+.005]);k.L('head','c',o.bone,b0,b1,.009,.006,5);  // brow ridge
     const z0=P([s*(o.ex+.008),o.ey-o.er*1.05,o.ez-.005]),z1=P([s*(o.ex+.018),o.ey-o.er*1.2,o.ez-.07]);k.L('head','c',o.boneD,z0,z1,.011,.009,5)}); // cheekbone
   const nz=P([0,o.ny,o.nz]),rn=hm186Rot(nrm([0,.25,1]));k.p('head','sph2','c',dark,nz[0],nz[1],nz[2],o.nw,.008,o.nh,rn[0],rn[1],rn[2])}
 {const D=LPR.Boneling,k0=D.kit;D.kit=function(k,c,C,red){const p0=k.p;
   k.p=function(bn,geo){if(bn=='head'&&geo=='box')return k;return p0.apply(k,arguments)};   // the old socket / brow / nose boxes
   let r;try{r=k0.apply(this,arguments)}finally{k.p=p0}
   try{const lich=rv137('Boneling',c)=='Lichbone',K=lich?LB150.cols(C):boneCols(C),bone=K.bone.getHex(),glow=red?0xff2a2a:K.glow.getHex();
-    sk186Skull(k,boneP,lich?{ex:.066,ey:.705,ez:.57,er:.03,ny:.624,nz:.806,nw:.011,nh:.016,bone,boneD:dkShade(bone,.86),glow}
-                           :{ex:.058,ey:.627,ez:.57,er:.027,ny:.557,nz:.764,nw:.01,nh:.015,bone,boneD:dkShade(bone,.86),glow})}catch(e){console.error('sk186',e)}
+    sk186Skull(k,boneP,lich?{ex:.066,ey:.705,ez:.57,er:.044,ny:.64,nz:.79,nw:.015,nh:.024,bone,boneD:dkShade(bone,.86),glow}
+                           :{ex:.058,ey:.627,ez:.57,er:.04,ny:.572,nz:.75,nw:.014,nh:.022,bone,boneD:dkShade(bone,.86),glow})}catch(e){console.error('sk186',e)}
   return r}}
 // Owner: "Direfang fangs are not connected to his mouth properly." The sabre fangs rooted at the outer corner of the muzzle,
 // below the edge of the upper lip, so they hung beside the mouth. Their roots now sit inside the upper jaw, a little in from
