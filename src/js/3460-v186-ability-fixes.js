@@ -242,7 +242,7 @@ function sgSingularity(p,R,ms,lvl){if(!p)return;lvl=lvl|0;R=R||5;ms=Math.max(600
     halo.scale.setScalar(R*1.1*(live?1:Math.max(0,1-post/.2)));halo.material.opacity=live?.22*inn:0;
     const dsc=live?R*.62*(.7+.3*grow)*inn*(1-pre*.85):0;disc.scale.setScalar(Math.max(.001,dsc));disc2.scale.setScalar(Math.max(.001,dsc*.62));disc.rotation.z-=dt*(3.2+grow*2+pre*14);disc2.rotation.z-=dt*(6+pre*20);
     disc.material.opacity=live?.95:0;disc2.material.opacity=live?.8:0;
-    lens.forEach(([s,j])=>{const u=((el*1.25+j/lens.length)%1),r=R*.95*(1-u)+cs*2.4;s.scale.setScalar(r*2);s.material.opacity=live?inn*.55*Math.sin(u*Math.PI):0});
+    lens.forEach(([s,j])=>{const u=((el*1.25+j/lens.length)%1),r=R*.95*(1-u)+cs*2.4;s.scale.setScalar(r*2);s.material.opacity=live?inn*.36*Math.sin(u*Math.PI):0});
     sw.userData.dr(-el*2.2,R*1.02);sw.material.opacity=(live?.5*inn:Math.max(0,.5-post*1.2));rim.material.opacity=(live?.55*inn*(.8+.2*Math.sin(el*6)):Math.max(0,.55-post*1.5));
     // debris
     for(let i=0;i<ND;i++){const q=D[i];if(live){const w=1.6/Math.pow(Math.max(.5,q.r),1.2)*(1+grow);q.a+=w*dt*(lvl?1.25:1);q.r-=(1.2+1.8/Math.max(.6,q.r))*dt;q.h+=(1.7-q.h)*dt*.9/Math.max(.6,q.r);q.rx+=dt*4;if(q.r<cs*1.4)spawn(q,0)}
