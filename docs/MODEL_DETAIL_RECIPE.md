@@ -355,6 +355,14 @@ enemy: keys `E137…` are skipped) with the recipe:
   mark of dark spots on the back reads as a face.
 - **Paint the seams:** a light dorsal stripe or pale spine row catches the top light and reads as a dashed line; keep the
   ridge and its spines dark with only the tips pale.
+- **Evolution grows the body, not only what sits on it** (round 5): copy the design per level (`Object.create(design)` plus
+  deep copies of its rows) and grow the copy: head, jaw depth, neck and chest girth, limbs, stance, wings, horn length and
+  curl, hood width, palette. Count growth in *seen* stages (the levels a player can see), not raw levels, and make each seen
+  step visible at whole-body distance. Everything built from the design (body, kit, evolution kit, wings) must use the same
+  copy, and every cache key (kit bake, jaw, wings) must carry the level. Spines or crests alone read as copies.
+- **Paint contrast:** a 0.9 shade on alternate scales vanishes under flat-shaded facets; use about 0.8 on the back and 0.85
+  on the flanks, belly plates with seams near 0.6, and keep a pattern off the neck where the head paint starts (it reads
+  as a collar).
 - **Crop your own close-ups** before a review: whole head per crop (open and shut), front 3/4 of the serpents with the
   head inside the frame, one crop per level; check every item of the review list on those crops, not the full sheet.
 

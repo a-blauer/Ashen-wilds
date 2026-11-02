@@ -100,7 +100,7 @@ function lpRig(c,n,D){
   const mesh=new THREE.SkinnedMesh(D.geo(C,c),lpMat(c.v,1,D.mat));
   mesh.castShadow=true;mesh.frustumCulled=false;mesh.add(bones.pelvis||bones[O[0]]);b.add(mesh);mesh.updateMatrixWorld(true);
   const sk=new THREE.Skeleton(mb.arr);mesh.bind(sk);
-  const key='LP|'+n+'|'+C+'|'+(c.v||'')+'|'+(c.tr||'')+'|'+(red?1:0);
+  const key='LP|'+n+'|'+C+'|'+(c.v||'')+'|'+(c.tr||'')+'|'+(red?1:0)+(D.kkey?'|'+D.kkey(c):'');   // v186: kkey (bodies that change per level)
   let P=[];if(!(DKBK&&DKBK[key])){const k=dkKit();D.kit(k,c,C,red);lpExtras(k,c,D);P=k.P}
   dkBind(mesh,dkBake(P,O,key));
   const x={g:g,b:b,C:C,bones:bones,spec:S,S:S,ears:[],wings:[],red:red};

@@ -34,7 +34,7 @@ function dgD(p,q){return Math.hypot(Math.abs(p[0])-q[0],p[1]-q[1],p[2]-q[2])}
 // loft = {rings:[{p,rx,ryT,ryB,w:{bone:w},sqB}], seg (even), ref, rot, capA, capB, paint(col,p,n,r,s,c,i), sculpt(p,n,r,s,c) → mm out}
 function dg186Geo(key,n,lofts){
   if(LPG[key])return LPG[key];
-  const O=Object.keys(SPEC[n].bones),P=[],Cc=[],SI=[],SW=[],IX=[],V=THREE.Vector3,col=new THREE.Color();
+  const O=Object.keys(SPEC[n].bones),P=[],Cc=[],SI=[],SW=[],IX=[],OW=[],PF=[],V=THREE.Vector3,col=new THREE.Color();
   const bi=b=>{const i=O.indexOf(b);if(i<0)throw new Error('dg186: no bone '+b+' in '+n);return i};
   const skin=w=>{const e=Object.keys(w).map(k=>[bi(k),w[k]]).filter(q=>q[1]>.01).sort((a,b)=>b[1]-a[1]).slice(0,4),s=e.reduce((x,q)=>x+q[1],0)||1;
     while(e.length<4)e.push([0,0]);SI.push(e[0][0],e[1][0],e[2][0],e[3][0]);SW.push(e[0][1]/s,e[1][1]/s,e[2][1]/s,e[3][1]/s)};
@@ -46,15 +46,15 @@ function dg186Geo(key,n,lofts){
         if(r.cup){const kk=r.cup*c*c;p=[p[0]-U.x*kk,p[1]-U.y*kk,p[2]-U.z*kk]}   // a cupped section (a cobra's hood: the edges curve forward)
         const nn=nrm3([Sd.x*c*ry+U.x*s*r.rx,Sd.y*c*ry+U.y*s*r.rx,Sd.z*c*ry+U.z*s*r.rx]);rad.push(nn);
         if(L.sculpt){const d=L.sculpt(p,nn,r,s,c);if(d)p=add3(p,mul3(nn,d))}
-        P.push(p[0],p[1],p[2]);col.setRGB(.5,.5,.5);L.paint(col,p,nn,r,s,c,i);Cc.push(col.r,col.g,col.b);skin(L.skin?L.skin(p,r):r.w)}});
+        P.push(p[0],p[1],p[2]);col.setRGB(.5,.5,.5);DG186.pf=1;L.paint(col,p,nn,r,s,c,i);Cc.push(col.r,col.g,col.b);PF.push(DG186.pf);skin(L.skin?L.skin(p,r):r.w)}});
     // winding: the faces of every loft point outward (checked on its fullest ring)
     let fi=0,fr=0;R.forEach((r,i)=>{if(r.rx>fr&&i<R.length-1){fr=r.rx;fi=i}});
     const v=j=>[P[(base+j)*3],P[(base+j)*3+1],P[(base+j)*3+2]],a0=fi*seg,f=cross3(sub3(v(a0+1),v(a0)),sub3(v(a0+seg),v(a0))),flip=(f[0]*rad[a0][0]+f[1]*rad[a0][1]+f[2]*rad[a0][2])<0;
-    const tri=(a,b,c)=>flip?IX.push(a,c,b):IX.push(a,b,c);
-    for(let i=0;i<R.length-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg,b2=a+seg,b3=a1+seg;tri(a,a1,b2);tri(b2,a1,b3)}
+    const tri=(a,b,c,o)=>{flip?IX.push(a,c,b):IX.push(a,b,c);OW.push(o==null?a:o)};
+    for(let i=0;i<R.length-1;i++)for(let k=0;k<seg;k++){const a=base+i*seg+k,a1=base+i*seg+(k+1)%seg,b2=a+seg,b3=a1+seg;tri(a,a1,b2,a);tri(b2,a1,b3,a)}
     [[L.capA,0],[L.capB,R.length-1]].forEach(q=>{if(!q[0])return;const r=R[q[1]],ci=P.length/3,c0=pts[q[1]],tg=pts[q[1]?q[1]:1].clone().sub(pts[q[1]?q[1]-1:0]).normalize().multiplyScalar(q[1]?1:-1);
-      const ex=r.rx*.35,p=[c0.x+tg.x*ex*(q[0]==2?1:.4),c0.y+tg.y*ex*(q[0]==2?1:.4),c0.z+tg.z*ex*(q[0]==2?1:.4)];P.push(p[0],p[1],p[2]);col.setRGB(.5,.5,.5);L.paint(col,p,tg.toArray(),r,0,0,q[1]);Cc.push(col.r,col.g,col.b);skin(L.skin?L.skin(p,r):r.w);
-      const o=base+q[1]*seg;for(let k=0;k<seg;k++){const a=o+k,a1=o+(k+1)%seg;if(q[1])tri(ci,a1,a);else tri(ci,a,a1)}})});
+      const ex=r.rx*.35,p=[c0.x+tg.x*ex*(q[0]==2?1:.4),c0.y+tg.y*ex*(q[0]==2?1:.4),c0.z+tg.z*ex*(q[0]==2?1:.4)];P.push(p[0],p[1],p[2]);col.setRGB(.5,.5,.5);DG186.pf=1;L.paint(col,p,tg.toArray(),r,0,0,q[1]);Cc.push(col.r,col.g,col.b);PF.push(1);skin(L.skin?L.skin(p,r):r.w);
+      const o=base+q[1]*seg;for(let k=0;k<seg;k++){const a=o+k,a1=o+(k+1)%seg;if(q[1])tri(ci,a1,a,a);else tri(ci,a,a1,a)}})});
   const G=new THREE.BufferGeometry();
   G.setAttribute('position',new THREE.Float32BufferAttribute(P,3));G.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI,4));G.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW,4));
   G.setIndex(IX);G.computeVertexNormals();
@@ -65,8 +65,17 @@ function dg186Geo(key,n,lofts){
     const f=Math.max(.5,Math.min(1.12,(.84+.2*(.5*ny+.5))*(.76+.24*Math.min(1,hs*1.6))));tmp.setRGB(Cc[i*3],Cc[i*3+1],Cc[i*3+2]).multiplyScalar(f);
     const sh=Math.max(0,-ny)*.2+(1-Math.min(1,hs*1.8))*.07;if(sh>0)tmp.lerp(cool.clone().multiplyScalar(tmp.r*.3+tmp.g*.59+tmp.b*.11+.04),Math.min(.22,sh));
     if(ny>.55)tmp.lerp(warm.clone().multiplyScalar(tmp.r*.3+tmp.g*.59+tmp.b*.11),(ny-.55)*.1);Cc[i*3]=tmp.r;Cc[i*3+1]=tmp.g;Cc[i*3+2]=tmp.b}
-  G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));G.computeBoundingSphere();DG186.tris=(DG186.tris||{});DG186.tris[key]=IX.length/3;return LPG[key]=G}
+  G.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3));
+  // smooth vertex colours times one pattern factor per quad (its first corner's DG186.pf): painted scales, plates and seams stay
+  // crisp (round 5: a checker of alternate vertices averaged out to a plain hide); an identity index is kept for the probes
+  {const n=IX.length,A=k=>G.attributes[k].array,Pa=A('position'),Na=A('normal'),Si=A('skinIndex'),Sw=A('skinWeight'),P2=new Float32Array(n*3),N2=new Float32Array(n*3),C2=new Float32Array(n*3),S2=new Uint16Array(n*4),W2=new Float32Array(n*4),I2=[];
+    for(let t=0;t<n;t++){const v=IX[t],o=OW[(t/3)|0];for(let j=0;j<3;j++){P2[t*3+j]=Pa[v*3+j];N2[t*3+j]=Na[v*3+j];C2[t*3+j]=Cc[v*3+j]*PF[o]}for(let j=0;j<4;j++){S2[t*4+j]=Si[v*4+j];W2[t*4+j]=Sw[v*4+j]}I2.push(t)}
+    G.setAttribute('position',new THREE.BufferAttribute(P2,3));G.setAttribute('normal',new THREE.BufferAttribute(N2,3));G.setAttribute('color',new THREE.BufferAttribute(C2,3));
+    G.setAttribute('skinIndex',new THREE.BufferAttribute(S2,4));G.setAttribute('skinWeight',new THREE.BufferAttribute(W2,4));G.setIndex(I2)}
+  G.computeBoundingSphere();DG186.tris=(DG186.tris||{});DG186.tris[key]=IX.length/3;return LPG[key]=G}
 
+// a stable pseudo-random value in [0,1) for a quad (ring i, sector k): scale-to-scale variation, never per-vertex speckle
+function dgHash(i,k){const v=Math.sin(i*12.9898+k*78.233)*43758.5453;return v-Math.floor(v)}
 // ---------------- kit helpers (model space) ----------------
 // a curved horn / spine / claw through points, radii tapering r0 → r1, colour c0 at the root → c1 at the tip
 function dgChain(k,bn,pts,r0,r1,c0,c1,seg,t){const N=pts.length-1,C0=new THREE.Color(c0),C1=new THREE.Color(c1==null?c0:c1);
@@ -129,7 +138,7 @@ function dgWingShape(J,D,L,P){const pos=[],col=[],gp=[],gc=[],K=D.cols,c3=new TH
   {const d=nrm3(add3(sub3(J.W,J.E),[0,.2,0])),b=add3(J.W,mul3(d,.01)),m=add3(b,mul3(d,.03)),e=add3(m,[0,-.018,.012]);tube(b,m,.008,.005,K.claw,4);tube(m,e,.005,.001,K.claw,4)}
   return {P:new Float32Array(pos),C:new Float32Array(col),GP:new Float32Array(gp),GC:new Float32Array(gc)}}
 function dgWingData(D,K,L,P){const S=D.spread,F=D.fold,half={};['S','E','W','R'].forEach(k=>{half[k]=lerp3(S[k],F[k],.5)});half.tips=S.tips.map((t,i)=>lerp3(t,F.tips[i],.5));
-  const sc=1+.02*L,scl=J=>{const o={};['S','E','W','R'].forEach(k=>{o[k]=mul3(J[k],k=='R'?1:sc)});o.tips=J.tips.map(t=>mul3(t,sc));return o};
+  const sc=(D.k||1)+.02*L,scl=J=>{const o={};['S','E','W','R'].forEach(k=>{o[k]=mul3(J[k],k=='R'?1:sc)});o.tips=J.tips.map(t=>mul3(t,sc));return o};
   const Dd=Object.assign({},D,{cols:K}),A=[S,half,F].map(J=>dgWingShape(scl(J),Dd,L,P));return {P:A.map(a=>a.P),C:A[0].C,GP:A.map(a=>a.GP),GC:A[0].GC}}
 // the shared geometry at fold level i (0 spread … DG186.lv folded)
 function dgWingGeo(key,d,i,glow){const G=DG186.WG[key]||(DG186.WG[key]={d,g:[],h:[]}),arr=glow?G.h:G.g;if(arr[i])return arr[i];
@@ -207,20 +216,23 @@ function dgHS(B,z,t,s,k){const q=dgSurf(B,z,t,s);return add3(q.p,mul3(q.n,k||0))
 // the shared paint of a drake (part 'body' | 'jaw' | 'leg'); D.paintX adds the species' own marks
 function dgPaintQ(D,o,K,p,n,r,s,c,i,part){const z=p[2],x=Math.abs(p[0]),hz=D.headZ||.535,mz=D.head.hinge-.03;
   if(part=='leg'){o.copy(K.main);if(p[1]>.3)o.lerp(K.back,.3*Math.min(1,(p[1]-.3)/.1));if(s<-.3)o.lerp(K.back,.35);if(s>.3&&p[1]>.26)o.lerp(K.side,.35);
-    if(Math.abs(p[1]-.215)<.03)o.lerp(K.dark,.3*(1-Math.abs(p[1]-.215)/.03));if(p[1]<.13)o.lerp(K.dark,.6*(1-p[1]/.13));
+    if(Math.abs(p[1]-.215)<.03)o.lerp(K.dark,.3*(1-Math.abs(p[1]-.215)/.03));if(p[1]<.3&&i%2)DG186.pf*=.84;if(p[1]>.36&&s<-.2)o.lerp(K.dark,.25);if(p[1]<.13)o.lerp(K.dark,.6*(1-p[1]/.13));
     if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
 if(part=='jaw'){if(s>.2&&Math.abs(c)<.5){o.copy(x<r.rx*.3?K.tongue:K.mouth);return}if(s>.2){o.copy(K.main);if(s>.75)o.multiplyScalar(.7);return}o.copy(K.main);if(s<-.35)o.lerp(K.bel,.3);if(z<D.head.hinge+.03)o.multiplyScalar(.82);
     if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
   o.copy(K.main);
   if(s>.5)o.lerp(K.back,Math.min(1,(s-.5)/.4)*.9);
   if(z<hz+.02&&z>-1.25&&s>-.12&&s<.32)o.lerp(K.side,.5*(1-Math.abs(s-.1)/.22)*Math.min(1,(hz+.02-z)/.16));   /* fades out toward the head (no collar band) */     // a paler line of flank scales
-  if(z<hz-.2&&s<-.4){o.copy(K.bel);if(i%2)o.multiplyScalar(.82);if(s>-.6)o.lerp(K.main,.5)}   // belly scutes
-  if(z<hz-.05&&s>.35){const kk=Math.round(Math.atan2(c,s)/(Math.PI/12));if((i+kk)%2)o.multiplyScalar(.9)}   // staggered scale rows along the back
+  if(z<hz-.2&&s<-.4){o.copy(K.bel);if(i%2)DG186.pf*=.66;else if(s<-.8)o.lerp(new THREE.Color(1,1,1),.06);if(s>-.6)o.lerp(K.main,.55)}   // belly plates: pale plates, dark seams
+  if(z<hz-.05&&s>-.4){const kk=Math.round(Math.atan2(c,s)/(Math.PI/12)),h=dgHash(i,kk);DG186.pf*=(s>.35?.78:.84)+(s>.35?.24:.18)*h}   // staggered scales over the back and flanks (paler scale centres)
   if(s<-.15&&!(z<hz-.2&&s<-.4))o.multiplyScalar(.88+.12*Math.max(0,1+s));                       // darker under the body
   if(z<hz-.05&&s>.9)o.lerp(K.dark,.8);                                                             // a dark dorsal stripe
-  if(s<-.05&&(Math.abs(z-.21)<.08||Math.abs(z+.26)<.09))o.lerp(K.dark,.16*(1-Math.min(Math.abs(z-.21),Math.abs(z+.26))/.09)*Math.min(1,(-.05-s)/.4));   // hollows over the legs
+  if(s<-.2&&(Math.abs(z-.21)<.08||Math.abs(z+.26)<.09))o.lerp(K.dark,.32*(1-Math.min(Math.abs(z-.21),Math.abs(z+.26))/.09)*Math.min(1,(-.2-s)/.4));   // creases where the legs meet the body
+  if(s<-.3&&Math.abs(z-(hz-.08))<.06)o.lerp(K.dark,.25*(1-Math.abs(z-(hz-.08))/.06));   // the crease under the throat
   if(z>hz-.06){// the head: pale under the chin, a dark lip line, the palate, nostrils, sockets
     if(s<-.2&&z<mz+.02)o.lerp(K.throat,.6);
+    if(s>-.3&&z>hz+.02){const kk=Math.round(Math.atan2(c,s)/(Math.PI/9)),h=dgHash(i,kk+40),f=Math.min(1,Math.max(0,(z-hz-.02)/.05));DG186.pf*=1-f*(1-((s>.4?.8:.86)+(s>.4?.22:.16)*h))}   // head scales, larger plates on the crown
+    if(s<-.25&&s>-.45&&z>mz)o.lerp(K.side,.3);   // a pale row of lip scales
     const inJ=x<r.rx*D.head.jw*.86;
     if(z>mz&&s<-.45&&(s>-.85||!inJ))o.lerp(K.lip,.75);   // a thin dark lip crease (the jaw hides the palate when shut)
     if(z>mz&&s<=-.85&&inJ)o.copy(K.mouth);
@@ -295,7 +307,7 @@ DG186.Q.Drakelet={eyeCol:0xffa030,headZ:.535,
     [-1,1].forEach(s=>{
       // a brow plate over the eye, swept horns from the back of the skull, small cheek horns, spikes at the jaw angle
       dgBrow(k,s,this.body,this.eye,dkShade(back,1.15),.0085);
-      {const h=this.horn(s);dgHornK(k,'head',dgHornA(h.b,h.d,h.C,.17,6),.013,K.horn2,K.horn)}
+      {const h=this.horn(s);dgHornK(k,'head',dgHornA(this.hp(h.b),h.d,mul3(h.C,this.hornC||1),this.hornL||.17,8),.013*(1+.12*(this.st||0)),K.horn2,K.horn)}
       });
     // a spade at the tail tip
     k.p('tail3','cone4','c',dkShade(back,.9),0,.556,-1.335,.05,.11,.012,-Math.PI/2);k.p('tail3','cone4','c',dark,0,.557,-1.33,.034,.07,.016,-Math.PI/2)},
@@ -303,7 +315,7 @@ DG186.Q.Drakelet={eyeCol:0xffa030,headZ:.535,
     spread:{S:[0,0,0],E:[.17,.07,-.04],W:[.34,.13,.05],R:[-.01,-.075,-.34],tips:[[.68,.06,-.06],[.61,.0,-.27],[.46,-.03,-.41],[.27,-.04,-.44]]},
     fold:{S:[0,0,0],E:[.032,.0,-.12],W:[.05,.09,-.01],R:[-.01,-.075,-.34],tips:[[.068,.04,-.43],[.074,.0,-.41],[.074,-.04,-.38],[.068,-.072,-.33]]}},
   horn(s){return {b:[s*.038,.742,.602],d:[s*.32,.5,-1],C:[s*.08,-.9,-.25]}},
-  wpal(C,K){return {root:K.back.clone().lerp(new THREE.Color(0x2a1a1c),.3),edge:K.main.clone().lerp(new THREE.Color(0x5a3428),.35),band:K.dark.clone(),bone:K.side.clone().multiplyScalar(.8),claw:new THREE.Color(0x161216),vein:.8}}};
+  wpal(C,K){return {root:K.back.clone().lerp(new THREE.Color(0x2a1a1c),.3),edge:K.main.clone().lerp(new THREE.Color(0x5a3428),.35),band:K.dark.clone(),bone:K.back.clone().lerp(K.main,.3),claw:new THREE.Color(0x161216),vein:.8}}};
 
 // ---------------- Pyrewing: a slender wyvern of fire ----------------
 // A long narrow wedge head on a long arched neck, a deep keel chest and wasp waist, thin raptor legs and a very long whip tail
@@ -349,11 +361,11 @@ DG186.Q.Pyrewing={eyeCol:0xffc23a,headZ:.55,
     [-1,1].forEach(s=>{
       // sharp brow spurs, one long pair of swept horns and a short pair under them, embers in the nostrils
       {const E=this.eye,a=dgSurf(B,E.z+.035,.72,s),b=dgSurf(B,E.z-.005,.78,s);dgChain(k,'head',[add3(a.p,mul3(a.n,-.004)),add3(b.p,mul3(b.n,.004)),add3(b.p,[s*.012,.008,-.04])],.0075,.0015,obs,obs2,4)}
-      {const h=this.horn(s);dgHornK(k,'head',dgHornA(h.b,h.d,h.C,.3,7),.016,K.horn2,K.horn)}
-      dgHornK(k,'head',dgHornA([s*.054,.735,.618],[s*.55,0,-1],[0,-.5,-.1],.11,4),.0095,K.horn2,K.horn);
+      {const h=this.horn(s);dgHornK(k,'head',dgHornA(this.hp(h.b),h.d,mul3(h.C,this.hornC||1),this.hornL||.3,9),.016*(1+.1*(this.st||0)),K.horn2,K.horn)}
+      dgHornK(k,'head',dgHornA(this.hp([s*.054,.735,.618]),[s*.55,0,-1],[0,-.5,-.1],.11,4),.0095,K.horn2,K.horn);
       k.p('head','sph','g',K.ember,s*this.nos[0],this.nos[1],this.nos[2]+.002,.006,.004,.007);
       // the cheek frill: three obsidian spines fanning back from the jaw angle, an ember membrane between them
-      const hub=[s*.052,.692,.612],tips=[[s*.13,.73,.53],[s*.15,.69,.51],[s*.135,.645,.52]];
+      const hub=this.hp([s*.052,.692,.612]),fk=1+.22*(this.st||0),tips=[[s*.13,.73,.53],[s*.15,.69,.51]].map(t=>add3(hub,mul3(sub3(this.hp(t),hub),fk)));
       tips.forEach((t,i)=>{const e=lerp3(hub,t,.8);dgChain(k,'head',[hub,lerp3(hub,e,.55),e],.0085-i*.001,.0012,obs,obs2,4)});
       // lava seams: glowing cracks lying in the hide over the shoulders and haunches
       [[.2,'chest',[[.62,0],[.85,-.03],[1.1,.012],[1.35,-.025]]],[-.21,'pelvis',[[.62,0],[.88,-.03],[1.15,.0],[1.38,-.035]]]].forEach(q=>{
@@ -361,7 +373,7 @@ DG186.Q.Pyrewing={eyeCol:0xffc23a,headZ:.55,
     // embers deep in the throat (seen when it bites)
     {const a=dgAt(B,.69);k.L('jaw','g',K.ember,[0,a.y-a.b-.001,.675],[0,a.y-a.b,.72],.009,.004,4)}
     // the whip tail's flame blade and obsidian barbs
-    [[0,0,-.13,.022],[.018,.012,-.1,.015],[-.018,.01,-.1,.015],[0,.028,-.09,.013],[0,-.012,-.08,.012]].forEach((q,i)=>k.L('tail3','g',i?K.ember:K.ember2,[0,.572,-1.44],[q[0],.572+q[1],-1.47+q[2]],q[3],.001,5));
+    // (the flame bulb on the tail tip read as a lit match: gone; obsidian barbs only)
     [-1,1].forEach(s=>dgChain(k,'tail3',[[0,.568,-1.4],[s*.04,.57,-1.37],[s*.075,.574,-1.33]],.009,.0012,obs,obs2,4))},
   wing:{piv:[.062,.556,.2],base:.36,amp:.55,r:[.016,.012,.008],bow:.03,scallop:.24,glowEdge:5,
     spread:{S:[0,0,0],E:[.2,.09,-.04],W:[.42,.15,.06],R:[-.01,-.08,-.36],tips:[[.98,.06,-.1],[.86,-.01,-.38],[.63,-.04,-.58],[.36,-.05,-.6]]},
@@ -403,7 +415,7 @@ DG186.Q.Elderdrake={eyeCol:0xffc830,headZ:.54,
   paint(o,K,p,n,r,s,c,i,part){dgPaintQ(this,o,K,p,n,r,s,c,i,part)},
   paintX(o,K,p,n,r,s,c,i,part){const z=p[2];if(part!='body')return;
     // ancient scales: a pale bronze edge line where the dark back meets the flank, bronze under the jaw and down the throat
-    if(z<.5&&z>-1.2&&s>.32&&s<.55)o.lerp(K.edge,.45*(1-Math.abs(s-.43)/.12));
+    if(z<.56&&z>-1.2&&s>.32&&s<.55)o.lerp(K.edge,.45*(1-Math.abs(s-.43)/.12)*Math.min(1,(.56-z)/.2));
     if(z<.35&&z>-.45&&s<-.4&&i%2==0)o.lerp(K.ember,.18+.05*(DG186.L|0));   // embers between the belly plates
     if(z>.6&&s>.6)o.lerp(K.back,.3)},
   kit(k,c,C,red,K){dgKitQ(this,k,c,C,red,K)},
@@ -411,7 +423,7 @@ DG186.Q.Elderdrake={eyeCol:0xffc830,headZ:.54,
     [-1,1].forEach(s=>{
       // a heavy brow over the eye; the crown: a great pair of horns sweeping back and up, a lesser pair, three cheek horns
       dgBrow(k,s,B,this.eye,dkShade(K.back.getHex(),1.3),.015);
-      {const h=this.horn(s);dgHornK(k,'head',dgHornA(h.b,h.d,h.C,.3,8),.024,K.horn2,K.horn,7)}   // ram horns: back, then curling down and forward
+      dgHornK(k,'head',dgRamPts(dgHS(B,.6,.42,s,-.006),s,this.st||0),.024*(1+.1*(this.st||0)),K.horn2,K.horn,8);   // ram horns: back, down, forward round the ear
       for(let i=0;i<2;i++){const b=dgHS(B,.61-i*.012,1.35+i*.3,s,-.004);dgChain(k,'head',[b,add3(b,[s*.015,-.005-i*.01,-.03]),add3(b,[s*.025,-.012-i*.018,-.05])],.0085,.0015,K.horn2,K.horn,5)}});
     // a blunt nose horn on the snout
     {const zt=B[2][0],q=dgAt(B,zt),y=q.y+q.a;dgChain(k,'head',[[0,y-.008,zt],[0,y+.012,zt-.012],[0,y+.022,zt-.034]],.01,.0015,K.horn2,K.horn,5)}
@@ -423,7 +435,7 @@ DG186.Q.Elderdrake={eyeCol:0xffc830,headZ:.54,
     spread:{S:[0,0,0],E:[.2,.09,-.03],W:[.4,.15,.06],R:[-.01,-.08,-.38],tips:[[.94,.07,-.08],[.84,.0,-.37],[.62,-.04,-.56],[.36,-.05,-.6]]},
     fold:{S:[0,0,0],E:[.035,-.005,-.14],W:[.055,.11,-.02],R:[-.01,-.08,-.38],tips:[[.074,.06,-.55],[.08,.015,-.52],[.08,-.03,-.47],[.074,-.07,-.4]]}},
   horn(s){return {b:dgHS(this.body,.6,.42,s,-.006),d:[s*.42,.3,-1],C:[s*.15,-1.1,1.0]}},
-  wpal(C,K){return {root:K.back.clone().lerp(K.main,.35),edge:K.main.clone().lerp(new THREE.Color(0x5a4430),.45),band:K.dark.clone(),bone:K.back.clone(),claw:new THREE.Color(0x8a7e66),vein:.82}}};
+  wpal(C,K){return {root:K.back.clone().lerp(K.main,.35),edge:K.main.clone().lerp(new THREE.Color(0x5a4430),.45),band:K.dark.clone(),bone:K.back.clone(),claw:K.dark.clone(),vein:.82}}};
 
 // ---------------- proportions (review: greyhound legs, a slim Elderdrake that lost its age) ----------------
 // the trunks hang lower (shorter-looking legs); Elderdrake heavier in the chest and neck, lower, with a broad skull and thick legs
@@ -447,8 +459,9 @@ Object.assign(DG186.Q.Pyrewing.wing,{glowEdge:1,edgeW:L=>.06+.04*L,glowVein:3});
 LP186.grade.Drakelet=[.5,.5];LP186.grade.Pyrewing=[.55,.5];LP186.grade.Elderdrake=[.5,.5];LP186.grade.Gravewyrm=[.5,.5];LP186.grade.Venomcoil=[.55,.5];
 if(EVO100.D.Drakelet)EVO100.D.Drakelet.wing=null;   // the wings carry their own evolution (dgWingShape)
 {const D=LPR.Drakelet,g0=D.geo,k0=D.kit,p0=D.post;
-  const des=c=>{const sp=rv137('Drakelet',c);return DG186.on&&DG186.Q[sp]?[sp,DG186.Q[sp]]:null};
-  D.geo=function(C,c){const q=des(c);if(q){DG186.L=DG186.LO!=null?DG186.LO:(typeof evo100Lv=='function'?evo100Lv(c):0);return dgQGeo(q[1],C,q[0])}return g0.apply(this,arguments)};
+  const des=c=>{const sp=rv137('Drakelet',c);return DG186.on&&DG186.Q[sp]?[sp,DG186.lvd(sp,dgLvOf(c))]:null};
+  D.kkey=c=>{const q=des(c);return q?q[0]+'L'+q[1].lv:''};   // the kit grows with the level too
+  D.geo=function(C,c){const q=des(c);if(q){DG186.L=dgLvOf(c);return dgQGeo(q[1],C,q[0])}return g0.apply(this,arguments)};
   D.kit=function(k,c,C,red){const q=des(c);if(q)return q[1].kit(k,c,C,red,q[1].pal(C));return k0.apply(this,arguments)};
   D.post=function(x,c,C,mat){const q=des(c);if(q)return dgWings(x,c,C,mat,q[0],q[1].wing,q[1].wpal(C,q[1].pal(C)));return p0.apply(this,arguments)};
   // anchors for the colour-variant extras (lpExtras): the crown and the crest line of each body
@@ -456,6 +469,16 @@ if(EVO100.D.Drakelet)EVO100.D.Drakelet.wing=null;   // the wings carry their own
   const A={};['Drakelet','Pyrewing','Elderdrake'].forEach(sp=>{A[sp]=anc(sp)});
   Object.defineProperty(D,'head',{configurable:true,get(){const sp=RV137.cur.Drakelet||'Drakelet';return DG186.on&&A[sp]?A[sp].head:['head',0,.78,.56]},set(v){}});
   Object.defineProperty(D,'back',{configurable:true,get(){const sp=RV137.cur.Drakelet||'Drakelet';return DG186.on&&A[sp]?A[sp].back:[]},set(v){}})}
+// round 5: Drakelet's upper teeth shorter (a picket showed under the lip); Pyrewing a deeper snout and jaw, bigger eyes;
+// Elderdrake's snout narrowed and tapered, the skull rounded, legs shaped (thigh, knee, shin, ankle) instead of pillars
+DG186.Q.Drakelet.teeth.up.forEach(q=>{q[1]*=.6});
+DG186.Q.Pyrewing.body.forEach(r=>{if(r[0]>.6){r[4]*=1.5;r[3]*=1.08}});Object.assign(DG186.Q.Pyrewing.head,{dep:z=>z<.67?.036:.036-(z-.67)*.05,jw:.8});Object.assign(DG186.Q.Pyrewing.eye,{len:.03,h:.0085});
+DG186.Q.Elderdrake.body.forEach(r=>{const z=r[0];if(z>.76)r[2]*=1-.34*Math.min(1,(z-.76)/.2);if(z>.58&&z<.8){r[3]*=1.12;r[6]=0}});
+{const F=[1.75,1.7,1.62,1.4,1.22,1.08,1.0,1.08,1.2,1.25],H=[1.85,1.8,1.7,1.42,1.2,1.06,.98,1.06,1.18,1.25];DG186.Q.Elderdrake.legs=dgLegs(i=>F[i],i=>H[i],.022,.022)}
+// a ram's horn: from the skull back, down behind the eye and forward round the ear in a tightening curl that turns further
+// with every stage (one horn, growing; dark root to pale tip)
+function dgRamPts(b,s,st){const n=24,th=Math.PI*(1.05+.28*st),R0=.062+.005*st,vy=.9*R0,vz=.35*R0,c=add3(b,[0,-vy,-vz]),o=[];
+  for(let i=0;i<=n;i++){const a=-th*i/n,k=1-.42*(-a)/(2*Math.PI);o.push(add3(c,[s*(.004+.05*(-a)/Math.PI+.03*Math.pow(i/n,3)),(vy*Math.cos(a)-vz*Math.sin(a))*k,(vy*Math.sin(a)+vz*Math.cos(a))*k]))}return o}
 
 // ======================================================================== serpents ========================================================================
 // Gravewyrm skeleton: tail3 -1.35 … pelvis -.25, spine 0, chest .2, neck .38, head (0,.32,.5), jaw (0,.27,.6), all near the ground;
@@ -468,10 +491,10 @@ function dgSRings(D,z0,z1,dz){const R=[];for(let z=z0;z<=z1+1e-6;z+=dz){const r=
 function dgSGeo(D,C,sp){const K=D.pal(C),H=D.head,bmp=dgBumps(D.bumps||[]),HR=D.headRows;
   const sculpt=(p,n,r,s,c)=>{let d=bmp(p);if(s>.8&&D.ridge){const h=D.ridge(r.z);if(h)d+=h*Math.pow((s-.8)/.2,1.6)}return d};
   const paint=part=>(o,p,n,r,s,c,i)=>D.paint.call(D,o,K,p,n,r,s,c,i,part);
-  const hr=HR.map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],w:q[5]||{head:1},z:q[0],hd:1}));
+  const hr=HR.map(q=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],w:q[5]||{head:1},z:q[0],hd:1,sqB:q[0]>H.hinge-.02?2.2:0}));
   const lofts=[];
   if(D.neck){// the reared body: ground rings, then the neck rising into the hood (capped), the head its own loft
-    lofts.push({rings:dgSRings(D,-1.66,D.neck[0][0]-.06,.1).concat(D.neck.map(q=>{const h=q[6]||0,rx=q[2]*(1+(D.hoodK||0)*(DG186.L|0)*h);return {p:[0,q[1],q[0]],rx,ryT:q[3],ryB:q[4],w:q[5],z:q[0],hood:h,cup:rx*.32*h}})),seg:16,capA:1,capB:1,sculpt,paint:paint('body')});
+    lofts.push({rings:dgSRings(D,-1.66,D.neck[0][0]-.06,.1).concat(D.neck.map(q=>{const h=q[6]||0,rx=q[2]*(1+(D.hoodK||0)*(DG186.L|0)*h);return {p:[0,q[1],q[0]],rx,ryT:q[3],ryB:q[4],w:q[5],z:q[0],hood:h,cup:Math.min(rx*.32,.08)*h}})),seg:16,capA:1,capB:1,sculpt,paint:paint('body')});
     lofts.push({rings:hr,seg:16,capA:1,capB:2,sculpt,paint:paint('body')})}
   else lofts.push({rings:dgSRings(D,-1.66,HR[0][0]-.06,.1).concat(hr),seg:16,capA:1,capB:2,sculpt,paint:paint('body')});
   const jaw={rings:dgJaw(HR,H).map(r=>D.ownJaw?Object.assign(r,{w:{head:1}}):r),seg:12,capA:1,capB:2,sculpt:dgJawSculpt,paint:paint('jaw')};
@@ -479,19 +502,19 @@ function dgSGeo(D,C,sp){const K=D.pal(C),H=D.head,bmp=dgBumps(D.bumps||[]),HR=D.
   return dg186Geo(key,'Gravewyrm',lofts.concat([jaw]))}
 // the hinged lower jaw of a reared head: its loft, lower teeth and tongue, on a pivot at the hinge on the head bone
 function dgSJaw(x,D,C,sp,mat){const K=D.pal(C),H=D.head,HR=D.headRows,hz=H.hinge,ha=dgAt(HR,hz),hy=ha.y-ha.b;
-  const G=dg186Geo('DG186J|'+sp+'|'+C,'Gravewyrm',[{rings:dgJaw(HR,H).map(r=>Object.assign(r,{w:{head:1}})),seg:12,capA:1,capB:2,sculpt:dgJawSculpt,paint:(o,p,n,r,s,c,i)=>D.paint.call(D,o,K,p,n,r,s,c,i,'jaw')}]);
+  const G=dg186Geo('DG186J|'+sp+'|'+C+'|L'+(D.lv|0),'Gravewyrm',[{rings:dgJaw(HR,H).map(r=>Object.assign(r,{w:{head:1}})),seg:12,capA:1,capB:2,sculpt:dgJawSculpt,paint:(o,p,n,r,s,c,i)=>D.paint.call(D,o,K,p,n,r,s,c,i,'jaw')}]);
   const piv=lpPart(x.S,x.bones,'head',G,mat,0,hy,hz,1,1,1);piv.children[0].position.set(0,-hy,-hz);
-  const k=dkKit();D.jawKit(k,K);dkBake(k.P,null,'DG186JK|'+sp+'|'+C).forEach(m=>{m.position.set(0,-hy,-hz);m.castShadow=true;piv.add(m)});
+  const k=dkKit();D.jawKit(k,K);dkBake(k.P,null,'DG186JK|'+sp+'|'+C+'|L'+(D.lv|0)).forEach(m=>{m.position.set(0,-hy,-hz);m.castShadow=true;piv.add(m)});
   x.dgJaw=piv}
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.dgJaw&&x.bones&&x.bones.jaw)x.dgJaw.rotation.x=Math.max(0,x.bones.jaw.rotation.x-.08)*1.1;else if(x&&x.dgShut&&x.bones&&x.bones.jaw)x.bones.jaw.rotation.x=Math.max(0,x.bones.jaw.rotation.x-.08)*1.1;/* the idle chew (~.04-.07) leaves it shut */return r}}
 // the shared serpent paint: scutes under the belly, the lip line, palate, sockets, nostrils; D.paintX adds the species' marks
 function dgPaintS(D,o,K,p,n,r,s,c,i,part){const z=p[2],x=Math.abs(p[0]),hz=D.headZ,mz=D.head.hinge-.03;
-if(part=='jaw'){if(s>.2&&Math.abs(c)<.5){o.copy(x<r.rx*.3?K.tongue:K.mouth);return}if(s>.2){o.copy(K.main);if(s>.75)o.multiplyScalar(.7);return}o.copy(K.main);if(s<-.35)o.lerp(K.bel,.3);if(z<D.head.hinge+.03)o.multiplyScalar(.82);if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
+if(part=='jaw'){if(s>.2&&Math.abs(c)<.5){o.copy(x<r.rx*.3?K.tongue:K.mouth);return}if(s>.2){o.copy(K.main);if(s>.75)o.multiplyScalar(.7);return}o.copy(K.main);if(s<-.3){o.lerp(K.throat||K.bel,.55);if(i%2)DG186.pf*=.82}else if(s<.05)o.lerp(K.throat||K.bel,.2);if(z<D.head.hinge+.03)o.multiplyScalar(.85);if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
   o.copy(K.main);if(s>.45)o.lerp(K.back,Math.min(1,(s-.45)/.45)*.85);
-  if(!r.hd&&!r.hood&&s<-.42){o.copy(K.bel);if(i%2)o.multiplyScalar(.8);if(s>-.6)o.lerp(K.main,.5)}
+  if(!r.hd&&!r.hood&&s<-.42){o.copy(K.bel);if(i%2)DG186.pf*=.72;if(s>-.6)o.lerp(K.main,.5)}
   if(r.hd){if(s<-.2&&z<mz+.02)o.copy(K.throat);
     const inJ=x<r.rx*D.head.jw*.86;
-    if(z>mz&&s<-.45&&(s>-.85||!inJ))o.lerp(K.lip,s<-.66?.7:.18);   // a thin lip crease, not a black band
+    if(z>mz&&s<-.45&&(s>-.85||!inJ))o.lerp(K.lip,s<-.78?.6:0);   // a thin lip crease, not a black band
     if(z>mz&&s<=-.85&&inJ)o.copy(K.mouth);
     const E=D._eye||(D._eye=dgSurf(D.headRows,D.eye.z,D.eye.t,1).p),de=dgD(p,E),ER=D.eye.sock||.03;if(de<ER)o.lerp(K.sock,Math.min(1,(ER-de)/(ER*.45)));
     if(dgD(p,D.nos)<.016)o.lerp(K.sock,.85)}
@@ -500,7 +523,7 @@ if(part=='jaw'){if(s>.2&&Math.abs(c)<.5){o.copy(x<r.rx*.3?K.tongue:K.mouth);retu
 function dgKitS(D,k,c,C,red,K){const HR=D.headRows,H=D.head;
   [-1,1].forEach(s=>{
     {const E=D.eye,q=dgSurf(HR,E.z,E.t,s);dgEye(k,s,q.p,q.n,E.len,E.h,red?0xff2a2a:D.eyeCol,{tilt:E.tilt==null?.12:E.tilt})}
-    dgBrow(k,s,HR,D.eye,D.browCol!=null?D.browCol:K.back.getHex(),D.eye.brow||.009);
+    // (no brow plate: a dark diamond beside the eye read as a second eye from above; the brow is sculpted, D.bumps)
     // fangs folded back along the palate (hidden in the shut jaw, bared in a bite), the other teeth seated in the lip
     D.teeth.up.forEach(q=>{const h=dgAt(HR,q[0]);dgTooth(k,'head',q[3]?K.fang:K.tooth,[s*h.w*(q[3]?.45:(q[4]||.8)),q[3]?h.y-h.b+.004:h.y-h.b*.6,q[0]],q[3]?[0,-.22,-1]:[s*.04,-1,.1],q[3]?q[1]:q[1]+h.b*.4,q[2])})});
   if(!D.ownJaw)D.jawKit(k,K);
@@ -527,15 +550,15 @@ DG186.S.Gravewyrm={eyeCol:0xd0e040,headZ:.4,
   L:z=>z<=0?0:.2*dgSm(z/.4),X:z=>z<.15?Math.sin(z*3.4+.6)*.06*Math.min(1,(.15-z)*3):0,
   headRows:[[.4,.3,.096,.072,.064,dgW('neck','head',.5)],[.45,.318,.112,.074,.06],[.5,.328,.12,.074,.053],[.55,.334,.118,.071,.046],[.6,.337,.109,.066,.039],[.65,.337,.096,.059,.034],
     [.7,.335,.082,.051,.03],[.75,.332,.067,.042,.026],[.8,.328,.051,.033,.021],[.84,.325,.035,.024,.016],[.87,.323,.018,.012,.009]],
-  head:{hinge:.56,jz:[.47,.51,.54,.57,.61,.66,.71,.76,.81,.85],dep:z=>z<.57?.034:.034-(z-.57)*.06,jw:.98,deep:.85},
+  head:{hinge:.56,jz:[.47,.51,.54,.57,.61,.66,.71,.76,.81,.85],dep:z=>z<.57?.036:.036-(z-.57)*.06,jw:.98,deep:1.5},
   eye:{z:.635,t:.92,len:.03,h:.008,tilt:.1,sock:.032,brow:.0075},nos:[.022,.333,.857],
   teeth:{up:[[.835,.03,.0055,1,.7],[.79,.012,.004],[.75,.012,.004],[.71,.011,.0038],[.67,.011,.0036],[.63,.01,.0034],[.595,.009,.0032]],lo:[[.8,.013,.003],[.75,.012,.003],[.7,.012,.003],[.65,.011,.003],[.61,.01,.0028]]},
   // a heavy brow ridge, low bone knobs over the brow and on the cheeks, nostril bosses
-  bumps:[[[.06,.375,.645],[.03,.012,.04],.012],[[.1,.34,.53],[.03,.025,.04],.01],[[.022,.336,.856],[.012,.01,.014],.004],
+  bumps:[[[.056,.392,.64],[.028,.012,.05],.016],[[.1,.34,.53],[.034,.028,.045],.018],[[.022,.336,.856],[.012,.01,.014],.004],
     [[.072,.38,.6],[.016,.01,.02],.012],[[.06,.384,.56],[.015,.01,.018],.01],[[.112,.335,.5],[.018,.016,.03],.014],[[.104,.34,.455],[.016,.014,.02],.01],[[0,.408,.5],[.02,.01,.03],.006,0],[[0,.37,.78],[.016,.01,.06],.006,0]],
   knobs:[[.072,.38,.6],[.06,.384,.56],[.112,.335,.5],[.104,.34,.455]],
   ridge:z=>z>.42?((DG186.L|0)>=2&&z<.78?.013*Math.min(1,(.78-z)/.08):0):z>-1.4?.009:0,
-  spineZ:[.36,-1.45,.11],spine:z=>{const h=z>0?.03:.022+z*.004;return h<.012?null:[h,.009]},
+  spineZ:[.3,-1.45,.11],spine:z=>{const h=z>0?.03:.022+z*.004;return h<.012?null:[h,.009]},
   pal(C){const main=dgHSL(C,.17,.18),bel=new THREE.Color().setHSL(.12,.2,.4);
     return {main,back:dgHSL(C,.15,.1),dark:dgHSL(C,.1,.04),bel,rib:new THREE.Color().setHSL(.11,.18,.4),throat:new THREE.Color().setHSL(.12,.14,.24).lerp(main,.3),
       bone:new THREE.Color().setHSL(.11,.14,.3),lip:new THREE.Color(0x14120e),mouth:new THREE.Color(0x2a0c0e),tongue:new THREE.Color(0x4a1a22),sock:new THREE.Color(0x060605),
@@ -546,13 +569,14 @@ DG186.S.Gravewyrm={eyeCol:0xd0e040,headZ:.4,
     if(!r.hd){// scale bands (every other ring a shade darker), moss in the dark of the back, a dark dorsal stripe; ribs show
       // faintly through the flanks; with the level bone plates spread over the back (L1) and down the flanks (L2), pale on top
       // and darkening toward their edges, a dark seam on every other ring (painted, following the form)
-      if(i%2&&s>-.4)o.multiplyScalar(.87);if(s>.55&&i%3==2)o.lerp(K.moss,.35);
+      {const kk=Math.round(Math.atan2(c,s)/(Math.PI/10));if(s>-.4)DG186.pf*=.78+.22*dgHash(i,kk)}if(s>.55&&i%3==2)o.lerp(K.moss,.35);if(s<-.3&&s>-.55)o.lerp(K.dark,.2);
       if(z<.3&&z>-1.25){if(s>-.45&&s<.6&&i%3==0)o.lerp(K.rib,(Lv>=2?.6:.48)*(1-Math.abs(s-.1)/.55));
         if(Lv>=1&&s>.45&&s<.86&&z>-1.05&&i%2==0)o.lerp(K.bone,(.3+.04*Math.min(Lv,4))*Math.min(1,(s-.45)/.3));
         if(Lv>=2&&s>0&&s<=.45&&z>-.9&&i%3!=1)o.lerp(K.bone,.3*Math.min(1,s/.2))}
       if(s>.92)o.lerp(K.dark,.45);return}
     // the head in the body's own colours: scale plates ring by ring on the crown, darker sides, a paler row of lip scales
-    if(s>.45){o.lerp(K.back,.3);if(i%2)o.multiplyScalar(.86)}if(s>-.25&&s<.05&&z>.6)o.lerp(K.throat,.35);
+    if(s>.45)o.lerp(K.back,.3);{const kk=Math.round(Math.atan2(c,s)/(Math.PI/9));if(s>-.35)DG186.pf*=(s>.45?.78:.86)+(s>.45?.22:.14)*dgHash(i,kk+40)}if(s>-.25&&s<.05&&z>.6)o.lerp(K.throat,.45);
+    if(s>.3&&s<.75&&Math.abs(z-.63)<.06)o.lerp(K.dark,.35*(1-Math.abs(z-.63)/.06));   // the brow overhangs the eye
     if((DG186.L|0)>=2&&s>.95&&z<.78)o.lerp(K.bone,.2);   // the bone ridge along the skull
     if(s>.2&&s<.6&&z>.5)o.multiplyScalar(.85);          // darker brow and temple
     if(this.knobs.some(q=>dgD(p,q)<.02))o.lerp(K.back,.35)},
@@ -573,14 +597,14 @@ DG186.S.Venomcoil={eyeCol:0xc8ff3a,headZ:.3,ownJaw:1,hoodK:.1,
     for(let i=0;i<T.length-1;i++)if(z<=T[i+1][0])return T[i][1]+(T[i+1][1]-T[i][1])*Math.max(0,(z-T[i][0])/(T[i+1][0]-T[i][0]));return .13},
   L:z=>0,X:z=>z<.0?Math.sin(z*3.4+.6)*.07*Math.min(1,(-z)*3):0,
   // the rising neck: [z, y, half width, back, front, weights, hood]
-  neck:[[.04,.12,.128,.11,.096,{chest:.6,spine:.4}],[.11,.16,.12,.1,.092,{chest:1}],[.16,.22,.112,.09,.086,{chest:.7,neck:.3}],[.195,.29,.12,.06,.065,{neck:.7,chest:.3},.4],
+  neck:[[.045,.12,.128,.11,.096,{chest:.6,spine:.4}],[.104,.148,.124,.104,.094,{chest:1}],[.152,.193,.118,.094,.088,{chest:.8,neck:.2}],[.185,.25,.114,.08,.078,{chest:.55,neck:.45}],[.2,.304,.116,.058,.062,{neck:.7,chest:.3},.4],
     [.21,.345,.128,.034,.038,{neck:1},.7],[.222,.405,.168,.027,.032,{neck:1},1],[.232,.46,.19,.03,.034,{neck:1},1],[.24,.51,.205,.032,.036,{neck:1},1],[.247,.55,.175,.028,.032,{neck:.85,head:.15},1],
     [.252,.58,.1,.044,.046,{neck:.35,head:.65},.4],[.26,.605,.058,.045,.045,{head:1}]],
   headRows:[[.25,.6,.05,.045,.04],[.29,.624,.07,.058,.044],[.33,.636,.08,.064,.042],[.37,.642,.083,.065,.038],[.41,.643,.08,.062,.034],[.45,.641,.072,.055,.03],
     [.49,.637,.06,.038,.024],[.525,.633,.045,.03,.019],[.552,.63,.028,.02,.013],[.568,.628,.012,.009,.007]],
-  head:{hinge:.355,jz:[.31,.335,.36,.39,.43,.47,.505,.535,.552],dep:z=>z<.37?.034:.034-(z-.37)*.08,jw:.8,deep:1.15},
+  head:{hinge:.355,jz:[.31,.335,.36,.39,.43,.47,.505,.535,.552],dep:z=>z<.37?.04:.04-(z-.37)*.09,jw:.82,deep:1.55},
   eye:{z:.43,t:.98,len:.026,h:.0075,tilt:.08,sock:.028,brow:.0095},nos:[.017,.636,.553],
-  teeth:{up:[[.528,.038,.0058,1,.66],[.49,.01,.0034],[.455,.01,.0034],[.42,.009,.0032],[.385,.009,.003]],lo:[[.5,.011,.0028],[.465,.011,.0028],[.43,.01,.0028],[.395,.01,.0026]]},
+  teeth:{up:[[.528,.038,.0058,1,.66]],lo:[[.5,.011,.0028],[.465,.011,.0028],[.43,.01,.0028],[.395,.01,.0026]]},
   bumps:[[[.048,.69,.44],[.024,.012,.036],.014],[[.078,.642,.36],[.024,.024,.04],.016],[[.017,.64,.552],[.01,.008,.012],.004],[[0,.703,.38],[.03,.012,.06],.008,0],[[.06,.68,.33],[.03,.02,.03],.008]],
   ridge:z=>z>.0?0:z>-1.4?.007:0,
   pal(C){const main=dgHSL(C,.24,.13),bel=new THREE.Color().setHSL(.14,.24,.3);
@@ -593,11 +617,12 @@ DG186.S.Venomcoil={eyeCol:0xc8ff3a,headZ:.3,ownJaw:1,hoodK:.1,
       // the back an olive brown that darkens to the hood's centre, a paler rim
       if(s<0){o.copy(K.throat);if(Math.abs(p[0])<r.rx*.35)o.lerp(K.bel,.4);if(i%2==1)o.lerp(K.bar,.8);if(Math.abs(c)>.7)o.lerp(K.back,.55);return}
       // the back: a scale gradient, darkest down the middle, paler toward the cupped edges, staggered scale rows
-      o.copy(K.back).lerp(K.hood,Math.pow(Math.abs(c),1.5));if(Math.abs(c)>.85)o.lerp(K.spec,.25);{const kk=Math.round(Math.atan2(c,s)/(Math.PI/8));if((i+kk)%2)o.multiplyScalar(.88)}return}
+      o.copy(K.back).lerp(K.hood,Math.pow(Math.abs(c),1.5));if(Math.abs(c)>.85)o.lerp(K.spec,.25);{const kk=Math.round(Math.atan2(c,s)/(Math.PI/8));DG186.pf*=.82+.18*dgHash(i,kk+80)}return}
     if(r.hd){// big head plates: darker seams between paler plates on the crown, a pale lip scale row
-      if(s>.4&&z>.33&&z<.53&&Math.abs(p[0])<.012)o.lerp(K.dark,.5);if(s>-.2&&s<.15&&z>.35)o.lerp(K.throat,.25);return}
+      if(s>.4&&z>.33&&z<.53&&Math.abs(p[0])<.012)o.lerp(K.dark,.5);if(s>-.2&&s<.15&&z>.35)o.lerp(K.throat,.3);
+      {const kk=Math.round(Math.atan2(c,s)/(Math.PI/7));if(s>-.3)DG186.pf*=(s>.4?.78:.86)+(s>.4?.22:.14)*dgHash(i,kk+40)}if(s>.3&&s<.75&&Math.abs(z-.43)<.05)o.lerp(K.dark,.35*(1-Math.abs(z-.43)/.05));return}
     // venom bands on the coils (every fourth ring), scale banding and a dark stripe along the back
-    {const kk=Math.round(Math.atan2(c,s)/(Math.PI/8));if((i+kk)%2&&s>-.3)o.multiplyScalar(.88)}if(s>.9)o.lerp(K.dark,.4);
+    {const kk=Math.round(Math.atan2(c,s)/(Math.PI/8));if(s>-.3)DG186.pf*=.8+.2*dgHash(i,kk)}if(s>.9)o.lerp(K.dark,.4);
     // crisp venom bands: two whole rings wide (one ring blurred into its neighbours), a deep olive-yellow
     if(z<.1&&z>-1.45&&(i%5==2||i%5==3)&&s>-.4)o.lerp(K.band,.85)},
   kit(k,c,C,red,K){dgKitS(this,k,c,C,red,K)},
@@ -614,8 +639,9 @@ DG186.S.Venomcoil={eyeCol:0xc8ff3a,headZ:.3,ownJaw:1,hoodK:.1,
 
 // ---------------- hooks: the two serpents on the Gravewyrm rig ----------------
 {const D=LPR.Gravewyrm,g0=D.geo,k0=D.kit,p0=D.post;
-  const des=c=>{const sp=rv137('Gravewyrm',c);return DG186.on&&DG186.S[sp]?[sp,DG186.S[sp]]:null};
-  D.geo=function(C,c){const q=des(c);if(q){DG186.L=DG186.LO!=null?DG186.LO:(typeof evo100Lv=='function'?evo100Lv(c):0);return dgSGeo(q[1],C,q[0])}return g0.apply(this,arguments)};
+  const des=c=>{const sp=rv137('Gravewyrm',c);return DG186.on&&DG186.S[sp]?[sp,DG186.lvd(sp,dgLvOf(c))]:null};
+  D.kkey=c=>{const q=des(c);return q?q[0]+'L'+q[1].lv:''};
+  D.geo=function(C,c){const q=des(c);if(q){DG186.L=dgLvOf(c);return dgSGeo(q[1],C,q[0])}return g0.apply(this,arguments)};
   D.kit=function(k,c,C,red){const q=des(c);if(q)return q[1].kit(k,c,C,red,q[1].pal(C));return k0.apply(this,arguments)};
   D.post=function(x,c,C,mat){const q=des(c);if(q){x.dgShut=1;if(q[1].post)q[1].post(x,c,C,mat);return}if(p0)return p0.apply(this,arguments)};
   const anc=sp=>{const Q=DG186.S[sp],HR=Q.headRows,t=z=>{const q=dgAt(HR,z);return q.y+q.a},b=z=>{const r=Q.R(z);return r*.74+.006+Q.L(z)+r*.88};
@@ -642,6 +668,54 @@ DG186.S.Venomcoil={eyeCol:0xc8ff3a,headZ:.3,ownJaw:1,hoodK:.1,
     const q=lfNearS(n,p.x,p.y,p.z),t=half*.25;if(q[3]>t){const f=(q[3]-t)/q[3];p.x+=(q[0]-p.x)*f;p.y+=(q[1]-p.y)*f;p.z+=(q[2]-p.z)*f}})}}catch(e){console.error('dg186 fuse',e)}
   return o.apply(this,arguments)}}
 
+// ======================================================================== bodies that grow with the level ========================================================================
+// Review round 5 (Nov 2 2026, the owner's "evolutions like Foxlet"): every level a player sees changes the BODY, not only the
+// spines on it. A design is copied per evolution level (DG186.lvd) and grown: a bigger head and deeper jaw, a heavier neck and
+// chest, thicker limbs, a lower, stronger stance, longer wings, the horns longer and curling further, Venomcoil's hood from a
+// narrow flare to a full cobra hood (about 2.7x as wide); the palette deepens per level (darker back, paler belly and markings).
+// The body, the kit (its bake key carries the level: LPR[rig].kkey) and the evolution kit are all built from that copy.
+// In-game levels (1710): Drakelet, Gravewyrm 0/1/2/4 · Pyrewing, Venomcoil 1/2/3/5 · Elderdrake 2/3/4/5 → growth stage 0..3.
+DG186.SEEN={Drakelet:[0,1,2,4],Gravewyrm:[0,1,2,4],Pyrewing:[1,2,3,5],Venomcoil:[1,2,3,5],Elderdrake:[2,3,4,5]};
+function dgStage(sp,L){const S=DG186.SEEN[sp]||[0,1,2,3];if(L<=S[0])return 0;for(let i=0;i<3;i++)if(L<=S[i+1])return i+(L-S[i])/(S[i+1]-S[i]);return 3}
+function dgLvOf(c){return DG186.LO!=null?DG186.LO:(typeof evo100Lv=='function'?evo100Lv(c):0)}
+function dgClone(v){if(Array.isArray(v))return v.map(dgClone);if(v&&typeof v=='object'&&Object.getPrototypeOf(v)===Object.prototype){const o={};for(const k in v)o[k]=dgClone(v[k]);return o}return v}
+DG186.LVC={};DG186.G={};
+DG186.lvd=function(sp,L){L=Math.max(0,Math.min(5,L|0));const key=sp+'|'+L;if(DG186.LVC[key])return DG186.LVC[key];
+  const B=DG186.Q[sp]||DG186.S[sp],D=Object.create(B);
+  ['body','legs','head','eye','nos','teeth','bumps','wing','headRows','neck','knobs','feet'].forEach(f=>{if(B[f]!==undefined)D[f]=dgClone(B[f])});
+  D.lv=L;D.st=dgStage(sp,L);D._eye=null;D.base=B;D.hp=p=>p.slice();
+  const t=D.st,pal0=B.pal;D.pal=function(C){const K=pal0.call(this,C);dgPalL(K,t,sp);return K};
+  if(DG186.G[sp])DG186.G[sp](D,t,L);
+  return DG186.LVC[key]=D};
+// the palette deepens with the level: a darker back and darker seams, a paler belly, stronger markings and glow
+function dgPalL(K,t,sp){const f=(k,ds,dl)=>{if(K[k]&&K[k].isColor)K[k].offsetHSL(0,ds*t,dl*t)};
+  f('back',.01,-.012);f('dark',0,-.006);f('bel',.03,.018);f('side',.03,.012);f('edge',.03,.016);f('main',.012,-.004);
+  if(sp=='Pyrewing'){f('lava',.03,.035)}if(sp=='Gravewyrm'){f('bone',.0,.03);f('rib',.0,.02)}if(sp=='Venomcoil'){f('band',.04,.02);f('hood',.02,.008);f('throat',.02,.012)}
+  if(sp=='Elderdrake'){f('ember',.03,.03)}}
+// a quadruped grown by stage t: head (o.hl longer, o.hw wider / taller), jaw depth, neck / chest / tail girth, limbs, stance
+function dgGrowQ(D,t,o){const B=D.base.body,z0=.6,k=1+o.hl*t,wf=1+o.hw*t,af=1+o.hw*t*.9,Z=z=>z>z0?z0+(z-z0)*k:z;
+  const yc=z=>dgAt(B,z).y,mp=p=>p[2]>.53?[p[0]*wf,yc(p[2])+(p[1]-yc(p[2]))*af,Z(p[2])]:p.slice();
+  (D.bumps||[]).forEach(b=>{if(b[0][2]>.53)b[0][1]=yc(b[0][2])+(b[0][1]-yc(b[0][2]))*af});
+  const ny=yc(D.nos[2])+(D.nos[1]-yc(D.nos[2]))*af;dgHead(D,z0,k,wf,af);D.nos[1]=ny;
+  D.head.deep=(D.head.deep||1.3)*(1+o.jd*t);D.eye.len*=1+.05*t;D.eye.sock=(D.eye.sock||.034)*(1+.08*t);
+  dgReshape(D,o.drop*t,{w:z=>z>.53?1:z>.27?1+o.nk*t:z>-.42?1+o.ch*t:1+o.tl*t,h:z=>z>.53?1:z>.27?1+o.nk*t:z>-.42?1+o.ch*t*.85:1+o.tl*t});
+  D.legs.forEach(Lg=>Lg.rows.forEach((q,i)=>{const f=1+o.lg*t*(i<5?1.15:.75);q[3]*=f;q[4]*=f;q[5]*=f}));
+  D.feet=D.feet.map(f=>Object.assign({},f,{o:Object.assign({},f.o,{len:f.o.len*(1+.07*t),r:f.o.r*(1+.1*t)})}));
+  D.hp=mp;D.hornL=o.horn[0]*(1+o.horn[1]*t);D.hornC=1+o.horn[2]*t;D.wing.k=1+o.wing*t}
+DG186.G.Drakelet=(D,t)=>dgGrowQ(D,t,{hl:.05,hw:.09,jd:.08,nk:.15,ch:.1,tl:.08,lg:.13,drop:.015,horn:[.17,.38,.2],wing:.1});
+DG186.G.Pyrewing=(D,t)=>dgGrowQ(D,t,{hl:.04,hw:.08,jd:.08,nk:.14,ch:.1,tl:.06,lg:.11,drop:.012,horn:[.3,.25,.35],wing:.12});
+DG186.G.Elderdrake=(D,t)=>dgGrowQ(D,t,{hl:.03,hw:.07,jd:.07,nk:.12,ch:.12,tl:.1,lg:.11,drop:.016,horn:[1,.2,.25],wing:.1});
+// a serpent grown by stage t: head rows wider / taller (o.hw), girth (o.g), jaw depth; Venomcoil's hood flares (o.hood[t])
+function dgGrowS(D,t,o){const hw=1+o.hw*t,g=1+o.g*t,R0=D.base.R;
+  D.headRows.forEach(q=>{q[2]*=hw;q[3]*=hw;q[4]*=hw});D.R=z=>R0(z)*g;D.head.deep=(D.head.deep||1.3)*(1+o.jd*t);D.eye.len*=1+.05*t;D.eye.sock=(D.eye.sock||.03)*(1+.08*t);
+  (D.bumps||[]).forEach(b=>{const h=dgAt(D.base.headRows,Math.max(D.base.headRows[0][0],Math.min(b[0][2],D.base.headRows[D.base.headRows.length-1][0])));b[0][0]*=hw;b[0][1]=h.y+(b[0][1]-h.y)*hw;b[1]=b[1].map(v=>v*hw);b[2]*=hw});
+  if(D.knobs)D.knobs=D.knobs.map(p=>{const h=dgAt(D.base.headRows,p[2]);return [p[0]*hw,h.y+(p[1]-h.y)*hw,p[2]]});
+  D.nos=[D.nos[0]*hw,D.nos[1],D.nos[2]];
+  if(D.neck){const hf=o.hood(t);D.hoodK=0;D.neck.forEach(q=>{const h=q[6]||0;q[2]*=(h?1+(hf-1)*h:g);const th=h?1+.35*(hf-1)*h:g;q[3]*=th;q[4]*=th})}}
+DG186.G.Gravewyrm=(D,t)=>dgGrowS(D,t,{hw:.1,g:.1,jd:.1});
+DG186.G.Venomcoil=(D,t)=>dgGrowS(D,t,{hw:.08,g:.08,jd:.1,hood:t=>.78+.48*t});
+Object.values(DG186.Q).concat(Object.values(DG186.S)).forEach(D=>{if(!D.hp)D.hp=p=>p.slice()});
+
 // ======================================================================== evolution looks ========================================================================
 // Review round 4 (Nov 1 2026): every level a player sees changes the OUTLINE at body scale, growing the creature's own feature
 // (the Foxlet model); the body is cached per level, so paint and some shape follow the level too (Gravewyrm's bone ridge and
@@ -663,42 +737,39 @@ function dgHornE(E,pts,r0,c0,c1,o){const N=pts.length-1,A=new THREE.Color(c0),B=
   E.L(pts[i],pts[i+1],r0*Math.pow(1-t0,1.15)+.0008,r0*Math.pow(1-t1,1.15)+.0008,'c',A.clone().lerp(B,Math.pow((t0+t1)/2,1.4)).getHex(),5,o)}}
 function dgEH(E,pts,r0,r1,c0,c1,t,o){const N=pts.length-1,A=new THREE.Color(c0),Bc=new THREE.Color(c1);for(let i=0;i<N;i++)E.L(pts[i],pts[i+1],r0+(r1-r0)*i/N,r0+(r1-r0)*(i+1)/N,t||'c',A.clone().lerp(Bc,(i+.5)/N).getHex(),5,o)}
 // a flame tongue: a dark ember root (lit), a glowing tip (one glowing stroke per flame under the EVO186 cap)
-function dgFlame(E,a,b,r,P,o){const m=lerp3(a,b,.5);E.L(a,m,r,r*.6,'c',new THREE.Color(P.glowD).multiplyScalar(.45).getHex(),4,o);E.L(m,b,r*.6,.001,'g',P.glow,4,o)}
+function dgFlame(E,a,b,r,P,o){const m=lerp3(a,b,.5),n=lerp3(a,b,.8);E.L(a,m,r,r*.7,'c',new THREE.Color(P.glowD).multiplyScalar(.25).getHex(),4,o);E.L(m,n,r*.7,r*.38,'c',new THREE.Color(P.glowD).multiplyScalar(.55).getHex(),4,o);E.L(n,b,r*.38,.001,'g',P.glow,4,o)}
 function dgDeepG(P){const g=new THREE.Color(P.glow).lerp(new THREE.Color(0x0c2a0c),.42);return {glow:g.getHex(),glowD:g.clone().multiplyScalar(.55).getHex()}}
 DG186.E.Drakelet=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},horn=K.horn,horn2=K.horn2,cr=0x1e1820,cr2=0x5a4c50,vs={vs:1};
   // the brow horns grow at every level: a sheath on the kit horn's own curve, longer and thicker
-  const hl=[0,.26,.29,.33,.35,.37][L],hr=[0,.016,.017,.019,.02,.021][L];
-  [-1,1].forEach(s=>{const h=D.horn(s);dgHornE(E,dgHornA(h.b,h.d,h.C,hl,7),hr,horn2,horn,hb);
-    [0,1].forEach(j=>{const b=dgHS(B,.6-j*.02,1.5+j*.3,s,-.004);dgHornE(E,[b,add3(b,[s*.02,.004-j*.01,-.045]),add3(b,[s*.036,-j*.02,-.085])],.0085,horn2,horn,hb)})});
-  const crest=z=>(L>=3?1.35:1)*(z>.3?.065+(.5-z)*.15:.11-Math.abs(z-.02)*.1);
+  // (the brow horn itself grows and curls with the level, in the kit: one horn per side, no sheaths)
+  [-1,1].forEach(s=>{
+    [0].forEach(j=>{const b=dgHS(B,.6-j*.02,1.5+j*.3,s,-.004);dgHornE(E,[b,add3(b,[s*.02,.004-j*.01,-.045]),add3(b,[s*.036,-j*.02,-.085])],.0085,horn2,horn,hb)})});
+  const crest=z=>(L>=4?1.4:1)*(z>.3?.065+(.5-z)*.15:.11-Math.abs(z-.02)*.1);
   const CZ=[];for(let z=.5;z>-.36;z-=z>.3?.045:.065)CZ.push(z);
   if(L>=2){// a tall dark crest down the neck and the back (spines, no sail)
     CZ.forEach(z=>{const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=crest(z);dgHornE(E,[[0,top-.012,z+.016],[0,top+h*.6,z-.014],[0,top+h,z-.04]],.014,cr,cr2,vs)})}
-  if(L>=4){// a second, great pair of horns above the first; the crest tips burn
-    [-1,1].forEach(s=>dgHornE(E,dgHornA(dgHS(B,.625,.42,s,-.004),[s*.45,.75,-1],[s*.1,-.8,-.3],.26+.02*(L-4),7),.019,horn2,horn,hb));
+  if(L>=4){// the crest tips burn
     CZ.forEach((z,j)=>{if(j%2||z>.3)return;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=crest(z);dgFlame(E,[0,top+h*.6,z-.014],[0,top+h+.006,z-.042],.006,P,vs)})}
   if(L>=5){// embers in the throat scales, the great horns' tips smoulder
     [-1,1].forEach(s=>{[.42,.36].forEach(z=>{const a=dgSurf(B,z,2.35,s),b=dgSurf(B,z-.05,2.35,s);E.L(add3(a.p,mul3(a.n,.0012)),add3(b.p,mul3(b.n,.0012)),.0045,.0032,'g',P.glow,3,vs)});
-      const H=dgHornA(dgHS(B,.625,.42,s,-.004),[s*.45,.75,-1],[s*.1,-.8,-.3],.28,7);dgFlame(E,H[5],add3(H[7],mul3(nrm3(sub3(H[7],H[6])),.012)),.005,P,hb)})}};
+})}};
 DG186.E.Pyrewing=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},obs=K.spine,obs2=0x4a3026,vs={vs:1};
   const seam=(z0,U,s)=>{const P2=U.map(u=>dgSurf(B,z0+u[1],u[0],s));for(let i=0;i<P2.length-1;i++)E.L(add3(P2[i].p,mul3(P2[i].n,.0008)),add3(P2[i+1].p,mul3(P2[i+1].n,.0008)),.0042,.0034,'g',P.glow,3,vs)};
-  [-1,1].forEach(s=>seam(.45,[[.9,0],[1.2,-.03],[1.5,-.05]],s));
-  const blade=z=>{const sp=D.spine(z);return sp?[sp[0]*(z<.35&&z>-.25?2:1.25),sp[1]*1.35]:null};
+  // (no glowing stripe down the neck: it read as one flat orange line)
+  const blade=z=>{const sp=D.spine(z);return sp?[sp[0]*(z<.35&&z>-.25?2.7:1.4),sp[1]*1.5]:null};
   if(L>=2){// tall obsidian blades over the shoulders and back, a bigger flame on the tail
     for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2]){const b=blade(z);if(!b)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=b[0];dgHornE(E,[[0,top-.01,z+.012],[0,top+h*.55,z-h*.25],[0,top+h,z-h*.75]],b[1],obs,obs2,vs)}
-    [[0,.012,-.2,.03],[.03,.022,-.15,.02],[-.03,.02,-.15,.02]].forEach(q=>dgFlame(E,[0,.572,-1.45],[q[0],.572+q[1],-1.47+q[2]],q[3],P,{bn:'tail3'}))}
+}
   if(L>=3){// long horns with burning tips, a long burning cheek frill, a molten belly
     E.shell((x,y,z,nx,ny)=>ny<-.6&&z>-.3&&z<.33,.004,'g',P.glowD,{rim:false});
-    [-1,1].forEach(s=>{const h=D.horn(s),H=dgHornA(h.b,h.d,h.C,.48,8);dgHornE(E,H.slice(0,7),.018,K.horn2,K.horn,hb);dgFlame(E,H[6],H[8],.006,P,hb);
-      const hub=[s*.052,.692,.612];[[s*.19,.75,.48],[s*.21,.69,.45],[s*.18,.625,.47]].forEach(t=>dgHornE(E,[hub,lerp3(hub,t,.55),t],.009,obs,obs2,hb))})}
+}
   if(L>=4){// the blades burn
     let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const b=blade(z);if(!b||j%2||z>.35||z<-.25)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=b[0];dgFlame(E,[0,top+h*.4,z-h*.18],[0,top+h+.006,z-h*.78],b[1]*.6,P,vs)}}
   if(L>=5){// a mane of flame tongues along the neck
     for(let i=0;i<5;i++){const z=.52-i*.045,q=dgAt(B,z),top=q.y+q.a;dgFlame(E,[0,top-.006,z],[0,top+.09-i*.006,z-.07],.014,P,vs)}}};
 DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},horn=K.horn,horn2=K.horn2,vs={vs:1};
   // the ram horns grow at every level, curling further round
-  const gl=[0,.36,.38,.41,.52,.55][L],gr=[0,.026,.027,.028,.031,.032][L];
-  [-1,1].forEach(s=>{const h=D.horn(s);dgHornE(E,dgHornA(h.b,h.d,h.C,gl,9),gr,horn2,horn,hb)});
+  // (the ram horn itself curls further with the level, in the kit)
   if(L>=2){// a crown of short bone spikes along the heavy brow
     [-1,1].forEach(s=>[0,1].forEach(j=>{const b=dgHS(B,D.eye.z+.02-j*.045,.5+j*.14,s,-.004);dgHornE(E,[b,add3(b,[s*.012,.03-j*.004,-.02]),add3(b,[s*.02,.05-j*.006,-.05])],.009,horn2,horn,hb)}))}
   if(L>=3){// tall bone blades down the back (sheaths over the spines)
@@ -706,9 +777,9 @@ DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'
   if(L>=4){// a heavier blade on the tail: more spines down its last third
     [-1.0,-1.1,-1.2].forEach(z=>{const q=dgAt(B,z),top=q.y+q.a;dgHornE(E,[[0,top-.006,z+.01],[0,top+.035,z-.02],[0,top+.05,z-.05]],.009,K.spine,horn2,vs)})}
   if(L>=5){// a mane of tall bone blades with ember tips along the neck, a lit throat
-    for(let i=0;i<5;i++){const z=.5-i*.05,q=dgAt(B,z),top=q.y+q.a,t=[0,top+.13-i*.01,z-.09];dgHornE(E,[[0,top-.01,z+.01],lerp3([0,top,z],t,.55),t],.012,K.spine,horn2,vs);dgFlame(E,lerp3([0,top,z],t,.7),add3(t,[0,.012,-.008]),.006,P,vs)}
+    for(let i=0;i<5;i++){const z=.5-i*.05,q=dgAt(B,z),top=q.y+q.a,t=[0,top+.13-i*.01,z-.09];dgHornE(E,[[0,top-.01,z+.01],lerp3([0,top,z],t,.55),t],.014,K.spine,horn2,vs)}
     [-1,1].forEach(s=>[.47,.41,.35].forEach(z=>{const a=dgSurf(B,z,2.3,s),b=dgSurf(B,z-.045,2.3,s);E.L(add3(a.p,mul3(a.n,.0012)),add3(b.p,mul3(b.n,.0012)),.0045,.0032,'g',P.glow,3,vs)}))}};
-DG186.E.Gravewyrm=function(E,L,P,c,D){const K=D.pal(P.C),G=dgDeepG(P),bone=0x8a7e66,dk=0x24201a,vs={vs:1};
+DG186.E.Gravewyrm=function(E,L,P,c,D){const K=D.pal(P.C),G=dgDeepG(P),bone=0x5e5444,dk=0x221e18,vs={vs:1};
   const top=z=>{const r=D.R(z);return [D.X(z),r*.74+.006+D.L(z)+r*.88+(D.ridge?D.ridge(z):0),z]};
   // L1: a row of tall dark spikes with pale tips down the back
   for(let z=.3;z>-1.3;z-=.11){const t=top(z),h=(.068-Math.max(0,-z-.6)*.04)*(L>=2?1.15:1);dgHornE(E,[add3(t,[0,-.012,.012]),add3(t,[0,h*.6,-.016]),add3(t,[0,h,-.045])],.014,dk,bone,vs)}
@@ -721,13 +792,10 @@ DG186.E.Gravewyrm=function(E,L,P,c,D){const K=D.pal(P.C),G=dgDeepG(P),bone=0x8a7
     [.11,-.11,-.33,-.55].forEach(z=>{const t=top(z);dgFlame(E,add3(t,[0,-.004,0]),add3(t,[0,.055,-.03]),.007,G,vs)})}};
 DG186.E.Venomcoil=function(E,L,P,c,D){const N=D.neck,HR=D.headRows,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'},vs={vs:1};
   // (the hood itself widens with the level: its shape is built per level, D.hoodK)
-  const rim=(i,s)=>{const q=N[i],h=q[6]||0,rx=q[2]*(1+D.hoodK*L*h),cup=rx*.32*h;return [s*rx,q[1]-.24*cup,q[0]+.97*cup]};
+  const rim=(i,s)=>{const q=N[i],h=q[6]||0,rx=q[2]*(1+D.hoodK*L*h),cup=Math.min(rx*.32,.08)*h;return [s*rx,q[1]-.24*cup,q[0]+.97*cup]};
   if(L>=3){// a crest of swept spines behind the head (taller at L5)
-    const k=L>=5?1.5:1;[-1,0,1].forEach(x=>{const b=dgHS(HR,.3-Math.abs(x)*.02,x*.38,x<0?-1:1,-.004);dgHornE(E,[b,add3(b,[x*.02,(.045-Math.abs(x)*.008)*k,-.05*k]),add3(b,[x*.03,(.07-Math.abs(x)*.012)*k,-.11*k])],.009,K.dark.getHex(),K.spine2,hb)})}
-  if(L>=4){// a fringe of dark spines round the widest part of the hood
-    [5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);dgHornE(E,[add3(p,[-s*.012,0,0]),add3(p,[s*.02,.006,-.004]),add3(p,[s*.045,.014,-.012])],.006,K.dark.getHex(),K.spine2,vs)}))}
-  if(L>=5){// venom at the tips of the fringe
-    [5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);dgFlame(E,add3(p,[s*.03,.01,-.008]),add3(p,[s*.06,.02,-.016]),.004,G,vs)}))}};
+    const k=L>=5?1.15:.9;[-1,1].forEach(x=>{const b=dgHS(HR,.3-Math.abs(x)*.02,x*.38,x<0?-1:1,-.004);dgHornE(E,[b,add3(b,[x*.02,(.045-Math.abs(x)*.008)*k,-.05*k]),add3(b,[x*.03,(.07-Math.abs(x)*.012)*k,-.11*k])],.009,K.dark.getHex(),K.spine2,hb)})}
+};
 // the rigs' designs dispatch to the species
-{const D=EVO100.D.Drakelet,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Drakelet||'Drakelet';if(DG186.on&&DG186.E[sp]&&DG186.Q[sp])return DG186.E[sp](E,L,P,c,DG186.Q[sp]);return b0.apply(this,arguments)}}
-{const D=EVO100.D.Gravewyrm,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Gravewyrm||'Gravewyrm';if(DG186.on&&DG186.E[sp]&&DG186.S[sp])return DG186.E[sp](E,L,P,c,DG186.S[sp]);return b0.apply(this,arguments)}}
+{const D=EVO100.D.Drakelet,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Drakelet||'Drakelet';if(DG186.on&&DG186.E[sp]&&DG186.Q[sp])return DG186.E[sp](E,L,P,c,DG186.lvd(sp,L));return b0.apply(this,arguments)}}
+{const D=EVO100.D.Gravewyrm,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Gravewyrm||'Gravewyrm';if(DG186.on&&DG186.E[sp]&&DG186.S[sp])return DG186.E[sp](E,L,P,c,DG186.lvd(sp,L));return b0.apply(this,arguments)}}
