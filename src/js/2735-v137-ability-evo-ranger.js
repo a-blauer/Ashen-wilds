@@ -13,7 +13,7 @@ Object.assign(EVO137,{
  'Explosive Arrow':{en:'Cluster Bomb',d:'Looses three bursting arrows in a spread instead of one.',mod:{n2:3}},
  'Hunter’s Focus':{en:'Eagle Eye',d:'+35% critical chance, +60% critical damage and +10% attack speed for 12s.',mod:{buff:{crit:.35,cdm:.6,as:.1},dur:12},
   post(c){}},
- 'Barrage':{en:'Thousand Arrows',d:'Fifteen arrows instead of nine, in an even wider fan.',mod:{n2:15}},
+ 'Ballista Bolt':{en:'Siegebreaker',d:'A spectral siege bolt: it flies 24 tiles through a line half again as wide, hurls enemies twice as far and stuns them for 0.6s.',mod:{L:24,w:2.6,kb:12,stun:.6}}, // v186: was Barrage → Thousand Arrows (15 arrows)
  'Disengage':{en:'Shadowstep Volley',d:'As you leap away you fire a fan of five arrows, and the enemies you leave are rooted for 1.2s.',
   post(c){const o=c.P.clone(),d=c.d,C=evC();[-.4,-.2,.2,.4].forEach(a=>launch(o,evRot(d,a),22,{col:c.sk.col,mt:'p',arrow:1},c.raw*.7,.65));kqsFoes(o,3.2).forEach(e=>eStatus(e,{root:1.2},0));ev137Shock(o,C.c1,3.2,420)}},
  'Call of the Wild':{en:"Alpha's Call",d:'Two spirit wolves answer instead of one, and they hunt for 20s.',mod:{dur:20},

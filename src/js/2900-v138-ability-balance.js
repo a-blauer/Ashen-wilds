@@ -13,7 +13,7 @@
 //   change the rate: a long cooldown is a bigger single hit, a short one steadier damage.
 // - Evolved forms follow the same table at ~2.2× the base form's rate (rank 5 ×1.48 and −15% cooldown, evolution ×1.25),
 //   whatever new shape the evolution gives them; BAL138_EVO is the per-ability factor applied to evolved casts only.
-// - Projectiles fired together by one cast (Multishot, Barrage, Shuriken Volley, Phoenix Barrage…) hit each enemy once at full
+// - Projectiles fired together by one cast (Multishot, Shuriken Volley, Phoenix Barrage…) hit each enemy once at full
 //   damage; more of them on the same enemy deal BAL138.dup. Seeking bolts meant to focus one enemy (Arcane Missiles) are exempt.
 var BAL138={vol:null,dup:.3,EXEMPT:{'Arcane Missiles':1}};
 {const f=cast;cast=function(i){let n=null;try{const s=heroSkills()[+i];n=s&&s.n}catch(_){}
@@ -34,8 +34,8 @@ Object.assign(KQR_TUNE,{
   "Avenger's Shield":1.005,"Beacon of Light":1.371,"Blessed Hammers":1.042,"Consecration":1.035,"Crusader's Charge":2.484,"Hammer of Light":1.328,"Heaven's Wrath":2.25,"Holy Smite":1.331,"Judgment":1.738,"Penance":2.209,"Sanctuary":2.115,"Shield Bash":1.305,
   // assassin (was: Caltrops 0.79, Death Mark 0.74, Eclipse 0.36, Envenom 1, Eviscerate 0.36, Fan of Knives 1, Garrote 0.59, Phantom Strike 0.53, Shadow Rush 0.38, Shuriken Volley 0.27, Smoke Bomb 0.93, Thousand Cuts 0.8, Venom Flask 0.55)
   "Caltrops":0.628,"Death Mark":1.189,"Eclipse":0.34,"Envenom":1.717,"Eviscerate":0.258,"Fan of Knives":1.042,"Garrote":0.952,"Phantom Strike":0.596,"Shadow Rush":0.166,"Shuriken Volley":0.443,"Smoke Bomb":0.657,"Thousand Cuts":1.305,"Venom Flask":0.271,
-  // ranger (was: Aimed Shot 0.53, Barrage 1.2, Disengage 1.21, Entangling Roots 1, Explosive Arrow 1.05, Explosive Trap 1, Frost Trap 1, Hawk Dive 0.9, Multishot 0.7, Piercing Arrow 0.75, Rain of Arrows 0.75, Rapid Fire 0.27, Stampede 0.6)
-  "Aimed Shot":0.575,"Barrage":1.246,"Disengage":1.391,"Entangling Roots":2.217,"Explosive Arrow":0.421,"Explosive Trap":0.418,"Frost Trap":1.948,"Hawk Dive":0.878,"Multishot":0.499,"Piercing Arrow":0.528,"Rain of Arrows":0.232,"Rapid Fire":0.257,"Stampede":1.189,
+  // ranger (was: Aimed Shot 0.53, Barrage 1.2 (now Ballista Bolt, v186), Disengage 1.21, Entangling Roots 1, Explosive Arrow 1.05, Explosive Trap 1, Frost Trap 1, Hawk Dive 0.9, Multishot 0.7, Piercing Arrow 0.75, Rain of Arrows 0.75, Rapid Fire 0.27, Stampede 0.6)
+  "Aimed Shot":0.575,"Ballista Bolt":1.246,"Disengage":1.391,"Entangling Roots":2.217,"Explosive Arrow":0.421,"Explosive Trap":0.418,"Frost Trap":1.948,"Hawk Dive":0.878,"Multishot":0.499,"Piercing Arrow":0.528,"Rain of Arrows":0.232,"Rapid Fire":0.257,"Stampede":1.189,
   // mage (was: Arcane Missiles 0.45, Blizzard 0.4, Chain Lightning 0.5, Comet Storm 1.3, Disintegrate 0.46, Dragon's Breath 0.55, Fireball 0.55, Frost Nova 1.25, Frozen Orb 1.9, Meteor 0.6, Singularity 0.43, Wall of Fire 0.55)
   "Arcane Missiles":0.404,"Blizzard":0.316,"Chain Lightning":0.353,"Comet Storm":2.072,"Disintegrate":0.396,"Dragon's Breath":0.758,"Fireball":0.314,"Frost Nova":1.051,"Frozen Orb":3.312,"Meteor":0.564,"Singularity":0.347,"Wall of Fire":0.309
 });
@@ -49,7 +49,7 @@ Object.assign(BAL138_EVO,{
   // assassin
   "Caltrops":0.702,"Death Mark":0.858,"Eclipse":0.603,"Envenom":0.778,"Eviscerate":0.568,"Fan of Knives":0.438,"Garrote":0.753,"Phantom Strike":0.445,"Shadow Rush":0.989,"Shuriken Volley":0.629,"Smoke Bomb":1.266,"Thousand Cuts":0.477,"Venom Flask":0.712,
   // ranger
-  "Aimed Shot":0.931,"Barrage":0.823,"Disengage":0.635,"Entangling Roots":0.994,"Explosive Arrow":1.14,"Explosive Trap":1.085,"Frost Trap":1.005,"Hawk Dive":0.395,"Multishot":1.008,"Piercing Arrow":0.34,"Rain of Arrows":0.428,"Rapid Fire":0.628,"Stampede":0.961,
+  "Aimed Shot":0.931,"Ballista Bolt":0.823,"Disengage":0.635,"Entangling Roots":0.994,"Explosive Arrow":1.14,"Explosive Trap":1.085,"Frost Trap":1.005,"Hawk Dive":0.395,"Multishot":1.008,"Piercing Arrow":0.34,"Rain of Arrows":0.428,"Rapid Fire":0.628,"Stampede":0.961,
   // mage
   "Arcane Missiles":0.643,"Blizzard":0.958,"Chain Lightning":0.83,"Comet Storm":1.088,"Disintegrate":0.564,"Dragon's Breath":0.445,"Fireball":0.692,"Frost Nova":1.021,"Frozen Orb":0.294,"Meteor":0.86,"Singularity":0.829,"Wall of Fire":0.708
 });

@@ -114,7 +114,7 @@ const SKX={
   {n:'Shadow Dance',i:'🌑',lv:22,k:'buff',cd:22,mp:18,buff:{as:.35,crit:.2},dur:8,col:0x7a4ae0,d:'+35% attack speed and +20% critical chance for 8s.'}],
  ranger:[{n:'Explosive Arrow',i:'💣',lv:6,k:'shot',m:2.6,big:1,burn:1,cd:7,mp:12,col:0xff9a4a,d:'An arrow that bursts into flame on impact.'},
   {n:'Hunter’s Focus',i:'🎯',lv:12,k:'buff',cd:20,mp:14,buff:{crit:.25,cdm:.4},dur:8,col:0xc8f0a0,d:'+25% critical chance and +40% critical damage for 8s.'},
-  {n:'Barrage',i:'🏹',lv:22,k:'shot',n2:9,m:.9,cd:10,mp:22,col:0xf0e0b0,arrow:1,d:'Loose nine arrows in a wide fan.'}],
+  {n:'Ballista Bolt',i:'🔩',lv:22,k:'x',x:'r_ballista',m:1.25,L:16,w:1.7,kb:7,cd:10,mp:22,col:0xf0e0b0,pose:'bow',pms:700,ty:'Projectile · piercing line',d:'Draw a heavy ballista bolt and loose it: it punches through every enemy in a 16-tile line and hurls them back.'}],   // v186: was Barrage (nine arrows in a fan, too like Multishot); handler KQH.r_ballista in 3460, old saves renamed there
  mage:[{n:'Arcane Missiles',i:'✨',lv:6,k:'shot',n2:3,m:1.3,mt:'m',cd:4,mp:10,col:0xb08aff,d:'Three seeking bolts of arcane energy.'},
   {n:'Blizzard',i:'🌨️',lv:12,k:'rain',at:'aim',m:.6,ticks:10,iv:.4,r:3.4,mt:'m',stun:.4,cd:15,mp:22,col:0x9fe3ff,d:'An ice storm batters the target area.'},
   {n:'Mana Shield',i:'🔮',lv:22,k:'barrier',v:.4,dur:7,cd:22,mp:24,col:0x9ab8ff,d:'Absorb damage equal to 40% of max health for 7s.'}]};
