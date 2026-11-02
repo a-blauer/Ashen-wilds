@@ -142,11 +142,11 @@ window.V100M=(function(){
     rec:{...V([.18,1.0,.2],[0,.5,.85]),b:{f:.5,py:-.1,sy:-.05,sx:.1,c:.15},off:OFF.low}}}
   M.dag2=strike({ph:stab(),tm:'snap'});
   {// v186 finisher (owner: "an overhead stab rather than an uppercut stab"): the dagger rises high over the weapon shoulder,
-    // the body rising and leaning back, point forward and up; then the fist drives straight down in front, the point turning down
+    // the body rising and leaning back, point toward the target; then the fist drives straight down in front, the point turning down
     // into the target at the hit, the body dropping into a deep lunge and following through low. The off hand aims, then swings back.
     const R={start:{...V([.2,1.1,.25],[0,.3,.95]),b:{f:.4,c:.15}},
-      coil:{...V([.2,1.5,-.02],[0,.5,.86]),b:{f:.1,py:.28,sy:.3,sx:-.2,c:.06,hx:.1},off:OFF.reach},
-      hold:{...V([.19,1.54,-.05],[0,.4,.92]),b:{f:.05,py:.3,sy:.33,sx:-.25,c:.05,hx:.12},off:OFF.reach},
+      coil:{...V([.2,1.5,-.02],[0,.12,1]),b:{f:.1,py:.28,sy:.3,sx:-.2,c:.06,hx:.1},off:OFF.reach},
+      hold:{...V([.19,1.54,-.05],[0,0,1]),b:{f:.05,py:.3,sy:.33,sx:-.25,c:.05,hx:.12},off:OFF.reach},
       accel:{...V([.15,1.42,.2],[0,-.05,1]),b:{f:.55,py:.06,sy:.1,sx:.1,c:.18},off:OFF.guard},
       hit:{...V([.09,1.02,.46],[0,-.8,.6]),b:{f:.95,py:-.2,sy:-.1,sx:.42,c:.4,w:1.15},off:OFF.back},
       thru:{...V([.08,.86,.43],[0,-.94,.34]),b:{f:1,py:-.22,sy:-.12,sx:.5,c:.48,w:1.15},off:OFF.back},
@@ -154,7 +154,15 @@ window.V100M=(function(){
       rec:{...V([.18,1.0,.25],[0,.5,.85]),b:{f:.5,sx:.12,c:.15},off:OFF.low}};
     M.dag3=strike({ph:R,tm:'heavy'})}
   // ---------------- claws: raking swipes that dip low, alternating hands; finisher = crouch and spring, both claws ----------------
-  const rake=()=>{const P=reach(fore({lo:.1}),.9,-.03);return bodyAdd(offAll(P,{lx:-.75,ly:.1,lz:-.3,le:-1.5,lw:.4}),{c:.1,sx:.05})};
+  // v186: the claws run along the paw (cl186Mount), so a rake is a cat's swipe: the paw is raised beside the head with the claws
+  // up (not drawn back over the shoulder like a sword: from the guard that was a ~160° flip in one frame of a 0.13 s strike), then
+  // it rakes down across the front, claws leading, and follows through low past the off hip
+  const rake=()=>{const P=reach(fore({lo:.1}),.9,-.03);
+    P.coil=Object.assign({},P.coil,V([.3,1.28,.02],[.25,.85,.3]));P.hold=Object.assign({},P.hold,V([.32,1.31,-.02],[.25,.9,.18]));
+    P.accel=Object.assign({},P.accel,V([.22,1.2,.3],[.1,.45,.88]));P.hit=Object.assign({},P.hit,V([.03,1.0,.44],[-.35,-.38,.85]));
+    P.thru=Object.assign({},P.thru,V([-.2,.88,.34],[-.6,-.7,.32]));P.follow=Object.assign({},P.follow,V([-.26,.8,.14],[-.45,-.85,-.1]));
+    P.rec=Object.assign({},P.rec,V([.06,.98,.28],[0,.2,1]));
+    return bodyAdd(offAll(P,{lx:-.75,ly:.1,lz:-.3,le:-1.5,lw:.4}),{c:.1,sx:.05})};
   M.claw0=strike({ph:rake(),tm:'snap',claw:1});M.claw1=strike({mirror:1,ph:rake(),tm:'snap',claw:1});
   {const up=()=>{// uppercut rake: low by the hip → up across the front
     return {coil:{...V([.24,.78,.02],[.3,-.6,.6]),b:{f:.1,py:.25,sy:.25,c:.3,sx:.12},off:{lx:-.75,lz:-.3,le:-1.5,lw:.4}},hold:{...V([.25,.74,-.02],[.3,-.65,.55]),b:{f:.06,py:.28,sy:.28,c:.34,sx:.14},off:{lx:-.75,lz:-.3,le:-1.5,lw:.4}},

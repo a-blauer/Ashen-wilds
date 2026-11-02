@@ -15,7 +15,11 @@
 //    fades for other actions (abilities), at the same rates as the beast hold.
 var WA186={on:true,up:5,down:14,
   // wand flick keys [k, hand [out, fwd, down] from the shoulder (m), wand direction [up, out, fwd]]; null = the carry hold
-  wand:[[0,null,null],[.2,[.15,.1,.04],[.8,.14,.55]],[.3,[.15,.08,.02],[.85,.14,.45]],[.385,[.1,.36,.1],[.14,.03,1]],[.5,[.09,.38,.14],[-.1,0,1]],[.8,null,null],[1,null,null]]};
+  wand:[[0,null,null],[.2,[.15,.12,.1],[.5,.1,.85]],[.3,[.15,.1,.08],[.58,.1,.8]],[.385,[.1,.36,.1],[.14,.03,1]],[.5,[.09,.38,.14],[-.1,0,1]],[.8,null,null],[1,null,null]]};
+// the wand track keeps only the body (twist into the flick, lean, knees, off arm): the weapon arm is the hold's IK, and the old
+// track's raised arm (ax −2.1, ex −1.6) under it rolled the forearm ~80° in two frames, which the paw then had to undo
+ATK.wand=atkTrack([[0,ATK_REST],[.24,atkEyes({sy:.35,py:.15,sx:-.08,lx:-.6,lz:.2,le:-1.1,lh:-.1,rh:.15,rk:.15,dy:-.02}),'out'],
+  [.385,atkEyes({sy:-.25,py:-.18,sx:.14,lx:-.3,le:-.9,lh:-.25,rh:.18,lk:.25,dy:-.04}),'in'],[.5,atkEyes({sy:-.3,py:-.2,sx:.16,lx:-.3,le:-.9,lh:-.25,rh:.18,lk:.25,dy:-.04}),'out'],[1,ATK_REST,'io']]);
 function wa186Basic(A,wt){return !!(A&&wt&&((wt=='wand'&&A.pose===ATK.wand)||(wt=='orb'&&A.pose===ATK.orb)))}
 function wa186Key(K,k,C){const sm=x=>x*x*(3-2*x),hc=C.hand,dc=C.dir||[0,0,1];let i=0;while(i<K.length-2&&k>K[i+1][0])i++;
   const A=K[i],B=K[i+1],t=sm(Math.max(0,Math.min(1,(k-A[0])/((B[0]-A[0])||1)))),h0=A[1]||hc,h1=B[1]||hc,d0=A[2]||dc,d1=B[2]||dc;

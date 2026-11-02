@@ -10,7 +10,7 @@ SRCJS=open(HERE+'/v100_anim_lib.js').read()+'\n'+open(HERE+'/v100_anim_bake.js')
 out={}
 def s(pg):
     pg.set_default_timeout(1200000)
-    pg.click('[data-dev=desktop]',timeout=300000);pg.click('[data-c="%s"]'%CLS,timeout=300000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
+    pg.click('[data-dev=desktop]',timeout=900000);pg.click('[data-c="%s"]'%CLS,timeout=900000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     pg.evaluate("()=>{window.requestAnimationFrame=f=>0}")
     pg.evaluate("(s)=>{(0,eval)(s)}",SRCJS)
     print('claw mount:',pg.evaluate("()=>{if(typeof cl186Mount!='function')return 'none (old build)';const R=cl186Mount(pl,'R'),L=cl186Mount(pl,'L');if(!R||!L)return 'paw not measured';window.V100B_CLAW={R:{q:R.q,p:R.p},L:{q:L.q,p:L.p}};return JSON.stringify([R.p,L.p])}"))
