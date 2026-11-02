@@ -201,9 +201,9 @@ EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,[1,2,3,3][s],1,s>=3)};
 // long hackles round the neck. Gone: Rocsovereign's bead cords (they hung from the crown) and the lightning arcs at the
 // wing roots of both (thin glowing lines standing up like antennae)
 EV38.birdCrest=function(E,P,s,o){const R=E.raw,hb={bn:'head'},n=s>=3?4:s>=2?3:2;if(!s||typeof bd184Fth!='function')return;
-  for(let i=-n;i<=n;i++){if(Math.abs(i)<=1&&s<2)continue;const a=[i*.02,o.y,o.z],ln=(o.len+.05*s)*(1-Math.abs(i)*.09),b=[i*.055,o.y+ln*.55,o.z-ln*.8],d=R.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);
-    bd184Fth(R,a,d,[i*.2,1,.4],ln,.016,'c',Math.abs(i)%2?P.mainD:P.dark,hb);if(s>=3&&Math.abs(i)%2==0)bd184Fth(R,R.add(a,d,ln-.05),d,[i*.2,1,.4],.06,.008,'g',o.glow||P.glow,hb)}
-  if(s>=3)[-1,1].forEach(sd=>{const a=[sd*.04,o.y-.04,o.z-.06],d=R.nrm([sd*.15,-.55,-1]);bd184Fth(R,a,d,[sd,.3,0],.2,.02,'c',P.dark,Object.assign({kind:'lance'},hb))})};
+  for(let i=-n;i<=n;i++){if(Math.abs(i)<=1&&s<2)continue;const q=R.top(i*.015,o.z-Math.abs(i)*.006);if(!q||q.p[1]<o.y-.06)continue;const a=R.add(q.p,q.n,-.012),ln=(o.len+.05*s)*(1-Math.abs(i)*.09),b=[a[0]+i*.035,a[1]+ln*.55,a[2]-ln*.8],d=R.nrm([b[0]-a[0],b[1]-a[1],b[2]-a[2]]);
+    bd184Fth(R,a,d,[i*.2,1,.4],ln,.016,'c',Math.abs(i)%2?P.mainD:P.dark,hb);if(s>=3&&Math.abs(i)%2==0)bd184Fth(R,R.add(a,d,ln-.075),d,[i*.2,1,.4],.08,.009,o.tipT||'g',o.glow||P.glow,hb)}
+  if(s>=3)[-1,1].forEach(sd=>{const q=R.top(sd*.035,o.z-.07);if(!q)return;const a=R.add(q.p,q.n,-.01),d=R.nrm([sd*.15,-.55,-1]);bd184Fth(R,a,d,[sd,.3,0],.2,.02,'c',P.dark,Object.assign({kind:'lance'},hb))})};
 // a ruff of long hackle feathers round the back of the neck, lying back over the shoulders (rows at heights ys)
 EV38.birdRuff=function(E,P,ys,len,cz){const R=E.raw;if(typeof bd184Fth!='function')return;ys.forEach((y,k)=>{for(let i=0;i<9;i++){const a=-1.5+i/8*3,o=[Math.sin(a)*.5,y,cz-Math.cos(a)*.5],h=R.on(o,[-Math.sin(a),0,Math.cos(a)]);
   if(h)bd184Fth(R,R.add(h.p,h.n,-.006),R.nrm([h.n[0]*.6,-.35,-1]),h.n,len*(1-k*.15)*(1-Math.abs(a)*.12),.022,'c',(i+k)%2?P.mainD:P.dark,{vs:1})}})};
@@ -212,7 +212,7 @@ EV38.S.Stormtalon=function(E,L,P,c,s,b0){const ch0=E.chain;E.chain=function(pts,
 EV38.S.Rocsovereign=function(E,L,P,c,s,b0){const L0=E.L,pd0=E.pd,ch0=E.chain;E.chain=function(pts,r0,r1,t,col){if(t=="g"&&r0===.009&&col===P.glow2)return E;return ch0.apply(E,arguments)};
   E.L=function(a,b,r1,r2,t,col){if(col===P.leather&&r1===.003)return E;return L0.apply(E,arguments)};
   E.pd=function(geo,t,col,pos,dir,sc){if(geo=='sph'&&sc===.011)return E;return pd0.apply(E,arguments)};
-  try{b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0;E.chain=ch0}EV38.birdCrest(E,P,s+1>3?3:s+1,{y:.95,z:.36,len:.12});if(s>=2)EV38.birdRuff(E,P,s>=3?[.9,.84,.78]:[.88,.82],.1+.035*s,.3)};
+  try{b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0;E.chain=ch0}EV38.birdCrest(E,P,s+1>3?3:s+1,{y:.95,z:.36,len:.12,tipT:'m',glow:P.gold});if(s>=2)EV38.birdRuff(E,P,s>=3?[.9,.84,.78]:[.88,.82],.1+.035*s,.3)};
 // ===================================================================== Swarm =====================================================================
 // a fungus cap on a stalk from hit q: stalk height h, cap radius r, lit gills under it (glow colour gl, or none)
 EV38T.cap=function(R,q,h,r,K,gl,lean,o){const d=R.nrm([q.n[0]*.4+(lean||0),1,q.n[2]*.4]),top=R.add(q.p,d,h);o=Object.assign({at:R.add(q.p,q.n,-.01)},o);
@@ -241,7 +241,10 @@ EV38.S.Sporelord=function(E,L,P0,c,s){const R=E.raw,T=EV38T,dim=h=>T.mix(h,0x2a3
     R.chain([p0,p1,p2,p3],.022,.009,'c',K.stalk.clone().lerp(K.club,.35).multiplyScalar(.75).getHex(),5,{at:p0});R.pd('oct',glow?'g':'c',glow?P.glow:K.club.getHex(),R.add(p3,[lean*.01,.03,-.006]),R.nrm([lean*.2,1,-.3]),[.026,.06,.026],null,{at:p0})};
   if(s>=1){stalk(-.16,-.04,.26,-.4,s>=2);stalk(.16,-.04,.27,.4,s>=2);[-1,1].forEach(sd=>T.vein(R,sd,[[.5,.08],[.44,0],[.48,-.08],[.42,-.16],[.4,-.24]],.006,P.glowD))}
   if(s>=2){stalk(-.06,-.18,.3,-.2,1);stalk(.07,-.16,.31,.2,1);
-    const top=(x,z)=>{const h=R.top(x,z);return h?h.p[1]+.02:.6};FC186.ST.forEach((q,i)=>{const p=FC186.club(q,top);R.pd('oct','g',i%2?P.glow:P.glowD,p,[0,1,0],[.024,.046,.024],null,{at:R.add([q[0],top(q[0],q[1])-.04,q[1]],[0,0,0])})});
+    // the kit's own stalk clubs light up (placed by the kit's own table, as the old design did)
+    const TB=FC186.B.Sporelord,top=(x,z)=>{let i=0;while(i<TB.length-2&&z>TB[i+1][0])i++;const A=TB[i],Bq=TB[i+1],t=Math.max(0,Math.min(1,(z-A[0])/(Bq[0]-A[0]))),y=A[1]+(Bq[1]-A[1])*t,w=A[2]+(Bq[2]-A[2])*t,h=A[3]+(Bq[3]-A[3])*t;
+      return y+h*Math.sqrt(Math.max(0,1-(x/w)**2))},bnz=z=>z>.26?'head':z>.08?'chest':z>-.12?'spine':'pelvis';
+    FC186.ST.forEach((q,i)=>{const p=FC186.club(q,top);R.pd('oct','g',i%2?P.glow:P.glowD,p,[0,1,0],[.024,.046,.024],null,{bn:bnz(q[1])})});
     [-1,1].forEach(sd=>[.02,-.1,-.2].forEach((z,i)=>{const h=R.top(sd*.1,z);if(h)R.pd('hem','c',K.capD.getHex(),R.add(h.p,h.n,.004),R.nrm([sd*.9,.5,0]),[.06-i*.008,.018,.05],null,{at:R.add(h.p,h.n,-.01)})}))}
   if(s>=3){[[-.1,.06,.36,-.3],[.1,.06,.38,.3],[0,-.08,.44,0],[-.02,-.26,.3,-.1]].forEach(q=>stalk(q[0],q[1],q[2],q[3],1));
     for(let i=0;i<8;i++){const x=(i%4-1.5)*.08,z=-.2+Math.floor(i/4)*.2+((i%2)*.05),t=R.top(x,z);if(t)R.pd('sph','g',P.glow2,R.add(t.p,t.n,-.002),t.n,[.01,.004,.01])}}};
@@ -287,7 +290,7 @@ EV38.S.Hivemother=function(E,L,P,c,s){const R=E.raw,T=EV38T,jb={bn:'jaw'},hb={bn
       if(s>=3)R.L(R.add(p,R.nrm([0,1,-.45]),ln*.65),R.add(p,R.nrm([0,1,-.45]),ln*1.01),.008,.001,'g',P.glow,3,tb)}
     R.L([0,.54,-1.16],[0,.49,-1.2],.016,.002,'g',P.glow,4,tb)}
   if(s>=3){for(let i=0;i<7;i++){const a=(i/6-.5)*Math.PI*1.4,b=[Math.sin(a)*.06,.49,.36+Math.cos(a)*.03-.03],t=[Math.sin(a)*.12,.62+.06*Math.cos(a),.3];R.L(b,t,.011,.002,'c',gl,4,hb)}
-    R.pd('oct','g',P.glow,[0,.535,.4],[0,.6,.8],[.018,.026,.014],null,hb);
+    R.pd('oct','g',P.glow,[0,.485,.395],[0,.6,.8],[.018,.026,.014],null,hb);
     let pr=null;for(let j=0;j<8;j++){const h=R.top(0,-.22-j*.1),p=h?R.add(h.p,h.n,.004):null;if(p&&pr)R.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,{vs:1});pr=p}
     for(let i=0;i<6;i++){const z=-.4-(i%3)*.17,a=i<3?.2:Math.PI-.2,h=R.on(v150Surf(AB,z,a,.4),[-Math.cos(a),-Math.sin(a),0]);if(h)R.pd('oct','g',i%2?P.glow:P.glowD,R.add(h.p,h.n,-.002),h.n,[.014,.02,.014],null,tb)}}};
 // ===================================================================== Spirit =====================================================================
@@ -298,11 +301,11 @@ EV38.S.Hivemother=function(E,L,P,c,s){const R=E.raw,T=EV38T,jb={bn:'jaw'},hb={bn
 EV38.S.Boneling=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,B=boneP,hb={bn:'head'},bone=P.bone,boneD=P.boneD;
   [-1,1].forEach(sd=>{const e=B([sd*.055,.625,.575]);R.L(e,R.add(e,[sd*.02,.06,-.07]),.016,.002,'g',P.glow,4,hb);if(s>=2)R.L(R.add(e,[0,.01,0]),R.add(e,[sd*.035,.1,-.14]),.012,.001,'g',P.glow2,3,hb)});
   [-1,1].forEach(sd=>R.horn(B([sd*.07,.69,.42]),[sd*.35,.55,-1],s>=3?[sd*.02,-.07,-.02]:[0,-.04,-.03],[0,.11,.16,.22][s],.016+.003*s,'c',boneD,5,hb,s>=3?P.glow:bone));
-  {const n=[0,6,8,9][s];for(let i=0;i<n;i++){const z=B([0,0,.3-i*.065])[2],q=R.top(0,z);if(!q)continue;const ln=(.045+.025*(s-1))*(1-Math.abs(i-n*.4)/n*.6);
+  {const n=[0,6,8,9][s];for(let i=0;i<n;i++){const z=B([0,0,.3-i*.065])[2],q=R.top(0,z);if(!q)continue;const ln=(.065+.025*(s-1))*(1-Math.abs(i-n*.4)/n*.6);
     T.spike(R,q,[0,1,-.45],ln,.012,i%2?boneD:bone,s>=2?(s>=3?P.glow2:P.glowD):null,.72)}}
   if(s>=2){R.pd('ico','g',P.glow2,[0,.512,.12],[0,1,0],.05,null,{bn:'chest'});
     const tb=T.box(E,/^tail/);if(tb)for(let i=0;i<3;i++){const z=tb.mx[2]-.12-i*.16,q=R.top(0,z);if(q)T.spike(R,q,[0,1,-.6],.05-.008*i+.02*(s-2),.011,bone)}}
-  if(s>=3){for(let i=-2;i<=2;i++){const p=B([i*.03,.69,.48]);R.L(p,R.add(p,[i*.018,.09-Math.abs(i)*.015,-.035]),.011,.002,'c',bone,4,hb)}
+  if(s>=3){for(let i=-2;i<=2;i++){const q=R.top(i*.025,B([0,0,.48])[2]);if(!q)continue;const p=R.add(q.p,q.n,-.008);R.L(p,R.add(p,[i*.018,.09-Math.abs(i)*.015,-.035]),.011,.002,'c',bone,4,hb)}
     R.band(B([0,.66,.48]),[0,1,-.3],.003,.006,'m',P.gold,10,hb);
     [-1,1].forEach(sd=>{const h=R.on([sd*.4,B([0,.55,0])[1],B([0,0,.22])[2]],[-sd,0,0]);if(h){R.pd('hem','c',boneD,R.add(h.p,h.n,-.004),h.n,[.06,.02,.08],[0,1,0],{vs:1});T.spike(R,h,[sd,.9,-.4],.07,.014,bone)}});
     const tb=T.box(E,/^tail/);if(tb){const q=R.top(0,tb.mn[2]+.05);if(q)[-1,0,1].forEach(i=>T.spike(R,q,[i*.6,.7,-.6],.07-Math.abs(i)*.015,.012,i?boneD:bone,i?null:P.glow2,.6))}}};
@@ -334,7 +337,7 @@ EV38.spirit=function(E,L,P,c,s,kind){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s)
   // the hood's point, longer each stage, sweeping back
   {const a=[0,top-.035,-.065],n=[0,.12,.2,.28][s];R.chain([a,R.add(a,[0,n*.3,-n*.3]),R.add(a,[0,n*.38,-n*.68]),R.add(a,[0,n*.25,-n])],.028,.003,'c',v==1?P.mainL:dk,5,hb)}
   if(s>=2){if(kind=='lumen'){for(let i=0;i<11;i++){const a=Math.PI+(i/10-.5)*2.4,p=H(a,1.03,-.012),d=R.nrm([Math.sin(a)*.8,.45+.5*Math.cos((i/10-.5)*Math.PI),Math.cos(a)*.8]);R.L(p,R.add(p,d,(.15+.07*(s-2))*(i%2?.7:1)),.016,.001,'g',i%2?P.glow2:P.glow,4,hb)}}
-    else{const big=kind=='warden'?1.3:1,y=kind=='warden'?1.13:1.07;[-1,1].forEach(sd=>{const p=H(sd*Math.PI*.55,y,-.014);R.horn(p,[sd*.6,.75,-.35],[sd*.03,-.05,-.07],(.16+.07*(s-2))*big,.022*big,'c',kind=='warden'?P.bone:dk,5,hb,P.glowD)})}}
+    else{const big=kind=='warden'?1.3:1,y=kind=='warden'?1.13:1.07;[-1,1].forEach(sd=>{const p=H(sd*Math.PI*.55,y,-.014);R.horn(p,[sd*.6,.75,-.35],[sd*.03,-.05,-.07],(.2+.08*(s-2))*big,.026*big,'c',kind=='warden'?P.bone:T.mix(P.boneD,P.mainD,.45),5,hb,P.glowD)})}}
   if(s>=3){for(let i=0;i<14;i++){const a=i/14*6.283,a2=(i+1)/14*6.283;if(Math.cos(a)>.55&&Math.cos(a2)>.55)continue;R.L(H(a,1.0,.004),H(a2,1.0,.004),.009,.009,'m',P.trim,4,hb)}
     R.pd('cone4','m',P.trim,[0,1.14,.035],[0,1,.3],[.018,.055,.018],null,hb);R.pd('oct','g',P.glow,[0,1.125,.05],[0,.5,.85],[.018,.024,.012],null,hb);
     for(let i=-3;i<=3;i++){const a=i/3*1.25+Math.PI,p=H(a,1.09,-.008);R.L(p,R.add(p,R.nrm([Math.sin(a)*.35,1,Math.cos(a)*.35]),.17-Math.abs(i)*.02),.024,.002,'g',i%2?P.glow:P.glow2,4,hb)}}};
