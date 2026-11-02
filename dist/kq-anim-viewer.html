@@ -64605,29 +64605,33 @@ FSM100_stars=function(c){return fs189Html(c)};
 // color can differ from companion to companion": every rune on one companion glows in that companion's own colour (from its
 // rune seed, so it never changes), and runes are about half the first size.
 var FR189={on:true,
-  // symbols on a 0..10 grid: each a list of strokes, each stroke a list of points (Elder-Futhark-like and a few sigils)
-  G:[[[[5,0],[5,10]],[[5,2],[8.5,0]],[[5,5],[8.5,3]]],                          // fehu
-     [[[3,10],[3,0],[7.5,3],[7.5,10]]],                                          // uruz
-     [[[3.5,0],[3.5,10]],[[3.5,2.5],[7.5,5],[3.5,7.5]]],                         // thurisaz
-     [[[3,10],[3,0],[7,3.5],[3,6.5],[7,10]]],                                    // raidho
-     [[[7.5,0],[3,5],[7.5,10]]],                                                 // kaunan
-     [[[2,0],[8,10]],[[8,0],[2,10]]],                                            // gebo
-     [[[3,10],[3,0],[7,3.5],[3,7]]],                                             // wunjo
-     [[[3,0],[3,10]],[[7,0],[7,10]],[[3,3],[7,6.5]]],                            // hagalaz
-     [[[5,0],[5,10]],[[3,3.5],[7,6.5]]],                                         // naudiz
-     [[[2.5,4],[5,1.5],[7.5,4]],[[2.5,6],[5,8.5],[7.5,6]],[[5,1.5],[5,8.5]]],    // jera-like
-     [[[3,0],[3,10]],[[3,1.5],[7,3.5]],[[3,8.5],[7,6.5]],[[7,3.5],[7,6.5]]],     // perthro
-     [[[5,10],[5,0]],[[5,4],[1.5,0.8]],[[5,4],[8.5,0.8]]],                       // algiz
-     [[[7.5,0],[2.5,2.8],[7.5,6],[2.5,9.5]]],                                    // sowilo
-     [[[5,0],[5,10]],[[5,0],[2,3]],[[5,0],[8,3]]],                               // tiwaz
-     [[[3,0],[3,10]],[[3,0],[7,2.5],[3,5],[7,7.5],[3,10]]],                      // berkanan
-     [[[2.5,10],[2.5,0],[5,3],[7.5,0],[7.5,10]]],                                // ehwaz
-     [[[3,0],[3,10],[7.5,10]],[[3,0],[7.5,3.5]]],                                // laguz-like
-     [[[5,1],[9,5],[5,9],[1,5],[5,1]],[[1,5],[9,5]]],                            // ingwaz
-     [[[2,1],[8,9]],[[2,9],[8,1]],[[2,1],[2,9]],[[8,1],[8,9]]],                  // dagaz
-     [[[5,0.5],[8.5,4.5],[5,10],[1.5,4.5],[5,0.5]],[[5,4.5],[5,10]]],            // othala-like
-     [[[5,0],[5,10]],[[2,2.5],[8,2.5]],[[2.5,7.5],[5,5],[7.5,7.5]]],             // sigil: crossed arrow
-     [[[2,5],[5,1],[8,5],[5,9],[2,5]],[[5,1],[5,9]]]],                           // sigil: split diamond
+  // Ashen script (owner, Nov 2 2026: "original rune symbols and shapes … make them up for our game"): 24 symbols of our own,
+  // on a 0..10 grid (y down). Each is a list of marks: ['l', points] a line, ['c', x, y, r] a ring, ['a', x, y, r, from°, to°]
+  // an arc (0° = right, 90° = down), ['d', x, y] a dot. Built from staves, rings, crescents, hooks and ember dots.
+  G:[[['l',[[5,10],[5,3.4]]],['c',5,1.9,1.4],['l',[[5,6.4],[3,8.4]]],['l',[[5,6.4],[7,8.4]]]],                           // ember stave
+     [['a',5,5,3.5,180,360],['l',[[1.5,5],[1.5,10]]],['l',[[8.5,5],[8.5,10]]],['d',5,6.8]],                            // the gate
+     [['a',5,3.6,2.8,125,415],['l',[[5,3.6],[5,10]]],['d',2.8,8.6],['d',7.2,8.6]],                                     // hollow key
+     [['l',[[2.6,10],[4.4,0]]],['a',7.4,4.6,2.4,100,260],['d',7.6,4.6]],                                               // moon stave
+     [['l',[[2,1],[5,9],[8,1]]],['l',[[2,1],[3.6,.4]]],['l',[[8,1],[6.4,.4]]],['d',5,4]],                              // fang
+     [['l',[[3,1],[7,9]]],['d',6.6,2.4],['d',8,4.6],['d',2.4,6.2]],                                                    // ashfall
+     [['c',3.6,5.4,2.2],['c',6.4,5.4,2.2],['l',[[5,0],[5,3.6]]]],                                                      // binding
+     [['l',[[5,0],[5,6.5]]],['a',3.5,6.5,1.5,0,180],['l',[[5,2.6],[3,1]]],['d',7.2,3.2]],                              // hook
+     [['l',[[1,7],[3,3],[5,7],[7,3],[9,7]]],['l',[[5,7],[5,10]]]],                                                     // thorn crown
+     [['c',5,5,1.6],['l',[[5,0],[5,2.2]]],['l',[[5,7.8],[5,10]]],['l',[[0,5],[2.2,5]]],['l',[[7.8,5],[10,5]]]],        // dusk sun
+     [['l',[[5,0],[5,4]]],['l',[[5,4],[2.5,10]]],['l',[[5,4],[7.5,10]]],['c',5,7.2,.9]],                               // split stave
+     [['l',[[5,1],[8.5,8],[1.5,8],[5,1]]],['d',5,5.6],['l',[[3.5,10],[6.5,10]]]],                                      // brand
+     [['l',[[5.0,3.7],[5.23,3.62],[5.5,3.66],[5.77,3.83],[5.97,4.13],[6.05,4.53],[5.95,4.96],[5.66,5.36],[5.21,5.64],[4.64,5.73],[4.04,5.59],[3.5,5.21],[3.11,4.62],[2.98,3.88],[3.13,3.1],[3.59,2.4],[4.31,1.89],[5.21,1.68],[6.17,1.83],[7.05,2.34],[7.7,3.18],[8.0,4.24],[7.89,5.38],[7.35,6.44],[6.42,7.25],[5.21,7.67],[3.89,7.62],[3.59,10]]]],  // coil
+     [['l',[[5,0],[5,10]]],['a',5,4.4,3,200,340],['a',5,7.6,2,200,340]],                                               // veil
+     [['a',5,5,3.8,-50,240],['d',6.4,1.2],['l',[[5,5],[5,8]]]],                                                        // cinder ring
+     [['l',[[3.3,0],[3.3,10]]],['l',[[6.7,0],[6.7,10]]],['l',[[3.3,3],[6.7,5]]],['l',[[3.3,7],[6.7,5]]]],              // twin staves
+     [['l',[[3,10],[3,2.2]]],['a',5.5,2.2,2.5,180,360],['l',[[8,2.2],[8,3.8]]],['d',8,6.2]],                           // shepherd
+     [['c',5,5,1.3],['l',[[2,2],[3.9,3.9]]],['l',[[8,2],[6.1,3.9]]],['l',[[2,8],[3.9,6.1]]],['l',[[8,8],[6.1,6.1]]]],   // star seed
+     [['a',5,6.6,2.8,-30,210],['l',[[7.42,5.2],[5,.6],[2.58,5.2]]],['l',[[5,5.4],[5,7.8]]]],                            // tear
+     [['l',[[6,0],[3.5,5],[6.5,5],[4,10]]],['d',7.8,8.2]],                                                             // bolt
+     [['l',[[5,10],[5,5]]],['a',5,2.5,2.5,0,180],['d',5,1.4]],                                                         // the cup
+     [['l',[[1.5,3],[8.5,1.5]]],['l',[[3.5,2.6],[3.5,9.6]]],['l',[[6.5,1.9],[6.5,6.4]]],['d',6.5,8.6]],                // lintel
+     [['c',5,6.6,2.5],['l',[[3.2,4.8],[1.4,1]]],['l',[[6.8,4.8],[8.6,1]]]],                                            // horned ring
+     [['l',[[5,0],[5,3.8]]],['l',[[5,6.2],[5,10]]],['l',[[2.4,5],[7.6,5]]],['d',2.4,2.4],['d',7.6,7.6]]],               // broken stave
   // glow colours: one per companion, chosen by its rune seed
   COL:[0xff8a3c,0x7fe8ff,0xb68cff,0x6dff9e,0xffd34a,0xff5a6a,0xe8f2ff,0x3fd8c4,0xff7ad1,0x9ab4ff],
   tex:{},mat:{},geo:null,keepOut:/head|jaw|skull|tongue|mouth|eye|beak|snout|muzzle|toe|foot|paw|hoof|claw|sole/i};
@@ -64636,17 +64640,23 @@ function fr189Seed(c){if(!c)return 1;if(!(c.rs189>0)){c.rs189=1+Math.floor(Math.
 function fr189Rng(s){let a=(s>>>0)||1;return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 // one glowing symbol as a texture (white; the material tints it), shared by every rune with that symbol
 function fr189Tex(i){let t=FR189.tex[i];if(t)return t;const cv=document.createElement('canvas');cv.width=cv.height=64;const X=cv.getContext('2d');
-  const G=FR189.G[i%FR189.G.length],P=p=>[7+p[0]*5,7+p[1]*5];X.lineCap='round';X.lineJoin='round';
-  const draw=(w,a,blur)=>{X.strokeStyle='rgba(255,255,255,'+a+')';X.lineWidth=w;X.shadowColor='#fff';X.shadowBlur=blur;
-    G.forEach(st=>{X.beginPath();st.forEach((p,k)=>{const q=P(p);k?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])});X.stroke()})};
-  draw(11,.35,9);draw(5.6,1,3);   // bold strokes: runes are small on the body
+  const G=FR189.G[i%FR189.G.length],P=(x,y)=>[7+x*5,7+y*5];X.lineCap='round';X.lineJoin='round';
+  const draw=(w,a,blur)=>{X.strokeStyle=X.fillStyle='rgba(255,255,255,'+a+')';X.lineWidth=w;X.shadowColor='#fff';X.shadowBlur=blur;
+    G.forEach(m=>{X.beginPath();
+      if(m[0]=='l')m[1].forEach((p,k)=>{const q=P(p[0],p[1]);k?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])});
+      else if(m[0]=='c'){const q=P(m[1],m[2]);X.arc(q[0],q[1],m[3]*5,0,Math.PI*2)}
+      else if(m[0]=='a'){const q=P(m[1],m[2]),A=m[4]*Math.PI/180,B=m[5]*Math.PI/180;X.arc(q[0],q[1],m[3]*5,A,B,B<A)}
+      else if(m[0]=='d'){const q=P(m[1],m[2]);X.arc(q[0],q[1],w*.62,0,Math.PI*2);X.fill();return}
+      X.stroke()})};
+  draw(10,.18,6);draw(5.4,.85,2);   // v189b: a faint halo and softer core (owner: "more subtle and not glow as bright")
   t=new THREE.CanvasTexture(cv);t.anisotropy=2;return FR189.tex[i]=t}
 function fr189Mat(i,ci){const k=i+'|'+ci;let m=FR189.mat[k];if(m)return m;
-  m=new THREE.MeshBasicMaterial({map:fr189Tex(i),color:FR189.COL[ci]||FR189.COL[0],transparent:true,opacity:.95,blending:THREE.AdditiveBlending,
+  m=new THREE.MeshBasicMaterial({map:fr189Tex(i),color:FR189.COL[ci]||FR189.COL[0],transparent:true,opacity:.5,blending:THREE.AdditiveBlending,
     depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,fog:false,toneMapped:false});
   return FR189.mat[k]=m}
 // shared glow pulse: every rune material breathes together (one update a frame, no per-rune work)
-function fr189Pulse(now){const k=.78+.22*Math.sin(now/520);for(const n in FR189.mat){FR189.mat[n].opacity=k}}
+// a faint, slow breath (was .56–1)
+function fr189Pulse(now){const k=.42+.08*Math.sin(now/700);for(const n in FR189.mat){FR189.mat[n].opacity=k}}
 // the companion's body skin: the skinned mesh that carries the skeleton (kit parts such as eyes and teeth are separate meshes)
 function fr189Body(g){let best=null;g.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton&&o.geometry&&o.geometry.attributes.skinIndex&&o.children.some(k=>k.isBone)){
   const n=o.geometry.attributes.position.count;if(!best||n>best.geometry.attributes.position.count)best=o}});return best}
