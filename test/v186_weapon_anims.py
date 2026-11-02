@@ -33,14 +33,16 @@ JS=r"""async([cls,wt,sec,every,W,view,hand,dist,noshot])=>{const out={fr:[],log:
    const ql=h.quaternion.clone();const ax=h.position.clone().normalize();// forearm axis (forearm local, toward the wrist)
    // swing-twist decomposition: twist part of ql about ax
    const p=ax.clone().multiplyScalar(ql.x*ax.x+ql.y*ax.y+ql.z*ax.z),tq=new Q(p.x,p.y,p.z,ql.w).normalize();let a=2*Math.atan2(Math.hypot(tq.x,tq.y,tq.z),tq.w);if(tq.x*ax.x+tq.y*ax.y+tq.z*ax.z<0)a=-a;return a};
- const cnv=document.createElement('canvas');const cv=ren.domElement,w0=cv.width,h0=cv.height,bg0=scene.background,cam1=new THREE.PerspectiveCamera(36,1,.01,60);
- const shot=(lab)=>{if(noshot)return;pl.updateMatrixWorld(true);try{ren.info.reset()}catch(_){}pl.traverse(m=>{if(m.isSkinnedMesh)m.skeleton.update()});const ry=pl.rotation.y,fx=Math.sin(ry),fz=Math.cos(ry),rx=Math.cos(ry),rz=-Math.sin(ry),P=pl.position;
+ // a small renderer of its own (resizing the game's canvas twice a frame churned memory; pages crashed on a busy machine)
+ const RD=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});RD.setSize(W,W);RD.outputEncoding=ren.outputEncoding;RD.toneMapping=ren.toneMapping;RD.toneMappingExposure=ren.toneMappingExposure;
+ const r1=(sc,c)=>RD.render(sc,c);const cv=RD.domElement,bg0=scene.background,cam1=new THREE.PerspectiveCamera(36,1,.01,60);
+ const shot=(lab)=>{if(noshot)return;pl.updateMatrixWorld(true);pl.traverse(m=>{if(m.isSkinnedMesh)m.skeleton.update()});const ry=pl.rotation.y,fx=Math.sin(ry),fz=Math.cos(ry),rx=Math.cos(ry),rz=-Math.sin(ry),P=pl.position;
    const vv=view=='side'?[-rx*2.2,1.0,-rz*2.2]:view=='front'?[fx*2.3,1.0,fz*2.3]:(view=='34l'?[fx*1.6-rx*1.3,1.05,fz*1.6-rz*1.3]:[fx*1.6+rx*1.3,1.05,fz*1.6+rz*1.3]);
-   ren.setSize(W,W,false);const hid=[];scene.children.forEach(o=>{if(o!==pl&&!o.isLight&&o.visible){o.visible=false;hid.push(o)}});scene.background=new THREE.Color(0x4a5560);
-   const imgs=[];cam1.position.set(P.x+vv[0],P.y+vv[1],P.z+vv[2]);cam1.lookAt(P.x+fx*.2,P.y+.8,P.z+fz*.2);cam1.aspect=1;cam1.updateProjectionMatrix();r0(scene,cam1);imgs.push(cv.toDataURL('image/jpeg',.82));
+   const hid=[];scene.children.forEach(o=>{if(o!==pl&&!o.isLight&&o.visible){o.visible=false;hid.push(o)}});scene.background=new THREE.Color(0x4a5560);
+   const imgs=[];cam1.position.set(P.x+vv[0],P.y+vv[1],P.z+vv[2]);cam1.lookAt(P.x+fx*.2,P.y+.8,P.z+fz*.2);cam1.aspect=1;cam1.updateProjectionMatrix();r1(scene,cam1);imgs.push(cv.toDataURL('image/jpeg',.82));
    const hs=hand||(wt=='orb'?'L':'R'),hp=B['a'+hs+'2'].getWorldPosition(new V());const sg=hs=='R'?-1:1;
-   cam1.position.set(hp.x+fx*.75-sg*rx*.5,hp.y+.3,hp.z+fz*.75-sg*rz*.5);cam1.lookAt(hp);r0(scene,cam1);imgs.push(cv.toDataURL('image/jpeg',.82));
-   hid.forEach(o=>o.visible=true);scene.background=bg0;ren.setSize(w0,h0,false);out.fr.push({lab,imgs})};
+   cam1.position.set(hp.x+fx*.75-sg*rx*.5,hp.y+.3,hp.z+fz*.75-sg*rz*.5);cam1.lookAt(hp);r1(scene,cam1);imgs.push(cv.toDataURL('image/jpeg',.82));
+   hid.forEach(o=>o.visible=true);scene.background=bg0;out.fr.push({lab,imgs})};
  const wa={prev:null,max:0,at:''};
  const meas=(lab)=>{if(Ws[0]){const a=new V(0,-1,0).applyQuaternion(Ws[0].getWorldQuaternion(new Q())).applyQuaternion(pl.getWorldQuaternion(new Q()).invert());if(wa.prev){const g=Math.acos(Math.max(-1,Math.min(1,a.dot(wa.prev))))*180/Math.PI;if(g>wa.max){wa.max=g;wa.at=lab}}wa.prev=a}
  hands.forEach(s=>{const h=B['a'+s+'2'],S=st[s],q=h.quaternion.clone();if(S.prev){const d=Math.min(1,Math.abs(S.prev.dot(q))),a=2*Math.acos(d)*180/Math.PI;if(a>S.max){S.max=a;S.maxAt=lab}}S.prev=q;
