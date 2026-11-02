@@ -88,6 +88,12 @@ poll(lambda:KH.evaluate("(k)=>SH.deco[k]==1",k[0] if k else '') and KG.evaluate(
 hd=KH.evaluate("(k)=>[SH.deco[k],gold]",k[0] if k else '')
 gd=KG.evaluate("(k)=>SH.deco[k]",k[0] if k else '')
 chk('guest build goes to host',k is not None and hd[0]==1 and gd==1,json.dumps([k,hd,gd]))
+# v190: the remodelled decorations look the same for both (same meshes, vertices, spots and colliders), the moved obelisk too
+DSIG="""()=>{const T=TOWNS[0];['obelisk','statue','torches','pavilion','beacon'].forEach(k=>{if(SH.deco[k]==null){SH.deco[k]=1}});dc103Sync();
+  return DECO103.filter(D=>SH.deco[D.k]===1&&DC103.g[D.k]).map(D=>{let n=0,v=0;DC103.g[D.k].traverse(m=>{if(m.isMesh&&m.geometry){n++;v+=m.geometry.attributes.position.count}});
+    return [D.k,n,v,(DC103.col[D.k]||[]).map(c=>[+(c.x-T.cx).toFixed(2),+(c.z-T.cy).toFixed(2)]).join(';')]})}"""
+dh=KH.evaluate(DSIG);dg=KG.evaluate(DSIG)
+chk('v190 decorations identical for host and guest',dh==dg and any(q[0]=='obelisk' and q[2]>0 and q[3]=='-8.5,4.8' for q in dh),json.dumps([dh,dg])[:900])
 # the guest's save still holds its own kingdom
 r=KG.evaluate("()=>{const o=x2Save();return [JSON.stringify(o.shp),JSON.stringify(o.kdeco||{})]}")
 chk('guest save keeps own kingdom',r[0]==own,json.dumps([r,own]))
