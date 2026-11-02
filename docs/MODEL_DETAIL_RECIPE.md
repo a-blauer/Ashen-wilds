@@ -298,6 +298,10 @@ enemy: keys `E137…` are skipped) with the recipe:
 - **Evolution looks (`EVO186`):** no dangling charms, ≤ 4 runes (never on legs), no leg cuffs, ≤ 2 gems, ≤ 26 glowing strokes,
   one-colour shells (an `i%2` colour function is averaged), no shells on legs, the gear palette pulled toward the body, no gold
   crown spikes. Round 2: the first pass cut too much and the companions lost their identity; keep each one's signature pieces.
+  Round 3 (`3438`, owner: "evolutions should be like foxlet"): each stage must grow the creature itself (crests, spines,
+  horns, tails, ruffs, bone or crystal growths, glowing tips and veins, a crowning piece last), designed per stage
+  (`ev38St`: the four looks a species can show) and drawn with `E.raw` (no EVO186 caps; keep the restraint by hand).
+  Root every piece in the surface (`R.top` / `R.on` hit, sunk a few mm), never at a fixed point above it.
 - **One-piece parts:** a beak is one keeled, hooked mandible that darkens toward the point (`bk186Geo`), never two or three round
   tubes joined at an angle. The same goes for horns, claws and fangs that should read as one solid piece.
 - **Eyes must show:** an eye sits proud of the head (a frog's on a turret), never sunk inside a lid shape; check it from the side.
