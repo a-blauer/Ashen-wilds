@@ -487,7 +487,10 @@ EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,2)};
 // (Soulwarden); the Lumenwisp hood a little darker so its pleats no longer read as a checkerboard
 {const B=LPR.Wispling,k0=B.kit;B.kit=function(k,c,C,red){const v=rv137I('Wispling',rv137('Wispling',c)),p0=k.p,L0=k.L;
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='tail3'&&t=='g')return k;if(v==1&&bn=='fr2'&&(t=='m'||col===0xffe8a0))return k;
-    if(bn=='head'&&geo=='box'&&t=='c'&&col===0x010204)return k;   // the dark squares beside the face opening
+    if(bn=='head'&&geo=='box'&&t=='c'&&col===0x010204)return p0.call(k,bn,'sph',t,0x020306,x,y,z,sx*.6,sy*.7,sz,rx,ry,rz);   // the dark squares beside the face opening: small round sockets in the void's colour
+    // the void reaches further down into the robe's neck: the hood is smaller than the body now (EV38G), and the void must
+    // still close the gap between them
+    if(bn=='head'&&geo=='sph'&&t=='c'&&col===0x020306&&sx===.115)return p0.call(k,bn,geo,t,col,x,y-.03,z-.006,sx*1.04,sy*1.32,sz,rx,ry,rz);
     if(v==0&&bn=='head'&&t=='g'&&col===0x9ff0ff&&y>1.2)return k;   // the spirit flame on the hood's point (it read as a unicorn horn)
     if(v==2&&bn=='chest'&&geo=='hem'&&(col===0xc8c0b0||col===0xe0d8c8))return p0.call(k,bn,geo,t,col===0xc8c0b0?0x5a5650:0x6a6660,x,y,z,sx,sy,sz,rx,ry,rz);
     if(v==2&&bn=='chest'&&(geo=='oct'||geo=='tor'))return k;if(v==2&&bn=='pelvis'&&t=='m')return k;
