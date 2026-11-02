@@ -64,7 +64,7 @@ try{if(typeof pl!='undefined'&&pl&&pl.bones&&pl._grip)gripReg(pl)}catch(_){}
 //    the side knives landed too (up to ~1 a throw). Now each throw is one knife straight at the aim, worth WB127.knife1 of the
 //    attack (v186_knife.py measures the damage per second against one foe, normal / elite / boss-sized, near and far, before and
 //    after). It still pierces to a second enemy (WB127.knPierce) and can still cause bleeding (WFX.knife).
-WB127.knife1=.8;
+WB127.knife1=.77;
 WDESC.knives='Throws one knife at a time, straight at your target. It pierces a second enemy and can cause bleeding.';
 WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
   launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})};
