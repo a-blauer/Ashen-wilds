@@ -599,6 +599,11 @@ DG186.S.Venomcoil={eyeCol:0xc8ff3a,headZ:.3,ownJaw:1,
 //  * Venomcoil, the hood: L1 the hood widens · L2 wider, a pale rim · L3 wider, outer chevrons, a plated head ·
 //    L4 wider, the chevrons glow · L5 the widest hood, a rim of venom-tipped spines
 DG186.E={};
+// where a point lies round a 16-sided loft ring, in faces from the top (0 … 8): a cut at a whole number falls on the ring's
+// vertices, so a shell picked with it covers whole quads and its edge runs straight along the loft
+function dgStep(x,y,q){return Math.atan2(Math.abs(x-(q.cx||0))/q.rx,(y-q.cy)/q.ry)/(Math.PI/8)}
+function dgSecQ(B,z){const q=dgAt(B,z);return {cy:q.y,rx:q.w,ry:q.a}}
+function dgSecS(D,z){if(z>=D.headRows[0][0]){const q=dgAt(D.headRows,z);return {cy:q.y,rx:q.w,ry:q.a}}const r=D.R(z);return {cx:D.X(z),cy:r*.74+.006+D.L(z),rx:r,ry:r*.88}}
 function dgHS(B,z,t,s,k){const q=dgSurf(B,z,t,s);return add3(q.p,mul3(q.n,k||0))}
 // a horn through points, dark at the root to pale at the tip, segments skinned to one bone
 function dgEH(E,pts,r0,r1,c0,c1,t,o){const N=pts.length-1,A=new THREE.Color(c0),Bc=new THREE.Color(c1);for(let i=0;i<N;i++)E.L(pts[i],pts[i+1],r0+(r1-r0)*i/N,r0+(r1-r0)*(i+1)/N,t||'c',A.clone().lerp(Bc,(i+.5)/N).getHex(),5,o)}
@@ -640,7 +645,7 @@ DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'
   if(L>=2){// a crown of bone horns round the back of the skull, swept back
     [-1,1].forEach(s=>[.55,.95].forEach((t,j)=>{const b=dgHS(B,.6-j*.012,t,s,-.005);dgEH(E,dgHornPts(b,[s*(.3+j*.4),.55-j*.4,-1],[0,-.01,-.02],.11-j*.02,4),.0105-j*.002,.0015,horn2,horn,'c',hb)}))}
   if(L>=3){// bone plates over the neck and the chest, flush, with dark seams
-    E.shell((x,y,z,nx,ny)=>z>.12&&z<.5&&ny>.7,.01,'c',plate,{rimCol:K.dark.getHex()});
+    E.shell((x,y,z)=>z>.12&&z<.5&&dgStep(x,y,dgSecQ(B,z))<2,.01,'c',plate,{rimCol:K.dark.getHex()});
     E.shell((x,y,z,nx,ny,nz)=>z>.16&&z<.34&&nz>.35&&ny<.2&&ny>-.6,.011,'c',dkShade(plate,.85),{rimCol:K.dark.getHex()})}
   if(L>=4){// the back blades grow tall (bone sheaths over the spines)
     for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2]){const sp=D.spine(z);if(!sp)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*1.6;dgEH(E,[[0,top-.01,z+.014],[0,top+h*.55,z-h*.25],[0,top+h,z-h*.75]],sp[1]*1.3,.0015,K.spine,horn2,'c')}}
@@ -649,15 +654,15 @@ DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'
     let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp||j%2||z>.3||z<-.2)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*1.6,tip=[0,top+h,z-h*.75];E.L([0,top+h*.6,z-h*.38],add3(tip,[0,.003,-.002]),sp[1]*.7,.001,'g',P.glow,3)}}};
 // armour plates are picked as whole loft strips (face normal bands and ring-aligned z bands), so their edges run straight
 // along the scales instead of stepping across triangles; muted bone (the shared material lights it strongly)
-DG186.E.Gravewyrm=function(E,L,P,c,D){const HR=D.headRows,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'},bone=0x5e5646,bone2=0x4e4840,dk=K.dark.getHex();
+DG186.E.Gravewyrm=function(E,L,P,c,D){const HR=D.headRows,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'},bone=0x4a443a,bone2=0x3e3a32,dk=K.dark.getHex(),st=(x,y,z)=>dgStep(x,y,dgSecS(D,z));
   // L1: an armoured skull: bone plates over the crown and brow
-  E.shell((x,y,z,nx,ny)=>z>.451&&z<.749&&ny>.7&&y>.33,.006,'c',bone,{rimCol:dk});
+  E.shell((x,y,z)=>z>.451&&z<.749&&st(x,y,z)<2,.006,'c',bone,{rimCol:dk});
   if(L>=2){// segmented bone plates down the spine, a low spined fin behind the head
-    [[.339,.241],[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559],[-.661,-.759]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.7,.007,'c',k%2?bone2:bone,{rimCol:dk}));
+    [[.339,.241],[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559],[-.661,-.759]].forEach((q,k)=>E.shell((x,y,z)=>z<q[0]&&z>q[1]&&st(x,y,z)<2,.007,'c',k%2?bone2:bone,{rimCol:dk}));
     const fh=L>=4?1.35:1,base=z=>{const r=D.R(z);return [0,r*.74+.006+D.L(z)+r*.88-.006,z]},F=[.43,.38,.33,.28].map((z,i)=>{const b=base(z);return {b,t:add3(b,[0,(.05-i*.009)*fh,-.06*fh])}});
     F.forEach((f,i)=>{E.L(f.b,f.t,.007,.0012,'c',bone,4);const n=F[i+1];if(n)E.fan(f.b,[lerp3(f.b,f.t,.85),lerp3(n.b,n.t,.85),n.b],dk,K.back.getHex(),'c')})}
   if(L>=3){// rib armour on the flanks
-    [[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559]].forEach(q=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.05&&ny<.7,.006,'c',bone2,{rimCol:dk}))}
+    [[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559]].forEach(q=>E.shell((x,y,z)=>{if(!(z<q[0]&&z>q[1]))return false;const t=st(x,y,z);return t>2&&t<4},.006,'c',bone2,{rimCol:dk}))}
   if(L>=4){// bone spikes up from the spine plates, a bone blade on the tail
     [.29,.09,-.11,-.31,-.51].forEach(z=>{const h=E.top(D.X(z),z);if(h)dgEH(E,[E.add(h.p,h.n,-.004),E.add(h.p,E.nrm([0,1,-.6]),.05),E.add(h.p,E.nrm([0,1,-1.2]),.075)],.011,.0015,bone2,bone,'c')});
     E.pd('oct','c',bone,[D.X(-1.7),.016,-1.71],[0,0,-1],[.04,.075,.012],[0,1,0],{bn:'tail3'})}
@@ -671,7 +676,7 @@ DG186.E.Venomcoil=function(E,L,P,c,D){const HR=D.headRows,N=D.neck,K=D.pal(P.C),
     E.fan(a0,[out(i,s),out(i+1,s),a1],K.back.getHex(),L>=2?new THREE.Color(K.back).lerp(K.spec,.45).getHex():K.back.getHex(),'c')}});
   if(L>=3){// outer chevrons on the widened hood, a plated head
     const bz=i=>N[i][0]-.001;[5,6].forEach(i=>[-1,1].forEach(s=>{const q=N[i],x0=s*q[2]*.9,x1=s*(q[2]+ext*prof[i]*.8);E.L([x0,q[1]-.012,bz(i)],[x1,q[1]+.012,bz(i)],.005,.004,'c',K.spec.getHex(),4,{vs:1})}));
-    E.shell((x,y,z,nx,ny)=>z>.331&&z<.489&&ny>.7&&y>.6,.005,'c',new THREE.Color(K.dark).lerp(K.spec,.12).getHex(),{rimCol:K.dark.getHex()})}
+    E.shell((x,y,z)=>z>.331&&z<.489&&dgStep(x,y,dgSecQ(HR,z))<2&&y>.6,.005,'c',new THREE.Color(K.dark).lerp(K.spec,.12).getHex(),{rimCol:K.dark.getHex()})}
   if(L>=4){// the chevrons on the back of the hood glow
     const back=(x,y)=>{let i=0;while(i<N.length-2&&N[i+1][1]<y)i++;const a=N[i],b=N[i+1],t=Math.max(0,Math.min(1,(y-a[1])/(b[1]-a[1]))),w=a[2]+(b[2]-a[2])*t,th=a[3]+(b[3]-a[3])*t,z=a[0]+(b[0]-a[0])*t,u=Math.min(.98,Math.abs(x)/w);return [x,y,z-th*Math.sqrt(1-u*u)-.002]};
     [[.42,.13,.05],[.475,.15,.055]].forEach(q=>[-1,1].forEach(s=>E.L(back(0,q[0]-q[2]*.5),back(s*q[1],q[0]+q[2]*.5),.0035,.003,'g',G.glow,3,{vs:1})))}
