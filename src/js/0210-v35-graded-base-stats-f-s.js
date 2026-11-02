@@ -24,7 +24,7 @@ party.forEach(ivFix);
 // companions window: show the graded rolls and the new fusion growth line
 function rC0(){
   rC0_base();if(!party.length)return;const c=party[cmpSel];if(!c)return;ivFix(c);
-  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${c.fz||0} fusion${(c.fz||0)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
+  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${fs189Html(c)} ${fs189N(c)} fusion${fs189N(c)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
     .replace('<div class="sec">Modifiers</div>',`<div class="sec">Base stat grades</div><div class="grds">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span style="--gc:${g[2]}"><i>${g[1]}</i>${IVN[k]}</span>`}).join('')}</div><div class="sec">Modifiers</div>`);
   if(typeof feedHTML=='function')cd.insertAdjacentHTML('beforeend',feedHTML(c));
   if(typeof runeHTML=='function')cd.insertAdjacentHTML('beforeend',runeHTML(c));

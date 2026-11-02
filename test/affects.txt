@@ -95,3 +95,5 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 0890-v85|v184-bird|3436-v186-dragons|3437-v186|1930-v105|wing: v187_wing_retract.py v184_bird_wings.py
 # v188: co-op look (3470): a partner sees the companions at their evolution, the wand hold, an evolved cast's second colour and bolt
 3470|v188|coop|co-op|2170|3455|2990|3440|3450|0107|0890|3396|3436|3438|1710|0120|0080|0610: v188_coop_look.py
+# v189: fusion stars (3480: badges next to companion names, HUD bars, Fusion window) and fusion runes on the body (3481, co-op look fz / rs)
+3480|3481|v189|fusion|fuse|star|0045|0210|0840|1780|2170|0610|3430|3438: v189_fusion_stars.py v189_coop_runes.py

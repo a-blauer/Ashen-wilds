@@ -980,7 +980,7 @@ const B=(c,k)=>c.g.reduce((s,n)=>s+S[n][k],0)/c.g.length,vm=(c,i)=>VAR[c.v].m[i]
 const M=c=>cM(c),A=c=>cPA(c),D=c=>cPD(c),pot=c=>Math.round((c.iv.hp+c.iv.a+c.iv.d)/3*100);
 // g = species it looks like, cl = their colors, sy = name syllables, mv = known moves
 const mk=(n,l,f=0,v='',iv)=>mkC(n,l,f,v,iv),mkOld=(n,l,f=0,v='',iv)=>{const rv=()=>.85+Math.random()*.3;const s=S[n],col=new THREE.Color(s.c);if(v)col.lerp(new THREE.Color(VAR[v].c),.65);const c={n,l,x:0,f,v,iv:iv||{hp:rv(),a:rv(),d:rv()},g:[n],cl:[col.getHex()],sy:[s.h,s.t],z:.92+Math.random()*.2,tr:Math.random()<.55?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'',sp:spl(n,v),cdm:{}};c.h=M(c);return c};
-const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+'★'.repeat(Math.floor(c.fp||c.f||0))+(c.evo?' '+'✦'.repeat(c.evo):'');
+const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+fs189Html(c)+(c.evo?' '+'✦'.repeat(c.evo):'');
 const dmg=(a,b,k,p)=>dmgCE(a,b,k,p);
 const W=1180,H=2030,TS=21,TK=1.5; // v106: 6 rows of 3 zone instances (see PMI below); H*GPX stays under 4096 px
 // ---- Progressive world: five zones separated by mountain ridges. The only way through each ridge is a walled town. ----
@@ -4239,7 +4239,7 @@ party.forEach(ivFix);
 // companions window: show the graded rolls and the new fusion growth line
 function rC0(){
   rC0_base();if(!party.length)return;const c=party[cmpSel];if(!c)return;ivFix(c);
-  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${c.fz||0} fusion${(c.fz||0)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
+  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${fs189Html(c)} ${fs189N(c)} fusion${fs189N(c)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
     .replace('<div class="sec">Modifiers</div>',`<div class="sec">Base stat grades</div><div class="grds">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span style="--gc:${g[2]}"><i>${g[1]}</i>${IVN[k]}</span>`}).join('')}</div><div class="sec">Modifiers</div>`);
   if(typeof feedHTML=='function')cd.insertAdjacentHTML('beforeend',feedHTML(c));
   if(typeof runeHTML=='function')cd.insertAdjacentHTML('beforeend',runeHTML(c));
@@ -9841,10 +9841,10 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
 var cbarSig='';
 function cbarsRender(){
   const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
-  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
+  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c),fs189N(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;
-      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm">${(c.tr=='Universal'?'✦ ':'')+c.n}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
+      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm"><span class="cnm-n">${(c.tr=='Universal'?'✦ ':'')+c.n}</span>${fs189Html(c)}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
         (dead?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" class="${c.emp?'on':''}" title="Empower (${i?'R':'E'})">⚡</button><button data-fd="${i}" title="Feed the best food you have">🍖</button>`)+`</div>`}).join('')}
   L.forEach((c,i)=>{const el=cb.children[i];if(!el)return;const mx=M(c),h=Math.max(0,c.h),hot=c.fhot&&c.fhot.left>0?Math.min(mx-h,c.fhot.left):0;
     el.querySelector('.chp i').style.width=(100*h/mx)+'%';const g=el.querySelector('.chp em');g.style.left=(100*h/mx)+'%';g.style.width=(100*hot/mx)+'%';
@@ -20704,7 +20704,7 @@ function FSM100_prevHTML(){const S=FSM100,a=S.a,b=S.b,act=S.act,A=FSM100_ACT[act
   if(act=='sip')notes.push(`Copies ${r.v>=1?'all':Math.round(Math.min(1,r.v)*100)+'%'} of the gap between the two ${FSM100_SN[S.stat]} rolls.`);
   if(act=='con')notes.push(`<b>${FSM100_SN[r.k]}</b> (the stat ${FSM100_esc(b.n)} is best at) goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). The other stats stay the same. Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
   if(act!='con'){if(r.pen)notes.push(`Half strength: ${FSM100_esc(b.n)} is a lower tier (T${fb.t}) than ${FSM100_esc(a.n)} (T${fa.t}).${(sup.c_asc||0)>0?' An Ascendant Tincture removes this.':''}`);
-    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${'★'.repeat(Math.min(5,r.lo.fz))}${r.lo.fz>5?'×'+r.lo.fz:''} · keeps level ${a.l} · fully healed.`);
+    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${fs189Html(r.lo.fz)} · keeps level ${a.l} · fully healed.`);
     const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));
     if(inh.length)notes.push((a.mods||[]).length>=5?`No modifier can pass on: ${FSM100_esc(a.n)} already has 5.`:`<b>${S.cat=='c_ess'?'Certain':'35% chance'}</b> to inherit one of: ${inh.map(m=>MODS[m].i+' '+m+(MODS[m].d?' <small>('+FSM100_esc(MODS[m].d)+')</small>':'')).join(', ')}.${inh.some(m=>MODS[m].s)?' Not counted in the table.':''}`);
     if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))notes.push(`<span style="color:var(--kq-bad)">${FSM100_esc(a.n)} loses its ✦ Universal trait</span> (partner of another family).`)}
@@ -64427,4 +64427,184 @@ MPV.pTag=null;
 // particle makers that cannot be sent
 [['fxOrbit',6],['fxRise',5],['fxFall',5]].forEach(([n,j])=>{const f=window[n];if(typeof f!='function')return;
   window[n]=function(){if(typeof arguments[j]!='function')return;return f.apply(this,arguments)}});
+// v189 fusion stars (owner, Nov 2 2026): "When a companion is fused the first time it gets a bronze star next to its name
+// both in the menus and when its in-game. A 2nd fuse gives a crest around the bronze star. And 3rd fuse gives a crest and
+// border around the bronze star. From 4 to 6 … silver star. 7 through 9 is a gold star, 10 through 12 is a diamond star.
+// At 13, the companion will gain an additional star and it will start at bronze."
+// One star holds 12 fusions: fusions 1–3 bronze, 4–6 silver, 7–9 gold, 10–12 diamond; within each three the 1st is a plain
+// star, the 2nd adds a crest (a laurel wreath), the 3rd a crest and a border ring. Full stars come first, the growing one
+// last. Drawn as small inline SVG (no ids, so any number of them can sit on one page), next to the name wherever nm() is
+// used, in the HUD companion bars (the in-game name) and in the Fusion window.
+var FS189={
+  T:[{n:'Bronze',lo:'#6e3a16',hi:'#ffcf9a',mid:'#c27a3e',ed:'#2e1606',gl:'rgba(255,150,70,.35)'},
+     {n:'Silver',lo:'#5a6470',hi:'#ffffff',mid:'#c4ccd6',ed:'#20262e',gl:'rgba(210,225,255,.4)'},
+     {n:'Gold',lo:'#8a5a06',hi:'#fff1a0',mid:'#efbb2c',ed:'#3a2602',gl:'rgba(255,205,60,.5)'},
+     {n:'Diamond',lo:'#2f7fb4',hi:'#ffffff',mid:'#a6ecff',ed:'#0e2c46',gl:'rgba(130,230,255,.6)'}],
+  D:['star','star with crest','star with crest and border'],
+  svg:{}};
+// fusions so far (fz counts every Fuse / Siphon; fp and f are the older capped fields, kept for very old saves)
+function fs189N(c){if(!c)return 0;return Math.max(c.fz|0,Math.floor(+c.fp||0),c.f|0,0)}
+// the stars for n fusions: [{t: tier 0–3, d: 0 plain / 1 crest / 2 crest + border}, …]
+function fs189List(n){const L=[];n=Math.max(0,n|0);while(n>0){const m=Math.min(12,n);L.push({t:Math.floor((m-1)/3),d:(m-1)%3});n-=m}return L}
+function fs189Mix(a,b,t){const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),A=p(a),B=p(b);
+  return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+// one star as SVG markup (viewBox -12 -12 24 24): a bevelled five-point star lit from the upper left
+function fs189Svg(t,d){const k=t+'|'+d;if(FS189.svg[k])return FS189.svg[k];const T=FS189.T[t]||FS189.T[0],f=v=>v.toFixed(2);
+  let s='';
+  if(d>=2)s+=`<circle r="11" fill="none" stroke="${T.ed}" stroke-width="2.6"/><circle r="11" fill="none" stroke="${T.mid}" stroke-width="1.5"/>`+
+    `<circle r="11.3" fill="none" stroke="${T.hi}" stroke-width=".45" stroke-dasharray="4 13.7" stroke-dashoffset="-2"/>`+
+    [0,1,2,3].map(i=>{const a=i*Math.PI/2+Math.PI/4;return `<circle cx="${f(Math.cos(a)*11)}" cy="${f(Math.sin(a)*11)}" r="1.15" fill="${T.hi}" stroke="${T.ed}" stroke-width=".4"/>`}).join('');
+  if(d>=1){// laurel crest: two sprigs rising from the bottom round both sides
+    [-1,1].forEach(sd=>{s+=`<path d="M${f(sd*1.2)} 9.4 Q${f(sd*9.4)} 8.2 ${f(sd*9.1)} -4.4" fill="none" stroke="${T.ed}" stroke-width="1.1"/>`+
+      `<path d="M${f(sd*1.2)} 9.4 Q${f(sd*9.4)} 8.2 ${f(sd*9.1)} -4.4" fill="none" stroke="${T.mid}" stroke-width=".55"/>`;
+      for(let i=0;i<5;i++){const u=i/4,a=Math.PI/2+sd*(.35+u*1.75),r=8.9+Math.sin(u*Math.PI)*.3,x=Math.cos(a)*r,y=Math.sin(a)*r,
+        rot=(a*180/Math.PI)+(sd>0?-55:55)+90,c=i%2?T.mid:fs189Mix(T.mid,T.hi,.45);
+        s+=`<ellipse cx="${f(x)}" cy="${f(y)}" rx="2.05" ry=".95" transform="rotate(${f(rot)} ${f(x)} ${f(y)})" fill="${c}" stroke="${T.ed}" stroke-width=".45"/>`}})}
+  const R=d>=1?7.1:8.8,ri=R*.45,P=[],L=[-.55,-.83];
+  for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?ri:R;P.push([Math.cos(a)*r,Math.sin(a)*r])}
+  s+=`<polygon points="${P.map(p=>f(p[0])+','+f(p[1])).join(' ')}" fill="${T.mid}" stroke="${T.ed}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  for(let i=0;i<10;i++){const A=P[i],B=P[(i+1)%10],cx=(A[0]+B[0])/3,cy=(A[1]+B[1])/3,l=Math.hypot(cx,cy)||1,
+    // facet normal leans toward its edge midpoint: lit when that faces the light
+    w=Math.max(0,Math.min(1,.5+((cx/l)*L[0]+(cy/l)*L[1])*.62)),c=fs189Mix(T.lo,T.hi,w);
+    s+=`<polygon points="0,0 ${f(A[0])},${f(A[1])} ${f(B[0])},${f(B[1])}" fill="${c}"/>`}
+  s+=`<polygon points="${P.map(p=>f(p[0])+','+f(p[1])).join(' ')}" fill="none" stroke="${T.ed}" stroke-width=".7" stroke-linejoin="round"/>`;
+  if(t==3)s+=`<path d="M${f(R*.55)} ${f(-R*.95)} l.55 1.5 1.5 .55 -1.5 .55 -.55 1.5 -.55 -1.5 -1.5 -.55 1.5 -.55z" fill="#fff"/>`;   // a diamond's glint
+  return FS189.svg[k]=`<svg viewBox="-12 -12 24 24" aria-hidden="true">${s}</svg>`}
+function fs189Title(n){const L=fs189List(n),last=L[L.length-1];if(!last)return '';
+  return n+' fusion'+(n==1?'':'s')+' · '+(L.length>1?(L.length-1)+' full star'+(L.length>2?'s':'')+' + ':'')+FS189.T[last.t].n+' '+FS189.D[last.d]}
+// the badge HTML for a companion (or a fusion count): '' when never fused
+function fs189Html(c){const n=typeof c=='number'?c:fs189N(c);if(n<=0)return '';
+  return `<span class="fs189" title="${fs189Title(n)}">`+fs189List(n).map(s=>`<i class="fs189-s t${s.t} d${s.d}">${fs189Svg(s.t,s.d)}</i>`).join('')+'</span>'}
+// the Fusion window's star spots (rows, the chosen companion, the preview) use the same badge
+FSM100_stars=function(c){return fs189Html(c)};
+{const f=FSM100_helpHTML;FSM100_helpHTML=function(){return f.apply(this,arguments).replace(/<dt>Stars ★<\/dt><dd>[^<]*<\/dd>/,
+  `<dt>Stars ${fs189Html(1)}</dt><dd>Each Fuse or Siphon adds to the companion's star: the 1st gives a bronze star, the 2nd a crest round it, the 3rd a crest and border. Fusions 4–6 do the same in silver, 7–9 in gold and 10–12 in diamond (${fs189Html(12)}); the 13th starts a second star at bronze. Every fusion also marks the companion's body with a small glowing rune, all in that companion's own colour. Stars make it a little bigger; they add no stats by themselves.</dd>`)}}
+{const st=document.createElement('style');st.textContent=`
+.fs189{display:inline-flex;align-items:center;gap:0;vertical-align:-.28em;margin-left:.22em;line-height:1;white-space:nowrap}
+.fs189-s{display:inline-block;width:1.3em;height:1.3em;font-style:normal}
+.fs189-s+.fs189-s{margin-left:-.08em}
+.fs189-s svg{width:100%;height:100%;display:block;overflow:visible}
+.fs189-s.t2 svg{filter:drop-shadow(0 0 2px rgba(255,205,60,.55))}
+.fs189-s.t3 svg{filter:drop-shadow(0 0 2.5px rgba(130,230,255,.75));animation:fs189tw 2.6s ease-in-out infinite}
+.cnm:has(.fs189){display:flex;align-items:center;min-width:0}
+.cnm .cnm-n{overflow:hidden;text-overflow:ellipsis;min-width:4.6em;flex:0 1 auto}
+.cnm .fs189{flex:none;margin-left:.2em}.cnm .fs189-s{width:1.15em;height:1.15em}
+.cnm small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@keyframes fs189tw{0%,100%{filter:drop-shadow(0 0 2px rgba(130,230,255,.55))}50%{filter:drop-shadow(0 0 4px rgba(170,240,255,.95))}}
+`;document.head.appendChild(st)}
+// v189 fusion runes (owner, Nov 2 2026): "For each time a companion is fused it will get a small glowing runic symbol
+// (varying symbols) somewhere random on its body (make it somewhere visible but not on a surface like its eyeball or
+// inside its mouth and not too big since a companion could theoretically be fused 30 times)."
+// One rune per fusion. Where it sits and which symbol it is come from the companion's own rune seed (`c.rs189`, made once,
+// saved with the companion and sent to co-op partners with its look), so the same companion always wears the same runes,
+// for you and for your partner. Spots are picked on the body skin only (never a kit part such as an eye, tooth, tongue,
+// horn or shell), away from the head and jaw (so never an eye or the mouth) and away from the soles and the belly
+// underside, so they can be seen; each rune is a small glowing decal tied to the bone under it, so it moves with the body.
+// Owner, Nov 2 2026 (after the first pictures): "Runes should be a lot smaller, and … the same color when on a companion. The
+// color can differ from companion to companion": every rune on one companion glows in that companion's own colour (from its
+// rune seed, so it never changes), and runes are about half the first size.
+var FR189={on:true,
+  // symbols on a 0..10 grid: each a list of strokes, each stroke a list of points (Elder-Futhark-like and a few sigils)
+  G:[[[[5,0],[5,10]],[[5,2],[8.5,0]],[[5,5],[8.5,3]]],                          // fehu
+     [[[3,10],[3,0],[7.5,3],[7.5,10]]],                                          // uruz
+     [[[3.5,0],[3.5,10]],[[3.5,2.5],[7.5,5],[3.5,7.5]]],                         // thurisaz
+     [[[3,10],[3,0],[7,3.5],[3,6.5],[7,10]]],                                    // raidho
+     [[[7.5,0],[3,5],[7.5,10]]],                                                 // kaunan
+     [[[2,0],[8,10]],[[8,0],[2,10]]],                                            // gebo
+     [[[3,10],[3,0],[7,3.5],[3,7]]],                                             // wunjo
+     [[[3,0],[3,10]],[[7,0],[7,10]],[[3,3],[7,6.5]]],                            // hagalaz
+     [[[5,0],[5,10]],[[3,3.5],[7,6.5]]],                                         // naudiz
+     [[[2.5,4],[5,1.5],[7.5,4]],[[2.5,6],[5,8.5],[7.5,6]],[[5,1.5],[5,8.5]]],    // jera-like
+     [[[3,0],[3,10]],[[3,1.5],[7,3.5]],[[3,8.5],[7,6.5]],[[7,3.5],[7,6.5]]],     // perthro
+     [[[5,10],[5,0]],[[5,4],[1.5,0.8]],[[5,4],[8.5,0.8]]],                       // algiz
+     [[[7.5,0],[2.5,2.8],[7.5,6],[2.5,9.5]]],                                    // sowilo
+     [[[5,0],[5,10]],[[5,0],[2,3]],[[5,0],[8,3]]],                               // tiwaz
+     [[[3,0],[3,10]],[[3,0],[7,2.5],[3,5],[7,7.5],[3,10]]],                      // berkanan
+     [[[2.5,10],[2.5,0],[5,3],[7.5,0],[7.5,10]]],                                // ehwaz
+     [[[3,0],[3,10],[7.5,10]],[[3,0],[7.5,3.5]]],                                // laguz-like
+     [[[5,1],[9,5],[5,9],[1,5],[5,1]],[[1,5],[9,5]]],                            // ingwaz
+     [[[2,1],[8,9]],[[2,9],[8,1]],[[2,1],[2,9]],[[8,1],[8,9]]],                  // dagaz
+     [[[5,0.5],[8.5,4.5],[5,10],[1.5,4.5],[5,0.5]],[[5,4.5],[5,10]]],            // othala-like
+     [[[5,0],[5,10]],[[2,2.5],[8,2.5]],[[2.5,7.5],[5,5],[7.5,7.5]]],             // sigil: crossed arrow
+     [[[2,5],[5,1],[8,5],[5,9],[2,5]],[[5,1],[5,9]]]],                           // sigil: split diamond
+  // glow colours: one per companion, chosen by its rune seed
+  COL:[0xff8a3c,0x7fe8ff,0xb68cff,0x6dff9e,0xffd34a,0xff5a6a,0xe8f2ff,0x3fd8c4,0xff7ad1,0x9ab4ff],
+  tex:{},mat:{},geo:null,keepOut:/head|jaw|skull|tongue|mouth|eye|beak|snout|muzzle|toe|foot|paw|hoof|claw|sole/i};
+// the rune seed: once per companion, saved with it (companion fields save automatically) and sent to co-op partners
+function fr189Seed(c){if(!c)return 1;if(!(c.rs189>0)){c.rs189=1+Math.floor(Math.random()*2147483000)}return c.rs189}
+function fr189Rng(s){let a=(s>>>0)||1;return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// one glowing symbol as a texture (white; the material tints it), shared by every rune with that symbol
+function fr189Tex(i){let t=FR189.tex[i];if(t)return t;const cv=document.createElement('canvas');cv.width=cv.height=64;const X=cv.getContext('2d');
+  const G=FR189.G[i%FR189.G.length],P=p=>[7+p[0]*5,7+p[1]*5];X.lineCap='round';X.lineJoin='round';
+  const draw=(w,a,blur)=>{X.strokeStyle='rgba(255,255,255,'+a+')';X.lineWidth=w;X.shadowColor='#fff';X.shadowBlur=blur;
+    G.forEach(st=>{X.beginPath();st.forEach((p,k)=>{const q=P(p);k?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])});X.stroke()})};
+  draw(11,.35,9);draw(5.6,1,3);   // bold strokes: runes are small on the body
+  t=new THREE.CanvasTexture(cv);t.anisotropy=2;return FR189.tex[i]=t}
+function fr189Mat(i,ci){const k=i+'|'+ci;let m=FR189.mat[k];if(m)return m;
+  m=new THREE.MeshBasicMaterial({map:fr189Tex(i),color:FR189.COL[ci]||FR189.COL[0],transparent:true,opacity:.95,blending:THREE.AdditiveBlending,
+    depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,fog:false,toneMapped:false});
+  return FR189.mat[k]=m}
+// shared glow pulse: every rune material breathes together (one update a frame, no per-rune work)
+function fr189Pulse(now){const k=.78+.22*Math.sin(now/520);for(const n in FR189.mat){FR189.mat[n].opacity=k}}
+// the companion's body skin: the skinned mesh that carries the skeleton (kit parts such as eyes and teeth are separate meshes)
+function fr189Body(g){let best=null;g.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton&&o.geometry&&o.geometry.attributes.skinIndex&&o.children.some(k=>k.isBone)){
+  const n=o.geometry.attributes.position.count;if(!best||n>best.geometry.attributes.position.count)best=o}});return best}
+// put one rune per fusion on model g (built by cr for companion c). Deterministic: the same seed, look and count give the
+// same spots and symbols on every machine.
+function fr189Apply(g,c){const n=Math.min(60,fs189N(c));if(!FR189.on||!g||!c||n<=0)return;
+  const body=fr189Body(g);if(!body)return;const S=SPEC[rigOf(c.g[0])],O=S&&S.bones?Object.keys(S.bones):null,sk=body.skeleton;if(!O||!sk)return;
+  g.updateMatrixWorld(true);
+  const geo=body.geometry,pos=geo.attributes.position,si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight,ix=geo.index,M=body.matrixWorld;
+  const GC=(A,i,k)=>k==0?A.getX(i):k==1?A.getY(i):k==2?A.getZ(i):A.getW(i);   // three r128 has no getComponent
+  const nT=ix?ix.count/3:pos.count/3,vi=(t,k)=>ix?ix.getX(t*3+k):t*3+k,V=i=>new THREE.Vector3(pos.getX(i),pos.getY(i),pos.getZ(i)).applyMatrix4(M);
+  const box=new THREE.Box3();for(let i=0;i<pos.count;i++)box.expandByPoint(V(i));const sz=box.getSize(new THREE.Vector3()),D=Math.max(sz.x,sz.y,sz.z);
+  const bad=O.map(nm=>FR189.keepOut.test(nm));
+  // each bone's part of the body: its centre (for "outward") and the triangles that belong to it
+  const cen=O.map(()=>[new THREE.Vector3(),0]),tri=[];
+  for(let i=0;i<pos.count;i++){let bb=0,bw=-1;for(let k=0;k<4;k++){const w=GC(sw,i,k);if(w>bw){bw=w;bb=GC(si,i,k)}}if(cen[bb]){cen[bb][0].add(V(i));cen[bb][1]++}}
+  cen.forEach(q=>{if(q[1])q[0].multiplyScalar(1/q[1])});
+  let tot=0;const yLo=box.min.y+sz.y*.16;
+  for(let t=0;t<nT;t++){const a=V(vi(t,0)),b=V(vi(t,1)),d=V(vi(t,2)),cr=new THREE.Vector3().subVectors(b,a).cross(new THREE.Vector3().subVectors(d,a)),ar=cr.length()*.5;if(ar<1e-7)continue;
+    const w={};for(let k=0;k<3;k++){const v=vi(t,k);for(let j=0;j<4;j++){const bi=GC(si,v,j);w[bi]=(w[bi]||0)+GC(sw,v,j)}}
+    let bn=-1,bw=-1;for(const q in w)if(w[q]>bw){bw=w[q];bn=+q}
+    // any real share of head or jaw keeps the rune off that triangle (eyes, mouth, lips, nostrils)
+    let hw=0;for(const q in w)if(bad[q])hw+=w[q];if(bn<0||bad[bn]||hw>.3)continue;
+    if(bw<2.4)continue;   // mostly one bone (≥80%): away from bending joints, where a flat rune would sink in or lift off
+    const ce=new THREE.Vector3().add(a).add(b).add(d).multiplyScalar(1/3),nm=cr.normalize();
+    const out=cen[bn]&&cen[bn][1]?new THREE.Vector3().subVectors(ce,cen[bn][0]):nm.clone();if(nm.dot(out)<0)nm.negate();
+    if(nm.y<-.3||ce.y<yLo)continue;                                    // not underneath, not down at the feet
+    tot+=ar;tri.push({a,b,d,ce,nm,bn,cum:tot})}
+  if(!tri.length||tot<=0)return;
+  const R=fr189Rng(fr189Seed(c)^0x5f3759df),sz1=Math.max(.01,D*.026),placed=[],ray=new THREE.Raycaster(),hitters=[];
+  g.traverse(o=>{if(o.isMesh&&!o.userData.fr189)hitters.push(o)});
+  let lastG=-1;const ci=fr189Seed(c)%FR189.COL.length;   // this companion's one colour
+  for(let i=0;i<n;i++){let pick=null;
+    for(let tries=0;tries<48&&!pick;tries++){const u=R()*tot;let lo=0,hi=tri.length-1;while(lo<hi){const m=(lo+hi)>>1;if(tri[m].cum<u)lo=m+1;else hi=m}
+      const T=tri[lo];let r1=R(),r2=R();if(r1+r2>1){r1=1-r1;r2=1-r2}
+      const p=T.a.clone().addScaledVector(new THREE.Vector3().subVectors(T.b,T.a),r1).addScaledVector(new THREE.Vector3().subVectors(T.d,T.a),r2);
+      const need=sz1*(tries<16?1.9:tries<30?1.5:1.15);   // never overlapping; crowded bodies (big wings, shells) close up the gaps rather than skip a runeif(placed.some(q=>q.distanceTo(p)<need))continue;
+      // something else in front of it (a shell, a wing, armour, a fur tuft)? then it would be hidden: try another spot
+      if(tries<40){ray.set(p.clone().addScaledVector(T.nm,sz1*.25),T.nm);ray.far=D*.35;let hid=false;try{hid=ray.intersectObjects(hitters,false).length>0}catch(_){}if(hid)continue}
+      pick={p,T}}
+    if(!pick)continue;placed.push(pick.p);
+    let gi=Math.floor(R()*FR189.G.length);if(gi===lastG)gi=(gi+1+Math.floor(R()*3))%FR189.G.length;lastG=gi;
+    const m=new THREE.Mesh(FR189.geo||(FR189.geo=new THREE.PlaneGeometry(1,1)),fr189Mat(gi,ci));
+    m.userData.fr189=1;m.userData.noMerge=1;m.castShadow=false;m.receiveShadow=false;m.renderOrder=3;
+    // face out of the skin, the symbol's top toward the sky (a little tilt each), lifted just off the surface
+    const N=pick.T.nm,up=new THREE.Vector3(0,1,0).addScaledVector(N,-N.y);if(up.lengthSq()<1e-4)up.set(0,0,1).addScaledVector(N,-N.z);up.normalize();
+    up.applyAxisAngle(N,(R()-.5)*.7);const X=new THREE.Vector3().crossVectors(up,N).normalize(),Mt=new THREE.Matrix4().makeBasis(X,up,N);
+    const s=sz1*(.88+R()*.24);m.matrix.compose(pick.p.clone().addScaledVector(N,sz1*.1),new THREE.Quaternion().setFromRotationMatrix(Mt),new THREE.Vector3(s,s,s));
+    m.matrix.decompose(m.position,m.quaternion,m.scale);
+    const bone=sk.bones[pick.T.bn]||sk.bones[0];m.updateMatrixWorld(true);bone.attach(m)}   // world pose → the bone's own space
+  g.userData.fr189=n}
+// every companion model: lpRig and the older rigs come through cr; partners' companions too (their look carries fz and the seed)
+{const f=cr;cr=function(c){const g=f.apply(this,arguments);try{if(c&&!c.en&&g&&!(c.g&&EN[c.g[0]]))fr189Apply(g,c)}catch(e){console.error('fusion runes',e)}return g}}
+// your companions: the follower is rebuilt when its fusion count changes (the old key only saw `f`, which stops at 10)
+{const f=sync;sync=function(){try{for(let i=0;i<2;i++){const g=fols[i],c=party[i];if(g&&c&&!c.en&&(g.userData.fr189|0)!==Math.min(60,fs189N(c)))leadK[i]=''}}catch(_){}return f.apply(this,arguments)}}
+// co-op: partners build your companions from mpvLookOf; the fusion count and rune seed go at the end of the look
+// (older partners ignore them), so they see the same runes in the same spots and the same stars
+{const f=mpvLookOf;mpvLookOf=function(c){const L=f.apply(this,arguments);try{const n=fs189N(c);if(n>0){L.fz=n;L.rs=fr189Seed(c)}}catch(_){}return L}}
+{const f=mpvLookIn;mpvLookIn=function(L){const c=f.apply(this,arguments);try{if(c&&L){const n=Math.max(0,Math.min(60,L.fz|0)),s=Math.floor(+L.rs||0);if(n>0){c.fz=n;if(s>0&&s<2147483648)c.rs189=s}}}catch(_){}return c}}
+// one shared pulse for every rune
+{let last=0;const tick=now=>{if(now-last>33){last=now;try{fr189Pulse(now)}catch(_){}}requestAnimationFrame(tick)};try{requestAnimationFrame(tick)}catch(_){}}
 </script></body></html>
