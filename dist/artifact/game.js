@@ -585,7 +585,7 @@ const B=(c,k)=>c.g.reduce((s,n)=>s+S[n][k],0)/c.g.length,vm=(c,i)=>VAR[c.v].m[i]
 const M=c=>cM(c),A=c=>cPA(c),D=c=>cPD(c),pot=c=>Math.round((c.iv.hp+c.iv.a+c.iv.d)/3*100);
 // g = species it looks like, cl = their colors, sy = name syllables, mv = known moves
 const mk=(n,l,f=0,v='',iv)=>mkC(n,l,f,v,iv),mkOld=(n,l,f=0,v='',iv)=>{const rv=()=>.85+Math.random()*.3;const s=S[n],col=new THREE.Color(s.c);if(v)col.lerp(new THREE.Color(VAR[v].c),.65);const c={n,l,x:0,f,v,iv:iv||{hp:rv(),a:rv(),d:rv()},g:[n],cl:[col.getHex()],sy:[s.h,s.t],z:.92+Math.random()*.2,tr:Math.random()<.55?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'',sp:spl(n,v),cdm:{}};c.h=M(c);return c};
-const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+'★'.repeat(Math.floor(c.fp||c.f||0))+(c.evo?' '+'✦'.repeat(c.evo):'');
+const em=c=>c.g.map(n=>S[n].e).join(''),nm=c=>em(c)+' '+(c.al?'Alpha ':'')+(c.shn?'✨ ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n+' Lv'+c.l+fs189Html(c)+(c.evo?' '+'✦'.repeat(c.evo):'');
 const dmg=(a,b,k,p)=>dmgCE(a,b,k,p);
 const W=1180,H=2030,TS=21,TK=1.5; // v106: 6 rows of 3 zone instances (see PMI below); H*GPX stays under 4096 px
 // ---- Progressive world: five zones separated by mountain ridges. The only way through each ridge is a walled town. ----
@@ -3844,7 +3844,7 @@ party.forEach(ivFix);
 // companions window: show the graded rolls and the new fusion growth line
 function rC0(){
   rC0_base();if(!party.length)return;const c=party[cmpSel];if(!c)return;ivFix(c);
-  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${c.fz||0} fusion${(c.fz||0)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
+  const cd=$('cd');cd.innerHTML=cd.innerHTML.replace(/<div class="kv"><span>Fusion<\/span><b>[^<]*<\/b><\/div>/,`<div class="kv"><span>Fusion</span><b>${fs189Html(c)} ${fs189N(c)} fusion${fs189N(c)==1?'':'s'} · +${Math.round((c.gs||0)*100)}% growth per level</b></div>`)
     .replace('<div class="sec">Modifiers</div>',`<div class="sec">Base stat grades</div><div class="grds">${IVK.map(k=>{const g=grade(ivOf(c,k));return `<span style="--gc:${g[2]}"><i>${g[1]}</i>${IVN[k]}</span>`}).join('')}</div><div class="sec">Modifiers</div>`);
   if(typeof feedHTML=='function')cd.insertAdjacentHTML('beforeend',feedHTML(c));
   if(typeof runeHTML=='function')cd.insertAdjacentHTML('beforeend',runeHTML(c));
@@ -5321,7 +5321,7 @@ $('doF').onclick=()=>{
   else if(fOpt=='bol'){const up=[];IVK.forEach(k=>{const o=ivOf(a,k);if(o<A_LINE){a.iv[k]=Math.min(A_LINE,o+(.025+Math.random()*.02)*v);if(grade(a.iv[k])[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(a.iv[k])[1])}});ivSync(a);msg='stats bolstered'+(up.length?' ('+up.join(', ')+')':'')}
   else{a.gs=(a.gs||0)+.06*v;msg='growth per level now +'+pctS(a.gs)}
   a.fz=(a.fz||0)+1;a.fp=a.fz;a.f=Math.min(10,a.fz);
-  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<dv189ModCap(a)&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
+  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<dv190ModCap(a)&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
   if(b.tr=='Universal'&&a.tr!='Universal'){}else if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))a.tr='';
   if(cat){sup[cat]--;say(SUP[cat].i+' '+SUP[cat].n+' was used up.');if(!(sup[cat]>0))fCat=''}
   if(b.emp)b.emp=false;a.h=M(a);party=party.filter((_,i)=>i!=sel[1]);sel=[];
@@ -9446,10 +9446,10 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
 var cbarSig='';
 function cbarsRender(){
   const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
-  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
+  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c),fs189N(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;
-      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm">${(c.tr=='Universal'?'✦ ':'')+c.n}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
+      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm"><span class="cnm-n">${(c.tr=='Universal'?'✦ ':'')+c.n}</span>${fs189Html(c)}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
         (dead?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" class="${c.emp?'on':''}" title="Empower (${i?'R':'E'})">⚡</button><button data-fd="${i}" title="Feed the best food you have">🍖</button>`)+`</div>`}).join('')}
   L.forEach((c,i)=>{const el=cb.children[i];if(!el)return;const mx=M(c),h=Math.max(0,c.h),hot=c.fhot&&c.fhot.left>0?Math.min(mx-h,c.fhot.left):0;
     el.querySelector('.chp i').style.width=(100*h/mx)+'%';const g=el.querySelector('.chp em');g.style.left=(100*h/mx)+'%';g.style.width=(100*hot/mx)+'%';
@@ -20309,7 +20309,7 @@ function FSM100_prevHTML(){const S=FSM100,a=S.a,b=S.b,act=S.act,A=FSM100_ACT[act
   if(act=='sip')notes.push(`Copies ${r.v>=1?'all':Math.round(Math.min(1,r.v)*100)+'%'} of the gap between the two ${FSM100_SN[S.stat]} rolls.`);
   if(act=='con')notes.push(`<b>${FSM100_SN[r.k]}</b> (the stat ${FSM100_esc(b.n)} is best at) goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). The other stats stay the same. Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
   if(act!='con'){if(r.pen)notes.push(`Half strength: ${FSM100_esc(b.n)} is a lower tier (T${fb.t}) than ${FSM100_esc(a.n)} (T${fa.t}).${(sup.c_asc||0)>0?' An Ascendant Tincture removes this.':''}`);
-    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${'★'.repeat(Math.min(5,r.lo.fz))}${r.lo.fz>5?'×'+r.lo.fz:''} · keeps level ${a.l} · fully healed.`);
+    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${fs189Html(r.lo.fz)} · keeps level ${a.l} · fully healed.`);
     const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));
     if(inh.length)notes.push((a.mods||[]).length>=5?`No modifier can pass on: ${FSM100_esc(a.n)} already has 5.`:`<b>${S.cat=='c_ess'?'Certain':'35% chance'}</b> to inherit one of: ${inh.map(m=>MODS[m].i+' '+m+(MODS[m].d?' <small>('+FSM100_esc(MODS[m].d)+')</small>':'')).join(', ')}.${inh.some(m=>MODS[m].s)?' Not counted in the table.':''}`);
     if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))notes.push(`<span style="color:var(--kq-bad)">${FSM100_esc(a.n)} loses its ✦ Universal trait</span> (partner of another family).`)}
@@ -64032,75 +64032,140 @@ MPV.pTag=null;
 // particle makers that cannot be sent
 [['fxOrbit',6],['fxRise',5],['fxFall',5]].forEach(([n,j])=>{const f=window[n];if(typeof f!='function')return;
   window[n]=function(){if(typeof arguments[j]!='function')return;return f.apply(this,arguments)}});
-// ================= v189 Devotion (owner, Nov 2 2026): investing in one companion pays off, lower tiers most =================
+// v189 fusion stars (owner, Nov 2 2026): "When a companion is fused the first time it gets a bronze star next to its name
+// both in the menus and when its in-game. A 2nd fuse gives a crest around the bronze star. And 3rd fuse gives a crest and
+// border around the bronze star. From 4 to 6 … silver star. 7 through 9 is a gold star, 10 through 12 is a diamond star.
+// At 13, the companion will gain an additional star and it will start at bronze."
+// One star holds 12 fusions: fusions 1–3 bronze, 4–6 silver, 7–9 gold, 10–12 diamond; within each three the 1st is a plain
+// star, the 2nd adds a crest (a laurel wreath), the 3rd a crest and a border ring. Full stars come first, the growing one
+// last. Drawn as small inline SVG (no ids, so any number of them can sit on one page), next to the name wherever nm() is
+// used, in the HUD companion bars (the in-game name) and in the Fusion window.
+var FS189={
+  T:[{n:'Bronze',lo:'#6e3a16',hi:'#ffcf9a',mid:'#c27a3e',ed:'#2e1606',gl:'rgba(255,150,70,.35)'},
+     {n:'Silver',lo:'#5a6470',hi:'#ffffff',mid:'#c4ccd6',ed:'#20262e',gl:'rgba(210,225,255,.4)'},
+     {n:'Gold',lo:'#8a5a06',hi:'#fff1a0',mid:'#efbb2c',ed:'#3a2602',gl:'rgba(255,205,60,.5)'},
+     {n:'Diamond',lo:'#2f7fb4',hi:'#ffffff',mid:'#a6ecff',ed:'#0e2c46',gl:'rgba(130,230,255,.6)'}],
+  D:['star','star with crest','star with crest and border'],
+  svg:{}};
+// fusions so far (fz counts every Fuse / Siphon; fp and f are the older capped fields, kept for very old saves)
+function fs189N(c){if(!c)return 0;return Math.max(c.fz|0,Math.floor(+c.fp||0),c.f|0,0)}
+// the stars for n fusions: [{t: tier 0–3, d: 0 plain / 1 crest / 2 crest + border}, …]
+function fs189List(n){const L=[];n=Math.max(0,n|0);while(n>0){const m=Math.min(12,n);L.push({t:Math.floor((m-1)/3),d:(m-1)%3});n-=m}return L}
+function fs189Mix(a,b,t){const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),A=p(a),B=p(b);
+  return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+// one star as SVG markup (viewBox -12 -12 24 24): a bevelled five-point star lit from the upper left
+function fs189Svg(t,d){const k=t+'|'+d;if(FS189.svg[k])return FS189.svg[k];const T=FS189.T[t]||FS189.T[0],f=v=>v.toFixed(2);
+  let s='';
+  if(d>=2)s+=`<circle r="11" fill="none" stroke="${T.ed}" stroke-width="2.6"/><circle r="11" fill="none" stroke="${T.mid}" stroke-width="1.5"/>`+
+    `<circle r="11.3" fill="none" stroke="${T.hi}" stroke-width=".45" stroke-dasharray="4 13.7" stroke-dashoffset="-2"/>`+
+    [0,1,2,3].map(i=>{const a=i*Math.PI/2+Math.PI/4;return `<circle cx="${f(Math.cos(a)*11)}" cy="${f(Math.sin(a)*11)}" r="1.15" fill="${T.hi}" stroke="${T.ed}" stroke-width=".4"/>`}).join('');
+  if(d>=1){// laurel crest: two sprigs rising from the bottom round both sides
+    [-1,1].forEach(sd=>{s+=`<path d="M${f(sd*1.2)} 9.4 Q${f(sd*9.4)} 8.2 ${f(sd*9.1)} -4.4" fill="none" stroke="${T.ed}" stroke-width="1.1"/>`+
+      `<path d="M${f(sd*1.2)} 9.4 Q${f(sd*9.4)} 8.2 ${f(sd*9.1)} -4.4" fill="none" stroke="${T.mid}" stroke-width=".55"/>`;
+      for(let i=0;i<5;i++){const u=i/4,a=Math.PI/2+sd*(.35+u*1.75),r=8.9+Math.sin(u*Math.PI)*.3,x=Math.cos(a)*r,y=Math.sin(a)*r,
+        rot=(a*180/Math.PI)+(sd>0?-55:55)+90,c=i%2?T.mid:fs189Mix(T.mid,T.hi,.45);
+        s+=`<ellipse cx="${f(x)}" cy="${f(y)}" rx="2.05" ry=".95" transform="rotate(${f(rot)} ${f(x)} ${f(y)})" fill="${c}" stroke="${T.ed}" stroke-width=".45"/>`}})}
+  const R=d>=1?7.1:8.8,ri=R*.45,P=[],L=[-.55,-.83];
+  for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?ri:R;P.push([Math.cos(a)*r,Math.sin(a)*r])}
+  s+=`<polygon points="${P.map(p=>f(p[0])+','+f(p[1])).join(' ')}" fill="${T.mid}" stroke="${T.ed}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  for(let i=0;i<10;i++){const A=P[i],B=P[(i+1)%10],cx=(A[0]+B[0])/3,cy=(A[1]+B[1])/3,l=Math.hypot(cx,cy)||1,
+    // facet normal leans toward its edge midpoint: lit when that faces the light
+    w=Math.max(0,Math.min(1,.5+((cx/l)*L[0]+(cy/l)*L[1])*.62)),c=fs189Mix(T.lo,T.hi,w);
+    s+=`<polygon points="0,0 ${f(A[0])},${f(A[1])} ${f(B[0])},${f(B[1])}" fill="${c}"/>`}
+  s+=`<polygon points="${P.map(p=>f(p[0])+','+f(p[1])).join(' ')}" fill="none" stroke="${T.ed}" stroke-width=".7" stroke-linejoin="round"/>`;
+  if(t==3)s+=`<path d="M${f(R*.55)} ${f(-R*.95)} l.55 1.5 1.5 .55 -1.5 .55 -.55 1.5 -.55 -1.5 -1.5 -.55 1.5 -.55z" fill="#fff"/>`;   // a diamond's glint
+  return FS189.svg[k]=`<svg viewBox="-12 -12 24 24" aria-hidden="true">${s}</svg>`}
+function fs189Title(n){const L=fs189List(n),last=L[L.length-1];if(!last)return '';
+  return n+' fusion'+(n==1?'':'s')+' · '+(L.length>1?(L.length-1)+' full star'+(L.length>2?'s':'')+' + ':'')+FS189.T[last.t].n+' '+FS189.D[last.d]}
+// the badge HTML for a companion (or a fusion count): '' when never fused
+function fs189Html(c){const n=typeof c=='number'?c:fs189N(c);if(n<=0)return '';
+  return `<span class="fs189" title="${fs189Title(n)}">`+fs189List(n).map(s=>`<i class="fs189-s t${s.t} d${s.d}">${fs189Svg(s.t,s.d)}</i>`).join('')+'</span>'}
+// the Fusion window's star spots (rows, the chosen companion, the preview) use the same badge
+FSM100_stars=function(c){return fs189Html(c)};
+{const f=FSM100_helpHTML;FSM100_helpHTML=function(){return f.apply(this,arguments).replace(/<dt>Stars ★<\/dt><dd>[^<]*<\/dd>/,
+  `<dt>Stars ${fs189Html(1)}</dt><dd>Each Fuse or Siphon adds to the companion's star: the 1st gives a bronze star, the 2nd a crest round it, the 3rd a crest and border. Fusions 4–6 do the same in silver, 7–9 in gold and 10–12 in diamond (${fs189Html(12)}); the 13th starts a second star at bronze. Stars make it a little bigger; they add no stats by themselves.</dd>`)}}
+{const st=document.createElement('style');st.textContent=`
+.fs189{display:inline-flex;align-items:center;gap:0;vertical-align:-.28em;margin-left:.22em;line-height:1;white-space:nowrap}
+.fs189-s{display:inline-block;width:1.3em;height:1.3em;font-style:normal}
+.fs189-s+.fs189-s{margin-left:-.08em}
+.fs189-s svg{width:100%;height:100%;display:block;overflow:visible}
+.fs189-s.t2 svg{filter:drop-shadow(0 0 2px rgba(255,205,60,.55))}
+.fs189-s.t3 svg{filter:drop-shadow(0 0 2.5px rgba(130,230,255,.75));animation:fs189tw 2.6s ease-in-out infinite}
+.cnm:has(.fs189){display:flex;align-items:center;min-width:0}
+.cnm .cnm-n{overflow:hidden;text-overflow:ellipsis;min-width:4.6em;flex:0 1 auto}
+.cnm .fs189{flex:none;margin-left:.2em}.cnm .fs189-s{width:1.15em;height:1.15em}
+.cnm small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@keyframes fs189tw{0%,100%{filter:drop-shadow(0 0 2px rgba(130,230,255,.55))}50%{filter:drop-shadow(0 0 4px rgba(170,240,255,.95))}}
+`;document.head.appendChild(st)}
+// ================= v190 Devotion (owner, Nov 2 2026): investing in one companion pays off, lower tiers most =================
 // Each companion earns Devotion points (c.dvp, saved with the companion) only while it is in the active team and standing:
-// kills 1, elites / camp leaders 3, bosses 20, Sovereigns 40, feeding 2. Levels 0–10 (DV189.need: 100, 140, … 460; 2800 in all).
-// Each level adds DV189.cap[tier] / 10 to every base stat (cStat): Tier 1 +40% at Devotion 10 … Tier 5 +5%, so a well-raised
+// kills 1, elites / camp leaders 3, bosses 20, Sovereigns 40, feeding 2. Levels 0–10 (DV190.need: 100, 140, … 460; 2800 in all).
+// Each level adds DV190.cap[tier] / 10 to every base stat (cStat): Tier 1 +40% at Devotion 10 … Tier 5 +5%, so a well-raised
 // low tier can stand with an un-invested high tier, while a high tier given the same care still leads.
-// Devotion 5: one extra modifier slot for fusion inheritance (dv189ModCap, used in 0490). Devotion 10: "Devoted": a badge in the
+// Devotion 5: one extra modifier slot for fusion inheritance (dv190ModCap, used in 0490). Devotion 10: "Devoted": a badge in the
 // Companions window and a faint warm glow under the companion. The glow is part of the model (cr), and the look field `dvd`
 // goes to co-op partners through mpvLookOf / mpvLookIn, so partners see it too. Fusing a companion away loses its Devotion
 // (the Improve window lists it as a loss).
-var DV189={cap:[.40,.30,.20,.10,.05],max:10,need:L=>100+40*(L-1),pts:{kill:1,elite:3,boss:20,sov:40,feed:2}};
-function dv189Lv(c){let p=(c&&c.dvp)||0,L=0;while(L<DV189.max&&p>=DV189.need(L+1)){p-=DV189.need(L+1);L++}return L}
+var DV190={cap:[.40,.30,.20,.10,.05],max:10,need:L=>100+40*(L-1),pts:{kill:1,elite:3,boss:20,sov:40,feed:2}};
+function dv190Lv(c){let p=(c&&c.dvp)||0,L=0;while(L<DV190.max&&p>=DV190.need(L+1)){p-=DV190.need(L+1);L++}return L}
 // progress inside the current level: [points in, points needed] (needed 0 at the max)
-function dv189Prog(c){let p=(c&&c.dvp)||0,L=0;while(L<DV189.max&&p>=DV189.need(L+1)){p-=DV189.need(L+1);L++}return L>=DV189.max?[0,0]:[p,DV189.need(L+1)]}
-function dv189Cap(c){const t=Math.max(1,Math.min(5,tierSp(c.g[0])|0||1));return DV189.cap[t-1]}
-function dv189Bonus(c){return c&&!c.mpRemote?dv189Lv(c)/DV189.max*dv189Cap(c):0}
-function dv189ModCap(c){return 5+(dv189Lv(c)>=5?1:0)}
-function dv189Pct(v){return Math.round(v*100)+'%'}
+function dv190Prog(c){let p=(c&&c.dvp)||0,L=0;while(L<DV190.max&&p>=DV190.need(L+1)){p-=DV190.need(L+1);L++}return L>=DV190.max?[0,0]:[p,DV190.need(L+1)]}
+function dv190Cap(c){const t=Math.max(1,Math.min(5,tierSp(c.g[0])|0||1));return DV190.cap[t-1]}
+function dv190Bonus(c){return c&&!c.mpRemote?dv190Lv(c)/DV190.max*dv190Cap(c):0}
+function dv190ModCap(c){return 5+(dv190Lv(c)>=5?1:0)}
+function dv190Pct(v){return Math.round(v*100)+'%'}
 
 // ---------- stats ----------
-{const f=cStat;cStat=function(c,k){const v=f.apply(this,arguments);if(!c||c.st)return v;const b=dv189Bonus(c);return b?v*(1+b):v}}
+{const f=cStat;cStat=function(c,k){const v=f.apply(this,arguments);if(!c||c.st)return v;const b=dv190Bonus(c);return b?v*(1+b):v}}
 
 // ---------- earning ----------
-function dv189Give(c,n){if(!c||!(n>0))return;const L0=dv189Lv(c),hp0=c.h>0?c.h/Math.max(1,M(c)):0;c.dvp=((c.dvp)||0)+n;const L1=dv189Lv(c);if(L1<=L0)return;
+function dv190Give(c,n){if(!c||!(n>0))return;const L0=dv190Lv(c),hp0=c.h>0?c.h/Math.max(1,M(c)):0;c.dvp=((c.dvp)||0)+n;const L1=dv190Lv(c);if(L1<=L0)return;
   if(c.h>0)c.h=Math.max(1,Math.round(hp0*M(c)));
   const i=party.indexOf(c),f=i>=0&&i<2?fols[i]:null;
-  let msg='💛 '+nm(c)+'’s Devotion rose to '+L1+' · +'+dv189Pct(dv189Bonus(c))+' all stats';
+  let msg='💛 '+nm(c)+'’s Devotion rose to '+L1+' · +'+dv190Pct(dv190Bonus(c))+' all stats';
   if(L0<5&&L1>=5)msg+=' · an extra modifier slot opened';
-  if(L1>=DV189.max){msg='💛 '+nm(c)+' is Devoted! Devotion 10 · +'+dv189Pct(dv189Bonus(c))+' all stats';if(i>=0&&i<2){leadK[i]='';try{sync()}catch(_){}}}
+  if(L1>=DV190.max){msg='💛 '+nm(c)+' is Devoted! Devotion 10 · +'+dv190Pct(dv190Bonus(c))+' all stats';if(i>=0&&i<2){leadK[i]='';try{sync()}catch(_){}}}
   say(msg);try{if(f&&f.visible){burst(gY(f.position,.8),0xffc85a,24,1.8,2.4,.8);ring(f.position,0xffc85a,2.2,600)}if(typeof sfx=='function')sfx('chime')}catch(_){}
   try{hsDirty()}catch(_){}}
-function dv189Active(){const n=typeof actN141=='function'?actN141():1;return party.slice(0,n).filter(c=>c&&c.h>0)}
+function dv190Active(){const n=typeof actN141=='function'?actN141():1;return party.slice(0,n).filter(c=>c&&c.h>0)}
 // a real kill is the one that counts on the death screen's tally (AWD.kills, 0560): props, sacs and mounds never reach it
 {const f=kill;kill=function(e){const k0=typeof AWD!='undefined'?AWD.kills:0;const r=f.apply(this,arguments);
-  try{if(e&&!e.dv189&&typeof AWD!='undefined'&&AWD.kills>k0){e.dv189=1;const P=DV189.pts;
-    const n=(e.ar!=null||e.sv)?P.sov:e.boss?P.boss:(e.trait||(e.camp&&e.leader===e.camp))?P.elite:P.kill;dv189Active().forEach(c=>dv189Give(c,n))}}catch(err){console.warn('v189 devotion',err)}
+  try{if(e&&!e.dv190&&typeof AWD!='undefined'&&AWD.kills>k0){e.dv190=1;const P=DV190.pts;
+    const n=(e.ar!=null||e.sv)?P.sov:e.boss?P.boss:(e.trait||(e.camp&&e.leader===e.camp))?P.elite:P.kill;dv190Active().forEach(c=>dv190Give(c,n))}}catch(err){console.warn('v190 devotion',err)}
   return r}}
 {const f=feedComp;feedComp=function(c,k){const a=cnt(k);const r=f.apply(this,arguments);
-  try{if(c&&cnt(k)<a&&dv189Active().includes(c))dv189Give(c,DV189.pts.feed)}catch(_){}return r}}
+  try{if(c&&cnt(k)<a&&dv190Active().includes(c))dv190Give(c,DV190.pts.feed)}catch(_){}return r}}
 
 // ---------- look: a faint warm glow under a Devoted companion (own and partners') ----------
-var DV189_TEX=null;
-function dv189Tex(){if(DV189_TEX)return DV189_TEX;const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
+var DV190_TEX=null;
+function dv190Tex(){if(DV190_TEX)return DV190_TEX;const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
   g.addColorStop(0,'rgba(255,214,130,.9)');g.addColorStop(.45,'rgba(255,170,70,.35)');g.addColorStop(1,'rgba(255,140,40,0)');x.fillStyle=g;x.fillRect(0,0,64,64);
-  DV189_TEX=new THREE.CanvasTexture(cv);return DV189_TEX}
-var DV189_GEO=null; // one shared disc; never disposed (companion models are not disposed either)
-function dv189Glow(g){if(!g||g.getObjectByName('dv189'))return;DV189_GEO=DV189_GEO||new THREE.PlaneGeometry(1.9,1.9);
-  const m=new THREE.Mesh(DV189_GEO,new THREE.MeshBasicMaterial({map:dv189Tex(),transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false}));
-  m.name='dv189';m.rotation.x=-Math.PI/2;m.position.y=.04;m.renderOrder=2;m.userData.fx=1;m.castShadow=false;m.receiveShadow=false;
+  DV190_TEX=new THREE.CanvasTexture(cv);return DV190_TEX}
+var DV190_GEO=null; // one shared disc; never disposed (companion models are not disposed either)
+function dv190Glow(g){if(!g||g.getObjectByName('dv190'))return;DV190_GEO=DV190_GEO||new THREE.PlaneGeometry(1.9,1.9);
+  const m=new THREE.Mesh(DV190_GEO,new THREE.MeshBasicMaterial({map:dv190Tex(),transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false}));
+  m.name='dv190';m.rotation.x=-Math.PI/2;m.position.y=.04;m.renderOrder=2;m.userData.fx=1;m.castShadow=false;m.receiveShadow=false;
   m.onBeforeRender=()=>{m.material.opacity=.32+.1*Math.sin(performance.now()/700)};g.add(m)}
-{const f=cr;cr=function(c){const g=f.apply(this,arguments);try{if(c&&g&&(c.dvd||dv189Lv(c)>=DV189.max))dv189Glow(g)}catch(_){}return g}}
+{const f=cr;cr=function(c){const g=f.apply(this,arguments);try{if(c&&g&&(c.dvd||dv190Lv(c)>=DV190.max))dv190Glow(g)}catch(_){}return g}}
 // co-op: the partner builds our companion from the look, so the Devoted flag goes with it (new field at the end)
-{const f=mpvLookOf;mpvLookOf=function(c){const L=f.apply(this,arguments);try{if(L&&c&&dv189Lv(c)>=DV189.max)L.dvd=1}catch(_){}return L}}
+{const f=mpvLookOf;mpvLookOf=function(c){const L=f.apply(this,arguments);try{if(L&&c&&dv190Lv(c)>=DV190.max)L.dvd=1}catch(_){}return L}}
 {const f=mpvLookIn;mpvLookIn=function(L){const c=f.apply(this,arguments);try{if(c&&L&&L.dvd===1)c.dvd=1}catch(_){}return c}}
 
 // ---------- Companions window: a Devotion row in the overview and a Devoted badge ----------
 {const st=document.createElement('style');st.textContent=`
-.dv189r{grid-column:1/-1}.dv189r b{display:flex;align-items:center;gap:8px;justify-content:flex-end}
-.dv189bar{display:inline-block;width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
-.dv189bar i{display:block;height:100%;background:linear-gradient(90deg,#c9893a,#ffd27a)}
-.dv189t{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:8px;font-size:.72rem;color:#ffd27a;border:1px solid rgba(255,210,122,.45);background:rgba(255,190,90,.08)}`;
+.dv190r{grid-column:1/-1}.dv190r b{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.dv190bar{display:inline-block;width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.dv190bar i{display:block;height:100%;background:linear-gradient(90deg,#c9893a,#ffd27a)}
+.dv190t{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:8px;font-size:.72rem;color:#ffd27a;border:1px solid rgba(255,210,122,.45);background:rgba(255,190,90,.08)}`;
   document.head.appendChild(st)}
-function dv189Tip(c){return 'Devotion grows while '+c.n+' is in your active team: kills, elites, bosses, Sovereigns and feeding. Each level adds '+dv189Pct(dv189Cap(c)/DV189.max)+
-  ' to all stats (lower tiers gain more; '+dv189Pct(dv189Cap(c))+' at Devotion 10). Devotion 5: one extra modifier slot. Fusing it away loses its Devotion.'}
-function dv189Row(c){const L=dv189Lv(c),p=dv189Prog(c),w=L>=DV189.max?100:Math.round(100*p[0]/p[1]);
-  return `<div class="kv dv189r" title="${dv189Tip(c).replace(/"/g,'&quot;')}"><span>💛 Devotion</span><b><span class="dv189bar"><i style="width:${w}%"></i></span>${L} / ${DV189.max}${L?' · +'+dv189Pct(dv189Bonus(c))+' all stats':''}${L<DV189.max?' <small class="mut">('+p[0]+' / '+p[1]+')</small>':''}</b></div>`}
+function dv190Tip(c){return 'Devotion grows while '+c.n+' is in your active team: kills, elites, bosses, Sovereigns and feeding. Each level adds '+dv190Pct(dv190Cap(c)/DV190.max)+
+  ' to all stats (lower tiers gain more; '+dv190Pct(dv190Cap(c))+' at Devotion 10). Devotion 5: one extra modifier slot. Fusing it away loses its Devotion.'}
+function dv190Row(c){const L=dv190Lv(c),p=dv190Prog(c),w=L>=DV190.max?100:Math.round(100*p[0]/p[1]);
+  return `<div class="kv dv190r" title="${dv190Tip(c).replace(/"/g,'&quot;')}"><span>💛 Devotion</span><b><span class="dv190bar"><i style="width:${w}%"></i></span>${L} / ${DV190.max}${L?' · +'+dv190Pct(dv190Bonus(c))+' all stats':''}${L<DV190.max?' <small class="mut">('+p[0]+' / '+p[1]+')</small>':''}</b></div>`}
 {const f=rC0;rC0=function(){const r=f.apply(this,arguments);try{const c=party[cmpSel],cd=$('cd');if(!c||!cd)return r;
   const sum=cd.querySelector('.kqm-cpane[data-kqc="ov"] .kqm-csum');
-  if(sum&&!sum.querySelector('.dv189r'))sum.insertAdjacentHTML('beforeend',dv189Row(c)); // full width, under the stat pairs
-  const hd=cd.querySelector('.kqm-chead .dh')||cd.querySelector('.dh');if(hd&&dv189Lv(c)>=DV189.max&&!cd.querySelector('.dv189t'))hd.insertAdjacentHTML('beforeend','<span class="dv189t" title="Devotion 10">💛 Devoted</span>')}catch(err){console.warn('v189 devotion ui',err)}return r}}
+  if(sum&&!sum.querySelector('.dv190r'))sum.insertAdjacentHTML('beforeend',dv190Row(c)); // full width, under the stat pairs
+  const hd=cd.querySelector('.kqm-chead .dh')||cd.querySelector('.dh');if(hd&&dv190Lv(c)>=DV190.max&&!cd.querySelector('.dv190t'))hd.insertAdjacentHTML('beforeend','<span class="dv190t" title="Devotion 10">💛 Devoted</span>')}catch(err){console.warn('v190 devotion ui',err)}return r}}
 
 // ---------- the Improve (fusion) window lists lost Devotion ----------
-{const f=FSM100_check;FSM100_check=function(a,b,act){const r=f.apply(this,arguments);try{const L=dv189Lv(b);if(r&&r.warn&&L>0)r.warn.push('Devotion '+L+' lost')}catch(_){}return r}}
+{const f=FSM100_check;FSM100_check=function(a,b,act){const r=f.apply(this,arguments);try{const L=dv190Lv(b);if(r&&r.warn&&L>0)r.warn.push('Devotion '+L+' lost')}catch(_){}return r}}

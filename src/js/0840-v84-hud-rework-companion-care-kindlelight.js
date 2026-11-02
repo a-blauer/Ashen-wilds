@@ -87,10 +87,10 @@ function cpic(c){const k=cpicKey(c);if(CPIC.cache[k]!==undefined)return CPIC.cac
 var cbarSig='';
 function cbarsRender(){
   const cb=$('cbars');if(!cb)return;const L=party.slice(0,actN141());
-  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c)].join(':')).join('/');
+  const sig=L.map((c,i)=>[c.n,c.l,c.evo||0,c.tr,c.emp?1:0,c.h<=0?1:0,CPIC.cache[cpicKey(c)]?1:0,cpicKey(c),fs189N(c)].join(':')).join('/');
   if(sig!==cbarSig){cbarSig=sig;
     cb.innerHTML=L.map((c,i)=>{const p=cpic(c),dead=c.h<=0;
-      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm">${(c.tr=='Universal'?'✦ ':'')+c.n}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
+      return `<div class="cbar glass${c.emp?' emp':''}${dead?' dead':''}" data-ci="${i}"><div class="cpic">${p?`<img src="${p}" alt="">`:em(c)}</div><div class="cinf"><div class="cnm"><span class="cnm-n">${(c.tr=='Universal'?'✦ ':'')+c.n}</span>${fs189Html(c)}<small>Lv ${c.l}${c.evo?' '+'✦'.repeat(c.evo):''}</small></div><div class="chp"><em></em><i></i><span></span></div></div>`+
         (dead?`<button data-rv="${i}" class="rvb" title="Revive: costs 25% of your max health">💗</button>`:`<button data-e="${i}" class="${c.emp?'on':''}" title="Empower (${i?'R':'E'})">⚡</button><button data-fd="${i}" title="Feed the best food you have">🍖</button>`)+`</div>`}).join('')}
   L.forEach((c,i)=>{const el=cb.children[i];if(!el)return;const mx=M(c),h=Math.max(0,c.h),hot=c.fhot&&c.fhot.left>0?Math.min(mx-h,c.fhot.left):0;
     el.querySelector('.chp i').style.width=(100*h/mx)+'%';const g=el.querySelector('.chp em');g.style.left=(100*h/mx)+'%';g.style.width=(100*hot/mx)+'%';

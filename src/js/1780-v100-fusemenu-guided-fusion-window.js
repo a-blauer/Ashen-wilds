@@ -278,7 +278,7 @@ function FSM100_prevHTML(){const S=FSM100,a=S.a,b=S.b,act=S.act,A=FSM100_ACT[act
   if(act=='sip')notes.push(`Copies ${r.v>=1?'all':Math.round(Math.min(1,r.v)*100)+'%'} of the gap between the two ${FSM100_SN[S.stat]} rolls.`);
   if(act=='con')notes.push(`<b>${FSM100_SN[r.k]}</b> (the stat ${FSM100_esc(b.n)} is best at) goes up by about +${FSM100_pc(r.g*.8)} to +${FSM100_pc(r.g*1.2)} (random in that range). The other stats stay the same. Bigger gains come from higher-tier, higher-level and evolved partners. Also heals ${FSM100_esc(a.n)} by 10% of its health.`);
   if(act!='con'){if(r.pen)notes.push(`Half strength: ${FSM100_esc(b.n)} is a lower tier (T${fb.t}) than ${FSM100_esc(a.n)} (T${fa.t}).${(sup.c_asc||0)>0?' An Ascendant Tincture removes this.':''}`);
-    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${'★'.repeat(Math.min(5,r.lo.fz))}${r.lo.fz>5?'×'+r.lo.fz:''} · keeps level ${a.l} · fully healed.`);
+    notes.push(`Stars ${FSM100_stars(a)||'none'} → ${fs189Html(r.lo.fz)} · keeps level ${a.l} · fully healed.`);
     const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));
     if(inh.length)notes.push((a.mods||[]).length>=5?`No modifier can pass on: ${FSM100_esc(a.n)} already has 5.`:`<b>${S.cat=='c_ess'?'Certain':'35% chance'}</b> to inherit one of: ${inh.map(m=>MODS[m].i+' '+m+(MODS[m].d?' <small>('+FSM100_esc(MODS[m].d)+')</small>':'')).join(', ')}.${inh.some(m=>MODS[m].s)?' Not counted in the table.':''}`);
     if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))notes.push(`<span style="color:var(--kq-bad)">${FSM100_esc(a.n)} loses its ✦ Universal trait</span> (partner of another family).`)}
