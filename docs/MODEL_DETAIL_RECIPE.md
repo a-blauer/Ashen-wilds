@@ -343,6 +343,17 @@ enemy: keys `E137…` are skipped) with the recipe:
   glow lines alone don't count. Glow from a dark root to a bright tip, one glowing stroke per flame (EVO186 caps them at 26).
 - **Evolution grows the creature's own feature** (owner's model: Foxlet): horns lengthen, a crest rises, a hood widens, bone
   armour spreads, fire spreads. No jewellery, metal crowns, runes that can read as arrows, gems or spikes out of the eyes.
+- **Horns on one curve** (round 4): build a horn as points on a bent path (`base + d·u + C·u²`), each segment thinner
+  (radius ∝ (1−t)^1.15, down to a point), coloured dark at the root to pale at the tip. Evolution sheaths reuse the same
+  base, direction and curve with a longer length, so the horn grows instead of a second horn appearing. Boxes or straight
+  bundles of cones read as planks and pencils.
+- **A hood is a cupped flare, not flaps:** widen the neck rings themselves (width × (1 + k·level)), push the edges forward
+  (a cup ∝ c²) and keep them thin; narrow where it leaves the body, widest near the head. Paint it as a scale gradient: any
+  mark of dark spots on the back reads as a face.
+- **Paint the seams:** a light dorsal stripe or pale spine row catches the top light and reads as a dashed line; keep the
+  ridge and its spines dark with only the tips pale.
+- **Crop your own close-ups** before a review: whole head per crop (open and shut), front 3/4 of the serpents with the
+  head inside the frame, one crop per level; check every item of the review list on those crops, not the full sheet.
 
 ## 5. Checklist for every new or reworked model
 
