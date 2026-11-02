@@ -331,6 +331,12 @@ enemy: keys `E137…` are skipped) with the recipe:
 - **Armour shells (`E.shell`) on whole loft strips:** select by face-normal bands that fall between the ring's face normals
   (16 sides: ny ≈ .98 / .83 / .56 / .2, so cut at .7 or .05) and by z bands between rings. A cut through triangles leaves a
   stair-stepped edge; a pale shell makes it glaring. Keep shell colours near the hide (the shared material lights them hard).
+- **No open ends** (round 3): every loft that can be seen from its end needs a cap; a jaw ends in a narrow, shallow ring
+  under the snout tip with a pointed cap, and its top is a trough between two rims (sculpted), the teeth on the rims.
+- **Evolution through paint:** cache the body per evolution level (key it) and let the paint read the level; armour, lava or
+  embers then spread over the hide following its form. Shells laid on the body read as tape, lids or argyle.
+- **Every level a player sees must change the outline** at body scale (horns, crest, sail, blades, fin, hood width); thin
+  glow lines alone don't count. Glow from a dark root to a bright tip, one glowing stroke per flame (EVO186 caps them at 26).
 - **Evolution grows the creature's own feature** (owner's model: Foxlet): horns lengthen, a crest rises, a hood widens, bone
   armour spreads, fire spreads. No jewellery, metal crowns, runes that can read as arrows, gems or spikes out of the eyes.
 
