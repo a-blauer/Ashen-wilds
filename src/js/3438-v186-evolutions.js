@@ -113,7 +113,7 @@ EV38.S.Ashwolf=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,ash=T.mix(
 // hump · 3 a huge black mane, the heaviest sabres, the spurs longer
 EV38.S.Direfang=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,ivory=0xd8ccb0,mane=T.fur(P.dark,T.mix(P.mainD,P.dark,.4));
   T.swell(R,[0,.74,.36],[.2+.03*s,.17+.03*s,.17+.03*s],.016+.02*s,mane,{jag:.9,sweep:[0,.25,-.7],sel:(x,y,z)=>!(z>.6&&y<.74)});
-  [-1,1].forEach(sd=>{const a=[sd*.05,.662,.852],b=[sd*.058,.56,.874],e=[sd*.052,.47,.86];R.L(a,b,.019+.004*s,.013+.004*s,'c',ivory,5,{bn:'head'});R.L(b,e,.013+.004*s,.003,'c',ivory,5,{bn:'head'})});
+  [-1,1].forEach(sd=>{const a=[sd*.05,.662,.852],b=[sd*.058,.56,.874],e=[sd*.052,.47,.86];const iv=T.mix(ivory,0x8a7a60,.3),m=[(b[0]+e[0])/2+sd*.002,(b[1]+e[1])/2,(b[2]+e[2])/2+.006];R.L(a,b,.02+.002*s,.015+.002*s,'c',iv,7,{bn:'head'});R.L(b,m,.015+.002*s,.009+.001*s,'c',iv,7,{bn:'head'});R.L(m,e,.009+.001*s,.002,'c',iv,6,{bn:'head'})});
   if(s>=2)T.crest(R,.36,.0,s>=3?7:5,t=>(.06+.03*(s-2))*(1-.35*t),.02,i=>i%2?P.boneD:P.bone,(t,q)=>[q.n[0]*.3,1,-.7])};
 // Skollmaw (the eclipse wolf; the gold circlet, the bright orange fan and the fetters are gone): 0 ember tips in the mane,
 // smouldering claws · 1 the mane and the tail grow shaggier, a corona of black spines from the nape · 2 a heavy mane, a long
@@ -212,7 +212,7 @@ EV38.S.Bogmaw=function(E,L,P,c,s){const R=E.raw,T=EV38T,hb={bn:'head'},skin=T.di
   if(!s)return;
   T.swell(R,[0,.2,.42],[.4,.1,.17],.014+.017*s,(x,y,z)=>T.mix(skD,skin,.4*T.hash(x,y,z)),{sel:(x,y,z,nx,ny)=>ny<.6&&y<.236});
   [-.14,0,.14].forEach((x,i)=>T.swell(R,[x,.46,-.04],[.05+.01*s,.08,.26],.01+.013*s,(x,y,z,k)=>T.mix(skin,wart,k),{jag:.8}));
-  if(s>=2)[-1,1].forEach(sd=>R.horn([sd*.2,.43,.36],[sd*.5,.8,-.3],[0,-.01,-.03],[0,0,.09,.15][s],.022+.004*s,'c',T.dim(P.boneD,.55),4,hb,T.dim(P.boneD,.35)))};
+  if(s>=2)[-1,1].forEach(sd=>R.horn([sd*.2,.43,.36],[sd*.5,.8,-.3],[0,-.01,-.03],[0,0,.09,.15][s],.022+.004*s,'c',0x3a3428,4,hb,0x24201a))};
 ['Stoneshell','Mossfrog'].forEach(ev38Hook);
 {const f=lpGeo;lpGeo=function(key,n,lofts){if(typeof key=='string'&&key.indexOf('ER150|Titanshell|')==0&&lofts&&lofts[2]&&lofts[2].paint&&!lofts[2].ev38){const p=lofts[2].paint;
     lofts[2]=Object.assign({},lofts[2],{ev38:1,paint:function(o,r,s2){p.apply(this,arguments);if(s2>.5)o.setHex(0x140a08);else o.multiplyScalar(.82)}})}return f.apply(this,arguments)}}
@@ -224,9 +224,11 @@ EV38.S.Bogmaw=function(E,L,P,c,s){const R=E.raw,T=EV38T,hb={bn:'head'},skin=T.di
   try{return k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
 // Titanshell kit (all stages): the loose stone blocks on the brow and the tusks are gone (they read as buck teeth in a grin);
 // the open mouth is dark inside, not pink (lpGeo wrapper)
-{const f=er150TitanKit;er150TitanKit=function(k,C,red){const p0=k.p;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box')return k;
+{const f=er150TitanKit;er150TitanKit=function(k,C,red){const p0=k.p,L0=k.L,hd={0x8a8070:0x5a5244,0x6a6254:0x443e34};
+  k.L=function(bn,t,col){if(bn=='head'&&hd[col]){const q=Array.prototype.slice.call(arguments);q[2]=hd[col];return L0.apply(k,q)}return L0.apply(k,arguments)};
+  k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box')return k;if(bn=='head'&&geo=='tor'&&hd[col])return p0.call(k,bn,geo,t,hd[col],x,y,z,sx,sy,sz,rx,ry,rz);
     if(bn=='jaw'&&geo=='cone4'&&col===0xb8ae94)return k;return p0.apply(k,arguments)};
-  try{return f.apply(this,arguments)}finally{k.p=p0}}}
+  try{return f.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
 // Mossfrog kit (all stages): the eyes looked like coconuts - now a dark eyeball with an amber iris and a black slit pupil under a
 // dark lid; the flat tan gland slab beside each eye is gone
 {const f=mf186Kit;mf186Kit=function(k,c,C,red){const p0=k.p,K=MF186.cols(C),gl=K.gland.getHex();
@@ -248,7 +250,7 @@ EV38.S.Bogmaw=function(E,L,P,c,s){const R=E.raw,T=EV38T,hb={bn:'head'},skin=T.di
   k.L=function(bn,t,col){if(col===0x9a9078){skip=3;return k}return L0.apply(k,arguments)};
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(skip>0){skip--;return k}
     if(bn=='head'&&geo=='sph'&&t=='c'&&col===0x0a0806){ei++;if((ei-1)%3){skip=3;return k}}
-    if(t=='g'&&col===0x9aff5a)return k;if(t=='g'&&col===0xc8ff6a){p0.call(k,bn,geo,'c',0x26301a,x,y,z,sx*.8,sy*.8,sz*.8,rx,ry,rz);return p0.call(k,bn,geo,t,red?0x5a1a12:0x3a4a20,x,y-sy*.2,z+sz*.45,sx*.4,sy*.35,sz*.4,rx,ry,rz)}
+    if(t=='g'&&col===0x9aff5a)return k;if(t=='g'&&col===0xc8ff6a){p0.call(k,bn,geo,'c',0x26301a,x,y,z,sx*.92,sy*.92,sz*.92,rx,ry,rz);return p0.call(k,bn,geo,t,red?0x5a1a12:0x3a4a20,x,y-sy*.2,z+sz*.45,sx*.4,sy*.35,sz*.4,rx,ry,rz)}
     if(geo=='hem'&&(col===0x6a5238||col===0x4a3a28))return k;if(geo=='sph'&&(col===0x8a8a50||col===0xb0a860))return k;return p0.apply(k,arguments)};
   try{return f.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
 
@@ -267,6 +269,7 @@ EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s,1)};
 {const B=LPR.Batwing,k0=B.kit,p0=B.post;
   B.kit=function(k,c,C,red){const kp=k.p;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box'&&t=='c'&&col===0x070506)return kp.call(k,bn,'sph','c',0x1a0e0c,x,y,z,.022,.017,.014,rx,ry,rz);
     if(bn=='head'&&geo=='cone4'&&col===0xece4d0)return kp.call(k,bn,geo,t,0xc8bca0,x,y-.004,z,sx*1.5,sy*1.15,sx*1.5,rx,ry,rz);
+    if(bn=='jaw'&&geo=='cone4'&&col===0xece4d0)return kp.call(k,bn,geo,t,0xa89c84,x,y+.008,z-.004,sx,sy*.6,sz,rx,ry,rz);   // the lower fangs poked out under the chin
     if(bn=='head'&&geo=='box'&&t=='g'){const s=Math.sign(x);
       return kp.call(k,'head','sph','g',red?0x8a1a14:col===0xc070ff?0x7a4aa8:0xa02a18,x+s*.002,y,z+.005,.009,.007,.006,rx,ry,rz)}   // a small glinting eye in a dark socket
     return kp.apply(k,arguments)};
@@ -411,8 +414,8 @@ EV38.S.Boneling=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,B=boneP,h
   if(s>=3){const tb=T.box(E,/^tail/);if(tb){const q=R.top(0,tb.mn[2]+.05);if(q)[-1,0,1].forEach(i=>T.spike(R,q,[i*.6,.7,-.6],.07-Math.abs(i)*.015,.012,i?boneD:bone))}}};
 // Lichbone (its crown, gold neck trim, rags, cage, phylactery gem and the violet flames at the paws are gone; the ram horns
 // curl tight round the ears as a smooth tapering spiral): the lich hound grows; its skull, chest and legs grow with the bones.
-// 0 dark soul-fire hanging from the spine into the ribcage · 1 the horns curl further, a longer jaw, more spines down the
-// back, more soul-fire · 2 bigger horns, taller spines · 3 the horns at their fullest spiral (dark violet throughout)
+// 0 dark soul-fire hanging from the spine into the ribcage · 1 the horns thicken, a longer jaw, more spines down the
+// back, more soul-fire · 2 bigger horns, taller spines · 3 the heaviest horns (dark violet throughout)
 var LB38={vio:0x3e1c60,vio2:0x5a3480,
   // the ram horn's centre line (template space; boneP maps it): from the side of the skull, back, down round the ear and
   // forward; later stages add the next turns of the spiral
@@ -426,7 +429,7 @@ EV38.S.Lichbone=function(E,L,P,c,s){const R=E.raw,T=EV38T,B=boneP,hb={bn:'head'}
   // soul-fire hanging from the spine into the ribcage, dark violet, stronger each stage
   for(let i=0;i<2+s;i++){const z=.24-i*.075,t=R.top(0,B([0,0,z])[2]);if(!t)continue;R.L(R.add(t.p,[0,-.03,0]),R.add(t.p,[0,-.1-.025*s,-.01]),.016+.004*s,.002,'g',i%2?v1:v2,4)}
   if(!s)return;
-  [-1,1].forEach(sd=>{const H=LB38.curve(sd,6+Math.min(2,s)).map(B);for(let i=0;i<H.length-1;i++){const k0=i/(H.length-1),k1=(i+1)/(H.length-1);
+  [-1,1].forEach(sd=>{const H=LB38.curve(sd,7).map(B);for(let i=0;i<H.length-1;i++){const k0=i/(H.length-1),k1=(i+1)/(H.length-1);
     R.L(H[i],H[i+1],.032*(1-k0*.8)+.005*s,.032*(1-k1*.8)+.004*s,'c',i%2?T.dim(K.dark.getHex(),1.2):K.dark.getHex(),6,hb)}});
   R.L(B([0,.598,.68]),B([0,.596,.75+.025*s]),.02,.012,'c',bone,5,{bn:'jaw'});
   T.crest(R,.3,-.3,[0,6,8,10][s],t=>(.06+.04*(s-1))*(1-.4*t),.017,i=>i%2?P.boneD:bone,(t,q)=>[0,1,-.6])};
@@ -486,7 +489,6 @@ EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,2)};
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='tail3'&&t=='g')return k;if(v==1&&bn=='fr2'&&(t=='m'||col===0xffe8a0))return k;
     if(bn=='head'&&geo=='box'&&t=='c'&&col===0x010204)return k;   // the dark squares beside the face opening
     if(v==0&&bn=='head'&&t=='g'&&col===0x9ff0ff&&y>1.2)return k;   // the spirit flame on the hood's point (it read as a unicorn horn)
-    if(bn=='head'&&geo=='sph'&&col===0x020306)return p0.call(k,bn,geo,t,col,x,y,z-.008,sx*.9,sy*.9,sz*.85,rx,ry,rz);   // the face void stays inside the hood
     if(v==2&&bn=='chest'&&geo=='hem'&&(col===0xc8c0b0||col===0xe0d8c8))return p0.call(k,bn,geo,t,col===0xc8c0b0?0x5a5650:0x6a6660,x,y,z,sx,sy,sz,rx,ry,rz);
     if(v==2&&bn=='chest'&&(geo=='oct'||geo=='tor'))return k;if(v==2&&bn=='pelvis'&&t=='m')return k;
     if(v==1&&bn=='head'&&typeof geo!='string'&&t=='c'&&x===0&&sx===1)return p0.call(k,bn,geo,t,dkShade(col,.82),x,y,z,sx,sy,sz,rx,ry,rz);return p0.apply(k,arguments)};
