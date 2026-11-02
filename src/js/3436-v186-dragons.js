@@ -179,7 +179,7 @@ function dgQGeo(D,C,sp){const K=D.pal(C),B=D.body,H=D.head,bmp=dgBumps(D.bumps||
 function dgPaintQ(D,o,K,p,n,r,s,c,i,part){const z=p[2],x=Math.abs(p[0]),hz=D.headZ||.535,mz=D.head.hinge-.03;
   if(part=='leg'){o.copy(K.main);if(p[1]>.3)o.lerp(K.back,.3*Math.min(1,(p[1]-.3)/.1));if(s<-.3)o.lerp(K.back,.3);if(p[1]<.13)o.lerp(K.dark,.6*(1-p[1]/.13));
     if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
-  if(part=='jaw'){if(s>.25){o.copy(x<r.rx*.42?K.tongue:K.mouth);return}o.copy(K.throat);if(s>-.3)o.copy(K.main).lerp(K.lip,.3);if(s>.05)o.copy(K.lip);
+  if(part=='jaw'){if(s>.7){o.copy(x<r.rx*.42?K.tongue:K.mouth);return}o.copy(K.throat);if(s>-.3)o.copy(K.main).lerp(K.lip,.3);if(s>.05)o.copy(K.lip);
     if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
   o.copy(K.main);
   if(s>.5)o.lerp(K.back,Math.min(1,(s-.5)/.4)*.9);
@@ -432,7 +432,7 @@ function dgSJaw(x,D,C,sp,mat){const K=D.pal(C),H=D.head,HR=D.headRows,hz=H.hinge
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){const r=f.apply(this,arguments);if(x&&x.dgJaw&&x.bones&&x.bones.jaw)x.dgJaw.rotation.x=Math.max(0,x.bones.jaw.rotation.x-.08)*1.1;/* the idle chew (~.04-.07) leaves it shut */return r}}
 // the shared serpent paint: scutes under the belly, the lip line, palate, sockets, nostrils; D.paintX adds the species' marks
 function dgPaintS(D,o,K,p,n,r,s,c,i,part){const z=p[2],x=Math.abs(p[0]),hz=D.headZ,mz=D.head.hinge-.03;
-  if(part=='jaw'){if(s>.25){o.copy(x<r.rx*.4?K.tongue:K.mouth);return}o.copy(K.throat);if(s>-.3)o.copy(K.main).lerp(K.lip,.3);if(s>.05)o.copy(K.lip);if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
+  if(part=='jaw'){if(s>.7){o.copy(x<r.rx*.4?K.tongue:K.mouth);return}o.copy(K.throat);if(s>-.3)o.copy(K.main).lerp(K.lip,.3);if(s>.05)o.copy(K.lip);if(D.paintX)D.paintX(o,K,p,n,r,s,c,i,part);return}
   o.copy(K.main);if(s>.45)o.lerp(K.back,Math.min(1,(s-.45)/.45)*.85);
   if(!r.hd&&!r.hood&&s<-.42){o.copy(K.bel);if(i%2)o.multiplyScalar(.8);if(s>-.6)o.lerp(K.main,.5)}
   if(r.hd){if(s<-.2&&z<mz+.02)o.copy(K.throat);
@@ -593,10 +593,10 @@ DG186.E.Drakelet=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},
     S.forEach((q,i)=>{E.L([0,q.top-.012,q.z+.016],q.tip,.012,.0015,'c',mainD,4);if(L>=3&&i%2==0)E.L(lerp3(q.base,q.tip,.7),add3(q.tip,[0,.004,-.002]),.005,.001,'g',P.glow,3);
       const n=S[i+1];if(n)E.fan(q.base,[lerp3(q.base,q.tip,.86),lerp3(n.base,n.tip,.86),n.base],K.dark.getHex(),L>=3?P.glowD:K.back.getHex(),'c')})}
   if(L>=3){// scale armour across the chest and shoulders (bone-rimmed), glowing vents beside the spine
-    E.shell((x,y,z,nx,ny,nz)=>z>.1&&z<.36&&y>.47&&ny>-.25,.013,'c',new THREE.Color(0x4a3e46).lerp(K.side,.4).getHex(),{rimCol:bone});
+    E.shell((x,y,z,nx,ny,nz)=>z>.1&&z<.36&&y>.47&&ny>-.25,.013,'c',new THREE.Color(0x4a3e46).lerp(K.side,.4).getHex(),{rimCol:K.dark.getHex()});   // a dark rim (a pale one drew the shell's stepped edge)
     [.05,-.15].forEach(z=>[-1,1].forEach(s=>{const a=dgSurf(B,z+.025,.5,s),b=dgSurf(B,z-.025,.5,s);E.L(add3(a.p,mul3(a.n,.0012)),add3(b.p,mul3(b.n,.0012)),.0048,.0048,'g',P.glow,3,{vs:1})}))}
   if(L>=4){// a crown of four horns tipped in gold, a gem on the brow, molten scales under the belly
-    [-1,1].forEach(s=>[0,1].forEach(j=>E.horn(dgHS(B,.655-j*.03,.22+j*.2,s,-.004),[s*(.15+j*.3),1,-.45],[0,0,-.04],.1-j*.015,.009,'c',boneD,4,hb,P.trim)));
+    [-1,1].forEach(s=>E.horn(dgHS(B,.655,.22,s,-.004),[s*.15,1,-.45],[0,0,-.04],.1,.009,'c',boneD,4,hb,P.trim));
     E.gem({p:dgHS(B,.745,0,1,.002),n:dgSurf(B,.745,0,1).n},.015,P.glow,hb);
     E.shell((x,y,z,nx,ny)=>ny<-.6&&z>-.3&&z<.3,.004,'g',P.glowD,{rim:false})}
   if(L>=5){// a flame crest down the neck, burning eyes, a burning spade
@@ -610,13 +610,13 @@ DG186.E.Pyrewing=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},
     const H=dgHornPts([s*.034,.758,.63],[s*.28,.42,-1],[s*.02,.03,-.02],.3,5),t=H[5],d=nrm3(sub3(H[5],H[4]));E.L(sub3(t,mul3(d,.02)),add3(t,mul3(d,.025+.005*L)),.0035,.0008,'g',P.glow,3,hb)});
   // the obsidian blades down the back glow molten at their tips
   for(let z=D.spineZ[0],j=0;z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*(L>=2&&z<.35?1.5:1),m=[0,top+h*.55,z-h*.25],tip=[0,top+h,z-h*.75];
-    if(L>=2&&z<.35)E.L([0,top-.01,z+.012],tip,sp[1]*1.25,.0015,'c',obs,4);if(j%2==0)E.L(lerp3(m,tip,.35),add3(tip,mul3(nrm3(sub3(tip,m)),.004)),sp[1]*.5,.001,'g',P.glow,3)}
+    if(L>=2&&z<.35)E.L([0,top-.01,z+.012],tip,sp[1]*1.25,.0015,'c',obs,4);if(j%2==0)E.L(lerp3([0,top,z],tip,.3),add3(tip,mul3(nrm3(sub3(tip,m)),.006)),sp[1]*.85,.001,'g',P.glow,3)}
   if(L>=2){// the cheek frill burns, a bigger flame blade on the tail, obsidian spurs on the elbows
-    [-1,1].forEach(s=>{const hub=[s*.052,.692,.612],tips=[[s*.13,.73,.53],[s*.15,.69,.51],[s*.135,.645,.52]].map(t=>lerp3(hub,t,.9));E.fan(add3(hub,[s*.002,0,0]),tips.map(t=>add3(t,[s*.002,0,0])),0x3a0c04,L>=4?P.glow:P.glowD,'c',hb);
+    [-1,1].forEach(s=>{const hub=[s*.052,.692,.612],tips=[[s*.13,.73,.53],[s*.15,.69,.51],[s*.135,.645,.52]].map(t=>lerp3(hub,t,.9));E.fan(add3(hub,[s*.002,0,0]),tips.map(t=>add3(t,[s*.002,0,0])),0x3a0c04,L>=3?P.glow:P.glowD,'c',hb);
       const el=s<0?'fl1':'fr1';E.L([s*.1,.215,.218],[s*.1,.25,.17],.009,.0012,'c',obs,4,{bn:el})});
     E.pd('cone4','g',P.glow2,[0,.585,-1.6],[0,.15,-1],[.01,.14,.06],[0,1,0],{bn:'tail3'})}
   if(L>=3){// obsidian plates on the neck and chest rimmed with embers, a magma heart in the breast, seams beside the spine
-    E.shell((x,y,z,nx,ny,nz)=>z>.14&&z<.46&&y>.5&&ny>-.15,.013,'c',0x2a2226,{rimCol:P.glow});
+    E.shell((x,y,z,nx,ny,nz)=>z>.14&&z<.46&&y>.5&&ny>-.15,.013,'c',0x2a2226,{rimCol:0x140c0a});
     const ch=E.on([0,.43,1.5],[0,0,-1]);if(ch)E.gem({p:add3(ch.p,mul3(ch.n,.003)),n:ch.n},.018,P.glow);
     [.07,-.13].forEach(z=>[-1,1].forEach(s=>{const a=dgSurf(B,z+.022,.4,s),b=dgSurf(B,z-.022,.4,s);E.L(add3(a.p,mul3(a.n,.0012)),add3(b.p,mul3(b.n,.0012)),.004,.004,'g',P.glow,3,{vs:1})}))}
   if(L>=4){// an obsidian crown of spikes with molten tips round the back of the skull, a brow gem (the wings get molten veins)
@@ -668,7 +668,7 @@ DG186.E.Venomcoil=function(E,L,P,c,D){const HR=D.headRows,N=D.neck,K=D.pal(P.C),
   const rim=(i,s)=>{const q=N[i];return [s*q[2],q[1],q[0]]};
   // L1: venom on the fangs, glowing venom glands behind the mouth, the spectacle's eyes glow
   [-1,1].forEach(s=>{const f=D.teeth.up[0],h=dgAt(HR,f[0]),tip=[s*h.w*f[4],h.y-h.b-f[1]+.004,f[0]+.008];E.L(add3(tip,[0,.004,0]),add3(tip,[0,-.026,.002]),.0032,.0012,'g',P.glow,3,hb);
-    const g=dgSurf(HR,.375,1.62,s);E.pd('sph','g',P.glowD,add3(g.p,mul3(g.n,.001)),g.n,[.016,.003,.024],[0,0,1],hb)});
+    const g0=dgSurf(HR,.395,1.55,s),g1=dgSurf(HR,.355,1.6,s);E.L(add3(g0.p,mul3(g0.n,.0008)),add3(g1.p,mul3(g1.n,.0008)),.0035,.0025,'g',P.glowD,3,hb)});
   if(L>=2){// a fringe of short dark spines round the hood's rim, venom bands glowing along the back
     [4,5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);E.L(add3(p,[-s*.012,0,0]),add3(p,[s*(.035+.004*L),.012,-.012]),.006,.0012,'c',K.spine,4,{vs:1})}));
     [-.2,-.55,-.9].forEach(z=>{const h=E.top(D.X(z),z);if(h)E.L(add3(h.p,[-.025,-.006,0]),add3(h.p,[.025,-.006,0]),.0035,.0035,'g',P.glow,3,{vs:1})})}
