@@ -505,7 +505,7 @@ DG186.S.Gravewyrm={eyeCol:0xd0e040,headZ:.4,
   pal(C){const main=dgHSL(C,.17,.18),bel=new THREE.Color().setHSL(.12,.2,.4);
     return {main,back:dgHSL(C,.15,.1),dark:dgHSL(C,.1,.04),bel,rib:new THREE.Color().setHSL(.11,.18,.4),throat:new THREE.Color().setHSL(.12,.14,.24).lerp(main,.3),
       bone:new THREE.Color().setHSL(.11,.16,.34),lip:new THREE.Color(0x14120e),mouth:new THREE.Color(0x2a0c0e),tongue:new THREE.Color(0x4a1a22),sock:new THREE.Color(0x060605),
-      tooth:0xd8d0b8,fang:0xe8e0c8,spine:0x5a5040,spine2:0xb0a486,horn:0xc0b494,horn2:0x4a4234,moss:new THREE.Color().setHSL(.2,.3,.12)}},
+      tooth:0xd8d0b8,fang:0xe8e0c8,spine:0x2a261e,spine2:0x5a5242,horn:0xc0b494,horn2:0x4a4234,moss:new THREE.Color().setHSL(.2,.3,.12)}},
   paint(o,K,p,n,r,s,c,i,part){dgPaintS(this,o,K,p,n,r,s,c,i,part)},
   paintX(o,K,p,n,r,s,c,i,part){const z=p[2];if(part!='body')return;
     if(!r.hd){// scale bands (every other ring a shade darker), pale rib arcs across the flanks on every third ring with dark
@@ -630,46 +630,48 @@ DG186.E.Pyrewing=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'};
     E.shell((x,y,z,nx,ny)=>ny<-.6&&z>-.3&&z<.33,.004,'g',P.glowD,{rim:false});
     [-1,1].forEach(s=>{const H=dgHornPts([s*.034,.758,.63],[s*.28,.42,-1],[s*.02,.03,-.02],.3,5),d=nrm3(sub3(H[5],H[4]));E.L(sub3(H[5],mul3(d,.05)),add3(H[5],mul3(d,.004)),.006,.001,'g',P.glow,3,hb)})}
   if(L>=4){// the back blades burn at their tips
-    let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp||j%2)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0],m=[0,top+h*.4,z-h*.2],tip=[0,top+h,z-h*.75];E.L(m,add3(tip,[0,.003,-.002]),sp[1]*.85,.001,'g',P.glow,3)}}
+    let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp||j%2||z>.3||z<-.2)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0],m=[0,top+h*.4,z-h*.2],tip=[0,top+h,z-h*.75];E.L(m,add3(tip,[0,.003,-.002]),sp[1]*.85,.001,'g',P.glow,3)}}
   if(L>=5){// flame tongues along the crest of the neck
-    for(let i=0;i<5;i++){const z=.5-i*.045,q=dgAt(B,z),top=q.y+q.a;E.L([0,top-.008,z],[0,top+.075-i*.006,z-.06],.014,.0015,'g',P.glow,4)}}};
-DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},horn=K.horn,horn2=K.horn2,plate=0x7a6e5a;
+    for(let i=0;i<4;i++){const z=.5-i*.05,q=dgAt(B,z),top=q.y+q.a;E.L([0,top-.008,z],[0,top+.075-i*.006,z-.06],.014,.0015,'g',P.glow,4)}}};
+DG186.E.Elderdrake=function(E,L,P,c,D){const B=D.body,K=D.pal(P.C),hb={bn:'head'},horn=K.horn,horn2=K.horn2,plate=0x4e463c;
   // the great horns grow at every level (bone, from the skull)
   const gl=[0,.36,.38,.4,.45,.47][L],gr=[0,.019,.02,.021,.024,.025][L];
   [-1,1].forEach(s=>dgEH(E,dgHornPts([s*.036,.758,.632],[s*.25,.45,-1],[s*.03,.07+.006*L,0],gl,5),gr,.002,horn2,horn,'c',hb));
   if(L>=2){// a crown of bone horns round the back of the skull, swept back
     [-1,1].forEach(s=>[.55,.95].forEach((t,j)=>{const b=dgHS(B,.6-j*.012,t,s,-.005);dgEH(E,dgHornPts(b,[s*(.3+j*.4),.55-j*.4,-1],[0,-.01,-.02],.11-j*.02,4),.0105-j*.002,.0015,horn2,horn,'c',hb)}))}
   if(L>=3){// bone plates over the neck and the chest, flush, with dark seams
-    E.shell((x,y,z,nx,ny)=>z>.12&&z<.5&&ny>.25,.011,'c',plate,{rimCol:K.dark.getHex()});
+    E.shell((x,y,z,nx,ny)=>z>.12&&z<.5&&ny>.7,.01,'c',plate,{rimCol:K.dark.getHex()});
     E.shell((x,y,z,nx,ny,nz)=>z>.16&&z<.34&&nz>.35&&ny<.2&&ny>-.6,.011,'c',dkShade(plate,.85),{rimCol:K.dark.getHex()})}
   if(L>=4){// the back blades grow tall (bone sheaths over the spines)
     for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2]){const sp=D.spine(z);if(!sp)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*1.6;dgEH(E,[[0,top-.01,z+.014],[0,top+h*.55,z-h*.25],[0,top+h,z-h*.75]],sp[1]*1.3,.0015,K.spine,horn2,'c')}}
   if(L>=5){// dragonfire: glowing seams in the throat and the crest's blade tips
     [-1,1].forEach(s=>[.47,.41,.35].forEach(z=>{const a=dgSurf(B,z,2.3,s),b=dgSurf(B,z-.045,2.3,s);E.L(add3(a.p,mul3(a.n,.0012)),add3(b.p,mul3(b.n,.0012)),.0045,.0032,'g',P.glow,3,{vs:1})}));
-    let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp||j%2)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*1.6,tip=[0,top+h,z-h*.75];E.L([0,top+h*.6,z-h*.38],add3(tip,[0,.003,-.002]),sp[1]*.7,.001,'g',P.glow,3)}}};
-DG186.E.Gravewyrm=function(E,L,P,c,D){const HR=D.headRows,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'},bone=0xa89a7c,bone2=0x8a7e64,dk=K.dark.getHex();
+    let j=0;for(let z=D.spineZ[0];z>-.45;z-=D.spineZ[2],j++){const sp=D.spine(z);if(!sp||j%2||z>.3||z<-.2)continue;const q=dgAt(B,z),top=q.y+q.a+D.ridge(z),h=sp[0]*1.6,tip=[0,top+h,z-h*.75];E.L([0,top+h*.6,z-h*.38],add3(tip,[0,.003,-.002]),sp[1]*.7,.001,'g',P.glow,3)}}};
+// armour plates are picked as whole loft strips (face normal bands and ring-aligned z bands), so their edges run straight
+// along the scales instead of stepping across triangles; muted bone (the shared material lights it strongly)
+DG186.E.Gravewyrm=function(E,L,P,c,D){const HR=D.headRows,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'},bone=0x5e5646,bone2=0x4e4840,dk=K.dark.getHex();
   // L1: an armoured skull: bone plates over the crown and brow
-  E.shell((x,y,z,nx,ny)=>z>.44&&z<.78&&ny>.45&&y>.33,.007,'c',bone,{rimCol:dk});
+  E.shell((x,y,z,nx,ny)=>z>.451&&z<.749&&ny>.7&&y>.33,.006,'c',bone,{rimCol:dk});
   if(L>=2){// segmented bone plates down the spine, a low spined fin behind the head
-    [[.32,.16],[.1,-.08],[-.14,-.32],[-.38,-.56],[-.62,-.8]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.62,.008,'c',k%2?bone2:bone,{rimCol:dk}));
+    [[.339,.241],[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559],[-.661,-.759]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.7,.007,'c',k%2?bone2:bone,{rimCol:dk}));
     const fh=L>=4?1.35:1,base=z=>{const r=D.R(z);return [0,r*.74+.006+D.L(z)+r*.88-.006,z]},F=[.43,.38,.33,.28].map((z,i)=>{const b=base(z);return {b,t:add3(b,[0,(.05-i*.009)*fh,-.06*fh])}});
     F.forEach((f,i)=>{E.L(f.b,f.t,.007,.0012,'c',bone,4);const n=F[i+1];if(n)E.fan(f.b,[lerp3(f.b,f.t,.85),lerp3(n.b,n.t,.85),n.b],dk,K.back.getHex(),'c')})}
   if(L>=3){// rib armour on the flanks
-    [[-.05,-.15],[-.25,-.35],[-.45,-.55],[-.65,-.75]].forEach(q=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>-.25&&ny<.62,.007,'c',bone2,{rimCol:dk}))}
+    [[.139,.041],[-.061,-.159],[-.261,-.359],[-.461,-.559]].forEach(q=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.05&&ny<.7,.006,'c',bone2,{rimCol:dk}))}
   if(L>=4){// bone spikes up from the spine plates, a bone blade on the tail
-    [.21,-.01,-.23,-.47,-.71].forEach(z=>{const h=E.top(D.X(z),z);if(h)dgEH(E,[E.add(h.p,h.n,-.004),E.add(h.p,E.nrm([0,1,-.6]),.05),E.add(h.p,E.nrm([0,1,-1.2]),.075)],.011,.0015,bone2,bone,'c')});
+    [.29,.09,-.11,-.31,-.51].forEach(z=>{const h=E.top(D.X(z),z);if(h)dgEH(E,[E.add(h.p,h.n,-.004),E.add(h.p,E.nrm([0,1,-.6]),.05),E.add(h.p,E.nrm([0,1,-1.2]),.075)],.011,.0015,bone2,bone,'c')});
     E.pd('oct','c',bone,[D.X(-1.7),.016,-1.71],[0,0,-1],[.04,.075,.012],[0,1,0],{bn:'tail3'})}
   if(L>=5){// grave-light in the seams between the spine plates
-    [.13,-.11,-.35,-.59].forEach(z=>{const h=E.top(D.X(z),z);if(h)E.L(E.add(h.p,[-.03,-.004,0]),E.add(h.p,[.03,-.004,0]),.0035,.0035,'g',G.glow,3,{vs:1})})}};
+    [.19,-.01,-.21,-.41].forEach(z=>{const h=E.top(D.X(z),z);if(h)E.L(E.add(h.p,[-.03,-.004,0]),E.add(h.p,[.03,-.004,0]),.0035,.0035,'g',G.glow,3,{vs:1})})}};
 DG186.E.Venomcoil=function(E,L,P,c,D){const HR=D.headRows,N=D.neck,K=D.pal(P.C),G=dgDeepG(P),hb={bn:'head'};
-  const rim=(i,s)=>{const q=N[i];return [s*q[2],q[1],q[0]]},ext=[0,.03,.05,.07,.085,.1][L],prof={3:0,4:.5,5:.9,6:1,7:.8,8:.4,9:0};
+  const rim=(i,s)=>{const q=N[i];return [s*q[2],q[1],q[0]]},ext=[0,.045,.075,.1,.125,.15][L],prof={3:0,4:.5,5:.9,6:1,7:.8,8:.4,9:0};
   // the hood widens at every level: a flap of the hood's own skin round its edge, pale-rimmed from L2
   const out=(i,s)=>add3(rim(i,s),[s*ext*(prof[i]||0),0,0]);
   [-1,1].forEach(s=>{for(let i=3;i<9;i++){const a0=add3(rim(i,s),[-s*.012,0,0]),a1=add3(rim(i+1,s),[-s*.012,0,0]);
     E.fan(a0,[out(i,s),out(i+1,s),a1],K.back.getHex(),L>=2?new THREE.Color(K.back).lerp(K.spec,.45).getHex():K.back.getHex(),'c')}});
   if(L>=3){// outer chevrons on the widened hood, a plated head
     const bz=i=>N[i][0]-.001;[5,6].forEach(i=>[-1,1].forEach(s=>{const q=N[i],x0=s*q[2]*.9,x1=s*(q[2]+ext*prof[i]*.8);E.L([x0,q[1]-.012,bz(i)],[x1,q[1]+.012,bz(i)],.005,.004,'c',K.spec.getHex(),4,{vs:1})}));
-    E.shell((x,y,z,nx,ny)=>z>.3&&z<.5&&ny>.55&&y>.6,.006,'c',K.dark.getHex(),{rimCol:K.dark.getHex()})}
+    E.shell((x,y,z,nx,ny)=>z>.331&&z<.489&&ny>.7&&y>.6,.005,'c',new THREE.Color(K.dark).lerp(K.spec,.12).getHex(),{rimCol:K.dark.getHex()})}
   if(L>=4){// the chevrons on the back of the hood glow
     const back=(x,y)=>{let i=0;while(i<N.length-2&&N[i+1][1]<y)i++;const a=N[i],b=N[i+1],t=Math.max(0,Math.min(1,(y-a[1])/(b[1]-a[1]))),w=a[2]+(b[2]-a[2])*t,th=a[3]+(b[3]-a[3])*t,z=a[0]+(b[0]-a[0])*t,u=Math.min(.98,Math.abs(x)/w);return [x,y,z-th*Math.sqrt(1-u*u)-.002]};
     [[.42,.13,.05],[.475,.15,.055]].forEach(q=>[-1,1].forEach(s=>E.L(back(0,q[0]-q[2]*.5),back(s*q[1],q[0]+q[2]*.5),.0035,.003,'g',G.glow,3,{vs:1})))}
