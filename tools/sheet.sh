@@ -22,7 +22,7 @@ GIT_INDEX_FILE=$ix git update-index --add --cacheinfo "100644,$blob,.sheet-reque
 tree=$(GIT_INDEX_FILE=$ix git write-tree); rm -f "$ix"
 c=$(git commit-tree "$tree" -p HEAD -m "sheet request: ${#cmds[@]} command(s)")
 git fetch -q origin main || true   # a fresh main makes the push a small (thin) pack
-git push -q -f origin "$c:refs/heads/ci-run/sheet-$id"
+pl=$(git push -q -f origin "$c:refs/heads/ci-run/sheet-$id" 2>&1) || { echo "$pl"; exit 1; }   # quiet unless the push fails
 echo "rendering ${#cmds[@]} sheet(s) of $(git rev-parse --short HEAD) (branch ci-run/sheet-$id) ..."
 run=
 for i in $(seq 60); do

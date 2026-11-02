@@ -1614,6 +1614,15 @@ is its own parallel job in **fast mode**; the run's last job, Summary, lists the
 failed tests (from the run's annotations; this workspace can't download Actions logs or artifacts, the Actions tab shows them).
 `tools/ci.sh full v57t.py v60t.py` re-runs only those tests (branch `ci-run/…`). The Actions tab's Run workflow does the same by hand.
 **Local fallback** (and for re-running one test while fixing it): `cd test && python3 run_suite.py changed|full [test.py …]`.
+**Picture sheets render on GitHub (owner's request, Nov 2 2026)**, not on this 2-core machine: `tools/sheet.sh '<command>' ['<command>' …]`
+(or `-f file`, one command per line). Each command is what you would type inside `test/` locally, e.g.
+`tools/sheet.sh 'LIST="Foxlet:0:idle:-:-" TAG=gh_test LV=1 python3 v180_look.py'`; any sheet script works (`v180_look.py`,
+`v180_comp_float.py`, evo sheets, `wd_sheet.py` …). Each command is its own job in `.github/workflows/sheets.yml`, all at the same
+time (one small sheet ≈ 2 min including setup). The script pushes a request commit (HEAD + `.sheet-request`, HEAD itself unchanged)
+to `ci-run/sheet-<id>`, waits, prints which pictures each job made (or a failed job's last lines), and downloads every `.jpg`/`.png`
+the commands wrote into `test/out/`: the workflow pushes them to a short-lived branch `sheet-out/<id>` that the script fetches
+through a throw-away repo and deletes (same way as `tools/render.sh`: this workspace can't download Actions artifacts). Commit first;
+give each command its own `TAG` so names don't clash. Both scratch branches are deleted after the download.
 **Retries and steady tests (Oct 27 2026, owner: "make you complete tasks faster")**: a failed test runs once more (`test/ci_run.py`,
 `CI_RETRY`, default 1; each try's browsers are killed by their `KQ_ATT` marker); a pass on the second try counts and shows as
 `PASS (retry)` (Summary: "N only on a second try"). `CI_RETRY=0` to see whether a test is steady. The browser install on GitHub is
