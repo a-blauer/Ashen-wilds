@@ -323,6 +323,16 @@ enemy: keys `E137…` are skipped) with the recipe:
 - **Membrane wings fold:** arm, four fingers and a scalloped membrane, spread and folded joint sets blended into 11 shared
   geometries (like the v184 bird wings); folded along the flank at rest, spread to attack, fly or use a wing ability.
 - **Kit membranes** (frills): a geometry with its own vertex colours (`userData.dgV`) keeps them through the kit bake.
+- **Check the loft's winding** (round 2): with inward-wound faces the baked top light comes out upside down (tops dark, bellies
+  lit: a flat, low-value body) and evolution shells sink into the body. Test: the top face's normal must have y > 0.
+- **Shut mouths:** the lower jaw's top sits ~2 cm up inside the upper head and is nearly as wide (~88%), with a flat underside
+  and its back ring tucked into the cheek and capped. A narrow jaw hanging under the palate read as a hose, a shut mouth as a
+  grin. Paint only a thin dark lip crease on the outside; palate and tongue colours stay inside.
+- **Armour shells (`E.shell`) on whole loft strips:** select by face-normal bands that fall between the ring's face normals
+  (16 sides: ny ≈ .98 / .83 / .56 / .2, so cut at .7 or .05) and by z bands between rings. A cut through triangles leaves a
+  stair-stepped edge; a pale shell makes it glaring. Keep shell colours near the hide (the shared material lights them hard).
+- **Evolution grows the creature's own feature** (owner's model: Foxlet): horns lengthen, a crest rises, a hood widens, bone
+  armour spreads, fire spreads. No jewellery, metal crowns, runes that can read as arrows, gems or spikes out of the eyes.
 
 ## 5. Checklist for every new or reworked model
 
