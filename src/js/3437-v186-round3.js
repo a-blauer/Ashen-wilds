@@ -35,6 +35,11 @@ function sk186Skull(k,P,o){const dark=0x070505,nrm=v=>{const l=Math.hypot(...v);
 // Owner: "Direfang fangs are not connected to his mouth properly." The sabre fangs rooted at the outer corner of the muzzle,
 // below the edge of the upper lip, so they hung beside the mouth. Their roots now sit inside the upper jaw, a little in from
 // the side, with a dark lip fold over each root; the fang keeps its length and curve.
+// Round 3 review: the old armoured brow (a round bone cap over the skull, three plank plates stepping down the muzzle and
+// their scar gouges) read as a hat and planks nailed to the snout: gone. The heavy brow ridges over the eyes stay.
+{const f=df150Kit;df150Kit=function(k,c,C,red){const p0=k.p;
+  k.p=function(bn,geo,t,col,x,y,z,sx){if(bn=='head'&&((geo=='hem'&&col===0xb4a68a)||(geo=='box'&&col===0x3a2c22)||(geo=='box'&&x===0&&(col===0xb4a68a||col===0x7a6e5a)&&z>.7&&z<.84&&sx<.075)))return k;return p0.apply(k,arguments)};
+  try{return f.apply(this,arguments)}finally{k.p=p0}}}
 {const f=df150Kit;df150Kit=function(k,c,C,red){const L0=k.L,iv=0xece2c8;
   k.L=function(bn,t,col,a,b,r1,r2,seg){if(bn=='head'&&col===iv&&a&&Math.abs(Math.abs(a[0])-.062)<1e-6&&a[1]===.64&&a[2]===.86){const s=Math.sign(a[0]);
       L0.call(k,'head','c',0x2a1a1a,[s*.05,.655,.835],[s*.056,.642,.87],.016,.014,5);   // the lip fold over the root
