@@ -11,10 +11,12 @@
 // How: the evolution kit E gets a second kit E.raw without the EVO186 limits (its parts are baked with E's); a species
 // design here draws with it and keeps its own restraint. Designs are written per stage, not per level: a species only ever
 // shows four of the five levels (tier 1-2: 0 1 2 4, tier 3-4: 1 2 3 5, tier 5: 2 3 4 5; evo100Lv in 1710).
-var EV38={on:true};
+// The dragon rigs (Drakelet: Drakelet, Pyrewing, Elderdrake; Gravewyrm: Gravewyrm, Venomcoil) have their own evolution pass (3436):
+// nothing here touches them (no raw kit, no hook).
+var EV38={on:true,skip:['Drakelet','Gravewyrm']};
 // the stage (0-3) a level shows for a species
 function ev38St(L,sp){const t=typeof tierSp=='function'?tierSp(sp):1,V=t<=2?[0,1,2,4]:t<=4?[1,2,3,5]:[2,3,4,5];let s=0;V.forEach((v,i)=>{if(L>=v)s=i});return s}
-{const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EV38.on||typeof EVO186=='undefined')return E;
+{const f=evo100Kit;evo100Kit=function(n,L,P,seed){const E=f.apply(this,arguments);if(!EV38.on||typeof EVO186=='undefined'||EV38.skip.indexOf(n)>=0)return E;
   const o=EVO186.on;EVO186.on=false;try{E.raw=f.call(this,n,L,P,(seed|0)+386)}finally{EVO186.on=o}return E}}
 {const f=evo100Bake;evo100Bake=function(E){if(E&&E.raw&&E.raw.parts.length){E.raw.parts.forEach(q=>{if(q.j!=null)q.j=0;E.parts.push(q)});E.raw.parts.length=0}return f.apply(this,arguments)}}
 // ---------------------------------------------------------------- shared tools (positions in the rig's model space) ----------------------------------------------------------------
@@ -166,7 +168,7 @@ EV38.S.Mossfrog=function(E,L,P,c,s){if(!s)return;const R=E.raw,T=EV38T,moss=0x34
   if(s>=2){T.crest(R,.2,-.16,s>=3?6:5,t=>(.03+.02*(s-2))*(1-.3*t),.016,i=>i%2?skD:P.mainD,(t,q)=>[0,1,-.5],s>=3?P.glow2:null,.6);
     [-1,1].forEach(sd=>R.pd('oct','g',P.glowD,[sd*.16,.383,.27],[0,1,0],[.022,.006,.05],null,hb))}
   if(s>=3){const lt=R.top(0,.3),b=lt?lt.p[1]-.012:.38;
-    R.chain([[0,b,.3],[0,b+.08,.33],[0,b+.12,.39],[0,b+.1,.45]],.013,.006,'c',P.mainD,5,hb);R.pd('ico','g',P.glow,[0,b+.075,.46],[0,1,0],.024,null,hb);R.pd('ico','g',P.glow2,[0,b+.075,.46],[0,1,0],.013,null,hb)}};
+    R.chain([[0,b,.3],[0,b+.08,.33],[0,b+.12,.39],[0,b+.1,.45]],.013,.006,'c',P.mainD,5,hb);R.pd('ico','g',P.glow,[0,b+.085,.455],[0,1,0],.024,null,hb);R.pd('ico','g',P.glow2,[0,b+.09,.452],[0,1,0],.013,null,hb)}};
 // Bogmaw (was pustules, runes, a moss cloak, charms, then glowing eye rings): the swamp maw grows horned and spined.
 // 0 glowing pustules · 1 bony brow horns, glowing spore caps · 2 the horns longer, a ridge of bone spines down the back, two
 // more lures · 3 great curved horns with glowing tips, the bone ridge and two rows of venom spines along the back burn
@@ -289,7 +291,7 @@ EV38.S.Hivemother=function(E,L,P,c,s){const R=E.raw,T=EV38T,jb={bn:'jaw'},hb={bn
     for(let j=0;j<5;j++){const z=-.36-j*.13,p=v150Surf(AB,z,Math.PI/2,-.012),ln=(.17+.06*(s-2))*(1-Math.abs(j-2)*.1);R.L(p,R.add(p,R.nrm([0,1,-.45]),ln),.026,.002,'c',j%2?blk:gl,4,tb);
       if(s>=3)R.L(R.add(p,R.nrm([0,1,-.45]),ln*.65),R.add(p,R.nrm([0,1,-.45]),ln*1.01),.008,.001,'g',P.glow,3,tb)}
     R.L([0,.54,-1.16],[0,.49,-1.2],.016,.002,'g',P.glow,4,tb)}
-  if(s>=3){for(let i=0;i<7;i++){const a=(i/6-.5)*Math.PI*1.4,b=[Math.sin(a)*.06,.49,.36+Math.cos(a)*.03-.03],t=[Math.sin(a)*.12,.62+.06*Math.cos(a),.3];R.L(b,t,.011,.002,'c',gl,4,hb)}
+  if(s>=3){for(let i=0;i<7;i++){const a=(i/6-.5)*Math.PI*1.4,q=R.top(Math.sin(a)*.05,.33+Math.cos(a)*.02);if(!q)continue;const b=R.add(q.p,q.n,-.01),t=[Math.sin(a)*.12,.62+.06*Math.cos(a),.3];R.L(b,t,.011,.002,'c',gl,4,hb)}
     R.pd('oct','g',P.glow,[0,.485,.395],[0,.6,.8],[.018,.026,.014],null,hb);
     let pr=null;for(let j=0;j<8;j++){const h=R.top(0,-.22-j*.1),p=h?R.add(h.p,h.n,.004):null;if(p&&pr)R.L(pr,p,.008,.008,'g',j%2?P.glow:P.glow2,3,{vs:1});pr=p}
     for(let i=0;i<6;i++){const z=-.4-(i%3)*.17,a=i<3?.2:Math.PI-.2,h=R.on(v150Surf(AB,z,a,.4),[-Math.cos(a),-Math.sin(a),0]);if(h)R.pd('oct','g',i%2?P.glow:P.glowD,R.add(h.p,h.n,-.002),h.n,[.014,.02,.014],null,tb)}}};
