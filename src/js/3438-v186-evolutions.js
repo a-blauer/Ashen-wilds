@@ -219,7 +219,7 @@ EV38.bat=function(E,L,P,c,s,moon){if(!s)return;const R=E.raw,T=EV38T,hb={bn:'hea
   T.swell(R,[0,.37,.28],[.15,.11,.11],(moon?.016:.01)+(moon?.014:.008)*s,T.fur(moon?T.mix(silver,P.mainD,.4):P.mainD,moon?silver:P.mainL),{jag:.8});
   if(!moon&&s>=2){for(let i=0;i<7;i++){const z=.38-i*.075,h=R.top(0,z);if(h)[-1,1].forEach(sd=>R.L(R.add(h.p,[sd*.014,-.008,0]),R.add(h.p,R.nrm([sd*.25,1,-.9]),(.1+.04*(s-2))*(1-i*.09)),.026,.002,'c',i%2?P.mainD:dk,4))}}};
 EV38.S.Batwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s,0)};
-EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s+1>3?3:s+1,1)};
+EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s,1)};
 // the bat kit (all stages): slit eyes instead of flat glowing boxes; no belly tufts; ears grow with the stage; no claws on the wing tips
 {const B=LPR.Batwing,k0=B.kit,p0=B.post;
   B.kit=function(k,c,C,red){const kp=k.p;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box'&&t=='g'){const s=Math.sign(x);
@@ -251,8 +251,8 @@ EV38.bird=function(E,P,s,o){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s||typeof b
     const tq=R.top(0,o.tz);if(tq)[-1,1].forEach(sd=>{const a=R.add(tq.p,[sd*.03,-.025,0]),d=R.nrm([sd*.16,-.06,-1]);bd184Fth(R,a,d,[sd*.15,1,0],.3+.1*(s-2),.04,'c',P.dark,{bn:'tail1',kind:'lance'});
       bd184Fth(R,R.add(a,[sd*.012,.006,-.02]),R.nrm([sd*.08,-.05,-1]),[sd*.15,1,0],.23+.08*(s-2),.032,'c',P.mainD,{bn:'tail1',kind:'lance'})})}};
 EV38.S.Skyhawk=function(E,L,P,c,s){EV38.bird(E,P,s,{y:.92,z:.37,len:.1,up:.55,ny:.85,nz:.3,my:.8,mz:.25,drape:0,tz:-.27})};
-EV38.S.Stormtalon=function(E,L,P,c,s){EV38.bird(E,P,s+1>3?3:s+1,{y:.92,z:.4,len:.15,up:.35,ny:.84,nz:.3,my:.77,mz:.22,drape:0,tz:-.29})};
-EV38.S.Rocsovereign=function(E,L,P,c,s){EV38.bird(E,P,s+1>3?3:s+1,{y:.95,z:.36,len:.12,up:.75,ny:.88,nz:.3,my:.8,mz:.2,drape:.4,tz:-.3})};
+EV38.S.Stormtalon=function(E,L,P,c,s){EV38.bird(E,P,s,{y:.92,z:.4,len:.15,up:.35,ny:.84,nz:.3,my:.77,mz:.22,drape:0,tz:-.29})};
+EV38.S.Rocsovereign=function(E,L,P,c,s){EV38.bird(E,P,s,{y:.95,z:.36,len:.12,up:.75,ny:.88,nz:.3,my:.8,mz:.2,drape:.4,tz:-.3})};
 ['Batwing','Skyhawk'].forEach(ev38Hook);
 
 // ===================================================================== Swarm =====================================================================
@@ -357,10 +357,10 @@ EV38.S.Lichbone=function(E,L,P,c,s){const R=E.raw,T=EV38T,B=boneP,hb={bn:'head'}
   try{f.apply(this,arguments)}finally{k.p=p0;k.L=L0;k.S=S0}
   [-1,1].forEach(s=>{const H=LB38.horn(s).map(boneP);for(let i=0;i<6;i++)L0.call(k,'head','c',i%2?dark2:dark,H[i],H[i+1],LB38.hr[i],LB38.hr[i+1],6)});
   L0.call(k,'chest','c',K.bone.getHex(),boneP([0,.48,.12]),boneP([0,.63,.12]),.012,.009,4)}}   // the phylactery hangs from the spine on a bone stem
-// Boneling kit (all stages): the ribcage heart is a faceted deep-green stone with a dim core; the glowing threads are gone
+// Boneling kit (all stages): the ribcage heart is a faceted deep-green stone with a dim core, hung on dark sinews (no neon threads)
 {const B=LPR.Boneling,k0=B.kit;B.kit=function(k,c,C,red){if(rv137('Boneling',c)=='Lichbone')return k0.apply(this,arguments);const p0=k.p,L0=k.L;
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz){if(bn=='chest'&&geo=='ico'&&t=='g'){p0.call(k,bn,'ico','c',0x1e4a2a,x,y,z,sx*1.1,sy*1.25,sz*1.1,.3,.5,0);return p0.call(k,bn,'oct','g',0x2a6a3a,x,y,z+sz*.6,sx*.4,sy*.5,sz*.4)}return p0.apply(k,arguments)};
-  k.L=function(bn,t){if(bn=='chest'&&t=='g')return k;return L0.apply(k,arguments)};
+  k.L=function(bn,t,col,a,b,r1,r2,sg){if(bn=='chest'&&t=='g')return L0.call(k,bn,'c',0x5a5246,a,b,r1,r2,sg);return L0.apply(k,arguments)};   // the heart hangs from the spine on a sinew
   try{return k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
 // Wispling, Lumenwisp, Soulwarden (the gold hood band, the sunburst and the halo ring, the lanterns, gems, the waist chain, the
 // horn through the hood and the pom-pom at the tail are gone): the spirit itself grows, each its own way. All: more and
@@ -390,8 +390,8 @@ EV38.spirit=function(E,L,P,c,s,v){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s)ret
   else{[-1,1].forEach(sd=>{T.chain(R,[[sd*.16,1.2,-.14],[sd*.15,1.3,-.24],[sd*.12,1.36+.03*s,-.32-.03*s],[sd*.08,1.38+.05*s,-.38-.05*s]].slice(0,2+Math.min(2,s)),.014,.002,'c',0xa89a88,hb);
       for(let i=0;i<s;i++){const a=sd*(.5+(i+4)*.32);R.pd('hem','c',i%2?0xc8c0b0:0xe0d8c8,[Math.sin(a)*.2,.86-i*.01,Math.cos(a)*.17-.01],[0,1,0],[.07,.025,.06],[0,a,-sd*.4],{bn:'chest'})}})}};
 EV38.S.Wispling=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,0)};
-EV38.S.Lumenwisp=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s+1>3?3:s+1,1)};
-EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s+1>3?3:s+1,2)};
+EV38.S.Lumenwisp=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,1)};
+EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,2)};
 // the spirit kits (all stages): no pom-pom at the tail, no halo ring or lantern (Lumenwisp), no waist chain or soul-gem
 // (Soulwarden); the Lumenwisp hood a little darker so its pleats no longer read as a checkerboard
 {const B=LPR.Wispling,k0=B.kit;B.kit=function(k,c,C,red){const v=rv137I('Wispling',rv137('Wispling',c)),p0=k.p,L0=k.L;
