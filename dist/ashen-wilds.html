@@ -64454,7 +64454,7 @@ function dv189Give(c,n){if(!c||!(n>0))return;const L0=dv189Lv(c),hp0=c.h>0?c.h/M
   const i=party.indexOf(c),f=i>=0&&i<2?fols[i]:null;
   let msg='💛 '+nm(c)+'’s Devotion rose to '+L1+' · +'+dv189Pct(dv189Bonus(c))+' all stats';
   if(L0<5&&L1>=5)msg+=' · an extra modifier slot opened';
-  if(L1>=DV189.max){msg='💛 '+nm(c)+' is Devoted! Devotion 10 · +'+dv189Pct(dv189Bonus(c))+' all stats';if(i>=0&&i<2)leadK[i]=''}
+  if(L1>=DV189.max){msg='💛 '+nm(c)+' is Devoted! Devotion 10 · +'+dv189Pct(dv189Bonus(c))+' all stats';if(i>=0&&i<2){leadK[i]='';try{sync()}catch(_){}}}
   say(msg);try{if(f&&f.visible){burst(gY(f.position,.8),0xffc85a,24,1.8,2.4,.8);ring(f.position,0xffc85a,2.2,600)}if(typeof sfx=='function')sfx('chime')}catch(_){}
   try{hsDirty()}catch(_){}}
 function dv189Active(){const n=typeof actN141=='function'?actN141():1;return party.slice(0,n).filter(c=>c&&c.h>0)}

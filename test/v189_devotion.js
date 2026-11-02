@@ -19,6 +19,8 @@
   const fk=Object.keys(SUP).find(k=>SUP[k].c=='food');sup[fk]=(sup[fk]||0)+1;const p0=a.dvp||0;feedComp(a,fk);ok('feed',a.dvp===p0+2);
   // level-up keeps the health share and rebuilds the follower at 10
   a.dvp=DV189.need(1)-1;a.h=M(a);dv189Give(a,1);ok('lvup_full_hp',a.h===M(a));
+  // reaching 10 rebuilds the active follower with the glow at once
+  a.dvp=2799;dv189Give(a,1);ok('follower_glow',!!(fols[0]&&fols[0].getObjectByName('dv189')));
   // glow: own model, the co-op look and the partner's copy
   const g0=cr(mk('Foxlet'));ok('glow_none',!g0.getObjectByName('dv189'));
   const d=mk('Foxlet');d.dvp=2800;ok('glow_own',!!cr(d).getObjectByName('dv189'));

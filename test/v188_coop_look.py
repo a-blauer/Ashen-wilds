@@ -65,7 +65,7 @@ poll(lambda:A.evaluate("()=>__fb.length>0"),30000)
 fb=A.evaluate("()=>__fb")
 chk('partner draws the evolved second bolt in the second colour',0x12ab34 in fb,json.dumps(fb))
 # 4b. v189: a Devoted companion's glow reaches the partner (look field dvd)
-B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.dvp=2800;party[0]=a;leadK[0]=''}")
+B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();a.dvp=2799;dv189Give(a,1)}")  # reach Devotion 10 the way play does
 poll(lambda:A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.mpC&&g.mpC.n=='Foxlet'&&g.getObjectByName('dv189'))}"),60000)
 dv=[B.evaluate("()=>!!(fols[0]&&fols[0].getObjectByName('dv189'))"),A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.getObjectByName('dv189'))}")]
 chk('partner sees the Devoted glow (v189)',dv==[True,True],json.dumps({'own':dv[0],'partner':dv[1]}))
