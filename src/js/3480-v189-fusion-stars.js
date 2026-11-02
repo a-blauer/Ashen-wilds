@@ -49,7 +49,7 @@ function fs189Html(c){const n=typeof c=='number'?c:fs189N(c);if(n<=0)return '';
 // the Fusion window's star spots (rows, the chosen companion, the preview) use the same badge
 FSM100_stars=function(c){return fs189Html(c)};
 {const f=FSM100_helpHTML;FSM100_helpHTML=function(){return f.apply(this,arguments).replace(/<dt>Stars ★<\/dt><dd>[^<]*<\/dd>/,
-  `<dt>Stars ${fs189Html(1)}</dt><dd>Each Fuse or Siphon adds to the companion's star: the 1st gives a bronze star, the 2nd a crest round it, the 3rd a crest and border. Fusions 4–6 do the same in silver, 7–9 in gold and 10–12 in diamond (${fs189Html(12)}); the 13th starts a second star at bronze. Every fusion also marks the companion's body with a small glowing rune, all in that companion's own colour. Stars make it a little bigger; they add no stats by themselves.</dd>`)}}
+  `<dt>Stars ${fs189Html(1)}</dt><dd>Each Fuse or Siphon adds to the companion's star: the 1st gives a bronze star, the 2nd a crest round it, the 3rd a crest and border. Fusions 4–6 do the same in silver, 7–9 in gold and 10–12 in diamond (${fs189Html(12)}); the 13th starts a second star at bronze. Stars make it a little bigger; they add no stats by themselves.</dd>`)}}
 {const st=document.createElement('style');st.textContent=`
 .fs189{display:inline-flex;align-items:center;gap:0;vertical-align:-.28em;margin-left:.22em;line-height:1;white-space:nowrap}
 .fs189-s{display:inline-block;width:1.3em;height:1.3em;font-style:normal}
