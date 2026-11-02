@@ -384,13 +384,13 @@ if(typeof EVO137!='undefined'&&EVO137['Disintegrate'])EVO137['Disintegrate'].run
 function sg2Leg(s){const a=6.2832*s;return [-.92*Math.sin(a)-.08,.28+1.4*Math.pow(Math.max(0,Math.cos(a+.35)),1.4)]}
 var SG2_RUN={
   // Bull Rush: shoulder lowered like a ram, head down, arms tucked
-  tackle:{lean:.66,dy:-.12,P:250,pump:.16,arm:{sy:.42,py:.18,hx:-.42,ax:-.4,az:.28,ex:-1.75,lx:-.8,lz:-.5,le:-1.65},
-    hit:{sx:.86,sy:.68,py:.3,hx:-.5,ax:-.25,az:.35,ex:-1.6,lx:-.9,lz:-.45,le:-1.6,lh:-.85,lk:.62,rh:.6,rk:.25,dy:-.22}},
+  tackle:{lean:.5,dy:-.12,P:250,pump:.16,arm:{sy:.42,py:.18,hx:-.42,ax:-.4,az:.28,ex:-1.75,lx:-.8,lz:-.5,le:-1.65},
+    hit:{sx:.7,sy:.68,py:.3,hx:-.5,ax:-.25,az:.35,ex:-1.6,lx:-.9,lz:-.45,le:-1.6,lh:-.85,lk:.62,rh:.6,rk:.25,dy:-.22}},
   // Crusader's Charge: shield thrust ahead, the weapon held high like a lance about to fall; it falls on the follow-through
-  lance:{lean:.42,dy:-.09,P:270,pump:.07,arm:{hx:-.22,lx:-1.55,lz:.1,le:-.2,ax:-2.7,az:.3,ex:-.7,rw:-.3},
+  lance:{lean:.36,dy:-.09,P:270,pump:.07,arm:{hx:-.22,lx:-1.55,lz:.1,le:-.2,ax:-2.7,az:.3,ex:-.7,rw:-.3},
     hit:{sx:.62,hx:-.28,lx:-1.65,lz:.05,le:-.1,ax:-1.15,az:.1,ex:-.1,rw:.5,lh:-.85,lk:.62,rh:.55,rk:.3,dy:-.2}},
   // Shadow Rush: a low sprint with both blades swept back, then a cross-cut at the end
-  blades:{lean:.8,dy:-.17,P:230,pump:.1,arm:{hx:-.55,ax:.85,az:.25,ex:-.3,lx:.85,lz:-.25,le:-.3,rw:.4,lw:.4},
+  blades:{lean:.62,dy:-.17,P:230,pump:.1,arm:{hx:-.55,ax:.85,az:.25,ex:-.3,lx:.85,lz:-.25,le:-.3,rw:.4,lw:.4},
     hit:{sx:.7,hx:-.45,ax:-1.5,az:-.6,ex:-.1,lx:-1.5,lz:.6,le:-.1,lh:-.9,lk:.75,rh:.6,rk:.35,dy:-.26}}};
 var SG2_RUNS={'Bull Rush':'tackle',"Crusader's Charge":'lance','Shadow Rush':'blades'};
 function sg2RunPose(st){const Y=SG2_RUN[st],ar=Y.arm,hx0=ar.hx!=null?ar.hx:-Y.lean*.5,
