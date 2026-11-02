@@ -371,7 +371,7 @@ EV38.spirit=function(E,L,P,c,s,v){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s)ret
   const base=new THREE.Color(P.C),deep=T.dim(base.clone().lerp(new THREE.Color(v==2?0x0a0a14:0x1a2a3a),v==2?.7:.55).getHex(),.8),pale=base.clone().lerp(new THREE.Color(0xe4ecf0),v==1?.55:.28).getHex(),
     hood=v==1?T.dim(base.clone().lerp(new THREE.Color(0xd8d4c8),.6).getHex(),.85):T.dim(base.clone().lerp(new THREE.Color(0x2a2a34),.72).getHex(),.6),eye=v==1?0xfff0b0:v==2?0x7affd0:0x9ff0ff,claw=0x1a1820;
   // tattered strands from the robe's lower body, trailing down and back
-  const n=3+2*s;for(let i=0;i<n;i++){const a=Math.PI+(i/(n-1)-.5)*2.4,y0=.42-(i%2)*.06,h=R.on([Math.sin(a)*.6,y0,Math.cos(a)*.6-.05],[-Math.sin(a),0,-Math.cos(a)]);if(!h)continue;
+  const n=3+2*s;for(let i=0;i<n;i++){const a=Math.PI+(i/(n-1)-.5)*2.4,y0=.42-(i%2)*.06,h=R.on([Math.sin(a)*.6,y0,Math.cos(a)*.6-.05],[-Math.sin(a),0,-Math.cos(a)]);if(!h||Math.hypot(h.p[0],h.p[2]+.05)>.16)continue;   // on the robe, not on a trailing tendril
     const len=.16+.07*s+(i%3)*.03,p0=R.add(h.p,h.n,-.01),dir=[Math.sin(a)*.25,-1,Math.cos(a)*.5-.35];
     R.loft([{p:p0,r:.022,col:deep,sk:['pelvis','tail0',.5]},{p:R.add(p0,R.nrm(dir),len*.45),r:.016,col:deep,sk:['tail0','tail1',.5]},{p:R.add(p0,R.nrm(dir),len),r:.003,col:T.dim(deep,.7),sk:['tail1','tail2',.5]}],5,'c')}
   // the hem shreds: jagged points round the robe's skirt
@@ -399,5 +399,8 @@ EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,2)};
     if(v==2&&bn=='chest'&&(geo=='oct'||geo=='tor'))return k;if(v==2&&bn=='pelvis'&&t=='m')return k;
     if(v==1&&bn=='head'&&typeof geo!='string'&&t=='c'&&x===0&&sx===1)return p0.call(k,bn,geo,t,dkShade(col,.82),x,y,z,sx,sy,sz,rx,ry,rz);return p0.apply(k,arguments)};
   k.L=function(bn,t,col){if(v==1&&bn=='head'&&t=='g'&&(col===0xfff0b0||col===0xffe080))return k;if(v==1&&bn=='fr2'&&t=='m')return k;if(v==2&&bn=='pelvis'&&t=='m')return k;return L0.apply(k,arguments)};
-  try{return k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
+  const n0=k.P?k.P.length:0;let r;try{r=k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}
+  // chain links are pushed straight into the part list (lk180Link): drop Soulwarden's belt and Lumenwisp's lantern chain
+  if(k.P&&v)for(let i=k.P.length-1;i>=n0;i--){const q=k.P[i];if(q&&q.t=='m'&&((v==2&&q.bn=='pelvis')||(v==1&&q.bn=='fr2')))k.P.splice(i,1)}
+  return r}}
 ['Boneling','Wispling'].forEach(ev38Hook);
