@@ -114,7 +114,7 @@ sgExec=function(p,yaw,col,low,lvl,land){if(!p)return;sgBusy(()=>sgHeadsman(p,yaw
 // ======================= 4. Rain of Arrows / Arrowstorm: real arrows falling and sticking in the ground =======================
 function sg2ArrowGeo(){return sgG('sg2arrow',()=>{const sh=new THREE.CylinderGeometry(.022,.022,.92,5);sh.rotateX(Math.PI/2);
   const hd=new THREE.ConeGeometry(.055,.17,4);hd.rotateX(Math.PI/2);hd.translate(0,0,.54);const parts=[[sh,0x8a6a44],[hd,0x9aa0a8]];
-  [0,1,2].forEach(i=>{const f=new THREE.PlaneGeometry(.075,.2);f.rotateY(Math.PI/2);f.translate(0,.045,-.36);f.rotateZ(i*2.094);parts.push([f,i?0xe8e0d0:0xa83a2a])});return sg2Merge(parts)})}
+  [0,1,2].forEach(i=>{const f=new THREE.PlaneGeometry(.042,.26);f.rotateX(Math.PI/2);f.rotateZ(Math.PI/2);f.translate(0,.03,-.33);f.rotateZ(i*2.094);parts.push([f,i?0xe8e0d0:0xa83a2a])});return sg2Merge(parts)})}
 function sgArrowRain(p,R,ms,lvl,col){if(!p)return;lvl=lvl|0;R=R||3;ms=Math.max(800,ms||2800);col=col||0xe8d8b0;const N=lvl?120:72,G=sg2ArrowGeo(),c2=lvl?sgC2(col):0xffffff;
   const mat=sg2Std({vertexColors:true,roughness:.7,metalness:.25,emissive:lvl?sgLerp(c2,0x000000,.45):0x000000,emissiveIntensity:lvl?.9:0,transparent:true,opacity:1});
   const im=new THREE.InstancedMesh(G,mat,N);im.userData.lpsSkip=1;im.frustumCulled=false;im.renderOrder=31;const g=new THREE.Group();g.add(im);
