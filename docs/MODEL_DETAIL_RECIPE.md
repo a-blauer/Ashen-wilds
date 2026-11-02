@@ -302,6 +302,9 @@ enemy: keys `E137…` are skipped) with the recipe:
   horns, tails, ruffs, bone or crystal growths, glowing tips and veins, a crowning piece last), designed per stage
   (`ev38St`: the four looks a species can show) and drawn with `E.raw` (no EVO186 caps; keep the restraint by hand).
   Root every piece in the surface (`R.top` / `R.on` hit, sunk a few mm), never at a fixed point above it.
+  Round 2 (review: "the body almost never grows, only small add-ons"): grow the creature's own features at body scale with
+  `EV38T.swell` (a mane, a jaw, thighs, a hump, an abdomen bulge out of the body itself; fur roughness and a sweep for manes),
+  bigger horns / fangs / ears / wingspan, and few separate pieces. No crowns, bands, gems, chains, lanterns, plates or icons.
 - **One-piece parts:** a beak is one keeled, hooked mandible that darkens toward the point (`bk186Geo`), never two or three round
   tubes joined at an angle. The same goes for horns, claws and fangs that should read as one solid piece.
 - **Eyes must show:** an eye sits proud of the head (a frog's on a turret), never sunk inside a lid shape; check it from the side.
