@@ -10578,7 +10578,11 @@ function rigAnim(x,now,mv,sp){
   }
   if(ty=='float')['fl','fr'].forEach((k,i)=>{if(b[k+'0']){b[k+'0'].rotation.z=(i?1:-1)*(.25+Math.sin(now/500+i*2)*.15);b[k+'0'].rotation.x=.35*w*Math.min(1,G.v/3)}});
   x.ears.forEach(e=>{e.rotation.z=e.userData.rz+Math.sin(now/620+e.userData.sd)*.06;e.rotation.x=A?-.5:-.12-.18*run*w+.05*w*Math.sin(TAU*2*P-.8)});
-  x.wings.forEach(wg=>{wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*(ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w))});
+  // v187: the flap strength eases (quick up when an attack starts, slow back down after it) instead of dropping from the
+  // attack strength to the rest strength in one frame, which made wings snap back into place after every attack
+  x.wings.forEach(wg=>{const am=ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w;
+    wg._am=wg._am==null?am:!(dt>0)?wg._am:wg._am+(am-wg._am)*(1-Math.exp(-dt*(am>wg._am?14:3.5)));
+    wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*wg._am)});
   const bob=Lm*w*((1-run)*.012*(.5+.5*Math.cos(TAU*2*(P-beta*.5)))+run*(1-gal)*.045*(.5-.5*Math.cos(TAU*2*(P-beta*.5)))+gal*.08*(.5+.5*Math.cos(TAU*(P-.92))))*(slow?.5:1);
   B.position.y=ty=='fly'?.4+Math.sin(now/180)*.06:ty=='float'?.3+Math.sin(now/500)*.07:ty=='spider'?bob*.4:ty=='hop'?hopY:bob;
 }
@@ -23039,9 +23043,10 @@ function mvEval105(M,k,A,L){const K=M.K;let i=0;while(i<K.length-2&&k>K[i+1][0])
 function mvPlay105(a,R,to,onHit){const M=MV105[R.m]||MV105.snap,D=M.D*(R.d||1),A=R.a||1,L=to?Math.max(0,V().subVectors(to,a.position).setY(0).length()-1.1):0;let hit=0;
   const S={M,k:0,A,L:Math.min(4,L)*(R.zr||1),sgn:R.sg||1};a._m105=S;
   tw(D,k=>{S.k=k;if(!hit&&k>=M.h){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}},()=>{if(!hit){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}a._m105=null;try{a.b.position.z=0;a.b.rotation.set(0,0,0)}catch(_){}})}
+// v187: the wing ability's flutter fades out over the last fifth of the move (it stopped dead)
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){f.apply(this,arguments);try{const g=x.g,S=g&&g._m105;if(!S)return;const [o,B]=mvEval105(S.M,S.k,S.A,S.L);const Lm=gaLegLen(x.spec);
     crApply(x,o,Lm);x.b.position.z=B.z;x.b.position.y+=B.y*Lm*2.2;x.b.rotation.set(B.rx,B.ry*S.sgn,B.rz);
-    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing})}catch(e){}}}
+    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing*Math.min(1,Math.max(0,(1-S.k)*5))})}catch(e){}}}
 // ---------- the recipes ----------
 // ctx: c companion, f its model, sp spell, t target (may be null), P companion position, d facing, tp target position, hp hero position
 const HP5=()=>pl.position;
@@ -29008,7 +29013,7 @@ MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
     MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
 // projectiles: the real shot stays local; partners get a ghost
 {const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
-  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||1),mpvR(+life||1.1)])}catch(_){}
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1)])}catch(_){}
   return f.apply(this,arguments)}}
 // companion moves: lunge / bolt / spell motion on fols[0|1]
 function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
@@ -29084,7 +29089,7 @@ function mpvPlay(r,e){
       let hit=typeof solid=='function'&&solid(Math.round(x),Math.round(z));if(!hit)for(const en of enemies){if(!en.dead&&en.m&&Math.abs(en.m.position.x-x)<1&&Math.abs(en.m.position.z-z)<1){hit=true;break}}
       if(hit){gone=true;m.visible=false;try{burst(m.position,e[9]|0||0xffffff,8,1.6,1.2,.35)}catch(_){}}},()=>scene.remove(m))}
   else if(T==='C'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible)return;const to=typeof e[5]=='number'&&typeof e[6]=='number'?new THREE.Vector3(e[5],GH(e[5],e[6]),e[6]):null;
-    MPV.rep++;try{if(e[3]==='l'&&to)lunge(g,to,null);else if(e[3]==='m'&&typeof SPX105!='undefined'&&SPX105[e[4]]&&Object.prototype.hasOwnProperty.call(SPX105,e[4]))mvPlay105(g,SPX105[e[4]],to,null)}catch(_){}finally{MPV.rep--}}
+    MPV.rep++;try{if(e[3]==='l'&&to)lunge(g,to,null);else if(e[3]==='m'&&typeof SPX105!='undefined'&&SPX105[e[4]]&&Object.prototype.hasOwnProperty.call(SPX105,e[4]))mvPlay105(g,SPX105[e[4]],to,()=>{})}catch(_){}finally{MPV.rep--}}
   else if(T==='B'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible||!g.mpC)return;const p=new THREE.Vector3(+e[3]||0,+e[4]||0,+e[5]||0);
     MPV.rep++;try{compBolt(g,g.mpC,{m:{position:p},dead:false},()=>{})}catch(_){}finally{MPV.rep--}}}
 {const f=mpOnEV;mpOnEV=function(msg){
@@ -36771,9 +36776,9 @@ ATK.orb=atkTrack([[0,ATK_REST],
   [1,ATK_REST,'io']]);
 {const f=staffAnim;staffAnim=function(ms){try{if(atkWT()=='orb'){ORB141.t0=performance.now();ORB141.d=Math.max(200,ms||600)}}catch(_){}return f.apply(this,arguments)}}
 // how far into the orb attack (0 = not attacking; the attack's own progress, HA.cur.k); ease in over the first 20%, out over the last 25%
-function orb141K(){const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
+function orb141K(H){const A=wa188A(H||pl);if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
 {const f=fc116Apply;fc116Apply=function(H){
-  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=H===pl&&W?orb141K():0;if(!k)return f.apply(this,arguments);
+  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=W&&wa188Mine(H)?orb141K(H):0;if(!k)return f.apply(this,arguments);
   const C=FC116.H.orb,h0=C.hand,S=H._brS,a0=S?S.a:1;
   try{C.hand=h0.map((v,i)=>v+(ORB141.ext[i]-v)*k);if(S)S.a=Math.max(a0,k);f.apply(this,arguments)}finally{C.hand=h0;if(S)S.a=a0}
   // the orb floats upright a little above the palm while the attack lasts (placed in the world: whatever the wrist does)
@@ -58404,13 +58409,13 @@ ST179.ss165zealot=Object.assign({},ST179.ss165zealot,{lz:-.05});ST179.ss165calle
 // The shape follows the species: Skyhawk a broad rounded hawk wing, Stormtalon a long narrow pointed falcon wing, Rocsovereign
 // a broad eagle wing whose outer primaries spread into "fingers".
 // The wing folds: three key shapes (spread, half-open, folded along the flank) are built for every wing and blended on the
-// CPU into shared geometries at 11 steps (BW184.lv), so instances share them and nothing is made per creature. Standing, the
+// CPU into shared geometries at 49 steps (BW184.lv; 11 before v187, which made the fold visibly step), so instances share them and nothing is made per creature. Standing, the
 // wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
 // (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
 // Evolution: the wing grows 2% per level (v186; was 6%) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
-var BW184={lv:10,G:{},
+var BW184={lv:48,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
   sp:{
     Skyhawk:{T:()=>HWK_BODY,zs:.15,arm:[.13,.2,.15],rad:[.03,.024,.016],
@@ -62039,10 +62044,10 @@ if(typeof EVO100!='undefined'&&EVO100.surf){delete EVO100.surf.Cryptspider;delet
 //    so a bite shows palate, tongue and two rows of teeth;
 //  * eyes are glowing almonds with a slit pupil set in a painted, sunken socket under a brow ridge;
 //  * membrane wings with an arm, four fingers and a scalloped trailing edge that FOLD along the flank at rest and
-//    spread to attack, fly or use a wing ability (three key shapes blended into 11 shared geometries, like the v184
+//    spread to attack, fly or use a wing ability (three key shapes blended into 49 shared geometries (11 before v187), like the v184
 //    bird wings); their evolution is built into the wing (claws, darker edges, glowing veins);
 //  * evolution looks rebuilt per species for the new bodies (EVO100.D.Drakelet / .Gravewyrm), one theme each.
-var DG186={on:true,lv:10,WG:{},WD:{}};
+var DG186={on:true,lv:48,WG:{},WD:{}};
 function dgW(a,b,t){const o={};o[a]=1-(t||0);if(t)o[b]=(o[b]||0)+t;return o}
 function dgMixW(A,B,t){const o={};for(const k in A)o[k]=(o[k]||0)+A[k]*(1-t);for(const k in B)o[k]=(o[k]||0)+B[k]*t;return o}
 function dgSm(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
@@ -63441,7 +63446,7 @@ function ev38Grow(g,c,n){const sp=c&&c.g&&c.g[0],gr=EV38G.grp[sp],S=SPEC[n];if(!
 // lens streak and a colour halo, columns get a rising double helix of motes, lances crackle along their length.
 // Everything is shared geometry / textures with per-effect materials freed at the end (evxRm), and partners see it (the
 // MPV wrappers on ev137* from 2710 sit inside these).
-function ev186C2(col){const E=typeof EV137!='undefined'&&EV137.cur;return E&&E.c2!=null?evxCol(E.c2):evxLerp(col,0xffffff,.5)}
+function ev186C2(col){const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();return E&&E.c2!=null?evxCol(E.c2):evxLerp(col,0xffffff,.5)}
 // a glowing scorch on the ground that lingers after the blast
 function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(col,0,evxTex('soft'))),h=evxMesh(evxDisk(),evxAdd(evxLerp(col,0x200800,.5),0,evxTex('glyph')));
   const b=evxGY(p,.06);g.position.copy(b);h.position.copy(b);h.position.y+=.01;g.scale.setScalar(R);h.scale.setScalar(R*.8);h.rotation.y=Math.random()*6.28;scene.add(g,h);
@@ -63466,7 +63471,7 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
   fx186Flash(b,c2,Math.min(2.2,.7+(w||.12)*6),(ms||300)*.7)}}catch(_){}return r}}
 // an evolved cast's lightning: a second, thicker forked bolt in the class's second colour that lingers (the evolved lance
 // alone was as thin as the standard bolt)
-{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur;if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}
+{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}
 // ================= v186: every ability its own move and its own look =================
 // Owner (Nov 1 2026): "Whirlwind's effect should be shown all around him", "Chain hook needs a better chain model", "Single target
 // abilities and some aoe attacks that come from the character … seem too similar to a regular attack … Make sure each ability has
@@ -63493,7 +63498,7 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
 var SG={t:{},g:{},V:[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()],Q:new THREE.Quaternion(),Q2:new THREE.Quaternion(),
   X:new THREE.Vector3(1,0,0),Y:new THREE.Vector3(0,1,0),Z:new THREE.Vector3(0,0,1),W:new THREE.Color(0xffffff),C:new THREE.Color(),C2:new THREE.Color()};
 function sgEvo(){return typeof EV137!='undefined'&&EV137.cur?1:0}
-function sgC2(col){const E=typeof EV137!='undefined'&&EV137.cur;return E&&E.c2!=null?E.c2:new THREE.Color(col).lerp(SG.W,.55).getHex()}
+function sgC2(col){const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();return E&&E.c2!=null?E.c2:new THREE.Color(col).lerp(SG.W,.55).getHex()}
 function sgLerp(a,b,t){return new THREE.Color(a).lerp(new THREE.Color(b),t).getHex()}
 function sgYaw(d){return Math.atan2(d.x,d.z)}
 // run fn with the evolved companions held off (our own shapes are the evolved look)
@@ -63948,9 +63953,9 @@ function wa186Key(K,k,C){const sm=x=>x*x*(3-2*x),hc=C.hand,dc=C.dir||[0,0,1];let
   const A=K[i],B=K[i+1],t=sm(Math.max(0,Math.min(1,(k-A[0])/((B[0]-A[0])||1)))),h0=A[1]||hc,h1=B[1]||hc,d0=A[2]||dc,d1=B[2]||dc;
   const d=d0.map((v,j)=>v+(d1[j]-v)*t),l=Math.hypot(d[0],d[1],d[2])||1;return {hand:h0.map((v,j)=>v+(h1[j]-v)*t),dir:d.map(v=>v/l)}}
 {const f=fc116Apply;fc116Apply=function(H){
-  if(!WA186.on||H!==pl||!H||!H._brS)return f.apply(this,arguments);
+  if(!WA186.on||!H||!wa188Mine(H)||!H._brS)return f.apply(this,arguments);
   const W=(H.gearG||[]).find(o=>o&&o.userData&&(o.userData.wt=='wand'||o.userData.wt=='orb')&&o.parent);if(!W)return f.apply(this,arguments);
-  const wt=W.userData.wt,A=typeof HA!='undefined'?HA.cur:null,basic=wa186Basic(A,wt),now=performance.now();
+  const wt=W.userData.wt,A=wa188A(H),basic=wa186Basic(A,wt),now=performance.now();
   // the hold weight: 1 through basic attacks and the gaps between them, eases out for other actions (abilities) and back in
   let g=H._wa186==null?1:H._wa186;const dt=Math.min(.1,Math.max(0,(now-(H._wa186t==null?now:H._wa186t))/1000));
   if(H._wa186t!==now){H._wa186t=now;const out=A&&!basic&&!A.mv164;g=out?Math.max(0,g-dt*WA186.down):Math.min(1,g+dt*(basic?WA186.down:WA186.up));H._wa186=g}
@@ -63990,7 +63995,7 @@ try{if(typeof pl!='undefined'&&pl&&pl.bones&&pl._grip)gripReg(pl)}catch(_){}
 WB127.knife1=.77;
 WDESC.knives='Throws one knife at a time, straight at your target. It pierces a second enemy and can cause bleeding.';
 WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
-  launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})};
+  launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})};
 // ================= v186 round 2: the owner's ability review (Nov 1 2026) =================
 // Owner: "Execute and headsman verdict just looks like a box falling from the sky", "During penance, the character un-kneels
 // between beams", "During all charge spells/abilities … they kind of just drift forward", "Rain of arrows should have visible
@@ -64478,6 +64483,51 @@ function sg2Rename(T){if(!T||typeof T!='object'||T.__rn186===SG2_RN)return;
 {const f=KQS.cdn;try{for(const o in SG2_RN)if(f&&f[o]!=null){f[SG2_RN[o]]=f[o];delete f[o]}}catch(_){}}
 
 sg2Reg(['sgHeadsman','sgExec','sgArrowRain','sgBlizzard','sgMeteor','sgSingularity','sgDisBeam','sgBallista','sgBoltHit','sgHawkFly']);
+// v188 co-op look (owner, Nov 2 2026: "confirm that all the changes we've made are visible and working in co-op"; then "fix these").
+// What a partner saw differently from the player's own screen, and the fixes:
+// 1. The raven's wand / orb hold (v186 WA186, v141 orb float) only ran for the player's own hero: a partner saw the old wand
+//    tumble. Now a partner's hero runs the same hold. The pose message ('P', 2170) carries which attack it is (e[5]: 'w' wand
+//    basic, 'o' orb basic, '' anything else) and its progress is tracked on the partner (H._mpvA {pose, k}); wa188A(H) gives the
+//    attack the hold reads (HA.cur for the player's own hero), wa188Mine(H) says the hold may run for H.
+// 2. An evolved cast's second colour: a partner's replay had no EV137.cur, so the v186 extras fell back to a white blend and the
+//    evolved second lightning bolt (3440) was missing. The effect message ('V') carries the caster's second colour (e[8]); while
+//    it is replayed ev188Rep() returns {c2}, which ev186C2 / sgC2 / the 3440 bolt read. (The v137 extras on ring / burst / area
+//    are already relayed as their own effects, so EV137.cur itself stays unset on the partner: no doubled extras.)
+// 3. A partner's companion bolt: the little hop of the cast's wind-up (0860) now plays on the partner's copy too.
+// 4. The thrown knife's ghost has the knife's size (launch option mpSc, read by the 'L' message in 2170).
+// 5. fxOrbit / fxRise / fxFall replayed without their particle maker (a function cannot be sent; the particles they make are
+//    relayed on their own) threw on the partner: now they do nothing without one. A replayed companion move gets an empty
+//    strike callback (2170) instead of null.
+// Old partners ignore the extra message fields; a partner on an older version still sees the old look.
+var WA188={on:true},EV188={cur:null};
+function ev188Rep(){return EV188.cur}
+function wa188Mine(H){if(!H)return false;if(H===pl)return true;if(!WA188.on)return false;
+  if(H._mp188)return true;let ok=false;try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){if(MP.rh[k]&&MP.rh[k].m===H){ok=true;break}}}catch(_){}
+  if(ok)H._mp188=1;return ok}
+function wa188A(H){if(!H||H===pl)return typeof HA!='undefined'?HA.cur:null;const A=H._mpvA;return A&&H._mpvP===A.id?A:null}
+// recording: tag the pose and the evolved colour onto the outgoing messages (mpvPush puts the time in at index 1)
+MPV.pTag=null;
+{const f=haPlay;haPlay=function(ms,pose){const o=MPV.pTag;
+  MPV.pTag=typeof ATK!='undefined'&&pose&&pose===ATK.wand?'w':typeof ATK!='undefined'&&pose&&pose===ATK.orb?'o':'';
+  try{return f.apply(this,arguments)}finally{MPV.pTag=o}}}
+{const f=mpvPush;mpvPush=function(e){try{
+  if(Array.isArray(e)&&e[0]==='P'&&MPV.pTag!=null)e.push(MPV.pTag);
+  else if(Array.isArray(e)&&e[0]==='V'&&e.length===7){const C=typeof EV137!='undefined'&&EV137.cur;if(C&&C.c2!=null)e.push(new THREE.Color(C.c2).getHex())}
+  }catch(_){}return f.apply(this,arguments)}}
+// replay on the partner
+{const f=mpvPlay;mpvPlay=function(r,e){const T=Array.isArray(e)?e[0]:null;
+  if(T==='V'&&typeof e[8]=='number'&&isFinite(e[8])){const o=EV188.cur;EV188.cur={c2:e[8]&0xffffff};try{return f.apply(this,arguments)}finally{EV188.cur=o}}
+  if(T==='B'){try{const g=r&&r.fl&&r.fl[e[2]|0],b=g&&g.visible&&g.b;
+    if(b&&!b._hop188){b._hop188=1;tw(220,k=>{b.position.y=Math.sin(k*Math.PI)*.12;b.rotation.x=-Math.sin(k*Math.PI)*.25},()=>{b._hop188=0;b.position.y=0;b.rotation.x=0})}}catch(_){}}
+  const h=T==='P'&&r&&r.m,id0=h?h._mpvP:0,res=f.apply(this,arguments);
+  if(h&&h._mpvP!==id0){const tg=typeof e[5]=='string'?e[5]:null;
+    if(tg==null||typeof ATK=='undefined')h._mpvA=null;
+    else{const A={pose:tg=='w'?ATK.wand:tg=='o'?ATK.orb:{},k:0,id:h._mpvP};h._mpvA=A;const ms=Math.max(60,Math.min(4000,+e[2]||300));
+      tw(ms,k=>{A.k=Math.max(0,Math.min(1,k))},()=>{A.k=1;if(h._mpvA===A)h._mpvA=null})}}
+  return res}}
+// particle makers that cannot be sent
+[['fxOrbit',6],['fxRise',5],['fxFall',5]].forEach(([n,j])=>{const f=window[n];if(typeof f!='function')return;
+  window[n]=function(){if(typeof arguments[j]!='function')return;return f.apply(this,arguments)}});
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

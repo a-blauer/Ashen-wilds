@@ -24,7 +24,7 @@
 var SG={t:{},g:{},V:[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()],Q:new THREE.Quaternion(),Q2:new THREE.Quaternion(),
   X:new THREE.Vector3(1,0,0),Y:new THREE.Vector3(0,1,0),Z:new THREE.Vector3(0,0,1),W:new THREE.Color(0xffffff),C:new THREE.Color(),C2:new THREE.Color()};
 function sgEvo(){return typeof EV137!='undefined'&&EV137.cur?1:0}
-function sgC2(col){const E=typeof EV137!='undefined'&&EV137.cur;return E&&E.c2!=null?E.c2:new THREE.Color(col).lerp(SG.W,.55).getHex()}
+function sgC2(col){const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();return E&&E.c2!=null?E.c2:new THREE.Color(col).lerp(SG.W,.55).getHex()}
 function sgLerp(a,b,t){return new THREE.Color(a).lerp(new THREE.Color(b),t).getHex()}
 function sgYaw(d){return Math.atan2(d.x,d.z)}
 // run fn with the evolved companions held off (our own shapes are the evolved look)

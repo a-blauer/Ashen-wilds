@@ -73,6 +73,7 @@ v148_boss_splash.py
 v148_revive.py
 v150_checks.py
 v150_coop.py
+v188_coop_look.py
 v150_ritual.py
 TIMES=4,20,27,40,53,57.5 v151_intro.py
 v151_intro_live.py

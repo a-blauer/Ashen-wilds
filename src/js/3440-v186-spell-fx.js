@@ -6,7 +6,7 @@
 // lens streak and a colour halo, columns get a rising double helix of motes, lances crackle along their length.
 // Everything is shared geometry / textures with per-effect materials freed at the end (evxRm), and partners see it (the
 // MPV wrappers on ev137* from 2710 sit inside these).
-function ev186C2(col){const E=typeof EV137!='undefined'&&EV137.cur;return E&&E.c2!=null?evxCol(E.c2):evxLerp(col,0xffffff,.5)}
+function ev186C2(col){const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();return E&&E.c2!=null?evxCol(E.c2):evxLerp(col,0xffffff,.5)}
 // a glowing scorch on the ground that lingers after the blast
 function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(col,0,evxTex('soft'))),h=evxMesh(evxDisk(),evxAdd(evxLerp(col,0x200800,.5),0,evxTex('glyph')));
   const b=evxGY(p,.06);g.position.copy(b);h.position.copy(b);h.position.y+=.01;g.scale.setScalar(R);h.scale.setScalar(R*.8);h.rotation.y=Math.random()*6.28;scene.add(g,h);
@@ -31,4 +31,4 @@ function ev186Scorch(p,col,R,ms){if(!p)return;const g=evxMesh(evxDisk(),evxAdd(c
   fx186Flash(b,c2,Math.min(2.2,.7+(w||.12)*6),(ms||300)*.7)}}catch(_){}return r}}
 // an evolved cast's lightning: a second, thicker forked bolt in the class's second colour that lingers (the evolved lance
 // alone was as thin as the standard bolt)
-{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur;if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}
+{const f=bolt;bolt=function(a,b,col){const r=f.apply(this,arguments);try{const E=typeof EV137!='undefined'&&EV137.cur||ev188Rep();if(E&&!EV137.busy&&a&&b&&evxLimit('b186',70))fx186Bolt(a,b,ev186C2(evxCol(col)),1.8,440)}catch(_){}return r}}

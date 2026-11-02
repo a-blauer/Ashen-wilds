@@ -11,9 +11,9 @@ ATK.orb=atkTrack([[0,ATK_REST],
   [1,ATK_REST,'io']]);
 {const f=staffAnim;staffAnim=function(ms){try{if(atkWT()=='orb'){ORB141.t0=performance.now();ORB141.d=Math.max(200,ms||600)}}catch(_){}return f.apply(this,arguments)}}
 // how far into the orb attack (0 = not attacking; the attack's own progress, HA.cur.k); ease in over the first 20%, out over the last 25%
-function orb141K(){const A=typeof HA!='undefined'&&HA.cur;if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
+function orb141K(H){const A=wa188A(H||pl);if(!A||A.pose!==ATK.orb)return 0;const t=A.k;if(!(t>=0&&t<1))return 0;const e=x=>x*x*(3-2*x);return t<.2?e(t/.2):t>.75?e((1-t)/.25):1}
 {const f=fc116Apply;fc116Apply=function(H){
-  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=H===pl&&W?orb141K():0;if(!k)return f.apply(this,arguments);
+  const W=H&&(H.gearG||[]).find(o=>o&&o.userData&&o.userData.wt=='orb'),k=W&&wa188Mine(H)?orb141K(H):0;if(!k)return f.apply(this,arguments);
   const C=FC116.H.orb,h0=C.hand,S=H._brS,a0=S?S.a:1;
   try{C.hand=h0.map((v,i)=>v+(ORB141.ext[i]-v)*k);if(S)S.a=Math.max(a0,k);f.apply(this,arguments)}finally{C.hand=h0;if(S)S.a=a0}
   // the orb floats upright a little above the palm while the attack lasts (placed in the world: whatever the wrist does)

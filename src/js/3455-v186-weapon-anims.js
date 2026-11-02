@@ -25,9 +25,9 @@ function wa186Key(K,k,C){const sm=x=>x*x*(3-2*x),hc=C.hand,dc=C.dir||[0,0,1];let
   const A=K[i],B=K[i+1],t=sm(Math.max(0,Math.min(1,(k-A[0])/((B[0]-A[0])||1)))),h0=A[1]||hc,h1=B[1]||hc,d0=A[2]||dc,d1=B[2]||dc;
   const d=d0.map((v,j)=>v+(d1[j]-v)*t),l=Math.hypot(d[0],d[1],d[2])||1;return {hand:h0.map((v,j)=>v+(h1[j]-v)*t),dir:d.map(v=>v/l)}}
 {const f=fc116Apply;fc116Apply=function(H){
-  if(!WA186.on||H!==pl||!H||!H._brS)return f.apply(this,arguments);
+  if(!WA186.on||!H||!wa188Mine(H)||!H._brS)return f.apply(this,arguments);
   const W=(H.gearG||[]).find(o=>o&&o.userData&&(o.userData.wt=='wand'||o.userData.wt=='orb')&&o.parent);if(!W)return f.apply(this,arguments);
-  const wt=W.userData.wt,A=typeof HA!='undefined'?HA.cur:null,basic=wa186Basic(A,wt),now=performance.now();
+  const wt=W.userData.wt,A=wa188A(H),basic=wa186Basic(A,wt),now=performance.now();
   // the hold weight: 1 through basic attacks and the gaps between them, eases out for other actions (abilities) and back in
   let g=H._wa186==null?1:H._wa186;const dt=Math.min(.1,Math.max(0,(now-(H._wa186t==null?now:H._wa186t))/1000));
   if(H._wa186t!==now){H._wa186t=now;const out=A&&!basic&&!A.mv164;g=out?Math.max(0,g-dt*WA186.down):Math.min(1,g+dt*(basic?WA186.down:WA186.up));H._wa186=g}
@@ -67,4 +67,4 @@ try{if(typeof pl!='undefined'&&pl&&pl.bones&&pl._grip)gripReg(pl)}catch(_){}
 WB127.knife1=.77;
 WDESC.knives='Throws one knife at a time, straight at your target. It pierces a second enemy and can cause bleeding.';
 WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;swingAnim(0,Math.max(170,base*420),()=>{const d2_=aimDir();face(d2_);
-  launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})};
+  launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})};

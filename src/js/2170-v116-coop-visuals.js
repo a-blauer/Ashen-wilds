@@ -72,7 +72,7 @@ MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
     MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
 // projectiles: the real shot stays local; partners get a ghost
 {const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
-  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||1),mpvR(+life||1.1)])}catch(_){}
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1)])}catch(_){}
   return f.apply(this,arguments)}}
 // companion moves: lunge / bolt / spell motion on fols[0|1]
 function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
@@ -148,7 +148,7 @@ function mpvPlay(r,e){
       let hit=typeof solid=='function'&&solid(Math.round(x),Math.round(z));if(!hit)for(const en of enemies){if(!en.dead&&en.m&&Math.abs(en.m.position.x-x)<1&&Math.abs(en.m.position.z-z)<1){hit=true;break}}
       if(hit){gone=true;m.visible=false;try{burst(m.position,e[9]|0||0xffffff,8,1.6,1.2,.35)}catch(_){}}},()=>scene.remove(m))}
   else if(T==='C'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible)return;const to=typeof e[5]=='number'&&typeof e[6]=='number'?new THREE.Vector3(e[5],GH(e[5],e[6]),e[6]):null;
-    MPV.rep++;try{if(e[3]==='l'&&to)lunge(g,to,null);else if(e[3]==='m'&&typeof SPX105!='undefined'&&SPX105[e[4]]&&Object.prototype.hasOwnProperty.call(SPX105,e[4]))mvPlay105(g,SPX105[e[4]],to,null)}catch(_){}finally{MPV.rep--}}
+    MPV.rep++;try{if(e[3]==='l'&&to)lunge(g,to,null);else if(e[3]==='m'&&typeof SPX105!='undefined'&&SPX105[e[4]]&&Object.prototype.hasOwnProperty.call(SPX105,e[4]))mvPlay105(g,SPX105[e[4]],to,()=>{})}catch(_){}finally{MPV.rep--}}
   else if(T==='B'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible||!g.mpC)return;const p=new THREE.Vector3(+e[3]||0,+e[4]||0,+e[5]||0);
     MPV.rep++;try{compBolt(g,g.mpC,{m:{position:p},dead:false},()=>{})}catch(_){}finally{MPV.rep--}}}
 {const f=mpOnEV;mpOnEV=function(msg){

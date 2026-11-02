@@ -93,3 +93,5 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 # v186: weapon basic attacks (3455): the raven keeps his wand / orb hold through basic attacks, claws fitted to the paw, dagger finisher, one throwing knife
 3455|v186|2220|2990|1705|0580|2300|2900|1270: v186_weapon_anims.py v186_knife.py v163_weapons.py v148_edges.py
 0890-v85|v184-bird|3436-v186-dragons|3437-v186|1930-v105|wing: v187_wing_retract.py v184_bird_wings.py
+# v188: co-op look (3470): a partner sees the companions at their evolution, the wand hold, an evolved cast's second colour and bolt
+3470|v188|coop|co-op|2170|3455|2990|3440|3450|0107|0890|3396|3436|3438|1710|0120|0080|0610: v188_coop_look.py
