@@ -190,8 +190,8 @@ function sg2RockGeo(){return sgG('sg2rock',()=>{const q=new THREE.DodecahedronGe
 // a cone with its wide end at the origin and its point toward +z (comet tails, wakes)
 function sg2TailGeo(){return sgG('sg2tail',()=>{const q=new THREE.ConeGeometry(1,1,12,1,true);q.translate(0,.5,0);q.rotateX(Math.PI/2);return q})}
 function sgMeteor(p,col,R,ms,lvl,from,sc){if(!p)return;lvl=lvl|0;col=col||0xff5a1a;R=R||3.5;ms=Math.max(400,ms||1100);sc=(sc||1)*(1+lvl*.3);const c2=lvl?sgC2(col):0xffd080,b=gY(p,0),Tf=Math.min(ms,900),t0=ms-Tf,rs=.85*sc*Math.max(.8,R/3.5);
-  // falls from high up, from beyond the caster's shoulder
-  const fy=from?Math.atan2(p.x-from.x,p.z-from.z):Math.random()*6.283,S0=new THREE.Vector3(b.x-Math.sin(fy)*9,b.y+19,b.z-Math.cos(fy)*9),Dv=new THREE.Vector3().subVectors(b,S0).normalize();
+  // falls from high up beyond the target and a little to the side (never from behind the caster: that is where the camera is)
+  const fy=(from?Math.atan2(p.x-from.x,p.z-from.z):Math.random()*6.283)+(Math.random()<.5?-.5:.5),S0=new THREE.Vector3(b.x+Math.sin(fy)*8,b.y+19,b.z+Math.cos(fy)*8),Dv=new THREE.Vector3().subVectors(b,S0).normalize();
   const g=new THREE.Group();g.visible=false;scene.add(g);
   const rock=sgMesh(sg2RockGeo(),sg2Std({vertexColors:true,roughness:.9,metalness:.05,emissive:0x5a1404,emissiveIntensity:.8}),31),shell=sgMesh(sg2RockGeo(),sgMat(sgLerp(col,0xffa040,.4),null,.38),32);shell.scale.setScalar(1.12);shell.material.side=THREE.BackSide;
   const fire=sg2Spr(fx186Tex('soft'),sgLerp(col,0xffd060,.35),.95,34),core=sg2Spr(fx186Tex('soft'),0xfff0c0,.9,35);fire.scale.setScalar(rs*4.2);core.scale.setScalar(rs*2);

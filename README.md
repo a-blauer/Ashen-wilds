@@ -950,7 +950,7 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
     the ground at the target; its edge leaves a blood-red slash; Execute calls it at cast time so it lands on the hit), `sgArrowRain` (instanced
     arrows falling in a volley, sticking in the ground, quivering, sinking away at the end), `sgBlizzard` (driving snow streaks and flakes blown
     round the eye, swirling wind bands, falling ice shards that shatter, frost spreading on the ground, low mist), `sgMeteor` (a lava-cracked rock
-    with a comet tail, fire and smoke trail, falling to land exactly at the delay; impact flash, fireballs, cracks, debris, scorch), `sgSingularity`
+    with a comet tail, fire and smoke trail, falling from beyond the target (never through the camera) to land exactly at the delay; impact flash, fireballs, cracks, debris, scorch), `sgSingularity`
     (black core, photon ring, tilted cyan→violet→magenta accretion disc, contracting lensing ripples, rocks spiralling in, a ground swirl; collapses
     to a point and bursts; Eclipse stays a dark sun over a shadowed field), `sgDisBeam` (a held beam of layered shafts, a helix, an orb between the
     hands, a splash at the end; follows the hero's aim), `sgBallista` / `sgBoltHit`, `sgHawkFly` (the Skyhawk rig in a spectral fresnel skin climbs,
