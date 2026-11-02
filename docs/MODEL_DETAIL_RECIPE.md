@@ -305,6 +305,13 @@ enemy: keys `E137…` are skipped) with the recipe:
   Round 2 (review: "the body almost never grows, only small add-ons"): grow the creature's own features at body scale with
   `EV38T.swell` (a mane, a jaw, thighs, a hump, an abdomen bulge out of the body itself; fur roughness and a sweep for manes),
   bigger horns / fangs / ears / wingspan, and few separate pieces. No crowns, bands, gems, chains, lanterns, plates or icons.
+  Round 3 (review: "every stage must read as a new form in a thumbnail"): copy the Foxlet method with the bones themselves.
+  `EV38G` scales each bone per stage to a target WORLD scale (bigger chest and neck, thicker legs whose length stays so the
+  feet stay down, a fuller tail or abdomen), with per-species base proportions for an own outline (`EV38G.B`), and darkens
+  the coat per stage. The animation sets some bone scales outright (chest breathing, an abdomen pulse), so the growth is
+  multiplied on after `g.rig` every frame. Faces first: fangs rooted in the jaw (grow thicker, never longer), no pale
+  slabs that read as teeth or planks, eyes as a dark socket with a small glint (never an empty black box or a big round
+  cartoon eye), no glowing dots in a row under the eyes (a grin).
 - **One-piece parts:** a beak is one keeled, hooked mandible that darkens toward the point (`bk186Geo`), never two or three round
   tubes joined at an angle. The same goes for horns, claws and fangs that should read as one solid piece.
 - **Eyes must show:** an eye sits proud of the head (a frog's on a turret), never sunk inside a lid shape; check it from the side.
