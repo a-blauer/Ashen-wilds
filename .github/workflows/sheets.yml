@@ -1,0 +1,79 @@
+# Renders picture sheets (companion / creature close-ups, float sheets, evo sheets ...) on GitHub Actions (owner's request,
+# Nov 2 2026): tools/sheet.sh starts it and fetches the pictures. Each sheet command runs as its own job, all at the same time.
+#   - push to ci-run/sheet-<id> (tools/sheet.sh does it, with a .sheet-request file: a JSON list of commands run inside test/)
+#   - result: every .jpg / .png a command wrote in test/out is pushed to the short-lived branch sheet-out/<id>
+#     (tools/sheet.sh downloads it, then deletes the branch); the session workspace can't download Actions artifacts, only git
+#     and annotations. A failed command's last lines come back as an annotation.
+# Runners are pinned to ubuntu-24.04 like tests.yml. ci-run/* pushes do not start the test suite (tests.yml runs on ci/** only).
+name: Sheets
+on:
+  push:
+    branches: ['ci-run/sheet-**']
+concurrency:
+  group: sheets-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      cmds: ${{ steps.p.outputs.cmds }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: echo "cmds=$(python3 -c 'import json;print(json.dumps(json.load(open(".sheet-request"))))')" >> "$GITHUB_OUTPUT"
+  draw:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        cmd: ${{ fromJSON(needs.plan.outputs.cmds) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/sheets.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow numpy scipy
+          for i in 1 2 3; do timeout 420 python -m playwright install --with-deps chromium && exit 0; echo "::warning::browser install try $i failed or hung; trying again"; sleep 5; done; exit 1
+      - name: Build
+        run: ./build.sh && ./viewer/build_viewer.sh
+      - name: Draw
+        env: {CMD: '${{ matrix.cmd }}'}
+        run: |
+          mkdir -p test/out res && touch res/.start && sleep 1
+          ok=1; (cd test && timeout 80m bash -c "$CMD" > ../draw.log 2>&1) || ok=0
+          tail -40 draw.log
+          find test/out -maxdepth 2 -type f \( -name '*.jpg' -o -name '*.png' \) -newer res/.start -exec cp {} res/ \;
+          n=$(ls res | wc -l)
+          if [ $ok = 1 ] && [ $n -gt 0 ]; then echo "::notice title=Sheet::$CMD -> $(ls res | tr '\n' ' ')"
+          else echo "::error title=Sheet failed::$CMD | pictures $n | $(tail -12 draw.log | tr '\n' '|' | cut -c1-1800)"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with: {name: 'sheet-${{ strategy.job-index }}', path: 'res/*', retention-days: 3}
+  collect:
+    needs: draw
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'sheet-*', merge-multiple: true, path: out}
+      - name: Send the pictures back (branch sheet-out/<id>)
+        run: |
+          ls out 2>/dev/null | grep -q . || { echo "::error title=Sheets::no pictures"; exit 1; }
+          id=${GITHUB_REF_NAME#ci-run/sheet-}
+          cd out && git init -q && git checkout -q -b r && git add -A
+          git -c user.name=sheet-bot -c user.email=actions@github.com commit -qm "sheets of ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" "r:refs/heads/sheet-out/$id"
+          echo "::notice title=Sheets::$(ls | wc -l) pictures"
+      - name: Some sheets failed
+        if: needs.draw.result != 'success'
+        run: exit 1
