@@ -92,3 +92,4 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 3420|v185|0250-|2270-|3242-|3370-|1680-|1981-|0060-: LIGHT=1 v185_audit.py v177_env.py v164_camps.py v123_camps.py v168_ground.py v183_env_paint.py
 # v186: weapon basic attacks (3455): the raven keeps his wand / orb hold through basic attacks, claws fitted to the paw, dagger finisher, one throwing knife
 3455|v186|2220|2990|1705|0580|2300|2900|1270: v186_weapon_anims.py v186_knife.py v163_weapons.py v148_edges.py
+0890-v85|v184-bird|3436-v186-dragons|3437-v186|1930-v105|wing: v187_wing_retract.py v184_bird_wings.py

@@ -124,7 +124,11 @@ function rigAnim(x,now,mv,sp){
   }
   if(ty=='float')['fl','fr'].forEach((k,i)=>{if(b[k+'0']){b[k+'0'].rotation.z=(i?1:-1)*(.25+Math.sin(now/500+i*2)*.15);b[k+'0'].rotation.x=.35*w*Math.min(1,G.v/3)}});
   x.ears.forEach(e=>{e.rotation.z=e.userData.rz+Math.sin(now/620+e.userData.sd)*.06;e.rotation.x=A?-.5:-.12-.18*run*w+.05*w*Math.sin(TAU*2*P-.8)});
-  x.wings.forEach(wg=>{wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*(ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w))});
+  // v187: the flap strength eases (quick up when an attack starts, slow back down after it) instead of dropping from the
+  // attack strength to the rest strength in one frame, which made wings snap back into place after every attack
+  x.wings.forEach(wg=>{const am=ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w;
+    wg._am=wg._am==null?am:!(dt>0)?wg._am:wg._am+(am-wg._am)*(1-Math.exp(-dt*(am>wg._am?14:3.5)));
+    wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*wg._am)});
   const bob=Lm*w*((1-run)*.012*(.5+.5*Math.cos(TAU*2*(P-beta*.5)))+run*(1-gal)*.045*(.5-.5*Math.cos(TAU*2*(P-beta*.5)))+gal*.08*(.5+.5*Math.cos(TAU*(P-.92))))*(slow?.5:1);
   B.position.y=ty=='fly'?.4+Math.sin(now/180)*.06:ty=='float'?.3+Math.sin(now/500)*.07:ty=='spider'?bob*.4:ty=='hop'?hopY:bob;
 }

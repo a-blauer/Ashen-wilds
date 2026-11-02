@@ -112,9 +112,10 @@ function mvEval105(M,k,A,L){const K=M.K;let i=0;while(i<K.length-2&&k>K[i+1][0])
 function mvPlay105(a,R,to,onHit){const M=MV105[R.m]||MV105.snap,D=M.D*(R.d||1),A=R.a||1,L=to?Math.max(0,V().subVectors(to,a.position).setY(0).length()-1.1):0;let hit=0;
   const S={M,k:0,A,L:Math.min(4,L)*(R.zr||1),sgn:R.sg||1};a._m105=S;
   tw(D,k=>{S.k=k;if(!hit&&k>=M.h){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}},()=>{if(!hit){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}a._m105=null;try{a.b.position.z=0;a.b.rotation.set(0,0,0)}catch(_){}})}
+// v187: the wing ability's flutter fades out over the last fifth of the move (it stopped dead)
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){f.apply(this,arguments);try{const g=x.g,S=g&&g._m105;if(!S)return;const [o,B]=mvEval105(S.M,S.k,S.A,S.L);const Lm=gaLegLen(x.spec);
     crApply(x,o,Lm);x.b.position.z=B.z;x.b.position.y+=B.y*Lm*2.2;x.b.rotation.set(B.rx,B.ry*S.sgn,B.rz);
-    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing})}catch(e){}}}
+    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing*Math.min(1,Math.max(0,(1-S.k)*5))})}catch(e){}}}
 // ---------- the recipes ----------
 // ctx: c companion, f its model, sp spell, t target (may be null), P companion position, d facing, tp target position, hp hero position
 const HP5=()=>pl.position;

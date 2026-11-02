@@ -10082,7 +10082,11 @@ function rigAnim(x,now,mv,sp){
   }
   if(ty=='float')['fl','fr'].forEach((k,i)=>{if(b[k+'0']){b[k+'0'].rotation.z=(i?1:-1)*(.25+Math.sin(now/500+i*2)*.15);b[k+'0'].rotation.x=.35*w*Math.min(1,G.v/3)}});
   x.ears.forEach(e=>{e.rotation.z=e.userData.rz+Math.sin(now/620+e.userData.sd)*.06;e.rotation.x=A?-.5:-.12-.18*run*w+.05*w*Math.sin(TAU*2*P-.8)});
-  x.wings.forEach(wg=>{wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*(ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w))});
+  // v187: the flap strength eases (quick up when an attack starts, slow back down after it) instead of dropping from the
+  // attack strength to the rest strength in one frame, which made wings snap back into place after every attack
+  x.wings.forEach(wg=>{const am=ty=='fly'?1.2:A?1.4:.3+.7*w+.2*run*w;
+    wg._am=wg._am==null?am:!(dt>0)?wg._am:wg._am+(am-wg._am)*(1-Math.exp(-dt*(am>wg._am?14:3.5)));
+    wg.p.rotation.z=wg.s*(wg.base+Math.sin(G.wp)*wg.amp*wg._am)});
   const bob=Lm*w*((1-run)*.012*(.5+.5*Math.cos(TAU*2*(P-beta*.5)))+run*(1-gal)*.045*(.5-.5*Math.cos(TAU*2*(P-beta*.5)))+gal*.08*(.5+.5*Math.cos(TAU*(P-.92))))*(slow?.5:1);
   B.position.y=ty=='fly'?.4+Math.sin(now/180)*.06:ty=='float'?.3+Math.sin(now/500)*.07:ty=='spider'?bob*.4:ty=='hop'?hopY:bob;
 }
@@ -22543,9 +22547,10 @@ function mvEval105(M,k,A,L){const K=M.K;let i=0;while(i<K.length-2&&k>K[i+1][0])
 function mvPlay105(a,R,to,onHit){const M=MV105[R.m]||MV105.snap,D=M.D*(R.d||1),A=R.a||1,L=to?Math.max(0,V().subVectors(to,a.position).setY(0).length()-1.1):0;let hit=0;
   const S={M,k:0,A,L:Math.min(4,L)*(R.zr||1),sgn:R.sg||1};a._m105=S;
   tw(D,k=>{S.k=k;if(!hit&&k>=M.h){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}},()=>{if(!hit){hit=1;try{onHit()}catch(e){console.warn('v105 cast',e)}}a._m105=null;try{a.b.position.z=0;a.b.rotation.set(0,0,0)}catch(_){}})}
+// v187: the wing ability's flutter fades out over the last fifth of the move (it stopped dead)
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){f.apply(this,arguments);try{const g=x.g,S=g&&g._m105;if(!S)return;const [o,B]=mvEval105(S.M,S.k,S.A,S.L);const Lm=gaLegLen(x.spec);
     crApply(x,o,Lm);x.b.position.z=B.z;x.b.position.y+=B.y*Lm*2.2;x.b.rotation.set(B.rx,B.ry*S.sgn,B.rz);
-    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing})}catch(e){}}}
+    if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing*Math.min(1,Math.max(0,(1-S.k)*5))})}catch(e){}}}
 // ---------- the recipes ----------
 // ctx: c companion, f its model, sp spell, t target (may be null), P companion position, d facing, tp target position, hp hero position
 const HP5=()=>pl.position;
@@ -57908,13 +57913,13 @@ ST179.ss165zealot=Object.assign({},ST179.ss165zealot,{lz:-.05});ST179.ss165calle
 // The shape follows the species: Skyhawk a broad rounded hawk wing, Stormtalon a long narrow pointed falcon wing, Rocsovereign
 // a broad eagle wing whose outer primaries spread into "fingers".
 // The wing folds: three key shapes (spread, half-open, folded along the flank) are built for every wing and blended on the
-// CPU into shared geometries at 11 steps (BW184.lv), so instances share them and nothing is made per creature. Standing, the
+// CPU into shared geometries at 49 steps (BW184.lv; 11 before v187, which made the fold visibly step), so instances share them and nothing is made per creature. Standing, the
 // wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
 // (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
 // Evolution: the wing grows 2% per level (v186; was 6%) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
-var BW184={lv:10,G:{},
+var BW184={lv:48,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
   sp:{
     Skyhawk:{T:()=>HWK_BODY,zs:.15,arm:[.13,.2,.15],rad:[.03,.024,.016],
@@ -61543,10 +61548,10 @@ if(typeof EVO100!='undefined'&&EVO100.surf){delete EVO100.surf.Cryptspider;delet
 //    so a bite shows palate, tongue and two rows of teeth;
 //  * eyes are glowing almonds with a slit pupil set in a painted, sunken socket under a brow ridge;
 //  * membrane wings with an arm, four fingers and a scalloped trailing edge that FOLD along the flank at rest and
-//    spread to attack, fly or use a wing ability (three key shapes blended into 11 shared geometries, like the v184
+//    spread to attack, fly or use a wing ability (three key shapes blended into 49 shared geometries (11 before v187), like the v184
 //    bird wings); their evolution is built into the wing (claws, darker edges, glowing veins);
 //  * evolution looks rebuilt per species for the new bodies (EVO100.D.Drakelet / .Gravewyrm), one theme each.
-var DG186={on:true,lv:10,WG:{},WD:{}};
+var DG186={on:true,lv:48,WG:{},WD:{}};
 function dgW(a,b,t){const o={};o[a]=1-(t||0);if(t)o[b]=(o[b]||0)+t;return o}
 function dgMixW(A,B,t){const o={};for(const k in A)o[k]=(o[k]||0)+A[k]*(1-t);for(const k in B)o[k]=(o[k]||0)+B[k]*t;return o}
 function dgSm(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}

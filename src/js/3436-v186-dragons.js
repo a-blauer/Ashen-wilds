@@ -11,10 +11,10 @@
 //    so a bite shows palate, tongue and two rows of teeth;
 //  * eyes are glowing almonds with a slit pupil set in a painted, sunken socket under a brow ridge;
 //  * membrane wings with an arm, four fingers and a scalloped trailing edge that FOLD along the flank at rest and
-//    spread to attack, fly or use a wing ability (three key shapes blended into 11 shared geometries, like the v184
+//    spread to attack, fly or use a wing ability (three key shapes blended into 49 shared geometries (11 before v187), like the v184
 //    bird wings); their evolution is built into the wing (claws, darker edges, glowing veins);
 //  * evolution looks rebuilt per species for the new bodies (EVO100.D.Drakelet / .Gravewyrm), one theme each.
-var DG186={on:true,lv:10,WG:{},WD:{}};
+var DG186={on:true,lv:48,WG:{},WD:{}};
 function dgW(a,b,t){const o={};o[a]=1-(t||0);if(t)o[b]=(o[b]||0)+t;return o}
 function dgMixW(A,B,t){const o={};for(const k in A)o[k]=(o[k]||0)+A[k]*(1-t);for(const k in B)o[k]=(o[k]||0)+B[k]*t;return o}
 function dgSm(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}

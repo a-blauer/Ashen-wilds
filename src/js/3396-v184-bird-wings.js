@@ -8,13 +8,13 @@
 // The shape follows the species: Skyhawk a broad rounded hawk wing, Stormtalon a long narrow pointed falcon wing, Rocsovereign
 // a broad eagle wing whose outer primaries spread into "fingers".
 // The wing folds: three key shapes (spread, half-open, folded along the flank) are built for every wing and blended on the
-// CPU into shared geometries at 11 steps (BW184.lv), so instances share them and nothing is made per creature. Standing, the
+// CPU into shared geometries at 49 steps (BW184.lv; 11 before v187, which made the fold visibly step), so instances share them and nothing is made per creature. Standing, the
 // wing lies folded on the flank (primaries crossing over the rump, every feather pushed just outside the body, `bw184Push`);
 // walking it stays folded; running lifts it a little; attacking, flying and wing abilities spread it fully
 // (`bw184Anim` after rigAnim, which also scales the shoulder flap down while folded).
 // Evolution: the wing grows 2% per level (v186; was 6%) and gains darker covert edges, bright flight-feather tips and a trimmed
 // leading edge (the old evo100Wing only worked on lpwWing fans).
-var BW184={lv:10,G:{},
+var BW184={lv:48,G:{},
   // per species: shoulder z, arm lengths [humerus, forearm, hand], arm radii, primaries / secondaries, colours
   sp:{
     Skyhawk:{T:()=>HWK_BODY,zs:.15,arm:[.13,.2,.15],rad:[.03,.024,.016],
