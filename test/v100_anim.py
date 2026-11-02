@@ -19,7 +19,7 @@ WT=[w for w in os.environ.get('WT',','.join(k for k in STEPS if STEPS[k])).split
 # mirrored moves are played by the left hand.
 DIR={'gs':[('x',-1,'R'),('x',1,'R'),('y',-1,'R')],'ga':[('x',-1,'R'),('x',1,'R'),('y',-1,'R')],'mace':[('x',-1,'R'),('x',1,'R'),('y',-1,'R')],
      'hammer':[('x',-1,'R'),('x',1,'R'),('y',-1,'R')],'axes':[('x',-1,'R'),('x',1,'L'),('y',-1,'R'),('y',-1,'R')],
-     'dagger':[('x',-1,'R'),('x',1,'L'),('z',1,'R'),('y',1,'R')],'claws':[('x',-1,'R'),('x',1,'L'),('y',1,'R'),('y',1,'L'),('y',-1,'R')],
+     'dagger':[('x',-1,'R'),('x',1,'L'),('z',1,'R'),('y',-1,'R')],'claws':[('x',-1,'R'),('x',1,'L'),('y',1,'R'),('y',1,'L'),('y',-1,'R')],
      'halberd':[('z',1,'R'),('z',1,'R'),('x',1,'R')],'flail':[('x',-1,'R'),('x',1,'R'),('y',-1,'R')],'knives':[('z',1,'R')]}
 TWO={'gs':[0,1,2],'ga':[0,1,2],'halberd':[0,1,2]}
 LIB=open(HERE+'/v100_anim_lib.js').read()

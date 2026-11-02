@@ -15,7 +15,9 @@
 // test/v117_grip.py (close-ups), v117_wclip.py (robe clipping) check it.
 var FC116={on:true,
   H:{staff:{arm:'R',hand:[.17,.1,.24],dir:[1,-.1,-.06],tilt:.28},  // v134 raven: a little further out and more upright (the frog's lean in brought the head of the staff past a crown's spikes)
-     wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0},  // tiltA: in attacks the wand points along the fingers, like a pointer
+     wand:{arm:'R',hand:[.13,.2,.2],dir:[.42,.12,.9],tilt:.15,tiltA:1.0,roll:[-.2,-.55,0]},  // tiltA: in attacks the wand points along the fingers, like a pointer
+     // v186 roll: the fingers also lean toward this direction [out, up, fwd] (fingers down and in), so the paw's roll round the wand stays put
+     // when the forearm lines up with the wand (arm reaching at the target): it swung ~150° in one frame of the flick (3455)
      orb:{arm:'L',hand:[.1,.3,.22],palm:1}},  // the orb (ball at +Y on a short stand) stands in the cupped palm, palm up
   pole:[.45,-.6,-1], // v118: elbow bends back and a little out [out, up, fwd] (it was [-.35,-1,.5]: forward and in, so the arm bent backwards)
   clear:[['spine',.19],['chest',.215],['head',.14]]}; // v134: spheres (bone, radius m) the orb stays outside of during attacks / casts
@@ -78,7 +80,7 @@ function fc116Apply(H){const B=H.bones;if(!B||!B.aR0||!B.aL0)return;
     const ws=b2.getWorldScale(new V()).x;
     // wrist rotation: the weapon (or the palm, for the orb) points along U; the roll round it keeps the paw in line with the forearm
     const wantR=Fw=>{let best=null;for(const s of (C.palm?[1]:H['_fcs'+s1]!==undefined?[sg]:[1,-1])){const a1=C.palm?Fp.c.clone():Fp.e.clone().multiplyScalar(s*Math.cos(C.tilt||0)).addScaledVector(Fp.d,Math.sin(C.tilt||0)).normalize();
-        const U=C.palm?up.clone():fr([C.dir[1],C.dir[0],C.dir[2]]).normalize(),a2=Fp.d.clone().addScaledVector(a1,-Fp.d.dot(a1)).normalize(),b2v=Fw.clone().addScaledVector(U,-Fw.dot(U)).normalize();
+        const U=C.palm?up.clone():fr([C.dir[1],C.dir[0],C.dir[2]]).normalize(),a2=Fp.d.clone().addScaledVector(a1,-Fp.d.dot(a1)).normalize(),b2v=Fw.clone().addScaledVector(U,-Fw.dot(U));if(C.roll){const g=fr(C.roll);b2v.addScaledVector(g.addScaledVector(U,-g.dot(U)),1)}b2v.normalize();
         const R=fc117Basis(a1,a2,U,b2v),sc=Fp.d.clone().applyQuaternion(R).dot(Fw);if(!best||sc>best.sc)best={R,s,sc}}return best};
     let Fw=G.clone().sub(S).normalize(),R=wantR(Fw);
     for(let it=0;it<2;it++){const tip=(C.palm?Fp.palm.clone():Fp.grip.clone()).multiplyScalar(ws).applyQuaternion(R.R),Tw=G.clone().sub(tip);
