@@ -466,7 +466,7 @@ EV38.spirit=function(E,L,P,c,s,v){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s)ret
     R.loft([{p:p0,r:.022,col:deep,sk:['pelvis','tail0',.5]},{p:R.add(p0,R.nrm(dir),len*.45),r:.016,col:deep,sk:['tail0','tail1',.5]},{p:R.add(p0,R.nrm(dir),len),r:.003,col:T.dim(deep,.7),sk:['tail1','tail2',.5]}],5,'c')}
   // the hem shreds: jagged points round the robe's skirt
   for(let i=0;i<8+3*s;i++){const a=i/(8+3*s)*6.283,h=R.on([Math.sin(a)*.6,.3,Math.cos(a)*.6-.12],[-Math.sin(a),0,-Math.cos(a)]);if(!h||Math.hypot(h.p[0],h.p[2]+.12)>.13)continue;
-    R.L(R.add(h.p,h.n,-.01),R.add(h.p,[h.n[0]*.03,-.06-.03*s-(i%2)*.02,h.n[2]*.03-.02]),.02,.001,'c',deep,3)}
+    R.L(R.add(h.p,h.n,-.024),R.add(h.p,[h.n[0]*.03,-.06-.03*s-(i%2)*.02,h.n[2]*.03-.02]),.024,.001,'c',deep,3)}
   // bigger clawed hands
   [['fl2',-.225],['fr2',.225]].forEach(f=>{const sd=Math.sign(f[1]),bn=f[0];R.pd('sph','g',v==1?0xf0ead8:0xbfeaff,[f[1],.54,.1],[0,1,0],[.036+.006*s,.03+.005*s,.038+.006*s],null,{bn});
     [-1,0,1].forEach(i=>{R.L([f[1]+i*.015,.53,.105],[f[1]+i*.027,.47-.01*s,.127],.012,.004,'g',v==1?0xf0ead8:0xbfeaff,4,{bn});R.L([f[1]+i*.027,.475-.01*s,.126],[f[1]+i*.03,.44-.02*s,.135+.008*s],.007,.001,'c',claw,4,{bn})})});
@@ -487,7 +487,7 @@ EV38.S.Soulwarden=function(E,L,P,c,s){EV38.spirit(E,L,P,c,s,2)};
 // (Soulwarden); the Lumenwisp hood a little darker so its pleats no longer read as a checkerboard
 {const B=LPR.Wispling,k0=B.kit;B.kit=function(k,c,C,red){const v=rv137I('Wispling',rv137('Wispling',c)),p0=k.p,L0=k.L;
   k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='tail3'&&t=='g')return k;if(v==1&&bn=='fr2'&&(t=='m'||col===0xffe8a0))return k;
-    if(bn=='head'&&geo=='box'&&t=='c'&&col===0x010204)return p0.call(k,bn,'sph',t,0x020306,x,y,z,sx*.6,sy*.7,sz,rx,ry,rz);   // the dark squares beside the face opening: small round sockets in the void's colour
+    if(bn=='head'&&geo=='box'&&t=='c'&&col===0x010204)return p0.call(k,bn,'sph',t,0x020306,x,y,z-.003,sx*.6,sy*.42,sz,rx,ry,rz);   // the dark squares beside the face opening: a small stub behind each eye (it holds the eye to the void)
     // the void reaches further down into the robe's neck: the hood is smaller than the body now (EV38G), and the void must
     // still close the gap between them
     if(bn=='head'&&geo=='sph'&&t=='c'&&col===0x020306&&sx===.115)return p0.call(k,bn,geo,t,col,x,y-.03,z-.006,sx*1.04,sy*1.32,sz,rx,ry,rz);
