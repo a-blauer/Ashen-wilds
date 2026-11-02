@@ -13,6 +13,15 @@
   changed model** — one fresh-agent review only; fix only clear bugs it finds (floating or detached parts, clipping, broken
   faces / mouths, test failures); at most 2 fix rounds per model, then show the owner pictures. The owner judges look and style:
   don't loop on taste. Float checks include the bite pose and the trait / variant / fusion sets, not just idle / walk.
+- **Every update must show for co-op partners (owner's request, Nov 2 2026).** Whatever a player sees or plays, their co-op
+  partner must see and play too (v188 found new companion, spell and weapon work that partners never saw). For every change:
+  1. Run `tools/coop_check.sh` before publishing. It lists the lines a partner may miss (own-hero-only code, `EV137.cur`, new
+     effect functions outside the relay, shots changed after `launch`, companion / hero look fields, `Math.random` in built
+     things, enemy and progress code). Answer each one: relayed, replayed or deterministic — or fix it.
+  2. Anything visible (models, animations, effects, UI a partner shares) or shared gameplay: check it in two windows
+     (`test/mpt.py`; `test/v188_coop_look.py` is the pattern) and add that check to a co-op test in `full.txt`.
+  3. Keep older partners working: add new message fields at the end, never change the meaning of existing ones.
+  4. Tell the owner in one line how the change reaches a co-op partner. README "Co-op checklist" has the details.
 - **Picture sheets (owner's request, Nov 2 2026) render on GitHub:** `tools/sheet.sh '<sheet command>' …` (see README, Testing).
 - **Testing (owner's request, Oct 25 2026): use GitHub Actions again.** The repo is public now, so Actions minutes are free and
   every test runs as its own parallel job — far faster than this 2-core machine. Commit, then run `tools/ci.sh` (in the background):

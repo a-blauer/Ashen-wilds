@@ -180,6 +180,26 @@ Find things with grep: `grep -n "function hud\b" src/js/*.js`. Useful starting p
   (they may still contain fields of retired systems such as `realm`, `incS`, `have`, `bounties`; load ignores or migrates them).
 - **Co-op**: anything that spawns or simulates enemies must respect the region host (`MP.host===MP.me`).
   The artifact's `room` topics `es, ev, hit, bs, trade, chat` stay declared as `"interact"`.
+- **Co-op checklist (owner, Nov 2 2026: every update must show for co-op partners).** Run `tools/coop_check.sh` and answer
+  each line it lists. How each kind of thing reaches a partner:
+  * *The partner's hero* is another model (`MP.rh[k].m`, built by `mpModel` from presence: class, look array, gear `tp` / `r`).
+    It moves by replayed poses ('P' messages: channels sampled from `haPlay`). Code gated on `H===pl` or reading `HA.cur`
+    runs only for your own hero: use `wa188Mine(H)` / `wa188A(H)` (3470), or send what the partner needs.
+  * *Partners' companions* are built with the normal `cr(c)` from `mpvLookOf` (n f v g cl tr evo shn rv l) and animated by
+    the normal `animC`. A new field the builder reads goes into `mpvLookOf` / `mpvLookIn`. Bites, bolts and ability moves
+    are replayed ('C' / 'B' messages).
+  * *Effects* reach a partner only through a relayed function: the `MPV.FX` lists (2170, 2710, 3450) and `sg2Reg` (3460).
+    The partner calls the same function with the same arguments, so arguments must be plain values (numbers, vectors,
+    colours, objects); functions arrive as `undefined`. Evolved casts: read the second colour through `ev186C2` / `sgC2`
+    (`EV137.cur||ev188Rep()`); `EV137.cur` itself is null on the partner.
+  * *Shots* are ghosts built from `launch()`'s options ('L': colour, arrow, scale `sc` / `mpSc`); changes made to the shot
+    after `launch` don't reach them.
+  * *Enemies*: the region host simulates; guests get copies and replay attacks ('a'), so their animation code must work
+    from replicated state. *Scenery and models* must be deterministic (seeded `rnd`, never `Math.random`).
+  * *Progress and quests*: shared through the co-op messages (`CP150`, the per-chapter `['dg' …]` / `['s5' …]` families).
+  * New message fields go at the end, so partners on an older version ignore them.
+  Test it in two windows: `test/mpt.py` + a steps file (`test/v188_coop_look.py` compares own vs partner: companion models,
+  wings, wand hold, evolved colours, page errors).
 - **Point lights** go straight into the scene (`scene.add`), never inside groups: they join the fixed light pool
   (`PGL`); a light inside a group changes the light count and recompiles every lit material.
 - **Frozen matrices** (`PST`): still objects stop recomputing their matrices. Move objects as usual; only when you
