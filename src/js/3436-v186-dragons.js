@@ -83,10 +83,10 @@ function dgEye(k,s,p,nrm,len,h,glow,o){o=o||{};const n=nrm3([s*Math.abs(nrm[0]),
 function dgSurf(T,z,t,s){const q=dgAt(T,z),q2=dgAt(T,z+.01),p=dgPt(T,z,t,s),dw=(q.w-q2.w)/.01,n=nrm3([s*Math.sin(t)/q.w,Math.cos(t)/(Math.cos(t)>0?q.a:q.b),dw*.9]);return {p,n}}
 // toes with claws from a foot: centre f (model), n toes over spread, length len, radius r; plus a dewclaw behind
 function dgToes(k,bn,f,s,o){const n=o.n||3,len=o.len,r=o.r;for(let i=0;i<n;i++){const a=(i-(n-1)/2)*(o.spread||.32)+s*(o.out||.06),d=[Math.sin(a),0,Math.cos(a)],
-    b=[f[0]+d[0]*r*.6,f[1]+r*.6,f[2]+d[2]*r*.6],m=[f[0]+d[0]*len*.55,f[1]+r*.45,f[2]+d[2]*len*.55],e=[f[0]+d[0]*len,f[1]+r*.25,f[2]+d[2]*len];
+    b=[f[0]+d[0]*r*.2,f[1]+.022,f[2]+d[2]*r*.2-.006],m=[f[0]+d[0]*len*.55,f[1]+r*.95,f[2]+d[2]*len*.55],e=[f[0]+d[0]*len,f[1]+r*.7,f[2]+d[2]*len];  // the root sits inside the foot
     k.L(bn,'c',o.skin,b,m,r,r*.85,5).L(bn,'c',o.skin2||o.skin,m,e,r*.85,r*.6,5);
     dgChain(k,bn,[sub3(e,mul3(d,r*.3)),add3(e,[d[0]*r*.9,r*.15,d[2]*r*.9]),add3(e,[d[0]*r*1.7,-r*.55,d[2]*r*1.7])],r*.62,.0015,o.claw,o.claw2||o.claw,4)}
-  if(o.dew){const b=[f[0],f[1]+r*.9,f[2]-r*.4],e=[f[0]+s*r*.3,f[1]+r*.3,f[2]-o.dew];k.L(bn,'c',o.skin,b,e,r*.7,r*.4,4);dgChain(k,bn,[e,add3(e,[0,-r*.2,-r*.8]),add3(e,[0,-r*.9,-r*1.1])],r*.42,.001,o.claw,o.claw2||o.claw,4)}}
+  if(o.dew){const b=[f[0],f[1]+.026,f[2]-r*.4],e=[f[0]+s*r*.3,f[1]+r*.3,f[2]-o.dew];k.L(bn,'c',o.skin,b,e,r*.7,r*.4,4);dgChain(k,bn,[e,add3(e,[0,-r*.2,-r*.8]),add3(e,[0,-r*.9,-r*1.1])],r*.42,.001,o.claw,o.claw2||o.claw,4)}}
 
 // ---------------- folding membrane wings ----------------
 // A wing is jointed: shoulder S (the hinge, at the pivot), elbow E, wrist W, four fingers (knuckle bowed, then the tip) and
@@ -450,7 +450,8 @@ function dgKitS(D,k,c,C,red,K){const HR=D.headRows,H=D.head;
     D.teeth.up.forEach(q=>{const h=dgAt(HR,q[0]);dgTooth(k,'head',q[3]?K.fang:K.tooth,[s*h.w*(q[4]||.84),h.y-h.b*.5,q[0]],[s*.04,-1,q[3]?.22:.1],q[1]+h.b*.5,q[2])})});
   if(!D.ownJaw)D.jawKit(k,K);
   if(D.spine)for(let z=D.spineZ[0];z>D.spineZ[1];z-=D.spineZ[2]){const sp=D.spine(z);if(!sp)continue;const r=D.R(z),top=r*.74+.006+D.L(z)+r*.88+(D.ridge?D.ridge(z):0),bn=wyrmBones(z)[0];
-    dgChain(k,bn,[[D.X(z),top-sp[1],z+sp[1]*.8],[D.X(z),top+sp[0]*.55,z-sp[0]*.3],[D.X(z),top+sp[0],z-sp[0]*.8]],sp[1],.0015,K.spine,K.spine2,4)}
+    const n0=k.P.length,wb=wyrmBones(z);dgChain(k,bn,[[D.X(z),top-sp[1],z+sp[1]*.8],[D.X(z),top+sp[0]*.55,z-sp[0]*.3],[D.X(z),top+sp[0],z-sp[0]*.8]],sp[1],.0015,K.spine,K.spine2,4);
+    for(let j=n0;j<k.P.length;j++)k.P[j].w=wb[2]>.01?[[wb[0],1-wb[2]],[wb[1],wb[2]]]:[[wb[0],1]]}  // skinned like the hide under it (a rigid spine drifted in the slither)
   if(D.kitX)D.kitX(k,c,C,red,K)}
 // lower teeth and a forked tongue on the jaw (bone 'jaw' or, for an own jaw, the pivot's frame: bone name ignored there)
 function dgSJawKit(D,k,K){const HR=D.headRows,H=D.head,bn='jaw';
@@ -654,12 +655,12 @@ DG186.E.Gravewyrm=function(E,L,P,c,D){const HR=D.headRows,K=D.pal(P.C),hb={bn:'h
       E.fan(base,pts,K.dark.getHex(),L>=4?new THREE.Color(K.main).lerp(new THREE.Color(P.glowD),.35).getHex():K.back.getHex(),'c',{bn:'neck'});pts.slice(1,5).forEach(p=>E.L(base,add3(p,mul3(nrm3(sub3(p,base)),.01)),.0065,.002,'c',bone,4,{bn:'neck'}))})}
   if(L>=3){// bone plates down the back with carved runes that glow
     [[.25,.08],[.02,-.16],[-.24,-.42],[-.5,-.7]].forEach((q,k)=>E.shell((x,y,z,nx,ny)=>z<q[0]&&z>q[1]&&ny>.6,.009,'c',k%2?0x8a7e64:0xa89a7c,{rimCol:0x5a5040}));
-    [.15,-.07,-.33].forEach(z=>{const h=E.top(D.X(z)+.03,z);if(h)E.rune({p:add3(h.p,mul3(h.n,.012)),n:h.n},[0,0,1],.026,P.glow)})}
+    [.15,-.33].forEach((z,j)=>{const s=j?-1:1,h=E.on([D.X(z)+s*.5,.2,z],[-s,0,0]);if(h)E.rune({p:add3(h.p,mul3(h.n,.003)),n:h.n},[0,1,0],.03,P.glow)})}  // carved in the flanks between the rib bands
   if(L>=4){// a crown of bone horns, glowing veins in the hood, a bone blade on the tail
     // grave-light cracks across the bone mask (lying in it), not more horns on the crown
     [-1,1].forEach(s=>{const P3=[[.79,.25],[.74,.42],[.7,.3],[.66,.5]].map(q=>add3(dgSurf(HR,q[0],q[1],s).p,[0,.0015,0]));for(let i=0;i<P3.length-1;i++)E.L(P3[i],P3[i+1],.0032,.0028,'g',P.glow,3,hb)});
     [-1,1].forEach(s=>[[.13,.46,.4],[.22,.42,.35],[.22,.32,.31]].forEach(q=>E.L([s*.05,.33,.39],[s*q[0],q[1],q[2]],.0032,.002,'g',P.glow,3,{bn:'neck'})));
-    E.pd('oct','c',bone,[D.X(-1.75),.03,-1.79],[0,0,-1],[.04,.07,.012],[0,1,0],{bn:'tail3'})}
+    E.pd('oct','c',bone,[D.X(-1.7),.016,-1.71],[0,0,-1],[.04,.075,.012],[0,1,0],{bn:'tail3'})}
   if(L>=5){// ghost flames along the spine, burning eyes
     [.3,.05,-.2,-.45,-.7].forEach((z,i)=>{const h=E.top(D.X(z),z);if(h)E.L(add3(h.p,mul3(h.n,-.004)),E.add(h.p,E.nrm([0,1,-.7]),.1-i*.008),.018,.0015,'g',i%2?P.glow:P.glow2,4)});
     [-1,1].forEach(s=>{const e=dgSurf(HR,D.eye.z,D.eye.t,s).p;E.L(add3(e,[s*.003,.004,-.012]),add3(e,[s*.03,.012,-.1]),.0045,.0008,'g',P.glow2,3,hb)})}};
@@ -669,16 +670,16 @@ DG186.E.Venomcoil=function(E,L,P,c,D){const HR=D.headRows,N=D.neck,K=D.pal(P.C),
   [-1,1].forEach(s=>{const f=D.teeth.up[0],h=dgAt(HR,f[0]),tip=[s*h.w*f[4],h.y-h.b-f[1]+.004,f[0]+.008];E.L(add3(tip,[0,.004,0]),add3(tip,[0,-.026,.002]),.0032,.0012,'g',P.glow,3,hb);
     const g=dgSurf(HR,.375,1.62,s);E.pd('sph','g',P.glowD,add3(g.p,mul3(g.n,.001)),g.n,[.016,.003,.024],[0,0,1],hb)});
   if(L>=2){// a fringe of short dark spines round the hood's rim, venom bands glowing along the back
-    [4,5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);E.L(add3(p,[-s*.01,0,0]),add3(p,[s*(.035+.004*L),.012,-.012]),.006,.0012,'c',K.spine,4,nb)}));
+    [4,5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);E.L(add3(p,[-s*.012,0,0]),add3(p,[s*(.035+.004*L),.012,-.012]),.006,.0012,'c',K.spine,4,{vs:1})}));
     [-.2,-.55,-.9].forEach(z=>{const h=E.top(D.X(z),z);if(h)E.L(add3(h.p,[-.025,-.006,0]),add3(h.p,[.025,-.006,0]),.0035,.0035,'g',P.glow,3,{vs:1})})}
   if(L>=3){// an armoured crown: dark plates over the head rimmed in venom
     E.shell((x,y,z,nx,ny)=>z>.3&&z<.5&&ny>.55&&y>.6,.006,'c',K.dark.getHex(),{rimCol:P.glowD})}
   if(L>=4){// a cobra crown of curved spines rising behind the head, a brow gem, glowing ribs down the front of the hood
     for(let i=-2;i<=2;i++){const s=i<0?-1:1,b=dgHS(HR,.31+Math.abs(i)*.006,Math.abs(i)*.45,s||1,-.004);E.horn(b,[i*.25,1,-.35],[0,-.01,-.04],.085-Math.abs(i)*.012,.0075,'c',K.spine,4,hb,P.glow)}
     E.gem({p:dgHS(HR,.45,0,1,.003),n:dgSurf(HR,.45,0,1).n},.012,P.glow,hb);
-    [-1,1].forEach(s=>[.4,.47].forEach(y=>{const q=N.find(r=>r[1]>=y)||N[5],z=q[0]+q[4]+.001;E.L([s*.02,y,z],[s*q[2]*.75,y-.015,z-.01],.003,.002,'g',P.glow,3,nb)}))}
+    [-1,1].forEach(s=>[.4,.47].forEach(y=>{const q=N.find(r=>r[1]>=y)||N[5],h0=E.on([s*.02,y,1],[0,0,-1]),h1=E.on([s*q[2]*.72,y-.015,1],[0,0,-1]);if(h0&&h1)E.L(add3(h0.p,mul3(h0.n,.0008)),add3(h1.p,mul3(h1.n,.0008)),.003,.002,'g',P.glow,3,{vs:1})}))}
   if(L>=5){// a venom crest of glowing spine tips round the hood, burning eyes, venom dripping from the jaw
-    [4,5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);E.L(add3(p,[s*(.03+.004*L),.01,-.01]),add3(p,[s*(.05+.004*L),.016,-.016]),.004,.0008,'g',P.glow2,3,nb)}));
+    [4,5,6,7].forEach(i=>[-1,1].forEach(s=>{const p=rim(i,s);E.L(add3(p,[s*(.02+.0028*L),.0075,-.0085]),add3(p,[s*(.055+.004*L),.017,-.017]),.004,.0008,'g',P.glow2,3,{vs:1})}));
     [-1,1].forEach(s=>{const e=dgSurf(HR,D.eye.z,D.eye.t,s).p;E.L(add3(e,[s*.003,.004,-.012]),add3(e,[s*.03,.012,-.09]),.0042,.0008,'g',P.glow2,3,hb)})}};
 // the rigs' designs dispatch to the species
 {const D=EVO100.D.Drakelet,b0=D.build;D.build=function(E,L,P,c){const sp=RV137.cur.Drakelet||'Drakelet';if(DG186.on&&DG186.E[sp]&&DG186.Q[sp])return DG186.E[sp](E,L,P,c,DG186.Q[sp]);return b0.apply(this,arguments)}}
