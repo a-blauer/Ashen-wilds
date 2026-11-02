@@ -375,7 +375,7 @@ EV38.spirit=function(E,L,P,c,s,v){const R=E.raw,T=EV38T,hb={bn:'head'};if(!s)ret
     const len=.16+.07*s+(i%3)*.03,p0=R.add(h.p,h.n,-.01),dir=[Math.sin(a)*.25,-1,Math.cos(a)*.5-.35];
     R.loft([{p:p0,r:.022,col:deep,sk:['pelvis','tail0',.5]},{p:R.add(p0,R.nrm(dir),len*.45),r:.016,col:deep,sk:['tail0','tail1',.5]},{p:R.add(p0,R.nrm(dir),len),r:.003,col:T.dim(deep,.7),sk:['tail1','tail2',.5]}],5,'c')}
   // the hem shreds: jagged points round the robe's skirt
-  for(let i=0;i<8+3*s;i++){const a=i/(8+3*s)*6.283,h=R.on([Math.sin(a)*.6,.3,Math.cos(a)*.6-.12],[-Math.sin(a),0,-Math.cos(a)]);if(!h)continue;
+  for(let i=0;i<8+3*s;i++){const a=i/(8+3*s)*6.283,h=R.on([Math.sin(a)*.6,.3,Math.cos(a)*.6-.12],[-Math.sin(a),0,-Math.cos(a)]);if(!h||Math.hypot(h.p[0],h.p[2]+.12)>.13)continue;
     R.L(R.add(h.p,h.n,-.01),R.add(h.p,[h.n[0]*.03,-.06-.03*s-(i%2)*.02,h.n[2]*.03-.02]),.02,.001,'c',deep,3)}
   // bigger clawed hands
   [['fl2',-.225],['fr2',.225]].forEach(f=>{const sd=Math.sign(f[1]),bn=f[0];R.pd('sph','g',v==1?0xf0ead8:0xbfeaff,[f[1],.54,.1],[0,1,0],[.036+.006*s,.03+.005*s,.038+.006*s],null,{bn});
