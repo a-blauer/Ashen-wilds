@@ -197,7 +197,7 @@ EV38.S.Bogmaw=function(E,L,P,c,s){const R=E.raw,T=EV38T,hb={bn:'head'},skin=T.di
     if(bn=='head'&&geo=='sph2'&&t=='c'&&col===0x050505)return k;
     if(bn=='head'&&geo=='sph'&&t=='g'&&sx===.005)return k;
     if(bn=='head'&&geo=='sph2'&&t=='c'&&Math.abs(y-.412)<1e-6)return p0.call(k,bn,geo,t,dkShade(col,.6),x,y,z,sx,sy,sz,rx,ry,rz);
-    if(bn=='head'&&geo=='sph'&&col===gl)return k;
+    if(bn=='head'&&geo=='sph'&&(col===gl||(sx===.007&&sy===.004)))return k;   // the gland and its pores
     return p0.apply(k,arguments)};
   try{return f.apply(this,arguments)}finally{k.p=p0}}}
 // Bogmaw kit (all stages): the lure keeps one bulb in a dim sickly green; the glowing spore dots are gone; two of the five
@@ -220,11 +220,14 @@ EV38.bat=function(E,L,P,c,s,moon){if(!s)return;const R=E.raw,T=EV38T,hb={bn:'hea
   if(!moon&&s>=2){for(let i=0;i<7;i++){const z=.38-i*.075,h=R.top(0,z);if(h)[-1,1].forEach(sd=>R.L(R.add(h.p,[sd*.014,-.008,0]),R.add(h.p,R.nrm([sd*.25,1,-.9]),(.1+.04*(s-2))*(1-i*.09)),.026,.002,'c',i%2?P.mainD:dk,4))}}};
 EV38.S.Batwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s,0)};
 EV38.S.Duskwing=function(E,L,P,c,s){EV38.bat(E,L,P,c,s+1>3?3:s+1,1)};
-// the bat kit (all stages): slit eyes instead of flat glowing boxes; ears grow with the stage; no claws on the wing tips
+// the bat kit (all stages): slit eyes instead of flat glowing boxes; no belly tufts; ears grow with the stage; no claws on the wing tips
 {const B=LPR.Batwing,k0=B.kit,p0=B.post;
   B.kit=function(k,c,C,red){const kp=k.p;k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(bn=='head'&&geo=='box'&&t=='g'){const s=Math.sign(x);
       kp.call(k,'head','sph','c',0x070506,x,y,z,.026,.014,.012,rx,ry,rz);return kp.call(k,'head','box','g',red?0x8a1a14:col===0xc070ff?0x6a3a9a:0x9a2418,x+s*.002,y,z+.004,.028,.005,.006,rx,ry,rz)}
-    return kp.apply(k,arguments)};try{return k0.apply(this,arguments)}finally{k.p=kp}};
+    return kp.apply(k,arguments)};
+  // the pale fluff tufts hanging under the belly read as extra legs
+  const kL=k.L;k.L=function(bn,t,col,a,b){if(t=='c'&&(bn=='chest'||bn=='spine')&&a&&b&&a[1]<.2&&b[1]<a[1])return k;return kL.apply(k,arguments)};
+  try{return k0.apply(this,arguments)}finally{k.p=kp;k.L=kL}};
   B.post=function(x,c){const n0=x.ears?x.ears.length:0,r=p0.apply(this,arguments);try{const s=ev38StC(c),dusk=rv137('Batwing',c)=='Duskwing',g=1+(dusk?.22:.18)*s;
       if(s&&x.ears)x.ears.forEach(p=>{const m=p.children[0];if(m)m.scale.multiplyScalar(g)})}catch(e){}return r}}
 if(EVO100.D.Batwing)EVO100.D.Batwing.wing={grow:.2,claws:false};
