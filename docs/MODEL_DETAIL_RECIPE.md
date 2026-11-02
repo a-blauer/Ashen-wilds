@@ -304,6 +304,26 @@ enemy: keys `E137…` are skipped) with the recipe:
 - **Kit geometry winding:** a hand-built `BufferGeometry` must wind its triangles counter-clockwise seen from outside, or the
   part is culled and vanishes (the first one-piece beaks did).
 
+## 4d. Companion heads, mouths and wings (v186 dragons, `3436`)
+
+- **Own loft builder with sculpt and paint by position** (`dg186Geo`): rings as before, plus gaussian bumps along the normal
+  (brow, cheekbone, nostrils, shoulder and haunch masses) and a dorsal crease (the top vertex lifted); paint gets the vertex's
+  model position, so sockets, nostrils, the lip line and the palate are painted where they are, not per ring.
+- **A mouth that opens:** the upper head is part of the body loft and its underside is painted as the palate (dark red), with
+  a dark lip band above it. The lower jaw is its own loft built under the palate (`dgJaw`): its top overlaps the palate by a
+  few mm when closed, it is ~75% as wide as the upper head, its rear rings are on the head bone and blend to the jaw bone at the
+  hinge. Upper teeth hang from the lip edge outside the jaw; lower teeth stand up inside it (hidden in the palate when closed).
+- **When the jaw bone is far from the mouth** (a reared head on a serpent skeleton), don't skin to it: hang the lower jaw on a
+  pivot at the real hinge on the head bone and copy the jaw bone's turn each frame (`dgSJaw`).
+- **Eyes:** a small glowing almond with a slit pupil over a dark socket lens, placed on the surface from the profile
+  (`dgSurf`), a painted dark socket round it and a brow ridge laid on the surface above it. Never place kit by guessed
+  coordinates: compute the surface point (a guessed brow plate floated 2.5 cm above the head).
+- **Palettes by HSL** (`dgHSL(C, s, l)`): keep the species hue, set saturation ~.15–.25 and lightness ~.1–.25 (linear); a
+  lerp toward grey still read as candy violet.
+- **Membrane wings fold:** arm, four fingers and a scalloped membrane, spread and folded joint sets blended into 11 shared
+  geometries (like the v184 bird wings); folded along the flank at rest, spread to attack, fly or use a wing ability.
+- **Kit membranes** (frills): a geometry with its own vertex colours (`userData.dgV`) keeps them through the kit bake.
+
 ## 5. Checklist for every new or reworked model
 
 1. **Silhouette:** front and side pictures. Every triangle-heavy feature changes the outline; everything else is paint.
