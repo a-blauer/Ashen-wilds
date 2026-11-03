@@ -64659,7 +64659,7 @@ FIT192.nearSk=.035;
 //  * the elbow direction is searched (BARD192.poles, a few per arm, the last choice tried first): the first one whose arm
 //    (upper arm, forearm, paw) stays outside the bowl's ellipsoid by BARD192.pad wins, so the forearm comes over the bowl's
 //    upper edge, like a lute player's. Kept per bard, so it does not flip from frame to frame.
-var BARD192={strum:[.0,.17,.11],neck:[.0,.42,-.05],sw:.03,nk:.05,pad:1.08,out:.035,
+var BARD192={strum:[.0,.2,.15],neck:[.0,.42,-.05],sw:.025,nk:.05,pad:1.08,out:.035,
   poles:[[-1,-.3,-.6],[-1,.2,-.5],[-1,-.8,-.4],[-.6,.6,-.8],[-1,0,.3],[-.3,-1,-.9],[-1,-1,-.5],[-1,.6,0],[-.4,.9,-.3],[-1,.4,.6],[0,1,-.4],[-1,-.2,.8]]};
 var BARD192_T=null;
 function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.copy(bowl.matrixWorld).invert(),a=b0.getWorldPosition(T.a),e=b1.getWorldPosition(T.e),w=b2.getWorldPosition(T.w);
