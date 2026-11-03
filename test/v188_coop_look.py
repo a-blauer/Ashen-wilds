@@ -69,6 +69,20 @@ B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();a.
 poll(lambda:A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.mpC&&g.mpC.n=='Foxlet'&&g.getObjectByName('dv191'))}"),60000)
 dv=[B.evaluate("()=>!!(fols[0]&&fols[0].getObjectByName('dv191'))"),A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.getObjectByName('dv191'))}")]
 chk('partner sees the Devoted glow (v191)',dv==[True,True],json.dumps({'own':dv[0],'partner':dv[1]}))
+# 4c. v192: a companion's Cheddar coat and the ridden mount's coat reach the partner (look field sk, presence mts192)
+B.evaluate("()=>{SKN164.u=Object.keys(SKN164.D);const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();leadK[0]='';sync();sk192Set(a,'rime')}")
+SKC="()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];if(!g)return null;let n=0;g.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData&&o.material.userData.sk192==='rime')n++});return [g.mpC&&g.mpC.sk192||null,n]}"
+poll(lambda:(A.evaluate(SKC) or [0,0])[1]>0,60000)
+sk=[B.evaluate("()=>{let n=0;fols[0].traverse(o=>{if(o.isMesh&&o.material.userData.sk192==='rime')n++});return n}"),A.evaluate(SKC)]
+chk('partner sees the companion coat (v192)',bool(sk[0] and sk[1] and sk[1][0]=='rime' and sk[1][1]==sk[0]),json.dumps({'own meshes':sk[0],'partner [coat, meshes]':sk[1]}))
+B.evaluate("()=>{sk192Set(party[0],null)}")
+poll(lambda:(A.evaluate(SKC) or [1,1])[1]==0,60000)
+chk('partner sees the companion coat switched off (v192)',(A.evaluate(SKC) or [1,1])[1]==0,json.dumps(A.evaluate(SKC)))
+B.evaluate("()=>{inCombatNow=()=>false;if(!mounts.length){mounts.push({id:77,k:'pony',n:'Pony',spd:10,cap:30,dist:0});mActive=77}const m=mOf(mActive)||mounts[0];mActive=m.id;m.sk192='storm';if(riding)dismount();toggleMount();MP.lastPres=''}")
+SKM="()=>{const r=Object.values(MP.rh)[0],g=r&&r.mt150&&r.mt150.g;if(!g)return null;let n=0;g.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData&&o.material.userData.sk192==='storm')n++});return n}"
+poll(lambda:(A.evaluate(SKM) or 0)>0,60000)
+chk('partner sees the ridden mount coat (v192)',(A.evaluate(SKM) or 0)==1,json.dumps({'own':B.evaluate("()=>{let n=0;mModel&&mModel.traverse(o=>{if(o.isMesh&&o.material.userData.sk192==='storm')n++});return n}"),'partner':A.evaluate(SKM)}))
+B.evaluate("()=>{if(riding)dismount()}")
 # 5. replayed effects throw nothing on either screen
 tick(1500)
 errs=[l for k in 'AB' for l in logs[k] if 'PAGEERROR' in l or 'v105 cast' in l]

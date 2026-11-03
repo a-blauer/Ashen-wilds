@@ -68,9 +68,10 @@ function chq148Zones(){return PMAP.map((p,z)=>z).filter(z=>typeof pUnlocked=='fu
 function chq148Town(){try{return townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
 function chq148Zone(){const I=chqHere132();return I?I.z:-1}
 chqList132=function(I){return I?(CHQD148[I.z]||[]):[]};
-// v148.1: a zone's difficulties open one after another: Medium once every Easy quest of that zone is done (turned in), Hard once
-// every Medium one is. Quests accepted before this rule keep going.
-function chq148Open(q){return !(CHQD148[q.z]||[]).some(o=>(o.df||1)<(q.df||1)&&!(chqS132(o)&&chqS132(o).s===3))}
+// v148.1 opened a zone's difficulties one after another (Medium once every Easy quest was turned in, Hard once every Medium one).
+// v192 (owner: "make Cheddar quests all available for a zone at once, no gated unlocks by quest tier"): every quest of an open zone
+// can be taken at once. Progress already made (CHQ132.st) is untouched, so old saves with half-done tiers keep it.
+function chq148Open(q){return true}
 function chq148Tier(z){const L=CHQD148[z]||[];let t=1;for(const q of L)if(chq148Open(q))t=Math.max(t,q.df||1);return t}
 function chq148State(z){const L=z==null?[].concat(...chq148Zones().map(q=>CHQD148[q]||[])):(CHQD148[z]||[]);let av=0,rd=0,ac=0,dn=0,lk=0;
   L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s){if(chq148Open(q))av++;else lk++}else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn,lk}}
@@ -193,7 +194,7 @@ CHQ132_SAY.board='Psst. Down here, on the crate. Cheddar. Every portal you open,
 CHQ132_SAY.zone='Pick a job. Anything you do anywhere in that zone counts, whichever stretch of road you’re on.';
 XR.chq132=()=>{$('xwT').textContent='🐭 Cheddar’s Quest Board';const Z=chq148Zones();
   if(CHQ148.tab==null||!Z.includes(CHQ148.tab)){const r=Z.find(z=>chq148State(z).rd);CHQ148.tab=r!=null?r:Z.find(z=>chq148State(z).av)!=null?Z.find(z=>chq148State(z).av):Z[Z.length-1]}
-  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done · '+(CHQ148_DF[chq148Tier(z)]||CHQ148_DF[1]).n+' open';
+  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done · all quests open';
   const line=st.rd?CHQ132_SAY.ready:zs.av?CHQ132_SAY.board:zs.ac?CHQ132_SAY.busy:CHQ132_SAY.zone;
   let b='<div class="cq132say"><span class="cq132who">Cheddar</span>“'+line+'”</div><div class="tabs cq148t">';
   PMAP.forEach((p,i)=>{const u=Z.includes(i),S=u?chq148State(i):null,dot=S&&S.rd?'<i class="rd">?</i>':S&&S.av?'<i>!</i>':'';

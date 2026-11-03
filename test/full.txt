@@ -86,6 +86,7 @@ v152_route.py
 v157_abeksi_alarm.py
 v164_abeksi.py
 v164_skins.py
+v192_cheddar.py
 v153_ascent.py
 v167_obstacles.py
 v154_hydra.py
