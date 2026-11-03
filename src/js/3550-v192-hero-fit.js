@@ -19,7 +19,8 @@
 //     knife the same way: a wide bell round thin legs.
 //     Now (a) a hood measures only the body and what lies on it: a point counts when it is within FIT192.near (FIT192.nearHead
 //     above the neck) of the bare body's own section at that height; loose details are left out and now sit on / poke through
-//     the cloth like trinkets; (b) on the weasel the face opening sits further back round the long muzzle; (c) the weasel's
+//     the cloth like trinkets; (b) the weasel's hood is cut closer (FIT192.loose, and below the neck no further than FIT192.cap
+//     from the bare body: it drapes over the shoulders) and its face opening sits further back round the long muzzle; (c) the weasel's
 //     skirts are measured the same way (FIT192.nearSk). The other four races keep their v136 hoods exactly (their bodies are
 //     broad enough that the trinkets stay inside the cloth; v136_gear checks their hood clearance).
 //  3. "Bard's hand is phasing through his instrument." The Duskhold Bard (hare, 1900 WK103.bard + 2995 bard141): his strumming
@@ -29,7 +30,7 @@
 //     part of either arm enters the bowl (BARD192): the forearm comes over the bowl's upper edge.
 // Co-op: all three are deterministic from what partners already receive (gear from the shared item templates and look; the
 // partner's replayed shot ends with h.sw, after which 1270 already eases its bow to the carry; the Bard is town scenery).
-var FIT192={on:true,bow:true,near:.06,nearHead:.05,skirt:true,bard:true};
+var FIT192={on:true,bow:true,near:.06,nearHead:.05,loose:.012,cap:.055,skirt:true,bard:true};
 
 // ---------------- 1. the bow: no strike grip outside the shot ----------------
 // For the player's own hero with a bow, the grip weight (S.w: 1 carry, 0 strike) is worked out here instead of by 1270 / 3220:
@@ -49,7 +50,7 @@ function fit192Draw(A){return !!A&&(A.pose===bowPose||(typeof fxaPose=='function
   // the carry is held steady in the hero's frame (2390 bow135Carry): while the arm swings up into the draw that target turns
   // with it against the hand, so the bow spun in the fist (v163_weapons: 218° in 0.1 s). From the frame a shot starts, the
   // carry is the bow's place in the hand at that moment (H._b192), and the hand turns it into the strike grip from there
-  if(shoot&&!h._b192){const e=S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(e)h._b192={q:e.W.quaternion.clone(),p:e.W.position.clone()}}
+  if(shoot&&!h._b192){const lf=h._b192f;if(lf)h._b192={q:lf.q.clone(),p:lf.p.clone()};else{const e=S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(e)h._b192={q:e.W.quaternion.clone(),p:e.W.position.clone()}}}
   if(S.w==null||!(dt>=0)||dt>.5)S.w=shoot?0:1;
   else S.w=shoot?Math.max(0,S.w-dt/BOW192.in):Math.min(1,S.w+dt/BOW192.out);
   if(!shoot&&h._b192&&S.w>=.999)h._b192=null;
@@ -60,7 +61,11 @@ function fit192Draw(A){return !!A&&(A.pose===bowPose||(typeof fxaPose=='function
 // the shot's last quarter (the arm lowering) it turns into the v135 carry held in the hero's frame, which takes over after the
 // shot. Runs after gripTick (2390's bow135Carry is wrapped: it runs last in animHero).
 var FIT192_Q=null;
-{const f=bow135Carry;bow135Carry=function(h){const L=h&&h._b192;if(!FIT192.on||!L||h!==pl)return f.apply(this,arguments);
+// the bow's final place in the hand each frame (the snapshot a shot starts from)
+function fit192Keep(h){try{const S=h._grip,e=S&&S.L&&S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!e)return;const K=h._b192f||(h._b192f={q:new THREE.Quaternion(),p:new THREE.Vector3()});K.q.copy(e.W.quaternion);K.p.copy(e.W.position)}catch(_){}}
+{const f=bow135Carry;bow135Carry=function(h){const L=h&&h._b192;if(!FIT192.on||h!==pl)return f.apply(this,arguments);if(!L){const r=f.apply(this,arguments);fit192Keep(h);return r}
+  try{return fit192Carry(h,L)}finally{fit192Keep(h)}}}
+function fit192Carry(h,L){
   const S=h._grip,A0=typeof HA!='undefined'?HA.cur:null,A=A0&&!A0.mv164?A0:null;   // after the shot (no A): the v135 carry (u = 1) until the grip is back
   const e=S&&S.L&&S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!e||!e.S)return;const w=gripSS(S.w==null?1:S.w);if(w<=1e-3)return;
   const Q=FIT192_Q||(FIT192_Q={a:new THREE.Quaternion(),b:new THREE.Quaternion(),t:new THREE.Quaternion(),c:new THREE.Quaternion()});
@@ -71,7 +76,7 @@ var FIT192_Q=null;
   W.quaternion.copy(e.S.q).slerp(tq,w);
   // the riser stays in the hand (the carry's hold point at the anchor, as bow135Carry places it)
   const C=e.C,an=C.an||GRIP_AN,hv=new THREE.Vector3(C.hold[0]*sx,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(tq),pc=new THREE.Vector3(an[0]-hv.x,an[1]-hv.y,an[2]-hv.z);
-  W.position.copy(ps).lerp(pc.lerp(L.p,1-u),w)}}
+  W.position.copy(ps).lerp(pc.lerp(L.p,1-u),w)}
 
 // ---------------- 2. hoods measure the body and what lies on it ----------------
 // the bare body's section at height y: the hull radius per angle of the body triangles only (BR body builders: GL176.body
@@ -103,9 +108,15 @@ var FIT192_HOOD=null;
 {const f=gkHood;gkHood=function(B,P,o){if(!FIT192.on||!B||!B.L||!BR.on||!BR.R||BR.R.key!='weasel')return f.apply(this,arguments);let S=null;try{S=fit192Body(B)}catch(_){S=null}
   if(!S)return f.apply(this,arguments);const D=BR.R,o2=Object.assign({},o||{});
   // the weasel: the opening further back and the cut lower round the long muzzle
-  if(D.key=='weasel'){const er=D.eyeR||.021;o2.zf=o2.zf!=null?o2.zf:D.EYEP[2]-er-.024;o2.yJaw=o2.yJaw||D.EYEP[1]-.1}
+  {const er=D.eyeR||.021;o2.zf=o2.zf!=null?o2.zf:D.EYEP[2]-er-.024;o2.yJaw=o2.yJaw||D.EYEP[1]-.1;o2.loose=Math.min(o2.loose==null?.03:o2.loose,FIT192.loose)}
   const prev=FIT192_HOOD;FIT192_HOOD={B,S,yNeck:1.06};let Hd;try{Hd=f.call(this,B,P,o2)}finally{FIT192_HOOD=prev}
   return Hd}}
+// the cap: gkHood builds its grid and then its surfaces (gkSurf); the first gkSurf call of a measured hood gets the grid, whose
+// vertices are shared with the lining and the rim, so moving them here moves the whole hood
+{const f=gkSurf;gkSurf=function(B,G,o){const H=FIT192_HOOD;if(H&&H.B===B&&!H.cap&&G&&G.length>2&&G[0]&&G[0][0]&&G[0][0].cz!=null){H.cap=1;try{fit192Cap(H.S,G)}catch(e){console.warn('v192 hood cap',e)}}return f.apply(this,arguments)}}
+function fit192Cap(S,G){const cap=FIT192.cap;G.forEach(row=>row.forEach(v=>{if(v.y>1.05)return;const k=Math.round(v.y/S.bw);let h=null;for(const d of [0,-1,1]){const q=S.H.get(k+d);if(q&&q.length>2){h=q;break}}if(!h)return;
+  const cz=v.cz||0,dx=v.x,dz=v.z-cz,L=Math.hypot(dx,dz);if(L<1e-6)return;const R=gkHullR(h,0,cz,Math.atan2(dx,dz));if(!(R>0))return;const lim=R+cap;
+  if(L>lim){const k2=lim/L;v.x=dx*k2;v.z=cz+dz*k2}}))}
 // the same body filter for the weasel's chest skirts: the coat skirt and the v136 hunting skirt are measured round the hips and
 // legs (gkSkirt: hull of what is built there, never narrowing downward). On the weasel's slim hips the belt pouches, the
 // skinning knife and the coat's own flare were the widest things there, so the skirt hung from them as a wide bell round a thin
@@ -124,8 +135,8 @@ FIT192.nearSk=.035;
 //  * the elbow direction is searched (BARD192.poles, a few per arm, the last choice tried first): the first one whose arm
 //    (upper arm, forearm, paw) stays outside the bowl's ellipsoid by BARD192.pad wins, so the forearm comes over the bowl's
 //    upper edge, like a lute player's. Kept per bard, so it does not flip from frame to frame.
-var BARD192={strum:[.0,.17,.11],neck:[.0,.42,-.05],sw:.03,nk:.05,pad:1.08,
-  poles:[[-1,-.3,-.6],[-1,.2,-.5],[-1,-.8,-.4],[-.6,.6,-.8],[-1,0,.3],[-.3,-1,-.9],[-1,-1,-.5]]};
+var BARD192={strum:[.0,.17,.11],neck:[.0,.42,-.05],sw:.03,nk:.05,pad:1.08,out:.035,
+  poles:[[-1,-.3,-.6],[-1,.2,-.5],[-1,-.8,-.4],[-.6,.6,-.8],[-1,0,.3],[-.3,-1,-.9],[-1,-1,-.5],[-1,.6,0],[-.4,.9,-.3],[-1,.4,.6],[0,1,-.4],[-1,-.2,.8]]};
 var BARD192_T=null;
 function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.copy(bowl.matrixWorld).invert(),a=b0.getWorldPosition(T.a),e=b1.getWorldPosition(T.e),w=b2.getWorldPosition(T.w);
   const tip=T.t.copy(w).sub(e).normalize().multiplyScalar(.07).add(w);let m=9;const R=.17;
@@ -134,6 +145,7 @@ function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.c
 if(typeof bard141=='function'){const f0=bard141;bard141=function(n,now){if(!FIT192.on||!FIT192.bard)return f0.apply(this,arguments);
   const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0||!L.children[0])return f0.apply(this,arguments);
   f0.apply(this,arguments);   // places the lute
+  {const V0=THREE.Vector3,fw=new V0(0,0,1).applyQuaternion(L.quaternion);fw.y=0;if(fw.lengthSq()>1e-6){fw.normalize();L.position.addScaledVector(fw,BARD192.out)}L.updateMatrixWorld(true)}
   const V=THREE.Vector3;if(!BARD192_T)BARD192_T={mi:new THREE.Matrix4(),a:new V(),e:new V(),w:new V(),t:new V(),l:new V(),p:new V()};
   const t=now/1000+(S.t0||0);n.updateMatrixWorld(true);L.updateMatrixWorld(true);const bowl=L.children[0];bowl.updateMatrixWorld(true);
   const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),loc=b=>n.worldToLocal(b.getWorldPosition(new V()));

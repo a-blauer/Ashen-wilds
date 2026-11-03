@@ -31,7 +31,7 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  const q0=QH();out.w0=+pl._grip.w.toFixed(2);
  if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(30);out.wFight=+pl._grip.w.toFixed(2)}
  atkCd=0;swing();let n=0;while(HA.cur&&n<200){STEP(1);n++}out.shotFrames=n;
- const tr=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1))}
+ const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0)dx.push([tr[i],+pl._grip.w.toFixed(2),HA.cur?+HA.cur.k.toFixed(2):-1,pl._b192?1:0,+(IDL.cbV||0)])}out.dx=dx;
  out.after05=tr[31];out.after1=tr[62];out.after2=tr[124];out.max05_2=Math.max(...tr.slice(31));out.trace=tr.filter((_,i)=>i%10==0);out.wEnd=+pl._grip.w.toFixed(2);
  return out}"""
 # ---------------- 2. gear fit ----------------
@@ -69,7 +69,7 @@ BARD=COMMON+r"""(sheet)=>{const V=THREE.Vector3,out={fr:[],img:null};
   const arm=(s)=>{const a=g.bones['a'+s+'0'].getWorldPosition(new V()),e=g.bones['a'+s+'1'].getWorldPosition(new V()),[w,tip]=paw(s),P=[];
     for(let j=4;j<=10;j++)P.push(a.clone().lerp(e,j/10));for(let j=0;j<=10;j++)P.push(e.clone().lerp(w,j/10));P.push(w.clone().lerp(tip,.5),tip);return Math.min(...P.map(inside))};
   for(let i=0;i<24;i++){const t=i*130;wkAnim103(g,t);g.updateMatrixWorld(true);
-    const r={t};['L','R'].forEach(s=>{r[s]=+arm(s).toFixed(2)});
+    const r={t,pole:[g._wk.b192L,g._wk.b192R]};['L','R'].forEach(s=>{r[s]=+arm(s).toFixed(2)});
     // the strumming paw's distance to the bowl's front face (lute frame z) and the neck hand's distance to the neck
     const [w2,t2]=paw('L');const lt=tl.worldToLocal(t2.clone());r.strumZ=+lt.z.toFixed(3);r.strumY=+lt.y.toFixed(3);
     const [w3,t3]=paw('R');const ln=tl.worldToLocal(w3.clone().lerp(t3,.5));r.neckX=+ln.x.toFixed(3);r.neckY=+ln.y.toFixed(3);r.neckZ=+ln.z.toFixed(3);
@@ -89,14 +89,14 @@ def s(pg):
             r=ev(BOW,fight)
             print('bow','fight' if fight else 'calm',json.dumps(r))
             if r.get('err'):F('bow: error %s'%r['err']);continue
-            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s)'%('fight' if fight else 'calm',r['after05'],MAXB))
+            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s) [deg,w,k,snap,combat] %s'%('fight' if fight else 'calm',r['after05'],MAXB,json.dumps(r.get('dx'))))
             if r['max05_2']>MAXB:F('bow (%s): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%('fight' if fight else 'calm',r['max05_2']))
     if 'bard' in PART:
         r=ev(BARD,bool(SHEET))
         mins=[min(f['L'],f['R']) for f in r['fr']]
         for f in r['fr'][:6]:print('bard',json.dumps(f))
         print('bard: smallest arm-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
-        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside)'%min(mins))
+        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside) frames %s'%(min(mins),json.dumps([f for f in r['fr'] if min(f['L'],f['R'])<1][:4])))
         if SHEET and r.get('img'):open(O+'/v192_bard%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_bard%s.jpg'%TAG)
     if 'gear' in PART:
         # every ranger hood with the chest piece of the same row (14 x 1) + the owner's screenshot set (Hornwood Hood + Galewing / Moonhunter Mantle)
