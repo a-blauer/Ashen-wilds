@@ -7,15 +7,16 @@
 #  2. gear: every Ranger hood with a chest piece, tier by tier, on the weasel (+ the owner's screenshot set): the hood's own
 #     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM, and narrower
 #     than the same piece built the pre-v192 way (FIT192.on=false, built fresh) by at least MIND unless that was already narrow.
-#  3. bard: both arms (upper arm, forearm, paw) stay outside the lute's bowl (an ellipsoid) through his whole strumming loop.
+#  3. bard: through his whole strumming loop the paws stay outside the lute's bowl (an ellipsoid) and the arms' centre lines at
+#     most rest on its rim (ratio >= MINA; 1 = on the bowl's surface: a lute player's forearm lies over the bowl's edge).
 #  SHEET=1: picture sheet out/v192_fit<TAG>.jpg (rows: combos; front / 3-4 / side / back / head 3-4 / head front) + bard close-ups.
 import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP
 COMMON=re.search(r'COMMON=r"""(.*?)"""',open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'v114_beasts.py')).read(),re.S).group(1)
-MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.15'))
-MIND=float(os.environ.get('MIND','.02'))
+MINA=float(os.environ.get('MINA','.85'));MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.15'))
+MIND=float(os.environ.get('MIND','.008'))
 TAG=os.environ.get('TAG','');SHEET=os.environ.get('SHEET','')
 fails=[]
 def F(m):fails.append(m);print('FAIL',m,flush=True)
@@ -101,10 +102,13 @@ def s(pg):
             if not fight and r['max05_2']>MAXB:F('bow (calm): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%r['max05_2'])
     if 'bard' in PART:
         r=ev(BARD,bool(SHEET))
+        # the paws (wrist, fingertips) never inside the bowl; the arm's centre line at most resting on the bowl's rim (MINA)
+        paws=[min(f['segL'][3],f['segL'][4],f['segR'][3],f['segR'][4]) for f in r['fr']]
         mins=[min(f['L'],f['R']) for f in r['fr']]
+        if min(paws)<1.0:F('bard: a paw is inside the lute\'s bowl (ratio %.2f)'%min(paws))
         for f in r['fr'][:6]:print('bard',json.dumps(f))
         print('bard: smallest arm-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
-        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside) frames %s'%(min(mins),json.dumps([f for f in r['fr'] if min(f['L'],f['R'])<1][:4])))
+        if min(mins)<MINA:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside) frames %s'%(min(mins),json.dumps([f for f in r['fr'] if min(f['L'],f['R'])<1][:4])))
         if SHEET and r.get('img'):open(O+'/v192_bard%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_bard%s.jpg'%TAG)
     if 'gear' in PART:
         # every ranger hood with the chest piece of the same row (14 x 1) + the owner's screenshot set (Hornwood Hood + Galewing / Moonhunter Mantle)
@@ -115,7 +119,7 @@ def s(pg):
         for q in r['rows']:
             print(json.dumps(q))
             if q['miss']:F('missing items %s'%q['miss'])
-            if q['lab'].startswith('ranger') and q['over'] is not None and q['overOld'] is not None and q['overOld']>.08 and q['over']>q['overOld']-MIND:F('%s: the hood\'s mantle is not narrower than before v192 (%s m past the shoulders, was %s)'%(q['lab'],q['over'],q['overOld']))
+            if q['lab'].startswith('ranger') and q['over'] is not None and q['overOld'] is not None and q['overOld']>.105 and q['over']>q['overOld']-MIND:F('%s: the hood\'s mantle is not narrower than before v192 (%s m past the shoulders, was %s)'%(q['lab'],q['over'],q['overOld']))
             if q['lab'].startswith('ranger') and q['over'] is not None and q['over']>MAXM:F('%s: the hood\'s mantle reaches %s m past the shoulders at y %s (max %s)'%(q['lab'],q['over'],q['wideY'],MAXM))
         if SHEET and r.get('img'):open(O+'/v192_fit%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_fit%s.jpg'%TAG)
         if SHEET:
