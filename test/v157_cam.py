@@ -18,7 +18,7 @@ SWEEP=r"""async(q)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));if(window.__l
   await fr(90);const tilt=()=>{const c=cam.position,P=pl.position,h=Math.hypot(c.x-P.x,c.z-P.z);return Math.atan2(c.y-(P.y+1.1),h)*180/Math.PI};
   const out={start:+tilt().toFixed(1),max:-99,min:99,jump:0,steps:48};let prev=cam.position.clone().sub(pl.position);const h0=pl.position.clone();out.hero=0;
   for(let i=1;i<=48;i++){camYaw=q.yw+i/48*Math.PI*2;await fr(8);const t=tilt();out.max=Math.max(out.max,t);out.min=Math.min(out.min,t);
-    out.hero=Math.max(out.hero,+pl.position.distanceTo(h0).toFixed(2));const rel=cam.position.clone().sub(pl.position),d=rel.distanceTo(prev);prev.copy(rel);
+    out.hero=Math.max(out.hero,+pl.position.distanceTo(h0).toFixed(2));const rel=cam.position.clone().sub(pl.position),d=rel.clone().setLength(prev.length()).distanceTo(prev);prev.copy(rel);   // v192: sliding in at an edge (3570) is wanted: only the sideways move counts
     // the camera is meant to turn round the hero: subtract the arc it should move per step
     const arc=2*Math.PI/48*Math.hypot(cam.position.x-pl.position.x,cam.position.z-pl.position.z);out.jump=Math.max(out.jump,d-arc)}
   camYaw=q.yw;await fr(90);out.end=+tilt().toFixed(1);out.max=+out.max.toFixed(1);out.min=+out.min.toFixed(1);out.jump=+out.jump.toFixed(2);return out}"""
