@@ -20,8 +20,12 @@ var FX135ON={value:0};
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
   if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||m.isMeshBasicMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
-  const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
-  if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
+  const P0=THREE.Material.prototype,def=m.onBeforeCompile===P0.onBeforeCompile,k0=m.customProgramCacheKey===P0.customProgramCacheKey?'':m.customProgramCacheKey();
+  // v192: the v183 paint (3410 ep183Hook) wraps the hook of almost every scenery material at load, before this scan first runs
+  // (its key: 'function(){}|ep183' over the default hook, 'txa1|ep183' over the atlas); this test used to skip those, so from v183 on
+  // most scenery (Duskhold's buildings, camps, tents, decorations) never faded. Chain onto the paint's hook too.
+  const kb=k0.replace(/(\|ep183)+$/,''),ep=!def&&!!m.onBeforeCompile._ep183&&(kb===''||kb===String(P0.onBeforeCompile)||kb==='txa1');
+  if(!def&&k0!=='txa1'&&!ep)return;const ob=def?null:m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;ob176Shader(sh);
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
     #ifdef USE_INSTANCING
@@ -48,9 +52,10 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
      float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
      if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v176: below the knees only flat surfaces stay (floors, paving, bridges)
      f=mix(1.,f,kn);
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+     ob192Fade(f);}}`)};   // v192 ob192Fade: semi-transparent (alpha to coverage) where the view is multisampled, else the dither (3570)
   if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v176: windows and plain panes too
-  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
+  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.alphaToCoverage=true;m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
+  if(ep)m.onBeforeCompile._ep183=1;   // v192: still the paint's hook as far as 3410 is concerned (it does not wrap it again)
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}

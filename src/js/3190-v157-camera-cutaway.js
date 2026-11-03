@@ -23,8 +23,8 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
      if(t>.0){float f=1.-uObT*ob176Fr(vC135,uCam157,uPl157)*(1.-uObK);   // v176: no window: the whole ground in front of the hero is dithered while it blocks the view (3361)
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
+      ob192Fade(f);}}`)};
+  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.alphaToCoverage=true;m.needsUpdate=true}   // v192: alphaToCoverage: see 3570
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
 // the intro's Duskhold shots (3081) keep the v135 look: the old tube fade for scenery, no terrain cut

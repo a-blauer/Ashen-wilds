@@ -1,9 +1,10 @@
 # v172 the camera stays inside the map at its outer edge (3360); v176: Abeksi's buildings count as the edge too: backing the camera out past an instance's edge (or Duskhold's island
-# edge) slides it in toward the hero; in the middle of a field and inside a cave it keeps the distance the player set.
+# edge) slides it in toward the hero; in the middle of a field it keeps the distance the player set. v192: a cave's walls count as
+# the edge (the camera stays out of them); Abeksi's houses no longer pull the camera in (they fade), its outer wall does.
 #   python3 fast.py v172_edge_cam.py      (pictures: <AW_TMP>/v172_<name>.png)
 # FAIL when: at an edge the camera ends up out of the map (cam172Ok false: past the rectangle, over or next to the void, inside the
-# rim's rock); it was not pulled in there; in a field's middle or in a cave it was pulled in; the camera jumps (a frame-to-frame step
-# much larger than the hero's own movement) while it slides in.
+# rim's rock, the cave wall); it was not pulled in there; the camera jumps (a frame-to-frame step
+# much larger than the hero's own movement) while it slides in; in the middle of a field the camera was pulled in; an Abeksi house pulled it in.
 import play,os,json
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'v169_ghost_look.py')).read().split('def s(pg):')[0].split('import play,os,json')[1])
 F=[]
@@ -45,15 +46,14 @@ def s(pg):
         print('edge',gk,'turn',json.dumps(r))
         if not r['ok'] and r['dist']>2.15:fail('edge',gk,'turning toward the edge: the camera is out of the map',r['cam'])
         if r['step']>2.5:fail('edge',gk,'turning toward the edge: the camera jumped',r['step'])
-    # 1b. Abeksi (v176): a house between the camera and the hero pulls the camera in front of it
+    # 1b. Abeksi: v176 pulled the camera in front of a house; v192 (owner: buildings fade, the camera does not zoom for them): a house
+    # between the camera and the hero leaves the distance alone (3361 fades it); only the city's outer wall pulls the camera in
     pg.evaluate("()=>{toPos(142.01,1559.24);return 1}");pg.wait_for_timeout(4000)
     for yaw in [3.53,2.75,3.93]:
         q={'x':142.01,'z':1559.24,'yaw':yaw};place(q,9.5,.35);r=watch(90)
-        if r['dist']>9:r=watch(30)
-        ab=pg.evaluate("()=>{const c=cam.position,I=INSL[cvKey()];return cam172Ab(c.x,c.y,c.z,I)}")
-        print('abeksi',yaw,json.dumps(r),'in a building',ab);shot('abeksi_%.2f'%yaw)
-        if ab and r['dist']>1.35:fail('Abeksi yaw',yaw,': the camera is inside a building',r['cam'])   # right at a wall it may stop at its closest (minAb 1.2; the house is then dithered)
-        if r['dist']>9:fail('Abeksi yaw',yaw,': the camera was not pulled in in front of the house (distance',r['dist'],')')
+        print('abeksi',yaw,json.dumps(r));shot('abeksi_%.2f'%yaw)
+        if not r['ok'] and r['dist']>1.35:fail('Abeksi yaw',yaw,': the camera is past the outer wall',r['cam'])
+        if r['ok'] and r['dist']<8.9:fail('Abeksi yaw',yaw,': the camera was pulled in for a house (distance',r['dist'],')')
     # 2. Duskhold's island edge
     q=pg.evaluate(DUSK);pg.wait_for_timeout(2500)
     if not q:fail('Duskhold: no edge spot')
@@ -66,10 +66,11 @@ def s(pg):
     else:
         place(q,12,.3);r=watch(60);print('field',json.dumps(q),json.dumps(r))
         if r['dist']<11.3:fail('field: the camera was pulled in (distance',r['dist'],')')
+    # v192: a cave's walls are its edge too (owner: "the walls that surround each map"): the camera slides in and stays out of the rock
     q=pg.evaluate(CAVE,1);pg.wait_for_timeout(2500)
     if not q:fail('cave: no wall spot')
     else:
         place(q,9.5,.3);r=watch(60);print('cave',json.dumps(q),json.dumps(r));shot('cave')
-        if r['dist']<8.8:fail('cave: the camera was pulled in (distance',r['dist'],')')
+        if not r['ok'] and r['dist']>1.35:fail('cave: the camera is in the cave wall',r['cam'])
     print('DONE' if not F else 'FAILED '+str(len(F)))
 play.run(s,w=1000,hh=620)
