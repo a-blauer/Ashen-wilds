@@ -52,11 +52,13 @@ chk("Abeksi: the partner's snakes follow the host's",len(r)>3 and max(h)<2.5,'%d
 # the partner walks out in front of a sentry: the host's snake sees them, the whole party is caught and goes back
 sp=G.evaluate("""()=>{const S=AB152.S,I=S.I;let best=null;for(const a of S.acts){if(a.role!='sentry'||a.o.sweep)continue;const fu=a.u+Math.sin(a.yaw)*2.6,fv=a.v+Math.cos(a.yaw)*2.6;
   if(S.G.sol[Math.round(fv)*S.G.W+Math.round(fu)])continue;best=[fu,fv];break}if(!best)return null;ab152SetCrouch(false);toPos(I.x0+best[0],I.y0+best[1]);return best}""")
-ok=until("()=>window.__c>=1",9000)
-chk('Abeksi: a partner seen by the host\'s snake = the whole party is caught',ok and sp is not None,json.dumps([sp,[p.evaluate("()=>window.__c") for p in (A,B)]]))
+ok=until("()=>window.__c>=1||AB192.R.length>0||AB192.n.rg>0||AB192.n.done>0||AB157A.on",9000)   # v192: the snake rings its bell first (the partner gets ['ab','rg'])
+chk('Abeksi: a partner seen by the host\'s snake = the whole party is caught',ok and sp is not None,json.dumps([sp,[p.evaluate("()=>[window.__c,AB192.n]") for p in (A,B)]]))
 # v157: caught = the city's alarm for everyone; the host's world rouses the residents (the game's enemies, mirrored to the partner)
 ok=until("()=>AB157A.on&&!AB152H.cau&&!AB152H.frz",9000)
 chk('Abeksi: caught = the city is roused for the whole party',ok,json.dumps([p.evaluate("()=>[AB157A.on,AB152H.cr]") for p in (A,B)]))
+rn=[p.evaluate("()=>[AB192.n.st,AB192.n.rg,AB192.n.done]") for p in (H,G)]
+chk('v192: the partner saw the bell-ringer wind up before the alarm (host rang it)',rn[0][0]>=1 and rn[0][2]>=1 and rn[1][1]>=1 and rn[1][2]>=1,json.dumps(rn))
 ok=until("()=>enemies.some(e=>!e.dead&&/^naga/.test(e.c.en))",9000)
 poll(lambda:H.evaluate("()=>enemies.filter(e=>e.ab157&&!e.dead).length")>0 and G.evaluate("()=>enemies.filter(e=>e.mir&&!e.dead&&/^naga/.test(e.c.en)).length")>0,7000)
 hs=H.evaluate("()=>enemies.filter(e=>e.ab157&&!e.dead).length");gs=G.evaluate("()=>[enemies.filter(e=>e.ab157&&!e.dead).length,enemies.filter(e=>e.mir&&!e.dead&&/^naga/.test(e.c.en)).length]")
@@ -85,6 +87,31 @@ W(800)
 G.evaluate("()=>{const c=ab152Spot(3);toPos(c.x,c.z);ab152SetCrouch(true)}")
 ok=until("()=>AB152Q.cp>=3",6000,[H])
 chk('Abeksi: the checkpoint is shared',ok,json.dumps([p.evaluate("()=>AB152Q.cp") for p in (A,B)]))
+# v192: the host's own eyes are switched off from here (a spot would rouse the city mid-test)
+H.evaluate("""()=>{window.__ns=1;if(!window.__nsW){window.__nsW=1;const s=ab152Sees;ab152Sees=function(){return window.__ns?0:s.apply(this,arguments)};const t=ab192Sees;ab192Sees=function(){return window.__ns?0:t.apply(this,arguments)};
+  const w=ab157Witness;ab157Witness=function(){return window.__ns?null:w.apply(this,arguments)}}AB192.T=40;AB157A.calmT=0;return 1}""")
+# v192: every Abeksi has eyes: the host's townsfolk near the partner are sent (['ab','fs']); the partner's folk follow them, with cones
+ok=until("()=>!!AB157.S&&AB157.S.folk.some(a=>a.fn192&&performance.now()-a.fn192.t<2500)",9000,[G])
+fc=G.evaluate("()=>[AB157.S.folk.filter(a=>a.cone).length,AB157.S.folk.filter(a=>a.cone&&a.cone.visible).length,AB157.S.folk.filter(a=>a.fn192).length]")
+chk("v192: the partner's townsfolk have cones and follow the host's eyes",ok and fc[0]>=100 and fc[1]>0,json.dumps(fc))
+# v192: the host's snake sees the partner and rings its bell: the partner sees the wind-up, kills it in time, nobody rings the alarm
+gp=G.evaluate("()=>MP.me")
+G.evaluate("()=>{window.__ns=1;AB192.T=40;if(!window.__nsW){window.__nsW=1;const w=ab157Witness;ab157Witness=function(){return window.__ns?null:w.apply(this,arguments)}}return 1}")
+ri=G.evaluate("""()=>{const S=AB152.S,G2=S.G,I=S.I,R=ab157Res();for(const a of S.acts){if(a.dead||a.o.sweep||(a.o.lift||0)>=.5||a.role!='sentry')continue;
+  for(const [du,dv] of [[1.6,0],[-1.6,0],[0,1.6],[0,-1.6],[1.2,1.2],[-1.2,-1.2]]){const u=a.u+du,v=a.v+dv;if(!ab158Ok(G2,Math.round(u),Math.round(v))||!ab152LOS(G2,a.u,a.v,u,v,false))continue;
+    ab152SetCrouch(true);toPos(I.x0+u,I.y0+v);return a.ri}}return -1}""")
+W(1200)
+H.evaluate("([ri,gp])=>{const a=ab157Res()[ri];a.cBy=gp;ab152Caught(a);return !!a.r192}",[ri,gp])
+ok=ri>=0 and until("()=>{const a=ab157Res()[%d];return !!a.r192}"%ri,6000,[G])
+W(700)
+vw=G.evaluate("(ri)=>{const a=ab157Res()[ri];return [!!a.r192,!!(a.b192&&a.b192.parent),!!(a.m192&&a.m192.visible),(worldPrompt()||{}).label||'',$('ab152h').querySelector('.s').textContent]}",ri)
+chk('v192: the partner sees the bell-ringer wind up (bell in hand, timer, prompt, HUD countdown)',ok and vw[0] and vw[1] and vw[2] and 'bell-ringer' in vw[3] and 'Alarm in' in vw[4],json.dumps([ri,vw]))
+G.evaluate("()=>{const p=worldPrompt();if(p&&/bell-ringer/.test(p.label))p.fn();return 1}")
+ok=until("()=>{const a=ab157Res()[%d];return !!a.dead&&!a.r192&&!AB192.R.length}"%ri,9000)
+W(2500)
+st=[p.evaluate("()=>[AB157A.on,AB192.n.done,AB192.R.length]") for p in (H,G)]
+chk('v192: the partner kills the bell-ringer in time: it falls in both worlds, no alarm',ok and not st[0][0] and not st[1][0] and st[0][2]==0,json.dumps(st))
+for p in (H,G):p.evaluate("()=>{AB192.T=3;return 1}")   # (the host's eyes stay off for the drain step)
 # out through the drain together
 G.evaluate("()=>{AB152H.cau=null;AB152H.frz=0;ab152Finish()}")
 ok=until("()=>curIns()&&curIns().g===6",9000)

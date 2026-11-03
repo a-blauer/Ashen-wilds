@@ -36,7 +36,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   S.acts.forEach(ab152ResetActor);const b3=S.acts.find(a=>a.id=='b3'),b1=S.acts.find(a=>a.id=='b1');
   b1.u=b3.u;b1.v=b3.v+5;b1.path=null;b1.home={u:b1.u,v:b1.v,ry:Math.PI};b1.yaw=Math.PI;b1.role='sentry';b1.o.arc=.01;
   stand(b3,1.2);const p2=worldPrompt();out.pB3=p2&&p2.label;if(p2&&/Assassinate/.test(p2.label))p2.fn();tick(.1);await wait(450);tick(.1);
-  out.witCau=!!H.cau;await wait(1300);tick(.3);
+  out.witCau=!!H.cau||!!b1.r192;await wait(1300);tick(3.4);   // v192: the witness rings its bell for 3 s, then the alarm
   // ---- the alarm ----
   out.alarm=AB157A.on;out.cr=H.cr;out.stealthHud=$('ab152h').classList.contains('hide');out.alHud=!$('ab157al').classList.contains('hide');
   out.crouchBlocked=(()=>{ab152SetCrouch(true);return H.cr})();
