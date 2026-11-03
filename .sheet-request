@@ -1,0 +1,1 @@
+["RACE=weasel SETS=\"helm:deadeye,chest:tails;helm:skullhood,chest:mantle;helm:hood,chest:longcoat;helm:pelt,chest:bandolier;helm:cowl,chest:vest\" VIEWS=front,34,side,back,hf,h34,hb R=3 TAG=_v192before python3 v136_sheet.py"]
