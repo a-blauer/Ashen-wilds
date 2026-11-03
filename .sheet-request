@@ -1,0 +1,1 @@
+["CLS=ranger MODE=items SL=helm TAG=_before python3 gear_look.py", "CLS=ranger MODE=items SL=chest TAG=_before python3 gear_look.py", "CLS=ranger MODE=prog TAG=_before python3 gear_look.py"]
