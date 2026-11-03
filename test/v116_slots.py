@@ -40,7 +40,7 @@ try:
     ctx=b.new_context(viewport={'width':1000,'height':620});pg=ctx.new_page();errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)+' || '+(e.stack or '')[:400].replace('\n',' ')))
     load(pg,True);pg.evaluate("()=>localStorage.clear()");load(pg);pg.evaluate("()=>bt193View('heroes')");
-    check('title lists three empty slots + join',pg.evaluate("()=>document.querySelectorAll('#awT [data-slot][data-aw=new]').length==3&&!!document.querySelector('#awT [data-aw=join]')"))
+    check('title lists three empty slots (Choose Hero) + join (main menu)',pg.evaluate("()=>{const n=document.querySelectorAll('#awT [data-slot][data-aw=new]').length;bt193View('main');const j=!!document.querySelector('#awT [data-aw=join]');bt193View('heroes');return n==3&&j}"))
     pg.screenshot(path=HERE+'/out/v116_title_empty.png',timeout=120000)
     pg.click('#awT [data-slot="1"]',force=True);pg.wait_for_timeout(1500);create(pg,'warrior','Two')
     check('new hero saved in slot 2 only',slot(pg,1)=='Two' and slot(pg,0) is None and pg.evaluate("()=>localStorage.getItem('kq_slot')")=='1')
@@ -65,7 +65,7 @@ try:
     check('delete needs two taps and clears only slot 1',slot(pg,0) is None and slot(pg,1)=='Two' and pg.evaluate("()=>document.querySelector('#awT [data-slot=\"0\"]').dataset.aw=='new'"))
     # join window: paste Two's save code into slot 3, Join
     code=pg.evaluate("()=>KQSX.pre+btoa(unescape(encodeURIComponent(localStorage.getItem(KQSL.keys[1]))))")
-    pg.click('#awT [data-aw=join]',force=True);pg.wait_for_timeout(500)
+    pg.evaluate("()=>bt193View('main')");pg.click('#awT [data-aw=join]',force=True);pg.wait_for_timeout(500)
     check('join window lists three slots',pg.evaluate("()=>!$('kqj').classList.contains('hide')&&document.querySelectorAll('#kqjSl [data-kqjs]').length==3"))
     pg.click('#kqjSl [data-kqjs="2"]',force=True);pg.evaluate("c=>{const d=$('kqjImp');d.open=true;const a=$('kqjA');a.value=c;a.dispatchEvent(new Event('input'))}",code)
     check('save code recognised for slot 3',pg.evaluate("()=>/Found Two/.test($('kqjAM').textContent)&&/Slot 3/.test($('kqjAM').textContent)"))
