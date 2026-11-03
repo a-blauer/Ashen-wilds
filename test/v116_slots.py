@@ -39,28 +39,28 @@ try:
     b=p.chromium.launch(executable_path=os.environ.get('PW_CHROME') or (os.path.exists('/opt/pw-browsers/chromium') and '/opt/pw-browsers/chromium') or None,args=['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist','--enable-unsafe-swiftshader','--no-proxy-server'])
     ctx=b.new_context(viewport={'width':1000,'height':620});pg=ctx.new_page();errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)+' || '+(e.stack or '')[:400].replace('\n',' ')))
-    load(pg,True);pg.evaluate("()=>localStorage.clear()");load(pg)
+    load(pg,True);pg.evaluate("()=>localStorage.clear()");load(pg);pg.evaluate("()=>bt193View('heroes')");
     check('title lists three empty slots + join',pg.evaluate("()=>document.querySelectorAll('#awT [data-slot][data-aw=new]').length==3&&!!document.querySelector('#awT [data-aw=join]')"))
     pg.screenshot(path=HERE+'/out/v116_title_empty.png',timeout=120000)
     pg.click('#awT [data-slot="1"]',force=True);pg.wait_for_timeout(1500);create(pg,'warrior','Two')
     check('new hero saved in slot 2 only',slot(pg,1)=='Two' and slot(pg,0) is None and pg.evaluate("()=>localStorage.getItem('kq_slot')")=='1')
-    load(pg)
+    load(pg);pg.evaluate("()=>bt193View('heroes')");
     check('title shows slot 2 hero, current',pg.evaluate("()=>{const b=document.querySelector('#awT [data-slot=\"1\"]');return b.dataset.aw=='cont'&&b.classList.contains('p')&&b.textContent.includes('Two')}"))
     pg.click('#awT [data-slot="0"]',force=True);pg.wait_for_timeout(1500);create(pg,'mage','One')
     check('second hero in slot 1, slot 2 kept',slot(pg,0)=='One' and slot(pg,1)=='Two')
-    load(pg)
+    load(pg);pg.evaluate("()=>bt193View('heroes')");
     pg.screenshot(path=HERE+'/out/v116_title_two.png',timeout=120000)
     pg.click('#awT [data-slot="1"]',force=True)
     check('continue slot 2 loads Two',until(pg,"()=>party.length>0&&hero.name=='Two'&&hero.cls=='warrior'&&KQSL.n==1"))
     # in-game main menu → the other slot → reload → continue there
-    pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1500)
+    pg.evaluate("()=>{ren.render=()=>{};POST.render=()=>{};kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1500);pg.evaluate("()=>bt193View('heroes')");
     check('menu title marks the hero playing now (no delete)',pg.evaluate("()=>{const b=document.querySelector('#awT [data-slot=\"1\"]');return b&&b.textContent.includes('playing now')&&!document.querySelector('#awT [data-sld=\"1\"]')}"))
     pg.evaluate("()=>document.querySelector('#awT [data-slot=\"0\"]').click()")
     pg.wait_for_timeout(4000);pg.wait_for_function('document.readyState=="complete"',timeout=180000)
     check('switched to slot 1 after reload',until(pg,"()=>party.length>0&&hero.name=='One'&&KQSL.n==0",90))
     check('slot 2 untouched by the switch',slot(pg,1)=='Two')
     # an old single save (pre-v116 key) is slot 1; delete slot 1 from the title
-    load(pg)
+    load(pg);pg.evaluate("()=>bt193View('heroes')");
     pg.click('#awT [data-sld="0"]',force=True);pg.wait_for_timeout(300);pg.click('#awT [data-sld="0"]',force=True);pg.wait_for_timeout(300)
     check('delete needs two taps and clears only slot 1',slot(pg,0) is None and slot(pg,1)=='Two' and pg.evaluate("()=>document.querySelector('#awT [data-slot=\"0\"]').dataset.aw=='new'"))
     # join window: paste Two's save code into slot 3, Join

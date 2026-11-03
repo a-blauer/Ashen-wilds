@@ -62,7 +62,7 @@ try:
     order=[1,2,0,2,1,0,1][:int(os.environ.get('SWITCHES','7'))]
     if 'slots' in PART or 'ap' in PART:
         for k,sl in enumerate(order):
-            pg.evaluate("()=>{kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1200)
+            pg.evaluate("()=>{kqMenuAsk();kqMenuGo()}");pg.wait_for_timeout(1200);pg.evaluate("()=>bt193View('heroes')")
             ok=pg.evaluate("i=>!!document.querySelector('#awT [data-slot=\"'+i+'\"][data-aw=cont]')",sl)
             if not ok:check('slot %d listed on the menu title'%(sl+1),False);break
             with pg.expect_navigation(timeout=240000):pg.evaluate("i=>document.querySelector('#awT [data-slot=\"'+i+'\"]').click()",sl)

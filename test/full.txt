@@ -140,3 +140,4 @@ CHECK=1 NOSHOT=1 CLS=mage WT=orb v186_weapon_anims.py
 v186_knife.py
 v192_misc.py
 v192_hero_fit.py
+v193_title.py
