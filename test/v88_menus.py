@@ -105,10 +105,10 @@ def s(pg):
     P('sellSel',"()=>[sellSel.size,document.querySelectorAll('#ss .kqm-cell.kqm-sel').length,document.querySelector('#ss .sellbar').innerText]")
     pg.screenshot(timeout=120000,path=O+'/'+pre+'shop_sell.png')
     P('sell',"()=>{const g0=gold,n0=gear.length;document.querySelector('[data-sa=sell]').click();document.querySelector('[data-sa=yes]').click();return [gold-g0,n0-gear.length]}")
-    ev("()=>{$('shop').classList.add('hide');openShop('x')}");pg.wait_for_timeout(600)
+    ev("()=>{$('shop').classList.add('hide');if(typeof MS194!='undefined')MS194.tab='wares';openShop('x')}");pg.wait_for_timeout(600)
     P('mshop',"()=>document.querySelectorAll('#mst .kqm-cell').length")
     pg.screenshot(timeout=120000,path=O+'/'+pre+'mshop.png')
-    ev("()=>{$('mshop').classList.add('hide')}")
+    ev("()=>{$('mshop').classList.add('hide');closeX()}")
     for nm,js in [('curio',"openX('visitor','merchant')"),('sage',"openX('visitor','sage')"),('stable',"openX('stable',0)"),('cook',"openX('cook')"),('hold',"openX('hold')")]:
         ev("()=>{"+js+"}");pg.wait_for_timeout(900)
         P(nm,"()=>[document.querySelectorAll('#xwB .kqm-cell').length,document.querySelectorAll('#xwB .kqm-hold .rw').length]")
@@ -121,7 +121,7 @@ def s(pg):
             if c.count():
                 c.click();pg.wait_for_timeout(300)
                 P('mktBuy',"()=>{const b=[...document.querySelectorAll('#xwB .kqm-bbar [data-kqa]')];const ks=[...document.querySelectorAll('#xwB [data-ibuy]')].map(x=>x.dataset.ibuy),tot=()=>ks.reduce((a,k)=>a+cnt(k),0)/2;const n0=tot();b[1]&&b[1].click();return [b.map(x=>x.textContent),tot()-n0]}")
-        if nm=='curio' and not MOB:
+        if nm=='curio' and not MOB and pg.locator('#xwB .kqm-cell').count():
             pg.locator('#xwB .kqm-cell').first.hover();pg.wait_for_timeout(300)
         pg.screenshot(timeout=120000,path=O+'/'+pre+'x_'+nm+'.png')
         ev("()=>$('xw').classList.add('hide')")

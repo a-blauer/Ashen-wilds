@@ -101,3 +101,4 @@ v192|1090-|1910-|1870-|decor|abilit|character-slots|title-screen|creator: v192_m
 3560|v192|sovereign-range|tab|target|chalice|1100-|3097-: v192_sov_range.py v150_checks.py v146_sovs.py v141_sov.py v112_hydra.py v112_wraith.py v112_vaelric.py
 3550|v192|hero-fit|bow|bard|lute|hood|1270|3220|2510|2500|2505|2540|2995|1900: v192_hero_fit.py v163_weapons.py v164_dodge_grip.py v135_bow.py v136_gear.py
 v193|blade-title|title-screen|character-slots|0560-|0600-: v193_title.py v73t.py v116_slots.py v94_creator.py
+v194|rune|sanctum|curio|magic-shop|reforge: v194_shops.py v194_rune_look.py v109_kingdom_shops.py v137_evolve.py

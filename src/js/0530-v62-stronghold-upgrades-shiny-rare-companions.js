@@ -12,13 +12,13 @@ const SHU=[
 const SHC=[null,{g:600,x:1,b:0},{g:3500,x:2.5,b:2},{g:12000,x:5,b:4}];
 // shops (everything except the Trading Post must be built)
 const SHOPS=[
- {k:'magic',n:'Magic Shop',i:'🔮',g:400,m:[['glowcap',10],['Rock Core',4]],d:'Sells spell scrolls and enchanted wares'},
+ {k:'magic',n:'Magic Shop',i:'🔮',g:400,m:[['glowcap',10],['Rock Core',4]],d:'Evolve abilities, reforge gear stats, elixirs and eggs'},
  {k:'cook',n:'Cooking Hearth',i:'🍳',g:250,m:[['stone',10],['wood',10]],d:'Cook meals that boost your stats'},
  {k:'alch',n:'Alchemy Table',i:'⚗️',g:300,m:[['glowcap',8],['bone',6]],d:'Brew potions, elixirs and fusion catalysts'},
- {k:'merchant',n:'Curio Shop',i:'🧳',g:500,m:[['wood',15],['fiber',10]],d:'Mystery eggs, potion bundles and a rune — new stock every 20 minutes'},
+ {k:'merchant',n:'Curio Shop',i:'🧳',g:500,m:[['wood',15],['fiber',10]],d:'Trades for resources: eggs, potions, runes and a Curio of the Hour'},
  {k:'trainer',n:'Beast Trainer',i:'🦴',g:600,m:[['fiber',10],['Silk Gland',6]],d:'Pay to train a companion up one level'},
  {k:'bard',n:'Bard’s Stage',i:'🎵',g:400,m:[['wood',12],['petals',8]],d:'A song that grants Inspired (+10% XP, +5% stats) every 20 minutes'},
- {k:'sage',n:'Rune Sanctum',i:'🔯',g:1500,m:[['crystal',6],['Ectoplasm',6]],d:'Buy any creature rune'}];
+ {k:'sage',n:'Rune Sanctum',i:'🔯',g:1500,m:[['crystal',6],['Ectoplasm',6]],d:'Set runes into gear and companions, fuse and buy runes'}];
 SH.shop={};
 function shopBuilt(k){return typeof SH!='undefined'&&!!(SH.shop&&SH.shop[k])}
 const shL=k=>SH.lv[k]|0;

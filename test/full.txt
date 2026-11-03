@@ -141,3 +141,5 @@ v186_knife.py
 v192_misc.py
 v192_hero_fit.py
 v193_title.py
+v194_shops.py
+SHOTS=0 v194_rune_look.py

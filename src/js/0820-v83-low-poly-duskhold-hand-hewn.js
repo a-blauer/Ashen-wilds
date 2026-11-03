@@ -208,7 +208,7 @@ function buildTown(T){
     twBake(k?k.P:[],key,true).forEach(m=>b.add(m));
     const ring=TQ(b,new THREE.TorusGeometry(1.35,.07,4,12),sm(0xd8b44a,{emissive:0x8a6a00,emissiveIntensity:.8,metalness:.6}),-2.0,4.5,-.4,1,1,1,Math.PI/2);
     const fin=TQ(b,G_OCT,gmat(0xffe08a),-2.0,8.75,-.4,.2,.2,.2);
-    sign(b,[{t:'ARCANE SHOP',f:'700 56px'},{t:'✦ spells · scrolls · wonders ✦',f:'600 26px'}],2.6,.5,'#1c1236','#cdb6ff','#9a7aff',.5,2.62,D/2+.17,0,512,150);
+    sign(b,[{t:'ARCANE SHOP',f:'700 56px'},{t:'✦ evolutions · reforging · elixirs ✦',f:'600 26px'}],2.6,.5,'#1c1236','#cdb6ff','#9a7aff',.5,2.62,D/2+.17,0,512,150);
     const rune=new THREE.Mesh(new THREE.RingGeometry(.9,1.1,12),new THREE.MeshBasicMaterial({color:0x7a4aff,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));rune.rotation.x=-Math.PI/2;rune.position.set(.7,.05,3.9);b.add(rune);
     const rune2=new THREE.Mesh(new THREE.RingGeometry(.35,.55,5),rune.material);rune2.rotation.x=-Math.PI/2;rune2.position.set(.7,.055,3.9);b.add(rune2);
     const cr=TQ(b,G_OCT,gmat(0x9ae0ff),2.5,1.25,3.3,.26,.34,.26);

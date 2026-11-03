@@ -6010,13 +6010,13 @@ const SHU=[
 const SHC=[null,{g:600,x:1,b:0},{g:3500,x:2.5,b:2},{g:12000,x:5,b:4}];
 // shops (everything except the Trading Post must be built)
 const SHOPS=[
- {k:'magic',n:'Magic Shop',i:'🔮',g:400,m:[['glowcap',10],['Rock Core',4]],d:'Sells spell scrolls and enchanted wares'},
+ {k:'magic',n:'Magic Shop',i:'🔮',g:400,m:[['glowcap',10],['Rock Core',4]],d:'Evolve abilities, reforge gear stats, elixirs and eggs'},
  {k:'cook',n:'Cooking Hearth',i:'🍳',g:250,m:[['stone',10],['wood',10]],d:'Cook meals that boost your stats'},
  {k:'alch',n:'Alchemy Table',i:'⚗️',g:300,m:[['glowcap',8],['bone',6]],d:'Brew potions, elixirs and fusion catalysts'},
- {k:'merchant',n:'Curio Shop',i:'🧳',g:500,m:[['wood',15],['fiber',10]],d:'Mystery eggs, potion bundles and a rune — new stock every 20 minutes'},
+ {k:'merchant',n:'Curio Shop',i:'🧳',g:500,m:[['wood',15],['fiber',10]],d:'Trades for resources: eggs, potions, runes and a Curio of the Hour'},
  {k:'trainer',n:'Beast Trainer',i:'🦴',g:600,m:[['fiber',10],['Silk Gland',6]],d:'Pay to train a companion up one level'},
  {k:'bard',n:'Bard’s Stage',i:'🎵',g:400,m:[['wood',12],['petals',8]],d:'A song that grants Inspired (+10% XP, +5% stats) every 20 minutes'},
- {k:'sage',n:'Rune Sanctum',i:'🔯',g:1500,m:[['crystal',6],['Ectoplasm',6]],d:'Buy any creature rune'}];
+ {k:'sage',n:'Rune Sanctum',i:'🔯',g:1500,m:[['crystal',6],['Ectoplasm',6]],d:'Set runes into gear and companions, fuse and buy runes'}];
 SH.shop={};
 function shopBuilt(k){return typeof SH!='undefined'&&!!(SH.shop&&SH.shop[k])}
 const shL=k=>SH.lv[k]|0;
@@ -9201,7 +9201,7 @@ function buildTown(T){
     twBake(k?k.P:[],key,true).forEach(m=>b.add(m));
     const ring=TQ(b,new THREE.TorusGeometry(1.35,.07,4,12),sm(0xd8b44a,{emissive:0x8a6a00,emissiveIntensity:.8,metalness:.6}),-2.0,4.5,-.4,1,1,1,Math.PI/2);
     const fin=TQ(b,G_OCT,gmat(0xffe08a),-2.0,8.75,-.4,.2,.2,.2);
-    sign(b,[{t:'ARCANE SHOP',f:'700 56px'},{t:'✦ spells · scrolls · wonders ✦',f:'600 26px'}],2.6,.5,'#1c1236','#cdb6ff','#9a7aff',.5,2.62,D/2+.17,0,512,150);
+    sign(b,[{t:'ARCANE SHOP',f:'700 56px'},{t:'✦ evolutions · reforging · elixirs ✦',f:'600 26px'}],2.6,.5,'#1c1236','#cdb6ff','#9a7aff',.5,2.62,D/2+.17,0,512,150);
     const rune=new THREE.Mesh(new THREE.RingGeometry(.9,1.1,12),new THREE.MeshBasicMaterial({color:0x7a4aff,transparent:true,opacity:.8,depthWrite:false,side:THREE.DoubleSide}));rune.rotation.x=-Math.PI/2;rune.position.set(.7,.05,3.9);b.add(rune);
     const rune2=new THREE.Mesh(new THREE.RingGeometry(.35,.55,5),rune.material);rune2.rotation.x=-Math.PI/2;rune2.position.set(.7,.055,3.9);b.add(rune2);
     const cr=TQ(b,G_OCT,gmat(0x9ae0ff),2.5,1.25,3.3,.26,.34,.26);
@@ -35843,7 +35843,7 @@ function ch139Stats(){const s=HS(),n=atr139Preview(),L=hero.lvl|0,kd=KD(L),mx=he
     row('Ability cooldowns','%',s=>-Math.min(.5,s.cdr||0),'Shorter cooldowns',1,1)+row('Lifesteal','%',s=>s.ls,'',0,1)+row('Execute','+%',s=>s.exec,'More damage to enemies under 35% health',0,1)+row('Ability area','+%',s=>s.aoeP,'',0,1));
   h+=sec('🛡️ Defense',row('Health','',(s,mx)=>mx)+row('Physical defense','',s=>s.pd,'Damage cut against a monster of your level: '+ch139Fmt(pdR(s.pd),'%'))+row('Magical defense','',s=>s.md,'Damage cut against a monster of your level: '+ch139Fmt(pdR(s.md),'%'))+
     row('Physical damage cut','%',s=>pdR(s.pd),'Against a monster of your level')+row('Magical damage cut','%',s=>pdR(s.md),'Against a monster of your level')+row('Damage reduction','%',s=>Math.min(.75,s.dr),'',0,1)+
-    row('Block chance','%',s=>s.blockC,'',0,1)+row('Health regen in combat','%',s=>s.regen,'Of max health per second',0,1)+row('Guard below 40% health','%',s=>s.lowdr,'',0,1)+row('Healing received','+%',s=>s.healP,'',0,1)+row('Heal per kill','%',s=>s.killheal,'Of max health',0,1));
+    row('Block chance','%',s=>s.blockC,'',0,1)+row('Deflect chance','%',s=>s.defl||0,'Hits that never land (v194 Deflect runes)',0,1)+row('Thorns','%',s=>s.thorns||0,'Of the damage you take, dealt back to the attacker',0,1)+row('Health regen in combat','%',s=>s.regen,'Of max health per second',0,1)+row('Guard below 40% health','%',s=>s.lowdr,'',0,1)+row('Healing received','+%',s=>s.healP,'',0,1)+row('Heal per kill','%',s=>s.killheal,'Of max health',0,1));
   h+=sec('✨ Utility',row('Mana','',(s,mx,mm)=>mm)+row('Mana regen','s',(s,mx,mm)=>mm*(.012+(s.mpr||0)),'Mana per second')+row('Dash charges','',s=>s.dash)+row('Dash invulnerability','',s=>(.3+(s.iframe||0))*1000,'Milliseconds')+
     row('Move speed','+%',s=>s.mspd,'',0,1)+row('Loot find','+%',s=>s.loot,'',0,1)+row('XP bonus','+%',s=>s.xp,'',0,1));
   // bonuses
@@ -65665,3 +65665,810 @@ function bt193Score(t,bar,s){const M=BT193M,b=bar%M.bars,sp=.25;
   if(i>=0&&i<M.cello.length){const [n,l]=M.cello[i];muCello(muF(n),t,sp*l*.96,b<8?.16:.13);if(b>=8)muLead(muF(n+12),t,sp*l*.95,.035,{w:'sine',cut:1800,vib:1.2,at:.25,sub:0})}}
 MTH.title=Object.assign({},MTH.title,{bpm:60,score:bt193Score});
 {const f=muStep;muStep=function(t){if(MU.th&&MU.th.score){try{MU.th.score(t,MU.bar,MU.s)}catch(e){if(!MU.err193){MU.err193=1;console.warn('v193 score',e)}}return}return f.apply(this,arguments)}}
+// ================= v194: runes, part 1 — the rune types, ranks, gear rune slots and what runes do =================
+// Owner (Nov 3 2026): "Runes need a better description of what they do. Make runes only be able to be placed into something at the
+// rune sanctum ... Runes should be permanent on slotting, and to remove you have to destroy the rune. Companions should only get a
+// rune slot once they are evolved for the first time, and another slot once they evolve a 3rd time. ... combining like-type Runes to
+// create a stronger version. ... a RNG slot system on equipment drops and shop equipment (armor and weapons only). Slots should only
+// be on items blue rarity or above and more common as you get higher level- but still not super common. Multiple rune slots on an item
+// should be uncommon, with 3 rune slots being rare and only available on epic or above items. There should be offensive Runes for
+// weapons (fire, poison, etc) and other Runes specifically for armor (extra health, armor, deflect, etc.)"
+//
+// How it works:
+// - Twelve rune types (RN194.T): six weapon runes (Ember, Frost, Storm, Venom, Might, Leech) and six armour runes (Vigor, Ward,
+//   Deflect, Tide, Swift, Thorns). Each has three ranks. A rune is a supply item (SUP / sup): 'r_<type>' is rank I (the old keys,
+//   so runes in old saves stay), 'r_<type>2' rank II, 'r_<type>3' rank III. RUNEK stays the list of rank I keys (drops roll from it).
+// - Gear: weapons (sl 'weapon') take weapon runes; shields, helms, chest pieces and boots take armour runes. A piece's slots are
+//   it.rs (0–3) and the runes set in it it.ru (keys). Slots are rolled when the piece is made (genItem, so drops and shop stock):
+//   only Rare (blue) or better, more often at higher tiers, two slots uncommon, three only on Epic or Legendary pieces and rare.
+// - Companions take any rune. Slots: one after their first evolution (c.evo ≥ 1), a second after the third (c.evo ≥ 3).
+//   Old saves: runes in slots a companion no longer has go back to the bag (rn194Fix, once per load).
+// - Runes are set at the Rune Sanctum only (3591) and are permanent: the only way to free a slot is to destroy the rune in it.
+// - Effects: hero stats through an HS wrapper (equipped, usable pieces only), weapon procs through a heroHit wrapper (burn, chill,
+//   arcs, poison), deflect through a hitHero wrapper; companions through runeMul / runeEl / runeHit / runeTick (the v49 hooks in
+//   cStat, compHit and the main loop, redefined here) and a hitTarget wrapper (deflect, thorns).
+var RN194={busy:0,rk:['I','II','III'],
+  T:{
+   // ---- weapon runes ----
+   ember:{n:'Ember',i:'🔥',sl:'w',col:0xff5a14,c2:0xffc040,el:'fire',
+     h:{pr:'burn',ch:[.25,.32,.4],k:[.2,.3,.4],dur:3},c:{att:[.05,.08,.12]},
+     hd:r=>`Hits have a ${P_(r.h.ch)} chance to set the enemy ablaze. It burns for 3 s, taking ${P_(r.h.k)} of your attack each second.`,
+     cd:r=>`Its attacks burn (fire element) · +${P_(r.c.att)} attack.`},
+   frost:{n:'Frost',i:'❄️',sl:'w',col:0x7ad8ff,c2:0xe8fbff,el:'frost',
+     h:{pr:'chill',ch:[.25,.33,.42],v:[.08,.12,.16],dur:2.5},c:{att:[.05,.08,.12]},
+     hd:r=>`Hits have a ${P_(r.h.ch)} chance to chill the enemy for 2.5 s: it is slowed and takes ${P_(r.h.v)} more damage from you.`,
+     cd:r=>`Its attacks chill (frost element) · +${P_(r.c.att)} attack.`},
+   storm:{n:'Storm',i:'⚡',sl:'w',col:0x8aa8ff,c2:0xf0f4ff,el:'shock',
+     h:{pr:'arc',ch:[.15,.2,.26],k:[.4,.55,.7],n:2},c:{att:[.05,.08,.12]},
+     hd:r=>`Hits have a ${P_(r.h.ch)} chance to arc lightning to up to 2 nearby enemies for ${P_(r.h.k)} of your attack.`,
+     cd:r=>`Its attacks shock (lightning element) · +${P_(r.c.att)} attack.`},
+   venom:{n:'Venom',i:'☠️',sl:'w',col:0x7ae04a,c2:0xd8ff6a,el:'poison',
+     h:{pr:'poison',ch:[.35,.45,.55],k:[.15,.22,.3],dur:4},c:{att:[.05,.08,.12]},
+     hd:r=>`Hits have a ${P_(r.h.ch)} chance to poison the enemy for 4 s, ${P_(r.h.k)} of your attack each second.`,
+     cd:r=>`Its attacks poison (poison element) · +${P_(r.c.att)} attack.`},
+   might:{n:'Might',i:'💪',sl:'w',col:0xffb238,c2:0xffe7a0,
+     h:{st:{paP:[.06,.1,.15],maP:[.06,.1,.15]}},c:{att:[.15,.22,.3]},
+     hd:r=>`+${P_(r.h.st.paP)} physical and magical attack.`,
+     cd:r=>`+${P_(r.c.att)} attack.`},
+   leech:{n:'Leech',i:'🩸',sl:'w',col:0xd01c3a,c2:0xff7a8a,
+     h:{st:{ls:[.02,.03,.045]}},c:{leech:[.08,.12,.16]},
+     hd:r=>`Heals you for ${P_(r.h.st.ls)} of the damage you deal.`,
+     cd:r=>`Heals it for ${P_(r.c.leech)} of the damage it deals.`},
+   // ---- armour runes ----
+   vigor:{n:'Vigor',i:'❤️',sl:'a',col:0xff2a1a,c2:0xff9a4a,
+     h:{st:{hpP:[.06,.1,.15]}},c:{hp:[.2,.28,.36]},
+     hd:r=>`+${P_(r.h.st.hpP)} max health.`,cd:r=>`+${P_(r.c.hp)} health.`},
+   ward:{n:'Ward',i:'🛡️',sl:'a',col:0x5a8aff,c2:0xc8dcff,
+     h:{st:{pdP:[.08,.13,.2],mdP:[.08,.13,.2]}},c:{def:[.2,.28,.36]},
+     hd:r=>`+${P_(r.h.st.pdP)} physical and magical defense (armor).`,cd:r=>`+${P_(r.c.def)} physical and magical defense.`},
+   deflect:{n:'Deflect',i:'💠',sl:'a',col:0xdfe6ff,c2:0x9ab8ff,
+     h:{st:{defl:[.04,.07,.1]}},c:{defl:[.06,.1,.14]},
+     hd:r=>`${P_(r.h.st.defl)} chance to deflect an enemy's hit completely.`,cd:r=>`${P_(r.c.defl)} chance to deflect a hit completely.`},
+   tide:{n:'Tide',i:'💧',sl:'a',col:0x1ad0b8,c2:0x9affee,
+     h:{st:{regen:[.0025,.004,.006]}},c:{regen:[.01,.015,.02]},
+     hd:r=>`Restores ${P_(r.h.st.regen,2)} of your max health every second in combat.`,cd:r=>`Restores ${P_(r.c.regen,1)} of its health every second.`},
+   swift:{n:'Swift',i:'💨',sl:'a',col:0xa8ffd8,c2:0xeafff6,
+     h:{st:{cdr:[.05,.08,.12]}},c:{swift:[.43,.6,.8]},
+     hd:r=>`Abilities recharge faster: +${P_(r.h.st.cdr)} cooldown reduction.`,cd:r=>`Its spells recharge ${['30%','38%','44%'][r._k|0]} faster.`},
+   thorns:{n:'Thorns',i:'🥀',sl:'a',col:0xb0205a,c2:0xff6aa8,
+     h:{st:{thorns:[.1,.16,.24]}},c:{thorns:[.15,.22,.3]},
+     hd:r=>`Reflects ${P_(r.h.st.thorns)} of the damage you take back at the attacker.`,cd:r=>`Reflects ${P_(r.c.thorns)} of the damage it takes back at the attacker.`}},
+  // gear slots: Rare (2) or better; chance by rarity, +2.5% per tier; two slots 20% of slotted pieces; three on Epic+ only
+  slot:{base:[0,0,.08,.14,.2],tier:.025,two:.2,three:.3},
+  // what setting a rune costs (gold), per rank
+  sockG:r=>[60,240,900][r-1],
+  // fusing three runes into one of the next rank: [gold, crystal shards] for → II and → III
+  fuse:[[150,3],[800,8]]};
+function P_(v,dp){const f=x=>(+(x*100).toFixed(dp==null?0:dp))+'%';return Array.isArray(v)?'<b class="rn194-v">'+f(v[RN194._r|0])+'</b>':f(v)}
+const RN194K=Object.keys(RN194.T);
+function rn194Key(t,r){return 'r_'+t+(r>1?r:'')}
+function rn194Parse(k){const m=/^r_([a-z]+?)([23])?$/.exec(k||'');if(!m||!RN194.T[m[1]])return null;return {t:m[1],r:m[2]?+m[2]:1,T:RN194.T[m[1]],k}}
+function rn194Name(k){const p=rn194Parse(k);return p?p.T.n+' Rune '+RN194.rk[p.r-1]:k}
+// descriptions at a rank (r 1..3): what it does in gear and what it does in a companion
+function rn194Desc(k,who){const p=rn194Parse(k);if(!p)return '';RN194._r=p.r-1;const T=Object.assign({},p.T,{_k:p.r-1});
+  try{return who=='c'?p.T.cd(T):p.T.hd(T)}finally{RN194._r=0}}
+function rn194Kind(k){const p=rn194Parse(k);return p?(p.T.sl=='w'?'Weapon rune':'Armor rune'):''}
+function rn194FullDesc(k){const p=rn194Parse(k);if(!p)return '';
+  return `${rn194Kind(k)} · rank ${RN194.rk[p.r-1]}. ${p.T.sl=='w'?'In a weapon':'In a shield, helm, chest piece or boots'}: ${rn194Desc(k,'h')} In a companion: ${rn194Desc(k,'c')} Set it at the Rune Sanctum (permanent).`}
+// the supply entries for every type and rank (rank I keeps the old key); RUNES (v49) mirrors them for old readers
+RN194K.forEach(t=>{const T=RN194.T[t];for(let r=1;r<=3;r++){const k=rn194Key(t,r),plain=s=>String(s).replace(/<[^>]+>/g,'');
+  SUP[k]={n:rn194Name(k),i:T.i,c:'rune',d:plain(rn194FullDesc(k))};RUNES[k]=[rn194Name(k),T.i,plain(rn194Desc(k,'h')),{}]}
+  if(!RUNEK.includes(rn194Key(t,1)))RUNEK.push(rn194Key(t,1))});
+// the ranks fit for a slot kind: weapon pieces take weapon runes, armour pieces armour runes, companions any
+function rn194SlK(it){const t=it&&itT(it);if(!t)return null;return t.sl=='weapon'?'w':['offhand','helm','chest','boots'].includes(t.sl)?'a':null}
+function rn194Fits(k,target){const p=rn194Parse(k);if(!p)return false;if(target&&target.g)return true;const s=rn194SlK(target);return !!s&&p.T.sl==s}
+
+// ---------------- gear rune slots ----------------
+function rn194Roll(it){const t=itT(it);if(!t||!rn194SlK(it)||(it.r|0)<2)return 0;const S=RN194.slot,T=Math.max(0,tierOfLv(it.lv||1)-1);
+  if(Math.random()>=S.base[Math.min(4,it.r|0)]+S.tier*T)return 0;let n=1;if(Math.random()<S.two)n=2;if(n==2&&(it.r|0)>=3&&Math.random()<S.three)n=3;return n}
+{const f=genItem;genItem=function(l,o){const it=f.apply(this,arguments);try{if(it&&it.rs==null){const n=rn194Roll(it);if(n){it.rs=n;it.ru=[]}}}catch(e){console.warn('v194 slots',e)}return it}}
+// the runes set in a piece (a copy), its open slots
+function rn194Ru(it){return it&&Array.isArray(it.ru)?it.ru.filter(k=>rn194Parse(k)):[]}
+function rn194Open(it){return Math.max(0,(it&&it.rs|0)-rn194Ru(it).length)}
+
+// ---------------- companion rune slots ----------------
+function rn194CSlots(c){if(!c||c.st)return 0;const e=c.evo|0;return (e>=1?1:0)+(e>=3?1:0)}
+function rn194CNext(c){const e=c.evo|0;return e<1?'Unlocks at its first evolution ✦':e<3?'Unlocks at its third evolution ✦✦✦':''}
+// old saves: runes in slots a companion doesn't have go back to the bag (once per load)
+function rn194Fix(){let n=0;try{(party||[]).forEach(c=>{if(!c||!Array.isArray(c.runes))return;c.runes=c.runes.filter(k=>rn194Parse(k));const m=rn194CSlots(c);
+  while(c.runes.length>m){giveS(c.runes.pop(),1);n++}})}catch(e){console.warn('v194 fix',e)}
+  try{(gear||[]).concat(Object.values(eq||{})).forEach(it=>{if(!it||it.rs==null)return;it.rs=Math.max(0,Math.min(3,it.rs|0));it.ru=rn194Ru(it).slice(0,it.rs)})}catch(_){}
+  if(n)setTimeout(()=>{try{say('🔮 Companions now gain rune slots by evolving (one at the first evolution, a second at the third). '+n+' rune'+(n>1?'s were':' was')+' returned to your bag.')}catch(_){}},4000);return n}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{rn194Fix()}catch(_){}return r}}
+
+// ---------------- what the runes add up to ----------------
+// the hero: every usable equipped piece's runes. Stats are summed; procs come from the weapon.
+function rn194HeroRunes(){const L=[];try{SLOTS.forEach(k=>{const it=eq[k];if(it&&canUse(it))rn194Ru(it).forEach(r=>L.push(r))})}catch(_){}return L}
+function rn194HeroSum(){const S={};rn194HeroRunes().forEach(k=>{const p=rn194Parse(k),st=p&&p.T.h.st;if(!st)return;for(const q in st)S[q]=(S[q]||0)+st[q][p.r-1]});return S}
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._rn194){s._rn194=1;try{const A=rn194HeroSum();
+  if(A.hpP)s.hp*=1+A.hpP;if(A.paP)s.pa*=1+A.paP;if(A.maP)s.ma*=1+A.maP;if(A.pdP)s.pd*=1+A.pdP;if(A.mdP)s.md*=1+A.mdP;
+  ['ls','regen','cdr','thorns','defl'].forEach(k=>{if(A[k])s[k]=(s[k]||0)+A[k]});if(s.defl)s.defl=Math.min(.35,s.defl)}catch(e){console.warn('v194 HS',e)}}return s}}
+// weapon procs (outermost heroHit wrapper)
+function rn194WProcs(){const w=eq&&eq.weapon;if(!w||!canUse(w))return [];return rn194Ru(w).map(rn194Parse).filter(p=>p&&p.T.h.pr)}
+{const f=heroHit;heroHit=function(e,raw,mt,o){
+  if(e&&!e.dead&&e._rnCh&&e._rnCh>nowP())raw*=1+(e._rnChV||0);
+  const d=f.apply(this,[e,raw,mt,o]);
+  if(d>0&&e&&!RN194.busy&&!(o&&o.proc===false)&&!(typeof ABX!='undefined'&&ABX.ctx)){const L=rn194WProcs();if(L.length){RN194.busy++;try{rn194Proc(e,L,mt)}catch(err){console.warn('v194 proc',err)}finally{RN194.busy--}}}
+  return d}}
+function rn194Proc(e,L,mt){const A=atkOf(mt||heroMt()),now=nowP(),at=()=>e.m?gY(e.m.position,.8):null;
+  L.forEach(p=>{const H=p.T.h,i=p.r-1;if(Math.random()>=H.ch[i])return;
+    if(e.dead&&H.pr!='arc')return;
+    if(H.pr=='burn'){eStatus(e,{burn:H.dur},A*H.k[i]/.32);const q=at();if(q)burst(q,p.T.col,7,1.3,1.4,.4)}
+    else if(H.pr=='poison'){eStatus(e,{poison:H.dur},A*H.k[i]/.28);const q=at();if(q)burst(q,p.T.col,6,1,.8,.45)}
+    else if(H.pr=='chill'){eStatus(e,{slow:H.dur},0);e._rnChV=Math.max(e._rnCh>now&&e._rnChV||0,H.v[i]);e._rnCh=now+H.dur*1000;const q=at();if(q)burst(q,p.T.col,8,1.1,.6,.5)}
+    else if(H.pr=='arc'){const from=e.m.position,L2=enemies.filter(q=>q!==e&&!q.dead&&!q.hid&&d2(q.m.position,from)<30).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from)).slice(0,H.n);
+      L2.forEach(q=>{try{bolt(gY(from,.9),gY(q.m.position,.8),p.T.col)}catch(_){}heroHit(q,A*H.k[i],'m',{s:{col:p.T.col,noel:1},proc:false})});
+      if(L2.length)try{sfx('zap',.5)}catch(_){}}})}
+// deflect (outermost hitHero wrapper): the hit never lands
+{const f=hitHero;hitHero=function(e,mult,mt){try{if(e&&hero.hp>0&&!(hero.iv>0)&&townAt(pl.position.x,pl.position.z,.5)<0&&!(typeof AWD!='undefined'&&AWD.dead)&&!(typeof RV148!='undefined'&&RV148.down)){
+    const s=HS();if(s.defl>0&&Math.random()<s.defl){dn(pl.position,'Deflected!','#dfe6ff',-18);burst(gY(pl.position,1),0xdfe6ff,10,1.6,1,.3);try{sfx('blunt',.5)}catch(_){}return}}}catch(_){}
+  return f.apply(this,arguments)}}
+// ---------------- companions ----------------
+function rn194CSum(c){const sig=(c.runes||[]).join(',');if(c._rn194&&c._rn194.k===sig)return c._rn194.v;const S={el:null};
+  (c.runes||[]).forEach(k=>{const p=rn194Parse(k);if(!p)return;const C=p.T.c;for(const q in C)S[q]=(S[q]||0)+C[q][p.r-1];if(p.T.el&&!S.el)S.el=p.T.el});
+  try{Object.defineProperty(c,'_rn194',{value:{k:sig,v:S},writable:true,configurable:true,enumerable:false})}catch(_){c._rn194={k:sig,v:S}}return S}
+runeEl=function(c){return c&&c.runes&&c.runes.length?rn194CSum(c).el:null};
+runeMul=function(c,k){if(!c||!c.runes||!c.runes.length)return 1;const S=rn194CSum(c);return 1+((k=='pa'||k=='ma')?(S.att||0):k=='hp'?(S.hp||0):(k=='pd'||k=='md')?(S.def||0):0)};
+runeHit=function(c,d){if(!c||!c.runes||!c.runes.length||!(c.h>0))return;const l=rn194CSum(c).leech;if(l)c.h=Math.min(M(c),c.h+d*l)};
+runeTick=function(dt){if(dt<=0)return;party.slice(0,actN141()).forEach(c=>{if(!c||!c.runes||!c.runes.length||!(c.h>0))return;const S=rn194CSum(c);
+  if(S.swift&&c.cdm)for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*S.swift);
+  if(S.regen&&c.h<M(c))c.h=Math.min(M(c),c.h+M(c)*S.regen*dt)})};
+{const f=hitTarget;hitTarget=function(e,tg,mult,mt){const i=tg&&tg!==pl?fols.indexOf(tg):-1,me=i>=0?party[i]:null;
+  if(me&&me.runes&&me.runes.length&&me.h>0){const S=rn194CSum(me);if(S.defl&&Math.random()<S.defl){try{dn(tg.position,'Deflected','#dfe6ff',-14)}catch(_){}return}
+    const h0=me.h,r=f.apply(this,arguments);if(S.thorns&&e&&!e.dead&&me.h<h0){try{hurt(e,Math.max(1,Math.round((h0-me.h)*S.thorns)),{col:0xb0205a},false)}catch(_){}}return r}
+  return f.apply(this,arguments)}}
+// the companion window: the runes it carries (read only; runes are set at the Rune Sanctum)
+runeHTML=function(c){if(!c)return '';const n=rn194CSlots(c),L=(c.runes||[]).filter(k=>rn194Parse(k));
+  let h=`<div class="sec">Runes (${L.length}/${n} slot${n==1?'':'s'})</div><div class="rn194-cs">`;
+  for(let i=0;i<2;i++){const k=L[i];if(k){const p=rn194Parse(k);h+=`<div class="rn194-cr" style="--rc:#${p.T.col.toString(16).padStart(6,'0')}"><span class="rn194-gem">${p.T.i}<i>${RN194.rk[p.r-1]}</i></span><span><b>${rn194Name(k)}</b><small>${rn194Desc(k,'c')}</small></span></div>`}
+    else if(i<n)h+=`<div class="rn194-cr rn194-empty"><span class="rn194-gem">◇</span><span><b>Empty rune slot</b><small>Set a rune at the Rune Sanctum in Duskhold.</small></span></div>`;
+    else h+=`<div class="rn194-cr rn194-lock"><span class="rn194-gem">🔒</span><span><b>Locked slot</b><small>${i==0?'Unlocks at its first evolution ✦':'Unlocks at its third evolution ✦✦✦'}</small></span></div>`}
+  return h+'</div><div class="mut dtl">Runes are permanent once set. Removing one destroys it.</div>'};
+// Cheddar's "Rune-Touched" quest: any rune set (gear or companion) counts while you are out on that road
+try{if(typeof CHQ132_ID!='undefined'&&CHQ132_ID.h2c)CHQ132_ID.h2c.d='Set a rune into your gear or one of your companions at the Rune Sanctum, then come back out here.'}catch(_){}
+function rn194Any(){try{if(rn194HeroRunes().length)return true;if((gear||[]).some(it=>rn194Ru(it).length))return true;return (party||[]).some(c=>c&&c.runes&&c.runes.length)}catch(_){return false}}
+if(typeof chqRunes132=='function'){const f=chqRunes132;chqRunes132=function(){const r=f.apply(this,arguments);try{if(rn194Any())chqEv132('rune',1)}catch(_){}return r}}
+
+// ---------------- tooltips and the item panel ----------------
+function rn194SlotsHTML(it,cls){const n=it&&it.rs|0;if(!n)return '';const L=rn194Ru(it);let h=`<div class="${cls||'kqm-tx'} rn194-tt"><span class="rn194-tth">Rune slots ${L.length}/${n}</span>`;
+  for(let i=0;i<n;i++){const k=L[i],p=k&&rn194Parse(k);h+=p?`<span class="rn194-tr" style="--rc:#${p.T.col.toString(16).padStart(6,'0')}">${p.T.i} <b>${rn194Name(k)}</b> <small>${rn194Desc(k,'h')}</small></span>`:`<span class="rn194-tr rn194-te">◇ Empty ${rn194SlK(it)=='w'?'weapon':'armor'} rune slot</span>`}
+  return h+'</div>'}
+{const f=kqmGearTip;kqmGearTip=function(it,o){let h=f.apply(this,arguments);try{const x=rn194SlotsHTML(it);if(x){const i=h.indexOf('<div class="kqm-ts" style="margin-top:4px">Upgrade');h=i>=0?h.slice(0,i)+x+h.slice(i):h+x}}catch(_){}return h}}
+{const f=idHTML;idHTML=function(){let h=f.apply(this,arguments);try{const it=selI&&(selI.k=='e'?SLOTS.map(k=>eq[k]).find(x=>x&&x.id==selI.id):gear.find(x=>x.id==selI.id));if(it&&it.rs)h+=rn194SlotsHTML(it,'rn194-box')}catch(_){}return h}}
+// ---------------- co-op: a partner's gear carries its rune types (for the look) ----------------
+{const f=mpMyGear;mpMyGear=function(){const g=f.apply(this,arguments);try{['weapon','offhand','helm','chest','boots'].forEach((k,i)=>{const it=eq[k];if(it&&Array.isArray(g[i])&&rn194Ru(it).length)g[i]=g[i].concat([rn194Ru(it).join(',')])})}catch(_){}return g}}
+{const f=mpGearE;mpGearE=function(g){const E=f.apply(this,arguments);try{const S5=['weapon','offhand','helm','chest','boots'];(Array.isArray(g)?g:[]).slice(0,5).forEach((q,i)=>{const it=E[S5[i]];if(it&&Array.isArray(q)&&typeof q[2]=='string'){
+  const L=q[2].split(',').filter(k=>rn194Parse(k)).slice(0,3);if(L.length){it.rs=L.length;it.ru=L}}})}catch(_){}return E}}
+{const f=mpSanG;mpSanG=function(it){const o=f.apply(this,arguments);if(o){if(o.rs!=null){o.rs=Math.max(0,Math.min(3,o.rs|0));o.ru=(Array.isArray(o.ru)?o.ru:[]).filter(k=>rn194Parse(k)).slice(0,o.rs)}else delete o.ru}return o}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+.rn194-v{color:#f5e2b0;font-weight:700}
+.rn194-cs{display:flex;flex-direction:column;gap:6px;margin:4px 0 6px}
+.rn194-cr{display:flex;gap:10px;align-items:center;padding:7px 9px;border-radius:8px;border:1px solid color-mix(in srgb,var(--rc,#7a5cff) 55%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--rc,#7a5cff) 16%,transparent),rgba(0,0,0,.25))}
+.rn194-cr small{display:block;color:var(--mut);font-size:.72rem;line-height:1.3}.rn194-cr b{font-size:.84rem}
+.rn194-cr.rn194-empty,.rn194-cr.rn194-lock{--rc:#5a5a66;opacity:.85}.rn194-cr.rn194-lock{filter:grayscale(.6)}
+.rn194-gem{position:relative;flex:none;width:34px;height:34px;display:grid;place-items:center;font-size:1.05rem;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--rc,#7a5cff) 70%,#fff 10%),color-mix(in srgb,var(--rc,#7a5cff) 30%,#000) 75%)}
+.rn194-gem i{position:absolute;bottom:1px;right:6px;font-style:normal;font-size:.55rem;font-weight:900;color:#fff;text-shadow:0 0 3px #000}
+.rn194-tt{display:flex;flex-direction:column;gap:3px;margin-top:5px}.rn194-tth{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#c9b8ff}
+.rn194-tr{font-size:.74rem;padding-left:8px;border-left:2px solid var(--rc,#7a5cff)}.rn194-tr small{color:var(--mut)}.rn194-tr.rn194-te{color:var(--mut);border-left-color:#5a5a66;font-style:italic}
+.rn194-box{margin-top:8px;padding:7px 9px;border:1px solid rgba(160,130,255,.35);border-radius:6px;background:rgba(120,90,255,.07)}
+</style>`);
+// ================= v194: runes, part 2 — the Rune Sanctum window =================
+// The only place runes go into anything. Tabs (RS194.tab):
+//   set   — pick a piece of gear with rune slots or a companion, pick one of your runes, set it (gold fee by rank, two-step confirm:
+//           permanent). A set rune can only be destroyed (two-step confirm); its slot is free again.
+//   fuse  — three runes of one type and rank → one of the next rank (gold + Crystal Shards). Rank III needs Sanctum level 1.
+//   buy   — rank I runes of any type; rank II from Sanctum level 2.
+//   carve — Sanctum level 3: carve one rune slot into a Rare-or-better weapon or armour piece that has none.
+// Window: the shared #xw in the visitor mode the Steward's shop prompt already opens (xwArg 'sage'); the older visitor code
+// (v49 list, v109 note, kqm slot grid) is skipped for it.
+var RS194={tab:'set',sel:null,rune:null,cf:null,anim:null,fsel:null};
+var RS194_BUY=[500,2200],RS194_CARVE={g:2500,m:[['crystal',10],['Ectoplasm',6]]};
+function rs194L(){return typeof shpL109=='function'?shpL109('sage'):0}
+const rs194Hex=c=>'#'+c.toString(16).padStart(6,'0');
+const rs194Esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+function rs194Gem(k,big,extra){const p=rn194Parse(k);if(!p)return '';return `<span class="rn194-gem rs194-g${big?' big':''}" style="--rc:${rs194Hex(p.T.col)};--rc2:${rs194Hex(p.T.c2)}" ${extra||''}>${p.T.i}<i>${RN194.rk[p.r-1]}</i></span>`}
+function rs194Owned(){const L=[];RN194K.forEach(t=>{for(let r=1;r<=3;r++){const k=rn194Key(t,r);if(cnt(k)>0)L.push(k)}});return L}
+// ---------------- targets: gear with slots (worn first) and companions ----------------
+function rs194Targets(){const L=[];
+  SLOTS.forEach(s=>{const it=eq[s];if(it&&it.rs>0)L.push({k:'i'+it.id,it,where:'Equipped · '+SLOTN[s]})});
+  gear.forEach(it=>{if(it&&it.rs>0)L.push({k:'i'+it.id,it,where:'Bag · '+SLOTN[itT(it).sl]})});
+  party.forEach((c,i)=>{if(c&&!c.st)L.push({k:'c'+i,c,where:i<actN141()?'Active companion':'Companion'})});return L}
+function rs194Find(key){if(!key)return null;return rs194Targets().find(t=>t.k==key)||null}
+function rs194Slots(T){if(!T)return {n:0,max:0,L:[]};if(T.it)return {n:T.it.rs|0,max:T.it.rs|0,L:rn194Ru(T.it)};const n=rn194CSlots(T.c);return {n,max:2,L:(T.c.runes||[]).filter(k=>rn194Parse(k))}}
+function rs194Pips(T){const S=rs194Slots(T);let h='';for(let i=0;i<S.max;i++){const k=S.L[i],p=k&&rn194Parse(k);h+=p?`<i class="on" style="--rc:${rs194Hex(p.T.col)}"></i>`:i<S.n?'<i></i>':'<i class="lk"></i>'}return h}
+function rs194Name(T){if(T.it)return `<span style="color:${RAR[T.it.r][1]}">${icoOf(T.it)} ${rs194Esc(itName(T.it))}</span>`;return `${em(T.c)} ${rs194Esc(T.c.n)} <small>Lv ${T.c.l}${T.c.evo?' '+'✦'.repeat(T.c.evo):''}</small>`}
+// ---------------- prices ----------------
+function rs194SockG(k){const p=rn194Parse(k);return p?shpP109('sage',RN194.sockG(p.r)):0}
+function rs194FuseC(r){const f=RN194.fuse[r-1];return f?{g:shpP109('sage',f[0]),m:[['crystal',f[1]]]}:null}
+function rs194Cost(g,ms){return `<span class="rs194-cost">${g?`<span class="${gold>=g?'':'bad'}">${g.toLocaleString()} 🪙</span>`:''}${(ms||[]).map(([k,n])=>{const q=matN(k),h=mats[k]||0;return `<span class="${h>=n?'':'bad'}">${q[0]} ${n} <small>(${h})</small></span>`}).join('')}</span>`}
+// ---------------- the window ----------------
+function rs194Render(){const B=$('xwB');if(!B)return;$('xwT').textContent='🔯 Rune Sanctum';$('xwS').textContent='🪙 '+gold.toLocaleString()+' · the Rune Sage';
+  const L=rs194L(),tabs=[['set','◈ Set runes'],['fuse','⚗️ Fuse'],['buy','🛒 Buy runes'],['carve','⛏️ Carve a slot'+(L<3?' 🔒':'')]];
+  if(!tabs.some(t=>t[0]==RS194.tab))RS194.tab='set';
+  let h=rs194Note()+`<div class="rs194-tabs">${tabs.map(([k,n])=>`<button data-rs="tab:${k}" class="${RS194.tab==k?'on':''}">${n}</button>`).join('')}</div>`;
+  h+=`<div class="rs194-body">${RS194.tab=='set'?rs194Set():RS194.tab=='fuse'?rs194Fuse():RS194.tab=='buy'?rs194Buy():rs194Carve()}</div>`;
+  B.innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">Runes are permanent: once set, the only way to free the slot is to destroy the rune. Rune slots are found on Rare (blue) or better weapons and armor; companions gain slots by evolving.</span>';
+  if(RS194.anim){const a=RS194.anim;RS194.anim=null;requestAnimationFrame(()=>{const el=B.querySelector(a);if(el){el.classList.add('rs194-go');setTimeout(()=>el.classList.remove('rs194-go'),1300)}})}}
+function rs194Note(){const L=rs194L(),U=['Rank III fusion','Rank II runes for sale','Carve a rune slot into gear'];
+  return `<div class="shpnote${L?' on':''}">🏪 ${L?`<b>Sanctum level ${L}</b> <span class="shpip">${'◆'.repeat(L)}${'◇'.repeat(3-L)}</span> · <b>${5*L}% off</b> · `:''}${U.map((u,i)=>`<span class="rs194-un${L>i?' on':''}">${L>i?'✔ ':'🔒 L'+(i+1)+': '}${u}</span>`).join(' · ')}${L<3?' · upgrade at the Stronghold Steward':''}</div>`}
+// ---- set ----
+function rs194Set(){const T0=rs194Targets();if(!RS194.sel||!T0.some(t=>t.k==RS194.sel)){const d=T0.find(t=>t.it&&rn194Open(t.it))||T0.find(t=>t.c&&rs194Slots(t).n>rs194Slots(t).L.length)||T0[0];RS194.sel=d?d.k:null}
+  const T=rs194Find(RS194.sel);
+  const grp=(t,list)=>list.length?`<div class="rs194-gh">${t}</div>`+list.map(x=>`<button class="rs194-tg${x.k==RS194.sel?' on':''}" data-rs="sel:${x.k}" style="--rc:${x.it?RAR[x.it.r][1]:'#8a7aff'}"><span class="rs194-tn">${rs194Name(x)}</span><span class="rs194-pp">${rs194Pips(x)}</span><small>${x.where}</small></button>`).join(''):'';
+  const items=T0.filter(x=>x.it),eqd=items.filter(x=>x.where.startsWith('Equipped')),bag=items.filter(x=>!x.where.startsWith('Equipped')),comps=T0.filter(x=>x.c);
+  let left=grp('Worn gear',eqd)+grp('Gear in your bag',bag)+grp('Companions',comps);
+  if(!items.length)left=`<div class="rs194-empty">None of your gear has rune slots yet. Rare (blue) or better weapons and armor sometimes drop with one, two or (Epic and Legendary only) three slots.</div>`+left;
+  return `<div class="rs194-set"><div class="rs194-col rs194-list">${left||'<div class="rs194-empty">Nothing to rune.</div>'}</div>
+    <div class="rs194-col rs194-mid">${rs194Altar(T)}</div><div class="rs194-col rs194-bag">${rs194Bag(T)}</div></div>`}
+function rs194Altar(T){if(!T)return '<div class="rs194-empty">Pick a piece of gear or a companion.</div>';const S=rs194Slots(T),R=RS194.rune&&cnt(RS194.rune)>0&&rn194Fits(RS194.rune,T.it||T.c)?RS194.rune:null;
+  const kind=T.it?(rn194SlK(T.it)=='w'?'Takes weapon runes':'Takes armor runes'):'Takes any rune';
+  let socks='';for(let i=0;i<S.max;i++){const k=S.L[i],p=k&&rn194Parse(k),lock=i>=S.n,cf=RS194.cf=='d:'+T.k+':'+i;
+    if(p)socks+=`<div class="rs194-sock full" style="--rc:${rs194Hex(p.T.col)}" id="rs194s${i}">${rs194Gem(k,1)}<b>${rn194Name(k)}</b><small>${rn194Desc(k,T.it?'h':'c')}</small>
+      <button class="rs194-del${cf?' cf':''}" data-rs="del:${i}">${cf?'⚠ Destroy it for good':'🗑 Destroy'}</button></div>`;
+    else if(lock)socks+=`<div class="rs194-sock lock"><span class="rn194-gem big">🔒</span><b>Locked</b><small>${i==0?'Unlocks at its first evolution ✦':'Unlocks at its third evolution ✦✦✦'}</small></div>`;
+    else socks+=`<div class="rs194-sock open${R?' ready':''}" id="rs194s${i}"><span class="rn194-gem big rs194-hole">◇</span><b>Empty slot</b><small>${R?'Ready for '+rn194Name(R):'Choose a rune on the right'}</small></div>`}
+  const open=S.n-S.L.length;let act='';
+  if(R&&open>0){const g=rs194SockG(R),cf=RS194.cf=='s:'+T.k+':'+R,ok=gold>=g;
+    act=`<div class="rs194-act"><div class="rs194-ap">${rs194Gem(R)}<span><b>Set ${rn194Name(R)}</b><small>${rn194Desc(R,T.it?'h':'c')}</small></span></div>
+      <div class="rs194-ab">${rs194Cost(g)}<button class="pri${cf?' cf':''}" data-rs="set" ${ok?'':'disabled'}>${cf?'✔ Confirm — this is permanent':'◈ Set rune'}</button>${cf?'<button data-rs="nocf">Cancel</button>':''}</div>
+      ${cf?'<div class="rs194-warn">Once set, this rune cannot be taken out. Freeing the slot later destroys it.</div>':''}</div>`}
+  else if(open<=0&&S.n)act=`<div class="rs194-act mut">Every slot is filled. Destroy a rune to free its slot.</div>`;
+  else if(!S.n)act=`<div class="rs194-act mut">${T.c?rn194CNext(T.c):'No rune slots.'}</div>`;
+  else act=`<div class="rs194-act mut">Choose one of your runes on the right to set it here.</div>`;
+  const stat=T.it?`<div class="rs194-sub">${RAR[T.it.r][0]} ${SLOTN[itT(T.it).sl]} · iLvl ${T.it.lv} · ${kind}</div>`:`<div class="rs194-sub">${kind} · ${S.n}/2 slots open by evolution</div>`;
+  return `<div class="rs194-altar"><div class="rs194-at">${rs194Name(T)}</div>${stat}<div class="rs194-socks n${S.max}">${socks}</div></div>${act}`}
+function rs194Bag(T){const own=rs194Owned();if(!own.length)return `<div class="rs194-gh">Your runes</div><div class="rs194-empty">You have no runes. Sovereigns always drop one; elites, chests, rare fish and Bestiary milestones sometimes do. You can also buy them here.</div>`;
+  const fit=k=>T&&rn194Fits(k,T.it||T.c),sec=(sl,n)=>{const L=own.filter(k=>rn194Parse(k).T.sl==sl);return L.length?`<div class="rs194-gh">${n}</div><div class="rs194-rg">`+L.map(k=>`<button class="rs194-rc${RS194.rune==k?' on':''}${fit(k)?'':' no'}" data-rs="rune:${k}" title="${rs194Esc(SUP[k].d)}">${rs194Gem(k)}<span class="rs194-ct">×${cnt(k)}</span><span class="rs194-rn">${rn194Parse(k).T.n} ${RN194.rk[rn194Parse(k).r-1]}</span></button>`).join('')+'</div>':''};
+  const R=RS194.rune&&cnt(RS194.rune)>0?RS194.rune:null;
+  return `<div class="rs194-gh">Your runes</div>`+sec('w','⚔️ Weapon runes')+sec('a','🛡️ Armor runes')+
+    (R?`<div class="rs194-rd">${rs194Gem(R)}<div><b>${rn194Name(R)}</b><small>${rn194Kind(R)}</small><p><b>In gear:</b> ${rn194Desc(R,'h')}</p><p><b>In a companion:</b> ${rn194Desc(R,'c')}</p>${T&&!fit(R)?'<p class="bad">This rune doesn\'t fit '+(T.it?(rn194SlK(T.it)=='w'?'a weapon (it is an armor rune)':'armor (it is a weapon rune)'):'here')+'.</p>':''}</div></div>`:'<div class="rs194-rd mut">Select a rune to read what it does.</div>')}
+// ---- fuse ----
+function rs194Fuse(){const L=rs194L();if(!RS194.fsel){const own=rs194Owned().find(k=>cnt(k)>=3&&rn194Parse(k).r<3);RS194.fsel=own||rn194Key('ember',1)}
+  const row=t=>{const T=RN194.T[t];return `<div class="rs194-fr"><span class="rs194-fn" style="color:${rs194Hex(T.col)}">${T.i} ${T.n}</span>`+[1,2,3].map(r=>{const k=rn194Key(t,r),n=cnt(k);
+    return `<button class="rs194-fc${RS194.fsel==k?' on':''}${n?'':' zero'}${n>=3&&r<3?' can':''}" data-rs="fsel:${k}"><b>${RN194.rk[r-1]}</b><span>×${n}</span></button>`}).join('')+'</div>'};
+  const grid=`<div class="rs194-gh">⚔️ Weapon runes</div>`+RN194K.filter(t=>RN194.T[t].sl=='w').map(row).join('')+`<div class="rs194-gh">🛡️ Armor runes</div>`+RN194K.filter(t=>RN194.T[t].sl=='a').map(row).join('');
+  const p=rn194Parse(RS194.fsel);let pan='';
+  if(p&&p.r<3){const nx=rn194Key(p.t,p.r+1),n=cnt(p.k),C=rs194FuseC(p.r),lock=p.r==2&&L<1,ok=n>=3&&!lock&&gold>=C.g&&shHas(C.m);
+    pan=`<div class="rs194-fz" id="rs194fz"><div class="rs194-tri">${[0,1,2].map(i=>`<span class="rs194-fi f${i}${i<n?'':' miss'}">${rs194Gem(p.k,1)}</span>`).join('')}<span class="rs194-arrow">➜</span><span class="rs194-fo">${rs194Gem(nx,1)}</span></div>
+      <div class="rs194-ft"><b>3 × ${rn194Name(p.k)} → ${rn194Name(nx)}</b><small>You have ${n}.</small></div>
+      <div class="rs194-cmp"><div><small>Rank ${RN194.rk[p.r-1]} in gear</small>${rn194Desc(p.k,'h')}</div><div><small>Rank ${RN194.rk[p.r]} in gear</small>${rn194Desc(nx,'h')}</div></div>
+      <div class="rs194-ab">${rs194Cost(C.g,C.m)}<button class="pri" data-rs="fuse" ${ok?'':'disabled'}>${lock?'🔒 Rank III fusion needs Sanctum level 1':n<3?'Needs 3 runes':'⚗️ Fuse'}</button></div></div>`}
+  else if(p)pan=`<div class="rs194-fz"><div class="rs194-tri"><span class="rs194-fo">${rs194Gem(p.k,1)}</span></div><div class="rs194-ft"><b>${rn194Name(p.k)}</b><small>Rank III is the highest rank.</small></div><div class="rs194-cmp one"><div><small>In gear</small>${rn194Desc(p.k,'h')}</div><div><small>In a companion</small>${rn194Desc(p.k,'c')}</div></div></div>`;
+  return `<div class="rs194-fuse"><div class="rs194-col">${grid}</div><div class="rs194-col">${pan}<div class="mut dtl" style="margin-top:8px">Three runes of the same type and rank fuse into one of the next rank. Ranks: I → II → III.</div></div></div>`}
+// ---- buy ----
+function rs194Buy(){const L=rs194L(),card=(k,price,lock)=>`<div class="rs194-bc">${rs194Gem(k,1)}<div class="rs194-bt"><b>${rn194Name(k)}</b><small>${rn194Kind(k)}</small><p>${rn194Desc(k,'h')}</p><p class="mut">Companion: ${rn194Desc(k,'c')}</p></div>
+    <div class="rs194-bb"><span class="mut">You have ${cnt(k)}</span>${lock?`<button disabled>🔒 ${lock}</button>`:`<button class="pri" data-rs="buy:${k}" ${gold>=price?'':'disabled'}>${price.toLocaleString()} 🪙</button>`}</div></div>`;
+  const r1=shpP109('sage',RS194_BUY[0]),r2=shpP109('sage',RS194_BUY[1]);
+  return `<div class="rs194-gh">Rank I runes</div><div class="rs194-buy">${RN194K.map(t=>card(rn194Key(t,1),r1)).join('')}</div>
+    <div class="rs194-gh">Rank II runes</div><div class="rs194-buy">${RN194K.map(t=>card(rn194Key(t,2),r2,L<2?'Sanctum level 2':'')).join('')}</div>`}
+// ---- carve ----
+function rs194CarveList(){const L=[];SLOTS.forEach(s=>{const it=eq[s];if(it)L.push([it,'Equipped'])});gear.forEach(it=>L.push([it,'Bag']));
+  return L.filter(([it])=>it&&rn194SlK(it)&&(it.r|0)>=2&&!(it.rs>0)&&!it.rc194)}
+function rs194Carve(){const L=rs194L();
+  if(L<3)return `<div class="rs194-lockp"><span class="rn194-gem big">⛏️</span><div><b>Carving opens at Sanctum level 3</b><p>The Rune Sage can carve one rune slot into a Rare (blue) or better weapon or armor piece that has none. Upgrade the Rune Sanctum at the Stronghold Steward.</p></div></div>`;
+  const list=rs194CarveList(),c=RS194_CARVE,g=shpP109('sage',c.g),ok=gold>=g&&shHas(c.m);
+  if(!list.length)return `<div class="rs194-empty">No weapon or armor piece to carve: it must be Rare (blue) or better and have no rune slots yet (each piece can be carved once).</div>`;
+  return `<div class="rs194-gh">Carve one rune slot · ${rs194Cost(g,c.m)}</div><div class="rs194-cv">`+list.map(([it,w])=>{const cf=RS194.cf=='c:'+it.id;
+    return `<div class="rs194-cvr" style="--rc:${RAR[it.r][1]}"><span>${rs194Name({it})}<small>${w} · ${RAR[it.r][0]} ${SLOTN[itT(it).sl]} · iLvl ${it.lv}</small></span><button class="pri${cf?' cf':''}" data-rs="carve:${it.id}" ${ok?'':'disabled'}>${cf?'✔ Confirm carving':'⛏️ Carve a slot'}</button></div>`}).join('')+'</div>'}
+// ---------------- actions ----------------
+function rs194Refresh(it){hsDirty();try{if(it&&Object.values(eq).includes(it)){refreshGear();if(typeof HP!='undefined'&&HP)refreshGear(HP)}}catch(e){console.warn(e)}try{hud();ui()}catch(_){}try{saveGame(true)}catch(_){}}
+function rs194Do(a){const [cmd,arg]=[a.split(':')[0],a.slice(a.indexOf(':')+1)];const T=rs194Find(RS194.sel);
+  if(cmd=='tab'){RS194.tab=arg;RS194.cf=null}
+  else if(cmd=='sel'){RS194.sel=arg;RS194.cf=null;const T2=rs194Find(arg);if(RS194.rune&&T2&&!rn194Fits(RS194.rune,T2.it||T2.c))RS194.rune=null}
+  else if(cmd=='rune'){RS194.rune=RS194.rune==arg?null:arg;RS194.cf=null}
+  else if(cmd=='nocf')RS194.cf=null;
+  else if(cmd=='set'){const R=RS194.rune;if(!T||!R||!(cnt(R)>0)||!rn194Fits(R,T.it||T.c))return;const S=rs194Slots(T);if(S.L.length>=S.n)return;const g=rs194SockG(R);if(gold<g)return say('Not enough gold.');
+    const key='s:'+T.k+':'+R;if(RS194.cf!==key){RS194.cf=key;rX();return}
+    gold-=g;sup[R]--;if(T.it){T.it.ru=rn194Ru(T.it);T.it.ru.push(R)}else{T.c.runes=(T.c.runes||[]).filter(k=>rn194Parse(k));T.c.runes.push(R);T.c.h=Math.min(T.c.h,M(T.c))}
+    RS194.cf=null;if(!(cnt(R)>0))RS194.rune=null;RS194.anim='#rs194s'+(S.L.length);say('◈ '+rn194Name(R)+' set into '+(T.it?itName(T.it):T.c.n)+'.');try{sfx('chime')}catch(_){}try{mSfx('rare')}catch(_){}rs194Refresh(T.it)}
+  else if(cmd=='del'){if(!T)return;const i=+arg,S=rs194Slots(T),k=S.L[i];if(!k)return;const key='d:'+T.k+':'+i;if(RS194.cf!==key){RS194.cf=key;rX();return}
+    if(T.it){T.it.ru=rn194Ru(T.it);T.it.ru.splice(i,1)}else{T.c.runes=S.L.slice();T.c.runes.splice(i,1);T.c.h=Math.min(T.c.h,M(T.c))}
+    RS194.cf=null;say('🗑 '+rn194Name(k)+' was destroyed. The slot is free.');try{sfx('brk',.6)}catch(_){}rs194Refresh(T.it)}
+  else if(cmd=='fsel'){RS194.fsel=arg}
+  else if(cmd=='fuse'){const p=rn194Parse(RS194.fsel);if(!p||p.r>=3||cnt(p.k)<3)return;if(p.r==2&&rs194L()<1)return;const C=rs194FuseC(p.r);if(gold<C.g||!shHas(C.m))return say('Not enough gold or Crystal Shards.');
+    shPay(C.g,C.m);sup[p.k]-=3;const nx=rn194Key(p.t,p.r+1);giveS(nx,1);RS194.anim='#rs194fz';say('⚗️ Three '+rn194Name(p.k)+'s fused into a '+rn194Name(nx)+'!');
+    try{sfx('power')}catch(_){}try{mSfx('rare')}catch(_){}if(cnt(p.k)<3)RS194.fsel=nx;try{hud();saveGame(true)}catch(_){}}
+  else if(cmd=='buy'){const p=rn194Parse(arg);if(!p||p.r>2)return;if(p.r==2&&rs194L()<2)return;const c=shpP109('sage',RS194_BUY[p.r-1]);if(gold<c)return say('Not enough gold.');gold-=c;giveS(arg,1);say('🔮 Bought a '+rn194Name(arg)+'.');try{sfx('chime')}catch(_){}try{hud()}catch(_){}}
+  else if(cmd=='carve'){if(rs194L()<3)return;const it=rs194CarveList().map(q=>q[0]).find(q=>q.id==+arg);if(!it)return;const c=RS194_CARVE,g=shpP109('sage',c.g);if(gold<g||!shHas(c.m))return say('Not enough gold or materials.');
+    const key='c:'+it.id;if(RS194.cf!==key){RS194.cf=key;rX();return}shPay(g,c.m);it.rs=1;it.ru=[];it.rc194=1;RS194.cf=null;RS194.tab='set';RS194.sel='i'+it.id;say('⛏️ The Rune Sage carved a rune slot into '+itName(it)+'.');try{sfx('power')}catch(_){}rs194Refresh(it)}
+  rX()}
+$('xw').addEventListener('click',e=>{if(xwMode!='visitor'||xwArg!='sage')return;const t=e.target.closest('[data-rs]');if(!t||t.disabled)return;e.stopPropagation();try{rs194Do(t.dataset.rs)}catch(err){console.warn('v194 sanctum',err)}});
+{const f=XR.visitor;XR.visitor=function(){if(xwArg=='sage'){try{return rs194Render()}catch(e){console.warn('v194 sanctum',e)}}return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .rs194-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+#xw .rs194-tabs button{padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--mut);font-weight:700}
+#xw .rs194-tabs button.on{color:#efe4ff;border-color:#8a6aff;background:linear-gradient(180deg,rgba(138,106,255,.32),rgba(80,50,160,.18));box-shadow:0 0 12px rgba(138,106,255,.25) inset}
+#xw .rs194-un{white-space:nowrap;color:var(--mut)}#xw .rs194-un.on{color:#c9f5c0}
+#xw .rs194-set{display:grid;grid-template-columns:minmax(200px,250px) minmax(0,1fr) minmax(200px,260px);gap:12px;align-items:start}
+#xw .rs194-fuse{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+#xw .rs194-col{min-width:0;display:flex;flex-direction:column;gap:5px}
+#xw .rs194-list{max-height:58vh;overflow:auto;padding-right:2px}
+#xw .rs194-gh{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#bfb0e8;margin:6px 0 2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#xw .rs194-tg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 6px;text-align:left;padding:7px 9px;border-radius:7px;border:1px solid var(--line);border-left:3px solid var(--rc);background:rgba(0,0,0,.25)}
+#xw .rs194-tg.on{background:linear-gradient(90deg,rgba(138,106,255,.22),rgba(0,0,0,.2));border-color:#8a6aff;border-left-color:var(--rc)}
+#xw .rs194-tg small{grid-column:1/-1;color:var(--mut);font-size:.68rem}#xw .rs194-tn{font-size:.8rem;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#xw .rs194-pp{display:flex;gap:3px;align-items:center}#xw .rs194-pp i{width:10px;height:10px;transform:rotate(45deg);border:1px solid #9a8ad0;background:transparent;display:block}
+#xw .rs194-pp i.on{background:var(--rc);border-color:var(--rc);box-shadow:0 0 6px var(--rc)}#xw .rs194-pp i.lk{border-color:#4a4a54;background:repeating-linear-gradient(45deg,#2a2a30 0 2px,#3a3a42 2px 4px)}
+#xw .rs194-empty{font-size:.78rem;color:var(--mut);padding:10px;border:1px dashed var(--line);border-radius:7px;line-height:1.4}
+#xw .rs194-altar{padding:14px 12px 12px;border-radius:12px;border:1px solid rgba(138,106,255,.4);text-align:center;
+  background:radial-gradient(ellipse at 50% 0%,rgba(138,106,255,.25),transparent 60%),radial-gradient(ellipse at 50% 120%,rgba(201,162,74,.18),transparent 60%),#0e0b12}
+#xw .rs194-at{font-size:1rem;font-weight:800}#xw .rs194-at small{color:var(--mut);font-weight:600}#xw .rs194-sub{font-size:.72rem;color:var(--mut);margin-top:2px}
+#xw .rs194-socks{display:grid;gap:10px;margin-top:14px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}#xw .rs194-socks.n1{--n:1}#xw .rs194-socks.n2{--n:2}#xw .rs194-socks.n3{--n:3}
+#xw .rs194-sock{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);min-width:0}
+#xw .rs194-sock b{font-size:.8rem}#xw .rs194-sock small{font-size:.7rem;color:var(--mut);line-height:1.3}
+#xw .rs194-sock.full{border-color:color-mix(in srgb,var(--rc) 60%,transparent);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 22%,transparent),rgba(0,0,0,.35) 70%)}
+#xw .rs194-sock.open{border-style:dashed}#xw .rs194-sock.open.ready{border-color:#c9a2ff;animation:rs194pulse 1.6s ease-in-out infinite}
+#xw .rs194-sock.lock{opacity:.6;filter:grayscale(.7)}
+#xw .rn194-gem.big{width:56px;height:56px;font-size:1.6rem}#xw .rn194-gem.big i{font-size:.7rem;right:12px;bottom:4px}
+#xw .rs194-g{box-shadow:0 0 0 1px rgba(255,255,255,.08)}#xw .rs194-sock.full .rs194-g,#xw .rs194-fo .rs194-g{filter:drop-shadow(0 0 8px var(--rc));animation:rs194glow 2.6s ease-in-out infinite}
+#xw .rs194-hole{background:radial-gradient(circle,#1a1622,#07060a 70%);color:#6a5a9a}
+#xw .rs194-del{margin-top:4px;font-size:.7rem!important;padding:3px 9px!important;border-color:rgba(255,90,90,.4)!important;color:#f0b0b0!important;background:rgba(120,20,20,.15)!important}
+#xw .rs194-del.cf,#xw button.cf{border-color:#ff7a5a!important;color:#fff!important;background:linear-gradient(180deg,#8a2a1a,#5a1a10)!important}
+#xw .rs194-act{margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:.78rem}
+#xw .rs194-ap{display:flex;gap:10px;align-items:center;text-align:left}#xw .rs194-ap small{display:block;color:var(--mut);font-size:.72rem}
+#xw .rs194-ab{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+#xw .rs194-cost{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.76rem;font-weight:700;color:#f0dca0}#xw .rs194-cost .bad{color:#f0a0a0}#xw .rs194-cost small{color:var(--mut);font-weight:500}
+#xw .rs194-warn{margin-top:6px;color:#ffb08a;font-size:.72rem;text-align:right}
+#xw .rs194-rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:5px}
+#xw .rs194-rc{position:relative;display:grid;place-items:center;padding:7px 2px 6px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+#xw .rs194-rc.on{border-color:#c9a2ff;background:rgba(138,106,255,.22);box-shadow:0 0 10px rgba(138,106,255,.35)}#xw .rs194-rc.no{opacity:.38}
+#xw .rs194-ct{position:absolute;top:1px;right:4px;font-size:.62rem;font-weight:800;color:#efe4cc}#xw .rs194-rn{font-size:.6rem;color:var(--mut);margin-top:2px;white-space:nowrap}
+#xw .rs194-rd{display:flex;gap:9px;align-items:flex-start;margin-top:8px;padding:9px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:.74rem;line-height:1.35}
+#xw .rs194-rd small{display:block;color:#bfb0e8;font-size:.68rem}#xw .rs194-rd p{margin:5px 0 0}#xw .rs194-rd .bad,#xw .bad{color:#f0a0a0}
+#xw .rs194-fr{display:grid;grid-template-columns:minmax(80px,1fr) repeat(3,minmax(44px,58px));gap:5px;align-items:center}
+#xw .rs194-fn{font-size:.8rem;font-weight:800}
+#xw .rs194-fc{display:flex;flex-direction:column;align-items:center;padding:4px 2px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.3);line-height:1.1}
+#xw .rs194-fc b{font-size:.72rem}#xw .rs194-fc span{font-size:.7rem;color:var(--mut)}#xw .rs194-fc.zero{opacity:.45}#xw .rs194-fc.can{border-color:#6ee7b7}#xw .rs194-fc.can span{color:#a8f0c8}
+#xw .rs194-fc.on{border-color:#c9a2ff;background:rgba(138,106,255,.25);opacity:1}
+#xw .rs194-fz{padding:16px 14px;border-radius:12px;border:1px solid rgba(138,106,255,.4);background:radial-gradient(ellipse at 50% 30%,rgba(138,106,255,.22),transparent 65%),#0e0b12}
+#xw .rs194-tri{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;min-height:120px}
+#xw .rs194-fi{display:inline-block;transition:transform .5s,opacity .5s}#xw .rs194-fi.f1{transform:translateY(-22px)}#xw .rs194-fi.miss{opacity:.22;filter:grayscale(1)}
+#xw .rs194-arrow{font-size:1.4rem;color:#c9a2ff}#xw .rs194-ft{text-align:center;margin-top:6px}#xw .rs194-ft small{display:block;color:var(--mut)}
+#xw .rs194-cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;font-size:.74rem;line-height:1.35}#xw .rs194-cmp>div{padding:8px;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+#xw .rs194-cmp small{display:block;color:#bfb0e8;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+#xw .rs194-buy{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+#xw .rs194-bc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.28)}
+#xw .rs194-bt b{font-size:.84rem}#xw .rs194-bt small{display:block;color:#bfb0e8;font-size:.66rem}#xw .rs194-bt p{margin:4px 0 0;font-size:.72rem;line-height:1.3}
+#xw .rs194-bb{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;font-size:.72rem}
+#xw .rs194-cv{display:flex;flex-direction:column;gap:6px}#xw .rs194-cvr{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;border:1px solid var(--line);border-left:3px solid var(--rc);background:rgba(0,0,0,.25)}
+#xw .rs194-cvr small{display:block;color:var(--mut);font-size:.7rem}
+#xw .rs194-lockp{display:flex;gap:14px;align-items:center;padding:16px;border-radius:12px;border:1px dashed rgba(138,106,255,.4);font-size:.8rem}#xw .rs194-lockp p{margin:4px 0 0;color:var(--mut)}
+@keyframes rs194pulse{0%,100%{box-shadow:0 0 0 rgba(201,162,255,0)}50%{box-shadow:0 0 16px rgba(201,162,255,.45)}}
+@keyframes rs194glow{0%,100%{filter:drop-shadow(0 0 5px var(--rc))}50%{filter:drop-shadow(0 0 12px var(--rc))}}
+#xw .rs194-sock.rs194-go{animation:rs194set 1.2s ease-out}@keyframes rs194set{0%{transform:scale(.8);box-shadow:0 0 0 rgba(255,255,255,0)}35%{transform:scale(1.06);box-shadow:0 0 34px var(--rc)}100%{transform:none}}
+#xw .rs194-fz.rs194-go .rs194-fi{animation:rs194in 1s ease-in forwards}#xw .rs194-fz.rs194-go .rs194-fi.f0{--dx:60px}#xw .rs194-fz.rs194-go .rs194-fi.f2{--dx:-60px}#xw .rs194-fz.rs194-go .rs194-fo{animation:rs194out 1.2s ease-out}
+@keyframes rs194in{to{transform:translateX(var(--dx,0)) scale(.3);opacity:0}}@keyframes rs194out{0%,50%{transform:scale(.4);opacity:0}75%{transform:scale(1.25);opacity:1;filter:drop-shadow(0 0 20px #fff)}100%{transform:none}}
+@media (max-width:760px){#xw .rs194-set,#xw .rs194-fuse{grid-template-columns:1fr}#xw .rs194-list{max-height:none}}
+</style>`);
+// ================= v194: runes, part 3 — how runed gear looks =================
+// Owner: "Lets have Runes also add a visual element to the equipment. For weapons there could be a subtle fire glow aura around the
+// blade for example. For armor maybe there's subtle details like its imbued with magic (subtle red glowing fissures for more hp).
+// Mixing 2 types of runes should give a unique visual effect that represents both types of runes combined."
+//
+// Weapons and shields (anything mkWpn builds that refreshGear hangs on the hero): every mesh of the piece gets a thin additive
+// shell (rv194Shell: the same geometry pushed out along its normals, ShaderMaterial RV194_VS / RV194_FS) whose pattern is the
+// rune's motif — Ember flickering flame, Frost glints, Storm crackling arcs, Venom creeping blobs, Might a travelling golden
+// pulse, Leech a slow blood mist, Vigor beating red cracks, Ward a steel-blue lattice, Deflect silver ripples, Tide flowing bands,
+// Swift racing wind streaks, Thorns a rose vine. It is masked to the business end (blade, head, tip; bows and shields whole), and
+// a few motes drift off it (rv194Motes, one Points per piece: embers rise, frost and venom fall, sparks jitter …).
+// Two different rune types on one piece braid: their motifs spiral round the piece in two strands with a bright seam where they
+// meet, in a blend of both colours, and the motes come in both colours; three types make a three-strand braid. Higher ranks glow
+// a little stronger and thicker.
+// Armour (helm, chest, boots): glowing lines baked into the hero model's glow channel ('g', drawn bright), laid on the outermost
+// surface after everything else is built (gkLater, like the v178 ornaments) along a pattern per rune: Vigor jagged fissures, Ward
+// angular rune lines, Deflect sweeping arcs, Tide waves, Swift slanted streaks, Thorns a vine with thorns. Two or three types braid
+// into twisted strands of each colour with blended knots where they cross. The model key carries the runes (mdGD d.key), so a new
+// rune rebuilds the model; the glow channel breathes gently while runed armour is worn (rv194Breathe).
+// GPU: shells share the piece's cached geometry (never disposed here); their materials and the mote geometry are cached per look.
+var RV194={on:1,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
+  // per motif: [mote speed, mote direction (1 up, -1 down, 0 jitter, 2 orbit, 3 along the piece), mote size]
+  mote:{ember:[.55,1,7],frost:[.3,-1,5],storm:[1.6,0,5],venom:[.35,-1,6],might:[.35,1,5],leech:[.3,2,6],vigor:[.5,1,5],ward:[.25,2,4],deflect:[.4,2,4],tide:[.4,-1,5],swift:[1.1,3,4],thorns:[.3,-1,6]},
+  // where the glow starts along the piece (0 grip → 1 tip)
+  mask:{gs:.2,sword:.2,dagger:.22,knives:.22,claws:.3,ga:.55,axes:.5,axe:.5,mace:.6,hammer:.6,flail:.45,halberd:.62,staff:.72,wand:.55,orb:0,bow:0,crossbow:0,sling:0,shield:0}};
+const RV194_M=RN194K;   // motif index = rune type index
+var RV194_VS=`uniform mat4 uG;uniform float uL,uTh,uT;varying vec3 vP;varying float vT;varying vec3 vN;varying vec3 vV;
+void main(){vec4 gp=uG*vec4(position,1.);vP=gp.xyz;vT=uL>0.?clamp(-gp.y/uL,0.,1.):.5;vec3 n=normalize(normal);
+  vec3 p=position+n*uTh*(.85+.3*sin(uT*2.7+gp.y*23.));vec4 mv=modelViewMatrix*vec4(p,1.);vN=normalize(normalMatrix*n);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`;
+var RV194_FS=`uniform float uT,uA,uN,uS,uL,uH;uniform vec3 uC[6];uniform float uM[3];varying vec3 vP;varying float vT;varying vec3 vN;varying vec3 vV;
+float hs(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float ns(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(hs(i),hs(i+vec3(1,0,0)),f.x),mix(hs(i+vec3(0,1,0)),hs(i+vec3(1,1,0)),f.x),f.y),mix(mix(hs(i+vec3(0,0,1)),hs(i+vec3(1,0,1)),f.x),mix(hs(i+vec3(0,1,1)),hs(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fb(vec3 p){return .55*ns(p)+.3*ns(p*2.03+1.7)+.15*ns(p*4.1+3.1);}
+// one motif: x = brightness, y = mix toward its second colour
+vec2 mo(float m,vec3 p,float t,float T,float rim){
+  if(m<.5){float n=fb(p*vec3(9.,6.,9.)+vec3(0.,t*2.3,0.));return vec2(rim*.75+smoothstep(.45,.85,n)*(.5+.7*rim),n);}
+  if(m<1.5){float s=step(.972,hs(floor(p*95.)+floor(t*2.5)));return vec2(rim*.8+s*1.6,s);}
+  if(m<2.5){float a=abs(fract(p.y*6.+fb(p*5.+t*6.)*2.2)-.5),l=1.-smoothstep(0.,.07,a),fl=.35+.65*step(.4,hs(vec3(floor(t*13.),1.,2.)));return vec2(rim*.7+l*2.*fl,l);}
+  if(m<3.5){float n=fb(p*11.+vec3(0.,t*1.1,0.)),b=smoothstep(.56,.76,n);return vec2(rim*.5+b,b);}
+  if(m<4.5){float b=.5+.5*sin(t*3.2-T*9.);return vec2(rim*(.5+.75*b),b);}
+  if(m<5.5){float n=fb(p*5.+vec3(t*.4,-t*.6,0.));return vec2(rim*.45+smoothstep(.5,.8,n)*.85,n);}
+  if(m<6.5){float n=fb(p*8.),c=1.-smoothstep(0.,.045,abs(n-.5)),b=pow(.5+.5*sin(t*6.),8.)+.6*pow(.5+.5*sin(t*6.-.9),8.);return vec2(c*(1.+.8*b)+rim*.3,b);}
+  if(m<7.5){vec3 q=p*13.;float l=max(max(1.-smoothstep(0.,.07,abs(fract(q.y+q.x*.5)-.5)),1.-smoothstep(0.,.07,abs(fract(q.y-q.x*.5)-.5))),1.-smoothstep(0.,.07,abs(fract(q.x)-.5)));return vec2(rim*.45+l*.75*(.6+.4*sin(t*2.+p.y*6.)),l);}
+  if(m<8.5){float r=1.-smoothstep(0.,.09,abs(fract(length(p)*13.-t*1.1)-.5));return vec2(rim*.65+r*.75,r);}
+  if(m<9.5){float w=sin(p.y*14.+fb(p*4.+t*.8)*4.+t*2.),b=smoothstep(.55,1.,w);return vec2(rim*.5+b*.85,b);}
+  if(m<10.5){float s=fract(T*4.5-t*1.9+hs(vec3(floor(atan(p.z,p.x)*3.),3.,1.))),k=smoothstep(.82,1.,s);return vec2(rim*.4+k*1.2,k);}
+  float n=fb(p*7.),v=1.-smoothstep(0.,.05,abs(n-.5)),th=step(.93,hs(floor(p*40.)));return vec2(v*.85+th*v+rim*.3,th);}
+void main(){float rr=pow(1.-abs(dot(normalize(vN),normalize(vV))),1.6),rim=.3+.7*rr,t=uT,T=vT;
+  float mk=uA<=0.?1.:smoothstep(uA,uA+.12,T)*(1.-smoothstep(.985,1.,T)*.4);if(mk<.002)discard;
+  vec2 a=mo(uM[0],vP,t,T,rim);vec3 c0=mix(uC[0],uC[1],clamp(a.y,0.,1.));float i0=a.x;vec3 col=c0*i0;
+  if(uN>1.5){float ang=atan(vP.z*3.,vP.x),ph=ang+vP.y*15.-t*1.7;
+    vec2 b=mo(uM[1],vP,t,T,rim);vec3 c1=mix(uC[2],uC[3],clamp(b.y,0.,1.));
+    if(uN<2.5){float w=.5+.5*sin(ph),k=smoothstep(.35,.65,w),seam=1.-smoothstep(0.,.13,abs(w-.5));
+      col=mix(c0*i0,c1*b.x,k)+(uC[0]+uC[2])*.55*seam*(.6+rim);}
+    else{vec2 c=mo(uM[2],vP,t,T,rim);vec3 c2=mix(uC[4],uC[5],clamp(c.y,0.,1.));float w0=sin(ph),w1=sin(ph+2.094),w2=sin(ph+4.189),mx=max(w0,max(w1,w2));
+      float mn=min(w0,min(w1,w2)),s2=w0+w1+w2-mx-mn,seam=1.-smoothstep(0.,.16,mx-s2);col=w0==mx?c0*i0:w1==mx?c1*b.x:c2*c.x;col+=(uC[0]+uC[2]+uC[4])*.35*seam*(.5+rim);}}
+  gl_FragColor=vec4(col*mk*uS*(uH>.5?rr*rr*.8:.95),1.);}`;
+var RV194_PVS=`uniform float uT,uN,uSz;uniform vec3 uUp;uniform float uM[3],uV[3],uD[3],uZ[3];attribute float aS;varying float vA;varying float vK;
+void main(){float j=uN>2.5?floor(fract(aS*13.7)*3.):uN>1.5?step(.5,fract(aS*13.7)):0.;vK=j;
+  float sp=j<.5?uV[0]:j<1.5?uV[1]:uV[2],dr=j<.5?uD[0]:j<1.5?uD[1]:uD[2],sz=j<.5?uZ[0]:j<1.5?uZ[1]:uZ[2];
+  float ph=fract(aS*7.31+uT*sp);vA=sin(ph*3.14159);vec3 p=position;
+  vec3 rnd=vec3(fract(aS*91.7),fract(aS*53.3),fract(aS*27.1))-.5;
+  if(dr>.5&&dr<1.5)p+=uUp*ph*.16+rnd*.04*ph;else if(dr<-.5)p-=uUp*ph*.1-rnd*.02;
+  else if(dr>2.5)p+=vec3(0.,-ph*.18,0.)+rnd*.01;else if(dr>1.5){float a=ph*6.283+aS*9.;p+=vec3(cos(a),0.,sin(a))*.05;}
+  else p+=rnd*.06*sin(uT*30.+aS*40.);
+  vec4 mv=modelViewMatrix*vec4(p,1.);gl_PointSize=uSz*sz*(.6+.6*vA)/max(.3,-mv.z);gl_Position=projectionMatrix*mv;}`;
+var RV194_PFS=`uniform vec3 uC[3];varying float vA;varying float vK;void main(){vec2 q=gl_PointCoord-.5;float d=dot(q,q);if(d>.25)discard;
+  vec3 c=vK<.5?uC[0]:vK<1.5?uC[1]:uC[2];gl_FragColor=vec4(c*vA*(1.-d*4.)*.9,1.);}`;
+// the rune types on a piece, in the order they were set (distinct), each with its highest rank
+function rv194Types(L){const o=[];(L||[]).forEach(k=>{const p=rn194Parse(k);if(!p)return;const q=o.find(x=>x.t==p.t);if(q)q.r=Math.max(q.r,p.r);else o.push({t:p.t,r:p.r,T:p.T})});return o.slice(0,3)}
+const RV194_C=new THREE.Color();
+function rv194Col(h){RV194_C.setHex(h);return RV194_C.clone()}
+function rv194ShellMat(types,mask,L,mt){const rk=Math.max(...types.map(q=>q.r));
+  const C=[];types.forEach(q=>{C.push(rv194Col(q.T.col),rv194Col(q.T.c2))});while(C.length<6)C.push(C[C.length-2].clone(),C[C.length-1].clone());
+  const M=types.map(q=>RV194_M.indexOf(q.t));while(M.length<3)M.push(M[0]);
+  return new THREE.ShaderMaterial({uniforms:{uG:{value:mt},uL:{value:L},uTh:{value:RV194.thick[rk-1]},uT:{value:0},uA:{value:mask},uH:{value:0},uN:{value:types.length},uS:{value:RV194.str[rk-1]},uC:{value:C},uM:{value:M}},
+    vertexShader:RV194_VS,fragmentShader:RV194_FS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide})}
+function rv194MoteMat(types){const C=types.map(q=>rv194Col(q.T.col));while(C.length<3)C.push(C[0].clone());const V=[],D=[],Z=[];
+  types.forEach(q=>{const m=RV194.mote[q.t]||[.4,1,5];V.push(m[0]);D.push(m[1]);Z.push(m[2])});while(V.length<3){V.push(V[0]);D.push(D[0]);Z.push(Z[0])}
+  return new THREE.ShaderMaterial({uniforms:{uT:{value:0},uN:{value:types.length},uSz:{value:3.6},uUp:{value:new THREE.Vector3(0,1,0)},uC:{value:C},uM:{value:[0,0,0]},uV:{value:V},uD:{value:D},uZ:{value:Z}},
+    vertexShader:RV194_PVS,fragmentShader:RV194_PFS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})}
+const RV194_INV=new THREE.Matrix4();
+function rv194Tick(o){o.onBeforeRender=function(){const u=this.material&&this.material.uniforms;if(!u)return;u.uT.value=window.__T194!=null?window.__T194:(performance.now()/1000)%600;
+  if(u.uUp){RV194_INV.copy(this.matrixWorld).invert();u.uUp.value.set(0,1,0).transformDirection(RV194_INV)}}}
+// dress one weapon / shield group in its runes (removes an older dressing first)
+function rv194Dress(g,ru){if(!g||!RV194.on)return;rv194Strip(g);const types=rv194Types(ru);if(!types.length)return;
+  try{g.updateMatrixWorld(true);const wt=(g.userData&&g.userData.wt)||'sword',inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),box=new THREE.Box3();
+    const meshes=[];g.traverse(o=>{if(o.isMesh&&!o.userData.rv194&&o.geometry&&o.geometry.attributes.position&&o.geometry.attributes.normal)meshes.push(o)});if(!meshes.length)return;
+    meshes.forEach(m=>{const mt=new THREE.Matrix4().multiplyMatrices(inv,m.matrixWorld);const b=m.geometry.boundingBox||(m.geometry.computeBoundingBox(),m.geometry.boundingBox);box.union(b.clone().applyMatrix4(mt))});
+    const L=Math.max(.05,-box.min.y),mask=RV194.mask[wt]!=null?RV194.mask[wt]:.25,whole=mask<=0;
+    meshes.forEach(m=>{const mt=new THREE.Matrix4().multiplyMatrices(inv,m.matrixWorld),sh=new THREE.Mesh(m.geometry,rv194ShellMat(types,mask,whole?0:L,mt));
+      sh.userData.rv194=1;sh.userData.lpsSkip=1;sh.castShadow=false;sh.receiveShadow=false;sh.renderOrder=3;sh.frustumCulled=false;rv194Tick(sh);m.add(sh);
+      // the halo: a wider shell that only shows at the silhouette (the aura round the blade)
+      const hm=rv194ShellMat(types,mask,whole?0:L,mt);hm.uniforms.uH.value=1;hm.uniforms.uTh.value*=2.8;const ha=new THREE.Mesh(m.geometry,hm);
+      ha.userData.rv194=1;ha.userData.lpsSkip=1;ha.castShadow=false;ha.renderOrder=3;ha.frustumCulled=false;rv194Tick(ha);m.add(ha)});
+    // motes: points sampled on the glowing part
+    const key=meshes.map(m=>m.geometry.uuid).join('|')+'|'+mask;let pg=RV194.pts[key];
+    if(!pg){const P=[],S=[],v=new THREE.Vector3();let tries=0;const N=whole?20:24;
+      while(P.length<N*3&&tries++<4000){const m=meshes[Math.random()*meshes.length|0],a=m.geometry.attributes.position,i=Math.random()*a.count|0;v.fromBufferAttribute(a,i).applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,m.matrixWorld));
+        const T=whole?1:-v.y/L;if(!whole&&T<mask+.06)continue;P.push(v.x,v.y,v.z);S.push(Math.random())}
+      pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.Float32BufferAttribute(P,3));pg.setAttribute('aS',new THREE.Float32BufferAttribute(S,1));RV194.pts[key]=pg}
+    const pts=new THREE.Points(pg,rv194MoteMat(types));pts.userData.rv194=1;pts.frustumCulled=false;pts.renderOrder=4;rv194Tick(pts);g.add(pts);g.userData.rv194=ru.join(',')}catch(e){console.warn('v194 rune look',e)}}
+function rv194Strip(g){if(!g)return;const L=[];g.traverse(o=>{if(o.userData&&o.userData.rv194&&o!==g)L.push(o)});L.forEach(o=>{if(o.parent)o.parent.remove(o);if(o.material&&o.material.dispose)o.material.dispose()});delete g.userData.rv194}
+// on every gear refresh (the hero, the bag / character previews, co-op partners): the held pieces get their runes
+{const f=refreshGear;refreshGear=function(h,cls,E){const H=h||pl;try{(H.gearG||[]).forEach(rv194Strip)}catch(_){}const r=f.apply(this,arguments);
+  try{const EE=E||eq,w=EE.weapon,sh=EE.offhand;(H.gearG||[]).forEach(o=>{const wt=o.userData&&o.userData.wt;if(wt=='shield'){if(sh&&rn194Ru(sh).length)rv194Dress(o,rn194Ru(sh))}else if(w&&rn194Ru(w).length)rv194Dress(o,rn194Ru(w))})}catch(e){console.warn('v194 rune look',e)}
+  try{rv194Breathe(H,E||eq)}catch(_){}return r}}
+// ---------------- armour: glowing lines on the worn pieces ----------------
+// (the gear descriptor carries the runes, so the model cache keys differ)
+{const f=mdGD;mdGD=function(it){const d=f.apply(this,arguments);try{if(d&&it&&['helm','chest','boots'].includes(d.sl)){const L=rn194Ru(it);if(L.length){d.ru=L.slice();d.key=(d.key||'')+'|rn:'+L.join('.')}}}catch(_){}return d}}
+// a small seeded random per piece (the look never changes between rebuilds)
+function rv194Rnd(seed){let s=(mdHash(seed)%2147483646)+1;return ()=>(s=s*16807%2147483647)/2147483647}
+// the marks: short lines in (y, angle) space; each style its own shape. A mark is a list of [y, th] (torso, boots) or [ph, th] (head)
+function rv194Mark(style,rnd,y,th,dy,n){const P=[[y,th]];let a=(rnd()-.5)*.6;
+  for(let i=1;i<=n;i++){const u=i/n;
+    if(style=='crack'){a+=(rnd()-.5)*.9;th+=Math.sin(a)*.07+(i%2?.035:-.035);y+=dy}
+    else if(style=='rune'){if(i%2)y+=dy*1.3;else th+=(rnd()<.5?-1:1)*.09}
+    else if(style=='arc'){th+=.07;y+=dy*Math.cos(u*Math.PI)*1.2}
+    else if(style=='wave'){th+=.065;y+=Math.sin(u*Math.PI*2+th)*dy*.9}
+    else if(style=='streak'){th+=.06;y+=dy*.8}
+    else{a+=(rnd()-.5)*.5;th+=Math.cos(a)*.05;y+=dy*.9}
+    P.push([y,th])}return P}
+const RV194_STY={vigor:'crack',ward:'rune',deflect:'arc',tide:'wave',swift:'streak',thorns:'vine',ember:'crack',frost:'rune',storm:'crack',venom:'vine',might:'rune',leech:'wave'};
+// strands: one per type; two or three types twist round the same mark (a helix in angle), with blended knots where they cross
+function rv194Strands(base,types){if(types.length<2)return [{pts:base,q:types[0]}];const n=types.length;
+  return types.map((q,j)=>({q,pts:base.map(([y,th],i)=>[y,th+.03*Math.sin(i*1.25+j*2*Math.PI/n)])}))}
+function rv194Knots(base,types){if(types.length<2)return [];const K=[];for(let i=1;i<base.length-1;i++)if(Math.abs(Math.sin(i*1.25*types.length/2))<.3)K.push(base[i]);return K}
+function rv194Mix(types){const c=new THREE.Color(0,0,0);types.forEach(q=>c.add(new THREE.Color(q.T.col)));c.multiplyScalar(1/types.length);c.lerp(new THREE.Color(0xffffff),.25);return c.getHex()}
+// one glowing line: a dark scorched edge under a thin bright core (it reads as a crack lit from inside)
+function rv194Line(k,bn,pts,rr,col,wf){if(pts.length<2)return;o176Tube(k,bn,pts,rr*2.3,rr*1.4,mdMix(col,0x0a0604,.82),'c',wf,3);o176Tube(k,bn,pts.map(p=>p),rr,rr*.55,col,'g',wf,3)}
+// the armour round the lines takes a faint glow of the rune's colour (baked into the facets' vertex colours)
+function rv194Tint(B,L,R){if(!L.length)return;const R2=R*R;let y0=1e9,y1=-1e9;L.forEach(q=>{y0=Math.min(y0,q.p[1]);y1=Math.max(y1,q.p[1])});const C=new THREE.Color();
+  ['c','m'].forEach(t=>{const b=B.L[t];if(!b)return;const p=b.p,c=b.c;for(let i=0;i+8<p.length;i+=9){const x=(p[i]+p[i+3]+p[i+6])/3,y=(p[i+1]+p[i+4]+p[i+7])/3,z=(p[i+2]+p[i+5]+p[i+8])/3;if(y<y0-R||y>y1+R)continue;
+    let best=R2,bq=null;for(const q of L){const dx=x-q.p[0],dy=y-q.p[1],dz=z-q.p[2],d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;bq=q}}if(!bq)continue;
+    const k=.42*(1-Math.sqrt(best)/R);C.setHex(bq.col);for(let v=0;v<3;v++){const j=i+v*3;c[j]+=(C.r-c[j])*k;c[j+1]+=(C.g-c[j+1])*k;c[j+2]+=(C.b-c[j+2])*k}}})}
+function rv194Draw(B,k,bn,types,marks,proj,wf,rr,dir){const T=[];marks.forEach(base=>{rv194Strands(base,types).forEach(S=>{const pts=proj(S.pts);rv194Line(k,bn,pts,rr,S.q.T.col,wf);pts.forEach(p=>T.push({p,col:S.q.T.col}));if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});
+    if(S.q.t=='thorns')pts.forEach((p,i)=>{if(i%2==1){const l=Math.hypot(p[0],p[2])||1;k.L(bn,'g',S.q.T.col,p,[p[0]+p[0]/l*.012,p[1]+.005,p[2]+p[2]/l*.012],.0028,.0003,3);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});
+    rv194Knots(base,types).forEach(q=>{const pp=proj([q]);if(pp[0]){const p=pp[0];k.p(bn,'oct','g',rv194Mix(types),p[0],p[1],p[2],.0055,.0055,.0038);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});return T}
+function rv194Chest(B,P,d){const types=rv194Types(d.ru);if(!types.length)return;const k=dkKit(),rnd=rv194Rnd('c'+d.key),rk=Math.max(...types.map(q=>q.r)),rr=.0011+.0003*rk,sty=RV194_STY[types[0].t]||'crack';
+  const n=6+2*rk,marks=[];for(let i=0;i<n;i++){const th=(i/n)*Math.PI*2+(rnd()-.5)*.45,up=i%2==0,y=up?.69+rnd()*.06:.86+rnd()*.08,dy=(up?1:-1)*(.02+rnd()*.008);marks.push(rv194Mark(sty,rnd,y,th,dy,6+(rnd()*3|0)))}
+  const proj=L=>o176Path(B,P,L.map(([y,th])=>[Math.max(.64,Math.min(.97,y)),th]),.0085);
+  const T=rv194Draw(B,k,'chest',types,marks,proj,A7W,rr,p=>{const l=Math.hypot(p[0],p[2])||1;return [p[0]/l,0,p[2]/l]});if(k.P.length)mdKit(B,k);rv194Tint(B,T,.032)}
+function rv194Helm(B,P,d,n0){const types=rv194Types(d.ru);if(!types.length)return;const H=a7Head(B);if(!H)return;const k=dkKit(),rnd=rv194Rnd('h'+d.key),rk=Math.max(...types.map(q=>q.r)),rr=.001+.0003*rk,sty=RV194_STY[types[0].t]||'crack';
+  const c=[0,H.y-.085,H.top[2]+.015],at=(th,ph)=>o176HeadAt(B,c,th,ph,.0065,null,n0);
+  const n=2+rk,marks=[];for(let i=0;i<n;i++){const th=(i/n)*Math.PI*2+(rnd()-.5)*.6,ph=.25+rnd()*.45;marks.push(rv194Mark(sty,rnd,ph,th,(rnd()<.5?-1:1)*.06,4+(rnd()*2|0)))}
+  const proj=L=>L.map(([ph,th])=>{const q=at(th,Math.max(.05,Math.min(1.3,ph)));return q?q.p:null}).filter(Boolean);
+  const T=rv194Draw(B,k,'head',types,marks,proj,null,rr,p=>{const v=[p[0]-c[0],p[1]-c[1],p[2]-c[2]],l=Math.hypot(...v)||1;return v.map(x=>x/l)});if(k.P.length)mdKit(B,k);rv194Tint(B,T,.025)}
+function rv194Boots(B,P,d,R){const types=rv194Types(d.ru);if(!types.length||!R)return;const k=dkKit(),rnd=rv194Rnd('b'+d.key),rk=Math.max(...types.map(q=>q.r)),rr=.001+.0003*rk,sty=RV194_STY[types[0].t]||'crack';
+  let top=.32;{const p=a7PtsR(B,-1,.6,R);let m=0;for(let i=0;i<p.length;i+=3)m=Math.max(m,p[i+1]);if(m>.08)top=m}let T=[];
+  [-1,1].forEach(s=>{const bn=s<0?'lh1':'rh1',side=(x,yy,z)=>s*x>0,cache={},Sx=y=>{const kk=y.toFixed(3);return cache[kk]||(cache[kk]=a7RingP(a7PtsR(B,y-.015,y+.015,R),y,side))},nw=p=>a7NearW(B,p);
+    const n=1+rk,marks=[];for(let i=0;i<n;i++){const th=(i/n)*Math.PI*2+(rnd()-.5)*.8,y=.08+rnd()*(top-.16);marks.push(rv194Mark(sty,rnd,y,th,.018,4))}
+    const proj=L=>L.map(([y,th])=>{const q=Sx(Math.round(Math.max(.05,Math.min(top-.03,y))/.006)*.006);return q.ok?q.at(th,.0065).p:null}).filter(Boolean);
+    const cx=s*.09;T=T.concat(rv194Draw(B,k,bn,types,marks,proj,nw,rr,p=>{const v=[p[0]-cx,0,p[2]-.02],l=Math.hypot(...v)||1;return v.map(x=>x/l)}))});if(k.P.length)mdKit(B,k);rv194Tint(B,T,.022)}
+{const c=mdChest,h=mdHelm,b=mdBoots,run=(fn,B,P,d,x)=>{if(!RV194.on||!d||!d.ru||!d.ru.length)return;gkLater(B,B2=>{try{fn(B2,P,d,x)}catch(e){console.warn('v194 rune armour',e)}})};
+  mdChest=function(B,P,d){const r=c.apply(this,arguments);run(rv194Chest,B,P,d);return r};
+  mdHelm=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=h.apply(this,arguments);run(rv194Helm,B,P,d,n0);return r};
+  mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;if(d&&d.key)run(rv194Boots,B,P,d,{n0,n1});return r}}
+// the glow channel breathes while runed armour is worn (heartbeat for Vigor, a slow swell otherwise)
+function rv194Breathe(h,E){if(!h||!h._mdM||!h._mdM.g)return;const types=rv194Types(['helm','chest','boots'].flatMap(s=>E&&E[s]?rn194Ru(E[s]):[]));const M=h._mdM.g;
+  (h._mdX||[]).forEach(m=>{if(m.material!==M)return;if(!types.length){M.color.setScalar(1);return}
+    const vg=types.some(q=>q.t=='vigor'),fn=function(){const t=performance.now()/1000,b=vg?Math.pow(.5+.5*Math.sin(t*5.2),6)+.5*Math.pow(.5+.5*Math.sin(t*5.2-.9),6):.5+.5*Math.sin(t*1.6);M.color.setScalar(.8+.2*Math.min(1,b))};fn.rv194=1;m.onBeforeRender=fn})}
+
+// ---------------- armour glow: soft points along the lines, riding the bones (true additive light; breathes) ----------------
+RV194.glow={};RV194.gg={};RV194.acc=null;
+{const f=mdHeroB;mdHeroB=function(cls,L,E){const o=RV194.acc;RV194.acc=[];try{const B=f.apply(this,arguments);try{const k=mdHeroKey(cls,L,E);if(RV194.acc.length)RV194.glow[k]=RV194.acc;else delete RV194.glow[k]}catch(_){}return B}finally{RV194.acc=o}}}
+var RV194_GVS=`uniform float uT,uPx;attribute float aS;varying vec3 vC;varying float vA;void main(){vC=color;vA=.55+.45*sin(uT*(1.4+aS)+aS*6.283);vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=uPx*.06/max(.25,-mv.z);gl_Position=projectionMatrix*mv;}`;
+var RV194_GFS=`varying vec3 vC;varying float vA;void main(){vec2 q=gl_PointCoord-.5;float d=dot(q,q)*4.;if(d>1.)discard;gl_FragColor=vec4(vC*vA*exp(-d*3.2)*(1.-d)*.5,1.);}`;
+function rv194GMat(){if(!RV194.gm)RV194.gm=new THREE.ShaderMaterial({uniforms:{uT:{value:0},uPx:{value:420}},vertexShader:RV194_GVS,fragmentShader:RV194_GFS,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});return RV194.gm}
+function rv194Glow(h){if(!h)return;(h._rv194G||[]).forEach(o=>{if(o.parent)o.parent.remove(o)});h._rv194G=[];const L=h._mdKey&&RV194.glow[h._mdKey];if(!L||!L.length||!h.bones)return;
+  const body=typeof huBody=='function'?huBody(h):null;if(!body||!body.skeleton)return;const by={};L.forEach(q=>{(by[q.bn]=by[q.bn]||[]).push(q)});
+  for(const bn in by){const b=h.bones[bn];if(!b)continue;const gk=h._mdKey+'|'+bn;let g=RV194.gg[gk];
+    if(!g){const i=body.skeleton.bones.indexOf(b);if(i<0)continue;const M=new THREE.Matrix4().multiplyMatrices(body.skeleton.boneInverses[i],body.bindMatrix),v=new THREE.Vector3(),c=new THREE.Color(),P=[],C=[],S=[];
+      by[bn].forEach((q,j)=>{v.set(q.p[0]+q.n[0]*.009,q.p[1]+q.n[1]*.009,q.p[2]+q.n[2]*.009).applyMatrix4(M);P.push(v.x,v.y,v.z);c.setHex(q.col);C.push(c.r,c.g,c.b);S.push((j*.618)%1)});
+      g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.setAttribute('aS',new THREE.Float32BufferAttribute(S,1));RV194.gg[gk]=g}
+    const pt=new THREE.Points(g,rv194GMat());pt.userData.rv194=1;pt.frustumCulled=false;pt.renderOrder=4;rv194Tick(pt);b.add(pt);h._rv194G.push(pt)}}
+{const f=refreshGear;refreshGear=function(h){const r=f.apply(this,arguments);try{rv194Glow(h||pl)}catch(e){console.warn('v194 armour glow',e)}return r}}
+// ================= v194: the Magic Shop — ability evolutions, reforging gear stats, wares =================
+// Owner (Nov 3 2026): "Lets make spell evolutions only purchasable at the magic shop. Lets make a nice UI in the shop for it and dont
+// show the evolution preview in the character skills area anymore- only in the magic shop ui. Lets make rerolling stats on equipment
+// (the extra stats like attack speed and crit for example- not base stat values) possible at the magic shop. Make a nice UI for that
+// experience as well." Also: "the magic shop ... still says it sells spell scrolls" (fixed: its description).
+//
+// The Magic Shop opens in the shared #xw window (mode 'magic', MS194.tab):
+//   evo     — every ability the hero has learned; a rank 5 one can evolve here (the v137 cost in ability points, still refunded by
+//             Reset abilities, plus gold — not refunded). The live preview (v119 ABX stage, EV137.pv) plays the evolved form.
+//             The Abilities window no longer offers to evolve or previews the evolution: it says where to go.
+//   forge   — reforge a piece's extra stats (it.aff; base stats never change). Reroll: a new random stat (one the piece doesn't
+//             have) with a fresh value. Shop level 1: Refine (same stat, new value). Level 2: rerolls offer three stats to choose
+//             from (or keep the old one). Level 3: masterwork rolls (values roll in the upper part of the range).
+//             Cost: gold (grows with item level, rarity and the piece's earlier reforges, it.rr) + the piece's tier upgrade material.
+//   wares   — the old stock (Elixir of Insight, upgrade materials, eggs): the v2/v88 #mst list is lent to the window.
+var MS194={tab:'evo',ab:null,it:null,offer:null};
+SHOPS.forEach(o=>{if(o.k=='magic')o.d='Evolve your abilities, reforge gear stats, elixirs, materials and eggs'});
+function ms194L(){return typeof shpL109=='function'?shpL109('magic'):0}
+{const f=openShop;openShop=function(k){if(k=='x'&&shopBuilt('magic')){MS194.offer=null;return openX('magic')}return f.apply(this,arguments)}}
+// ---------------- evolutions ----------------
+function ms194EvG(s){return shpP109('magic',Math.round(250+30*Math.max(1,hero.lvl|0)))}
+function ms194Abil(){const c=hero.cls;return kqsAll(c).filter(s=>kqsUnl(c,s)&&ev137Def(s))}
+function ms194Evo(){const L=ms194Abil();if(!L.length)return '<div class="rs194-empty">Learn abilities first (K → Abilities).</div>';
+  if(!MS194.ab||!L.some(s=>s.n==MS194.ab)){const d=L.find(s=>kqrRank(s)>=KQR_MAX&&!hero.tal[ev137Key(s.n)])||L[0];MS194.ab=d.n}
+  const s=kqsFind(hero.cls,MS194.ab),E=ev137Def(s),on=!!hero.tal[ev137Key(s.n)],r=kqrRank(s),k=ev137Cost(s),g=ms194EvG(s),why=ev137Why(s),ok=!why&&gold>=g;
+  const list=L.map(q=>{const ev=!!hero.tal[ev137Key(q.n)],rq=kqrRank(q),rd=!ev&&rq>=KQR_MAX;
+    return `<button class="ms194-ab${q.n==MS194.ab?' on':''}${ev?' ev':rd?' rd':''}" data-ms194="ab:${rs194Esc(q.n)}"><span class="ms194-ai">${q.i||'✦'}</span><span class="ms194-an"><b>${rs194Esc(q.n)}</b><small>${ev?'✦ '+rs194Esc(ev137Def(q).en):'Rank '+rq+'/'+KQR_MAX}</small></span><span class="ms194-at">${ev?'✦':rd?'Ready':'◇'.repeat(Math.max(0,KQR_MAX-rq))}</span></button>`}).join('');
+  const pips=`<span class="ms194-rk">${[1,2,3,4,5].map(i=>`<i class="${i<=r?'on':''}"></i>`).join('')}</span>`;
+  let btn;if(on)btn=`<div class="ms194-done">✦ Evolved. It casts as <b>${rs194Esc(E.en)}</b> now.</div>`;
+  else btn=`<div class="rs194-ab"><span class="rs194-cost"><span class="${apFree()>=k?'':'bad'}">${k} ⚡ ability points <small>(${apFree()} free)</small></span><span class="${gold>=g?'':'bad'}">${g.toLocaleString()} 🪙</span></span>
+    <button class="pri" data-ms194="evolve" ${ok?'':'disabled'}>${why&&why!='Evolved'?'🔒 '+why:gold<g?'Not enough gold':'✦ Evolve'}</button></div>`;
+  return `<div class="ms194-evo"><div class="rs194-col ms194-list"><div class="rs194-gh">Your abilities</div>${list}</div>
+    <div class="rs194-col"><div class="ms194-card${on?' on':''}"><div class="ms194-pv"><div class="abpvc" id="ms194PV"></div><div class="ms194-pvl"><span>▶ ${on?'Evolved':'Preview of the evolution'} · <b>✦ ${rs194Esc(E.en)}</b></span><button data-ms194="replay" title="Play it again">↻</button></div></div>
+      <div class="ms194-h"><span>${s.i||''} <b>${rs194Esc(s.n)}</b> ${pips}</span><span class="ms194-arr">➜</span><span class="ms194-en">✦ ${rs194Esc(E.en)}</span></div>
+      <div class="ms194-d">${E.d}</div><div class="ms194-n">Evolved casts hit and heal 25% harder and get their own look.${r<KQR_MAX?` Raise ${rs194Esc(s.n)} to rank ${KQR_MAX} first (K → Abilities).`:''}</div>${btn}
+      <div class="mut dtl" style="margin-top:6px">The ability points come back if you reset your abilities (the evolution is removed then); the gold does not.</div></div></div></div>`}
+function ms194PV(){const host=$('ms194PV');if(!host)return;const s=kqsFind(hero.cls,MS194.ab);if(!s)return;EV137.pv=s.n;try{abxShow(host,s)}catch(e){console.warn('v194 preview',e)}}
+// the preview stage may run while the Magic Shop is open too
+abxWatch=function(){if(!ABX.on||ABX.ctx)return;const x=$('xw');const ok=xwMode=='abil'||(xwMode=='magic'&&MS194.tab=='evo');
+  if(!PV.cv||!PV.cv.isConnected||PV.obj!==ABX.root||!x||x.classList.contains('hide')||!ok||(typeof mpLive=='function'&&mpLive())){abxStop();if(xwMode!='abil'&&EV137.pv)EV137.pv=null}};
+// the Abilities window: no evolve button and no evolution preview any more, only where to evolve it
+ev137Box=function(s){const E=ev137Def(s);if(!E)return '';const on=!!hero.tal[ev137Key(s.n)],r=kqsUnl(hero.cls,s)?kqrRank(s):0;
+  if(on)return `<div class="ev137-box on"><div class="ev137-h">✦ Evolved · <b>${E.en}</b></div><div class="ev137-d">${E.d}</div><div class="ev137-n">+25% damage and healing · new look</div></div>`;
+  return `<div class="ev137-box lock ms194-hint"><div class="ev137-h">✦ ${r>=KQR_MAX?'Ready to evolve':'Can evolve at rank '+KQR_MAX}</div><div class="ev137-d">Evolutions are bought at the <b>Magic Shop</b> in Duskhold, where you can preview them.</div></div>`};
+{const f=ev137Decor;ev137Decor=function(){if(EV137.pv&&xwMode=='abil')EV137.pv=null;return f.apply(this,arguments)}}
+// ---------------- reforging ----------------
+function ms194Items(){const L=[];SLOTS.forEach(s=>{const it=eq[s];if(it&&(it.aff||[]).length)L.push([it,'Equipped'])});gear.forEach(it=>{if(it&&(it.aff||[]).length)L.push([it,'Bag'])});return L}
+function ms194T(it){return Math.max(0,tierOfLv(it.lv||1)-1)}
+function ms194Rng(it,k,mw){const A=AFX[k],T=ms194T(it),lo=mw?.95:it.u?.9:.8,hi=1.3,f=x=>A[1]=='n'?Math.round(A[2]*(2+it.lv)*x):+(A[2]*(1+T*.45)*x).toFixed(4);return [f(lo),f(hi),f]}
+function ms194Roll(it,k){const mw=ms194L()>=3,[lo,hi,f]=ms194Rng(it,k,mw),a=mw?.95:it.u?.9:.8;return f(a+Math.random()*(1.3-a))}
+function ms194Pool(it,keep){const t=itT(it),have=(it.aff||[]).map(a=>a.k);return Object.keys(AFX).filter(k=>!(t.sl=='weapon'&&k=='mp')&&(!have.includes(k)||k==keep))}
+function ms194Cost(it,refine){const g=Math.round((40+it.lv*9)*(1+(it.r|0)*.35)*(1+.2*Math.min(10,it.rr|0))*(refine?.6:1)),T=ms194T(it);return {g:shpP109('magic',g),m:[[UPM[T][0],refine?1:1+Math.floor((it.r|0)/2)]]}}
+function ms194Fmt(k,v){return AFX[k][1]=='n'?'+'+Math.round(v):'+'+(+(v*100).toFixed(2))+'%'}
+function ms194Bar(it,a){const [lo,hi]=ms194Rng(it,a.k,false),q=Math.max(0,Math.min(1,(a.v-lo)/((hi-lo)||1)));return `<span class="ms194-bar" title="Range ${ms194Fmt(a.k,lo)} – ${ms194Fmt(a.k,hi)}"><i style="width:${Math.round(q*100)}%"></i></span><small class="ms194-rg">${ms194Fmt(a.k,lo)} – ${ms194Fmt(a.k,hi)}</small>`}
+function ms194Forge(){const L=ms194Items(),Lv=ms194L();if(!L.length)return '<div class="rs194-empty">None of your gear has extra stats to reforge. Uncommon (green) or better pieces have one extra stat per rarity step.</div>';
+  if(!MS194.it||!L.some(([it])=>it.id==MS194.it))MS194.it=L[0][0].id;const it=L.find(([q])=>q.id==MS194.it)[0],t=itT(it);
+  const list=L.map(([q,w])=>`<button class="rs194-tg${q.id==MS194.it?' on':''}" data-ms194="it:${q.id}" style="--rc:${RAR[q.r][1]}"><span class="rs194-tn"><span style="color:${RAR[q.r][1]}">${icoOf(q)} ${rs194Esc(itName(q))}</span></span><span class="mut" style="font-size:.7rem">${q.aff.length} stat${q.aff.length>1?'s':''}</span><small>${w} · ${SLOTN[itT(q).sl]} · iLvl ${q.lv}${q.rr?' · reforged ×'+q.rr:''}</small></button>`).join('');
+  const C=ms194Cost(it,false),CR=ms194Cost(it,true),okC=c=>gold>=c.g&&shHas(c.m),O=MS194.offer&&MS194.offer.id==it.id?MS194.offer:null;
+  const base=Object.entries(itStats(Object.assign({},it,{aff:[]}))).map(([k,v])=>`<span>${SNM[k]||k} <b>${fmtS(k,v)}</b></span>`).join('');
+  const rows=it.aff.map((a,i)=>{const pend=O&&O.i==i;
+    return `<div class="ms194-af${pend?' pend':''}"><div class="ms194-al"><b>${AFX[a.k][0]}</b><span class="ms194-v">${ms194Fmt(a.k,a.v*(1+.033*(it.up||0)))}</span>${ms194Bar(it,a)}</div>
+      <div class="ms194-ab2"><button data-ms194="rr:${i}" ${okC(C)&&!O?'':'disabled'} title="A new random stat with a fresh value">🎲 Reroll stat</button>${Lv>=1?`<button data-ms194="rf:${i}" ${okC(CR)&&!O?'':'disabled'} title="Same stat, a fresh value">✧ Refine value</button>`:''}</div>
+      ${pend?`<div class="ms194-off"><div class="ms194-oh">Choose the new stat</div>${O.opts.map((o,j)=>`<button class="ms194-oc" data-ms194="pick:${j}"><b>${AFX[o.k][0]}</b><span>${ms194Fmt(o.k,o.v)}</span></button>`).join('')}<button class="ms194-oc keep" data-ms194="keep"><b>Keep ${AFX[a.k][0]}</b><span>${ms194Fmt(a.k,a.v)}</span></button></div>`:''}</div>`}).join('');
+  const lv=['Refine (same stat, new value)','Three stats to choose from','Masterwork rolls (upper range)'];
+  return `<div class="ms194-forge"><div class="rs194-col rs194-list"><div class="rs194-gh">Your gear</div>${list}</div><div class="rs194-col">
+    <div class="ms194-it" style="--rc:${RAR[it.r][1]}"><div class="ms194-ih"><span style="color:${RAR[it.r][1]}">${icoOf(it)} <b>${rs194Esc(itName(it))}</b></span><small>${RAR[it.r][0]} ${SLOTN[t.sl]} · iLvl ${it.lv}${it.up?' · +'+it.up:''}</small></div>
+      <div class="ms194-base"><span class="ms194-bl">Base stats (never change)</span>${base}</div>
+      <div class="rs194-gh">Extra stats</div>${rows}
+      <div class="rs194-ab"><span class="mut" style="font-size:.72rem">Reroll</span>${rs194Cost(C.g,C.m)}${Lv>=1?`<span class="mut" style="font-size:.72rem">· Refine</span>${rs194Cost(CR.g,CR.m)}`:''}</div></div>
+    <div class="ms194-lv">${lv.map((u,i)=>`<span class="rs194-un${Lv>i?' on':''}">${Lv>i?'✔ ':'🔒 L'+(i+1)+': '}${u}</span>`).join('')}</div>
+    <div class="mut dtl">Each reforge of a piece makes the next one 20% dearer. Upgrades (+1…+10) keep their bonus on the new stat.</div></div></div>`}
+function ms194Apply(it){hsDirty();try{if(Object.values(eq).includes(it))hud()}catch(_){}try{ui()}catch(_){}try{saveGame(true)}catch(_){}}
+// ---------------- wares (the old list, lent to this window) ----------------
+function ms194Park(){const m=$('mst'),home=$('mshop')&&$('mshop').querySelector('.wb');if(m&&home&&!home.contains(m))home.appendChild(m)}
+function ms194Wares(){return '<div class="ms194-wares" id="ms194W"></div><div class="mut dtl" style="margin-top:6px">Eggs restock after every Sovereign you defeat.</div>'}
+// ---------------- the window ----------------
+XR.magic=function(){const B=$('xwB');if(!B)return;ms194Park();$('xwT').textContent='🔮 Magic Shop';$('xwS').textContent='🪙 '+gold.toLocaleString()+' · ⚡ '+apFree()+' ability points';
+  const tabs=[['evo','✦ Evolutions'],['forge','⚒️ Reforge'],['wares','🧪 Wares']];
+  B.innerHTML=ms194Note()+`<div class="rs194-tabs">${tabs.map(([k,n])=>`<button data-ms194="tab:${k}" class="${MS194.tab==k?'on':''}">${n}</button>`).join('')}</div><div class="rs194-body">${MS194.tab=='evo'?ms194Evo():MS194.tab=='forge'?ms194Forge():ms194Wares()}</div>`;
+  $('xwF').innerHTML='<span class="mut dtl">Evolve rank 5 abilities, reforge the extra stats on your gear, and buy elixirs, upgrade materials and eggs.</span>';
+  if(MS194.tab=='evo')ms194PV();
+  if(MS194.tab=='wares'){const h=$('ms194W'),m=$('mst');if(h&&m){h.appendChild(m);try{rMS()}catch(e){console.warn(e)}}}};
+function ms194Note(){const L=ms194L();return `<div class="shpnote${L?' on':''}">🏪 ${L?`<b>Shop level ${L}</b> <span class="shpip">${'◆'.repeat(L)}${'◇'.repeat(3-L)}</span> · <b>${5*L}% off</b> · `:''}Upgrades unlock reforging options and more eggs${L<3?' · upgrade at the Stronghold Steward':''}.</div>`}
+{const f=closeX;closeX=function(){const was=xwMode;const r=f.apply(this,arguments);if(was=='magic'){ms194Park();MS194.offer=null;EV137.pv=null}return r}}
+function ms194Do(a){const i=a.indexOf(':'),cmd=i<0?a:a.slice(0,i),arg=i<0?'':a.slice(i+1);
+  if(cmd=='tab'){MS194.tab=arg;MS194.offer=null}
+  else if(cmd=='ab'){MS194.ab=arg}
+  else if(cmd=='replay'){try{if(ABX.on)abxCycle(performance.now())}catch(_){}return}
+  else if(cmd=='evolve'){const s=kqsFind(hero.cls,MS194.ab);if(!s)return;const g=ms194EvG(s);if(gold<g)return say('Not enough gold.');if(ev137Why(s))return say('🔒 '+s.n+': '+ev137Why(s)+'.');
+    try{if(ABX.on)abxStop()}catch(_){}EV137.pv=null;if(ev137Evolve(s.n)){gold-=g;try{hud();saveGame(true)}catch(_){}}}
+  else if(cmd=='it'){MS194.it=+arg;MS194.offer=null}
+  else if(cmd=='rr'||cmd=='rf'){const it=ms194Items().map(q=>q[0]).find(q=>q.id==MS194.it);if(!it)return;const n=+arg,a=it.aff[n];if(!a)return;const C=ms194Cost(it,cmd=='rf');
+    if(gold<C.g||!shHas(C.m))return say('Not enough gold or materials.');shPay(C.g,C.m);it.rr=(it.rr|0)+1;
+    if(cmd=='rf'){a.v=ms194Roll(it,a.k);say('✧ Refined: '+AFX[a.k][0]+' '+ms194Fmt(a.k,a.v)+'.')}
+    else{const pool=ms194Pool(it).filter(k=>k!=a.k);if(!pool.length)return;
+      if(ms194L()>=2){const o=[];const P=pool.slice();while(o.length<3&&P.length){const k=P.splice(R(0,P.length-1),1)[0];o.push({k,v:ms194Roll(it,k)})}MS194.offer={id:it.id,i:n,opts:o}}
+      else{const k=pool[R(0,pool.length-1)];it.aff[n]={k,v:ms194Roll(it,k)};say('🎲 Reforged: '+AFX[k][0]+' '+ms194Fmt(k,it.aff[n].v)+'.')}}
+    try{sfx('chime')}catch(_){}ms194Apply(it)}
+  else if(cmd=='pick'||cmd=='keep'){const O=MS194.offer;const it=O&&ms194Items().map(q=>q[0]).find(q=>q.id==O.id);if(!it){MS194.offer=null;return rX()}
+    if(cmd=='pick'){const o=O.opts[+arg];if(o){it.aff[O.i]={k:o.k,v:o.v};say('🎲 Reforged: '+AFX[o.k][0]+' '+ms194Fmt(o.k,o.v)+'.');try{mSfx('rare')}catch(_){}}}MS194.offer=null;ms194Apply(it)}
+  rX()}
+$('xw').addEventListener('click',e=>{if(xwMode!='magic')return;const t=e.target.closest('[data-ms194]');if(!t||t.disabled)return;e.stopPropagation();try{ms194Do(t.dataset.ms194)}catch(err){console.warn('v194 magic',err)}});
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .ms194-evo,#xw .ms194-forge{display:grid;grid-template-columns:minmax(210px,270px) minmax(0,1fr);gap:12px;align-items:start}
+#xw .ms194-ab{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;padding:6px 9px;border-radius:7px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+#xw .ms194-ab.on{border-color:#c9a24a;background:linear-gradient(90deg,rgba(201,162,74,.22),rgba(0,0,0,.2))}#xw .ms194-ab.rd .ms194-at{color:#6ee7b7;font-weight:800}#xw .ms194-ab.ev .ms194-at{color:#f5d0fe}
+#xw .ms194-ai{font-size:1.1rem}#xw .ms194-an b{font-size:.8rem;display:block}#xw .ms194-an small{font-size:.68rem;color:var(--mut)}#xw .ms194-ab.ev .ms194-an small{color:#e9c8ff}#xw .ms194-at{font-size:.68rem;color:var(--mut);letter-spacing:1px}
+#xw .ms194-card{border:1px solid rgba(201,162,74,.4);border-radius:12px;padding:10px;background:radial-gradient(ellipse at 50% 0%,rgba(201,162,74,.16),transparent 60%),#0e0b09}
+#xw .ms194-card.on{border-color:rgba(233,180,255,.55)}
+#xw .ms194-pv{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#2c2418,#0e0b08 75%)}#xw .ms194-pv .abpvc{height:230px;position:relative}#xw .ms194-pv .abpvc canvas{width:100%!important;height:100%!important;display:block}
+#xw .ms194-pvl{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px;font-size:.72rem;color:var(--mut);border-top:1px solid var(--line);background:rgba(0,0,0,.3)}#xw .ms194-pvl b{color:#f5d0fe}#xw .ms194-pvl button{padding:1px 8px!important}
+#xw .ms194-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 2px 4px;font-size:.92rem}#xw .ms194-arr{color:#c9a24a}#xw .ms194-en{color:#f5d0fe;font-weight:800;text-shadow:0 0 10px rgba(233,160,255,.5)}
+#xw .ms194-rk{display:inline-flex;gap:3px;margin-left:6px;vertical-align:middle}#xw .ms194-rk i{width:8px;height:8px;border-radius:50%;border:1px solid #8a7a5a;display:block}#xw .ms194-rk i.on{background:#f0cc72;border-color:#f0cc72;box-shadow:0 0 5px #f0cc72}
+#xw .ms194-d{font-size:.8rem;line-height:1.45;padding:2px}#xw .ms194-n{font-size:.72rem;color:var(--mut);margin-top:4px}
+#xw .ms194-done{margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(233,160,255,.1);border:1px solid rgba(233,160,255,.35);font-size:.78rem}
+#xw .ms194-it{border:1px solid color-mix(in srgb,var(--rc) 50%,transparent);border-radius:12px;padding:10px 12px;background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 10%,transparent),rgba(0,0,0,.3))}
+#xw .ms194-ih{display:flex;flex-direction:column}#xw .ms194-ih b{font-size:.95rem}#xw .ms194-ih small{color:var(--mut);font-size:.72rem}
+#xw .ms194-base{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.72rem;color:var(--mut);margin:8px 0 2px;padding:6px 8px;border-radius:7px;background:rgba(0,0,0,.3)}#xw .ms194-base b{color:var(--ink)}#xw .ms194-bl{width:100%;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:#8a7a5a}
+#xw .ms194-af{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:8px 9px;margin-top:5px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+#xw .ms194-af.pend{border-color:#c9a24a;box-shadow:0 0 12px rgba(201,162,74,.25) inset}
+#xw .ms194-al{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;font-size:.8rem}#xw .ms194-v{color:#bfe8a0;font-weight:800}
+#xw .ms194-bar{grid-column:1/-1;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;display:block}#xw .ms194-bar i{display:block;height:100%;background:linear-gradient(90deg,#8a6a2a,#f0cc72)}
+#xw .ms194-rg{grid-column:1/-1;font-size:.64rem;color:var(--mut)}
+#xw .ms194-ab2{display:flex;flex-direction:column;gap:4px}#xw .ms194-ab2 button{font-size:.72rem!important;padding:3px 9px!important;white-space:nowrap}
+#xw .ms194-off{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}#xw .ms194-oh{grid-column:1/-1;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#f0cc72}
+#xw .ms194-oc{display:flex;flex-direction:column;align-items:flex-start;padding:7px 9px;border-radius:7px;border:1px solid #c9a24a;background:rgba(201,162,74,.12)}#xw .ms194-oc b{font-size:.76rem}#xw .ms194-oc span{color:#bfe8a0;font-weight:800;font-size:.8rem}
+#xw .ms194-oc.keep{border-color:var(--line);background:rgba(0,0,0,.25)}#xw .ms194-oc.keep span{color:var(--mut)}
+#xw .ms194-lv{display:flex;flex-direction:column;gap:2px;margin-top:8px;font-size:.72rem}
+#xw .ms194-wares #mst{display:block}
+#xw .ms194-hint .ev137-d b{color:#f0cc72}
+@media (max-width:760px){#xw .ms194-evo,#xw .ms194-forge{grid-template-columns:1fr}}
+</style>`);
+// ================= v194: the Curio Shop (resources instead of gold, Curio of the Hour), shop upgrade features, Sovereign restocks =================
+// Owner (Nov 3 2026): "For the curio shop I like the Curio of the hour idea- lets implement that. Lets also make his wares cost resources
+// instead of money. Lets also make the shop upgrades unlock new features like you mentioned, and have shops restock after a sovereign
+// kill." And the exploit: a tier-5 Curio egg cost 750 gold but sold for 6,000.
+//
+// Curio Shop (#xw visitor mode, xwArg 'merchant'; the v49/v55/v109 visitor list is skipped for it):
+//   wares — a mystery egg, three Health Potions and a random rune, plus one ware per shop level (rune, egg, rune, as in v109), all
+//           paid in gathered resources and companion materials (CU194_P). New wares every 20 minutes and after every Sovereign.
+//   Curio of the Hour (CU194_POOL) — one rare thing you can't get elsewhere, changing every hour: a Shimmering Egg (always hatches
+//           shiny), a Rank II rune, a runed Epic+ weapon or armour piece (two slots, three when it rolls Legendary), an Elixir of
+//           Fortune (+25% loot find for 20 minutes) or an Elder Egg (a tier above yours). Shop level 2: a second Curio each hour.
+//           Shop level 3: ask the merchant for a different Curio once an hour (10 Crystal Shards).
+//   Shop discount: 5% fewer resources per level. Eggs bought here (e.cu) can't be sold back (the old 750 → 6,000 gold loop).
+//   The stock is saved (x2Save 'cu194'), so reloading doesn't refill it.
+// Sovereign restocks (SR194.n): every Sovereign kill refreshes the Trading Post, the Magic Shop's eggs, the Curio wares and Curios.
+// Shop upgrade texts (shpFx109) now name the features each level opens (Magic Shop, Curio Shop, Rune Sanctum).
+var SR194={n:0};
+var CU194={k:'',hk:'',wares:[],cur:[],ask:'',fam:''};
+var CU194_POOL=['shiny','rune2','armament','fortune','elder'];
+function cu194L(){return typeof shpL109=='function'?shpL109('merchant'):0}
+function cu194T(){return Math.max(1,Math.min(5,tierOfLv(hero.lvl)))}
+function cu194Off(ms){const L=cu194L();return ms.map(([k,n])=>[k,Math.max(1,Math.ceil(n*(1-.05*L)))])}
+function cu194Fam(seed){return FAM[FAMS[mdHash('f'+seed)%FAMS.length]][0]}
+// ---- prices in resources (tier T 1..5) ----
+function cu194Price(kind,T,fam){const P={
+  egg:[['wood',6+4*T],['fiber',4+3*T],['bone',2+2*T]],pots:[['glowcap',4+T],['petals',3+T]],rune:[['crystal',2+T],['bone',3+2*T]],
+  shiny:[['crystal',4+2*T],['glowcap',6+2*T],[fam,2+T]],rune2:[['crystal',6+2*T],['bone',6+3*T],['Ectoplasm',1+T]],
+  armament:[['iron',10+5*T],['stone',8+4*T],['crystal',3+T],[UPM[T-1][0],2]],fortune:[['petals',8+2*T],['glowcap',6+2*T],['fiber',6+2*T]],
+  elder:[['wood',10+5*T],['fiber',8+4*T],[fam,3+T]]}[kind]||[];return cu194Off(P)}
+// ---- the stock ----
+function cu194Key(){return Math.floor(Date.now()/(20*60000))+'|'+SR194.n}
+function cu194HKey(){return Math.floor(Date.now()/3600000)+'|'+SR194.n}
+function cu194Egg(t){const T=Math.max(1,Math.min(5,t));const e=rollEgg(T);e.cu=1;return e}
+function cu194Ware(k,T){const L=cu194L(),t=k=='egg'&&T<5&&Math.random()<.12*L?T+1:T;
+  if(k=='egg')return {k,t,egg:cu194Egg(t),m:cu194Price('egg',t)};if(k=='pots')return {k,n:3,m:cu194Price('pots',T)};
+  return {k:'rune',r:RUNEK[R(0,RUNEK.length-1)],m:cu194Price('rune',T)}}
+function cu194Curio(kind,T,seed){const fam=cu194Fam(seed),o={k:kind,m:cu194Price(kind,T,fam)};
+  if(kind=='shiny'){o.egg=cu194Egg(T);o.egg.shn=1}
+  else if(kind=='elder'){o.egg=cu194Egg(Math.min(5,T+1));if(T>=5)o.egg.pa=Math.max(o.egg.pa||1,1.22)}
+  else if(kind=='rune2'){o.r=rn194Key(RN194K[R(0,RN194K.length-1)],2)}
+  else if(kind=='armament'){const sl=['weapon','weapon','chest','helm','boots'].concat(hero.cls=='paladin'?['offhand']:[]),l=Math.max(TIERS[T-1][0],Math.min(TIERS[T-1][1],hero.lvl));
+    const it=genItem(l,{cls:hero.cls,minR:3,sl:sl[R(0,sl.length-1)]});if(!rn194SlK(it)){it.rs=0}else{it.rs=(it.r|0)>=4?3:2;it.ru=[]}o.it=it}
+  return o}
+function cu194Stock(){const T=cu194T(),k=cu194Key(),hk=cu194HKey();
+  if(CU194.k!==k||!CU194.wares.length){CU194.k=k;const L=['egg','pots','rune'].concat(CUR109.slice(0,cu194L()));CU194.wares=L.map(x=>cu194Ware(x,T))}
+  else{const want=3+cu194L();while(CU194.wares.length<want)CU194.wares.push(cu194Ware(CUR109[CU194.wares.length-3]||'rune',T))}
+  const nC=cu194L()>=2?2:1;
+  if(CU194.hk!==hk||!CU194.cur.length){CU194.hk=hk;CU194.ask='';const h=mdHash('cu'+hk),a=CU194_POOL[h%CU194_POOL.length],b=CU194_POOL[(h+1+(h>>3)%(CU194_POOL.length-1))%CU194_POOL.length];CU194.cur=[cu194Curio(a,T,hk),cu194Curio(b,T,hk+'b')]}
+  return {wares:CU194.wares,cur:CU194.cur.slice(0,nC)}}
+// ---- what each thing is ----
+function cu194Info(o){const sp=e=>e?`Tier ${e.tier+1} egg (${TGI[e.tag]||''} ${e.tag})`:'';
+  if(o.k=='egg')return {ic:'🥚',n:'Mystery Tier '+o.t+' Egg',d:'You find out what hatches. Hatches after a minute in your bag.',rc:RAR[Math.min(4,o.t-1)][1]};
+  if(o.k=='pots')return {ic:'🧪',n:'3× Health Potion',d:'Each heals 40% of your health.',rc:'#5fcf6a'};
+  if(o.k=='rune')return {ic:RUNES[o.r][1],n:rn194Name(o.r),d:rn194Kind(o.r)+': '+rn194Desc(o.r,'h'),rc:'#7a5cff',rune:o.r};
+  if(o.k=='shiny')return {ic:'✨',n:'Shimmering Egg',d:'A '+sp(o.egg)+' that always hatches a shiny companion (+10% to every stat, a sparkle, an extra modifier).',rc:'#f5d76e'};
+  if(o.k=='elder')return {ic:'🥚',n:'Elder Egg',d:'A '+sp(o.egg)+': a tier above your own'+(o.egg&&o.egg.pa>1.15?', from a strong parent':'')+'.',rc:RAR[Math.min(4,o.egg.tier)][1]};
+  if(o.k=='rune2')return {ic:RUNES[o.r][1],n:rn194Name(o.r),d:rn194Kind(o.r)+' (rank II, rare): '+rn194Desc(o.r,'h')+' In a companion: '+rn194Desc(o.r,'c'),rc:'#9a7aff',rune:o.r};
+  if(o.k=='armament')return {ic:icoOf(o.it),n:itName(o.it),d:`${RAR[o.it.r][0]} ${SLOTN[itT(o.it).sl]} · iLvl ${o.it.lv} · ${o.it.rs} rune slots. ${itMain(o.it)}`,rc:RAR[o.it.r][1],item:o.it};
+  if(o.k=='fortune')return {ic:'🍀',n:'Elixir of Fortune',d:'+25% loot find for 20 minutes.',rc:'#6ee7b7'};
+  return {ic:'📦',n:o.k,d:'',rc:'#888'}}
+function cu194Give(o){
+  if(o.k=='egg'||o.k=='shiny'||o.k=='elder'){eggs.push(o.egg);say('🥚 '+(o.k=='shiny'?'A Shimmering ':'A ')+'Tier '+(o.egg.tier+1)+' '+o.egg.sp+' egg is in your bag. It hatches after a minute.')}
+  else if(o.k=='pots'){pots+=3;say('🧪 3 Health Potions bought.')}
+  else if(o.k=='rune'||o.k=='rune2'){giveS(o.r,1);say('🔮 '+rn194Name(o.r)+' bought.')}
+  else if(o.k=='armament'){gear.push(o.it);say('⚔️ '+itName(o.it)+' is in your bag ('+o.it.rs+' rune slots).')}
+  else if(o.k=='fortune'){hero.buffs=hero.buffs.filter(b=>b.n!='Fortune');hero.buffs.push({n:'Fortune',i:'🍀',s:{loot:.25},t:nowP()+20*60000,food:1,d:'+25% loot find'});hsDirty();say('🍀 Fortune smiles on you: +25% loot find for 20 minutes.')}}
+// ---- the window ----
+function cu194Clock(){const ms=3600000-Date.now()%3600000,m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000);return m+':'+String(s).padStart(2,'0')}
+function cu194Card(o,i,cur){const I=cu194Info(o),ok=!o.sold&&shHas(o.m);
+  return `<div class="cu194-c${cur?' cur':''}${o.sold?' sold':''}" style="--rc:${I.rc}"><div class="cu194-ic">${I.rune?rs194Gem(I.rune,cur):I.ic}</div><div class="cu194-t"><b>${rs194Esc(I.n)}</b><p>${I.d}</p></div>
+    <div class="cu194-b">${rs194Cost(0,o.m)}<button class="pri" data-cu194="${cur?'c':'w'}:${i}" ${ok?'':'disabled'}>${o.sold?'Sold':'Trade'}</button></div></div>`}
+function cu194Render(){const B=$('xwB');if(!B)return;const S=cu194Stock(),L=cu194L(),hk=cu194HKey();$('xwT').textContent='🧳 Curio Shop';
+  const R=['wood','fiber','stone','iron','crystal','glowcap','petals','bone'];$('xwS').innerHTML=R.map(k=>`${RES[k][1]} ${mats[k]||0}`).join(' · ');
+  const U=['+1 rune ware','+1 egg ware and a second Curio of the Hour','+1 rune ware and you may ask for another Curio once an hour'];
+  let h=`<div class="shpnote${L?' on':''}">🏪 ${L?`<b>Shop level ${L}</b> <span class="shpip">${'◆'.repeat(L)}${'◇'.repeat(3-L)}</span> · <b>${5*L}% fewer resources</b> · `:''}${U.map((u,i)=>`<span class="rs194-un${L>i?' on':''}">${L>i?'✔ ':'🔒 L'+(i+1)+': '}${u}</span>`).join(' · ')}</div>`;
+  h+=`<div class="cu194-hh"><span>✦ Curio of the Hour</span><span class="cu194-clk">Next curio in <b id="cu194clk">${cu194Clock()}</b></span></div><div class="cu194-curs n${S.cur.length}">${S.cur.map((o,i)=>cu194Card(o,i,1)).join('')}</div>`;
+  if(L>=3)h+=`<div class="cu194-ask">${CU194.ask===hk?'<span class="mut">You already asked for another curio this hour.</span>':`<span class="mut">Not what you need?</span>${rs194Cost(0,[['crystal',10]])}<button data-cu194="ask" ${shHas([['crystal',10]])?'':'disabled'}>🔄 Ask for another curio</button>`}</div>`;
+  h+=`<div class="rs194-gh">Wares · new stock every 20 minutes and after every Sovereign</div><div class="cu194-wares">${S.wares.map((o,i)=>cu194Card(o,i,0)).join('')}</div>`;
+  B.innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">The Curio Merchant trades for resources and companion materials, not gold. Eggs bought here can\'t be sold back.</span>'}
+setInterval(()=>{try{if(xwMode=='visitor'&&xwArg=='merchant'&&!$('xw').classList.contains('hide')){const c=$('cu194clk');if(c)c.textContent=cu194Clock();if(CU194.hk&&CU194.hk!==cu194HKey())rX()}}catch(_){}},1000);
+function cu194Do(a){const S=cu194Stock();
+  if(a=='ask'){const hk=cu194HKey();if(cu194L()<3||CU194.ask===hk||!shHas([['crystal',10]]))return;shPay(0,[['crystal',10]]);CU194.ask=hk;const T=cu194T(),have=CU194.cur.map(o=>o.k),pool=CU194_POOL.filter(k=>!have.includes(k));
+    CU194.cur[0]=cu194Curio(pool[R(0,pool.length-1)]||'rune2',T,hk+'x'+Math.random());say('🧳 "Ah, perhaps this instead…"');rX();return}
+  const [t,i]=a.split(':'),o=(t=='c'?S.cur:S.wares)[+i];if(!o||o.sold)return;if(!shHas(o.m))return say('Not enough resources.');
+  shPay(0,o.m);o.sold=1;cu194Give(o);try{sfx('chime')}catch(_){}if(t=='c')try{mSfx('rare')}catch(_){}try{hud();ui();saveGame(true)}catch(_){}rX()}
+$('xw').addEventListener('click',e=>{if(xwMode!='visitor'||xwArg!='merchant')return;const t=e.target.closest('[data-cu194]');if(!t||t.disabled)return;e.stopPropagation();try{cu194Do(t.dataset.cu194)}catch(err){console.warn('v194 curio',err)}});
+{const f=XR.visitor;XR.visitor=function(){if(xwArg=='merchant'){try{return cu194Render()}catch(e){console.warn('v194 curio',e)}}return f.apply(this,arguments)}}
+// tooltips on the Curio cards: the item / egg tooltip of the game
+// ---- eggs: shiny eggs hatch shiny; Curio eggs can't be sold ----
+{const f=hatch;hatch=function(e){const c=f.apply(this,arguments);try{if(c&&e&&e.shn&&!c.shn){c.shn=1;try{rollMod(c)}catch(_){}c._new='shiny'}}catch(_){}return c}}
+{const f=sellables;sellables=function(){const L=f.apply(this,arguments);try{return L.filter(x=>{if(x.k[0]!='e')return true;const e=eggs.find(q=>q.id==+x.k.slice(1));return !(e&&e.cu)})}catch(_){return L}}}
+{const f=kqmEggTip;kqmEggTip=function(e,o){let h=f.apply(this,arguments);try{if(e&&e.shn)h=h.replace('🥚 Tier','✨ Shimmering Tier')+'<div class="kqm-tx">✨ Always hatches a shiny companion</div>';if(e&&e.cu)h+='<div class="kqm-ts">Bought from the Curio Merchant · can\'t be sold</div>'}catch(_){}return h}}
+// ---- saves ----
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.cu194={k:CU194.k,hk:CU194.hk,ask:CU194.ask,w:CU194.wares,c:CU194.cur,n:SR194.n}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.cu194;SR194.n=q&&q.n|0||0;
+  if(q&&Array.isArray(q.w)&&Array.isArray(q.c)){CU194.k=String(q.k||'');CU194.hk=String(q.hk||'');CU194.ask=String(q.ask||'');CU194.wares=q.w.filter(o=>o&&o.k);CU194.cur=q.c.filter(o=>o&&o.k)}
+  else{CU194.k='';CU194.hk='';CU194.wares=[];CU194.cur=[]}}catch(_){}return r}}
+// ---------------- Sovereign restocks ----------------
+function sr194Restock(quiet){SR194.n++;try{stock2=null}catch(_){}try{mstock=null}catch(_){}CU194.k='';CU194.hk='';
+  if(!quiet)setTimeout(()=>{try{say('🛍️ Word of your victory spreads: the shops of Duskhold have restocked.')}catch(_){}},5200)}
+{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);try{sr194Restock()}catch(_){}return r}}
+// ---------------- what each shop level opens (Steward rows and the upgrade banner) ----------------
+{const f=shpFx109;shpFx109=function(k,l){const off=5*l+'% off';
+  if(k=='magic')return (2+l)+' eggs for sale'+(l?' · '+['Refine (reroll a stat\'s value)','three stats to choose from when rerolling','masterwork rolls when reforging'].slice(0,l).join(', '):'')+' · '+off;
+  if(k=='merchant')return (3+l)+' wares'+(l>=2?' · a second Curio of the Hour':'')+(l>=3?' · ask for another Curio once an hour':'')+' · '+(5*l)+'% fewer resources';
+  if(k=='sage')return (l?['Rank III fusion','Rank II runes for sale','carve a rune slot into gear'].slice(0,l).join(', ')+' · ':'')+off;
+  return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+#xw .cu194-hh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 6px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#f5d76e;font-weight:800}
+#xw .cu194-clk{letter-spacing:0;text-transform:none;font-weight:600;color:var(--mut)}#xw .cu194-clk b{color:#f5d76e;font-variant-numeric:tabular-nums}
+#xw .cu194-curs{display:grid;gap:10px;grid-template-columns:1fr}#xw .cu194-curs.n2{grid-template-columns:1fr 1fr}
+#xw .cu194-wares{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+#xw .cu194-c{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--rc) 12%,transparent),rgba(0,0,0,.3) 60%)}
+#xw .cu194-c.cur{padding:14px 16px;border-width:1px;border-color:color-mix(in srgb,var(--rc) 70%,transparent);background:radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--rc) 28%,transparent),transparent 60%),linear-gradient(180deg,rgba(40,30,12,.6),rgba(0,0,0,.4));box-shadow:0 0 22px color-mix(in srgb,var(--rc) 20%,transparent)}
+#xw .cu194-c.sold{opacity:.5;filter:grayscale(.6)}
+#xw .cu194-ic{font-size:1.6rem;display:grid;place-items:center;width:46px;height:46px;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid color-mix(in srgb,var(--rc) 40%,transparent)}
+#xw .cu194-c.cur .cu194-ic{width:64px;height:64px;font-size:2.3rem;animation:cu194f 3s ease-in-out infinite}
+#xw .cu194-t b{font-size:.86rem}#xw .cu194-c.cur .cu194-t b{font-size:1rem;color:#fff2c8}#xw .cu194-t p{margin:3px 0 0;font-size:.72rem;line-height:1.35;color:var(--mut)}
+#xw .cu194-b{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+#xw .cu194-ask{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:6px 0 4px;font-size:.74rem}
+@keyframes cu194f{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (max-width:760px){#xw .cu194-curs.n2{grid-template-columns:1fr}}
+</style>`);

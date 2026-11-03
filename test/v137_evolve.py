@@ -75,14 +75,14 @@ def s(pg):
           o.w4=ev137Why(s);o.e4=ev137Evolve('Cleave');hero.tal['ab:Cleave']=5;const a0=apFree(),sp0=apSpent();o.w5=ev137Why(s);o.e5=ev137Evolve('Cleave');
           o.key=hero.tal['__ev:Cleave'];o.cost=ev137Cost(s);o.paid=a0-apFree();o.spent=apSpent()-sp0;o.again=ev137Evolve('Cleave');
           openAbil();KQS.sel='Cleave';XR.abil();o.box=!!document.querySelector('#xw .ev137-box.on');o.tag=!!document.querySelector('#xw .ev137-tag');
-          KQS.sel='Leap Slam';hero.tal['ab:Leap Slam']=5;XR.abil();o.btn=!!document.querySelector('#xw [data-ev137="Leap Slam"]:not([disabled])');o.pvb=!!document.querySelector('#xw [data-ev137pv="Leap Slam"]');closeX();
+          KQS.sel='Leap Slam';hero.tal['ab:Leap Slam']=5;XR.abil();o.btn=!!document.querySelector('#xw [data-ev137="Leap Slam"]:not([disabled])');o.pvb=!!document.querySelector('#xw [data-ev137pv="Leap Slam"]');o.hint=!!document.querySelector('#xw .ms194-hint');closeX();
           saveGame(true);hero.tal={};loadGame();o.load=hero.tal['__ev:Cleave']===1;o.ld=heroSkills().map(q=>q.n);
           gold=1e6;const a1=apFree();kqsReset();o.reset=!hero.tal['__ev:Cleave'];o.refund=apFree()-a1;return o}""")
         print(json.dumps(r))
         chk('below rank 5 it cannot evolve',r['w4']!='' and r['e4']==False,r)
         chk('at rank 5 the Evolve works and costs ability points',r['w5']=='' and r['e5']==True and r['key']==1 and r['paid']==r['cost'] and r['spent']==r['cost'] and 12<=r['cost']<=16,r)
         chk('an evolved ability cannot evolve twice',r['again']==False,r)
-        chk('the Abilities window shows the evolution (box, ✦ tag) and an Evolve + Preview button at rank 5',r['box'] and r['tag'] and r['btn'] and r['pvb'],r)
+        chk('the Abilities window shows the evolution (box, ✦ tag); since v194 no Evolve / Preview button there, only a pointer to the Magic Shop',r['box'] and r['tag'] and not r['btn'] and not r['pvb'] and r['hint'],r)
         chk('the evolution survives save + load',r['load'],r)
         chk('Reset abilities removes the evolution and refunds its points',r['reset'] and r['refund']>=r['cost'],r)
         # mechanics: count projectiles, radius, jumps, damage
