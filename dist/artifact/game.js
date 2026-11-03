@@ -64546,7 +64546,8 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 // 2. Tab during a Sovereign signature (Blood Covenant's chalices, and the eyes / braziers / glands / scars / carcasses of
 //    the others): the v150 Tab list was every live target within 34 tiles sorted only by distance, with the boss in it, and
 //    started after whatever was targeted, so a press from the boss jumped past the nearest chalice; chalices on the far side
-//    of the doubled hall (pedestals 16.8 tiles from its centre) were beyond 34 tiles and not in the list at all, and a
+//    of the doubled hall (pedestals 16.8 tiles from its centre) were beyond 34 tiles and not in the list at all, any
+//    target beyond 30 tiles counted as not visible (the main loop hides models past 30, and v150 skipped hidden ones), and a
 //    target more than 32 tiles away was dropped the next frame (tgtTick). Now while a signature's targets stand: Tab goes
 //    through them first, nearest first, then the boss (then anything else), and on round; they are never dropped for
 //    distance inside the fight; when the targeted one breaks the nearest one left is targeted (the boss when none is left);
@@ -64678,7 +64679,7 @@ function sov192PickRanged(e){const S=e.sv,B=S.B,R=SOV192.ranged[S.i];if(!R||!R.s
 // ---------------- 2. Tab during a Sovereign signature ----------------
 var TAB192={cyc:null,t:0,mem:4000};
 // the live targets of the running signature (each player's own copies)
-function tab192Props(){try{if(typeof AF=='undefined'||!AF||!AF.f||!AF.s146)return [];return sk146Alive(AF.s146.props).filter(p=>enemies.includes(p)&&fx150Ok(p))}catch(_){return []}}
+function tab192Props(){try{if(typeof AF=='undefined'||!AF||!AF.f||!AF.s146)return [];return sk146Alive(AF.s146.props).filter(p=>enemies.includes(p)&&p.m&&!p.hid&&!p.mpGhost)}catch(_){return []}}
 {const f=selectTarget;selectTarget=function(){const P=tab192Props();if(!P.length){TAB192.cyc=null;return f.apply(this,arguments)}
   const p=pl.position,B=bossEnt(AF.i),now=nowP(),byD=(a,b)=>d2(a.m.position,p)-d2(b.m.position,p);
   const others=enemies.filter(e=>fx150Ok(e)&&e!==B&&!P.includes(e)&&d2(e.m.position,p)<34).sort(byD);
