@@ -46096,8 +46096,10 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
   // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at the nearest hero (the host spawns them)
   if(host){E.spT-=dt;const live=enemies.filter(e=>(e.fs160sp||e.c&&e.c.en==='icespider')&&!e.dead&&!e.mir).length;
   if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=2*(1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0));n=Math.min(n,(co?MQ160.capC:MQ160.cap)-live);   // v166: twice as many
-    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
-        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
+    // v192: 24 tries; the first 18 also need a clear walk to the hero and to stay inside the AI's 30-tile wake range (fs192Spot, 3510:
+    // spiders used to rise behind rocks, the gate's stone or out of range and stand there)
+    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<24&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
+        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8&&(tr>=18||typeof fs192Spot!='function'||fs192Spot(qx,qz))){x=qx;z=qz;okp=true}}
       if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:co?0:1})}catch(err){console.error('v151 spider',err)}
       if(!e)continue;e.fs160sp=1;e.hunt=1;e.agg=1;e.wx=pl.position.x;e.wz=pl.position.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
@@ -46440,20 +46442,23 @@ try{const I=sp152I('ascent');CH153SN.r.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);
 // against the rock, wired to four control boxes round the yard.
 //  * F at the drill's console starts the drill: a special event that cannot be stopped (the hero is held in the drill yard, no recall)
 //    until the mountain is bored through (MQ170.need, 90 s of drilling) or the hero falls (the drill winds down and the bore is lost).
-//  * The drill bores at full speed while all four control boxes are lit and running; v168: with boxes offline it keeps boring, only
-//    slower (×MQ170.slow = 0.4 for each box offline: 100% · 40% · 16% · 6%), and with none running it has no power. Each box starts
-//    dark: F switches it on. Running boxes fail on their own: one FREEZES or MALFUNCTIONS.
+//  * The drill bores at full speed while all four control boxes are lit and running; v192 (owner): each running box gives 25% of the
+//    drill's power (MQ170.per: 4 · 3 · 2 · 1 · 0 boxes = 100% · 75% · 50% · 25% · 0%; v168 had ×0.4 per box offline). Each box starts
+//    dark: F switches it on. Running boxes fail on their own (v192: half as often, MQ170.tf): one FREEZES or MALFUNCTIONS.
 //  * Frost Trolls come up the road and out of the snow and go for the boxes, not for you: a troll that reaches a box raises its fists
 //    (a warning ring) and SMASHES it. Hit a troll and it turns on you.
-//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch (3 s), REWIRE with a
-//    spanner on one knee (6 s), REBUILD with a hammer (10 s). The game keeps going while you work; moving or a hit stops the work,
+//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch, REWIRE with a
+//    spanner on one knee, REBUILD with a hammer (v192: 1.8 / 3.5 / 5.5 s, were 3 / 6 / 10 s). The game keeps going while you work; moving or a hit stops the work,
 //    and F carries on where it stopped (see the repairs section).
 //  * Bored through: the rock face bursts open on a tunnel; F at it goes to the Sovereign's Den.
 // State MQ170.st: 0 · 1 the tunnel is open. Done also when the Den has been reached (mq170Done). Saved as x2.mq170 {st}. A save made
 // mid-drill loads with the drill at rest. Co-op: local to each player (the trolls are minions, never shared).
-var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,slow:.4,
+var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,
+  per:.25,   // v192 (owner): each running box is 25% of the drill's power (was ×0.4 per box offline, MQ170.slow)
+  tf:[24,24],   // v192 (owner): a running box freezes / malfunctions after tf[0] + up to tf[1] s (was 12 + 12: half as often now)
   // v168: the repairs are timed (seconds of work at the box): thawing is quickest, rewiring takes longer, rebuilding longest
-  rt:{thaw:3,wire:6,rebuild:10},
+  // v192 (owner: "make repairs quicker"): 1.8 / 3.5 / 5.5 s (were 3 / 6 / 10 s, 40-45% shorter)
+  rt:{thaw:1.8,wire:3.5,rebuild:5.5},
   bn:['North-west box','North-east box','South-west box','South-east box'],
   stN:{off:'dark',on:'running',frozen:'frozen',fault:'malfunctioning',smashed:'smashed'},
   stC:{off:'#5a6470',on:'#7aff8a',frozen:'#8ad8ff',fault:'#ffb040',smashed:'#ff5a4a'}};
@@ -46583,7 +46588,7 @@ function mq170Start(){if(MQ170.E||mq170Done())return;const R=mq170Plan();if(ridi
   MQ170.E={t:0,prog:0,box:[0,1,2,3].map(i=>({s:'off',tf:9+Math.random()*8+i*2})),trT:6,live:[],run:0,hint:0};MQ170.trkK='';mq170Sync();
   shake(.25);svSnd('heavy',1.1,.6);setTimeout(()=>svSnd('charge',1,.5),300);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0x7ad8ff,MQ170.leash,.8);
   try{zt116Show(ZT116.Z[2],'Stormcrown','The Mountain Drill','The drill wakes, and the trolls hear it','Keep all four control boxes running','z2')}catch(_){}
-  say('⚙️ The drill wakes! Switch on all four control boxes (F at each). Keep them running: the drill only bores while every box is lit.');dr170Hud()}
+  say('⚙️ The drill wakes! Switch on the four control boxes (F at each). Each running box gives the drill a quarter of its power: keep as many lit as you can.');dr170Hud()}
 function mq170Fail(why){const E=MQ170.E;if(!E)return;MQ170.E=null;MQ170.trkK='';dr170Close(false);
   enemies.slice().forEach(e=>{if(e.dr170t&&!e.dead){burst(gY(e.m.position,1),0xe8f0f8,20,1.6,1.4,.6);try{removeE(e)}catch(_){}}});mq170Sync();dr170Hud();svSnd('heavy',.9,.5);
   say(why==='dead'?'⚙️ You fall, and the drill grinds to a halt. The bore collapses: start the drill again.':'⚙️ The drill grinds to a halt.')}
@@ -46599,15 +46604,16 @@ function dr170Fix(i){if(co151On()&&!co151Host()){co151Send(['d3o',i]);const E=MQ
 // a box changes state (with its effect and a line in the log)
 function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;
   const W=MQ170.W;if(W&&W.i===i)dr170Close(false);b.s=s;b.rp=0;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
-  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
+  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=MQ170.tf[0]+Math.random()*MQ170.tf[1]}
   else if(s==='frozen'){burst(gY(p,1),0xd8f4ff,30,1.5,1.5,.7);svSnd('crack',.9,1.2);popT(gY(p,2),'❄ FROZEN','#8ad8ff',true)}
   else if(s==='fault'){burst(gY(p,1.4),0xffd07a,30,2,2,.4);svSnd('zap',1,1);popT(gY(p,2),'⚡ MALFUNCTION','#ffb040',true)}
   else if(s==='smashed'){try{sk146Debris(gY(p,1),dr170Mats().iron,8,.15,4,5,1.3)}catch(_){}burst(gY(p,1),0xffa07a,30,2,2,.5);shake(.25);svSnd('heavy',1.1,.9);svSnd('crack',.8,1.4);popT(gY(p,2),'💥 SMASHED','#ff5a4a',true)}
   if(was==='on'&&s!=='on'){const r=dr170Rate(E);say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': '+(r>0?'the drill slows to '+Math.round(r*100)+'% speed!':'the drill has no power!'))}}
-// v168: the drill keeps boring with boxes offline, only slower: ×0.4 for each box that is not running (1 · 0.4 · 0.16 · 0.064);
-// with all four offline it has no power at all
+// v168: the drill keeps boring with boxes offline, only slower; v192 (owner: "have each drill represent 25% of efficiency"): each
+// running box gives MQ170.per = 25% (4 · 3 · 2 · 1 · 0 running = 1 · .75 · .5 · .25 · 0), so one hero keeping some boxes lit still
+// bores steadily (v168 was ×0.4 per box offline: 1 · .4 · .16 · .064)
 function dr170Off(E){return E?E.box.filter(b=>b.s!=='on').length:4}
-function dr170Rate(E){const n=dr170Off(E);return n>=4?0:Math.pow(MQ170.slow,n)}
+function dr170Rate(E){const n=4-dr170Off(E);return Math.max(0,Math.min(1,n*MQ170.per))}
 function mq170ETick(dt,now,al){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
   // co-op (3180): the region host runs the drill (progress, failures, trolls, the end); partners switch on and repair boxes
   const co=co151On(),host=co151Host();
@@ -46666,9 +46672,9 @@ function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,
 // ---------------- the repairs (v168: timed work at the box, each with its own motion; they do not pause the game) ----------------
 // (they replace v151's Thaw / Rewire / Rebuild mini-game windows.) F at a broken box starts the work: the hero steps up to the box,
 // faces it and works while a ring over the box fills:
-//  * Thaw (MQ170.rt 3 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
-//  * Rewire (6 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
-//  * Rebuild (10 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
+//  * Thaw (MQ170.rt, v192 1.8 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
+//  * Rewire (v192 3.5 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
+//  * Rebuild (v192 5.5 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
 //    and the panel, the gauges and the lever jump back into place one by one.
 // Moving (or Esc, or a dodge) steps away and a hit knocks you away: the work stops, but what is done stays done (E.box[i].rp), so F
 // again carries on from there. The box changing state (a troll smashing a frozen box) starts that box's work afresh.
@@ -64917,4 +64923,48 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 
 // ---------- the Improve (fusion) window lists lost Devotion ----------
 {const f=FSM100_check;FSM100_check=function(a,b,act){const r=f.apply(this,arguments);try{const L=dv191Lv(b);if(r&&r.warn&&L>0)r.warn.push('Devotion '+L+' lost')}catch(_){}return r}}
+// ================= v192: Burningeye Summit II / III owner fixes (the Frozen Gate's spiders; the drill numbers live in 3170) =================
+// Owner (Nov 2 2026): "Spiders get stuck during melting the frozen gate" and "Reduce drops from frozen gate event spiders by 65% and
+// xp by 50%". (The drill requests, 25% per box, quicker repairs and fewer breakdowns, are plain numbers in MQ170 in 3170.)
+//  * Why the spiders got stuck: they rise on a ring 15-19 tiles round the yard (up to ~34 tiles from a hero at the far side of it)
+//    and walk in a straight line at their hero, with no pathing. (1) The enemy loop (0104) puts every monster further than 30 tiles
+//    from your own hero to sleep (`m.visible=dpl<30` → aiSleep, no AI at all), so spiders that rose on the far side of the yard
+//    stood there frozen until you walked over. (2) The ring reaches the edge of the gate clearing, where rock walls bend, boulders
+//    and trees stand and the gate's stone sits: a spider whose straight line ran into one pressed against it for ever.
+//  * The fix: spawn spots must be within FS192.wake of the hero and have a clear walk to them (fs192Spot, used by the spawner in 3160;
+//    the old rule is the fallback for the last tries); event spiders never sleep while the melt runs (mpAct wrapper); and a watchdog
+//    (fs192Tick, the region host only, like v150's ghost wolves) moves a spider that has gone less than FS192.move tiles in FS192.wait
+//    seconds while more than FS192.gap tiles from the hero it hunts: it bursts into frost and rises again FS192.r tiles from that hero,
+//    on free ground with a clear walk to them, inside the yard. Partners see the move through the shared-monster snapshot.
+//  * Rewards: a gate spider gives FS192.xp (50%) of its XP and drops loot only FS192.loot (35%) of the time (65% fewer drops). The
+//    partner's copies are ice spiders too (e.c.en), so a co-op kill is scaled the same on both screens.
+var FS192={wake:26,wait:2.2,move:.6,gap:4.5,r:[5,8],xp:.5,loot:.35,n:0,err:0};
+function fs192Is(e){return !!(e&&(e.fs160sp||(e.c&&e.c.en==='icespider')))}
+// a straight walk from a to b with the walker's corner probes (walk() in 0160 uses CR = ±.3) hitting nothing solid
+function fs192Line(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz),n=Math.max(1,Math.ceil(L/.35));
+  for(let i=1;i<n;i++){const x=ax+dx*i/n,z=az+dz*i/n;if(solid(x+.3,z+.3)||solid(x-.3,z+.3)||solid(x+.3,z-.3)||solid(x-.3,z-.3))return false}return true}
+// a good spawn spot: close enough that the spider is awake, with a clear walk to the hero
+function fs192Spot(x,z,tg){const p=tg||pl.position;return Math.hypot(x-p.x,z-p.z)<=FS192.wake&&fs192Line(x,z,p.x,p.z)}
+// event spiders never fall asleep while the melt runs (the enemy loop sleeps monsters beyond 30 tiles)
+{const f=mpAct;mpAct=function(e){if(MQ160.E&&fs192Is(e)&&!e.dead)return true;return f.apply(this,arguments)}}
+// rewards: half the XP, 35% of the drops
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return fs192Is(e)?k*FS192.xp:k}}
+function fs192Drop(){return Math.random()<FS192.loot}
+{const f=lootE;lootE=function(e){if(fs192Is(e)&&!fs192Drop())return;return f.apply(this,arguments)}}
+// the watchdog: a spider that is not getting anywhere rises again near the hero it hunts (the host's world, or yours alone)
+function fs192Tick(now){const E=MQ160.E;if(!E||!co151Host())return;if(!(now>0))now=performance.now();let R=null;try{R=mq160Plan()}catch(_){return}
+  for(const e of enemies){if(!e.fs160sp||e.dead||e.mir||!e.m)continue;const m=e.m,p=m.position;
+    let tg=null;try{tg=eTarget(e,m,m.position.distanceTo(pl.position))}catch(_){tg=pl}if(!tg||!tg.position)tg=pl;const T=tg.position,d=Math.hypot(T.x-p.x,T.z-p.z);
+    const S=e.st192;if(!S||e.atk||e.stun>0||e.root>0||d<=FS192.gap){e.st192={x:p.x,z:p.z,t:now};continue}
+    if(Math.hypot(p.x-S.x,p.z-S.z)>FS192.move){e.st192={x:p.x,z:p.z,t:now};continue}
+    if(now-S.t<FS192.wait*1000)continue;
+    // free ground near the hunted hero, on the spider's side first, inside the yard, with a clear walk to the hero
+    const a0=Math.atan2(p.z-T.z,p.x-T.x);let spot=null;
+    for(let k=0;k<20&&!spot;k++){const a=a0+(k%2?1:-1)*Math.ceil(k/2)*.4,r=FS192.r[0]+Math.random()*(FS192.r[1]-FS192.r[0]),x=T.x+Math.cos(a)*r,z=T.z+Math.sin(a)*r;
+      if(Math.hypot(x-R.yard.x,z-R.yard.z)>MQ160.leash+2)continue;if(R.ok(x,z,.4)&&!solid(Math.round(x),Math.round(z))&&fs192Line(x,z,T.x,T.z))spot=[x,z]}
+    e.st192={x:p.x,z:p.z,t:now};if(!spot)continue;
+    try{burst(gY(p,.3),0xd8f4ff,14,1.2,1.4,.6)}catch(_){}
+    p.x=spot[0];p.z=spot[1];p.y=GH(p.x,p.z);e.vx=e.vz=0;m.rotation.y=Math.atan2(T.x-p.x,T.z-p.z);e.st192={x:p.x,z:p.z,t:now};FS192.n++;
+    try{burst(gY(p,.3),0x8ab8d8,16,1.2,1.6,.6);svDecal(new THREE.Vector3(p.x,0,p.z),0x8ab8d8,1.1,2,.6)}catch(_){}}}
+{const f=homeTick;homeTick=function(dt,now){const r=f.apply(this,arguments);try{fs192Tick(now)}catch(err){if(!FS192.err++)console.warn('v192 spiders',err)}return r}}
 </script></body></html>

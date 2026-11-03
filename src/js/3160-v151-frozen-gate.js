@@ -295,8 +295,10 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
   // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at the nearest hero (the host spawns them)
   if(host){E.spT-=dt;const live=enemies.filter(e=>(e.fs160sp||e.c&&e.c.en==='icespider')&&!e.dead&&!e.mir).length;
   if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=2*(1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0));n=Math.min(n,(co?MQ160.capC:MQ160.cap)-live);   // v166: twice as many
-    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
-        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
+    // v192: 24 tries; the first 18 also need a clear walk to the hero and to stay inside the AI's 30-tile wake range (fs192Spot, 3510:
+    // spiders used to rise behind rocks, the gate's stone or out of range and stand there)
+    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<24&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
+        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8&&(tr>=18||typeof fs192Spot!='function'||fs192Spot(qx,qz))){x=qx;z=qz;okp=true}}
       if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:co?0:1})}catch(err){console.error('v151 spider',err)}
       if(!e)continue;e.fs160sp=1;e.hunt=1;e.agg=1;e.wx=pl.position.x;e.wz=pl.position.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}

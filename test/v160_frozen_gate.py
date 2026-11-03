@@ -1,7 +1,7 @@
 # v151: The Frozen Gate (Burningeye Summit II main quest): the plan (gate, workbench, three caches), the gate replaces the II
 # gateway, each cache's elite warden and its part, assembling the flamespitter, the melt event (held in the yard, recall blocked,
 # C picks up and drops, holding the left button sprays and melts, overheating after 5 s and cooling, ice spiders spawning and
-# hunting, v166: twice as many, the flame burning spiders in heavy hits (charge = bonus burn, empty still kills, refills), a death resets it), the gate opening, the road to III,
+# hunting, v166: twice as many, v192: spawn spots in wake range with a clear walk, stuck spiders rising again near the hero, half XP and 35% loot, the flame burning spiders in heavy hits (charge = bonus burn, empty still kills, refills), a death resets it), the gate opening, the road to III,
 # saves (round trip, old saves, III reached, a mid-melt save). NOSHOT=1 skips the pictures.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -46,6 +46,23 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   // v166: twice as many spiders: two or more per spawn, up to MQ160.cap alive
   enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});E.spT=0;clk+=33;god();mq160Tick(1/30,clk);out.spawn1=enemies.filter(e=>e.fs160sp&&!e.dead).length;
   for(let i=0;i<40;i++){E.spT=0;clk+=33;god();mq160Tick(1/30,clk)}out.spawnMax=enemies.filter(e=>e.fs160sp&&!e.dead).length;out.cap=MQ160.cap;
+  // v192: spawn spots are inside the AI's wake range with a clear walk to the hero; event spiders never sleep during the melt
+  {const L=enemies.filter(e=>e.fs160sp&&!e.dead),P=pl.position;out.spawnNear=+(L.filter(e=>Math.hypot(e.m.position.x-P.x,e.m.position.z-P.z)<=FS192.wake+.5&&fs192Line(e.m.position.x,e.m.position.z,P.x,P.z)).length/Math.max(1,L.length)).toFixed(2);
+   out.awake=L.length>0&&L.every(e=>mpAct(e));out.farD=+Math.max(...L.map(e=>Math.hypot(e.m.position.x-P.x,e.m.position.z-P.z))).toFixed(1)}
+  // v192: the real game loop runs for a while (the hero stands still): the spiders reach the hero instead of standing stuck
+  {E.spT=1e9;enemies.forEach(e=>{delete e.st192});const P=pl.position.clone(),hold=setInterval(()=>{try{hero.hp=heroMax();hero.iv=99;pl.position.x=P.x;pl.position.z=P.z;atkHeld=false}catch(_){}},40),n0=FS192.n,t0=N();
+   const near=()=>{const L=enemies.filter(e=>e.fs160sp&&!e.dead);return L.length?L.filter(e=>Math.hypot(e.m.position.x-P.x,e.m.position.z-P.z)<6).length/L.length:0};
+   while(N()-t0<60000&&near()<.85)await wait(250);clearInterval(hold);out.reached=+near().toFixed(2);out.reachS=+((N()-t0)/1000).toFixed(1);out.unstuck=FS192.n-n0;clk=N()}
+  // v192: a spider that gets nowhere (here: held still 12 tiles off) rises again near its hero; one on the move is left alone
+  {enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});const P=pl.position,R=mq160Plan();let sx=0,sz=0;for(let k=0;k<64;k++){const a=k*.7,x=P.x+Math.cos(a)*12,z=P.z+Math.sin(a)*12;if(R.ok(x,z,.4)&&!solid(Math.round(x),Math.round(z))){sx=x;sz=z;break}}
+   const st=spawnEnemy('icespider',sx,sz,MQ160.lv,{agg:1,minion:1});st.fs160sp=1;st.hunt=1;const mv=spawnEnemy('icespider',sx,sz,MQ160.lv,{agg:1,minion:1});mv.fs160sp=1;mv.hunt=1;mv.m.position.set(sx,0,sz);
+   const t=N();fs192Tick(t);mv.m.position.x+=1;fs192Tick(t+2500);out.stuckD=+Math.hypot(st.m.position.x-P.x,st.m.position.z-P.z).toFixed(1);out.movedD=+Math.hypot(mv.m.position.x-P.x,mv.m.position.z-P.z).toFixed(1);
+   out.stuckLine=fs192Line(st.m.position.x,st.m.position.z,P.x,P.z);
+   // v192 rewards: half the XP, loot only 35% of the time (65% fewer drops)
+   out.xpK=[gw150X({fs160sp:1}),gw150X({c:{en:'icespider'}}),gw150X({c:{en:'troll',g:['troll']}})];
+   const ctl=Object.assign({},st,{fs160sp:0,c:Object.assign({},st.c,{en:'stalker'})});out.xpUse=String(gainXP).includes('gw150X');
+   const lb=lootE_base,ur=unqRoll135;let nS=0,nC=0;lootE_base=e=>{if(e===st)nS++;else nC++};unqRoll135=()=>{};try{for(let k=0;k<2000;k++){lootE(st);lootE(ctl)}}finally{lootE_base=lb;unqRoll135=ur}
+   out.lootS=+(nS/2000).toFixed(3);out.lootC=+(nC/2000).toFixed(3);removeE(st);removeE(mv)}
   // v166: the flame burns a spider down in a few heavy hits (not at once); with essence charge 2 burns, 8 charge
   const spawnFront=()=>{const e=spawnEnemy('icespider',pl.position.x+Math.sin(pl.rotation.y)*3,pl.position.z+Math.cos(pl.rotation.y)*3,22,{agg:1,minion:1});e.fs160sp=1;e.hunt=1;e.vx=e.vz=0;return e};
   const keep=e=>{e.m.position.set(pl.position.x+Math.sin(pl.rotation.y)*3,e.m.position.y,pl.position.z+Math.cos(pl.rotation.y)*3)};
@@ -104,6 +121,13 @@ def s(pg):
     exp(r['spiders']>=1 and r['hunt'],'ice spiders spawn and hunt the hero (%s)'%r['spiders'])
     exp(r['spawn1']>=2,'v166: a spawn brings two or more spiders (%s)'%r['spawn1'])
     exp(16<r['spawnMax']<=r['cap']==32,'v166: up to 32 spiders alive, twice the old 16 (%s of %s)'%(r['spawnMax'],r['cap']))
+    exp(r['spawnNear']>=.8,'v192: spiders rise within %s tiles with a clear walk to the hero (%s of them, farthest %s)'%(26,r['spawnNear'],r['farD']))
+    exp(r['awake'],'v192: event spiders stay awake (never put to sleep) during the melt')
+    exp(r['reached']>=.85,'v192: spiders reach the hero instead of getting stuck (%s within 6 tiles after %s s, %s moved by the watchdog)'%(r['reached'],r['reachS'],r['unstuck']))
+    exp(r['stuckD']<=8.5 and r['stuckLine'],'v192: a stuck spider rises again near its hero with a clear walk (%s tiles)'%r['stuckD'])
+    exp(r['movedD']>9,'v192: a spider on the move is left where it is (%s tiles)'%r['movedD'])
+    exp(r['xpK']==[.5,.5,1] and r['xpUse'],'v192: gate spiders give half the XP (%s)'%r['xpK'])
+    exp(.3<=r['lootS']<=.4 and r['lootC']==1,'v192: gate spiders drop loot 35%% of the time (65%% fewer drops: %s, others %s)'%(r['lootS'],r['lootC']))
     exp(r['sp1Alive'] and .3<r['sp1Frac']<.6,'v166: one charged burn is a heavy hit, not a kill (alive %s, %s hp left)'%(r['sp1Alive'],r['sp1Frac']))
     exp(r['spDead'] and r['chargeCost']==8,'the charged flame kills a spider in 2 burns for 8 charge (%s, cost %s)'%(r['spDead'],r['chargeCost']))
     exp(r['sp2Alive'] and .5<r['sp2Frac']<.75 and r['spent'],'v166: an empty charge burns lighter (alive %s, %s hp left, spent %s)'%(r['sp2Alive'],r['sp2Frac'],r['spent']))

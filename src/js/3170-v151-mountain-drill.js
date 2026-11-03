@@ -4,20 +4,23 @@
 // against the rock, wired to four control boxes round the yard.
 //  * F at the drill's console starts the drill: a special event that cannot be stopped (the hero is held in the drill yard, no recall)
 //    until the mountain is bored through (MQ170.need, 90 s of drilling) or the hero falls (the drill winds down and the bore is lost).
-//  * The drill bores at full speed while all four control boxes are lit and running; v168: with boxes offline it keeps boring, only
-//    slower (×MQ170.slow = 0.4 for each box offline: 100% · 40% · 16% · 6%), and with none running it has no power. Each box starts
-//    dark: F switches it on. Running boxes fail on their own: one FREEZES or MALFUNCTIONS.
+//  * The drill bores at full speed while all four control boxes are lit and running; v192 (owner): each running box gives 25% of the
+//    drill's power (MQ170.per: 4 · 3 · 2 · 1 · 0 boxes = 100% · 75% · 50% · 25% · 0%; v168 had ×0.4 per box offline). Each box starts
+//    dark: F switches it on. Running boxes fail on their own (v192: half as often, MQ170.tf): one FREEZES or MALFUNCTIONS.
 //  * Frost Trolls come up the road and out of the snow and go for the boxes, not for you: a troll that reaches a box raises its fists
 //    (a warning ring) and SMASHES it. Hit a troll and it turns on you.
-//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch (3 s), REWIRE with a
-//    spanner on one knee (6 s), REBUILD with a hammer (10 s). The game keeps going while you work; moving or a hit stops the work,
+//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch, REWIRE with a
+//    spanner on one knee, REBUILD with a hammer (v192: 1.8 / 3.5 / 5.5 s, were 3 / 6 / 10 s). The game keeps going while you work; moving or a hit stops the work,
 //    and F carries on where it stopped (see the repairs section).
 //  * Bored through: the rock face bursts open on a tunnel; F at it goes to the Sovereign's Den.
 // State MQ170.st: 0 · 1 the tunnel is open. Done also when the Den has been reached (mq170Done). Saved as x2.mq170 {st}. A save made
 // mid-drill loads with the drill at rest. Co-op: local to each player (the trolls are minions, never shared).
-var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,slow:.4,
+var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,
+  per:.25,   // v192 (owner): each running box is 25% of the drill's power (was ×0.4 per box offline, MQ170.slow)
+  tf:[24,24],   // v192 (owner): a running box freezes / malfunctions after tf[0] + up to tf[1] s (was 12 + 12: half as often now)
   // v168: the repairs are timed (seconds of work at the box): thawing is quickest, rewiring takes longer, rebuilding longest
-  rt:{thaw:3,wire:6,rebuild:10},
+  // v192 (owner: "make repairs quicker"): 1.8 / 3.5 / 5.5 s (were 3 / 6 / 10 s, 40-45% shorter)
+  rt:{thaw:1.8,wire:3.5,rebuild:5.5},
   bn:['North-west box','North-east box','South-west box','South-east box'],
   stN:{off:'dark',on:'running',frozen:'frozen',fault:'malfunctioning',smashed:'smashed'},
   stC:{off:'#5a6470',on:'#7aff8a',frozen:'#8ad8ff',fault:'#ffb040',smashed:'#ff5a4a'}};
@@ -147,7 +150,7 @@ function mq170Start(){if(MQ170.E||mq170Done())return;const R=mq170Plan();if(ridi
   MQ170.E={t:0,prog:0,box:[0,1,2,3].map(i=>({s:'off',tf:9+Math.random()*8+i*2})),trT:6,live:[],run:0,hint:0};MQ170.trkK='';mq170Sync();
   shake(.25);svSnd('heavy',1.1,.6);setTimeout(()=>svSnd('charge',1,.5),300);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0x7ad8ff,MQ170.leash,.8);
   try{zt116Show(ZT116.Z[2],'Stormcrown','The Mountain Drill','The drill wakes, and the trolls hear it','Keep all four control boxes running','z2')}catch(_){}
-  say('⚙️ The drill wakes! Switch on all four control boxes (F at each). Keep them running: the drill only bores while every box is lit.');dr170Hud()}
+  say('⚙️ The drill wakes! Switch on the four control boxes (F at each). Each running box gives the drill a quarter of its power: keep as many lit as you can.');dr170Hud()}
 function mq170Fail(why){const E=MQ170.E;if(!E)return;MQ170.E=null;MQ170.trkK='';dr170Close(false);
   enemies.slice().forEach(e=>{if(e.dr170t&&!e.dead){burst(gY(e.m.position,1),0xe8f0f8,20,1.6,1.4,.6);try{removeE(e)}catch(_){}}});mq170Sync();dr170Hud();svSnd('heavy',.9,.5);
   say(why==='dead'?'⚙️ You fall, and the drill grinds to a halt. The bore collapses: start the drill again.':'⚙️ The drill grinds to a halt.')}
@@ -163,15 +166,16 @@ function dr170Fix(i){if(co151On()&&!co151Host()){co151Send(['d3o',i]);const E=MQ
 // a box changes state (with its effect and a line in the log)
 function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;
   const W=MQ170.W;if(W&&W.i===i)dr170Close(false);b.s=s;b.rp=0;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
-  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
+  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=MQ170.tf[0]+Math.random()*MQ170.tf[1]}
   else if(s==='frozen'){burst(gY(p,1),0xd8f4ff,30,1.5,1.5,.7);svSnd('crack',.9,1.2);popT(gY(p,2),'❄ FROZEN','#8ad8ff',true)}
   else if(s==='fault'){burst(gY(p,1.4),0xffd07a,30,2,2,.4);svSnd('zap',1,1);popT(gY(p,2),'⚡ MALFUNCTION','#ffb040',true)}
   else if(s==='smashed'){try{sk146Debris(gY(p,1),dr170Mats().iron,8,.15,4,5,1.3)}catch(_){}burst(gY(p,1),0xffa07a,30,2,2,.5);shake(.25);svSnd('heavy',1.1,.9);svSnd('crack',.8,1.4);popT(gY(p,2),'💥 SMASHED','#ff5a4a',true)}
   if(was==='on'&&s!=='on'){const r=dr170Rate(E);say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': '+(r>0?'the drill slows to '+Math.round(r*100)+'% speed!':'the drill has no power!'))}}
-// v168: the drill keeps boring with boxes offline, only slower: ×0.4 for each box that is not running (1 · 0.4 · 0.16 · 0.064);
-// with all four offline it has no power at all
+// v168: the drill keeps boring with boxes offline, only slower; v192 (owner: "have each drill represent 25% of efficiency"): each
+// running box gives MQ170.per = 25% (4 · 3 · 2 · 1 · 0 running = 1 · .75 · .5 · .25 · 0), so one hero keeping some boxes lit still
+// bores steadily (v168 was ×0.4 per box offline: 1 · .4 · .16 · .064)
 function dr170Off(E){return E?E.box.filter(b=>b.s!=='on').length:4}
-function dr170Rate(E){const n=dr170Off(E);return n>=4?0:Math.pow(MQ170.slow,n)}
+function dr170Rate(E){const n=4-dr170Off(E);return Math.max(0,Math.min(1,n*MQ170.per))}
 function mq170ETick(dt,now,al){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
   // co-op (3180): the region host runs the drill (progress, failures, trolls, the end); partners switch on and repair boxes
   const co=co151On(),host=co151Host();
@@ -230,9 +234,9 @@ function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,
 // ---------------- the repairs (v168: timed work at the box, each with its own motion; they do not pause the game) ----------------
 // (they replace v151's Thaw / Rewire / Rebuild mini-game windows.) F at a broken box starts the work: the hero steps up to the box,
 // faces it and works while a ring over the box fills:
-//  * Thaw (MQ170.rt 3 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
-//  * Rewire (6 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
-//  * Rebuild (10 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
+//  * Thaw (MQ170.rt, v192 1.8 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
+//  * Rewire (v192 3.5 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
+//  * Rebuild (v192 5.5 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
 //    and the panel, the gauges and the lever jump back into place one by one.
 // Moving (or Esc, or a dodge) steps away and a hit knocks you away: the work stops, but what is done stays done (E.box[i].rp), so F
 // again carries on from there. The box changing state (a troll smashing a frozen box) starts that box's work afresh.

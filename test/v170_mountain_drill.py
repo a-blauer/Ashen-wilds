@@ -1,7 +1,7 @@
 # v151: The Mountain Drill (Burningeye Summit III main quest): the plan (cliff, drill, console, four boxes), the old Den gateway hidden,
-# the drill event (held in the yard, recall blocked, boxes switched on; v168: full speed with all four running, ×0.4 slower for each
-# box offline, no power with none; boxes freezing and malfunctioning; the timed repairs: Thaw 3 s with a torch, Rewire 6 s with a
-# spanner, Rebuild 10 s with a hammer, each with its tool and motion, the box changing as the work goes on, moving or a hit stopping
+# the drill event (held in the yard, recall blocked, boxes switched on; v192: 25% of the drill's power per running box (v168 was
+# ×0.4 slower for each box offline), no power with none; boxes freezing and malfunctioning, v192 half as often (24-48 s); the timed
+# repairs, v192 quicker: Thaw 1.8 s with a torch, Rewire 3.5 s with a spanner, Rebuild 5.5 s with a hammer, each with its tool and motion, the box changing as the work goes on, moving or a hit stopping
 # the work and F carrying on, the HUD's speed in words, no mini-game window or Space listener left), Frost Troll wreckers going for
 # the boxes and smashing them, a hit turning a troll on you, a death ending it), the bore through,
 # the tunnel to the Den, saves (round trip, old saves, Den reached, a mid-drill save). NOSHOT=1 skips the pictures.
@@ -29,7 +29,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   // no box running: no power, the drill does not bore
   tick(1);out.prog0=E.prog;out.spd0=dr170Speed(E);
   for(let i=0;i<3;i++){at(i);out.boxP.push(((worldPrompt()||{}).label||'').slice(0,12));(worldPrompt()||{fn(){}}).fn()}E.box.forEach(b=>b.tf=99);
-  // one box offline: 40% speed; two: 16%; three: 6.4%
+  // v192: each running box is 25%: one box offline 75% speed; two 50%; three 25%
   const p3=E.prog;tick(1);out.prog3=+(E.prog-p3).toFixed(3);dr170Hud();out.hud3=document.getElementById('dr170h').textContent;MQ170.trkK='';mq170Trk();out.trk3=$('mqt143').textContent;
   out.rates=[0,1,2,3,4].map(n=>{const F={box:[0,1,2,3].map(i=>({s:i<n?'frozen':'on'}))};return +dr170Rate(F).toFixed(3)});
   at(3);(worldPrompt()||{fn(){}}).fn();E.box.forEach(b=>b.tf=99);const p4=E.prog;tick(2);out.prog4=+(E.prog-p4).toFixed(2);out.run=E.run;dr170Hud();out.hud4=document.getElementById('dr170h').textContent;
@@ -42,16 +42,16 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   out.face=Math.abs(Math.atan2(Math.sin(pl.rotation.y-Math.atan2(B[0].x-pl.position.x,B[0].z-pl.position.z)),Math.cos(pl.rotation.y-Math.atan2(B[0].x-pl.position.x,B[0].z-pl.position.z))));
   out.boxD=+Math.hypot(pl.position.x-B[0].x,pl.position.z-B[0].z).toFixed(2);
   const lock=pl.position.clone();pl.position.x+=3;tick(.05);out.locked=pl.position.distanceTo(lock)<.01;
-  tick(1.4);out.iceMid=+B[0].ice.scale.y.toFixed(2);out.iceVis=B[0].ice.visible;out.thawT=+(1.55+work()).toFixed(2);out.thawed=E.box[0].s;out.winClosed=!MQ170.W;out.toolOff=!DR170W.tool&&(pl.gearG||[]).some(o=>o&&o.visible);out.iceGone=!B[0].ice.visible;
-  // Rewire (a malfunction): on one knee with a spanner; the cables stand up into their sockets one by one; 6 s
+  tick(.75);out.iceMid=+B[0].ice.scale.y.toFixed(2);out.iceVis=B[0].ice.visible;out.thawT=+(.9+work()).toFixed(2);out.thawed=E.box[0].s;out.winClosed=!MQ170.W;out.toolOff=!DR170W.tool&&(pl.gearG||[]).some(o=>o&&o.visible);out.iceGone=!B[0].ice.visible;
+  // Rewire (a malfunction): on one knee with a spanner; the cables stand up into their sockets one by one; v192 3.5 s
   dr170Set(1,'fault');E.box.forEach(b=>b.tf=99);at(1);(worldPrompt()||{fn(){}}).fn();out.win2=MQ170.W?MQ170.W.kind:'';out.tool2=!!(DR170W.tool&&DR170W.tool.userData.k==='wire');out.anim2=!!(HA.cur&&HA.cur.pose===DR170_T.wire.t);
-  const c0=B[1].cab.map(c=>+c.rotation.x.toFixed(2));tick(3);out.cabMid=B[1].cab.map(c=>+c.rotation.x.toFixed(2));out.cab0=c0;out.wireT=+(3+work()).toFixed(2);out.rewired=E.box[1].s;out.cabOff=!B[1].wir.visible;
-  // Rebuild (smashed): a hammer; the cabinet upright, then the pieces back one by one; 10 s
+  const c0=B[1].cab.map(c=>+c.rotation.x.toFixed(2));tick(1.75);out.cabMid=B[1].cab.map(c=>+c.rotation.x.toFixed(2));out.cab0=c0;out.wireT=+(1.75+work()).toFixed(2);out.rewired=E.box[1].s;out.cabOff=!B[1].wir.visible;
+  // Rebuild (smashed): a hammer; the cabinet upright, then the pieces back one by one; v192 5.5 s
   dr170Set(3,'smashed');E.box.forEach(b=>b.tf=99);at(3);(worldPrompt()||{fn(){}}).fn();out.win3k=MQ170.W?MQ170.W.kind:'';out.tool3=!!(DR170W.tool&&DR170W.tool.userData.k==='rebuild');out.anim3=!!(HA.cur&&HA.cur.pose===DR170_T.rebuild.t);
   const pc=()=>+B[3].parts[0].o.position.distanceTo(new THREE.Vector3(...B[3].parts[0].on.slice(0,3))).toFixed(2);out.part0=pc();out.tilt0=+B[3].body.rotation.z.toFixed(2);
-  tick(5);out.part5=pc();out.tilt5=+B[3].body.rotation.z.toFixed(2);out.rebuildT=+(5+work()).toFixed(2);out.rebuilt=E.box[3].s;
+  tick(3);out.part5=pc();out.tilt5=+B[3].body.rotation.z.toFixed(2);out.rebuildT=+(3+work()).toFixed(2);out.rebuilt=E.box[3].s;
   // moving steps away (the work stops, what is done is kept) and F carries on; a hit knocks you away (kept too)
-  dr170Set(2,'smashed');E.box.forEach(b=>b.tf=99);at(2);(worldPrompt()||{fn(){}}).fn();tick(2);clk+=33;god();mq170Tick(1/30,clk,1);out.stepped=!MQ170.W;out.kept=+(E.box[2].rp||0).toFixed(2);
+  dr170Set(2,'smashed');E.box.forEach(b=>b.tf=99);at(2);(worldPrompt()||{fn(){}}).fn();tick(1.1);clk+=33;god();mq170Tick(1/30,clk,1);out.stepped=!MQ170.W;out.kept=+(E.box[2].rp||0).toFixed(2);
   at(2);out.carryP=((worldPrompt()||{}).label||'');(worldPrompt()||{fn(){}}).fn();out.resumed=!!MQ170.W;tick(1);hero.iv=0;hero.hp-=10;clk+=33;mq170Tick(1/30,clk);out.knocked=!MQ170.W;out.kept2=+(E.box[2].rp||0).toFixed(2);god();
   at(2);(worldPrompt()||{fn(){}}).fn();out.restT=work();out.fixed2=E.box[2].s;
   // the box changing state under the work (a frozen box smashed) stops it and starts that box afresh
@@ -59,6 +59,9 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   // Esc steps away too
   at(2);(worldPrompt()||{fn(){}}).fn();dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));out.esc=!MQ170.W;
   dr170Set(2,'on');E.box.forEach(b=>b.tf=99);
+  // v192: a running box breaks down half as often: 24-48 s after it was switched on or repaired (was 12-24 s)
+  out.tfs=[];for(let k=0;k<40;k++){E.box[2].s='frozen';dr170Set(2,'on');out.tfs.push(E.box[2].tf)}out.tfMin=+Math.min(...out.tfs).toFixed(1);out.tfMax=+Math.max(...out.tfs).toFixed(1);delete out.tfs;
+  out.per=MQ170.per;out.rt=JSON.stringify(MQ170.rt);E.box.forEach(b=>b.tf=99);
   // the old mini-game is gone: no window, no Space listener exception left in the companion command
   out.cmdFree=cmd167Free()&&!String(cmd167Free).includes('MQ170');out.oldFns=['dr170Thaw','dr170Wire','dr170Rebuild','dr170WireSet','dr170Put'].filter(n=>typeof window[n]=='function');
   // Frost Troll wreckers go for a box and smash it
@@ -95,32 +98,34 @@ def s(pg):
     exp(r['clamp']<=16.6,'the hero is held in the yard (%.1f)'%r['clamp'])
     exp(all(p.startswith('F · Switch') for p in r['boxP']),'dark boxes switch on (%s)'%r['boxP'])
     exp(r['prog0']==0 and 'no power' in r['spd0'],'no box running: no power, no drilling (%s, %s)'%(r['prog0'],r['spd0']))
-    exp(.3<r['prog3']<.5,'one box offline: the drill bores at 40%% speed (%s in 1 s)'%r['prog3'])
-    exp(r['rates']==[1,.4,.16,.064,0],'the speed per boxes offline: 100/40/16/6.4/0%% (%s)'%r['rates'])
-    exp('Drilling slowly' in r['hud3'] and '1 box offline: 40% speed' in r['hud3'],'the HUD says the speed in plain words (%s)'%r['hud3'][:120])
-    exp('Drill speed' in r['trk3'] and '40%' in r['trk3'],'the tracker shows the speed (%s)'%r['trk3'])
+    exp(.65<r['prog3']<.85,'v192: one box offline: the drill bores at 75%% speed (%s in 1 s)'%r['prog3'])
+    exp(r['rates']==[1,.75,.5,.25,0] and r['per']==.25,'v192: each running box is 25%% of the drill: 100/75/50/25/0%% (%s)'%r['rates'])
+    exp('Drilling slowly' in r['hud3'] and '1 box offline: 75% speed' in r['hud3'],'the HUD says the speed in plain words (%s)'%r['hud3'][:120])
+    exp('Drill speed' in r['trk3'] and '75%' in r['trk3'],'the tracker shows the speed (%s)'%r['trk3'])
     exp(1.6<r['prog4']<2.2 and r['run']==1 and 'full speed' in r['hud4'],'all four running: full speed (%s)'%r['prog4'])
-    exp(r['fail0'] in ('frozen','fault') and .3<r['slow']<.5,'a box fails on its own and the drill slows down, not stops (%s, %s)'%(r['fail0'],r['slow']))
-    exp('Thaw' in r['thawP'] and '3 s' in r['thawP'],'the frozen box: F · Thaw (3 s) (%s)'%r['thawP'])
+    exp(r['fail0'] in ('frozen','fault') and .65<r['slow']<.85,'a box fails on its own and the drill slows down, not stops (%s, %s)'%(r['fail0'],r['slow']))
+    exp('Thaw' in r['thawP'] and '1.8 s' in r['thawP'],'the frozen box: F · Thaw (1.8 s) (%s)'%r['thawP'])
+    exp(r['rt']=='{"thaw":1.8,"wire":3.5,"rebuild":5.5}','v192: repairs quicker: thaw 1.8 / rewire 3.5 / rebuild 5.5 s (%s)'%r['rt'])
+    exp(23.9<=r['tfMin'] and r['tfMax']<=48.1 and r['tfMax']-r['tfMin']>8,'v192: a running box breaks down after 24-48 s, half as often as before (%s-%s s)'%(r['tfMin'],r['tfMax']))
     exp(r['win']=='thaw' and r['noWin'],'F starts the thaw at the box, no mini-game window (%s)'%r['win'])
     exp(bool(r['ring']) and 'Thawing' in str(r['ring']),'the progress ring shows over the box (%s)'%r['ring'])
     exp(r['tool'] and r['anim'] and r['gearHid'],'thawing: a lit torch in hand (weapon away) and the thaw motion (%s %s %s)'%(r['tool'],r['anim'],r['gearHid']))
     exp(r['face']<.05 and r['boxD']<1.5,'the hero faces the box, close to it (%.2f, %s)'%(r['face'],r['boxD']))
     exp(r['locked'],'the hero stays at the box while repairing')
     exp(r['iceVis'] and r['iceMid']<.8,'the ice melts down as the thaw goes on (%s)'%r['iceMid'])
-    exp(2.8<=r['thawT']<=3.3 and r['thawed']=='on' and r['winClosed'] and r['iceGone'],'the thaw takes 3 s and the box runs again (%s s, %s)'%(r['thawT'],r['thawed']))
+    exp(1.7<=r['thawT']<=2.0 and r['thawed']=='on' and r['winClosed'] and r['iceGone'],'v192: the thaw takes 1.8 s and the box runs again (%s s, %s)'%(r['thawT'],r['thawed']))
     exp(r['toolOff'],'the torch goes away and the weapon comes back')
     exp(r['win2']=='wire' and r['tool2'] and r['anim2'],'a malfunction: the rewire with a spanner and its own motion')
     exp(r['cab0'][0]>1.4 and r['cabMid'][0]<.3 and r['cabMid'][2]>1.0,'the cables stand up into their sockets one by one (%s -> %s)'%(r['cab0'],r['cabMid']))
-    exp(5.8<=r['wireT']<=6.3 and r['rewired']=='on' and r['cabOff'],'the rewire takes 6 s (%s s, %s)'%(r['wireT'],r['rewired']))
+    exp(3.4<=r['wireT']<=3.7 and r['rewired']=='on' and r['cabOff'],'v192: the rewire takes 3.5 s (%s s, %s)'%(r['wireT'],r['rewired']))
     exp(r['win3k']=='rebuild' and r['tool3'] and r['anim3'],'a smashed box: the rebuild with a hammer and its own motion')
     exp(r['part0']>.5 and r['tilt0']>.2 and r['part5']<.05 and abs(r['tilt5'])<.01,'the cabinet straightens and the pieces go back (%s/%s -> %s/%s)'%(r['part0'],r['tilt0'],r['part5'],r['tilt5']))
-    exp(9.8<=r['rebuildT']<=10.3 and r['rebuilt']=='on','the rebuild takes 10 s (%s s, %s)'%(r['rebuildT'],r['rebuilt']))
+    exp(5.4<=r['rebuildT']<=5.8 and r['rebuilt']=='on','v192: the rebuild takes 5.5 s (%s s, %s)'%(r['rebuildT'],r['rebuilt']))
     exp(r['thawT']<r['wireT']<r['rebuildT'],'thaw is quickest, rewire next, rebuild longest')
     exp(r['stepped'] and .15<r['kept']<.25,'moving steps away; the work done is kept (%s)'%r['kept'])
     exp('Carry on' in r['carryP'] and r['resumed'],'F carries on (%s)'%r['carryP'])
     exp(r['knocked'] and r['kept2']>r['kept'],'a hit knocks you away, the work kept (%s)'%r['kept2'])
-    exp(6.5<=r['restT']<=7.2 and r['fixed2']=='on','carrying on only takes what is left (%s s)'%r['restT'])
+    exp(3.1<=r['restT']<=3.8 and r['fixed2']=='on','carrying on only takes what is left (%s s)'%r['restT'])
     exp(r['changed'],'the box changing state stops the work and starts it afresh')
     exp(r['esc'],'Esc steps away')
     exp(r['cmdFree'] and not r['oldFns'],'the mini-game code and its Space exception are gone (%s)'%r['oldFns'])
