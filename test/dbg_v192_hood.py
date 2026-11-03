@@ -15,14 +15,21 @@ JS=COMMON+r"""(sets)=>{const out=[];const tag=[];let cur=null;
       let nm='?';for(let j=tag.length-1;j>=0;j--){const q=tag[j];if(q.b===B&&i>=q.n0[t]&&i<q.n1[t]){nm=q.n;}}
       who[nm]=Math.max(who[nm]||0,+x.toFixed(3))}});
     cur.who=who;
+    // the same in the final (warped: beast proportions) space, per height band: body / chest / hood half-width and z range
+    const rng={};['c','m','g'].forEach(t=>{const p=B.L[t].p;for(let i=0;i<p.length;i+=9){let nm='?';for(let j=tag.length-1;j>=0;j--){const q=tag[j];if(q.b===B&&i>=q.n0[t]&&i<q.n1[t])nm=q.n}(rng[t]=rng[t]||[]).push([i,nm])}});
+    mdBake(B);const bands={};['c','m','g'].forEach(t=>{const p=B.L[t].p;(rng[t]||[]).forEach(([i,nm])=>{const g=nm=='mdBody'||nm=='mdHead'||nm=='brPaws'?'body':nm=='gkHood'?'hood':nm=='?'?'other':'gear';
+      for(let v=0;v<9;v+=3){const x=p[i+v],y=p[i+v+1],z=p[i+v+2];if(y<.78||y>1.2)continue;const k=(Math.round(y/.04)*.04).toFixed(2);const b=bands[k]=bands[k]||{};const q=b[g]=b[g]||[0,9,-9];q[0]=Math.max(q[0],+Math.abs(x).toFixed(3));q[1]=Math.min(q[1],+z.toFixed(3));q[2]=Math.max(q[2],+z.toFixed(3))}})});
+    cur.bands=bands;
     BR.bare=true;const Bb=mdHeroB('ranger',Object.assign({},L),{});BR.bare=false;let sw=0;const p=Bb.L.c.p;for(let i=0;i<p.length;i+=3){const y=p[i+1];if(y>.86&&y<1.0)sw=Math.max(sw,Math.abs(p[i]))}cur.bareW=+sw.toFixed(3)})}
   finally{for(const n in saved)window[n]=saved[n]}
   return out}"""
 def s(pg):
     pg.evaluate("()=>localStorage.clear()")
     pg.click('[data-dev=desktop]',timeout=300000);pg.click('[data-c="ranger"]',timeout=300000);pg.click('#ccNext',timeout=300000);pg.wait_for_timeout(300);pg.click('#ccNext',timeout=300000);pg.wait_for_timeout(3000)
-    sets=os.environ.get('SETS','Leather Hood|Padded Jerkin;Hornwood Hood|Galewing Mantle;|Galewing Mantle;Hornwood Hood|').split(';')
+    sets=os.environ.get('SETS','Hornwood Hood|Galewing Mantle;Leather Hood|Padded Jerkin;|Galewing Mantle').split(';')
     r=pg.evaluate(JS,sets)
-    for q in r:print(json.dumps(q,separators=(',',':')),flush=True)
+    for q in r:
+        print(q['set'],'bareW',q.get('bareW'),flush=True)
+        for k in sorted(q.get('bands',{})):print(' ',k,json.dumps(q['bands'][k],separators=(',',':')),flush=True)
 play.run(s,w=900,hh=600)
 sys.exit(1)
