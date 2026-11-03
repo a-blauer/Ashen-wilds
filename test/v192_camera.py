@@ -99,7 +99,7 @@ def s(pg):
         if q['bk']>=14 and r['dd']<10.5:fail(name,'turned away from the edge: the camera did not glide back out (distance',r['dd'],')')
     # Abeksi: the city's outer wall is its edge
     pg.evaluate("()=>{AB152Q.st=1;ab152Enter();AB152H.frz=1;window.__k192=setInterval(()=>{AB152H.frz=1},100);return 1}");pg.wait_for_timeout(5000)
-    q=pg.evaluate(FIND,{'gk':30,'box':pg.evaluate("()=>{const I=INSL[30];return [I.x0+20,I.y0+30,I.x0+I.w-20,I.y0+I.h-30]}")})
+    q=pg.evaluate(FIND,{'gk':30,'box':pg.evaluate("()=>{const I=INSL[30],N=ab152Plan().IN;return [I.x0+N[0]+2,I.y0+N[1]+2,I.x0+N[2]-2,I.y0+N[3]-2]}")})
     if not q:fail('abeksi: no spot near the outer wall')
     else:
         pg.evaluate(PLACE,[q,12,.3]);r=pg.evaluate(WATCH,90);print('edge abeksi wall',json.dumps(q),json.dumps(r),flush=True)
