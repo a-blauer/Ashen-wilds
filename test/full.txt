@@ -61,6 +61,7 @@ v160_frozen_gate.py
 v170_mountain_drill.py
 v151_coop.py
 v146_sovs.py
+v192_sov_range.py
 v149_ssithra.py
 kv_viewer.py
 v148_tools.py

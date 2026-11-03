@@ -38,7 +38,7 @@ def s(pg):
         plan=[('reap',3.5,0,True),('reap2',3.5,0,True),('spinR',3.5,1,True),('cleave',6,0,True),('glide',12,0,True),('nova',3,1,True),
               ('icicles',12,0,True),('step',8,0,True),('prison',8,0,True),('awaken',4,0,True),('stagger',4,0,False),
               ('frostbrand',4,0,True),('wraithchain',10,0,True),('maelstrom',7,0,True),
-              ('frostbrand',13,0,False),('wraithchain',10,1,False),('maelstrom',22,0,None)]
+              ('frostbrand',23,0,False),('wraithchain',10,1,False),('maelstrom',22,0,None)]
         for k,d,back,exp in plan:
             r=ev("""([k,d,back])=>{const e=BE,S=e.sv,D=S.B.M[k];if(!D)return {err:'nomove'};PLACE(k,d,back,D.ph||1);svStart(e,k,7);
               let t=0;const keep=k==='wraithchain'||k==='maelstrom'||k==='icicles'||k==='prison';while(t<D.dur+.4){STEP(.1);t+=.1;if(!keep&&!back){}}

@@ -54,7 +54,7 @@ def s(pg):
         print('dodge geyser stay',g1['hits'],'moving',g2['hits'])
         if len(g1['hits'])<3 or g2['hits']:bad.append('geyser dodge')
         # maelstrom: inside the ring is hit, outside it is not
-        m1=ev(CAST,['maelstrom',6.5,False,None,2]);m2=ev(CAST,['maelstrom',12.5,False,None,2])
+        m1=ev(CAST,['maelstrom',6.5,False,None,2]);m2=ev(CAST,['maelstrom',23,False,None,2])   # v192: the ring reaches 20
         print('dodge maelstrom inside',m1['hits'],'outside',m2['hits'],'yaw after',m1['yaw'])
         if not m1['hits'] or m2['hits']:bad.append('maelstrom dodge')
     if 'ai' in PART:
