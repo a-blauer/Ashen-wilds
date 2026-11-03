@@ -1543,11 +1543,11 @@ function windMat(mat,amp,off){
     sh.uniforms.uM157w=M157;ob176Shader(sh);
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
     if(uM157w>.5){float f=1.-ob176Bx(vWP2)*ob176Fr(vWP2,uCam,uPl)*(1.-uObK)*smoothstep(-.6,-.3,vWP2.y-uPl.y);   // v176: a plant in the way is dithered whole (3361); grass stays
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}
+     ob192Fade(f);}   // v192: semi-transparent where multisampled (3570)
     else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  mat.customProgramCacheKey=()=>'ifx';mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
+  mat.customProgramCacheKey=()=>'ifx';if(!mat.transparent)mat.alphaToCoverage=true;mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
 }
 function buildVI(){
   const chk={};buildTerrain(chk);
@@ -3714,7 +3714,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 3 ability points every level (up to 7 from level 40), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -14424,7 +14424,9 @@ setTimeout(keepLast,0);addEventListener('load',keepLast);
 //     cooldown                                                       −8% from rank 3, −15% at rank 5
 //   Damage is scaled where the cast computes its attack value (cast_base for the old kinds, the KQN cast wrapper for the new ones),
 //   so every hit, DoT, projectile, trap, zone and summon that comes from that cast is scaled the same way.
-// - Ability points: 2 per level gained, 3 on every 5th level (108 by level 50) + hero.tal.__apB. apFree() = earned − spent, never negative.
+// - Ability points (v192): a level-up to level L gives 3 (L 2–9), 4 (10–19), 5 (20–29), 6 (30–39), 7 (40–50): 251 by level 50
+//   (was 2, 3 on every 5th: 108) + hero.tal.__apB. Earned is worked out from the level, so old heroes get the new total on load.
+//   apFree() = earned − spent, never negative.
 //   Unlock cost (v88): 1 + floor(level requirement / 6). Rank-up cost to rank r: ceil(unlock cost / 3) + r − 2
 //   (the default ability counts as unlock cost 1). So maxing costs 10 AP for an early ability and up to 18 for a level-48 one.
 // - Abilities window: rank pips (5 small diamonds, kqrPips) on every row and the slots, "Rank up · N ⚡" buttons, the detail panel lists this rank → next rank.
@@ -14465,7 +14467,8 @@ function kqrB(s,o){const k=kqrU(s);if(k===1||!o)return o;const n={};for(const q 
 
 Object.keys(SKB).forEach(c=>kqsAll(c).forEach(s=>{if(KQR_CD[s.n]!=null)s.cd=KQR_CD[s.n]}));
 // ---------------- ability points ----------------
-function kqrLvAP(l){return l%5==0?3:2}
+function kqrLvAP(l){return l<10?3:l<20?4:l<30?5:l<40?6:7}
+var KQR_APTXT='3 every level (4 from level 10, 5 from 20, 6 from 30, 7 from 40)';
 function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
 function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
 // AP to go from rank r-1 to rank r
@@ -14506,11 +14509,11 @@ function kqrDecor(){const c=hero.cls,B=$('xwB');if(!B)return;
     <div class="kqr-ln">${lines.map(x=>`<span>${x}</span>`).join('')}</div>
     ${n?`<div class="btns"><button class="${w?'':'pri'}" data-kqrup="${sel.n}" ${w?'disabled':''}>${w?'🔒 '+w:'Rank up to '+n+' · '+k+' ⚡'}</button></div>`:''}</div>`;
   const st=det.querySelector('.kqs-stats');if(st)st.insertAdjacentHTML('afterend',h);else det.insertAdjacentHTML('beforeend',h);
-  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+2 points every level (+3 every 5th)');
-  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn 2 ability points every level (3 on every 5th level). Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
+  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+'+kqrLvAP(hero.lvl+1)+' points next level');
+  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn ability points every level: ${KQR_APTXT}. Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqrup]');if(!t)return;e.stopPropagation();e.preventDefault();if(t.disabled)return;kqrUp(t.dataset.kqrup)},true);
 // the talents window link
-{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','(2 per level, 3 every 5th level)')}}
+{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','('+KQR_APTXT+')')}}
 // hotbar: a small rank badge on every ability key
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;heroSkills().forEach((s,i)=>{const b=A.querySelector('button[data-x="'+i+'"]');if(!b||b.querySelector('.kqr-b'))return;const r=kqrRank(s);b.insertAdjacentHTML('beforeend',`<span class="kqr-b r${r}" title="Rank ${r}">${r}★</span>`)})}catch(_){}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
@@ -22408,7 +22411,7 @@ function czTick103(){const now=Date.now();let back=[];
       if(czRole104(c)=='egg'&&eggs.length>=CZ104_EGGMAX){c.wf=2;return}
       if(czEat105(czCost105(c))){c.t0=now;c.wf=0;c.vt=null}else c.wf=1;return}
     if(now-c.t0>=czTrip104(c)){c.bag=czGoods105(c);c.t0=0;c.vt=null;back.push(c)}});
-  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');sfx&&sfx('chime')}
+  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');try{sfx192('home')}catch(_){}}
   try{if(back.length&&typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
 setInterval(()=>{try{czTick103()}catch(e){console.warn('v103 citizens',e)}},1000);
 // ---------- saves ----------
@@ -22861,7 +22864,7 @@ var DECO103=[
  {k:'fireworks',i:'🌠',n:'Night Fireworks',g:3000,d:'At night, fireworks burst high over Duskhold every few seconds.',
   an(g){let nx=0;return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;if(n<.35||now<nx)return;nx=now+2600+Math.random()*3000;const T=TOWNS[0];
     try{if(Math.hypot(pl.position.x-T.cx,pl.position.z-(T.cy+15))>60)return;const F=dcF104(),c=[0xff5a5a,0xffd24a,0x6ad8ff,0xb08aff,0x6aff9a][Math.floor(Math.random()*5)],p=new THREE.Vector3(T.cx+(Math.random()-.5)*F.WX*1.6,T.ph+20+Math.random()*8,T.cy-14+Math.random()*(F.SZ+14));
-      burst(p,c,46,7,1.5,1.3);if(typeof sfx=='function'&&Math.random()<.4)sfx('chime')}catch(_){}}}}
+      burst(p,c,46,7,1.5,1.3);if(typeof sfx192=='function')sfx192('fwk',Math.max(.25,.8-p.distanceTo(pl.position)/90))}catch(_){}}}}
 ];
 var DC103={g:{},col:{}};SH.deco=SH.deco||{};
 function dcOn103(k){return SH.deco[k]===1}
@@ -28697,7 +28700,10 @@ function kqslBtn(mode,sl){const b=document.createElement('button');b.dataset.aw=
   return f.apply(this,arguments)}}
 kqslRender();
 // after a reload from the menu into another slot (kq_new is handled in 1160)
-try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}}catch(_){}
+// v192: only once the whole game script has run (setTimeout 0). Loading here, mid-script, ran loadGame before the later files:
+// v137+ gear was not in ITPL yet, so heroMax() threw before the creator was hidden (the creator showed instead of the hero),
+// and the later loadGame / x2Load wrappers (quests, attributes, …) were skipped.
+try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');setTimeout(()=>{try{if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}catch(e){console.warn('slot continue',e)}},0)}}catch(_){}
 // ================= v116: join-code co-op (no Claude account) =================
 // One player hosts and gets a 6-letter join code; friends type it to connect. Players link up directly over WebRTC data
 // channels; the free public PeerJS signaling server (0.peerjs.com) only introduces them (its plain WebSocket protocol is
@@ -31937,8 +31943,12 @@ var FX135ON={value:0};
 function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
   if(!(m.isMeshStandardMaterial||m.isMeshLambertMaterial||m.isMeshPhongMaterial||m.isMeshBasicMaterial)||m.transparent||m.skinning||m.userData.noFade135)return;
   // chain onto the town texture atlas shader (txa1, 1020); leave every other custom shader alone
-  const def=m.onBeforeCompile===THREE.Material.prototype.onBeforeCompile,k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();
-  if(!def&&k0!=='txa1')return;const ob=def?null:m.onBeforeCompile;
+  const P0=THREE.Material.prototype,def=m.onBeforeCompile===P0.onBeforeCompile,k0=m.customProgramCacheKey===P0.customProgramCacheKey?'':m.customProgramCacheKey();
+  // v192: the v183 paint (3410 ep183Hook) wraps the hook of almost every scenery material at load, before this scan first runs
+  // (its key: 'function(){}|ep183' over the default hook, 'txa1|ep183' over the atlas); this test used to skip those, so from v183 on
+  // most scenery (Duskhold's buildings, camps, tents, decorations) never faded. Chain onto the paint's hook too.
+  const kb=k0.replace(/(\|ep183)+$/,''),ep=!def&&!!m.onBeforeCompile._ep183&&(kb===''||kb===String(P0.onBeforeCompile)||kb==='txa1');
+  if(!def&&k0!=='txa1'&&!ep)return;const ob=def?null:m.onBeforeCompile;
   m.onBeforeCompile=(sh,rn)=>{if(ob)ob.call(m,sh,rn);sh.uniforms.uCam=FADE.cam;sh.uniforms.uPl=FADE.pl;sh.uniforms.uF135=F135.U;sh.uniforms.uR157=R157;sh.uniforms.uN157=N157;sh.uniforms.uM157=M157;sh.uniforms.uClip=CLIP135;sh.uniforms.uOn135=FX135ON;ob176Shader(sh);
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vF135;').replace('#include <project_vertex>',`#include <project_vertex>
     #ifdef USE_INSTANCING
@@ -31965,9 +31975,10 @@ function f135Patch(m){if(!m||F135.done.has(m))return;F135.done.add(m);
      float kn=smoothstep(-.85,-.55,vF135.y-uPl.y);
      if(uM157>.5){vec3 fn=normalize(cross(dFdx(vF135),dFdy(vF135)));kn=max(kn,1.-smoothstep(.55,.75,abs(fn.y)));}   // v176: below the knees only flat surfaces stay (floors, paving, bridges)
      f=mix(1.,f,kn);
-     float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
+     ob192Fade(f);}}`)};   // v192 ob192Fade: semi-transparent (alpha to coverage) where the view is multisampled, else the dither (3570)
   if(m.isMeshBasicMaterial){const o2=m.onBeforeCompile;m.onBeforeCompile=(sh,rn)=>{o2(sh,rn);sh.fragmentShader='#define F135_B\n'+sh.fragmentShader}}   // v176: windows and plain panes too
-  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
+  m.extensions=Object.assign({},m.extensions,{derivatives:true});m.alphaToCoverage=true;m.userData.ob176=1;m.userData.ob176Fl=-.85;   // v176: 3361 scans it
+  if(ep)m.onBeforeCompile._ep183=1;   // v192: still the paint's hook as far as 3410 is concerned (it does not wrap it again)
   m.customProgramCacheKey=()=>k0+'f135';m.needsUpdate=true}
 function f135Skip(){const S=new Set();try{S.add(pl)}catch(_){}
   try{fols.forEach(f=>f&&S.add(f))}catch(_){}try{enemies.forEach(e=>e&&e.m&&S.add(e.m))}catch(_){}
@@ -40621,9 +40632,10 @@ function chq148Zones(){return PMAP.map((p,z)=>z).filter(z=>typeof pUnlocked=='fu
 function chq148Town(){try{return townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
 function chq148Zone(){const I=chqHere132();return I?I.z:-1}
 chqList132=function(I){return I?(CHQD148[I.z]||[]):[]};
-// v148.1: a zone's difficulties open one after another: Medium once every Easy quest of that zone is done (turned in), Hard once
-// every Medium one is. Quests accepted before this rule keep going.
-function chq148Open(q){return !(CHQD148[q.z]||[]).some(o=>(o.df||1)<(q.df||1)&&!(chqS132(o)&&chqS132(o).s===3))}
+// v148.1 opened a zone's difficulties one after another (Medium once every Easy quest was turned in, Hard once every Medium one).
+// v192 (owner: "make Cheddar quests all available for a zone at once, no gated unlocks by quest tier"): every quest of an open zone
+// can be taken at once. Progress already made (CHQ132.st) is untouched, so old saves with half-done tiers keep it.
+function chq148Open(q){return true}
 function chq148Tier(z){const L=CHQD148[z]||[];let t=1;for(const q of L)if(chq148Open(q))t=Math.max(t,q.df||1);return t}
 function chq148State(z){const L=z==null?[].concat(...chq148Zones().map(q=>CHQD148[q]||[])):(CHQD148[z]||[]);let av=0,rd=0,ac=0,dn=0,lk=0;
   L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s){if(chq148Open(q))av++;else lk++}else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn,lk}}
@@ -40746,7 +40758,7 @@ CHQ132_SAY.board='Psst. Down here, on the crate. Cheddar. Every portal you open,
 CHQ132_SAY.zone='Pick a job. Anything you do anywhere in that zone counts, whichever stretch of road you’re on.';
 XR.chq132=()=>{$('xwT').textContent='🐭 Cheddar’s Quest Board';const Z=chq148Zones();
   if(CHQ148.tab==null||!Z.includes(CHQ148.tab)){const r=Z.find(z=>chq148State(z).rd);CHQ148.tab=r!=null?r:Z.find(z=>chq148State(z).av)!=null?Z.find(z=>chq148State(z).av):Z[Z.length-1]}
-  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done · '+(CHQ148_DF[chq148Tier(z)]||CHQ148_DF[1]).n+' open';
+  const z=CHQ148.tab,st=chq148State(),zs=chq148State(z);$('xwS').textContent=PMAP[z].ic+' '+PMAP[z].n+' · '+zs.dn+' of '+zs.n+' done · all quests open';
   const line=st.rd?CHQ132_SAY.ready:zs.av?CHQ132_SAY.board:zs.ac?CHQ132_SAY.busy:CHQ132_SAY.zone;
   let b='<div class="cq132say"><span class="cq132who">Cheddar</span>“'+line+'”</div><div class="tabs cq148t">';
   PMAP.forEach((p,i)=>{const u=Z.includes(i),S=u?chq148State(i):null,dot=S&&S.rd?'<i class="rd">?</i>':S&&S.av?'<i>!</i>':'';
@@ -46197,8 +46209,10 @@ function mq160ETick(dt,now){const E=MQ160.E,R=mq160Plan(),G=R.gate,S=MQ160.S;if(
   // ice spiders: from all round the yard, all the time, faster as the melt goes on; always at the nearest hero (the host spawns them)
   if(host){E.spT-=dt;const live=enemies.filter(e=>(e.fs160sp||e.c&&e.c.en==='icespider')&&!e.dead&&!e.mir).length;
   if(E.spT<=0){const k=E.melt/MQ160.melt;E.spT=Math.max(.9,2.5-k*1.4-E.t*.004)*(co?.85:1);let n=2*(1+(Math.random()<.25+k*.5?1:0)+(k>.6&&Math.random()<.35?1:0)+(co&&Math.random()<.4?1:0));n=Math.min(n,(co?MQ160.capC:MQ160.cap)-live);   // v166: twice as many
-    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<14&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
-        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8){x=qx;z=qz;okp=true}}
+    // v192: 24 tries; the first 18 also need a clear walk to the hero and to stay inside the AI's 30-tile wake range (fs192Spot, 3510:
+    // spiders used to rise behind rocks, the gate's stone or out of range and stand there)
+    for(let i=0;i<n;i++){let x=0,z=0,okp=false;for(let tr=0;tr<24&&!okp;tr++){const a=Math.random()*6.283,r=15+Math.random()*4,qx=R.yard.x+Math.sin(a)*r,qz=R.yard.z+Math.cos(a)*r;
+        if((Math.sin(a)*G.fx+Math.cos(a)*G.fz)<-.3)continue;if(R.ok(qx,qz,.4)&&!solid(Math.round(qx),Math.round(qz))&&Math.hypot(qx-pl.position.x,qz-pl.position.z)>8&&(tr>=18||typeof fs192Spot!='function'||fs192Spot(qx,qz))){x=qx;z=qz;okp=true}}
       if(!okp)continue;let e=null;try{e=spawnEnemy('icespider',x,z,MQ160.lv,{agg:1,minion:co?0:1})}catch(err){console.error('v151 spider',err)}
       if(!e)continue;e.fs160sp=1;e.hunt=1;e.agg=1;e.wx=pl.position.x;e.wz=pl.position.z;e.m.rotation.y=Math.atan2(pl.position.x-x,pl.position.z-z);
       const p=new THREE.Vector3(x,0,z);svDecal(p,0x8ab8d8,1.1,2,.6);burst(gY(p,.3),0xd8f4ff,14,1.2,1.6,.7);svSpike(p,gb151IceMat(),.7,.2,.6,.4)}}
@@ -46541,20 +46555,23 @@ try{const I=sp152I('ascent');CH153SN.r.value.set(I.x0,I.y0,I.x0+I.w,I.y0+I.h);
 // against the rock, wired to four control boxes round the yard.
 //  * F at the drill's console starts the drill: a special event that cannot be stopped (the hero is held in the drill yard, no recall)
 //    until the mountain is bored through (MQ170.need, 90 s of drilling) or the hero falls (the drill winds down and the bore is lost).
-//  * The drill bores at full speed while all four control boxes are lit and running; v168: with boxes offline it keeps boring, only
-//    slower (×MQ170.slow = 0.4 for each box offline: 100% · 40% · 16% · 6%), and with none running it has no power. Each box starts
-//    dark: F switches it on. Running boxes fail on their own: one FREEZES or MALFUNCTIONS.
+//  * The drill bores at full speed while all four control boxes are lit and running; v192 (owner): each running box gives 25% of the
+//    drill's power (MQ170.per: 4 · 3 · 2 · 1 · 0 boxes = 100% · 75% · 50% · 25% · 0%; v168 had ×0.4 per box offline). Each box starts
+//    dark: F switches it on. Running boxes fail on their own (v192: half as often, MQ170.tf): one FREEZES or MALFUNCTIONS.
 //  * Frost Trolls come up the road and out of the snow and go for the boxes, not for you: a troll that reaches a box raises its fists
 //    (a warning ring) and SMASHES it. Hit a troll and it turns on you.
-//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch (3 s), REWIRE with a
-//    spanner on one knee (6 s), REBUILD with a hammer (10 s). The game keeps going while you work; moving or a hit stops the work,
+//  * v168: each fix is timed work at the box with its own motion (no more mini-game windows): THAW with a torch, REWIRE with a
+//    spanner on one knee, REBUILD with a hammer (v192: 1.8 / 3.5 / 5.5 s, were 3 / 6 / 10 s). The game keeps going while you work; moving or a hit stops the work,
 //    and F carries on where it stopped (see the repairs section).
 //  * Bored through: the rock face bursts open on a tunnel; F at it goes to the Sovereign's Den.
 // State MQ170.st: 0 · 1 the tunnel is open. Done also when the Den has been reached (mq170Done). Saved as x2.mq170 {st}. A save made
 // mid-drill loads with the drill at rest. Co-op: local to each player (the trolls are minions, never shared).
-var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,slow:.4,
+var MQ170={name:'The Mountain Drill',st:0,S:null,E:null,err:0,t:0,trkK:'',need:90,lv:25,leash:16.5,W:null,
+  per:.25,   // v192 (owner): each running box is 25% of the drill's power (was ×0.4 per box offline, MQ170.slow)
+  tf:[24,24],   // v192 (owner): a running box freezes / malfunctions after tf[0] + up to tf[1] s (was 12 + 12: half as often now)
   // v168: the repairs are timed (seconds of work at the box): thawing is quickest, rewiring takes longer, rebuilding longest
-  rt:{thaw:3,wire:6,rebuild:10},
+  // v192 (owner: "make repairs quicker"): 1.8 / 3.5 / 5.5 s (were 3 / 6 / 10 s, 40-45% shorter)
+  rt:{thaw:1.8,wire:3.5,rebuild:5.5},
   bn:['North-west box','North-east box','South-west box','South-east box'],
   stN:{off:'dark',on:'running',frozen:'frozen',fault:'malfunctioning',smashed:'smashed'},
   stC:{off:'#5a6470',on:'#7aff8a',frozen:'#8ad8ff',fault:'#ffb040',smashed:'#ff5a4a'}};
@@ -46684,7 +46701,7 @@ function mq170Start(){if(MQ170.E||mq170Done())return;const R=mq170Plan();if(ridi
   MQ170.E={t:0,prog:0,box:[0,1,2,3].map(i=>({s:'off',tf:9+Math.random()*8+i*2})),trT:6,live:[],run:0,hint:0};MQ170.trkK='';mq170Sync();
   shake(.25);svSnd('heavy',1.1,.6);setTimeout(()=>svSnd('charge',1,.5),300);svShock(new THREE.Vector3(R.yard.x,0,R.yard.z),0x7ad8ff,MQ170.leash,.8);
   try{zt116Show(ZT116.Z[2],'Stormcrown','The Mountain Drill','The drill wakes, and the trolls hear it','Keep all four control boxes running','z2')}catch(_){}
-  say('⚙️ The drill wakes! Switch on all four control boxes (F at each). Keep them running: the drill only bores while every box is lit.');dr170Hud()}
+  say('⚙️ The drill wakes! Switch on the four control boxes (F at each). Each running box gives the drill a quarter of its power: keep as many lit as you can.');dr170Hud()}
 function mq170Fail(why){const E=MQ170.E;if(!E)return;MQ170.E=null;MQ170.trkK='';dr170Close(false);
   enemies.slice().forEach(e=>{if(e.dr170t&&!e.dead){burst(gY(e.m.position,1),0xe8f0f8,20,1.6,1.4,.6);try{removeE(e)}catch(_){}}});mq170Sync();dr170Hud();svSnd('heavy',.9,.5);
   say(why==='dead'?'⚙️ You fall, and the drill grinds to a halt. The bore collapses: start the drill again.':'⚙️ The drill grinds to a halt.')}
@@ -46700,15 +46717,16 @@ function dr170Fix(i){if(co151On()&&!co151Host()){co151Send(['d3o',i]);const E=MQ
 // a box changes state (with its effect and a line in the log)
 function dr170Set(i,s,why){const E=MQ170.E;if(!E)return;const b=E.box[i],B=MQ170.S.box[i],was=b.s;if(was===s)return;
   const W=MQ170.W;if(W&&W.i===i)dr170Close(false);b.s=s;b.rp=0;dr170BoxLook(B,s);MQ170.trkK='';const p=new THREE.Vector3(B.x,0,B.z);
-  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=12+Math.random()*12}
+  if(s==='on'){burst(gY(p,1.7),0x7aff8a,20,1.2,1.2,.5);svSnd('bell',.6,1.6);b.tf=MQ170.tf[0]+Math.random()*MQ170.tf[1]}
   else if(s==='frozen'){burst(gY(p,1),0xd8f4ff,30,1.5,1.5,.7);svSnd('crack',.9,1.2);popT(gY(p,2),'❄ FROZEN','#8ad8ff',true)}
   else if(s==='fault'){burst(gY(p,1.4),0xffd07a,30,2,2,.4);svSnd('zap',1,1);popT(gY(p,2),'⚡ MALFUNCTION','#ffb040',true)}
   else if(s==='smashed'){try{sk146Debris(gY(p,1),dr170Mats().iron,8,.15,4,5,1.3)}catch(_){}burst(gY(p,1),0xffa07a,30,2,2,.5);shake(.25);svSnd('heavy',1.1,.9);svSnd('crack',.8,1.4);popT(gY(p,2),'💥 SMASHED','#ff5a4a',true)}
   if(was==='on'&&s!=='on'){const r=dr170Rate(E);say((s==='smashed'?'💥 ':s==='frozen'?'❄️ ':'⚡ ')+'The '+MQ170.bn[i].toLowerCase()+' is '+MQ170.stN[s]+': '+(r>0?'the drill slows to '+Math.round(r*100)+'% speed!':'the drill has no power!'))}}
-// v168: the drill keeps boring with boxes offline, only slower: ×0.4 for each box that is not running (1 · 0.4 · 0.16 · 0.064);
-// with all four offline it has no power at all
+// v168: the drill keeps boring with boxes offline, only slower; v192 (owner: "have each drill represent 25% of efficiency"): each
+// running box gives MQ170.per = 25% (4 · 3 · 2 · 1 · 0 running = 1 · .75 · .5 · .25 · 0), so one hero keeping some boxes lit still
+// bores steadily (v168 was ×0.4 per box offline: 1 · .4 · .16 · .064)
 function dr170Off(E){return E?E.box.filter(b=>b.s!=='on').length:4}
-function dr170Rate(E){const n=dr170Off(E);return n>=4?0:Math.pow(MQ170.slow,n)}
+function dr170Rate(E){const n=4-dr170Off(E);return Math.max(0,Math.min(1,n*MQ170.per))}
 function mq170ETick(dt,now,al){const E=MQ170.E,R=mq170Plan(),S=MQ170.S;if(!E||!S)return;E.t+=dt;
   // co-op (3180): the region host runs the drill (progress, failures, trolls, the end); partners switch on and repair boxes
   const co=co151On(),host=co151Host();
@@ -46767,9 +46785,9 @@ function mq170Prompt(){if(!mq170In3()||!MQ170.S)return null;const P=pl.position,
 // ---------------- the repairs (v168: timed work at the box, each with its own motion; they do not pause the game) ----------------
 // (they replace v151's Thaw / Rewire / Rebuild mini-game windows.) F at a broken box starts the work: the hero steps up to the box,
 // faces it and works while a ring over the box fills:
-//  * Thaw (MQ170.rt 3 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
-//  * Rewire (6 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
-//  * Rebuild (10 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
+//  * Thaw (MQ170.rt, v192 1.8 s): a lit torch held out to the ice and waved slowly over it; the crust melts down and steams away.
+//  * Rewire (v192 3.5 s): down on one knee at the panel, a spanner turning in one hand, the other pushing each loose cable up into its socket.
+//  * Rebuild (v192 5.5 s): a hammer brought down on the cabinet again and again, the other hand bracing it; the cabinet is knocked upright
 //    and the panel, the gauges and the lever jump back into place one by one.
 // Moving (or Esc, or a dodge) steps away and a hit knocks you away: the work stops, but what is done stays done (E.box[i].rp), so F
 // again carries on from there. The box changing state (a troll smashing a frozen box) starts that box's work afresh.
@@ -47611,8 +47629,8 @@ function cam157Terrain(m){if(!m||m.userData.cam157)return;m.userData.cam157=1;co
      if(t>.0){float f=1.-uObT*ob176Fr(vC135,uCam157,uPl157)*(1.-uObK);   // v176: no window: the whole ground in front of the hero is dithered while it blocks the view (3361)
       vec3 fn=normalize(cross(dFdx(vC135),dFdy(vC135)));if(fn.y<0.)fn=-fn;float hf=vC135.y-uPl157.y+1.1;
       f=max(f,smoothstep(.6,.8,fn.y)*(1.-smoothstep(.7,1.3,hf)));   // flat ground below the waist stays solid
-      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}`)};
-  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.needsUpdate=true}
+      ob192Fade(f);}}`)};
+  const k0=m.customProgramCacheKey===THREE.Material.prototype.customProgramCacheKey?'':m.customProgramCacheKey();m.customProgramCacheKey=()=>k0+'cam157';m.alphaToCoverage=true;m.needsUpdate=true}   // v192: alphaToCoverage: see 3570
 var CAM157U={value:1};
 try{GTX.list.forEach(T=>cam157Terrain(T.mat))}catch(e){console.warn('v157 terrain cutaway',e)}
 // the intro's Duskhold shots (3081) keep the v135 look: the old tube fade for scenery, no terrain cut
@@ -65018,6 +65036,909 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 
 // ---------- the Improve (fusion) window lists lost Devotion ----------
 {const f=FSM100_check;FSM100_check=function(a,b,act){const r=f.apply(this,arguments);try{const L=dv191Lv(b);if(r&&r.warn&&L>0)r.warn.push('Devotion '+L+' lost')}catch(_){}return r}}
+// ================= v192: Burningeye Summit II / III owner fixes (the Frozen Gate's spiders; the drill numbers live in 3170) =================
+// Owner (Nov 2 2026): "Spiders get stuck during melting the frozen gate" and "Reduce drops from frozen gate event spiders by 65% and
+// xp by 50%". (The drill requests, 25% per box, quicker repairs and fewer breakdowns, are plain numbers in MQ170 in 3170.)
+//  * Why the spiders got stuck: they rise on a ring 15-19 tiles round the yard (up to ~34 tiles from a hero at the far side of it)
+//    and walk in a straight line at their hero, with no pathing. (1) The enemy loop (0104) puts every monster further than 30 tiles
+//    from your own hero to sleep (`m.visible=dpl<30` → aiSleep, no AI at all), so spiders that rose on the far side of the yard
+//    stood there frozen until you walked over. (2) The ring reaches the edge of the gate clearing, where rock walls bend, boulders
+//    and trees stand and the gate's stone sits: a spider whose straight line ran into one pressed against it for ever.
+//  * The fix: spawn spots must be within FS192.wake of the hero and have a clear walk to them (fs192Spot, used by the spawner in 3160;
+//    the old rule is the fallback for the last tries); event spiders never sleep while the melt runs (mpAct wrapper); and a watchdog
+//    (fs192Tick, the region host only, like v150's ghost wolves) moves a spider that has gone less than FS192.move tiles in FS192.wait
+//    seconds while more than FS192.gap tiles from the hero it hunts: it bursts into frost and rises again FS192.r tiles from that hero,
+//    on free ground with a clear walk to them, inside the yard. Partners see the move through the shared-monster snapshot.
+//  * Rewards: a gate spider gives FS192.xp (50%) of its XP and drops loot only FS192.loot (35%) of the time (65% fewer drops). The
+//    partner's copies are ice spiders too (e.c.en), so a co-op kill is scaled the same on both screens.
+var FS192={wake:26,wait:2.2,move:.6,gap:4.5,r:[5,8],xp:.5,loot:.35,n:0,err:0};
+function fs192Is(e){return !!(e&&(e.fs160sp||(e.c&&e.c.en==='icespider')))}
+// a straight walk from a to b with the walker's corner probes (walk() in 0160 uses CR = ±.3) hitting nothing solid
+function fs192Line(ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz),n=Math.max(1,Math.ceil(L/.35));
+  for(let i=1;i<n;i++){const x=ax+dx*i/n,z=az+dz*i/n;if(solid(x+.3,z+.3)||solid(x-.3,z+.3)||solid(x+.3,z-.3)||solid(x-.3,z-.3))return false}return true}
+// a good spawn spot: close enough that the spider is awake, with a clear walk to the hero
+function fs192Spot(x,z,tg){const p=tg||pl.position;return Math.hypot(x-p.x,z-p.z)<=FS192.wake&&fs192Line(x,z,p.x,p.z)}
+// event spiders never fall asleep while the melt runs (the enemy loop sleeps monsters beyond 30 tiles)
+{const f=mpAct;mpAct=function(e){if(MQ160.E&&fs192Is(e)&&!e.dead)return true;return f.apply(this,arguments)}}
+// rewards: half the XP, 35% of the drops
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return fs192Is(e)?k*FS192.xp:k}}
+function fs192Drop(){return Math.random()<FS192.loot}
+{const f=lootE;lootE=function(e){if(fs192Is(e)&&!fs192Drop())return;return f.apply(this,arguments)}}
+// the watchdog: a spider that is not getting anywhere rises again near the hero it hunts (the host's world, or yours alone)
+function fs192Tick(now){const E=MQ160.E;if(!E||!co151Host())return;if(!(now>0))now=performance.now();let R=null;try{R=mq160Plan()}catch(_){return}
+  for(const e of enemies){if(!e.fs160sp||e.dead||e.mir||!e.m)continue;const m=e.m,p=m.position;
+    let tg=null;try{tg=eTarget(e,m,m.position.distanceTo(pl.position))}catch(_){tg=pl}if(!tg||!tg.position)tg=pl;const T=tg.position,d=Math.hypot(T.x-p.x,T.z-p.z);
+    const S=e.st192;if(!S||e.atk||e.stun>0||e.root>0||d<=FS192.gap){e.st192={x:p.x,z:p.z,t:now};continue}
+    if(Math.hypot(p.x-S.x,p.z-S.z)>FS192.move){e.st192={x:p.x,z:p.z,t:now};continue}
+    if(now-S.t<FS192.wait*1000)continue;
+    // free ground near the hunted hero, on the spider's side first, inside the yard, with a clear walk to the hero
+    const a0=Math.atan2(p.z-T.z,p.x-T.x);let spot=null;
+    for(let k=0;k<20&&!spot;k++){const a=a0+(k%2?1:-1)*Math.ceil(k/2)*.4,r=FS192.r[0]+Math.random()*(FS192.r[1]-FS192.r[0]),x=T.x+Math.cos(a)*r,z=T.z+Math.sin(a)*r;
+      if(Math.hypot(x-R.yard.x,z-R.yard.z)>MQ160.leash+2)continue;if(R.ok(x,z,.4)&&!solid(Math.round(x),Math.round(z))&&fs192Line(x,z,T.x,T.z))spot=[x,z]}
+    e.st192={x:p.x,z:p.z,t:now};if(!spot)continue;
+    try{burst(gY(p,.3),0xd8f4ff,14,1.2,1.4,.6)}catch(_){}
+    p.x=spot[0];p.z=spot[1];p.y=GH(p.x,p.z);e.vx=e.vz=0;m.rotation.y=Math.atan2(T.x-p.x,T.z-p.z);e.st192={x:p.x,z:p.z,t:now};FS192.n++;
+    try{burst(gY(p,.3),0x8ab8d8,16,1.2,1.6,.6);svDecal(new THREE.Vector3(p.x,0,p.z),0x8ab8d8,1.1,2,.6)}catch(_){}}}
+{const f=homeTick;homeTick=function(dt,now){const r=f.apply(this,arguments);try{fs192Tick(now)}catch(err){if(!FS192.err++)console.warn('v192 spiders',err)}return r}}
+// ================= v192 Abeksi: the bell-ringer; every Abeksi has eyes (owner, Nov 2 2026) =================
+// Owner: "For the Abeksi city — when someone spots you have them attempt to ring a bell (takes 3 seconds after spotted)." · "If an
+// Abeksi is killed before he rang the bell the whole town isn't alerted." · "Make all Abeksi in the city have a vision cone and be
+// able to spot you."
+//  * Spotted = a bell-ringer, not the alarm (ab152Caught wrapper → ab192Start): the Abeksi who saw you pulls out a hand bell and
+//    shakes it overhead (pose AB152P.ring192, a bronze bell in its left hand, a quickening jingle ab192Tink), a timer over its head
+//    fills (ab192Tex, drawn through walls), the stealth HUD counts down ("🔔 Alarm in 2.1 s!") and the log says what to do. You are
+//    not frozen. After AB192.T (3) s of game time (+AB192.lag for a ringer that saw a co-op partner) the ring is done: the city's alarm (ab157Alarm: the great bell, the hunt, the
+//    bell's elite guards of v164).
+//  * Kill it first and the city stays asleep: F · "Silence the bell-ringer!" within AB192.reach tiles (any side: it faces you; the
+//    knife of 3193, ab157Assassinate), a swing in reach does the same; a raised ringer (roof, battlement) takes a thrown knife within
+//    AB192.thr tiles. Anyone who sees that kill starts ringing in turn (ab157Witness). Several can ring at once; each one counts.
+//  * Every Abeksi has eyes: the townsfolk of 3191 (AB157.S.folk, 128) get view cones like the plan's snakes (ab152ConeMake), "?"
+//    marks and sight (ab152Sees, kind 'folk': AB152V.rng.folk / half.folk, shorter than a guard's). Suspicion rises while one sees
+//    you; from AB152V.look its head follows you; at 100 it rings. Folk keep their routines and seats (ab192FolkTick).
+//  * Co-op: the region's host runs every pair of eyes and every ring. New message kinds (old partners ignore them and still get the
+//    alarm from the host's ['ab','rs']): ['ab','rg',ri,peer,yaw×100] a ring starts (peer: who was seen), ['ab','rx',ri] it stopped,
+//    ['ab','rd',ri,peer] it rang (the alarm), ['ab','sl',ri] a partner silences one (the host stops it at once; the kill follows as
+//    3193's ['ab','x',...]), ['ab','fs',[ri,u,v,yaw,hy,sus,mv,pi, ...]] the host's townsfolk near each partner, ~5 a second (the
+//    partner's folk follow them, so a partner sees the cones the host's eyes really have).
+var AB192={T:3,lag:.3,reach:2.6,thr:9,fk:.6,R:[],tF:0,n:{st:0,rg:0,mk:0,sil:0,done:0,stop:0},log:[],tx:null,M:null,err:0,v:192};
+AB152V.rng.folk=5;AB152V.half.folk=.65;
+{const f=ab152Kind;ab152Kind=function(a){return a&&a.folk?'folk':f.apply(this,arguments)}}
+function ab192Log(k,a){const L=AB192.log;L.push([k,a&&a.id,Math.round(performance.now())]);if(L.length>30)L.shift()}
+// ---------------- the hand bell, the ringing pose, the jingle, the timer ----------------
+function ab192Mats(){return AB192.M||(AB192.M={br:new THREE.MeshStandardMaterial({color:0xb48a3a,roughness:.3,metalness:.82,flatShading:true,side:THREE.DoubleSide}),
+  wd:new THREE.MeshStandardMaterial({color:0x4e3420,roughness:.85,flatShading:true}),st:new THREE.MeshStandardMaterial({color:0xc8ccd2,roughness:.25,metalness:.85}),
+  hd:new THREE.CylinderGeometry(.016,.02,.11,6).translate(0,-.03,0),cap:new THREE.SphereGeometry(.036,8,3,0,Math.PI*2,0,Math.PI/2).translate(0,-.085,0),
+  body:new THREE.CylinderGeometry(.036,.092,.13,9,1,true).translate(0,-.15,0),lip:new THREE.TorusGeometry(.09,.011,4,12).rotateX(Math.PI/2).translate(0,-.215,0),
+  cl:new THREE.SphereGeometry(.024,6,4).translate(0,-.205,0),kn:new THREE.BoxGeometry(.035,.035,.42)})}
+function ab192Bell(a,on){try{if(!on){const b=a.b192;if(b&&b.parent)b.parent.remove(b);return}
+  if(a.b192&&a.b192.parent)return;const bn=a.h&&a.h.bones&&a.h.bones.aL2;if(!bn)return;let g=a.b192;
+  if(!g){const M=ab192Mats();g=new THREE.Group();g.name='ab192bell';[[M.hd,M.wd],[M.cap,M.br],[M.body,M.br],[M.lip,M.br],[M.cl,M.wd]].forEach(([q,m])=>{const o=new THREE.Mesh(q,m);o.castShadow=false;g.add(o)});
+    g.position.set(0,-.06,.02);g.rotation.x=2.5;a.b192=g}   // turned back against the raised arm (ring192: shoulder + elbow ≈ −2.55) so it hangs mouth down
+  bn.add(g)}catch(_){}}
+// the bell held high and shaken hard, the other hand pointing at you (an overlay on the arms and head; legs keep 'caught')
+AB152P.ring192=function(P,t,S){const s=Math.sin(t*24),w=Math.sin(t*3.1);
+  P('aL0',-2.2+.12*s,0,-.32);P('aL1',-.35+.1*s);P('aL2',.55*s,0,.25*s);P('aR0',-1.35,0,.22+.05*w);P('aR1',-.25);P('head',-.18,(S.ht||0)*.3,.06*s)};
+function ab192Tink(v,p){if(!(v>.02))return;let a=null;try{a=AUD}catch(_){}if(!a||a.state!='running'||SET.sfx===false)return;const t=a.currentTime,out=a.out;
+  try{const f0=1250*(1+(Math.random()-.5)*.04)*(1+.06*p);[[1,.5,.42],[2.32,.3,.3],[4.25,.16,.2],[6.63,.08,.12]].forEach(([r,amp,dec])=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f0*r;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp*.14*v,t+.004);g.gain.exponentialRampToValueAtTime(.0002,t+dec);o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.05)})}catch(_){}}
+// a bell in a ring that fills as the ringer winds up (17 steps, baked once)
+function ab192Tex(k){const T=AB192.tx||(AB192.tx=[]);if(T[k])return T[k];const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),P2=Math.PI*2;
+  x.beginPath();x.arc(64,64,58,0,P2);x.fillStyle='rgba(24,6,4,.8)';x.fill();x.lineWidth=11;x.strokeStyle='rgba(255,255,255,.2)';x.beginPath();x.arc(64,64,50,0,P2);x.stroke();
+  if(k>0){x.strokeStyle=k>=12?'#ff3020':k>=7?'#ff8a20':'#ffd040';x.lineCap='round';x.beginPath();x.arc(64,64,50,-Math.PI/2,-Math.PI/2+P2*k/16);x.stroke()}
+  x.fillStyle='#ffd27a';x.strokeStyle='#1a0a04';x.lineWidth=3;x.beginPath();x.moveTo(64,30);x.bezierCurveTo(48,30,46,50,44,66);x.lineTo(37,80);x.lineTo(91,80);x.lineTo(84,66);x.bezierCurveTo(82,50,80,30,64,30);x.closePath();x.fill();x.stroke();
+  x.beginPath();x.arc(64,87,7,0,P2);x.fill();x.stroke();x.fillRect(60,23,8,8);x.strokeRect(60,23,8,8);
+  return T[k]=new THREE.CanvasTexture(c)}
+// ---------------- a ring: start, stop, done ----------------
+function ab192HeroAt(by){const H=AB152H;if(!by||by===MP.me)return [H.u,H.v];try{const I=AB152.S.I,r=MP.rh[by];if(r&&r.pr)return [r.pr.x-I.x0,r.pr.z-I.y0]}catch(_){}return [H.u,H.v]}
+function ab192Start(a,by,remote,yaw){if(!a||a.r192||a.dead||a.e||a.net1||!AB152.S)return false;ab157Res();
+  if(!remote&&(!a.seen||!a.last))a.last=ab192HeroAt(by);
+  a.r192={t:0,by:by||'',nT:0,rem:!!remote};a.st='caught';a.sus=100;a.mv=0;if(a.folk&&isFinite(yaw))a.yaw=yaw;
+  ab192Bell(a,true);AB192.R.push(a);AB192.n[remote?'rg':'st']++;ab192Log(remote?'rg':'st',a);
+  const me=!by||by===MP.me,who=me?'you':'<b>'+mpEsc(mpName(by))+'</b>',raised=(a.o.lift||0)>=1;
+  say('🔔 <b>An Abeksi '+(ab157Guard(a)?'guard ':'')+'has seen '+who+' and grabs its alarm bell!</b> '+(raised?'Throw a knife at it':'Kill it')+' within '+AB192.T+' s — or the whole city wakes.');
+  try{if(me){svSnd('hiss',1,1.1);flash('rgba(255,140,30,.45)');shake(.12)}}catch(_){}
+  if(!remote&&ab157Co()&&ab157Lead())try{cl155Send(['ab','rg',a.ri,by||MP.me,Math.round(a.yaw*100)])}catch(_){}
+  return true}
+function ab192Stop(a,why,quiet){if(!a||!a.r192)return;const rem=a.r192.rem;a.r192=null;ab192Bell(a,false);if(a.m192)a.m192.visible=false;
+  const i=AB192.R.indexOf(a);if(i>=0)AB192.R.splice(i,1);ab192Log('x:'+why,a);
+  if(why!='done'&&why!='clear'&&why!='reset'){AB192.n.stop++;if(!a.dead){a.st=a.folk?'routine':'look';a.sus=a.folk?AB152V.look+5:AB152V.go+5}}
+  if(!quiet&&!rem&&ab157Co()&&ab157Lead())try{cl155Send(['ab','rx',a.ri])}catch(_){}}
+function ab192Clear(){AB192.R.slice().forEach(a=>ab192Stop(a,'clear',true));AB192.R.length=0}
+// the host's ringer finished: the city's alarm, for the whole party
+function ab192Rang(a){const by=a.r192&&a.r192.by;AB192.n.done++;ab192Log('done',a);ab192Clear();
+  try{if(ab157Co())cl155Send(['ab','rd',a.ri,by||''])}catch(_){}
+  ab157Alarm()}
+// every frame in the city (every client): wind up, jingle, the timer over the head; the host's ring ends in the alarm
+function ab192Tick(dt,now){const S=AB152.S,I=S.I,lead=ab157Lead();
+  for(const a of AB192.R.slice()){const r=a.r192;if(!r){const i=AB192.R.indexOf(a);if(i>=0)AB192.R.splice(i,1);continue}
+    if(a.dead||a.e||a.net1||AB157A.on||(!r.rem&&a.halt)){ab192Stop(a,a.dead?'dead':'stop');continue}
+    r.t+=dt;if(r.rem)r.t=Math.min(r.t,AB192.T+5);
+    if(!r.rem&&lead&&r.t>=AB192.T+(r.by&&r.by!==MP.me&&ab157Co()?AB192.lag:0)){ab192Rang(a);return}   // a partner's timer starts a moment later (the message): they get that moment
+    if(r.t>AB192.T+4){ab192Stop(a,'lost',true);continue}   // the host's word never came (or the host left): drop it
+    const p=Math.min(1,r.t/AB192.T),x=I.x0+a.u,z=I.y0+a.v,y=GH(x,z)+(a.o.lift||0);
+    r.nT-=dt;if(r.nT<=0){r.nT=.3-.17*p;const d=Math.hypot(pl.position.x-x,pl.position.z-z);ab192Tink(Math.max(0,1-d/34)*(.45+.55*p),p)}
+    let m=a.m192;if(!m){m=a.m192=new THREE.Sprite(new THREE.SpriteMaterial({map:ab192Tex(0),transparent:true,depthTest:false,depthWrite:false,fog:false}));m.renderOrder=40;m.userData.psNo=1;S.root.add(m)}
+    const vis=(a.folk?!!a.on:!!a.g.visible)&&!a.dead;m.visible=vis;
+    if(vis){m.material.map=ab192Tex(Math.min(16,Math.floor(p*16)));const s=.95+.1*Math.abs(Math.sin(now/60));m.scale.set(s,s,1);m.position.set(x,y+2.85,z);AB192.n.mk++}}}
+// ---------------- silencing a ringer ----------------
+function ab192Near(melee){const H=AB152H,S=AB152.S;let best=null,bd=1e9;
+  for(const a of AB192.R){if(!a.r192||a.dead||a.e||a.net1||a.halt)continue;const raised=(a.o.lift||0)>=1,d=Math.hypot(a.u-H.u,a.v-H.v),R=raised?(melee?0:AB192.thr):AB192.reach;
+    if(d>R||d>=bd)continue;if(d>1.2&&!ab192LOS(S.G,a.u,a.v,H.u,H.v,false,raised))continue;best=a;bd=d}
+  return best}
+function ab192Silence(a){if(!a||a.dead||!a.r192)return;const S=AB152.S,H=AB152H,I=S.I,lift=a.o.lift||0,d=Math.hypot(a.u-H.u,a.v-H.v);
+  ab192Stop(a,'kill');AB192.n.sil++;
+  try{if(ab157Co()&&!ab157Lead())cl155Send(['ab','sl',a.ri])}catch(_){}   // the host stops its ring at once (the kill follows as 'x')
+  say('🔕 <b>The bell-ringer falls</b> before the alarm could sound.');
+  if(lift<1&&d<=AB192.reach+.4){const y0=a.yaw,h0=a.hy;a.yaw=Math.atan2(a.u-H.u,a.v-H.v);a.hy=0;ab157Assassinate(a);a.yaw=y0;a.hy=h0;return}   // the lunge lands on the hero's side (3193 aims it at the back)
+  // a thrown knife (a ringer on a roof or a battlement)
+  a.halt=1;a.st='routine';a.sus=0;a.k192=1;const P=pl.position,x=I.x0+a.u,z=I.y0+a.v,y1=GH(x,z)+lift+1.25,x0=P.x,z0=P.z,y0=P.y+1.3;
+  try{pl.rotation.y=Math.atan2(x-x0,z-z0);svSnd('whoosh',.4,1.6);const M=ab192Mats(),k=new THREE.Mesh(M.kn,M.st);k.userData.psNo=1;scene.add(k);k.position.set(x0,y0,z0);k.lookAt(x,y1,z);
+    tw(240,q=>{k.position.set(x0+(x-x0)*q,y0+(y1-y0)*q+Math.sin(q*Math.PI)*.4,z0+(z-z0)*q)},()=>{if(k.parent)k.parent.remove(k)})}catch(_){}
+  setTimeout(()=>{if(a.dead)return;ab157Fall(a,null,null,true);const b=AB157A.bodies[AB157A.bodies.length-1];if(b&&b.a===a&&b.p)b.p.position.y+=lift;
+    try{burst(new THREE.Vector3(x,y1-.1,z),0x5a0808,18,1.4,1.2,.5);svSnd('crack',.3,.6)}catch(_){}
+    try{if(ab157Co())cl155Send(['ab','x',a.ri,cl155R1(a.u),cl155R1(a.v),cl155R1(H.u),cl155R1(H.v)])}catch(_){}
+    if(ab157Lead()){const w=ab157Witness(a,H.u,H.v,!!H.cr);if(w){say('👁 <b>'+(w.folk?'Someone':'A guard')+' saw the kill!</b>');w.yaw=Math.atan2(H.u-w.u,H.v-w.v);w.last=[H.u,H.v];ab152Caught(w)}}},260)}
+// ---------------- the townsfolk's eyes ----------------
+// sight in the cone only (no all-round ring: folk are busy), AB192.fk of a guard's speed; a townsperson on a roof sees over its own
+// roof and over low cover
+function ab192LOS(G,au,av,bu,bv,cr,up){if(!up)return ab152LOS(G,au,av,bu,bv,cr);const L=Math.hypot(bu-au,bv-av);if(L<.8)return true;const n=Math.ceil(L/.3);let roof=1;
+  for(let i=1;i<n;i++){const t=i/n,c=ab152Cls(G,au+(bu-au)*t,av+(bv-av)*t);if(roof){if(c>=2)continue;roof=0}if((1-t)*L<.45)continue;if(c>=2)return false}return true}
+function ab192Sees(a,hu,hv,cr,lit){const du=hu-a.u,dv=hv-a.v,d=Math.hypot(du,dv);let R=AB152V.rng.folk*(cr?AB152V.crouchK:1);
+  R*=1-(1-AB152V.darkK)*(1-Math.min(1,lit/.6));if((a.sus||0)>=AB152V.look)R*=1.25;if(d>R)return 0;
+  let df=Math.atan2(du,dv)-(a.yaw+(a.hy||0));df=Math.atan2(Math.sin(df),Math.cos(df));if(Math.abs(df)>AB152V.half.folk)return 0;
+  if(!ab192LOS(AB152.S.G,a.u,a.v,hu,hv,cr,(a.o.lift||0)>=1))return 0;return (AB152V.rate[0]+AB152V.rate[1]*(1-d/R))*AB192.fk}
+// the cone of a townsperson on a roof: from its feet up there, across the roof, down onto the street (3153's fan, not cut by its roof)
+function ab192ConeUp(a,I,G,cr){const c=a.cone,N=AB152CN.N,lift=a.o.lift||0,half=AB152V.half.folk,fy=a.yaw+(a.hy||0),p=c.geometry.attributes.position,x0=I.x0+a.u,z0=I.y0+a.v;
+  const R=AB152V.rng.folk*(cr?AB152V.crouchK:1)*(a.st!='routine'||(a.sus||0)>=AB152V.look?1.25:1);p.setXYZ(0,x0,GH(x0,z0)+lift+.06,z0);
+  for(let i=0;i<=N;i++){const an=fy-half+2*half*i/N,su=Math.sin(an),sv=Math.cos(an);let L=R,roof=1;
+    for(let s=.5;s<=R;s+=.5){const c2=ab152Cls(G,a.u+su*s,a.v+sv*s);if(roof){if(c2>=2)continue;roof=0}if(c2>=2){L=s-.25;break}}
+    const x=x0+su*L,z=z0+sv*L;p.setXYZ(i+1,x,GH(x,z)+(roof?lift:0)+.06,z)}
+  p.needsUpdate=true;const U=c.material.uniforms;U.col.value.setHex(a.st=='caught'?0xff3020:a.sus>=AB152V.go?0xff8a2a:a.sus>=AB152V.look?0xffd040:0xfff0a0);
+  U.op.value=a.st=='caught'?.42:a.sus>8?.26+.16*a.sus/100:.2}
+function ab192FolkTick(dt,now){const Q=AB157.S,S=AB152.S;if(!Q||!S)return;ab157Res();const H=AB152H,I=S.I,G=S.G,co=ab157Co(),lead=ab157Lead(),al=AB157A.on,pn=performance.now();
+  const L=(co&&lead&&AB155.hs)||[H],mates=co&&lead?L.filter(h=>h&&h.peer):[],near=a=>mates.some(h=>Math.abs(h.u-a.u)<AB157V.R&&Math.abs(h.v-a.v)<AB157V.R);let mx=0;
+  for(const a of Q.folk){const off=a.dead||a.e||a.net1||a.hid||al;
+    // the host keeps the folk near a partner going (3191 only runs them near its own hero)
+    if(!off&&!a.on&&!a.halt&&mates.length&&near(a)){a.t+=dt;ab152Routine(a,dt)}
+    const fol=co&&!lead&&a.fn192&&pn-a.fn192.t<1500;
+    if(!fol)a.hy+=((a.ht||0)*.6-(a.hy||0))*Math.min(1,dt*4);   // the eyes follow the head, as 3153 does for the plan's snakes
+    if(off){if(!a.r192)a.sus=0}
+    else if(lead){if(!a.r192&&!a.halt){let rate=0,best=null;
+        for(const h of L){if(!h||!h.live||Math.abs(h.u-a.u)>9||Math.abs(h.v-a.v)>9)continue;const r=ab192Sees(a,h.u,h.v,h.cr,h.lit);if(r>rate){rate=r;best=h}}
+        if(rate>0){a.sus=Math.min(100,(a.sus||0)+rate*dt);a.unseen=0;a.last=[best.u,best.v]}else{a.unseen=(a.unseen||0)+dt;if(a.unseen>AB152V.hold)a.sus=Math.max(0,(a.sus||0)-AB152V.decay*dt)}
+        if(a.sus>=AB152V.catch&&best){a.cBy=best.peer||MP.me;ab152Caught(a)}}}
+    else if(!fol&&!a.r192&&a.sus>0)a.sus=Math.max(0,a.sus-AB152V.decay*dt);   // a partner: the host's numbers stopped coming
+    if(a.sus>mx&&!a.r192)mx=a.sus;
+    const d=Math.hypot(a.u-H.u,a.v-H.v),show=!!a.on&&!off&&d<24;
+    if(a.cone){a.cone.visible=show;if(show){if((a.o.lift||0)>=1)ab192ConeUp(a,I,G,!!H.cr);else ab152ConeTick(a,I,G,!!H.cr)}}
+    if(a.on&&!off)ab152MarkTick(a,now);else if(a.mark)a.mark.visible=false}
+  if(!al&&!H.cau)H.maxS=Math.max(H.maxS||0,mx);
+  // the host: its townsfolk near each partner, ~5 a second
+  if(co&&lead&&!al&&mates.length&&pn-AB192.tF>180){AB192.tF=pn;let F=[],n=0;
+    for(const a of Q.folk){if(a.dead||a.e||a.net1||a.hid||!mates.some(h=>Math.abs(h.u-a.u)<26&&Math.abs(h.v-a.v)<26))continue;
+      F.push(a.ri,cl155R1(a.u),cl155R1(a.v),cl155R2(a.yaw),cl155R2(a.hy||0),Math.round(a.sus||0),cl155R1(a.mv||0),a.pi|0);if(++n>=40){cl155Send(['ab','fs',F]);F=[];n=0}}
+    if(F.length)cl155Send(['ab','fs',F])}}
+// a townsperson's routine: still while ringing, its head after you while suspicious; a partner's folk follow the host's
+{const f=ab152Routine;ab152Routine=function(a,dt){if(!a||!a.folk)return f.apply(this,arguments);
+  if(a.r192){a.mv=0;if(!a.r192.rem&&a.last)ab152Turn(a,Math.atan2(a.last[0]-a.u,a.last[1]-a.v),3,dt);a.ht=(a.ht||0)*.9;return}
+  const N=a.fn192;if(N&&!ab157Lead()&&performance.now()-N.t<1500){const k=Math.min(1,dt*8);
+    if(Math.hypot(N.u-a.u,N.v-a.v)>4){a.u=N.u;a.v=N.v}else{a.u+=(N.u-a.u)*k;a.v+=(N.v-a.v)*k}
+    let dy=N.yaw-a.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));a.yaw+=dy*k;a.hy=(a.hy||0)+(N.hy-(a.hy||0))*k;a.ht=a.hy/.6;a.mv=N.mv;if(a.path&&N.pi>=0&&N.pi<a.path.length)a.pi=N.pi;return}
+  const r=f.apply(this,arguments);
+  if(a.sus>=AB152V.look&&a.last){let d=Math.atan2(a.last[0]-a.u,a.last[1]-a.v)-a.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));a.ht=Math.max(-1.3,Math.min(1.3,d))/.6}
+  return r}}
+// ---------------- hooks ----------------
+// spotted: a ringer instead of the alarm (an older host's 'caught' message still means its alarm)
+{const f=ab152Caught;ab152Caught=function(a){if(AB157A.on)return;
+  if(AB155.rx||!a||!ab152In()||!AB152.S)return f.apply(this,arguments);
+  if(AB157A.calmT&&performance.now()-AB157A.calmT<AB158.grace*1000)return;   // 3193's grace after the city calms
+  if(!ab157Lead())return;const by=a.cBy||MP.me;a.cBy=null;ab192Start(a,by,false)}}
+// the host's ringer (a plan snake) stands and rings, facing the hero it saw
+{const f=ab152ActTick;ab152ActTick=function(a,dt,now,H){const r=a.r192;
+  if(r&&!r.rem&&!a.dead&&!a.e&&!a.halt&&!AB157A.on){a.t+=dt;a.mv=0;a.sus=100;a.seen=1;a.st='caught';
+    if(a.last&&!a.o.sweep)ab152Turn(a,Math.atan2(a.last[0]-a.u,a.last[1]-a.v),2.6,dt);a.ht=(a.ht||0)*.9;a.hy*=.9;return null}
+  return f.apply(this,arguments)}}
+{const f=ab152ActPose;ab152ActPose=function(a,now,dt,vis){const r=f.apply(this,arguments);try{
+  if(a.r192&&!a.dead&&!a.e&&!a.net1&&a.g.visible)ab152Apply(a.h,'ring192',performance.now()/1000,a,true);
+  else if(a.dead&&a.k192)a.g.position.y+=a.o.lift||0}catch(_){}return r}}   // a ringer knifed on a roof lies on the roof
+// townsfolk get view cones like the plan's snakes
+{const f=ab152Build;ab152Build=function(){const S=f.apply(this,arguments);try{if(S&&!S.v192&&AB157.S){S.v192=1;
+  AB157.S.folk.forEach(a=>{if(!a.cone){a.cone=ab152ConeMake();a.cone.visible=false;S.root.add(a.cone)}})}}catch(e){console.error('v192 cones',e)}return S}}
+{const f=ab152WorldTick;ab152WorldTick=function(dt,now){const r=f.apply(this,arguments);try{ab192FolkTick(dt,now);ab192Tick(dt,now)}catch(e){if(!AB192.err++)console.error('v192 bell',e)}return r}}
+{const f=ab152Tick;ab152Tick=function(dt,now){if(AB192.R.length&&!ab152In())ab192Clear();return f.apply(this,arguments)}}
+{const f=ab157Alarm;ab157Alarm=function(){ab192Clear();return f.apply(this,arguments)}}
+{const f=ab157Calm;ab157Calm=function(){ab192Clear();return f.apply(this,arguments)}}
+{const f=ab152ResetActor;ab152ResetActor=function(a){ab192Stop(a,'reset',true);a.fn192=null;a.cBy=null;a.last=null;a.k192=0;return f.apply(this,arguments)}}
+{const f=ab157Unfall;ab157Unfall=function(a){a.k192=0;return f.apply(this,arguments)}}
+// F and a swing silence the ringer in reach
+{const f=worldPrompt;worldPrompt=function(){try{if(ab152In()&&AB152.S&&!AB157A.on&&!AB157A.kill&&!AB152H.cau&&AB192.R.length){const a=ab192Near(false);
+    if(a){const far=(a.o.lift||0)>=1;return {label:far?'F · Throw a knife at the bell-ringer!':'F · Silence the bell-ringer!',fn:()=>{if(a.r192&&!a.dead)ab192Silence(a)}}}}}catch(_){}return f.apply(this,arguments)}}
+{const f=swing;swing=function(){try{if(ab152In()&&AB152.S&&!AB157A.on&&!AB157A.kill&&!AB152H.cau&&AB192.R.length){const a=ab192Near(true);if(a){ab192Silence(a);return}}}catch(_){}return f.apply(this,arguments)}}
+// the stealth HUD counts the ring down
+{const f=ab152Hud;ab152Hud=function(){const r=f.apply(this,arguments);try{const el=$('ab152h');if(!el||AB157A.on||!ab152In()||el.classList.contains('hide'))return r;
+  let a=null;for(const q of AB192.R)if(q.r192&&!q.dead&&(!a||q.r192.t>a.r192.t))a=q;if(!a)return r;const left=Math.max(0,AB192.T-a.r192.t),e=el.querySelector('.eye');
+  e.style.setProperty('--ec','#ff3a20');e.style.setProperty('--eg','16px');el.querySelector('.s').textContent='🔔 Alarm in '+left.toFixed(1)+' s!';
+  el.querySelector('.c').textContent=(a.o.lift||0)>=1?'Throw a knife at the bell-ringer (F)':'Kill the bell-ringer to stop it (F)';
+  el.querySelector('.bar i').style.width=Math.min(100,a.r192.t/AB192.T*100)+'%';$('ab152cv').style.opacity=.85}catch(_){}return r}}
+// ---------------- co-op ----------------
+{const f=ab155On;ab155On=function(q,peer){const k=q[1];if(['rg','rx','rd','sl','fs'].indexOf(k)<0)return f.apply(this,arguments);
+  if(!ab152In()||!AB152.S)return;const R=ab157Res(),host=peer===MP.host&&!ab157Lead();
+  if(k==='rg'&&host){const a=R[q[2]|0];if(!a||a.dead||AB157A.on)return;const yw=+q[4]/100;ab192Start(a,String(q[3]||''),true,isFinite(yw)?yw:undefined)}
+  else if(k==='rx'&&host){const a=R[q[2]|0];if(a&&a.r192)ab192Stop(a,'host',true)}
+  else if(k==='rd'&&host){AB192.n.done++;ab192Log('rd',R[q[2]|0]);ab192Clear();if(!AB157A.on&&performance.now()-(AB157A.calmT||-1e9)>1000)ab157Alarm()}
+  else if(k==='sl'&&ab157Lead()){const a=R[q[2]|0];if(a&&a.r192){ab192Stop(a,'sl');a.halt=1;if((a.o.lift||0)>=1)a.k192=1;setTimeout(()=>{if(!a.dead)a.halt=0},2500)}}
+  else if(k==='fs'&&host&&Array.isArray(q[2])){const F=q[2],t=performance.now();for(let j=0;j+7<F.length;j+=8){const a=R[F[j]|0];if(!a||!a.folk||a.dead)continue;
+      const u=+F[j+1],v=+F[j+2],yw=+F[j+3],hy=+F[j+4];if(!isFinite(u)||!isFinite(v)||!isFinite(yw)||!isFinite(hy))continue;
+      const N=a.fn192||(a.fn192={});N.u=u;N.v=v;N.yaw=yw;N.hy=hy;N.mv=+F[j+6]||0;N.pi=F[j+7]|0;N.t=t;if(!a.r192)a.sus=Math.max(0,Math.min(100,+F[j+5]||0))}}}}
+// ================= v192 Cheddar (owner, Nov 2 2026): every quest open at once, and quiet, switchable creature coats =================
+// 1) "Make Cheddar quests all available for a zone at once, no gated unlocks by quest tier." chq148Open (3075) now always says yes;
+//    saved progress (CHQ132.st) is untouched, so half-done tiers in old saves keep it.
+// 2) "Skins from completing all quests are too intense and I don't like the fact that they cover all of the companion/mount. I just
+//    want an exclusive toggleable skin for the actual creature/companion/mount."
+//    * The hero never wears one any more (skn164RaceOf → null; look index 9 goes out as 0). The two old hero rewards became
+//      creature coats: Lanternbound (Kindlelight) a companion coat, Sunforged (Searing Sands) a mount coat: 3 + 3.
+//    * A coat dresses the creature's own body only: a companion's skinned body loft and the parts made of the same body material
+//      (ears, fins); a mount's coat loft (userData.mdlBody). Gear, tack, saddle, rider, evolution armour, glow, sparkles,
+//      Devotion glow and fusion stars keep their own materials (sk192Parts).
+//    * The look is quiet (SK192): the creature's own markings and baked shading are kept (the coat follows each vertex's
+//      brightness), soft countershading (darker back, lighter belly), one gentle pattern per coat (mottle, stripes, dapples,
+//      rosettes, fine veins), a fur grain and only a faint rim tint. No pulsing, no glowing cracks.
+//    * Switchable per creature: c.sk192 (companion) and m.sk192 (mount) hold the coat id, saved with the companion / mount. Off
+//      unless chosen. The Companions window (Overview tab) and the Stable / Mounts windows list each earned coat as a chip.
+//      Old saves: a companion coat that was "worn" (v164 SKN164.e.comp) goes to the active companions, a worn mount coat to the
+//      active mount, once (x2.skn164.v192 marks a migrated save). Nothing else is switched on.
+//    * Co-op: a companion's coat travels in its look (mpvLookOf field `sk`, last); the ridden mount's coat as presence `mts192`
+//      (new key). Partners dress the same parts with the same shader (cr wrapper, v150MtTick wrapper).
+var SK192={on:true,MC:new Map(),err:0,ui:{},
+  // a: back, b: belly / light markings, e: pattern colour, pt: 0 mottle · 1 stripes · 2 dapples · 3 rosettes · 4 veins,
+  // pa: pattern strength, ps: pattern scale, r: rim tint, rs: rim strength (faint), ro / me: sheen
+  D:{lantern:{a:0x2a211c,b:0x8c6c4c,e:0xb0703a,pt:0,pa:.45,ps:5.5,r:0xffa060,rs:.05,ro:.85,me:0},
+     storm:{a:0x262c33,b:0x8a96a2,e:0x4c6680,pt:1,pa:.5,ps:3.2,r:0xa8d4ff,rs:.05,ro:.6,me:.08},
+     rime:{a:0x8aa2b4,b:0xe8f0f4,e:0x6a8ca8,pt:2,pa:.4,ps:6.5,r:0xdaf0ff,rs:.06,ro:.55,me:.04},
+     sun:{a:0x7a5420,b:0xe0c48c,e:0x4a3012,pt:3,pa:.55,ps:4.2,r:0xffe2a8,rs:.05,ro:.6,me:.1},
+     wraith:{a:0x231d2e,b:0x786a90,e:0x463a60,pt:1,pa:.4,ps:3.6,r:0xc4a8ff,rs:.06,ro:.8,me:0},
+     blood:{a:0x1a1214,b:0x543234,e:0x6e1c1c,pt:4,pa:.55,ps:3.6,r:0xff6a50,rs:.04,ro:.5,me:.12}},
+  // new words for the six rewards (the hero ones are creature coats now)
+  T:{lantern:{k:'comp',d:'A charcoal coat with warm amber flecks, like lantern light through smoke.'},
+     storm:{k:'mount',d:'A gunmetal coat with soft storm-blue stripes.'},
+     rime:{k:'comp',d:'A frost-pale coat dappled like ice on a winter pond.'},
+     sun:{k:'mount',d:'An old-gold coat with dark desert rosettes.'},
+     wraith:{k:'comp',d:'A violet-shadow coat with faint mist bands.'},
+     blood:{k:'mount',d:'An obsidian coat traced with fine crimson veins.'}}};
+(function(){for(const id in SK192.T){const S=SKN164.D[id];if(!S)continue;S.k=SK192.T[id].k;S.d=SK192.T[id].d;const P=SK192.D[id];S.a=P.a;S.b=P.b;S.e=P.e}})();
+SKN164_KN.comp='Companion';SKN164_KN.mount='Mount';
+
+// ---------------- the coat shader ----------------
+var SK192_FH=`
+uniform vec3 uA192,uB192,uE192,uR192;uniform float uPt192,uPa192,uPs192,uRs192,uRo192,uMe192,uK192,uSz192;varying vec3 vP192;varying vec3 vN192;
+float k192h(vec3 p){p=fract(p*.3183099+vec3(.1,.2,.3));p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float k192n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
+  return mix(mix(mix(k192h(i),k192h(i+vec3(1.,0.,0.)),f.x),mix(k192h(i+vec3(0.,1.,0.)),k192h(i+vec3(1.,1.,0.)),f.x),f.y),mix(mix(k192h(i+vec3(0.,0.,1.)),k192h(i+vec3(1.,0.,1.)),f.x),mix(k192h(i+vec3(0.,1.,1.)),k192h(i+vec3(1.,1.,1.)),f.x),f.y),f.z);}
+float k192f(vec3 p){return .5*k192n(p)+.25*k192n(p*2.03+3.1)+.125*k192n(p*4.01+7.7)+.125*k192n(p*8.1+1.3);}
+vec2 k192v(vec3 p){vec3 i=floor(p),f=fract(p);float d1=8.,d2=8.;
+  for(int z=-1;z<=1;z++)for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec3 g=vec3(float(x),float(y),float(z)),o=vec3(k192h(i+g),k192h(i+g+19.1),k192h(i+g+47.3));
+    vec3 r=g+o*.8+.1-f;float d=dot(r,r);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}
+  return vec2(sqrt(d1),sqrt(d2)-sqrt(d1));}
+`;
+var SK192_FC=`
+{vec3 o0=diffuseColor.rgb;float L=dot(o0,vec3(.299,.587,.114));
+  float t=smoothstep(.03,.62,L),up=clamp(normalize(vN192+vec3(0.,1e-4,0.)).y*.5+.5,0.,1.);
+  vec3 q=vP192*uPs192*uSz192;float n=k192f(q*.6);
+  vec3 c=mix(uA192,uB192,clamp(t*.78+(1.-up)*.28-.08+(n-.5)*.22,0.,1.));
+  float pt=0.,back=smoothstep(.25,.75,up);
+  if(uPt192<.5)pt=smoothstep(.56,.74,k192f(q*1.2+11.))*back;
+  else if(uPt192<1.5){float s=sin(q.z*2.6+(k192f(q*.7)-.5)*5.);pt=smoothstep(.45,.9,s)*smoothstep(.15,.6,up);}
+  else if(uPt192<2.5){vec2 v=k192v(q*.9);pt=(1.-smoothstep(.16,.3,v.x))*(.55+.45*back);}
+  else if(uPt192<3.5){vec2 v=k192v(q*.8);pt=smoothstep(.1,.17,v.x)*(1.-smoothstep(.24,.33,v.x))*smoothstep(.1,.5,up);}
+  else{vec2 v=k192v(q*.9+vec3(k192n(q*.5)*.6));pt=(1.-smoothstep(0.,.05,v.y))*.85;}
+  c=mix(c,uE192,clamp(pt*uPa192,0.,1.));
+  c*=.93+.14*k192n(q*9.);
+  float cl=max(dot(c,vec3(.299,.587,.114)),.02);c*=mix(1.,clamp(L/cl,.55,1.5),.3);
+  diffuseColor.rgb=mix(o0,c,uK192);}
+`;
+var SK192_FE=`
+{vec3 nv=normalize(vViewPosition);float fr=pow(1.-clamp(abs(dot(normal,nv)),0.,1.),3.);totalEmissiveRadiance+=uR192*fr*uRs192*uK192;}
+`;
+function sk192U(id,sz){const P=SK192.D[id],C=c=>({value:new THREE.Color(c)}),v=x=>({value:x});
+  return {uA192:C(P.a),uB192:C(P.b),uE192:C(P.e),uR192:C(P.r),uPt192:v(P.pt),uPa192:v(P.pa),uPs192:v(P.ps),uRs192:v(P.rs),uRo192:v(P.ro),uMe192:v(P.me),uK192:v(.9),uSz192:v(sz||1)}}
+// a coat copy of a body material (cached per material, coat and size): its own uniforms, one shared program
+function sk192Mat(base,id,sz){const k=base.uuid+'|'+id+'|'+(sz||1);let m=SK192.MC.get(k);if(m)return m;
+  m=base.clone();const ob=base.onBeforeCompile,ck=base.customProgramCacheKey,U=sk192U(id,sz),P=THREE.Material.prototype;
+  m.onBeforeCompile=function(sh,rn){if(ob&&ob!==P.onBeforeCompile)ob.call(this,sh,rn);Object.assign(sh.uniforms,U);
+    sh.vertexShader='varying vec3 vP192;varying vec3 vN192;\n'+sh.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvN192=objectNormal;')
+      .replace('#include <begin_vertex>','#include <begin_vertex>\nvP192=position;');
+    sh.fragmentShader=SK192_FH+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+SK192_FC)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,uRo192,uK192);')
+      .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\nmetalnessFactor=mix(metalnessFactor,uMe192,uK192);')
+      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n'+SK192_FE)};
+  m.customProgramCacheKey=function(){return (ck&&ck!==P.customProgramCacheKey?ck.call(base):'')+'|sk192'};
+  m.userData=Object.assign({},base.userData,{sk192:id});m.needsUpdate=true;SK192.MC.set(k,m);return m}
+
+// ---------------- which meshes are the creature itself ----------------
+function sk192InEvo(o,g){for(let p=o;p&&p!==g;p=p.parent)if(p.userData&&p.userData.evo100)return true;return false}
+function sk192Parts(g){if(!g)return [];if(g.userData.sk192P)return g.userData.sk192P;const P=[];
+  let body=null;g.traverse(o=>{if(!body&&o.isMesh&&o.userData.mdlBody)body=o});
+  if(body){P.push(body);g.userData.sk192Sz=.6}            // a mount: its coat loft only (tack, saddle, reins, flames are other meshes)
+  else if(g.b){body=g.b.children.find(m=>m.isSkinnedMesh&&m.skeleton&&!m.userData.evo100&&m.material&&!Array.isArray(m.material)&&m.material.vertexColors);
+    if(body){P.push(body);const bm=body.userData.sk192o||body.material,LP=new Set((typeof LPMT!='undefined'?Object.values(LPMT):[]).concat(typeof LP186M!='undefined'?[...LP186M.values()]:[])),eh=bm.emissive?bm.emissive.getHex():0;
+      // ears, fins, crests: meshes made of the body's own material family (not glow, not armour, not effects)
+      g.traverse(o=>{if(o===body||!o.isMesh||o.isSkinnedMesh||o.isPoints||o.isSprite)return;const m=o.userData.sk192o||o.material;
+        if(m&&!Array.isArray(m)&&LP.has(m)&&m.vertexColors&&!m.transparent&&(m.emissive?m.emissive.getHex():0)===eh&&!sk192InEvo(o,g))P.push(o)})}}
+  g.userData.sk192P=P;return P}
+function sk192Dress(g,id){if(!g)return;const want=id&&SK192.D[id]?id:'';if(g.userData.sk192k===want)return;g.userData.sk192k=want;
+  const P=sk192Parts(g),sz=g.userData.sk192Sz||1;
+  P.forEach(o=>{const base=o.userData.sk192o||o.material;if(!base||Array.isArray(base))return;
+    if(!want){o.material=base;delete o.userData.sk192o;return}o.userData.sk192o=base;o.material=sk192Mat(base,want,sz)})}
+// the coat a creature should wear: own ones only when earned; a partner's (mpRemote) when it is a real coat of that kind
+function sk192Ok(id,k,remote){const S=SKN164.D[id];return S&&S.k===k&&(remote||SKN164.u.includes(id))?id:null}
+function sk192Comp(c){return c?sk192Ok(c.sk192,'comp',!!c.mpRemote):null}
+function sk192Mount(m){return m?sk192Ok(m.sk192,'mount',false):null}
+
+// ---------------- the old v164 hooks, quietened ----------------
+function skn164RaceOf(h){return null}                      // the hero never wears a coat
+function skn164Tick(){try{if(!SK192.on)return;for(let i=0;i<2;i++){const g=typeof fols!='undefined'?fols[i]:null;if(g&&!g.userData.mpFol)sk192Dress(g,sk192Comp(party[i]))}
+    if(typeof mModel!='undefined'&&mModel)sk192Dress(mModel,riding?sk192Mount(riding):null)}catch(e){if(!SK192.err++)console.warn('v192 coats',e)}}
+function skn164Refresh(){SKN164.e.race=null;try{if(typeof pl!='undefined'&&pl&&pl._mdM&&pl._mdM.c&&pl._mdM.c.userData.skn164)heroOutfit(pl,hero.cls)}catch(_){}skn164Tick()}
+// skn164Wear (old API): put the coat on the active companions / the active mount, or take it off them
+function skn164Wear(id,on){const S=SKN164.D[id];if(!S||!SKN164.u.includes(id))return;
+  if(S.k==='comp')party.slice(0,typeof actN141=='function'?actN141():1).forEach(c=>{if(c)sk192Set(c,on?id:(c.sk192===id?null:c.sk192))});
+  else if(S.k==='mount'){const m=typeof mOf=='function'?mOf(mActive):null;if(m)sk192SetM(m,on?id:(m.sk192===id?null:m.sk192))}}
+function skn164Unlock(id,silent){const S=SKN164.D[id];if(!S||SKN164.u.includes(id))return false;SKN164.u.push(id);
+  const where=S.k==='comp'?'Turn it on for any companion in the Companions window (✨ Exclusive coat)':'Turn it on for any mount at the Stable or in the Mounts window (✨ Exclusive coats)';
+  if(!silent){try{zt116Show(ZT116.Z[S.z]||ZT116.Z[0],'Cheddar’s Reward · '+PMAP[S.z].n,S.n,'Exclusive '+SKN164_KN[S.k].toLowerCase()+' coat unlocked',where,'z'+S.z)}catch(_){}
+    try{pickup({ic:'✨',t:'Exclusive coat: '+S.n,col:'#'+new THREE.Color(S.b).getHexString(),sub:SKN164_KN[S.k]+' coat · every '+PMAP[S.z].n+' quest done',r:4})}catch(_){}
+    try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}
+    say('🐭✨ Every one of Cheddar’s <b>'+PMAP[S.z].n+'</b> quests is done. Your reward: the exclusive <b>'+S.n+'</b> '+SKN164_KN[S.k].toLowerCase()+' coat. '+where+'.')}
+  skn164Refresh();return true}
+
+// ---------------- switching a coat on / off ----------------
+function sk192Coop(){try{if(typeof MP!='undefined')MP.lastPres=''}catch(_){}}
+function sk192Set(c,id){if(!c)return;const v=id&&sk192Ok(id,'comp',false);if(v)c.sk192=v;else delete c.sk192;
+  const i=party.indexOf(c);if(i>=0&&i<2&&typeof fols!='undefined'&&fols[i])sk192Dress(fols[i],sk192Comp(c));sk192Coop()}
+function sk192SetM(m,id){if(!m)return;const v=id&&sk192Ok(id,'mount',false);if(v)m.sk192=v;else delete m.sk192;
+  if(riding===m&&typeof mModel!='undefined'&&mModel)sk192Dress(mModel,sk192Mount(m));sk192Coop()}
+function sk192Have(k){return SKN164_Z.filter(id=>SKN164.u.includes(id)&&SKN164.D[id].k===k)}
+function sk192Css(c){return '#'+new THREE.Color(c).getHexString()}
+function sk192Chips(cur,list,attr,who){return '<span class="sk192ch"><button class="'+(cur?'':'on')+'" '+attr+'="" data-sk192w="'+who+'">Off</button>'+
+  list.map(id=>{const S=SKN164.D[id],P=SK192.D[id];return '<button class="'+(cur===id?'on':'')+'" '+attr+'="'+id+'" data-sk192w="'+who+'" title="'+S.d.replace(/"/g,'&quot;')+'">'+
+    '<i style="background:radial-gradient(circle at 35% 30%,'+sk192Css(P.b)+','+sk192Css(P.a)+' 75%);box-shadow:inset 0 0 0 2px '+sk192Css(P.e)+'"></i>'+S.n+'</button>'}).join('')+'</span>'}
+
+// the creature models: a companion built anywhere (own follower, window preview, a partner's copy) wears its coat
+{const f=cr;cr=function(c){const g=f.apply(this,arguments);try{const id=SK192.on&&sk192Comp(c);if(g&&id)sk192Dress(g,id)}catch(e){if(!SK192.err++)console.warn('v192 coat',e)}return g}}
+// the ridden mount wears its coat from the first frame (the 400 ms tick catches every other way of mounting)
+{const f=toggleMount;toggleMount=function(){const r=f.apply(this,arguments);try{if(riding&&mModel)sk192Dress(mModel,sk192Mount(riding));sk192Coop()}catch(_){}return r}}
+// the mount preview in the Stable / Mounts window: the coat of the owned mount of that kind (the active one first)
+{const f=mPreview;mPreview=function(k){const r=f.apply(this,arguments);try{if(mPV&&mPV.m){const a=mOf(mActive),m=a&&a.k===k?a:mounts.find(q=>q.k===k&&q.sk192);sk192Dress(mPV.m,sk192Mount(m))}}catch(_){}return r}}
+
+// ---------------- the Companions window: ✨ Exclusive coat (Overview tab) ----------------
+{const f=rC0;rC0=function(){const r=f.apply(this,arguments);try{const c=party[cmpSel],cd=$('cd');if(!c||!cd)return r;const L=sk192Have('comp');if(!L.length||cd.querySelector('.sk192r'))return r;
+  const ov=cd.querySelector('.kqm-cpane[data-kqc="ov"]')||cd,sum=ov.querySelector('.kqm-csum');
+  const h='<div class="sk192r"><span>✨ Exclusive coat</span>'+sk192Chips(sk192Comp(c),L,'data-sk192c','c')+'</div>';
+  if(sum)sum.insertAdjacentHTML('afterend',h);else ov.insertAdjacentHTML('beforeend',h)}catch(err){console.warn('v192 coat ui',err)}return r}}
+$('cd').addEventListener('click',e=>{const b=e.target.closest('[data-sk192c]');if(!b)return;e.stopImmediatePropagation();const c=party[cmpSel];if(!c)return;
+  sk192Set(c,b.dataset.sk192c||null);try{sfx('chime')}catch(_){}try{rC()}catch(_){}},true);
+
+// ---------------- the Stable and Mounts windows: ✨ Exclusive coats per owned mount ----------------
+function sk192MountSec(){const L=sk192Have('mount');if(!L.length||!mounts.length)return '';
+  return '<div class="sec">✨ Exclusive coats</div><div class="sk192m">'+mounts.map(m=>{const D=MOUNTS[m.k]||{};
+    return '<div class="sk192r"><span>'+(D.i||'🐎')+' <b>'+m.n+'</b></span>'+sk192Chips(sk192Mount(m),L,'data-sk192m','m'+m.id)+'</div>'}).join('')+'</div>'}
+['mounts','stable'].forEach(w=>{const f=XR[w];if(!f)return;XR[w]=function(){const r=f.apply(this,arguments);try{const col=$('xwB').querySelector('.xcols>div')||$('xwB');const h=sk192MountSec();if(col&&h)col.insertAdjacentHTML('beforeend',h)}catch(e){console.warn('v192 mount coats',e)}return r}});
+$('xw').addEventListener('click',e=>{if(xwMode!='mounts'&&xwMode!='stable')return;const b=e.target.closest('[data-sk192m]');if(!b)return;e.stopImmediatePropagation();
+  const m=mOf(+String(b.dataset.sk192w).slice(1));if(!m)return;sk192SetM(m,b.dataset.sk192m||null);mSel=m.k;mPVk='';try{sfx('chime')}catch(_){}rX()},true);
+
+// ---------------- Cheddar's board: the zone's coat card (earned, where to switch it on) ----------------
+function skn164Card(z){const id=SKN164_Z[z],S=SKN164.D[id];if(!S)return '';const P=SK192.D[id],st=chq148State(z),have=SKN164.u.includes(id),pc=Math.round(st.dn/Math.max(1,st.n)*100);
+  const who=S.k==='comp'?'any companion (Companions window)':'any mount (Stable / Mounts window)';
+  return '<div class="sk164 sk192c'+(have?' have':'')+'" style="--a:'+sk192Css(P.a)+';--b:'+sk192Css(P.b)+';--e:'+sk192Css(P.e)+'">'+
+    '<div class="sk164sw"><i></i><s></s></div><div class="sk164t"><div class="sk164l">✨ Exclusive '+SKN164_KN[S.k].toLowerCase()+' coat · '+(have?'earned':'finish every quest here')+'</div>'+
+    '<b>'+S.n+'</b><div class="sk164d">'+S.d+' <span class="mut">'+(have?'Switch it on for ':'For ')+who+'.</span></div>'+
+    (have?'':'<div class="sk164p"><i style="width:'+pc+'%"></i></div><small>'+st.dn+' of '+st.n+' quests turned in</small>')+'</div>'+
+    (have?'<span class="sk192ok" title="Earned">✓</span>':'<span class="sk164lk" title="Locked">🔒</span>')+'</div>'}
+
+// ---------------- co-op ----------------
+// the hero sends no skin (look index 9 stays 0, as before v164)
+{const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a))a[9]=0}catch(_){}return a}}
+{const f=mpvLookOf;mpvLookOf=function(c){const L=f.apply(this,arguments);try{const id=sk192Comp(c);if(L&&id)L.sk=id}catch(_){}return L}}
+{const f=mpvLookIn;mpvLookIn=function(L){const c=f.apply(this,arguments);try{if(c&&L&&typeof L.sk=='string'&&SKN164.D[L.sk]&&SKN164.D[L.sk].k==='comp')c.sk192=L.sk}catch(_){}return c}}
+// a companion's look changed (a coat switched): send presence now, not only when something moves
+{const f=mpvMine;mpvMine=function(){const k0=MPV.ckK;const r=f.apply(this,arguments);try{if(MPV.ckK!==k0)MP.lastPres=''}catch(_){}return r}}
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'&&typeof p.x=='number'){try{p.mts192=riding&&mModel?(sk192Mount(riding)||0):0}catch(_){p.mts192=0}}return f.apply(this,arguments)}}
+{const f=v150MtTick;v150MtTick=function(now){const r=f.apply(this,arguments);
+  for(const k in MP.rh){const R=MP.rh[k];if(!R||!R.mt150||!R.mt150.g)continue;const id=R.pr&&R.pr.mts192,ok=typeof id=='string'&&SKN164.D[id]&&SKN164.D[id].k==='mount'?id:null;sk192Dress(R.mt150.g,ok)}
+  return r}}
+
+// ---------------- saves: coats live on the companion / mount (c.sk192, m.sk192); a v164 save's worn coats move over once ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{if(o.skn164){o.skn164.v192=1;o.skn164.e={race:null,comp:null,mount:null}}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const q=s&&s.skn164,old=q&&!q.v192&&q.e?Object.assign({},q.e):null;const r=f.apply(this,arguments);
+  try{if(old){const c0=SKN164.D[old.comp]&&SKN164.u.includes(old.comp)?old.comp:null,m0=SKN164.D[old.mount]&&SKN164.u.includes(old.mount)?old.mount:null;
+      if(c0&&SKN164.D[c0].k==='comp')party.slice(0,typeof actN141=='function'?actN141():1).forEach(c=>{if(c&&!c.sk192)c.sk192=c0});
+      if(m0&&SKN164.D[m0].k==='mount'){const m=typeof mOf=='function'?(mOf(mActive)||mounts[0]):null;if(m&&!m.sk192)m.sk192=m0}}
+    SKN164.e={race:null,comp:null,mount:null};
+    // coats on companions / mounts that are not earned (or of the wrong kind) are dropped
+    (party||[]).forEach(c=>{if(c&&c.sk192&&!sk192Ok(c.sk192,'comp',false))delete c.sk192});(mounts||[]).forEach(m=>{if(m&&m.sk192&&!sk192Ok(m.sk192,'mount',false))delete m.sk192});
+    setTimeout(()=>{try{skn164Refresh()}catch(_){}},0)}catch(e){console.warn('v192 coats load',e)}return r}}
+
+document.head.insertAdjacentHTML('beforeend',`<style>
+.sk192r{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:8px 0 4px;padding:6px 8px;border-radius:8px;border:1px solid rgba(216,184,96,.22);background:rgba(30,22,14,.35);font-size:.8rem}
+.sk192r>span:first-child{color:#d8c08a;min-width:110px}
+.sk192ch{display:flex;flex-wrap:wrap;gap:4px}
+.sk192ch button{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;padding:3px 8px;border-radius:99px;opacity:.75}
+.sk192ch button.on{opacity:1;border-color:#d8b860;box-shadow:0 0 0 1px rgba(216,184,96,.5) inset;color:#f4e2a8}
+.sk192ch i{display:inline-block;width:12px;height:12px;border-radius:50%}
+.sk192m .sk192r{margin:4px 0}
+#xw .sk164.sk192c.have{box-shadow:none}
+#xw .sk164.sk192c .sk164sw i{opacity:.22;animation:none;mix-blend-mode:normal}
+#xw .sk164.sk192c .sk164sw s{box-shadow:inset 0 0 6px rgba(0,0,0,.45)}
+#xw .sk192ok{font-size:1.2rem;color:#d8b860;flex:none}
+</style>`);
+// ================= v192: owner's fixes — slot switching, more ability points, no stray equip chime in town =================
+// 1. Switching characters (main menu → another slot) reloads the page and continues there (2145, sessionStorage kq_cont).
+//    That continue used to run while the game script was still loading, before the later files: v137+ gear was not in ITPL
+//    yet, so loadGame threw at heroMax() before it hid the creator (the creator showed instead of the hero), and the later
+//    loadGame / x2Load wrappers were skipped. Fixed in 2145: the continue waits until the whole script has run.
+// 2. Ability points per level-up to level L (1090 kqrLvAP): 3 (L 2–9), 4 (10–19), 5 (20–29), 6 (30–39), 7 (40–50).
+//    apEarned() is worked out from the level, so an existing hero gets the new total as soon as it loads (nothing is stored,
+//    nothing taken away, nothing granted twice). hero.tal.__ap192 only marks that the hero was told once.
+// 3. The "equip" chime (sfx('chime'), played when you drag gear onto yourself) also rang from the Night Fireworks decoration
+//    (1910: 40% of bursts, every 2.6–5.6 s at night, near the Grand Square fountain) and from villagers coming home (1870).
+//    Those now use their own sounds (sfx192 'fwk' / 'home'); the chime stays for real player actions.
+function ap192Old(L){let n=0;for(let l=2;l<=L;l++)n+=l%5==0?3:2;return n}
+function ap192New(L){let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n}
+function ap192Note(){try{if(!hero||!hero.tal||typeof hero.tal!='object')return 0;if(hero.tal.__ap192)return 0;hero.tal.__ap192=1;
+  const L=hero.lvl|0,d=ap192New(L)-ap192Old(L);
+  if(d>0)setTimeout(()=>{try{say('⚡ <b>More ability points:</b> heroes now earn '+KQR_APTXT+'. You gained <b>+'+d+'</b> ability points for your level (K · Abilities).');hud()}catch(_){}},3200);
+  return d}catch(_){return 0}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);if(r)ap192Note();return r}}
+{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(hero.tal&&typeof hero.tal=='object')hero.tal.__ap192=1}catch(_){}return r}}
+
+// small sounds of their own (same bus and volume as sfx)
+function sfx192(k,vol){try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!a.out)return;const t=a.currentTime;vol=vol||1;
+  const tone=(ty,f0,f1,at,dur,v)=>{const o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f0,t+at);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+at+dur);
+    g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v*vol,t+at+.01);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);o.connect(g);g.connect(a.out);o.start(t+at);o.stop(t+at+dur+.05)};
+  const nz=(ft,f0,f1,at,dur,v)=>{if(!NOISE)return;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;f.type=ft;f.frequency.setValueAtTime(f0,t+at);f.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+at+dur);
+    g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v*vol,t+at+.01);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);s.connect(f);f.connect(g);g.connect(a.out);s.start(t+at,Math.random()*.5);s.stop(t+at+dur+.05)};
+  if(k=='fwk'){nz('lowpass',900,120,0,.5,.3);tone('sine',90,40,0,.4,.25);for(let i=0;i<5;i++)nz('highpass',3000,5000,.18+i*.07,.05,.05)}       // a distant pop and crackle
+  else if(k=='home'){tone('sine',523,523,0,.5,.08);tone('sine',784,784,.12,.6,.06)}                                                      // a soft two-note call
+}catch(_){}}
+// ================= v192: hero fit — the Ranger's bow after a shot, the Ranger's hoods and chest pieces, the Bard's lute hand =================
+// Owner (Nov 2 2026):
+//  1. "Ranger class holds bow wrong after shooting — but then corrects itself after a second or two."
+//     Cause: v163 (3220, EDGE163) keeps the hands in the STRIKE grip for EDGE163.hold (2 s) after any attack, and all the time
+//     while a monster hunts nearby, so a melee edge doesn't flip round between swings. The bow's strike grip is the shooting
+//     hold (upright, held by the riser, gripStrikeOf 1270), meant for a raised bow arm. After the shot's pose (bowPose) ends,
+//     the arm goes back to its low carry, but the grip stayed in the shooting hold: the bow hung upright by the hip, half
+//     turned, until 2 s later the grip eased back to the v135 carry across the hips. Measured by test/v192_hero_fit.py.
+//     Now a bow uses the strike grip only while a shot pose plays (eased in over 0.26 s) and goes back to the carry as the arm
+//     lowers into the follow-through (last quarter of the draw), in a fight too. Melee weapons keep v163's hold.
+//  2. "The helmet and chest pieces for the ranger class seem strange and don't fit his body well."
+//     Cause: every Ranger hood is a v136 gkHood: cloth measured round EVERYTHING built before it (it is built last, gkLater),
+//     each row the convex hull of what is there + clearance, and below the widest row the cloth "hangs" straight down. On the
+//     weasel (the slimmest, most sloped body: TR .9 at the shoulders) the chest's loose decorations stick far out of the body:
+//     the feathers and bone charms on the left shoulder (2540 mdExtra), the feather / spike shoulder fans of the coats, the
+//     fur collar's tufts, the motif horns (2760) and the v178 tier V feather mantle (3372). The hood's hull went round their
+//     tips, so its mantle became a stiff collar far wider than the shoulders, sitting high and flat like a tray with a gap
+//     to the body (from behind: a flat disc above the shoulders). The weasel's coat skirts were hung round the belt pouches and
+//     knife the same way: a wide bell round thin legs.
+//     Now (a) a hood measures only the body and what lies on it: a point counts when it is within FIT192.near (FIT192.nearHead
+//     above the neck) of the bare body's own section at that height; loose details are left out and now sit on / poke through
+//     the cloth like trinkets; (b) the weasel's hood is cut closer (FIT192.loose, and below the neck no further than FIT192.cap
+//     from the bare body: it drapes over the shoulders) and its face opening sits further back round the long muzzle; (c) the weasel's
+//     skirts are measured the same way (FIT192.nearSk). The other four races keep their v136 hoods exactly (their bodies are
+//     broad enough that the trinkets stay inside the cloth; v136_gear checks their hood clearance).
+//  3. "Bard's hand is phasing through his instrument." The Duskhold Bard (hare, 1900 WK103.bard + 2995 bard141): his strumming
+//     shoulder is behind the lute's bowl and bard141's IK bent the elbow down and back, so the forearm went straight through
+//     the bowl and the paw came out of the sound hole, every frame of his loop (out/v192_bard_before.jpg). Now the paws reach
+//     for the strings just in front of the soundboard and for the neck from behind, and the elbow direction is chosen so no
+//     part of either arm enters the bowl (BARD192): the forearm comes over the bowl's upper edge.
+// Co-op: all three are deterministic from what partners already receive (gear from the shared item templates and look; the
+// partner's replayed shot ends with h.sw, after which 1270 already eases its bow to the carry; the Bard is town scenery).
+var FIT192={on:true,bow:true,near:.06,nearHead:.05,loose:.012,cap:.055,skirt:true,bard:true};
+
+// ---------------- 1. the bow: no strike grip outside the shot ----------------
+// For the player's own hero with a bow, the grip weight (S.w: 1 carry, 0 strike) is worked out here instead of by 1270 / 3220:
+//  * strike grip only while a shot (or another action pose) plays; the last BOW192.tail of a bow draw (the arm already lowering
+//    into the follow-through) counts as carry, so the bow turns back to the carry while the arm comes down;
+//  * into the strike grip over BOW192.in s, from where the bow sits in the fist when the shot starts (1270 turned it in ~0.05 s and clamped it to the shot's first 18%: v163 found 60-104°
+//    in one frame and kept the strike hold between shots to hide that); back to the carry over BOW192.out s (as before).
+// Co-op partners' heroes already left the strike grip when the replayed shot ended (1270: att = h.sw); they are unchanged.
+var BOW192={in:.26,out:.28,tail:.76};
+function fit192Bow(h){const S=h&&h._grip;if(!S||!S.L)return false;for(const e of S.L)if(e.ty=='bow'&&e.W&&e.W.parent)return true;return false}
+function fit192Draw(A){return !!A&&(A.pose===bowPose||(typeof fxaPose=='function'&&A.pose===fxaPose))}
+{const f=gripTick;gripTick=function(h,now,el,att){
+  if(!FIT192.on||!FIT192.bow||h!==pl||now==null||!h._grip||!fit192Bow(h))return f.apply(this,arguments);
+  const S=h._grip,A=typeof HA!='undefined'?HA.cur:null,mv=!!(A&&A.mv164);
+  const shoot=!!A&&!mv&&!(fit192Draw(A)&&A.k>=BOW192.tail);
+  const dt=S.t!=null?(now-S.t)/1000:-1;
+  // the carry is held steady in the hero's frame (2390 bow135Carry): while the arm swings up into the draw that target turns
+  // with it against the hand, so the bow spun in the fist (v163_weapons: 218° in 0.1 s). From the frame a shot starts, the
+  // carry is the bow's place in the hand at that moment (H._b192), and the hand turns it into the strike grip from there
+  if(shoot&&!h._b192){const lf=h._b192f;if(lf)h._b192={q:lf.q.clone(),p:lf.p.clone()};else{const e=S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(e)h._b192={q:e.W.quaternion.clone(),p:e.W.position.clone()}}}
+  if(S.w==null||!(dt>=0)||dt>.5)S.w=shoot?0:1;
+  else S.w=shoot?Math.max(0,S.w-dt/BOW192.in):Math.min(1,S.w+dt/BOW192.out);
+  if(!shoot&&h._b192&&S.w>=.999)h._b192=null;
+  S.t=now;if(A&&!mv)EDGE163.last=nowP();
+  // the rest of the grip (placing the bow by that weight, the elbow, the hold) as before; undefined = keep the weight
+  return f.call(this,h,undefined,el,att)}}
+// while a shot plays the carry end of the blend is that hand-held snapshot (no spin in the fist while the arm swings up); over
+// the shot's last quarter (the arm lowering) it turns into the v135 carry held in the hero's frame, which takes over after the
+// shot. Runs after gripTick (2390's bow135Carry is wrapped: it runs last in animHero).
+var FIT192_Q=null;
+// the bow's final place in the hand each frame (the snapshot a shot starts from)
+function fit192Keep(h){try{const S=h._grip,e=S&&S.L&&S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!e)return;const K=h._b192f||(h._b192f={q:new THREE.Quaternion(),p:new THREE.Vector3()});K.q.copy(e.W.quaternion);K.p.copy(e.W.position)}catch(_){}}
+{const f=bow135Carry;bow135Carry=function(h){const L=h&&h._b192;if(!FIT192.on||h!==pl)return f.apply(this,arguments);if(!L){const r=f.apply(this,arguments);fit192Keep(h);return r}
+  try{return fit192Carry(h,L)}finally{fit192Keep(h)}}}
+function fit192Carry(h,L){
+  const S=h._grip,A0=typeof HA!='undefined'?HA.cur:null,A=A0&&!A0.mv164?A0:null;   // after the shot (no A): the v135 carry (u = 1) until the grip is back
+  const e=S&&S.L&&S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!e||!e.S)return;const w=gripSS(S.w==null?1:S.w);if(w<=1e-3)return;
+  const Q=FIT192_Q||(FIT192_Q={a:new THREE.Quaternion(),b:new THREE.Quaternion(),t:new THREE.Quaternion(),c:new THREE.Quaternion()});
+  let tq=L.q;const u=!A?1:fit192Draw(A)?Math.max(0,Math.min(1,(A.k-BOW192.tail)/(1-BOW192.tail))):0;
+  if(u>0&&V100A_BOW.x135){const W=e.W,P=W.parent;P.updateWorldMatrix(true,false);h.getWorldQuaternion(Q.a);P.getWorldQuaternion(Q.b);
+    Q.t.copy(Q.b.invert()).multiply(Q.a).multiply(bow135Q());tq=Q.c.copy(L.q).slerp(Q.t,u*u*(3-2*u))}
+  const W=e.W,sx=W.scale.x,hd=e.S.hold,ps=hd?new THREE.Vector3(hd[0]*sx,hd[1],hd[2]).applyQuaternion(e.S.q).negate().add(new THREE.Vector3(...e.S.p)):new THREE.Vector3(...e.S.p);
+  W.quaternion.copy(e.S.q).slerp(tq,w);
+  // the riser stays in the hand (the carry's hold point at the anchor, as bow135Carry places it)
+  const C=e.C,an=C.an||GRIP_AN,hv=new THREE.Vector3(C.hold[0]*sx,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(tq),pc=new THREE.Vector3(an[0]-hv.x,an[1]-hv.y,an[2]-hv.z);
+  W.position.copy(ps).lerp(pc.lerp(L.p,1-u),w)}
+
+// ---------------- 2. hoods measure the body and what lies on it ----------------
+// the bare body's section at height y: the hull radius per angle of the body triangles only (BR body builders: GL176.body
+// counted parts + the skinned body lofts built before any gear). We take the body sections from the build itself: every
+// triangle built before the first piece of gear (B.__fit192n0, set when the chest / helm / boots start) is "body".
+function fit192Mark(B){if(!B||!B.L||B.__fit192n0)return;const n={};for(const t in B.L)n[t]=B.L[t].p.length;B.__fit192n0=n}
+['mdChest','mdHelm','mdBoots','mdChestPre'].forEach(nm=>{const f=window[nm];if(typeof f!='function')return;window[nm]=function(B){try{if(B&&B.L)fit192Mark(B)}catch(_){}return f.apply(this,arguments)}});
+// the class outfit's base pieces (no chest item) go on through O.base / O.extra: mark before them too
+{const f=mdHead;mdHead=function(B){const r=f.apply(this,arguments);try{if(B&&B.L&&!B.__fit192h){const n={};for(const t in B.L)n[t]=B.L[t].p.length;B.__fit192h=n}}catch(_){}return r}}
+// body sections: per height bin (2 cm), the 2-D hull of the body's points
+function fit192Body(B){if(B.__fit192S)return B.__fit192S;const n0=B.__fit192h||B.__fit192n0;if(!n0)return null;const pts=[];
+  ['c','m','g'].forEach(t=>{const L=B.L[t];if(!L)return;const p=L.p,e=Math.min(p.length,n0[t]||0);for(let i=0;i<e;i+=3){const y=p[i+1];if(y>.25)pts.push(p[i],y,p[i+2])}});
+  const bins=new Map(),bw=.02;for(let i=0;i<pts.length;i+=3){const k=Math.round(pts[i+1]/bw);let a=bins.get(k);if(!a)bins.set(k,a=[]);a.push([pts[i],pts[i+2]])}
+  const H=new Map();bins.forEach((a,k)=>H.set(k,gkHull(a)));return B.__fit192S={H,bw}}
+// distance of (x, z) outside the body hull at height y (0 inside); no section there → 0 (keep)
+function fit192Out(S,x,y,z){const k=Math.round(y/S.bw);let h=S.H.get(k);if(!h||h.length<3){h=S.H.get(k-1)||S.H.get(k+1);if(!h||h.length<3)return 0}
+  // inside test + distance to the polygon
+  let inside=false,dm=1e9;for(let i=0,j=h.length-1;i<h.length;j=i++){const a=h[i],b=h[j];
+    if(((a[1]>z)!=(b[1]>z))&&(x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1]+1e-12)+a[0]))inside=!inside;
+    const ex=b[0]-a[0],ez=b[1]-a[1],L2=ex*ex+ez*ez||1e-12,t=Math.max(0,Math.min(1,((x-a[0])*ex+(z-a[1])*ez)/L2)),dx=a[0]+ex*t-x,dz=a[1]+ez*t-z;dm=Math.min(dm,Math.hypot(dx,dz))}
+  return inside?0:dm}
+// while a hood is measured, gkPts leaves out points far from the body (loose details); the head (above the neck) keeps a
+// tighter limit so whiskers and the muzzle tip do not widen the cowl
+var FIT192_HOOD=null;
+{const f=gkPts;gkPts=function(B,y0,y1,filt,exRe){const H=FIT192_HOOD;if(!FIT192.on||!H||H.B!==B)return f.apply(this,arguments);const S=H.S;
+  const f2=(x,y,z)=>{if(filt&&!filt(x,y,z))return false;const lim=y>H.yNeck?FIT192.nearHead:FIT192.near;return fit192Out(S,x,y,z)<=lim};
+  return f.call(this,B,y0,y1,f2,exRe)}}
+// only the weasel: the other four races' hoods fit their bodies and keep their v136 shape exactly (v136_gear hood clearance)
+{const f=gkHood;gkHood=function(B,P,o){if(!FIT192.on||!B||!B.L||!BR.on||!BR.R||BR.R.key!='weasel')return f.apply(this,arguments);let S=null;try{S=fit192Body(B)}catch(_){S=null}
+  if(!S)return f.apply(this,arguments);const D=BR.R,o2=Object.assign({},o||{});
+  // the weasel: the opening further back and the cut lower round the long muzzle
+  {const er=D.eyeR||.021;o2.zf=o2.zf!=null?o2.zf:D.EYEP[2]-er-.024;o2.yJaw=o2.yJaw||D.EYEP[1]-.1;o2.loose=Math.min(o2.loose==null?.03:o2.loose,FIT192.loose)}
+  const prev=FIT192_HOOD;FIT192_HOOD={B,S,yNeck:1.06};let Hd;try{Hd=f.call(this,B,P,o2)}finally{FIT192_HOOD=prev}
+  return Hd}}
+// the cap: gkHood builds its grid and then its surfaces (gkSurf); the first gkSurf call of a measured hood gets the grid, whose
+// vertices are shared with the lining and the rim, so moving them here moves the whole hood
+{const f=gkSurf;gkSurf=function(B,G,o){const H=FIT192_HOOD;if(H&&H.B===B&&!H.cap&&G&&G.length>2&&G[0]&&G[0][0]&&G[0][0].cz!=null){H.cap=1;try{fit192Cap(H.S,G)}catch(e){console.warn('v192 hood cap',e)}}return f.apply(this,arguments)}}
+function fit192Cap(S,G){const cap=FIT192.cap;G.forEach(row=>row.forEach(v=>{if(v.y>1.05)return;const k=Math.round(v.y/S.bw);let h=null;for(const d of [0,-1,1]){const q=S.H.get(k+d);if(q&&q.length>2){h=q;break}}if(!h)return;
+  const cz=v.cz||0,dx=v.x,dz=v.z-cz,L=Math.hypot(dx,dz);if(L<1e-6)return;const R=gkHullR(h,0,cz,Math.atan2(dx,dz));if(!(R>0))return;const lim=R+cap;
+  if(L>lim){const k2=lim/L;v.x=dx*k2;v.z=cz+dz*k2}}))}
+// the same body filter for the weasel's chest skirts: the coat skirt and the v136 hunting skirt are measured round the hips and
+// legs (gkSkirt: hull of what is built there, never narrowing downward). On the weasel's slim hips the belt pouches, the
+// skinning knife and the coat's own flare were the widest things there, so the skirt hung from them as a wide bell round a thin
+// torso. Now only the body and what lies on it (within FIT192.nearSk of the bare body's section) is measured.
+FIT192.nearSk=.035;
+{const f=gkSkirt;gkSkirt=function(B,P,o){if(!FIT192.on||!FIT192.skirt||!BR.on||!BR.R||BR.R.key!='weasel'||!B||!B.L)return f.apply(this,arguments);let S=null;try{S=fit192Body(B)}catch(_){}
+  if(!S)return f.apply(this,arguments);o=o||{};const sk=o.skip;
+  const o2=Object.assign({},o,{skip:(x,y,z)=>(sk&&sk(x,y,z))||fit192Out(S,x,y,z)>FIT192.nearSk});return f.call(this,B,P,o2)}}
+
+// ---------------- 3. the Bard's paws on the lute ----------------
+// bard141 (2995) reaches its two targets with fc116IK, with a fixed elbow direction. Its strum target lay just in front of the
+// bowl's middle, but the strumming shoulder is BEHIND the bowl: with the elbow down and back the forearm went straight through
+// the bowl and the paw came out of the sound hole (out/v192_bard_before.jpg; every frame of his loop). Now:
+//  * the strum paw reaches for the strings between the sound hole and the neck (just in front of the soundboard), the neck paw
+//    holds the neck from behind; both move as before (strum, sliding along the neck);
+//  * the elbow direction is searched (BARD192.poles): the one that keeps the arm (upper arm, forearm, paw) furthest outside
+//    the bowl's ellipsoid wins, the last choice favoured a little so it does not flip from frame to frame: the forearm comes
+//    over the bowl's upper edge, like a lute player's. The lute sits BARD192.out further from the belly than in v141, and a
+//    paw that would still dip into the bowl has its target moved out from the soundboard (BARD192.pawPad).
+var BARD192={strum:[.0,.2,.15],neck:[.0,.42,-.05],sw:.025,nk:.05,pad:1.08,pawPad:1.04,out:.05,
+  poles:[[-1,-.3,-.6],[-1,.2,-.5],[-1,-.8,-.4],[-.6,.6,-.8],[-1,0,.3],[-.3,-1,-.9],[-1,-1,-.5],[-1,.6,0],[-.4,.9,-.3],[-1,.4,.6],[0,1,-.4],[-1,-.2,.8]]};
+var BARD192_T=null;
+function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.copy(bowl.matrixWorld).invert(),a=b0.getWorldPosition(T.a),e=b1.getWorldPosition(T.e),w=b2.getWorldPosition(T.w);
+  const tip=T.t.copy(w).sub(e).normalize().multiplyScalar(.07).add(w);let m=9;const R=.17;
+  const chk=p=>{const l=T.l.copy(p).applyMatrix4(mi);m=Math.min(m,Math.hypot(l.x,l.y,l.z)/R)};
+  for(let j=3;j<=10;j++)chk(T.p.copy(a).lerp(e,j/10));for(let j=0;j<=10;j++)chk(T.p.copy(e).lerp(w,j/10));for(let j=1;j<=4;j++)chk(T.p.copy(w).lerp(tip,j/4));return m}
+if(typeof bard141=='function'){const f0=bard141;bard141=function(n,now){if(!FIT192.on||!FIT192.bard)return f0.apply(this,arguments);
+  const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0||!L.children[0])return f0.apply(this,arguments);
+  f0.apply(this,arguments);   // places the lute
+  L.position.z+=BARD192.out;L.updateMatrixWorld(true);   // the keeper's own forward (the lute is a child of the keeper)
+  const V=THREE.Vector3;if(!BARD192_T)BARD192_T={mi:new THREE.Matrix4(),a:new V(),e:new V(),w:new V(),t:new V(),l:new V(),p:new V()};
+  const t=now/1000+(S.t0||0);n.updateMatrixWorld(true);L.updateMatrixWorld(true);const bowl=L.children[0];bowl.updateMatrixWorld(true);
+  const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),loc=b=>n.worldToLocal(b.getWorldPosition(new V()));
+  const rs=Math.sign(loc(B.aR0).x)||-1,s=Math.sin(t*9.5),f=Math.sin(t*2.1),C=BARD192;
+  const TS=W([C.strum[0],C.strum[1]+C.sw*s,C.strum[2]]),TN=W([C.neck[0],C.neck[1]+C.nk*f,C.neck[2]]);
+  // arm side: k = 'L' strums (the town rig's aL is the figure's right), 'R' holds the neck; pole x sign: out to that arm's side
+  const arm=(k,T,sx)=>{const b0=B['a'+k+'0'],b1=B['a'+k+'1'],b2=B['a'+k+'2'],q0=b0.quaternion.clone(),q1=b1.quaternion.clone(),q2=b2.quaternion.clone();
+    const memo=S['b192'+k]|0,order=[memo].concat(C.poles.map((_,i)=>i).filter(i=>i!==memo));let best=-1,bv=-1;
+    for(const i of order){const pp=C.poles[i];b0.quaternion.copy(q0);b1.quaternion.copy(q1);b2.quaternion.copy(q2);b0.updateMatrixWorld(true);
+      try{fc116IK(b0.getWorldPosition(new V()),b0,b1,b2,T,new V(sx*pp[0],pp[1],pp[2]).transformDirection(n.matrixWorld),1)}catch(e){continue}
+      const v=bard192Out(L,bowl,b0,b1,b2)+(i===memo?.03:0);if(v>bv){bv=v;best=i}}
+    if(best<0)return;S['b192'+k]=best;const pp=C.poles[best];
+    b0.quaternion.copy(q0);b1.quaternion.copy(q1);b2.quaternion.copy(q2);b0.updateMatrixWorld(true);
+    try{fc116IK(b0.getWorldPosition(new V()),b0,b1,b2,T,new V(sx*pp[0],pp[1],pp[2]).transformDirection(n.matrixWorld),1)}catch(e){}};
+  // the paw must end outside the bowl: if the strum paw (wrist .. fingertips) still dips in, its target moves out from the
+  // soundboard (lute frame +z) until it is clear (a few tries, then it stays where it is)
+  const pawIn=k=>{const T=BARD192_T,mi=T.mi.copy(bowl.matrixWorld).invert(),e=B['a'+k+'1'].getWorldPosition(T.e),w=B['a'+k+'2'].getWorldPosition(T.w),tip=T.t.copy(w).sub(e).normalize().multiplyScalar(.07).add(w);let m=9;
+    for(let j=0;j<=4;j++){const l=T.l.copy(w).lerp(tip,j/4).applyMatrix4(mi);m=Math.min(m,Math.hypot(l.x,l.y,l.z)/.17)}return m};
+  try{arm('L',TS,-rs);arm('R',TN,rs);
+    for(let i=0,dz=0;i<4&&pawIn('L')<C.pawPad;i++){dz+=.02;arm('L',W([C.strum[0],C.strum[1]+C.sw*s,C.strum[2]+dz]),-rs)}
+    for(let i=0,dz=0;i<4&&pawIn('R')<C.pawPad;i++){dz-=.02;arm('R',W([C.neck[0],C.neck[1]+C.nk*f,C.neck[2]+dz]),rs)}}
+  catch(e){if(!BARD192.err){BARD192.err=1;console.warn('v192 bard',e)}}}}
+// ================= v192: Sovereigns reach twice as far with ranged attacks; Tab cycles a signature's targets =================
+// Owner (Nov 2 2026): "Sovereign bosses are too easy to kite with ranged weapons of all types ... increase the range of all
+// boss projectiles and spells by double." and "I had a hard time tab targeting chalices in the Citadel boss fight."
+//
+// 1. Ranged reach × SOV192.K (2), one knob, applied here to the six Sovereigns' move definitions (SVB[i].M) and to the
+//    shared helpers those moves draw and hit through:
+//    * the AI range: a ranged move's r[1] (the farthest distance at which the boss picks it) × K (capped at SOV192.cap);
+//    * the reach of lines, beams, cones and sweeping streams aimed out from the boss: hit shapes l (lines) and r (cones 'a',
+//      rings 'r') × K; targeted circles placed on the hero ('c') keep their size (they already land where you stand);
+//    * the helpers with a length written into them: argBeam / argSweepStart (+ argSweepTick, drawn up to the den wall),
+//      hydBreath, hydStreamTick, rwrChain, rwrSpikes, rwrCrescent (+ Frostbrand's wave hits), ssrSpray, ssrBeam (+ Sun
+//      Lance's Phase II re-burst), the Butcher's Hook throw, Bone Furrow's spikes, the Amber Furrow lines, vlrWave,
+//      vlrThorns (a second run of thorns continues each lane), vlrTendrils. Visuals stop at the den wall (sov192Exit), and
+//      during a den fight every red warning / hit flash is clipped to the den (svShapeGeo wrapper; a warning circle that
+//      lies wholly outside the den is not drawn).
+//    * Projectiles (eye bolts, venom globs, icicles, quills, rot globs, blood spears, Reach) are thrown at the hero's spot
+//      with a fixed flight time, so they always reached the whole den: only their AI range (and the far pick below) changes.
+//    * Melee swings, gap-closing dashes / leaps and the self-centred blasts (novas, stomps, whirls) are unchanged, and so are
+//      the arena-wide signatures and den hazards.
+//    * Far pick: when the hero stands SOV192.far+ tiles away, svPick answers with a ranged move whenever one is ready
+//      (SOV192.pFar of the time when its own pick was a gap closer, always when it had nothing), instead of only walking.
+// 2. Tab during a Sovereign signature (Blood Covenant's chalices, and the eyes / braziers / glands / scars / carcasses of
+//    the others): the v150 Tab list was every live target within 34 tiles sorted only by distance, with the boss in it, and
+//    started after whatever was targeted, so a press from the boss jumped past the nearest chalice; chalices on the far side
+//    of the doubled hall (pedestals 16.8 tiles from its centre) were beyond 34 tiles and not in the list at all, any
+//    target beyond 30 tiles counted as not visible (the main loop hides models past 30, and v150 skipped hidden ones), and a
+//    target more than 32 tiles away was dropped the next frame (tgtTick). Now while a signature's targets stand: Tab goes
+//    through them first, nearest first, then the boss (then anything else), and on round; they are never dropped for
+//    distance inside the fight; when the targeted one breaks the nearest one left is targeted (the boss when none is left);
+//    ranged aim and homing shots follow a targeted one anywhere in the den (v89 only aimed at a target within 24 / 26 tiles);
+//    clicking near a chalice's cup picks it even with the boss behind it; a shot homing on a targeted one flies through
+//    the (warded) boss instead of stopping on him; and hero shots reach the chalices at all: they stand on pedestals that
+//    are solid den tiles (2x2 tiles since the den doubled) and a shot was removed on the pedestal's edge, before it came
+//    within 0.75 of the cup, so arrows, bolts and thrown knives could never hit one (melee and area spells could).
+// Co-op: the move definitions and helpers are the same code on every machine; the driver picks (the far pick is driver-
+// only like svPick) and relays the cast with its seed, so a partner's copy plays the same doubled timeline and hits the
+// partner on their own screen. Signature targets are each player's own copies (v146), so Tab is local on each screen.
+var SOV192={K:2,on:1,far:9,pFar:.5,cap:80,orig:{},ranged:{},err:0,picks:0,swaps:0,
+  // per boss: move -> {r: AI range × K and counts as a ranged move for the far pick, h: hit indices (or 'all') whose
+  // line length / cone or ring radius × K}
+  M:{0:{gaze:{r:1,h:'all'},gaze2:{h:'all'},sweep:{r:1,h:'all'},furrow:{r:1},furrow3:{r:1},barrage:{r:1},reach141:{r:1}},
+     1:{spit:{r:1},geyser:{r:1},deluge:{r:1},breath:{r:1,h:'all'},maelstrom:{r:1,h:'all'},reach141:{r:1}},
+     2:{icicles:{r:1},wraithchain:{r:1,h:[0]},prison:{r:1},cleave:{h:[1]},frostbrand:{},reach141:{r:1}},
+     3:{spray:{r:1,h:'all'},glare:{r:1,h:'all'},sinkhole:{r:1},quills:{r:1},spit:{r:1},reach141:{r:1}},
+     4:{vomit:{r:1,h:'all'},hook:{r:1,h:[0]},furrow:{r:1,h:[0]},burst:{r:1},reach141:{r:1}},
+     5:{wave:{r:1,h:'all'},waves:{r:1,h:'all'},thorns:{r:1,h:'all'},grasp:{r:1,h:[0]},skyfall:{r:1},reach141:{r:1}}}};
+// distance from (x,z) along yaw a (forward = sin a, cos a) to the den wall; Infinity outside a den
+function sov192Exit(A,x,z,a){A=A||(typeof AF!='undefined'?AF:null);if(!A)return Infinity;const ux=Math.sin(a),uz=Math.cos(a),px=x-A.cx,pz=z-A.cz,b=ux*px+uz*pz,c=px*px+pz*pz-ARENA_R*ARENA_R,q=b*b-c;
+  return q<0?0:Math.max(0,-b+Math.sqrt(q))}
+// a callback on the game clock after T seconds
+function sov192After(T,fn){let t=0;kqFx({tick(dt){t+=dt||0;if(t<T)return true;try{fn()}catch(err){if(!SOV192.err++)console.error('v192 after',err)}return false},end(){}})}
+function sov192Shape(s){const K=SOV192.K;if(!s||s.v192)return;s.v192=1;if(s.k==='l')s.l*=K;else if(s.k==='a'||s.k==='r')s.r*=K}
+// warnings and hit flashes stay inside the den: vertices past the wall are pulled onto it; a circle wholly outside is skipped
+{const f=svShapeGeo;svShapeGeo=function(S,an,k,lift){const g=f.apply(this,arguments);try{const A=(typeof AF!='undefined'&&AF&&AF.f)?AF:null;if(!A||!an||Math.hypot(an.x-A.cx,an.z-A.cz)>ARENA_R)return g;
+    const P=g.attributes.position,R=ARENA_R+.3;let n=0;for(let i=0;i<P.count;i++){const dx=P.getX(i)-A.cx,dz=P.getZ(i)-A.cz,d=Math.hypot(dx,dz);if(d>R){const nx=A.cx+dx/d*R,nz=A.cz+dz/d*R;P.setXYZ(i,nx,GH(nx,nz)+(lift||.15),nz);n++}}
+    if(n){P.needsUpdate=true;g.computeBoundingSphere()}}catch(_){}return g}}
+{const f=svWarn;svWarn=function(S,an,T,o){try{const A=(typeof AF!='undefined'&&AF&&AF.f)?AF:null;if(A&&S&&S.k==='c'&&an&&Math.hypot(an.x-A.cx,an.z-A.cz)>ARENA_R+S.r*.6)return {kill(){}}}catch(_){}return f.apply(this,arguments)}}
+// ---------------- 1. the move definitions ----------------
+function sov192Apply(){const K=SOV192.K;
+  for(const i in SOV192.M){const B=SVB[i];if(!B||!B.M)continue;const O=SOV192.orig[i]=SOV192.orig[i]||{},R=SOV192.ranged[i]=SOV192.ranged[i]||new Set();
+    for(const id in SOV192.M[i]){const D=B.M[id],o=SOV192.M[i][id];if(!D||D.v192)continue;D.v192=1;
+      O[id]={r:D.r?D.r.slice():null,s:(D.hit||[]).map(h=>h&&h.s?Object.assign({},h.s):null)};
+      if(o.r){R.add(id);if(D.r)D.r=[D.r[0],Math.min(SOV192.cap,Math.max(D.r[1],D.r[1]*K))]}
+      if(o.h&&D.hit)D.hit.forEach((h,k)=>{if(h&&(o.h==='all'||o.h.includes(k)))sov192Shape(h.s)})}}
+  // ---- Argus: Amber Furrow — twice as many spike circles down each line ----
+  try{const mk=lines=>{const hit=[],N=1+Math.round((14.1*K-2.7)/1.9);lines.forEach((da,li)=>{for(let k=0;k<N;k++){const d=2.7+k*1.9,t=1.2+k*.085;
+      hit.push({t,s:{k:'c',r:1.45},w:t-.42,nohit:1,o:c=>{const a=c.m.rotation.y+da,p=c.m.position;return {x:p.x+Math.sin(a)*d,z:p.z+Math.cos(a)*d,a}},fx:(c,an)=>argSpikeAt(c,an,k,li)})}});return hit};
+    const M=SVB[0]&&SVB[0].M;if(M&&M.furrow&&!M.furrow.h192){M.furrow.h192=1;M.furrow.hit=mk([0])}if(M&&M.furrow3&&!M.furrow3.h192){M.furrow3.h192=1;M.furrow3.hit=mk([0,-.42,.42])}}catch(err){console.warn('v192 argus furrow',err)}
+  // ---- Rime Wraith: Frostbrand's frost wave runs twice as far (the same speed: more hits, a longer move) ----
+  try{const D=SVB[2]&&SVB[2].M.frostbrand;if(D&&!D.h192){D.h192=1;const W=D.hit.filter(h=>h.s&&h.s.k==='l'),rest=D.hit.filter(h=>!W.includes(h));
+      if(W.length>1){const f0=W[0].f,f1=W[W.length-1].f*K,n=Math.round(W.length*K),sp=(W[1].t-W[0].t)/(W[1].f-W[0].f),add=[];
+        for(let j=0;j<n;j++){const f=f0+(f1-f0)*j/(n-1);add.push(Object.assign({},W[0],{f,t:W[0].t+(f-f0)*sp}))}
+        D.hit=rest.concat(add);D.dur=Math.max(D.dur,add[add.length-1].t+.3)}}}catch(err){console.warn('v192 frostbrand',err)}
+  // ---- Ssith'ra: Sun Lance's Phase II re-burst covers the doubled line ----
+  try{const D=SVB[3]&&SVB[3].M.glare;if(D&&!D.e192){D.e192=1;const L=()=>17*SOV192.K;
+      D.ev=D.ev.map(v=>{if(v[0]===1.72)return [1.72,c=>{const an=c.M.an.h0;if(c.S.ph>1&&an)c.M.warn.push(svWarn({k:'l',w:2.4,l:L(),b:0},an,.6,{col:0xff8a10}))}];
+        if(v[0]===2.32)return [2.32,c=>{const an=c.M.an.h0;if(c.S.ph<2||!an)return;svHitNow(c.e,{k:'l',w:2.4,l:L(),b:0},an,1.1,{col:SSR.glass});
+          const end=Math.min(L(),sov192Exit(c.A,an.x,an.z,an.a)+.5);for(let d=1.5;d<end;d+=1.2){const x=an.x+Math.sin(an.a)*d,z=an.z+Math.cos(an.a)*d;burst(new THREE.Vector3(x,GH(x,z)+.6,z),SSR.glass,5,2.4,3,.6)}svSnd('ice',1,.6);shake(.25)}];
+        return v})}}catch(err){console.warn('v192 glare',err)}
+  // ---- Bloated One: the hook is thrown twice as far; Bone Furrow's spikes race twice as far; the vomit spray reaches out ----
+  try{const M=SVB[4]&&SVB[4].M;const H=M&&M.hook;if(H&&!H.e192){H.e192=1;H.ev=H.ev.map(v=>v[0]!==1.3?v:[1.3,c=>{const a=c.m.rotation.y,p=c.m.position,L=Math.min(14.3*SOV192.K,sov192Exit(c.A,p.x,p.z,a)+.5),
+        end=new THREE.Vector3(p.x+Math.sin(a)*L,GH(p.x,p.z)+1,p.z+Math.cos(a)*L);c.M.an.hk=bloHookFx(c,end,.16);svSnd('swing',1.1,.8);svSnd('crack',.5,1.5)}])}
+    const F=M&&M.furrow;if(F&&!F.e192){F.e192=1;const N=1+Math.round((14.6*K-3.4)/1.6);
+      for(let k=8;k<N;k++)F.ev.push([1.45+k*.07,c=>{const m=c.m,a=m.rotation.y,f=3.4+k*1.6,x=(k%2?.35:-.35),p=c.at(f,x),an={x:p.x,z:p.z,a};const A=c.A;if(A&&Math.hypot(p.x-A.cx,p.z-A.cz)>ARENA_R-1)return;
+        const mat=bloBoneMat();for(let q=0;q<3;q++){const o=new THREE.Vector3(p.x+(Math.random()-.5)*1.1,0,p.z+(Math.random()-.5)*1.1);svSpike(o,mat,1.3+Math.random()*1.1+(q?0:.6),.22+Math.random()*.12,1.3,.7)}
+        svDecal(p,0x1a1408,1.3,4,.55);burst(gY(p,.3),0x6a5a40,14,1.6,2.2,.5);if(k%2===0)svSnd('crack',.7,.7+k*.04);if(k%4===2)shake(.2);
+        if(!c.M.an.fh&&c.hit({k:'c',r:1.45},an,1.15,{kb:2.2,col:0xd8ccb0}))c.M.an.fh=1}])}
+    const V=M&&M.vomit,h=V&&V.hit&&V.hit[0];if(h&&!h.f192){h.f192=1;const f0=h.fx;h.fx=function(c,an,hit){f0&&f0.apply(this,arguments);
+      try{const R=h.s.r;for(let k=0;k<40;k++){const d=9+Math.random()*Math.max(0,Math.min(R,sov192Exit(c.A,an.x,an.z,an.a))-9),a=an.a+(Math.random()-.5)*.9;burst(new THREE.Vector3(an.x+Math.sin(a)*d,GH(an.x,an.z)+.5+Math.random()*1.2,an.z+Math.cos(a)*d),BLO.bile,2,1,.6,.8)}}catch(_){}}}}catch(err){console.warn('v192 bloated',err)}
+  // re-register (no new ids, but harmless) so every relayed id still maps to its move
+  for(let i=0;i<6;i++)try{if(SVB[i])svRegMoves(i)}catch(_){}}
+try{sov192Apply()}catch(err){console.error('v192 sovereign range',err)}
+// ---------------- the helpers with a length written into them ----------------
+// Argus: the gaze beam (to the den wall), the searing sweep (length, and drawn only up to the wall)
+{const f=argBeam;argBeam=function(c,an,L){return f.call(this,c,an,Math.min(L*SOV192.K,sov192Exit(c.A,an.x,an.z,an.a)+1))}}
+{const f=argSweepStart;argSweepStart=function(c){const r=f.apply(this,arguments);try{const B=c.M.an.sw;if(B&&!B.v192){B.v192=1;B.L*=SOV192.K}}catch(_){}return r}}
+argSweepTick=function(c,dt){const e=c.e,M=c.M,B=M.an.sw;if(!B)return;const m=e.m,o=svWP(e,'brow',0,.02,.3),y1=argSweepYaw(e),y0=B.y;B.y=y1;B.t+=dt;
+  const Lv=Math.max(4.5,Math.min(B.L,sov192Exit(c.A,m.position.x,m.position.z,y1)+.5));
+  const end=new THREE.Vector3(m.position.x+Math.sin(y1)*Lv,0,m.position.z+Math.cos(y1)*Lv);end.y=GH(end.x,end.z)+.3;const len=o.distanceTo(end),w=1+.12*Math.sin(B.t*40);
+  [B.b1,B.b2].forEach(b=>{b.position.copy(o);b.lookAt(end)});B.b1.scale.set(.62*w,.62*w,len);B.b2.scale.set(.2,.2,len);B.tip.position.copy(end);
+  B.dc-=dt;if(B.dc<=0){B.dc=.07;const s=4+c.rnd()*(Lv-4),q=new THREE.Vector3(m.position.x+Math.sin(y1)*s,0,m.position.z+Math.cos(y1)*s);svDecal(end,0x2a1804,1.3,3.2,.6);svDecal(q,0x2a1804,.9,2.4,.45);burst(gY(end,.3),ARG.col,5,2,2.2,.45)}
+  if(!M.an.got&&dt>0&&AF){const da=svAng(y1-y0),an={x:m.position.x,z:m.position.z,a:y0+da/2},S={k:'a',r:B.L+.5,h:Math.abs(da)/2+.07};
+    if(svIn(S,an,pl.position,.35)&&svHitNow(e,S,an,1.5,{flash:false,kb:2}))M.an.got=1}};
+// Hydra: venom breath cones and the maelstrom's streams
+hydBreath=function(c,s,a0,T){const e=c.e,R=10*SOV192.K,S2={k:'a',r:R,h:.42},o=hydBase(c,s),an={x:o.x,z:o.z,a:c.m.rotation.y+a0};svFlash(S2,an,HYD.ven,700);
+  const m=hydMouth(c,s),Lv=Math.max(3,Math.min(R,sov192Exit(c.A,o.x,o.z,an.a)));for(let k=0;k<Math.round(26*SOV192.K);k++){const d=2+Math.random()*(Lv-2),a=an.a+(Math.random()-.5)*.8;burst(new THREE.Vector3(o.x+Math.sin(a)*d,GH(o.x,o.z)+1+Math.random()*2.5,o.z+Math.cos(a)*d),HYD.ven,2,1.4,.6,.9)}
+  burst(m,HYD.ven,20,3,1,.6);svSnd('hiss',.9,.8);svHitNow(e,S2,an,1.1,{flash:false,on:()=>dqDebuff('Venom','🟢',{mspd:-.3},2500,'Slowed by venom')})};
+hydStreamTick=function(c,dt,on){const e=c.e,M=c.M,m=e.m;if(!M.st)return;M.ht=Math.max(0,(M.ht||0)-dt);M.dc=(M.dc||0)+dt;const drop=M.dc>.22;if(drop)M.dc=0;const R=10*SOV192.K,HS={k:'a',r:R,r0:2.8,h:.2};
+  M.st.forEach(q=>{const mo=hydMouth(c,q.s),a=Math.atan2(mo.x-m.position.x,mo.z-m.position.z),Lv=Math.max(3.5,Math.min(R-.5,sov192Exit(c.A,m.position.x,m.position.z,a))),gp=new THREE.Vector3(m.position.x+Math.sin(a)*Lv,0,m.position.z+Math.cos(a)*Lv);gp.y=GH(gp.x,gp.z)+.1;
+    q.o.position.copy(mo);const d=gp.clone().sub(mo),L=d.length();q.o.lookAt(gp);q.o.scale.set(1+.15*Math.sin(c.t*31),1+.15*Math.cos(c.t*27),L);q.m.opacity+=((on?.62:0)-q.m.opacity)*Math.min(1,dt*10);
+    if(!on)return;if(Math.random()<.9){const r=3+Math.random()*(Lv-3);burst(new THREE.Vector3(m.position.x+Math.sin(a)*r,GH(m.position.x,m.position.z)+.4,m.position.z+Math.cos(a)*r),HYD.ven,2,1.2,2.4,.6)}
+    if(drop){const r=4+Math.random()*(Lv-4);svDecal(new THREE.Vector3(m.position.x+Math.sin(a)*r,0,m.position.z+Math.cos(a)*r),0x4adf2a,1.1,2.4,.32)}
+    if(M.ht<=0&&svIn(HS,{x:m.position.x,z:m.position.z,a},pl.position,.25)){if(svHitNow(e,HS,{x:m.position.x,z:m.position.z,a},.75,{flash:false,on:()=>dqDebuff('Venom','🟢',{mspd:-.3},1800,'Slowed by venom')}))M.ht=.5}})};
+// Rime Wraith: the chain, the cleave's ice spikes, Frostbrand's crescent
+{const f=rwrChain;rwrChain=function(c,an,L,caught){return f.call(this,c,an,Math.min(L*SOV192.K,sov192Exit(c.A,an.x,an.z,an.a)+.5),caught)}}
+{const f=rwrSpikes;rwrSpikes=function(c,an,L,w,dm){const a=an.a||0,x=an.x,z=an.z;return f.call(this,c,an,Math.max(Math.min(L,4),Math.min(L*SOV192.K,sov192Exit(c.A,x,z,a)+.5)),w,dm)}}
+{const f=rwrCrescent;rwrCrescent=function(c,an,f0,f1,T){const K=SOV192.K,f2=Math.max(f0+1,Math.min(f0+(f1-f0)*K,sov192Exit(c.A,an.x,an.z,an.a)-.3));return f.call(this,c,an,f0,f2,T*(f2-f0)/Math.max(.01,f1-f0))}}
+// Ssith'ra: the acid spray cones and the Sun Lance beam
+ssrSpray=function(c,a0){const e=c.e,o=svWP(e,'head',0,0,1.2),R=9*SOV192.K,S2={k:'a',r:R,h:.38},an={x:e.m.position.x,z:e.m.position.z,a:e.m.rotation.y+a0},Lv=Math.max(3,Math.min(R,sov192Exit(c.A,an.x,an.z,an.a)));
+  for(let k=0;k<Math.round(22*SOV192.K);k++){const d=1.5+Math.random()*(Lv-1.5),a=an.a+(Math.random()-.5)*.7;burst(new THREE.Vector3(an.x+Math.sin(a)*d,GH(an.x,an.z)+.3+Math.random()*1.5,an.z+Math.cos(a)*d),SSR.acid,2,1,1.2,.6)}
+  burst(o,SSR.acid,16,3,1,.5);svSnd('hiss',.8,1.1);svHitNow(e,S2,an,.9,{col:SSR.acid,on:()=>dqDebuff('Acid','🟡',{pdP:-.15},3000,'Armour melting')});
+  for(let d=3;d<Lv;d+=2.5)svDecal(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),0x3a5a08,1.2,2.5,.4)};
+{const f=ssrBeam;ssrBeam=function(c,an,L){return f.call(this,c,an,Math.min(L*SOV192.K,sov192Exit(c.A,an.x,an.z,an.a)+.5))}}
+// Vaelric: blood waves, thorn lanes (a second run continues each lane), the grasping tendrils
+{const f=vlrWave;vlrWave=function(c,a0,spd,L,dm){const p=c.m.position,a=c.m.rotation.y+(a0||0);return f.call(this,c,a0,spd,Math.min(L*SOV192.K,sov192Exit(c.A,p.x,p.z,a)+1),dm)}}
+{const f=vlrThorns;vlrThorns=function(c,an,dm){const r=f.apply(this,arguments);try{const K=SOV192.K,seg=12*1.35,sa=Math.sin(an.a),ca=Math.cos(an.a);
+    for(let j=1;j<Math.ceil(K-1e-6);j++){const a2={x:an.x+sa*seg*j,z:an.z+ca*seg*j,a:an.a};if(sov192Exit(c.A,an.x,an.z,an.a)<seg*j)break;sov192After(12*.055*j,()=>{if(c.e.dead||!AF)return;f.call(this,c,a2,dm)})}}catch(err){if(!SOV192.err++)console.error('v192 thorns',err)}return r}}
+vlrTendrils=function(c,an,hit){const e=c.e,o=svWP(e,'hdL',0,-.16,.04),N=5,L=9.2*SOV192.K,mat=new THREE.MeshBasicMaterial({color:0xb0102a,fog:false}),
+  g=svG('vl2_tnd',()=>{const P=[],r=[];for(let k=0;k<=7;k++){const u=k/7;P.push([Math.sin(u*9)*.06*(1-u),Math.cos(u*7)*.05*(1-u),u]);r.push(.11*(1-u*.9))}return svTube(P,r,5)}),T=[];
+  for(let k=0;k<N;k++){const a=an.a+(k-(N-1)/2)*.15,l=Math.min(L*(k===2?1:.82+.06*Math.abs(k-2)),sov192Exit(c.A,an.x,an.z,a)),ms=new THREE.Mesh(g,mat);ms.position.copy(o);ms.userData.lpsSkip=1;ms.renderOrder=19;ms.frustumCulled=false;scene.add(ms);
+    const tip=new THREE.Vector3(an.x+Math.sin(a)*l,GH(an.x,an.z)+1.0,an.z+Math.cos(a)*l);T.push({ms,tip})}
+  let t=0;svSnd('blood',1,.8);svSnd('hiss',.7,.7);
+  kqFx({tick(dt){t+=dt||0;const p=svWP(e,'hdL',0,-.16,.04);
+    const ext=t<.16?svEase.o(t/.16):t<(hit?.62:.4)?1:Math.max(0,1-svEase.io((t-(hit?.62:.4))/.28));
+    T.forEach((q,k)=>{let tip=q.tip;if(hit&&k===2){tip=gY(pl.position,1.0)}q.ms.position.copy(p);const d=tip.clone().sub(p),len=Math.max(.01,d.length()*ext);q.ms.lookAt(tip);q.ms.scale.set(1,1,len);
+      if(ext>.9&&Math.random()<.25){const b=p.clone().addScaledVector(d,Math.random()*ext);burst(b,VLR.blood,1,.5,.4,.4)}});
+    return t<(hit?.95:.72)&&!e.dead},end(){T.forEach(q=>scene.remove(q.ms));mat.dispose()}})};
+// ---------------- the far pick: a ranged answer to a hero who keeps away ----------------
+// signature moves, the awakening and the broken stagger are never swapped for a ranged move
+function sov192Sig(id){return id==='awaken'||id==='broken'||id==='stagger'||id==='intro'||(typeof SIG163!='undefined'&&Object.prototype.hasOwnProperty.call(SIG163.W,id))}
+function sov192Side(e){const m=e.m,ang=Math.abs(svAng(svYawTo(m,pl.position)-m.rotation.y));return ang<1.0?'f':ang>2.1?'b':'s'}
+function sov192PickRanged(e){const S=e.sv,B=S.B,R=SOV192.ranged[S.i];if(!R||!R.size)return null;const L=d2(pl.position,e.m.position),side=sov192Side(e),C=[];let tot=0;
+  R.forEach(id=>{const D=B.M[id];if(!D||!D.wt||(D.ph||1)>S.ph||(D.ph1only&&S.ph>1))return;if((S.cd[id]||0)>0||S.last[0]===id)return;
+    const r=D.r||[0,99];if(L<r[0]||L>r[1])return;const a=D.a||'f';if(a!=='any'&&!(a===side||(a==='fs'&&side!=='b')||(a==='sb'&&side!=='f')))return;
+    try{if(D.when&&!D.when(e,L,side))return}catch(_){return}let w=1;try{w=typeof D.wt==='function'?(+D.wt(e,L,side)||0):D.wt}catch(_){w=0}if(S.last[1]===id)w*=.5;if(w>0){C.push([id,w]);tot+=w}});
+  if(!C.length)return null;let u=Math.random()*tot;for(const [id,w] of C){u-=w;if(u<=0)return id}return C[C.length-1][0]}
+{const f=svPick;svPick=function(e,loose){const S=e&&e.sv;if(!S||!SOV192.on||loose||S.force||!SOV192.ranged[S.i]||e.mb144)return f.apply(this,arguments);
+  const id=f.apply(this,arguments);try{if(d2(pl.position,e.m.position)<SOV192.far)return id;const R=SOV192.ranged[S.i];SOV192.picks++;
+    if(id&&(R.has(id)||sov192Sig(id)))return id;if(id&&Math.random()>=SOV192.pFar)return id;const q=sov192PickRanged(e);if(q){SOV192.swaps++;return q}}catch(err){if(!SOV192.err++)console.error('v192 pick',err)}return id}}
+// a v133 spacing plan that would walk the boss in toward a far hero (for a move with a shorter reach) gives way, as often,
+// to a ready ranged move cast from where it stands
+{const f=svPlan133;svPlan133=function(e,force){const P=f.apply(this,arguments);try{const S=e&&e.sv;if(!P||force||!S||!SOV192.on||!SOV192.ranged[S.i])return P;
+    const L=d2(pl.position,e.m.position);if(L<SOV192.far||P.r[1]>=L||Math.random()>=SOV192.pFar)return P;const q=sov192PickRanged(e);
+    if(q){S.plan=null;S.force=q;SOV192.swaps++;return null}}catch(err){if(!SOV192.err++)console.error('v192 plan',err)}return P}}
+// ---------------- 2. Tab during a Sovereign signature ----------------
+var TAB192={cyc:null,t:0,mem:4000};
+// the live targets of the running signature (each player's own copies)
+function tab192Props(){try{if(typeof AF=='undefined'||!AF||!AF.f||!AF.s146)return [];return sk146Alive(AF.s146.props).filter(p=>enemies.includes(p)&&p.m&&!p.hid&&!p.mpGhost)}catch(_){return []}}
+{const f=selectTarget;selectTarget=function(){const P=tab192Props();if(!P.length){TAB192.cyc=null;return f.apply(this,arguments)}
+  const p=pl.position,B=bossEnt(AF.i),now=nowP(),byD=(a,b)=>d2(a.m.position,p)-d2(b.m.position,p);
+  const others=enemies.filter(e=>fx150Ok(e)&&e!==B&&!P.includes(e)&&d2(e.m.position,p)<34).sort(byD);
+  const all=P.slice().sort(byD).concat(B&&fx150Ok(B)?[B]:[],others);
+  let L=TAB192.cyc;const fresh=!L||now-TAB192.t>TAB192.mem;
+  if(fresh)L=all;else{L=L.filter(e=>all.includes(e));all.filter(e=>!L.includes(e)).forEach(e=>{if(P.includes(e)){const k=L.findIndex(q=>!P.includes(q));L.splice(k<0?L.length:k,0,e)}else L.push(e)})}
+  TAB192.cyc=L;TAB192.t=now;const i=L.indexOf(tgt);
+  setTarget(i<0||(fresh&&!P.includes(tgt))?L[0]:L[(i+1)%L.length])}}
+// inside the fight a signature target (or the boss) is never dropped for being far away
+{const f=tgtTick;tgtTick=function(now,dt){const e=tgt;
+  try{if(e&&!e.dead&&!e._gone&&AF&&AF.f&&enemies.includes(e)&&((e.sv&&e.ar===AF.i)||tab192Props().includes(e))){
+    tgRing.position.copy(gY(e.m.position,.1));tgRing.scale.setScalar((e.m.bs||1)*(e.boss?1.6:1)*(1+.06*Math.sin(now/180)));tgRing.rotation.z+=(dt||0)*1.5;return}}catch(_){}
+  return f.apply(this,arguments)}}
+// when the targeted one breaks (or is eaten, or the rite ends) the nearest one left is targeted next frame (the boss when
+// none is left: the end-of-rite cleanup removes them one after another, so the choice waits until it is done)
+{const f=dqPropGone;dqPropGone=function(e,killed){let was=false;try{was=!!(e&&!e._gone&&typeof tgt!='undefined'&&tgt===e&&AF&&AF.f&&AF.s146&&(AF.s146.props||[]).includes(e))}catch(_){}
+  const r=f.apply(this,arguments);
+  if(was)try{const A0=AF;sov192After(0,()=>{if(tgt||AF!==A0||!AF||!AF.f)return;const p=pl.position,P=tab192Props().sort((a,b)=>d2(a.m.position,p)-d2(b.m.position,p)),B=bossEnt(AF.i),n=P.length?P[0]:(B&&!B.dead?B:null);if(n)setTarget(n)})}catch(_){}
+  return r}}
+// ranged aim and homing (v89: only within 24 / 26 tiles) reach a signature target anywhere in the den
+{const f=bfxTgtOk;bfxTgtOk=function(t,maxD){try{if(t&&maxD<40&&tab192Props().includes(t))maxD=40}catch(_){}return f.call(this,t,maxD)}}
+// clicking near a signature target's cup / body picks it, even with the boss standing behind it
+{const f=bfxPick;bfxPick=function(cx,cy){const r0=f.apply(this,arguments);try{const P=tab192Props();if(!P.length)return r0;const r=gl.getBoundingClientRect();if(!r.width)return r0;
+    const th=Math.tan(cam.fov*Math.PI/360),v=new THREE.Vector3();let best=null,bs=1;
+    for(const e of P){const q=gY(e.m.position,(e.dprop&&e.dprop.cupY)||1.6);v.copy(q).project(cam);if(v.z>1||v.z<-1)continue;const sx=r.left+(v.x+1)/2*r.width,sy=r.top+(1-v.y)/2*r.height,dist=cam.position.distanceTo(q)||1;
+      const pr=Math.max(30,1.1/(dist*th)*r.height/2),k=Math.hypot(sx-cx,sy-cy)/pr;if(k<bs){bs=k;best=e}}
+    return best||r0}catch(_){return r0}}}
+// hero shots reach a signature target: a shot homing on one flies through the (warded) boss instead of stopping on him, and
+// the solid tiles of the pedestal a live one stands on (its den tile image, 2x2 tiles since the den doubled) do not stop
+// shots: a shot was removed on the pedestal's edge before it came within 0.75 of the cup
+TAB192.sh=null;
+function tab192Ped(P){const K=new Set();P.forEach(p=>{try{const q=p.m.position,L=typeof denImg=='function'?denImg(q.x,q.z):null;if(L)L.forEach(k=>K.add(k));else if(solid(q.x,q.z))K.add(Math.round(q.z)*W+Math.round(q.x))}catch(_){}});return K.size?K:null}
+{const f=solid;solid=function(x,z){const K=TAB192.sh;if(K&&K.has(Math.round(z)*W+Math.round(x)))return false;return f.apply(this,arguments)}}
+{const f=shotTick;shotTick=function(dt){const ad=[];let B=null;
+  try{if(AF&&AF.f&&AF.s146&&shots.length){const P=sk146Alive(AF.s146.props);if(P.length){TAB192.sh=tab192Ped(P);B=bossEnt(AF.i);
+      if(B&&!B.dead)for(const sh of shots){const t=sh.htg;if(t&&t!==B&&P.includes(t)&&sh.hit&&!sh.hit.has(B)&&d2(sh.m.position,B.m.position)<.75+1.2+.6){sh.hit.add(B);ad.push(sh)}}}}}catch(_){}
+  try{return f.apply(this,arguments)}finally{TAB192.sh=null;ad.forEach(sh=>{try{sh.hit.delete(B)}catch(_){}})}}}
+// ================= v192: the camera never passes an instance's edge; everything else fades =================
+// Owner (Nov 2 2026): "Something happened with how our camera works. I want the camera to not be able to pass through the edge of an
+// instance (the walls that surround each map). If it collides with the edge, the camera should zoom in. When the camera collides
+// with all other objects in the game the object should fade and become semi transparent so you can still see your character."
+// What had happened:
+//  * the fade: v183's paint (3410 ep183Hook) wraps the shader hook of nearly every scenery material at load, before 2420's fade scan
+//    first runs, and f135Patch left every material with a hook of its own alone: from v183 on most scenery (Duskhold's buildings,
+//    camps, tents, every decoration, v190's new pieces) was never set up to fade, so v176's scan (3361) never saw it. Fixed in
+//    f135Patch (2420): it chains onto the paint's hook.
+//  * the edge: v172's rule (cam172Ok, 3360) counted the rock of an edge wall as "out" only within 8 tiles of the void; field, den
+//    and cave walls rise far from the void, so the camera went into them (and then saw through the terrain from inside).
+// Now (cam192Out): the camera may not be
+//  * past the instance's rectangle, over the void or within CAM172.r1 of it (as v172);
+//  * in or against the ground past the walkable edge: where the map's walkable ground has ended (MAP.DW > CAM192.band) the lens keeps
+//    CAM192.clr above the highest ground round it: the cliffs, slopes and cave walls that surround each map (inside caves too);
+//  * past Abeksi's outer wall (the city's edge: its walls are buildings, not ground) at any height.
+// The camera slides in along its own line toward the hero instead (cam172Reach sets the target distance, camDD's smoothing in 0104:
+// fast in, slow out; cam172Hold keeps its actual spot inside while it catches up). Everything else between the camera and the hero
+// (buildings, Abeksi's houses too — v176 had them pull the camera in —, trees, rocks, props, decorations, set pieces) is faded whole
+// by 3361 (OB176.k of it left, a fine even screen so it reads as see-through) and the camera keeps the distance the player set.
+var CAM192={on:true,band:.5,far:3,clr:.9,min:1.1,step:.3,back:.45,abm:.5,why:'',lite:false,st:{d:0,cut:0,hold:0,lite:0},
+  old(){try{return (typeof ch153Run=='function'&&ch153Run())||(typeof sr165Here=='function'&&sr165Here())}catch(_){return false}}};
+const CAM192R=[[0,0],[.55,0],[-.55,0],[0,.55],[0,-.55]];
+function cam192Dw(x,z){const X=Math.round(x),Z=Math.round(z);if(X<0||Z<0||X>=W||Z>=H)return 99;return MAP.DW[Z*W+X]}
+// why the camera may not be at (x,y,z) in instance I (null: Duskhold / outside the zones), or '' when it may.
+// lite: only the rectangle and the void (the hero stands somewhere the full rule would not allow: a level's own ground)
+function cam192Out(x,y,z,I,lite){
+  if(I&&(x<I.x0+.5||z<I.y0+.5||x>I.x0+I.w-.5||z>I.y0+I.h-.5))return 'rect';
+  if(cam172Void(x,z,CAM172.r1))return 'void';
+  if(lite)return '';
+  if(I&&I.g===30&&typeof ab152Plan=='function'){const N=ab152Plan().IN,u=x-I.x0,v=z-I.y0,m=CAM192.abm;   // Abeksi: its outer wall is the edge, at any height
+    return u<N[0]+m||v<N[1]+m||u>N[2]-m||v>N[3]-m?'wall':''}
+  if(CAM192.old()){   // the chase levels' own cameras (the Ascent, the Sandstorm Run) keep v172's rule: the rim's rock near the void only
+    if(y<GH(x,z)-.05){for(const r of [3,5.5,CAM172.r2])if(cam172Void(x,z,r))return 'rim'}return ''}
+  let d=cam192Dw(x,z);for(let i=1;i<5;i++)d=Math.max(d,cam192Dw(x+CAM192R[i][0],z+CAM192R[i][1]));
+  if(d>CAM192.far)return 'far';   // past the foot of the edge: never, at any height (no looking over the wall's top)
+  if(d>CAM192.band){let g=-1e9;for(const [a,b] of CAM192R)g=Math.max(g,GH(x+a,z+b));if(y<g+CAM192.clr)return 'edge'}   // in or against the wall
+  return ''}
+// v172's names, now with the v192 rule (later definitions win; 3360's hooks in 0104 and before drawing call these)
+function cam172Ok(x,y,z,I){const w=cam192Out(x,y,z,I,CAM192.lite);CAM172.why=CAM192.why=w;return !w}
+function cam172Ab(){return false}   // v192: Abeksi's houses fade like every other object (3361); the camera no longer slides in for them
+function cam192Ins(){try{const k=cvKey();return k>=0?INSL[k]:null}catch(_){return null}}
+// the first spot along the line from the hero's chest (y0) in direction v (unit) that is out, as a safe distance, or L when none
+function cam192Walk(P,y0,vx,vy,vz,L,I){CAM192.lite=!!cam192Out(P.x,y0,P.z,I,false);if(CAM192.lite)CAM192.st.lite++;
+  for(let s=.6;s<=L+CAM192.back+.3;s+=CAM192.step)if(cam192Out(P.x+vx*s,y0+vy*s,P.z+vz*s,I,CAM192.lite))return Math.min(L,Math.max(CAM192.min,s-CAM192.back));
+  return L}
+// how far back the camera may go along its line from the hero's chest (P = the hero's feet), at most d
+function cam172Reach(P,yaw,pitch,d){if(!CAM172.on||!CAM192.on)return d;const I=cam192Ins(),cp=Math.cos(pitch);
+  const r=cam192Walk(P,P.y+1.1,Math.sin(yaw)*cp,Math.sin(pitch),Math.cos(yaw)*cp,d,I);if(r<d){CAM192.st.cut++;CAM172.st.cut++}CAM192.st.d=CAM172.st.d=r;return r}
+// the camera's actual spot (it trails its target in 0104) is held inside too, along its own line to the hero's chest
+const CAM192V=new THREE.Vector3();
+function cam172Hold(P,c){if(!CAM172.on||!CAM192.on)return;const I=cam192Ins();
+  const y0=P.y+1.1,v=CAM192V.set(c.x-P.x,c.y-y0,c.z-P.z),L=v.length();if(L<CAM192.min)return;v.multiplyScalar(1/L);
+  const r=cam192Walk(P,y0,v.x,v.y,v.z,L,I);if(r<L-1e-3){c.set(P.x+v.x*r,y0+v.y*r,P.z+v.z*r);CAM192.st.hold++;CAM172.st.hold=(CAM172.st.hold||0)+1}}
+
+// ---- the look: semi-transparent, not speckled ----
+// 3361 leaves OB176.k (.35) of a blocking object. Before, the rest was cut away with a screen-door dither (a speckle). The main view
+// is drawn into a 4x multisampled target (POST, WebGL2): there each pixel of a faded object now covers that share of its samples
+// (alpha to coverage) and the resolve blends it with what is behind, so the object reads as see-through glass-like, evenly, and
+// the hero shows through. Without multisampling (WebGL1, the PSX low-res look, post off) and in the intro's shots the old dither stays.
+// ob192Fade(f) replaces the dither discard in 2420 (scenery), 0060 (plants) and 3190 (ground); those materials set alphaToCoverage.
+// (hoisted: a material may compile before this file runs, so the GLSL comes from a function, not from OB176.HEAD)
+function ob192Glsl(){return `uniform float uOb192A;float ob192a=1.;
+void ob192Fade(float f){if(uOb192A>.5){ob192a=min(ob192a,clamp(f,0.,1.));if(ob192a<.02)discard;}
+ else{float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}}
+`}
+function ob176Shader(sh){if(!OB176.U.uOb192A)OB176.U.uOb192A={value:0};for(const k in OB176.U)sh.uniforms[k]=OB176.U[k];
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+OB176.HEAD+ob192Glsl())
+    .replace('#include <dithering_fragment>','#include <dithering_fragment>\n gl_FragColor.a=ob192a;')}   // (opaque scenery: its own alpha never mattered, so it is replaced, not multiplied)
+if(!OB176.U.uOb192A)OB176.U.uOb192A={value:0};
+function ob192Msaa(){try{return CAM192.a2c&&POST.on&&ren.capabilities.isWebGL2&&(ren.capabilities.maxSamples|0)>=2&&!(PSXON&&PSXH>0)&&!(typeof IC151!='undefined'&&IC151.on)}catch(_){return false}}
+CAM192.a2c=true;
+{const f=POST.render;POST.render=function(){OB176.U.uOb192A.value=ob192Msaa()?1:0;return f.apply(this,arguments)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

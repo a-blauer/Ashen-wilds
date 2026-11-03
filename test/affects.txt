@@ -99,3 +99,4 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 3480|v189|fusion|fuse|star|0045|0210|0840|1780: v189_fusion_stars.py
 v192|1090-|1910-|1870-|decor|abilit|character-slots|title-screen|creator: v192_misc.py
 3560|v192|sovereign-range|tab|target|chalice|1100-|3097-: v192_sov_range.py v150_checks.py v146_sovs.py v141_sov.py v112_hydra.py v112_wraith.py v112_vaelric.py
+3550|v192|hero-fit|bow|bard|lute|hood|1270|3220|2510|2500|2505|2540|2995|1900: v192_hero_fit.py v163_weapons.py v164_dodge_grip.py v135_bow.py v136_gear.py
