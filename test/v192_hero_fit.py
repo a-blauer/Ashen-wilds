@@ -31,7 +31,8 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  const q0=QH();out.w0=+pl._grip.w.toFixed(2);
  if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(30);out.wFight=+pl._grip.w.toFixed(2)}
  atkCd=0;swing();let n=0;while(HA.cur&&n<200){STEP(1);n++}out.shotFrames=n;
- const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0)dx.push([tr[i],+pl._grip.w.toFixed(2),HA.cur?+HA.cur.k.toFixed(2):-1,pl._b192?1:0,+(IDL.cbV||0)])}out.dx=dx;
+ const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0){const hq=new THREE.Quaternion(),pq=new THREE.Quaternion();pl.getWorldQuaternion(hq);W.parent.getWorldQuaternion(pq);const T=hq.clone().multiply(bow135Q()),pw=pq.clone().multiply(W.quaternion);
+   dx.push([tr[i],+pl._grip.w.toFixed(2),HA.cur?+HA.cur.k.toFixed(2):-1,pl._b192?1:0,+(IDL.cbV||0),+pl.rotation.y.toFixed(2),+ang(T,pw).toFixed(1),+ang(q0,hq.clone().invert().multiply(T)).toFixed(1)])}}out.dx=dx;
  out.after05=tr[31];out.after1=tr[62];out.after2=tr[124];out.max05_2=Math.max(...tr.slice(31));out.trace=tr.filter((_,i)=>i%10==0);out.wEnd=+pl._grip.w.toFixed(2);
  return out}"""
 # ---------------- 2. gear fit ----------------
@@ -89,7 +90,7 @@ def s(pg):
             r=ev(BOW,fight)
             print('bow','fight' if fight else 'calm',json.dumps(r))
             if r.get('err'):F('bow: error %s'%r['err']);continue
-            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s) [deg,w,k,snap,combat] %s'%('fight' if fight else 'calm',r['after05'],MAXB,json.dumps(r.get('dx'))))
+            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s) [deg,w,k,snap,combat,rotY,bowVsCarryTarget,targetVsQ0] %s'%('fight' if fight else 'calm',r['after05'],MAXB,json.dumps(r.get('dx'))))
             if r['max05_2']>MAXB:F('bow (%s): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%('fight' if fight else 'calm',r['max05_2']))
     if 'bard' in PART:
         r=ev(BARD,bool(SHEET))
