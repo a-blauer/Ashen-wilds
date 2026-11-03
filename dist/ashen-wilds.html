@@ -3613,7 +3613,7 @@ function ccRender(){
     const C=CLS[ccCls],S50=k=>C.base[k]+C.per[k]*49;
     $('ccInfo').innerHTML=`<h3 style="color:${C.col}">${C.i} ${C.n}</h3><p>${C.d}</p><div class="mut" style="font-size:.72rem;margin-bottom:6px">${C.st} · ${C.arm} armor · ${({melee3:'heavy 3-hit combo',melee4:'fast 4-hit combo',bow:'arrows from range',staff:'magic bolts from range'})[C.atk]}</div>`+
       statBar('Health',S50('hp'),1400)+statBar('Phys. attack',S50('pa'),200)+statBar('Magic attack',S50('ma'),215)+statBar('Phys. defense',S50('pd'),150)+statBar('Magic defense',S50('md'),125)+statBar('Speed',1/C.spd,2.8)+
-      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 2 ability points every level (3 every 5th level), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
+      `<div class="sec">Starting ability</div>`+SKL[ccCls].slice(0,1).map(k=>`<div class="ccsk">${k.i} <b>${k.n}</b><br><small class="mut">${k.d}</small></div>`).join('')+`<div class="mut" style="font-size:.72rem;margin-top:6px">⚡ Earn 3 ability points every level (up to 7 from level 40), rank abilities up to 5 and unlock 16 more ${CLS[ccCls].n} abilities in the Abilities window (K).</div>`;
   }else{
     $('ccList').innerHTML=STARTERS.map(n=>{const f=famOf(n);return `<button class="ccc${n==ccSp?' on':''}" data-s="${n}" style="--cc:#${('00000'+FAMD[f].col.toString(16)).slice(-6)}"><span class="cci">${SP2[n][3]}</span><span><b>${n}</b><small>${FAMD[f].i} ${f} family</small></span></button>`}).join('');
     const f=famOf(ccSp),F=FAMD[f],sp=CSP[SP2[ccSp][8]];
@@ -14323,7 +14323,9 @@ setTimeout(keepLast,0);addEventListener('load',keepLast);
 //     cooldown                                                       −8% from rank 3, −15% at rank 5
 //   Damage is scaled where the cast computes its attack value (cast_base for the old kinds, the KQN cast wrapper for the new ones),
 //   so every hit, DoT, projectile, trap, zone and summon that comes from that cast is scaled the same way.
-// - Ability points: 2 per level gained, 3 on every 5th level (108 by level 50) + hero.tal.__apB. apFree() = earned − spent, never negative.
+// - Ability points (v192): a level-up to level L gives 3 (L 2–9), 4 (10–19), 5 (20–29), 6 (30–39), 7 (40–50): 251 by level 50
+//   (was 2, 3 on every 5th: 108) + hero.tal.__apB. Earned is worked out from the level, so old heroes get the new total on load.
+//   apFree() = earned − spent, never negative.
 //   Unlock cost (v88): 1 + floor(level requirement / 6). Rank-up cost to rank r: ceil(unlock cost / 3) + r − 2
 //   (the default ability counts as unlock cost 1). So maxing costs 10 AP for an early ability and up to 18 for a level-48 one.
 // - Abilities window: rank pips (5 small diamonds, kqrPips) on every row and the slots, "Rank up · N ⚡" buttons, the detail panel lists this rank → next rank.
@@ -14364,7 +14366,8 @@ function kqrB(s,o){const k=kqrU(s);if(k===1||!o)return o;const n={};for(const q 
 
 Object.keys(SKB).forEach(c=>kqsAll(c).forEach(s=>{if(KQR_CD[s.n]!=null)s.cd=KQR_CD[s.n]}));
 // ---------------- ability points ----------------
-function kqrLvAP(l){return l%5==0?3:2}
+function kqrLvAP(l){return l<10?3:l<20?4:l<30?5:l<40?6:7}
+var KQR_APTXT='3 every level (4 from level 10, 5 from 20, 6 from 30, 7 from 40)';
 function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
 function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
 // AP to go from rank r-1 to rank r
@@ -14405,11 +14408,11 @@ function kqrDecor(){const c=hero.cls,B=$('xwB');if(!B)return;
     <div class="kqr-ln">${lines.map(x=>`<span>${x}</span>`).join('')}</div>
     ${n?`<div class="btns"><button class="${w?'':'pri'}" data-kqrup="${sel.n}" ${w?'disabled':''}>${w?'🔒 '+w:'Rank up to '+n+' · '+k+' ⚡'}</button></div>`:''}</div>`;
   const st=det.querySelector('.kqs-stats');if(st)st.insertAdjacentHTML('afterend',h);else det.insertAdjacentHTML('beforeend',h);
-  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+2 points every level (+3 every 5th)');
-  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn 2 ability points every level (3 on every 5th level). Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
+  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+'+kqrLvAP(hero.lvl+1)+' points next level');
+  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn ability points every level: ${KQR_APTXT}. Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqrup]');if(!t)return;e.stopPropagation();e.preventDefault();if(t.disabled)return;kqrUp(t.dataset.kqrup)},true);
 // the talents window link
-{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','(2 per level, 3 every 5th level)')}}
+{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','('+KQR_APTXT+')')}}
 // hotbar: a small rank badge on every ability key
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;heroSkills().forEach((s,i)=>{const b=A.querySelector('button[data-x="'+i+'"]');if(!b||b.querySelector('.kqr-b'))return;const r=kqrRank(s);b.insertAdjacentHTML('beforeend',`<span class="kqr-b r${r}" title="Rank ${r}">${r}★</span>`)})}catch(_){}}}
 document.head.insertAdjacentHTML('beforeend',`<style>
@@ -22307,7 +22310,7 @@ function czTick103(){const now=Date.now();let back=[];
       if(czRole104(c)=='egg'&&eggs.length>=CZ104_EGGMAX){c.wf=2;return}
       if(czEat105(czCost105(c))){c.t0=now;c.wf=0;c.vt=null}else c.wf=1;return}
     if(now-c.t0>=czTrip104(c)){c.bag=czGoods105(c);c.t0=0;c.vt=null;back.push(c)}});
-  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');sfx&&sfx('chime')}
+  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');try{sfx192('home')}catch(_){}}
   try{if(back.length&&typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
 setInterval(()=>{try{czTick103()}catch(e){console.warn('v103 citizens',e)}},1000);
 // ---------- saves ----------
@@ -22760,7 +22763,7 @@ var DECO103=[
  {k:'fireworks',i:'🌠',n:'Night Fireworks',g:3000,d:'At night, fireworks burst high over Duskhold every few seconds.',
   an(g){let nx=0;return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;if(n<.35||now<nx)return;nx=now+2600+Math.random()*3000;const T=TOWNS[0];
     try{if(Math.hypot(pl.position.x-T.cx,pl.position.z-(T.cy+15))>60)return;const F=dcF104(),c=[0xff5a5a,0xffd24a,0x6ad8ff,0xb08aff,0x6aff9a][Math.floor(Math.random()*5)],p=new THREE.Vector3(T.cx+(Math.random()-.5)*F.WX*1.6,T.ph+20+Math.random()*8,T.cy-14+Math.random()*(F.SZ+14));
-      burst(p,c,46,7,1.5,1.3);if(typeof sfx=='function'&&Math.random()<.4)sfx('chime')}catch(_){}}}}
+      burst(p,c,46,7,1.5,1.3);if(typeof sfx192=='function')sfx192('fwk',Math.max(.25,.8-p.distanceTo(pl.position)/90))}catch(_){}}}}
 ];
 var DC103={g:{},col:{}};SH.deco=SH.deco||{};
 function dcOn103(k){return SH.deco[k]===1}
@@ -28596,7 +28599,10 @@ function kqslBtn(mode,sl){const b=document.createElement('button');b.dataset.aw=
   return f.apply(this,arguments)}}
 kqslRender();
 // after a reload from the menu into another slot (kq_new is handled in 1160)
-try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}}catch(_){}
+// v192: only once the whole game script has run (setTimeout 0). Loading here, mid-script, ran loadGame before the later files:
+// v137+ gear was not in ITPL yet, so heroMax() threw before the creator was hidden (the creator showed instead of the hero),
+// and the later loadGame / x2Load wrappers (quests, attributes, …) were skipped.
+try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');setTimeout(()=>{try{if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}catch(e){console.warn('slot continue',e)}},0)}}catch(_){}
 // ================= v116: join-code co-op (no Claude account) =================
 // One player hosts and gets a 6-letter join code; friends type it to connect. Players link up directly over WebRTC data
 // channels; the free public PeerJS signaling server (0.peerjs.com) only introduces them (its plain WebSocket protocol is
@@ -64917,4 +64923,33 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 
 // ---------- the Improve (fusion) window lists lost Devotion ----------
 {const f=FSM100_check;FSM100_check=function(a,b,act){const r=f.apply(this,arguments);try{const L=dv191Lv(b);if(r&&r.warn&&L>0)r.warn.push('Devotion '+L+' lost')}catch(_){}return r}}
+// ================= v192: owner's fixes — slot switching, more ability points, no stray equip chime in town =================
+// 1. Switching characters (main menu → another slot) reloads the page and continues there (2145, sessionStorage kq_cont).
+//    That continue used to run while the game script was still loading, before the later files: v137+ gear was not in ITPL
+//    yet, so loadGame threw at heroMax() before it hid the creator (the creator showed instead of the hero), and the later
+//    loadGame / x2Load wrappers were skipped. Fixed in 2145: the continue waits until the whole script has run.
+// 2. Ability points per level-up to level L (1090 kqrLvAP): 3 (L 2–9), 4 (10–19), 5 (20–29), 6 (30–39), 7 (40–50).
+//    apEarned() is worked out from the level, so an existing hero gets the new total as soon as it loads (nothing is stored,
+//    nothing taken away, nothing granted twice). hero.tal.__ap192 only marks that the hero was told once.
+// 3. The "equip" chime (sfx('chime'), played when you drag gear onto yourself) also rang from the Night Fireworks decoration
+//    (1910: 40% of bursts, every 2.6–5.6 s at night, near the Grand Square fountain) and from villagers coming home (1870).
+//    Those now use their own sounds (sfx192 'fwk' / 'home'); the chime stays for real player actions.
+function ap192Old(L){let n=0;for(let l=2;l<=L;l++)n+=l%5==0?3:2;return n}
+function ap192New(L){let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n}
+function ap192Note(){try{if(!hero||!hero.tal||typeof hero.tal!='object')return 0;if(hero.tal.__ap192)return 0;hero.tal.__ap192=1;
+  const L=hero.lvl|0,d=ap192New(L)-ap192Old(L);
+  if(d>0)setTimeout(()=>{try{say('⚡ <b>More ability points:</b> heroes now earn '+KQR_APTXT+'. You gained <b>+'+d+'</b> ability points for your level (K · Abilities).');hud()}catch(_){}},3200);
+  return d}catch(_){return 0}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);if(r)ap192Note();return r}}
+{const f=ccBegin;ccBegin=function(){const r=f.apply(this,arguments);try{if(hero.tal&&typeof hero.tal=='object')hero.tal.__ap192=1}catch(_){}return r}}
+
+// small sounds of their own (same bus and volume as sfx)
+function sfx192(k,vol){try{if(SET.sfx===false)return;const a=AUD;if(!a||a.state!='running'||!a.out)return;const t=a.currentTime;vol=vol||1;
+  const tone=(ty,f0,f1,at,dur,v)=>{const o=a.createOscillator(),g=a.createGain();o.type=ty;o.frequency.setValueAtTime(f0,t+at);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+at+dur);
+    g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v*vol,t+at+.01);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);o.connect(g);g.connect(a.out);o.start(t+at);o.stop(t+at+dur+.05)};
+  const nz=(ft,f0,f1,at,dur,v)=>{if(!NOISE)return;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NOISE;f.type=ft;f.frequency.setValueAtTime(f0,t+at);f.frequency.exponentialRampToValueAtTime(Math.max(40,f1),t+at+dur);
+    g.gain.setValueAtTime(0,t+at);g.gain.linearRampToValueAtTime(v*vol,t+at+.01);g.gain.exponentialRampToValueAtTime(.0001,t+at+dur);s.connect(f);f.connect(g);g.connect(a.out);s.start(t+at,Math.random()*.5);s.stop(t+at+dur+.05)};
+  if(k=='fwk'){nz('lowpass',900,120,0,.5,.3);tone('sine',90,40,0,.4,.25);for(let i=0;i<5;i++)nz('highpass',3000,5000,.18+i*.07,.05,.05)}       // a distant pop and crackle
+  else if(k=='home'){tone('sine',523,523,0,.5,.08);tone('sine',784,784,.12,.6,.06)}                                                      // a soft two-note call
+}catch(_){}}
 </script></body></html>

@@ -9,7 +9,9 @@
 //     cooldown                                                       −8% from rank 3, −15% at rank 5
 //   Damage is scaled where the cast computes its attack value (cast_base for the old kinds, the KQN cast wrapper for the new ones),
 //   so every hit, DoT, projectile, trap, zone and summon that comes from that cast is scaled the same way.
-// - Ability points: 2 per level gained, 3 on every 5th level (108 by level 50) + hero.tal.__apB. apFree() = earned − spent, never negative.
+// - Ability points (v192): a level-up to level L gives 3 (L 2–9), 4 (10–19), 5 (20–29), 6 (30–39), 7 (40–50): 251 by level 50
+//   (was 2, 3 on every 5th: 108) + hero.tal.__apB. Earned is worked out from the level, so old heroes get the new total on load.
+//   apFree() = earned − spent, never negative.
 //   Unlock cost (v88): 1 + floor(level requirement / 6). Rank-up cost to rank r: ceil(unlock cost / 3) + r − 2
 //   (the default ability counts as unlock cost 1). So maxing costs 10 AP for an early ability and up to 18 for a level-48 one.
 // - Abilities window: rank pips (5 small diamonds, kqrPips) on every row and the slots, "Rank up · N ⚡" buttons, the detail panel lists this rank → next rank.
@@ -50,7 +52,8 @@ function kqrB(s,o){const k=kqrU(s);if(k===1||!o)return o;const n={};for(const q 
 
 Object.keys(SKB).forEach(c=>kqsAll(c).forEach(s=>{if(KQR_CD[s.n]!=null)s.cd=KQR_CD[s.n]}));
 // ---------------- ability points ----------------
-function kqrLvAP(l){return l%5==0?3:2}
+function kqrLvAP(l){return l<10?3:l<20?4:l<30?5:l<40?6:7}
+var KQR_APTXT='3 every level (4 from level 10, 5 from 20, 6 from 30, 7 from 40)';
 function apEarned(){const L=hero.lvl|0;let n=0;for(let l=2;l<=L;l++)n+=kqrLvAP(l);return n+((hero.tal&&hero.tal.__apB)|0)}
 function kqrUnlockCost(s){return 1+Math.floor((s.lv|0)/6)}
 // AP to go from rank r-1 to rank r
@@ -91,11 +94,11 @@ function kqrDecor(){const c=hero.cls,B=$('xwB');if(!B)return;
     <div class="kqr-ln">${lines.map(x=>`<span>${x}</span>`).join('')}</div>
     ${n?`<div class="btns"><button class="${w?'':'pri'}" data-kqrup="${sel.n}" ${w?'disabled':''}>${w?'🔒 '+w:'Rank up to '+n+' · '+k+' ⚡'}</button></div>`:''}</div>`;
   const st=det.querySelector('.kqs-stats');if(st)st.insertAdjacentHTML('afterend',h);else det.insertAdjacentHTML('beforeend',h);
-  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+2 points every level (+3 every 5th)');
-  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn 2 ability points every level (3 on every 5th level). Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
+  const S=$('xwS');if(S)S.innerHTML=S.innerHTML.replace('+1 point every level','+'+kqrLvAP(hero.lvl+1)+' points next level');
+  const F=document.querySelector('#xwF .dtl');if(F)F.textContent=`You earn ability points every level: ${KQR_APTXT}. Unlock abilities, rank them up to ${KQR_MAX} to make them stronger, then choose which ${KQS_SLOTS} sit on keys 1–${KQS_SLOTS}.`}
 $('xw').addEventListener('click',e=>{if(xwMode!='abil')return;const t=e.target.closest('[data-kqrup]');if(!t)return;e.stopPropagation();e.preventDefault();if(t.disabled)return;kqrUp(t.dataset.kqrup)},true);
 // the talents window link
-{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','(2 per level, 3 every 5th level)')}}
+{const f=skHTML;skHTML=function(){return f.apply(this,arguments).replace('(1 per level)','('+KQR_APTXT+')')}}
 // hotbar: a small rank badge on every ability key
 {const f=hud;hud=function(){f.apply(this,arguments);try{const A=$('acts');if(!A||!party.length)return;heroSkills().forEach((s,i)=>{const b=A.querySelector('button[data-x="'+i+'"]');if(!b||b.querySelector('.kqr-b'))return;const r=kqrRank(s);b.insertAdjacentHTML('beforeend',`<span class="kqr-b r${r}" title="Rank ${r}">${r}★</span>`)})}catch(_){}}}
 document.head.insertAdjacentHTML('beforeend',`<style>

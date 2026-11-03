@@ -63,10 +63,10 @@ with sync_playwright() as p:
     pg.click('[data-dev=desktop]',timeout=120000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     # ---------- ability points ----------
     r=ev("()=>({ap:apFree(),e:[1,2,5,10,20,50].map(l=>{const o=hero.lvl;hero.lvl=l;const v=apEarned();hero.lvl=o;return v})})")
-    chk('AP earned: 0 at 1, 2 per level, 3 on every 5th (108 at 50)',r['e']==[0,2,9,20,42,108],r)
+    chk('AP earned (v192): 0 at 1, 3/4/5/6/7 per level by bracket (251 at 50)',r['e']==[0,3,12,28,64,251],r)
     r=ev("()=>{heroLevelUp();return {lv:hero.lvl,ap:apFree(),b:$('banner')?$('banner').textContent:''}}")
-    chk('level 2 gives 2 AP',r['ap']==2,r);print('  banner:',r['b'][:140])
-    chk('level-up banner names the AP',('+2 ability points' in r['b']) or r['b']=='',r['b'][:140])
+    chk('level 2 gives 3 AP',r['ap']==3,r);print('  banner:',r['b'][:140])
+    chk('level-up banner names the AP',('+3 ability points' in r['b']) or r['b']=='',r['b'][:140])
     # ---------- rank up through the window ----------
     ev("()=>openAbil()");pg.wait_for_timeout(500)
     r=ev("()=>({pips:document.querySelectorAll('#xwB .kqs-ab .kqr-pip').length,up:[...document.querySelectorAll('#xwB [data-kqrup]')].map(b=>[b.dataset.kqrup,b.disabled,b.textContent]),box:!!document.querySelector('#xwB .kqr-box'),sub:$('xwS').textContent})")

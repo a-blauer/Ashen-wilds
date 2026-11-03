@@ -134,3 +134,4 @@ v181_foe_attacks.py
 CHECK=1 NOSHOT=1 CLS=mage WT=wand v186_weapon_anims.py
 CHECK=1 NOSHOT=1 CLS=mage WT=orb v186_weapon_anims.py
 v186_knife.py
+v192_misc.py

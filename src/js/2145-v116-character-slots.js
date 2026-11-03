@@ -43,4 +43,7 @@ function kqslBtn(mode,sl){const b=document.createElement('button');b.dataset.aw=
   return f.apply(this,arguments)}}
 kqslRender();
 // after a reload from the menu into another slot (kq_new is handled in 1160)
-try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}}catch(_){}
+// v192: only once the whole game script has run (setTimeout 0). Loading here, mid-script, ran loadGame before the later files:
+// v137+ gear was not in ITPL yet, so heroMax() threw before the creator was hidden (the creator showed instead of the hero),
+// and the later loadGame / x2Load wrappers (quests, attributes, …) were skipped.
+try{if(sessionStorage.getItem('kq_cont')){sessionStorage.removeItem('kq_cont');setTimeout(()=>{try{if(saveInfo()&&$('awT'))awTitleGo('cont',kqslBtn('cont',KQSL.n))}catch(e){console.warn('slot continue',e)}},0)}}catch(_){}
