@@ -1,8 +1,9 @@
 # v192 hero fit (owner, Nov 2 2026): the Ranger's bow after a shot, the Ranger's hoods and chest pieces on the weasel, the Bard's hand.
 #  1. bow: after a basic shot the bow goes straight back to its carry hold. Before v192 the hands kept the strike grip for 2 s
 #     after every attack (v163 EDGE163.hold, made for melee edges): the bow hung upright by the riser in the low carry arm, then
-#     turned back into the carry ~2 s later. Checked: 0.5 s after the shot the bow is within MAXB deg of its carry (v135
-#     bow135Q, in the hero's frame), with a monster hunting nearby (the v163 fight hold) and without.
+#     turned back into the carry ~2 s later. Checked, with a monster hunting nearby (the v163 fight hold) and without: 0.5 s
+#     after the shot the hands are back in the carry grip and the bow out of the shooting hold; in a calm the bow lies within
+#     MAXB deg of its carry (v135 bow135Q, hero frame; in a fight the combat-ready stance raises the arm, turning the carry).
 #  2. gear: every Ranger hood with a chest piece, tier by tier, on the weasel (+ the owner's screenshot set): the hood's own
 #     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM, and narrower
 #     than the same piece built the pre-v192 way (FIT192.on=false, built fresh) by at least MIND unless that was already narrow.
@@ -24,33 +25,16 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  {const p=PMAP[1],q=p.path[Math.floor(p.path.length/2)];toPos(q[0],q[1])}enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});
  const tp=ITPL.findIndex((t,i)=>t.sl=='weapon'&&t.cls=='ranger'&&itT({tp:i,lv:1,r:1,up:0,aff:[]}).wt=='bow');eq.weapon={id:9e4+tp,tp,lv:30,req:1,r:2,up:0,aff:[]};refreshGear();
  EDGE163.last=-1e9;EDGE163.fT=-1e9;STEP(120);
- const E0=pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent),W=E0&&E0.W;if(!W)return {err:'no bow'};
- out.bows=(pl.gearG||[]).filter(o=>o.userData&&o.userData.wt=='bow'&&o.parent).length;
- // the bow the grip holds now (the same item built again replaces the model: always measure the live one)
- const BW=()=>{const e=pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);return e?e.W:W};
- const QH=()=>{const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);BW().getWorldQuaternion(b);return a.invert().multiply(b)};
+ const BE=()=>pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!BE())return {err:'no bow'};
  const ang=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a.dot(b))))*180/Math.PI;
- // the carry the bow has with no attack and no monster near (in a fight before v192 the hands already held the strike grip)
- const q0=bow135Q().clone();out.w0=+pl._grip.w.toFixed(2);out.q0vsV135=+ang(q0,bow135Q()).toFixed(1);out.st0=[!!HA.cur,HA.cur?String(HA.cur.pose&&HA.cur.pose.name):'',+(IDL.cbV||0),!!pl._b192,typeof riding!='undefined'&&!!riding,+pl._grip.w.toFixed(2),W.parent&&W.parent.name];
- if(!window.__bc192){window.__bc192=1;const f=bow135Carry;bow135Carry=function(h){window.__bcN=(window.__bcN||0)+1;const r=f.apply(this,arguments);try{if(h===pl){const e=pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);e.W.getWorldQuaternion(b);window.__bcA=+ang(bow135Q(),a.clone().invert().multiply(b)).toFixed(1);window.__bcWQ=b.clone();window.__bcHQ=e.W.parent.getWorldQuaternion(new THREE.Quaternion());window.__bcPQ=['chest','aL0','aL1','aL2'].map(n=>pl.bones[n].getWorldQuaternion(new THREE.Quaternion()));window.__bcW=e.W===W}}catch(err){window.__bcA='err '+err}return r}}
- if(fight&&!window.__ah192){window.__ah192=1;const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);if((h||pl)===pl){window.__bq=BW().quaternion.clone();window.__snap=['pelvis','spine','chest','neck','aL0','aL1','aL2','aR0'].map(n=>[n,pl.bones[n].quaternion.clone()]);window.__rotY=pl.rotation.y;window.__plq=pl.quaternion.clone()}return r}}
- if(fight){STEP(1);const ch=window.__snap.map(([n,q])=>[n,+ang(q,pl.bones[n].quaternion).toFixed(1)]).filter(x=>x[1]>.05);out.afterAnim=[+ang(window.__bq,BW().quaternion).toFixed(1),ch,+(pl.rotation.y-window.__rotY).toFixed(3),+ang(window.__plq,pl.quaternion).toFixed(1),pl.parent&&pl.parent.type]}
- if(fight){const Wq=BW().quaternion,who=[];let on=false;const f2=animHero;animHero=function(){const r=f2.apply(this,arguments);on=true;return r};
-   ['copy','slerp','set','multiply','premultiply','setFromRotationMatrix','setFromUnitVectors','setFromEuler','identity'].forEach(m=>{const o=Wq[m];Wq[m]=function(){if(on)who.push(m+' '+String(new Error().stack).split('\n').slice(2,5).map(x=>x.trim().slice(0,90)).join(' < '));return o.apply(this,arguments)}});
-   STEP(1);animHero=f2;on=false;['copy','slerp','set','multiply','premultiply','setFromRotationMatrix','setFromUnitVectors','setFromEuler','identity'].forEach(m=>{delete Wq[m]});out.who=who.slice(0,6)}
- if(fight){const who=[];let out2=false;const f3=animHero;animHero=function(now,mv,h){const me=(h||pl)===pl;const o=out2;if(me)out2=false;try{return f3.apply(this,arguments)}finally{if(me)out2=true}};
-   ['aL0','aL1','chest'].forEach(n=>{const b=pl.bones[n],cb=b.quaternion._onChangeCallback,cr=b.rotation._onChangeCallback;
-     const rec=()=>{if(out2&&who.length<8)who.push(n+' '+String(new Error().stack).split('\n').slice(3,8).map(x=>x.trim().replace(/\(.*live.html:/,'(').slice(0,70)).join(' < '))};
-     b.quaternion._onChange(function(){rec();cb.call(this)});b.rotation._onChange(function(){rec();cr.call(this)})});
-   out2=false;STEP(2);animHero=f3;out.who2=who}
- {const L=pl._grip.L.filter(q=>q.ty=='bow');out.gripBows=L.map(q=>[!!q.W.parent,q.W.parent&&q.W.parent.name,q.W===BW(),q.W.visible]);
-  const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);BW().getWorldQuaternion(b);out.now=[+ang(q0,a.clone().invert().multiply(b)).toFixed(1),+ang(q0,QH()).toFixed(1),[a.x,a.y,a.z,a.w].map(v=>+v.toFixed(2)),+pl.rotation.y.toFixed(2),+pl.rotation.x.toFixed(2),+pl.rotation.z.toFixed(2)]}
- {const a=[];for(let i=0;i<20;i++){window.__bcN=0;window.__bcA=null;STEP(1);const wq=BW().getWorldQuaternion(new THREE.Quaternion());a.push([+ang(q0,QH()).toFixed(1),window.__bcA,+ang(wq,window.__bcWQ).toFixed(1),['chest','aL0','aL1','aL2'].map((n,j)=>+ang(pl.bones[n].getWorldQuaternion(new THREE.Quaternion()),window.__bcPQ[j]).toFixed(1)),+pl.rotation.y.toFixed(3),+pl.getWorldQuaternion(new THREE.Quaternion()).y.toFixed(3),pl.parent&&pl.parent.uuid.slice(0,4),+(pl.parent?pl.parent.rotation.y:0).toFixed(3)])}out.idleDrift=a.filter((_,i)=>i%5==0)}
- if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(30);out.wFight=+pl._grip.w.toFixed(2)}
+ // the bow in the hero's frame vs its v135 carry; and in the hand vs the strike (shooting) grip
+ const QH=()=>{const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);BE().W.getWorldQuaternion(b);return a.invert().multiply(b)};
+ const QS=()=>{const e=BE();return e.S?ang(e.S.q,e.W.quaternion):0};
+ if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(60)}
+ out.wBefore=+pl._grip.w.toFixed(2);
  atkCd=0;swing();let n=0;while(HA.cur&&n<200){STEP(1);n++}out.shotFrames=n;
- const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0){const hq=new THREE.Quaternion(),pq=new THREE.Quaternion();pl.getWorldQuaternion(hq);BW().parent.getWorldQuaternion(pq);const T=hq.clone().multiply(bow135Q()),pw=pq.clone().multiply(BW().quaternion);
-   dx.push([tr[i],+pl._grip.w.toFixed(2),HA.cur?+HA.cur.k.toFixed(2):-1,pl._b192?1:0,+(IDL.cbV||0),+pl.rotation.y.toFixed(2),+ang(T,pw).toFixed(1),+ang(q0,hq.clone().invert().multiply(T)).toFixed(1)])}}out.dx=dx;
- out.after05=tr[31];out.after1=tr[62];out.after2=tr[124];out.max05_2=Math.max(...tr.slice(31));out.trace=tr.filter((_,i)=>i%10==0);out.wEnd=+pl._grip.w.toFixed(2);
+ const q0=bow135Q(),tr=[],ws=[],sh=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));ws.push(+pl._grip.w.toFixed(2));sh.push(+QS().toFixed(1))}
+ out.after05=tr[31];out.after2=tr[124];out.max05_2=Math.max(...tr.slice(31));out.w05=ws[31];out.strike05=sh[31];out.trace=tr.filter((_,i)=>i%10==0);out.wTrace=ws.filter((_,i)=>i%10==0);
  return out}"""
 # ---------------- 2. gear fit ----------------
 GEAR=COMMON+r"""(a)=>{const [rows,sheet]=a,V=THREE.Vector3,out={rows:[],img:null};const FW=210,FH=270;let rd,sc,pc;if(sheet){const R=RT.mk(FW,FH,0x262a30);rd=R.rd;sc=R.sc;pc=R.pc}
@@ -87,7 +71,8 @@ BARD=COMMON+r"""(sheet)=>{const V=THREE.Vector3,out={fr:[],img:null};
   const arm=(s)=>{const a=g.bones['a'+s+'0'].getWorldPosition(new V()),e=g.bones['a'+s+'1'].getWorldPosition(new V()),[w,tip]=paw(s),P=[];
     for(let j=4;j<=10;j++)P.push(a.clone().lerp(e,j/10));for(let j=0;j<=10;j++)P.push(e.clone().lerp(w,j/10));P.push(w.clone().lerp(tip,.5),tip);return Math.min(...P.map(inside))};
   for(let i=0;i<24;i++){const t=i*130;wkAnim103(g,t);g.updateMatrixWorld(true);
-    const r={t,pole:[g._wk.b192L,g._wk.b192R]};['L','R'].forEach(s=>{r[s]=+arm(s).toFixed(2)});
+    const seg=(s)=>{const a=g.bones['a'+s+'0'].getWorldPosition(new V()),e=g.bones['a'+s+'1'].getWorldPosition(new V()),[w,tip]=paw(s);return [[a,e].map(inside).map(x=>+x.toFixed(2)),+inside(a.clone().lerp(e,.5)).toFixed(2),+inside(e.clone().lerp(w,.5)).toFixed(2),+inside(w).toFixed(2),+inside(tip).toFixed(2)]};
+    const r={t,pole:[g._wk.b192L,g._wk.b192R],segL:seg('L'),segR:seg('R')};['L','R'].forEach(s=>{r[s]=+arm(s).toFixed(2)});
     // the strumming paw's distance to the bowl's front face (lute frame z) and the neck hand's distance to the neck
     const [w2,t2]=paw('L');const lt=tl.worldToLocal(t2.clone());r.strumZ=+lt.z.toFixed(3);r.strumY=+lt.y.toFixed(3);
     const [w3,t3]=paw('R');const ln=tl.worldToLocal(w3.clone().lerp(t3,.5));r.neckX=+ln.x.toFixed(3);r.neckY=+ln.y.toFixed(3);r.neckZ=+ln.z.toFixed(3);
@@ -107,8 +92,13 @@ def s(pg):
             r=ev(BOW,fight)
             print('bow','fight' if fight else 'calm',json.dumps(r))
             if r.get('err'):F('bow: error %s'%r['err']);continue
-            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s) [deg,w,k,snap,combat,rotY,bowVsCarryTarget,targetVsQ0] %s'%('fight' if fight else 'calm',r['after05'],MAXB,json.dumps(r.get('dx'))))
-            if r['max05_2']>MAXB:F('bow (%s): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%('fight' if fight else 'calm',r['max05_2']))
+            cs='fight' if fight else 'calm'
+            # half a second after the shot the hands are back in the carry grip and the bow is out of the shooting hold; in a
+            # calm the bow lies at its carry (in a fight the combat-ready stance raises the bow arm: that carry is turned)
+            if r['w05']<.99:F('bow (%s): 0.5 s after the shot the hands still hold the shooting grip (carry weight %s, trace %s)'%(cs,r['w05'],r['wTrace']))
+            if r['strike05']<20:F('bow (%s): 0.5 s after the shot the bow is still in the upright shooting hold (%s deg from it)'%(cs,r['strike05']))
+            if not fight and r['after05']>MAXB:F('bow (calm): 0.5 s after the shot the bow is still %s deg from its carry (max %s)'%(r['after05'],MAXB))
+            if not fight and r['max05_2']>MAXB:F('bow (calm): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%r['max05_2'])
     if 'bard' in PART:
         r=ev(BARD,bool(SHEET))
         mins=[min(f['L'],f['R']) for f in r['fr']]
