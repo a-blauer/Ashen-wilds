@@ -65026,7 +65026,7 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 //     hold (upright, held by the riser, gripStrikeOf 1270), meant for a raised bow arm. After the shot's pose (bowPose) ends,
 //     the arm goes back to its low carry, but the grip stayed in the shooting hold: the bow hung upright by the hip, half
 //     turned, until 2 s later the grip eased back to the v135 carry across the hips. Measured by test/v192_hero_fit.py.
-//     Now a bow uses the strike grip only while a shot pose plays (eased in over 0.12 s) and goes back to the carry as the arm
+//     Now a bow uses the strike grip only while a shot pose plays (eased in over 0.26 s) and goes back to the carry as the arm
 //     lowers into the follow-through (last quarter of the draw), in a fight too. Melee weapons keep v163's hold.
 //  2. "The helmet and chest pieces for the ranger class seem strange and don't fit his body well."
 //     Cause: every Ranger hood is a v136 gkHood: cloth measured round EVERYTHING built before it (it is built last, gkLater),
@@ -65040,8 +65040,8 @@ function dv191Row(c){const L=dv191Lv(c),p=dv191Prog(c),w=L>=DV191.max?100:Math.r
 //     Now (a) a hood measures only the body and what lies on it: a point counts when it is within FIT192.near (FIT192.nearHead
 //     above the neck) of the bare body's own section at that height; loose details are left out and now sit on / poke through
 //     the cloth like trinkets; (b) on the weasel the face opening sits further back round the long muzzle; (c) the weasel's
-//     skirts are measured the same way (FIT192.nearSk). Every race's hoods use (a); on the other four only a hood a loose detail
-//     used to widen changes (out/v192_fit_others_*.jpg).
+//     skirts are measured the same way (FIT192.nearSk). The other four races keep their v136 hoods exactly (their bodies are
+//     broad enough that the trinkets stay inside the cloth; v136_gear checks their hood clearance).
 //  3. "Bard's hand is phasing through his instrument." The Duskhold Bard (hare, 1900 WK103.bard + 2995 bard141): his strumming
 //     shoulder is behind the lute's bowl and bard141's IK bent the elbow down and back, so the forearm went straight through
 //     the bowl and the paw came out of the sound hole, every frame of his loop (out/v192_bard_before.jpg). Now the paws reach
@@ -65055,10 +65055,10 @@ var FIT192={on:true,bow:true,near:.06,nearHead:.05,skirt:true,bard:true};
 // For the player's own hero with a bow, the grip weight (S.w: 1 carry, 0 strike) is worked out here instead of by 1270 / 3220:
 //  * strike grip only while a shot (or another action pose) plays; the last BOW192.tail of a bow draw (the arm already lowering
 //    into the follow-through) counts as carry, so the bow turns back to the carry while the arm comes down;
-//  * into the strike grip over BOW192.in s (1270 turned it in ~0.05 s and clamped it to the shot's first 18%: v163 found 60-104°
+//  * into the strike grip over BOW192.in s, from where the bow sits in the fist when the shot starts (1270 turned it in ~0.05 s and clamped it to the shot's first 18%: v163 found 60-104°
 //    in one frame and kept the strike hold between shots to hide that); back to the carry over BOW192.out s (as before).
 // Co-op partners' heroes already left the strike grip when the replayed shot ended (1270: att = h.sw); they are unchanged.
-var BOW192={in:.12,out:.28,tail:.76};
+var BOW192={in:.26,out:.28,tail:.76};
 function fit192Bow(h){const S=h&&h._grip;if(!S||!S.L)return false;for(const e of S.L)if(e.ty=='bow'&&e.W&&e.W.parent)return true;return false}
 function fit192Draw(A){return !!A&&(A.pose===bowPose||(typeof fxaPose=='function'&&A.pose===fxaPose))}
 {const f=gripTick;gripTick=function(h,now,el,att){
@@ -65066,11 +65066,32 @@ function fit192Draw(A){return !!A&&(A.pose===bowPose||(typeof fxaPose=='function
   const S=h._grip,A=typeof HA!='undefined'?HA.cur:null,mv=!!(A&&A.mv164);
   const shoot=!!A&&!mv&&!(fit192Draw(A)&&A.k>=BOW192.tail);
   const dt=S.t!=null?(now-S.t)/1000:-1;
+  // the carry is held steady in the hero's frame (2390 bow135Carry): while the arm swings up into the draw that target turns
+  // with it against the hand, so the bow spun in the fist (v163_weapons: 218° in 0.1 s). From the frame a shot starts, the
+  // carry is the bow's place in the hand at that moment (H._b192), and the hand turns it into the strike grip from there
+  if(shoot&&!h._b192){const e=S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(e)h._b192={q:e.W.quaternion.clone(),p:e.W.position.clone()}}
   if(S.w==null||!(dt>=0)||dt>.5)S.w=shoot?0:1;
   else S.w=shoot?Math.max(0,S.w-dt/BOW192.in):Math.min(1,S.w+dt/BOW192.out);
+  if(!shoot&&h._b192&&S.w>=.999)h._b192=null;
   S.t=now;if(A&&!mv)EDGE163.last=nowP();
   // the rest of the grip (placing the bow by that weight, the elbow, the hold) as before; undefined = keep the weight
   return f.call(this,h,undefined,el,att)}}
+// while a shot plays the carry end of the blend is that hand-held snapshot (no spin in the fist while the arm swings up); over
+// the shot's last quarter (the arm lowering) it turns into the v135 carry held in the hero's frame, which takes over after the
+// shot. Runs after gripTick (2390's bow135Carry is wrapped: it runs last in animHero).
+var FIT192_Q=null;
+{const f=bow135Carry;bow135Carry=function(h){const L=h&&h._b192;if(!FIT192.on||!L||h!==pl)return f.apply(this,arguments);
+  const S=h._grip,A0=typeof HA!='undefined'?HA.cur:null,A=A0&&!A0.mv164?A0:null;   // after the shot (no A): the v135 carry (u = 1) until the grip is back
+  const e=S&&S.L&&S.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);if(!e||!e.S)return;const w=gripSS(S.w==null?1:S.w);if(w<=1e-3)return;
+  const Q=FIT192_Q||(FIT192_Q={a:new THREE.Quaternion(),b:new THREE.Quaternion(),t:new THREE.Quaternion(),c:new THREE.Quaternion()});
+  let tq=L.q;const u=!A?1:fit192Draw(A)?Math.max(0,Math.min(1,(A.k-BOW192.tail)/(1-BOW192.tail))):0;
+  if(u>0&&V100A_BOW.x135){const W=e.W,P=W.parent;P.updateWorldMatrix(true,false);h.getWorldQuaternion(Q.a);P.getWorldQuaternion(Q.b);
+    Q.t.copy(Q.b.invert()).multiply(Q.a).multiply(bow135Q());tq=Q.c.copy(L.q).slerp(Q.t,u*u*(3-2*u))}
+  const W=e.W,sx=W.scale.x,hd=e.S.hold,ps=hd?new THREE.Vector3(hd[0]*sx,hd[1],hd[2]).applyQuaternion(e.S.q).negate().add(new THREE.Vector3(...e.S.p)):new THREE.Vector3(...e.S.p);
+  W.quaternion.copy(e.S.q).slerp(tq,w);
+  // the riser stays in the hand (the carry's hold point at the anchor, as bow135Carry places it)
+  const C=e.C,an=C.an||GRIP_AN,hv=new THREE.Vector3(C.hold[0]*sx,C.hold[1]*W.scale.y,C.hold[2]*W.scale.z).applyQuaternion(tq),pc=new THREE.Vector3(an[0]-hv.x,an[1]-hv.y,an[2]-hv.z);
+  W.position.copy(ps).lerp(pc.lerp(L.p,1-u),w)}}
 
 // ---------------- 2. hoods measure the body and what lies on it ----------------
 // the bare body's section at height y: the hull radius per angle of the body triangles only (BR body builders: GL176.body
@@ -65098,7 +65119,8 @@ var FIT192_HOOD=null;
 {const f=gkPts;gkPts=function(B,y0,y1,filt,exRe){const H=FIT192_HOOD;if(!FIT192.on||!H||H.B!==B)return f.apply(this,arguments);const S=H.S;
   const f2=(x,y,z)=>{if(filt&&!filt(x,y,z))return false;const lim=y>H.yNeck?FIT192.nearHead:FIT192.near;return fit192Out(S,x,y,z)<=lim};
   return f.call(this,B,y0,y1,f2,exRe)}}
-{const f=gkHood;gkHood=function(B,P,o){if(!FIT192.on||!B||!B.L||!BR.on||!BR.R)return f.apply(this,arguments);let S=null;try{S=fit192Body(B)}catch(_){S=null}
+// only the weasel: the other four races' hoods fit their bodies and keep their v136 shape exactly (v136_gear hood clearance)
+{const f=gkHood;gkHood=function(B,P,o){if(!FIT192.on||!B||!B.L||!BR.on||!BR.R||BR.R.key!='weasel')return f.apply(this,arguments);let S=null;try{S=fit192Body(B)}catch(_){S=null}
   if(!S)return f.apply(this,arguments);const D=BR.R,o2=Object.assign({},o||{});
   // the weasel: the opening further back and the cut lower round the long muzzle
   if(D.key=='weasel'){const er=D.eyeR||.021;o2.zf=o2.zf!=null?o2.zf:D.EYEP[2]-er-.024;o2.yJaw=o2.yJaw||D.EYEP[1]-.1}

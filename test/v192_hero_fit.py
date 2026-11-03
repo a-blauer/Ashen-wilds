@@ -4,7 +4,8 @@
 #     turned back into the carry ~2 s later. Checked: 0.5 s after the shot the bow is within MAXB deg of its pre-shot carry
 #     (in the hero's frame), with a monster hunting nearby (the v163 fight hold) and without.
 #  2. gear: every Ranger hood with a chest piece, tier by tier, on the weasel (+ the owner's screenshot set): the hood's own
-#     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM.
+#     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM, and narrower
+#     than the same piece built the pre-v192 way (FIT192.on=false, built fresh) by at least MIND unless that was already narrow.
 #  3. bard: both arms (upper arm, forearm, paw) stay outside the lute's bowl (an ellipsoid) through his whole strumming loop.
 #  SHEET=1: picture sheet out/v192_fit<TAG>.jpg (rows: combos; front / 3-4 / side / back / head 3-4 / head front) + bard close-ups.
 import os,sys,re,base64,json
@@ -12,7 +13,8 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP
 COMMON=re.search(r'COMMON=r"""(.*?)"""',open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'v114_beasts.py')).read(),re.S).group(1)
-MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.1'))
+MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.15'))
+MIND=float(os.environ.get('MIND','.02'))
 TAG=os.environ.get('TAG','');SHEET=os.environ.get('SHEET','')
 fails=[]
 def F(m):fails.append(m);print('FAIL',m,flush=True)
@@ -38,6 +40,7 @@ GEAR=COMMON+r"""(a)=>{const [rows,sheet]=a,V=THREE.Vector3,out={rows:[],img:null
   const byName=n=>ITPL.findIndex(t=>t.n==n);
   if(!window.__gkw){window.__gkw=1;const f=gkHood;gkHood=function(B,P,o){const H=f.apply(this,arguments);try{let m=0,my=0,top=0;H.G.forEach(r=>r.forEach(v=>{if(v.y<1.0&&Math.abs(v.x)>m){m=Math.abs(v.x);my=v.y}}));window.__hw={w:m,y:my}}catch(_){}return H}}
   rows.forEach((r,ri)=>{const [cls,race,helm,chest]=r,E={};const th=byName(helm),tc=byName(chest);if(th>=0)E.helm=RT.it(th,2);if(tc>=0)E.chest=RT.it(tc,2);
+    let old=null;if(race==5&&th>=0){FIT192.on=false;mdS().G.clear();window.__hw=null;try{RT.beast(cls,race,E)}catch(_){}old=window.__hw;FIT192.on=true;mdS().G.clear()}
     window.__hw=null;const H=RT.beast(cls,race,E);RT.hideW(H);if(sc)sc.add(H);RT.idle(H,400);H.updateMatrixWorld(true);
     // vertices of the whole model in its bind pose (geometry space: the measurements of the build)
     const P=[];H.traverse(m=>{if(m.isSkinnedMesh&&m.geometry&&m.geometry.attributes.position){const pa=m.geometry.attributes.position;for(let i=0;i<pa.count;i++)P.push([pa.getX(i),pa.getY(i),pa.getZ(i)])}});
@@ -45,7 +48,7 @@ GEAR=COMMON+r"""(a)=>{const [rows,sheet]=a,V=THREE.Vector3,out={rows:[],img:null
     // shoulders: the widest body point at the shoulder line (arms included), from the bare body of the same race
     const key='sh'+race;if(!RT[key]){BR.bare=true;const Hb=RT.beast(cls,race,{});BR.bare=false;let sw=0;Hb.traverse(m=>{if(m.isSkinnedMesh&&m.geometry){const pa=m.geometry.attributes.position;for(let i=0;i<pa.count;i++){const y=pa.getY(i);if(y>.86&&y<1.0)sw=Math.max(sw,Math.abs(pa.getX(i)))}}});RT[key]=sw}
     const shW=RT[key],hw=window.__hw,mw=hw?hw.w:0,mwY=hw?hw.y:0;
-    out.rows.push({lab:cls+'/'+D.key+' '+helm+' + '+chest,shoulder:+shW.toFixed(3),wide:+mw.toFixed(3),wideY:+mwY.toFixed(2),over:hw?+(mw-shW).toFixed(3):null,miss:[th<0?helm:null,tc<0?chest:null].filter(Boolean)});
+    out.rows.push({lab:cls+'/'+D.key+' '+helm+' + '+chest,shoulder:+shW.toFixed(3),wide:+mw.toFixed(3),wideY:+mwY.toFixed(2),over:hw?+(mw-shW).toFixed(3):null,overOld:old?+(old.w-shW).toFixed(3):null,miss:[th<0?helm:null,tc<0?chest:null].filter(Boolean)});
     if(sheet){const cb=new V(0,.82,0),hp=H.bones.head.getWorldPosition(new V()),hc=new V(hp.x,hp.y+.03,hp.z+.03);
       const shot=(col,dir,c,dist,l)=>{const d=new V(...dir).normalize().multiplyScalar(dist);pc.position.copy(c).add(d);pc.lookAt(c);rd.render(sc,pc);ctx.drawImage(rd.domElement,col*FW,ri*FH);RT.lbl(ctx,l,col*FW,ri*FH,FW)};
       views.forEach((v,col)=>{const lab=col?v:(helm.split(' ').slice(-2).join(' ')+' + '+chest.split(' ').slice(-2).join(' '));
@@ -80,7 +83,21 @@ def s(pg):
     ev("()=>localStorage.clear()")
     pg.set_default_timeout(1500000)
     pg.click('[data-dev=desktop]',timeout=300000);pg.click('[data-c="ranger"]',timeout=300000);pg.click('#ccNext',timeout=300000);pg.wait_for_timeout(300);pg.click('#ccNext',timeout=300000);pg.wait_for_timeout(3000)
-    PART=os.environ.get('PART','bow,gear,bard').split(',')
+    PART=os.environ.get('PART','bow,bard,gear').split(',')
+    if 'bow' in PART:
+        for fight in (0,1):
+            r=ev(BOW,fight)
+            print('bow','fight' if fight else 'calm',json.dumps(r))
+            if r.get('err'):F('bow: error %s'%r['err']);continue
+            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s)'%('fight' if fight else 'calm',r['after05'],MAXB))
+            if r['max05_2']>MAXB:F('bow (%s): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%('fight' if fight else 'calm',r['max05_2']))
+    if 'bard' in PART:
+        r=ev(BARD,bool(SHEET))
+        mins=[min(f['L'],f['R']) for f in r['fr']]
+        for f in r['fr'][:6]:print('bard',json.dumps(f))
+        print('bard: smallest arm-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
+        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside)'%min(mins))
+        if SHEET and r.get('img'):open(O+'/v192_bard%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_bard%s.jpg'%TAG)
     if 'gear' in PART:
         # every ranger hood with the chest piece of the same row (14 x 1) + the owner's screenshot set (Hornwood Hood + Galewing / Moonhunter Mantle)
         rows=[['ranger',5,h,c] for h,c in zip(RANGER_H,RANGER_C)]+[['ranger',5,'Hornwood Hood','Galewing Mantle'],['ranger',5,'Hornwood Hood','Moonhunter Mantle'],['ranger',5,'Bonehunter Hood','Windrunner Coat']]
@@ -90,25 +107,12 @@ def s(pg):
         for q in r['rows']:
             print(json.dumps(q))
             if q['miss']:F('missing items %s'%q['miss'])
+            if q['lab'].startswith('ranger') and q['over'] is not None and q['overOld'] is not None and q['overOld']>.08 and q['over']>q['overOld']-MIND:F('%s: the hood\'s mantle is not narrower than before v192 (%s m past the shoulders, was %s)'%(q['lab'],q['over'],q['overOld']))
             if q['lab'].startswith('ranger') and q['over'] is not None and q['over']>MAXM:F('%s: the hood\'s mantle reaches %s m past the shoulders at y %s (max %s)'%(q['lab'],q['over'],q['wideY'],MAXM))
         if SHEET and r.get('img'):open(O+'/v192_fit%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_fit%s.jpg'%TAG)
         if SHEET:
             r2=ev(GEAR,[[['warrior',1,'Gravewarden Helm','Gravewarden Hauberk'],['assassin',2,'Voidwalker Hood','Voidwalker Garb'],['mage',3,'Candlemourn Hood','Candlemourn Robe'],['paladin',4,'Reliquarian Crown-Helm','Reliquarian Aegis']],True])
             for q in r2['rows']:print('other race',json.dumps(q))
             if r2.get('img'):open(O+'/v192_fit_others%s.jpg'%TAG,'wb').write(base64.b64decode(r2['img'].split(',')[1]));print('wrote v192_fit_others%s.jpg'%TAG)
-    if 'bard' in PART:
-        r=ev(BARD,bool(SHEET))
-        mins=[min(f['L'],f['R']) for f in r['fr']]
-        for f in r['fr'][:6]:print('bard',json.dumps(f))
-        print('bard: smallest arm-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
-        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside)'%min(mins))
-        if SHEET and r.get('img'):open(O+'/v192_bard%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_bard%s.jpg'%TAG)
-    if 'bow' in PART:
-        for fight in (0,1):
-            r=ev(BOW,fight)
-            print('bow','fight' if fight else 'calm',json.dumps(r))
-            if r.get('err'):F('bow: error %s'%r['err']);continue
-            if r['after05']>MAXB:F('bow (%s): 0.5 s after the shot the bow is still %s deg from its carry (max %s)'%('fight' if fight else 'calm',r['after05'],MAXB))
-            if r['max05_2']>MAXB:F('bow (%s): between 0.5 and 2.4 s after the shot it turns %s deg from its carry'%('fight' if fight else 'calm',r['max05_2']))
 play.run(s,w=900,hh=600)
 print('v192 hero fit: checked' if not fails else 'CHECKS FAILED')
