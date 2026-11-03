@@ -37,7 +37,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   out.seeStand=sees(80,41,false);out.seeCr=sees(80,41,true);out.seeFar=sees(80,36.5,true);out.seeBehind=(()=>{b2.yaw=Math.atan2(0,1);return ab152Sees(b2,80,41,false,1)})();
   // caught: stand in front of the fountain sentry → "!" → the city's alarm (v157), then a death → back to the market checkpoint, calm
   AB152.S.acts.forEach(ab152ResetActor);{const [x,z]=W2(80,42.5);toPos(x,z);ab152SetCrouch(false)}tick(.3);
-  b2.yaw=Math.PI;b2.t=0;let caught=0;tick(3,()=>{if(H.cau)caught=1});out.caught=caught;out.cp=AB152Q.cp;await wait(2400);tick(.3);
+  b2.yaw=Math.PI;b2.t=0;let caught=0;tick(3,()=>{if(H.cau||b2.r192)caught=1});out.caught=caught;out.cp=AB152Q.cp;tick(3.4);await wait(2400);tick(.3);   // v192: the sentry rings its bell for 3 s first
   out.alarmOn=AB157A.on;out.alarmCr=H.cr;tick(1.2);out.alarmFoes=enemies.filter(e=>e.ab157&&!e.dead).length;
   hero.hp=1;down();await wait(300);try{AWD.ready=1;awRise()}catch(_){}await wait(900);tick(.3);
   out.posCp=[Math.round(pl.position.x-I.x0),Math.round(pl.position.z-I.y0)];out.cauClear=!H.cau&&!H.frz&&!AB157A.on;out.crAfter=H.cr;
