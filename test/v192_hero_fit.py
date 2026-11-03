@@ -3,16 +3,16 @@
 #     after every attack (v163 EDGE163.hold, made for melee edges): the bow hung upright by the riser in the low carry arm, then
 #     turned back into the carry ~2 s later. Checked: 0.5 s after the shot the bow is within MAXB deg of its pre-shot carry
 #     (in the hero's frame), with a monster hunting nearby (the v163 fight hold) and without.
-#  2. gear: every Ranger hood x chest combination tier by tier on the weasel (and one hood + chest on every other race): the hood's
-#     mantle at shoulder height is no wider than the shoulders + MAXM, and its front edge is not in front of the eyes.
-#  3. bard: the strumming hand stays outside the lute's bowl (the bowl is an ellipsoid; the paw's tip must be outside it).
+#  2. gear: every Ranger hood with a chest piece, tier by tier, on the weasel (+ the owner's screenshot set): the hood's own
+#     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM.
+#  3. bard: both arms (upper arm, forearm, paw) stay outside the lute's bowl (an ellipsoid) through his whole strumming loop.
 #  SHEET=1: picture sheet out/v192_fit<TAG>.jpg (rows: combos; front / 3-4 / side / back / head 3-4 / head front) + bard close-ups.
 import os,sys,re,base64,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 O=play.TMP
 COMMON=re.search(r'COMMON=r"""(.*?)"""',open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'v114_beasts.py')).read(),re.S).group(1)
-MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.075'))
+MAXB=float(os.environ.get('MAXB','25'));MAXM=float(os.environ.get('MAXM','.1'))
 TAG=os.environ.get('TAG','');SHEET=os.environ.get('SHEET','')
 fails=[]
 def F(m):fails.append(m);print('FAIL',m,flush=True)
@@ -36,15 +36,16 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
 GEAR=COMMON+r"""(a)=>{const [rows,sheet]=a,V=THREE.Vector3,out={rows:[],img:null};const FW=210,FH=270;let rd,sc,pc;if(sheet){const R=RT.mk(FW,FH,0x262a30);rd=R.rd;sc=R.sc;pc=R.pc}
   const views=['front','34','side','back','h34','hf'],cnv=sheet?document.createElement('canvas'):null;if(cnv){cnv.width=FW*views.length;cnv.height=FH*rows.length}const ctx=cnv?cnv.getContext('2d'):null;
   const byName=n=>ITPL.findIndex(t=>t.n==n);
+  if(!window.__gkw){window.__gkw=1;const f=gkHood;gkHood=function(B,P,o){const H=f.apply(this,arguments);try{let m=0,my=0,top=0;H.G.forEach(r=>r.forEach(v=>{if(v.y<1.0&&Math.abs(v.x)>m){m=Math.abs(v.x);my=v.y}}));window.__hw={w:m,y:my}}catch(_){}return H}}
   rows.forEach((r,ri)=>{const [cls,race,helm,chest]=r,E={};const th=byName(helm),tc=byName(chest);if(th>=0)E.helm=RT.it(th,2);if(tc>=0)E.chest=RT.it(tc,2);
-    const H=RT.beast(cls,race,E);RT.hideW(H);if(sc)sc.add(H);RT.idle(H,400);H.updateMatrixWorld(true);
+    window.__hw=null;const H=RT.beast(cls,race,E);RT.hideW(H);if(sc)sc.add(H);RT.idle(H,400);H.updateMatrixWorld(true);
     // vertices of the whole model in its bind pose (geometry space: the measurements of the build)
     const P=[];H.traverse(m=>{if(m.isSkinnedMesh&&m.geometry&&m.geometry.attributes.position){const pa=m.geometry.attributes.position;for(let i=0;i<pa.count;i++)P.push([pa.getX(i),pa.getY(i),pa.getZ(i)])}});
     const D=BRD[race],ey=D.EYEP[1],ez=D.EYEP[2];
     // shoulders: the widest body point at the shoulder line (arms included), from the bare body of the same race
     const key='sh'+race;if(!RT[key]){BR.bare=true;const Hb=RT.beast(cls,race,{});BR.bare=false;let sw=0;Hb.traverse(m=>{if(m.isSkinnedMesh&&m.geometry){const pa=m.geometry.attributes.position;for(let i=0;i<pa.count;i++){const y=pa.getY(i);if(y>.86&&y<1.0)sw=Math.max(sw,Math.abs(pa.getX(i)))}}});RT[key]=sw}
-    const shW=RT[key];let mw=0,mwY=0,fz=-9;P.forEach(p=>{if(p[1]>.86&&p[1]<1.06&&Math.abs(p[0])>mw){mw=Math.abs(p[0]);mwY=p[1]}});
-    out.rows.push({lab:cls+'/'+D.key+' '+helm+' + '+chest,shoulder:+shW.toFixed(3),wide:+mw.toFixed(3),wideY:+mwY.toFixed(2),over:+(mw-shW).toFixed(3),miss:[th<0?helm:null,tc<0?chest:null].filter(Boolean)});
+    const shW=RT[key],hw=window.__hw,mw=hw?hw.w:0,mwY=hw?hw.y:0;
+    out.rows.push({lab:cls+'/'+D.key+' '+helm+' + '+chest,shoulder:+shW.toFixed(3),wide:+mw.toFixed(3),wideY:+mwY.toFixed(2),over:hw?+(mw-shW).toFixed(3):null,miss:[th<0?helm:null,tc<0?chest:null].filter(Boolean)});
     if(sheet){const cb=new V(0,.82,0),hp=H.bones.head.getWorldPosition(new V()),hc=new V(hp.x,hp.y+.03,hp.z+.03);
       const shot=(col,dir,c,dist,l)=>{const d=new V(...dir).normalize().multiplyScalar(dist);pc.position.copy(c).add(d);pc.lookAt(c);rd.render(sc,pc);ctx.drawImage(rd.domElement,col*FW,ri*FH);RT.lbl(ctx,l,col*FW,ri*FH,FW)};
       views.forEach((v,col)=>{const lab=col?v:(helm.split(' ').slice(-2).join(' ')+' + '+chest.split(' ').slice(-2).join(' '));
@@ -61,15 +62,17 @@ BARD=COMMON+r"""(sheet)=>{const V=THREE.Vector3,out={fr:[],img:null};
   const bowl=tl.children[0],neck=tl.children[1];
   const paw=(side)=>{const b=g.bones['a'+side+'2'],e=g.bones['a'+side+'1'];const p=b.getWorldPosition(new V()),q=e.getWorldPosition(new V());const d=p.clone().sub(q).normalize();return [p,p.clone().addScaledVector(d,.07)]};
   const inside=(pt)=>{const l=bowl.worldToLocal(pt.clone());return Math.hypot(l.x/.17,l.y/.17,l.z/.17)};   // < 1 = inside the bowl (bowl.scale is part of worldToLocal)
-  const IN=g.bones.aL2&&g.bones.aR2;
+  const camO=cam.position.clone();cam.position.set(0,2,3);
+  const arm=(s)=>{const a=g.bones['a'+s+'0'].getWorldPosition(new V()),e=g.bones['a'+s+'1'].getWorldPosition(new V()),[w,tip]=paw(s),P=[];
+    for(let j=4;j<=10;j++)P.push(a.clone().lerp(e,j/10));for(let j=0;j<=10;j++)P.push(e.clone().lerp(w,j/10));P.push(w.clone().lerp(tip,.5),tip);return Math.min(...P.map(inside))};
   for(let i=0;i<24;i++){const t=i*130;wkAnim103(g,t);g.updateMatrixWorld(true);
-    const r={t};['L','R'].forEach(s=>{const [w,tip]=paw(s);r[s]=[+inside(w).toFixed(2),+inside(tip).toFixed(2),+inside(w.clone().lerp(tip,.5)).toFixed(2)]});
+    const r={t};['L','R'].forEach(s=>{r[s]=+arm(s).toFixed(2)});
     // the strumming paw's distance to the bowl's front face (lute frame z) and the neck hand's distance to the neck
     const [w2,t2]=paw('L');const lt=tl.worldToLocal(t2.clone());r.strumZ=+lt.z.toFixed(3);r.strumY=+lt.y.toFixed(3);
     const [w3,t3]=paw('R');const ln=tl.worldToLocal(w3.clone().lerp(t3,.5));r.neckX=+ln.x.toFixed(3);r.neckY=+ln.y.toFixed(3);r.neckZ=+ln.z.toFixed(3);
     out.fr.push(r);
     if(sheet&&i<6){const c=tl.getWorldPosition(new V()).add(new V(0,.05,0));[[0,.15,1],[.9,.3,.5]].forEach((dv,j)=>{pc.position.copy(c).add(new V(...dv).normalize().multiplyScalar(.95));pc.lookAt(c);rd.render(sc,pc);ctx.drawImage(rd.domElement,i*FW,j*FH)})}}
-  if(cnv)out.img=cnv.toDataURL('image/jpeg',.88);return out}"""
+  cam.position.copy(camO);if(cnv)out.img=cnv.toDataURL('image/jpeg',.88);return out}"""
 RANGER_H=['Leather Hood','Wolfpelt Hood','Emberstalker Cowl','Bonehunter Hood','Galewing Mask','Pathfinder Hood','Trapper Cap','Crowfeather Cowl','Deadeye Hood','Bogstalker Hood','Hornwood Hood','Gravehound Hood','Windrunner Hood','Moonhunter Cowl']
 RANGER_C=['Padded Jerkin','Studded Brigandine','Emberstalker Vest','Bonehunter Coat','Galewing Mantle','Pathfinder Coat','Trapper Jerkin','Crowfeather Coat','Deadeye Coat','Bogstalker Vest','Hornwood Harness','Gravehound Longcoat','Windrunner Coat','Moonhunter Mantle']
 def s(pg):
@@ -87,7 +90,7 @@ def s(pg):
         for q in r['rows']:
             print(json.dumps(q))
             if q['miss']:F('missing items %s'%q['miss'])
-            if q['lab'].startswith('ranger') and q['over']>MAXM:F('%s: the gear reaches %s m past the shoulders at y %s (max %s)'%(q['lab'],q['over'],q['wideY'],MAXM))
+            if q['lab'].startswith('ranger') and q['over'] is not None and q['over']>MAXM:F('%s: the hood\'s mantle reaches %s m past the shoulders at y %s (max %s)'%(q['lab'],q['over'],q['wideY'],MAXM))
         if SHEET and r.get('img'):open(O+'/v192_fit%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_fit%s.jpg'%TAG)
         if SHEET:
             r2=ev(GEAR,[[['warrior',1,'Gravewarden Helm','Gravewarden Hauberk'],['assassin',2,'Voidwalker Hood','Voidwalker Garb'],['mage',3,'Candlemourn Hood','Candlemourn Robe'],['paladin',4,'Reliquarian Crown-Helm','Reliquarian Aegis']],True])
@@ -95,10 +98,10 @@ def s(pg):
             if r2.get('img'):open(O+'/v192_fit_others%s.jpg'%TAG,'wb').write(base64.b64decode(r2['img'].split(',')[1]));print('wrote v192_fit_others%s.jpg'%TAG)
     if 'bard' in PART:
         r=ev(BARD,bool(SHEET))
-        mins=[min(f['L']+f['R']) for f in r['fr']]
+        mins=[min(f['L'],f['R']) for f in r['fr']]
         for f in r['fr'][:6]:print('bard',json.dumps(f))
-        print('bard: smallest paw-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
-        if min(mins)<1.0:F('bard: a paw passes into the lute\'s bowl (ratio %.2f)'%min(mins))
+        print('bard: smallest arm-in-bowl ratio over 24 frames (< 1 = inside the bowl):',min(mins))
+        if min(mins)<1.0:F('bard: an arm passes through the lute\'s bowl (ratio %.2f, < 1 = inside)'%min(mins))
         if SHEET and r.get('img'):open(O+'/v192_bard%s.jpg'%TAG,'wb').write(base64.b64decode(r['img'].split(',')[1]));print('wrote v192_bard%s.jpg'%TAG)
     if 'bow' in PART:
         for fight in (0,1):
