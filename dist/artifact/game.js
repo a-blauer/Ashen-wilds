@@ -64658,8 +64658,9 @@ FIT192.nearSk=.035;
 //    holds the neck from behind; both move as before (strum, sliding along the neck);
 //  * the elbow direction is searched (BARD192.poles): the one that keeps the arm (upper arm, forearm, paw) furthest outside
 //    the bowl's ellipsoid wins, the last choice favoured a little so it does not flip from frame to frame: the forearm comes
-//    over the bowl's upper edge, like a lute player's. The lute sits BARD192.out further from the belly than in v141.
-var BARD192={strum:[.0,.2,.15],neck:[.0,.42,-.05],sw:.025,nk:.05,pad:1.08,out:.08,
+//    over the bowl's upper edge, like a lute player's. The lute sits BARD192.out further from the belly than in v141, and a
+//    paw that would still dip into the bowl has its target moved out from the soundboard (BARD192.pawPad).
+var BARD192={strum:[.0,.2,.15],neck:[.0,.42,-.05],sw:.025,nk:.05,pad:1.08,pawPad:1.04,out:.05,
   poles:[[-1,-.3,-.6],[-1,.2,-.5],[-1,-.8,-.4],[-.6,.6,-.8],[-1,0,.3],[-.3,-1,-.9],[-1,-1,-.5],[-1,.6,0],[-.4,.9,-.3],[-1,.4,.6],[0,1,-.4],[-1,-.2,.8]]};
 var BARD192_T=null;
 function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.copy(bowl.matrixWorld).invert(),a=b0.getWorldPosition(T.a),e=b1.getWorldPosition(T.e),w=b2.getWorldPosition(T.w);
@@ -64669,7 +64670,7 @@ function bard192Out(L,bowl,b0,b1,b2){const T=BARD192_T,V=THREE.Vector3,mi=T.mi.c
 if(typeof bard141=='function'){const f0=bard141;bard141=function(n,now){if(!FIT192.on||!FIT192.bard)return f0.apply(this,arguments);
   const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.pelvis||!B.chest||!B.aL0||!B.aR0||!L.children[0])return f0.apply(this,arguments);
   f0.apply(this,arguments);   // places the lute
-  {const V0=THREE.Vector3,fw=new V0(0,0,1).applyQuaternion(L.quaternion);fw.y=0;if(fw.lengthSq()>1e-6){fw.normalize();L.position.addScaledVector(fw,BARD192.out)}L.updateMatrixWorld(true)}
+  L.position.z+=BARD192.out;L.updateMatrixWorld(true);   // the keeper's own forward (the lute is a child of the keeper)
   const V=THREE.Vector3;if(!BARD192_T)BARD192_T={mi:new THREE.Matrix4(),a:new V(),e:new V(),w:new V(),t:new V(),l:new V(),p:new V()};
   const t=now/1000+(S.t0||0);n.updateMatrixWorld(true);L.updateMatrixWorld(true);const bowl=L.children[0];bowl.updateMatrixWorld(true);
   const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),loc=b=>n.worldToLocal(b.getWorldPosition(new V()));
@@ -64684,4 +64685,11 @@ if(typeof bard141=='function'){const f0=bard141;bard141=function(n,now){if(!FIT1
     if(best<0)return;S['b192'+k]=best;const pp=C.poles[best];
     b0.quaternion.copy(q0);b1.quaternion.copy(q1);b2.quaternion.copy(q2);b0.updateMatrixWorld(true);
     try{fc116IK(b0.getWorldPosition(new V()),b0,b1,b2,T,new V(sx*pp[0],pp[1],pp[2]).transformDirection(n.matrixWorld),1)}catch(e){}};
-  try{arm('L',TS,-rs);arm('R',TN,rs)}catch(e){if(!BARD192.err){BARD192.err=1;console.warn('v192 bard',e)}}}}
+  // the paw must end outside the bowl: if the strum paw (wrist .. fingertips) still dips in, its target moves out from the
+  // soundboard (lute frame +z) until it is clear (a few tries, then it stays where it is)
+  const pawIn=k=>{const T=BARD192_T,mi=T.mi.copy(bowl.matrixWorld).invert(),e=B['a'+k+'1'].getWorldPosition(T.e),w=B['a'+k+'2'].getWorldPosition(T.w),tip=T.t.copy(w).sub(e).normalize().multiplyScalar(.07).add(w);let m=9;
+    for(let j=0;j<=4;j++){const l=T.l.copy(w).lerp(tip,j/4).applyMatrix4(mi);m=Math.min(m,Math.hypot(l.x,l.y,l.z)/.17)}return m};
+  try{arm('L',TS,-rs);arm('R',TN,rs);
+    for(let i=0,dz=0;i<4&&pawIn('L')<C.pawPad;i++){dz+=.02;arm('L',W([C.strum[0],C.strum[1]+C.sw*s,C.strum[2]+dz]),-rs)}
+    for(let i=0,dz=0;i<4&&pawIn('R')<C.pawPad;i++){dz-=.02;arm('R',W([C.neck[0],C.neck[1]+C.nk*f,C.neck[2]+dz]),rs)}}
+  catch(e){if(!BARD192.err){BARD192.err=1;console.warn('v192 bard',e)}}}}
