@@ -6,38 +6,30 @@
 //     hold (upright, held by the riser, gripStrikeOf 1270), meant for a raised bow arm. After the shot's pose (bowPose) ends,
 //     the arm goes back to its low carry, but the grip stayed in the shooting hold: the bow hung upright by the hip, half
 //     turned, until 2 s later the grip eased back to the v135 carry across the hips. Measured by test/v192_hero_fit.py.
-//     Now a bow is never held in the strike grip outside the shot itself: when no shot pose plays the grip goes straight back
-//     to the carry (the same 0.28 s ease the grip always used after a shot), in a fight too. Melee weapons keep v163's hold.
+//     Now a bow uses the strike grip only while a shot pose plays (eased in over 0.12 s) and goes back to the carry as the arm
+//     lowers into the follow-through (last quarter of the draw), in a fight too. Melee weapons keep v163's hold.
 //  2. "The helmet and chest pieces for the ranger class seem strange and don't fit his body well."
 //     Cause: every Ranger hood is a v136 gkHood: cloth measured round EVERYTHING built before it (it is built last, gkLater),
 //     each row the convex hull of what is there + clearance, and below the widest row the cloth "hangs" straight down. On the
 //     weasel (the slimmest, most sloped body: TR .9 at the shoulders) the chest's loose decorations stick far out of the body:
 //     the feathers and bone charms on the left shoulder (2540 mdExtra), the feather / spike shoulder fans of the coats, the
 //     fur collar's tufts, the motif horns (2760) and the v178 tier V feather mantle (3372). The hood's hull went round their
-//     tips, so its mantle became a stiff disc up to ~2x the shoulder width, sitting high and flat like a tray, with a gap to
-//     the body; from behind a flat ring above the shoulders. The same hull also took the weasel's long muzzle (and the
-//     whiskers) into the rows behind the face opening, so the face opening started late and the snout poked out of a hood
-//     shaped for a rounder head.
-//     Now: (a) the hood measures only the body and the cloth / plate that lies on it: a point is used when it is within
-//     FIT192.near of the bare body's own section at that height (head, neck, torso, upper arms) — loose details (feathers,
-//     spikes, horns, tufts, charms) are left out, so they now sit over or poke through the cloth like real trinkets would;
-//     (b) below the shoulders the hood's mantle is capped to the shoulder line + FIT192.mant (it drapes over the shoulders,
-//     never wider), and (c) on the weasel the face opening is cut a little further back and wider (behind the eyes and round
-//     the muzzle), so the long snout comes out of the opening instead of through the cloth. The v136 fur collar of the Ranger's
-//     chest (mdExtra, under no hood) and the hood itself are measured the same way, every race (the other four races' hoods
-//     only change where a loose detail used to widen them).
-//     The chest's v136 hunting skirt: on the weasel the coat's own skirt and the hunting skirt stacked into a wide bell (the
-//     skirt measures what is under it the same way); it now measures only the legs and the coat's skirt (FIT192.skirt).
-//  3. "Bard's hand is phasing through his instrument." The Duskhold Bard (hare, 1900 WK103.bard + 2995 bard141) strums with his
-//     left paw at a point 12 cm in front of the lute's middle (TR = [.02, .02, .12] in the lute's frame), but the lute's bowl is
-//     an ellipsoid .17 x .21 x .077 — the IK reached for a point INSIDE the soundboard's dome (the bowl's front is at z ≈ .077
-//     × .9 scale, the strum point's paw tip went ~5 cm further in as the paw curls): the paw and its fingers went through the body.
-//     The neck hand closed round the neck's centre line, the fingers through the fretboard. Now the strumming paw reaches for
-//     a point just in front of the soundboard over the sound hole (the paw tip stays outside the bowl), and the neck paw
-//     holds the neck from behind (its palm on the back of the neck, fingers over the fretboard edge).
-// Co-op: all three are deterministic from what partners already receive (the partner's hero runs the same grip code on its
-// replayed shot pose; models are built from the same item templates and look; the bard is town scenery).
-var FIT192={on:true,bow:true,near:.06,nearHead:.05,mant:.05,skirt:true,bard:true};
+//     tips, so its mantle became a stiff collar far wider than the shoulders, sitting high and flat like a tray with a gap
+//     to the body (from behind: a flat disc above the shoulders). The weasel's coat skirts were hung round the belt pouches and
+//     knife the same way: a wide bell round thin legs.
+//     Now (a) a hood measures only the body and what lies on it: a point counts when it is within FIT192.near (FIT192.nearHead
+//     above the neck) of the bare body's own section at that height; loose details are left out and now sit on / poke through
+//     the cloth like trinkets; (b) on the weasel the face opening sits further back round the long muzzle; (c) the weasel's
+//     skirts are measured the same way (FIT192.nearSk). Every race's hoods use (a); on the other four only a hood a loose detail
+//     used to widen changes (out/v192_fit_others_*.jpg).
+//  3. "Bard's hand is phasing through his instrument." The Duskhold Bard (hare, 1900 WK103.bard + 2995 bard141): his strumming
+//     shoulder is behind the lute's bowl and bard141's IK bent the elbow down and back, so the forearm went straight through
+//     the bowl and the paw came out of the sound hole, every frame of his loop (out/v192_bard_before.jpg). Now the paws reach
+//     for the strings just in front of the soundboard and for the neck from behind, and the elbow direction is chosen so no
+//     part of either arm enters the bowl (BARD192): the forearm comes over the bowl's upper edge.
+// Co-op: all three are deterministic from what partners already receive (gear from the shared item templates and look; the
+// partner's replayed shot ends with h.sw, after which 1270 already eases its bow to the carry; the Bard is town scenery).
+var FIT192={on:true,bow:true,near:.06,nearHead:.05,skirt:true,bard:true};
 
 // ---------------- 1. the bow: no strike grip outside the shot ----------------
 // For the player's own hero with a bow, the grip weight (S.w: 1 carry, 0 strike) is worked out here instead of by 1270 / 3220:

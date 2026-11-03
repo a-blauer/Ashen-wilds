@@ -97,3 +97,4 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 3470|v188|coop|co-op|2170|3455|2990|3440|3450|0107|0890|3396|3436|3438|1710|0120|0080|0610: v188_coop_look.py
 # v189: fusion stars (3480: badges next to companion names, HUD bars, Fusion window)
 3480|v189|fusion|fuse|star|0045|0210|0840|1780: v189_fusion_stars.py
+3550|v192|hero-fit|bow|bard|lute|hood|1270|3220|2510|2500|2505|2540|2995|1900: v192_hero_fit.py v163_weapons.py v164_dodge_grip.py v135_bow.py v136_gear.py

@@ -69,6 +69,19 @@ B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();a.
 poll(lambda:A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.mpC&&g.mpC.n=='Foxlet'&&g.getObjectByName('dv191'))}"),60000)
 dv=[B.evaluate("()=>!!(fols[0]&&fols[0].getObjectByName('dv191'))"),A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.getObjectByName('dv191'))}")]
 chk('partner sees the Devoted glow (v191)',dv==[True,True],json.dumps({'own':dv[0],'partner':dv[1]}))
+# 4c. v192: a ranger's bow on the partner's screen is back in its carry soon after a shot (own screen: the same)
+A.evaluate("""()=>{hero.cls='ranger';const tp=ITPL.findIndex((t,i)=>t.sl=='weapon'&&t.cls=='ranger'&&itT({tp:i,lv:1,r:1,up:0,aff:[]}).wt=='bow');eq.weapon={id:9e4+tp,tp,lv:30,req:1,r:2,up:0,aff:[]};refreshGear();for(const e of enemies)e.agg=0}""")
+poll(lambda:B.evaluate("()=>{const r=Object.values(MP.rh)[0];return !!(r&&r.m&&(r.m.gearG||[]).some(o=>o.userData&&o.userData.wt=='bow'&&o.parent))}"),40000)
+BQ="""(own)=>{const h=own?pl:Object.values(MP.rh)[0].m;const W=(h.gearG||[]).find(o=>o.userData&&o.userData.wt=='bow'&&o.parent);if(!W)return null;const a=new THREE.Quaternion(),b=new THREE.Quaternion();h.getWorldQuaternion(a);W.getWorldQuaternion(b);const q=a.invert().multiply(b);return [q.x,q.y,q.z,q.w]}"""
+tick(1200);c0=[A.evaluate(BQ,True),B.evaluate(BQ,False)]
+A.evaluate("()=>{atkCd=0;swing()}");poll(lambda:A.evaluate("()=>!HA.cur"),20000);tick(1200)
+c1=[A.evaluate(BQ,True),B.evaluate(BQ,False)]
+def qang(a,b):
+    import math
+    if not a or not b:return 999
+    d=min(1,abs(sum(x*y for x,y in zip(a,b))));return round(2*math.acos(d)*180/math.pi,1)
+ba=[qang(c0[0],c1[0]),qang(c0[1],c1[1])]
+chk('v192: the bow is back in its carry after a shot (own screen, partner)',ba[0]<=25 and ba[1]<=25,json.dumps({'own deg':ba[0],'partner deg':ba[1]}))
 # 5. replayed effects throw nothing on either screen
 tick(1500)
 errs=[l for k in 'AB' for l in logs[k] if 'PAGEERROR' in l or 'v105 cast' in l]
