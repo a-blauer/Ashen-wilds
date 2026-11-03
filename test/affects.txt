@@ -11,7 +11,7 @@ save|slot|export|0230-: v38t.py v114_save.py v116_slots.py v131_load_title.py
 kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor|folk: v137_npcs.py v142_folk.py v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
 instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v164_camps.py v148_camps.py v144_glowmire.py v148_cheddar.py v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py v133_sov_spacing.py v141_sov.py
-compan|command|kite|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v137_enemies.py v57t.py v100_fusemenu.py v141_consume.py v105_abil.py v122_support.py v113_roster.py v164_kite.py v180_comp_float.py v190_devotion.py v188_coop_look.py
+compan|command|kite|egg|fusion|fuse|evolve|feed|hatch|grade|graded|incubat|support|comp-|rune|econ|pace|balance: v137_enemies.py v57t.py v100_fusemenu.py v141_consume.py v105_abil.py v122_support.py v113_roster.py v164_kite.py v180_comp_float.py v191_devotion.py v188_coop_look.py
 abilit|skill|talent|class|spell|resource|helpers-new: v117_abilities.py v105_abil.py v119_abprev.py v114_race.py v137_evolve.py
 beast|race|raven|creator|look|model|humanoid|outfit|armour|equipment|helm|jewel|gear|item|md|ornate|hair|chest|boots|amulet|hood|robe|weapon-details|icons|new-gear: v137_npcs.py v136_gear.py v136_icons.py v137_items.py v134_raven.py v120_anim.py v114_race.py v117_creator.py v117_wclip.py v117_grip_atk.py v117_xbow.py v178_gear_audit.py
 grip|weapon|arsenal|bow|flail|anim|attack|combat|step|dodge|poise|hit|idl|tail|tilt|movement|mount|riding|carry: v134_raven.py v120_anim.py v117_grip_atk.py v117_xbow.py v117_wclip.py v110_fight.py v73t.py v32t.py
@@ -41,7 +41,7 @@ skilling|gather|grip|1270|2995|3070|anim|weapon|0900|1700: v148_tools.py v148_ed
 camp|3071|0250|0360|chest|loot|kill|roster|0550: v148_camps.py
 outskirt|3074|1960|kingdom|gather|0102: v148_outskirts.py
 cheddar|3075|quest|board|2350|2380: v148_cheddar.py
-deco|3076|1910|3073|footprint|lot|1860|1870|kingdom: v148_deco.py v103_kingdom.py v109_kingdom_shops.py
+deco|3076|1910|3073|footprint|lot|1860|1870|kingdom|3490|brazier|1030|1830|1850: v148_deco.py v103_kingdom.py v109_kingdom_shops.py v190_deco.py
 3077|splash|compan|0095|0120|hit|enemy-move|moves: v148_splash.py v107_ai.py v85_combat.py
 3079|splash|sov|boss|1970|197[1-6]|305[0-6]|303[23]|vorraxis: v148_boss_splash.py v141_sov.py
 3085|3086|revive|coop|co-op|0520|215[0-9]|216[0-9]|2170|0560|kill|bossDefeated|0510|3033: v148_revive.py

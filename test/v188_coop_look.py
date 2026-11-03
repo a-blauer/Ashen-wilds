@@ -64,11 +64,11 @@ B.evaluate("""()=>{const p=pl.position,a=new THREE.Vector3(p.x,p.y+1.5,p.z),b=ne
 poll(lambda:A.evaluate("()=>__fb.length>0"),30000)
 fb=A.evaluate("()=>__fb")
 chk('partner draws the evolved second bolt in the second colour',0x12ab34 in fb,json.dumps(fb))
-# 4b. v190: a Devoted companion's glow reaches the partner (look field dvd)
-B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();a.dvp=2799;dv190Give(a,1)}")  # reach Devotion 10 the way play does
-poll(lambda:A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.mpC&&g.mpC.n=='Foxlet'&&g.getObjectByName('dv190'))}"),60000)
-dv=[B.evaluate("()=>!!(fols[0]&&fols[0].getObjectByName('dv190'))"),A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.getObjectByName('dv190'))}")]
-chk('partner sees the Devoted glow (v190)',dv==[True,True],json.dumps({'own':dv[0],'partner':dv[1]}))
+# 4b. v191: a Devoted companion's glow reaches the partner (look field dvd)
+B.evaluate("()=>{const a=mkC('Foxlet',30,0,'');a.z=1;a.h=M(a);party[0]=a;ui();a.dvp=2799;dv191Give(a,1)}")  # reach Devotion 10 the way play does
+poll(lambda:A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.mpC&&g.mpC.n=='Foxlet'&&g.getObjectByName('dv191'))}"),60000)
+dv=[B.evaluate("()=>!!(fols[0]&&fols[0].getObjectByName('dv191'))"),A.evaluate("()=>{const r=Object.values(MP.rh)[0],g=r&&r.fl&&r.fl[0];return !!(g&&g.getObjectByName('dv191'))}")]
+chk('partner sees the Devoted glow (v191)',dv==[True,True],json.dumps({'own':dv[0],'partner':dv[1]}))
 # 5. replayed effects throw nothing on either screen
 tick(1500)
 errs=[l for k in 'AB' for l in logs[k] if 'PAGEERROR' in l or 'v105 cast' in l]

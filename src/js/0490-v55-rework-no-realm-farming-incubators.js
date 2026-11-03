@@ -107,7 +107,7 @@ $('doF').onclick=()=>{
   else if(fOpt=='bol'){const up=[];IVK.forEach(k=>{const o=ivOf(a,k);if(o<A_LINE){a.iv[k]=Math.min(A_LINE,o+(.025+Math.random()*.02)*v);if(grade(a.iv[k])[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(a.iv[k])[1])}});ivSync(a);msg='stats bolstered'+(up.length?' ('+up.join(', ')+')':'')}
   else{a.gs=(a.gs||0)+.06*v;msg='growth per level now +'+pctS(a.gs)}
   a.fz=(a.fz||0)+1;a.fp=a.fz;a.f=Math.min(10,a.fz);
-  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<dv190ModCap(a)&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
+  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<dv191ModCap(a)&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
   if(b.tr=='Universal'&&a.tr!='Universal'){}else if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))a.tr='';
   if(cat){sup[cat]--;say(SUP[cat].i+' '+SUP[cat].n+' was used up.');if(!(sup[cat]>0))fCat=''}
   if(b.emp)b.emp=false;a.h=M(a);party=party.filter((_,i)=>i!=sel[1]);sel=[];

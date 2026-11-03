@@ -14,7 +14,7 @@ v110_fight.py
 v103_kingdom.py
 v100_fusemenu.py
 v141_consume.py
-v190_devotion.py
+v191_devotion.py
 v109_kingdom_shops.py
 TITLE=1 ABIL_ONLY=1 v114_race.py
 v117_menus.py
@@ -69,6 +69,7 @@ v148_mouse.py
 v148_camps.py
 v148_outskirts.py
 v148_deco.py
+v190_deco.py
 v148_splash.py
 v148_boss_splash.py
 v148_revive.py
