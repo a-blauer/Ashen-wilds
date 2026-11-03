@@ -1,8 +1,8 @@
 # v192 hero fit (owner, Nov 2 2026): the Ranger's bow after a shot, the Ranger's hoods and chest pieces on the weasel, the Bard's hand.
 #  1. bow: after a basic shot the bow goes straight back to its carry hold. Before v192 the hands kept the strike grip for 2 s
 #     after every attack (v163 EDGE163.hold, made for melee edges): the bow hung upright by the riser in the low carry arm, then
-#     turned back into the carry ~2 s later. Checked: 0.5 s after the shot the bow is within MAXB deg of its pre-shot carry
-#     (in the hero's frame), with a monster hunting nearby (the v163 fight hold) and without.
+#     turned back into the carry ~2 s later. Checked: 0.5 s after the shot the bow is within MAXB deg of its carry (v135
+#     bow135Q, in the hero's frame), with a monster hunting nearby (the v163 fight hold) and without.
 #  2. gear: every Ranger hood with a chest piece, tier by tier, on the weasel (+ the owner's screenshot set): the hood's own
 #     mantle (its cloth grid below y 1.0) is no wider than the bare weasel's shoulders (arms included) + MAXM, and narrower
 #     than the same piece built the pre-v192 way (FIT192.on=false, built fresh) by at least MIND unless that was already narrow.
@@ -24,11 +24,12 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  {const p=PMAP[1],q=p.path[Math.floor(p.path.length/2)];toPos(q[0],q[1])}enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});
  const tp=ITPL.findIndex((t,i)=>t.sl=='weapon'&&t.cls=='ranger'&&itT({tp:i,lv:1,r:1,up:0,aff:[]}).wt=='bow');eq.weapon={id:9e4+tp,tp,lv:30,req:1,r:2,up:0,aff:[]};refreshGear();
  EDGE163.last=-1e9;EDGE163.fT=-1e9;STEP(120);
- const W=(pl.gearG||[]).find(o=>o.userData&&o.userData.wt=='bow'&&o.parent);if(!W)return {err:'no bow'};
+ const E0=pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent),W=E0&&E0.W;if(!W)return {err:'no bow'};
+ out.bows=(pl.gearG||[]).filter(o=>o.userData&&o.userData.wt=='bow'&&o.parent).length;
  const QH=()=>{const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);W.getWorldQuaternion(b);return a.invert().multiply(b)};
  const ang=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a.dot(b))))*180/Math.PI;
  // the carry the bow has with no attack and no monster near (in a fight before v192 the hands already held the strike grip)
- const q0=QH();out.w0=+pl._grip.w.toFixed(2);out.q0vsV135=+ang(q0,bow135Q()).toFixed(1);out.st0=[!!HA.cur,HA.cur?String(HA.cur.pose&&HA.cur.pose.name):'',+(IDL.cbV||0),!!pl._b192,typeof riding!='undefined'&&!!riding,+pl._grip.w.toFixed(2),W.parent&&W.parent.name];
+ const q0=bow135Q().clone();out.w0=+pl._grip.w.toFixed(2);out.q0vsV135=+ang(q0,bow135Q()).toFixed(1);out.st0=[!!HA.cur,HA.cur?String(HA.cur.pose&&HA.cur.pose.name):'',+(IDL.cbV||0),!!pl._b192,typeof riding!='undefined'&&!!riding,+pl._grip.w.toFixed(2),W.parent&&W.parent.name];
  {const a=[];for(let i=0;i<20;i++){STEP(1);a.push(+ang(q0,QH()).toFixed(1))}out.idleDrift=a}
  if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(30);out.wFight=+pl._grip.w.toFixed(2)}
  atkCd=0;swing();let n=0;while(HA.cur&&n<200){STEP(1);n++}out.shotFrames=n;
