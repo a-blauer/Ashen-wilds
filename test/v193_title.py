@@ -35,9 +35,9 @@ def s(pg):
     chk('closing Settings puts it back in the game window',r['hid'] and r['back'],r)
     # the composed title theme: schedule two full loops on the music clock without errors
     r=ev("""()=>{try{audio()}catch(_){}if(!AUD)return {na:1};if(!MU.a){muInit(AUD,AUD.destination)}MU.th=MTH.title;const t=AUD.currentTime;let n=0;
-      for(let bar=0;bar<32;bar++)for(let st=0;st<16;st++){MU.bar=bar;MU.s=st;muStep(t+bar*4+st*.25);n++}
+      for(let bar=0;bar<32;bar++)for(let st=0;st<16;st++){MU.bar=bar;MU.s=st;muStep(t+(bar*16+st)*60/66/4);n++}
       return {n,err:!!MU.err193,score:typeof MTH.title.score=='function',bpm:MTH.title.bpm}}""")
-    chk('title theme schedules 2 loops without errors',r.get('na') or (r['n']==512 and not r['err'] and r['score'] and r['bpm']==60),r)
+    chk('title theme schedules 2 loops without errors',r.get('na') or (r['n']==512 and not r['err'] and r['score'] and r['bpm']==66),r)
     # heroes: one, then two, then three
     ev("""()=>{const hero0={name:'Ana',cls:'warrior',lvl:7};const mk=(n,c,l)=>JSON.stringify({wv:3,at:Date.now(),hero:{name:n,cls:c,lvl:l,look:null},bossDone:[]});
       localStorage.setItem(KQSL.keys[0],mk('Ana','warrior',7));kqSlotSet(0);const o=$('awT');if(o)o.remove();window.KQ_PRESS=0;awTitle()}""");pg.wait_for_timeout(600)
