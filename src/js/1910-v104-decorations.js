@@ -114,7 +114,7 @@ var DECO103=[
  {k:'fireworks',i:'🌠',n:'Night Fireworks',g:3000,d:'At night, fireworks burst high over Duskhold every few seconds.',
   an(g){let nx=0;return now=>{const n=typeof ATM!='undefined'?ATM.night||0:.5;if(n<.35||now<nx)return;nx=now+2600+Math.random()*3000;const T=TOWNS[0];
     try{if(Math.hypot(pl.position.x-T.cx,pl.position.z-(T.cy+15))>60)return;const F=dcF104(),c=[0xff5a5a,0xffd24a,0x6ad8ff,0xb08aff,0x6aff9a][Math.floor(Math.random()*5)],p=new THREE.Vector3(T.cx+(Math.random()-.5)*F.WX*1.6,T.ph+20+Math.random()*8,T.cy-14+Math.random()*(F.SZ+14));
-      burst(p,c,46,7,1.5,1.3);if(typeof sfx=='function'&&Math.random()<.4)sfx('chime')}catch(_){}}}}
+      burst(p,c,46,7,1.5,1.3);if(typeof sfx192=='function')sfx192('fwk',Math.max(.25,.8-p.distanceTo(pl.position)/90))}catch(_){}}}}
 ];
 var DC103={g:{},col:{}};SH.deco=SH.deco||{};
 function dcOn103(k){return SH.deco[k]===1}

@@ -7,7 +7,7 @@
 # (Editing full.txt / smoke.txt / this file does not: a new test listed there runs because its own file changed.)
 FULL: ^src/js/0(0\d|1[0-4])\d|^src/page|^src/style|^build\.sh|^test/(play|fast|ci_run|run_suite|mpt|v100_lib)\.py|^test/vendor/|^test/ci_known_fail\.txt
 
-save|slot|export|0230-: v38t.py v114_save.py v116_slots.py v131_load_title.py
+save|slot|export|0230-: v38t.py v114_save.py v116_slots.py v131_load_title.py v192_misc.py
 kingdom|town|duskhold|shop|vendor|decor|keeper|citizen|villager|stronghold|stable|visitor|folk: v137_npcs.py v142_folk.py v103_kingdom.py v109_kingdom_shops.py v88_town_paths.py v117_menus.py
 instance|zone|portal|world|terrain|cull|creature|wildlife|camp|spawn|map|atmosphere|themes|edge|ledge|site: v164_camps.py v148_camps.py v144_glowmire.py v148_cheddar.py v108_instances.py v112_instances.py v123_camps.py v124_edge_test.py v60t.py v113_roster.py v88_town_paths.py v117_titles.py
 sov|den-|dens|boss|arena|wave: v32t.py v110_fight.py v133_sov_spacing.py v141_sov.py
@@ -97,3 +97,4 @@ v184-bird|v184_bird|3120-v150: v184_bird_wings.py v180_comp_float.py v137_enemie
 3470|v188|coop|co-op|2170|3455|2990|3440|3450|0107|0890|3396|3436|3438|1710|0120|0080|0610: v188_coop_look.py
 # v189: fusion stars (3480: badges next to companion names, HUD bars, Fusion window)
 3480|v189|fusion|fuse|star|0045|0210|0840|1780: v189_fusion_stars.py
+v192|1090-|1910-|1870-|decor|abilit|character-slots|title-screen|creator: v192_misc.py

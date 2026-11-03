@@ -140,7 +140,7 @@ function czTick103(){const now=Date.now();let back=[];
       if(czRole104(c)=='egg'&&eggs.length>=CZ104_EGGMAX){c.wf=2;return}
       if(czEat105(czCost105(c))){c.t0=now;c.wf=0;c.vt=null}else c.wf=1;return}
     if(now-c.t0>=czTrip104(c)){c.bag=czGoods105(c);c.t0=0;c.vt=null;back.push(c)}});
-  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');sfx&&sfx('chime')}
+  if(back.length){say('🏘️ '+back.map(c=>c.n).join(', ')+(back.length>1?' are':' is')+' back home with goods — collect them at the house (F).');try{sfx192('home')}catch(_){}}
   try{if(back.length&&typeof xwMode!='undefined'&&xwMode=='hold'&&!$('xw').classList.contains('hide'))rX()}catch(_){}}
 setInterval(()=>{try{czTick103()}catch(e){console.warn('v103 citizens',e)}},1000);
 // ---------- saves ----------
