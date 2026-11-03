@@ -26,7 +26,9 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  EDGE163.last=-1e9;EDGE163.fT=-1e9;STEP(120);
  const E0=pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent),W=E0&&E0.W;if(!W)return {err:'no bow'};
  out.bows=(pl.gearG||[]).filter(o=>o.userData&&o.userData.wt=='bow'&&o.parent).length;
- const QH=()=>{const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);W.getWorldQuaternion(b);return a.invert().multiply(b)};
+ // the bow the grip holds now (the same item built again replaces the model: always measure the live one)
+ const BW=()=>{const e=pl._grip&&pl._grip.L.find(q=>q.ty=='bow'&&q.W&&q.W.parent);return e?e.W:W};
+ const QH=()=>{const a=new THREE.Quaternion(),b=new THREE.Quaternion();pl.getWorldQuaternion(a);BW().getWorldQuaternion(b);return a.invert().multiply(b)};
  const ang=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a.dot(b))))*180/Math.PI;
  // the carry the bow has with no attack and no monster near (in a fight before v192 the hands already held the strike grip)
  const q0=bow135Q().clone();out.w0=+pl._grip.w.toFixed(2);out.q0vsV135=+ang(q0,bow135Q()).toFixed(1);out.st0=[!!HA.cur,HA.cur?String(HA.cur.pose&&HA.cur.pose.name):'',+(IDL.cbV||0),!!pl._b192,typeof riding!='undefined'&&!!riding,+pl._grip.w.toFixed(2),W.parent&&W.parent.name];
@@ -34,7 +36,7 @@ BOW=r"""async(fight)=>{const out={};window.VT=performance.now();performance.now=
  {const a=[];for(let i=0;i<20;i++){window.__bcN=0;window.__bcA=null;STEP(1);a.push([+ang(q0,QH()).toFixed(1),window.__bcN,window.__bcA,window.__bcW,+W.scale.x.toFixed(3),+W.scale.y.toFixed(3)])}out.idleDrift=a.filter((_,i)=>i%5==0)}
  if(fight){const e=spawnEnemy(BIOEN[PMAP[1].n][0],pl.position.x+6,pl.position.z,5,{});if(e){e.c.h=e.c.st.hp=1e7;e.stun=999;e.agg=1}EDGE163.fT=-1e9;STEP(30);out.wFight=+pl._grip.w.toFixed(2)}
  atkCd=0;swing();let n=0;while(HA.cur&&n<200){STEP(1);n++}out.shotFrames=n;
- const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0){const hq=new THREE.Quaternion(),pq=new THREE.Quaternion();pl.getWorldQuaternion(hq);W.parent.getWorldQuaternion(pq);const T=hq.clone().multiply(bow135Q()),pw=pq.clone().multiply(W.quaternion);
+ const tr=[],dx=[];for(let i=0;i<150;i++){STEP(1);tr.push(+ang(q0,QH()).toFixed(1));if(i%10==0){const hq=new THREE.Quaternion(),pq=new THREE.Quaternion();pl.getWorldQuaternion(hq);BW().parent.getWorldQuaternion(pq);const T=hq.clone().multiply(bow135Q()),pw=pq.clone().multiply(BW().quaternion);
    dx.push([tr[i],+pl._grip.w.toFixed(2),HA.cur?+HA.cur.k.toFixed(2):-1,pl._b192?1:0,+(IDL.cbV||0),+pl.rotation.y.toFixed(2),+ang(T,pw).toFixed(1),+ang(q0,hq.clone().invert().multiply(T)).toFixed(1)])}}out.dx=dx;
  out.after05=tr[31];out.after1=tr[62];out.after2=tr[124];out.max05_2=Math.max(...tr.slice(31));out.trace=tr.filter((_,i)=>i%10==0);out.wEnd=+pl._grip.w.toFixed(2);
  return out}"""
