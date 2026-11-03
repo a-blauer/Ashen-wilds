@@ -42,7 +42,7 @@ try:
     if 'ap' in PART:
         r=pg.evaluate("()=>({per:[2,9,10,19,20,29,30,39,40,50].map(kqrLvAP),e:[1,2,9,10,20,30,40,50].map(l=>{const o=hero.lvl;hero.lvl=l;const v=apEarned()-((hero.tal&&hero.tal.__apB)|0);hero.lvl=o;return v})})")
         check('points per level-up: 3 (2-9), 4 (10-19), 5 (20-29), 6 (30-39), 7 (40-50)',r['per']==[3,3,4,4,5,5,6,6,7,7],r)
-        check('total earned: 0,3,24,28,64,115,176,251 at 1,2,9,10,20,30,40,50',r['e']==[0,3,24,28,64,115,176,251],r)
+        check('total earned: 0,3,24,28,69,120,181,251 at 1,2,9,10,20,30,40,50',r['e']==[0,3,24,28,69,120,181,251],r)
     # ---------- three heroes: one made in the creator, two "old saves" wearing v137+ gear ----------
     pg.click('#awT [data-slot="0"]',force=True);pg.wait_for_timeout(1500);create(pg,'warrior','Ana')
     check('a new hero is marked as already on the new points table',pg.evaluate("()=>hero.tal.__ap192===1"))
