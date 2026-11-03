@@ -17,7 +17,7 @@ FIND=r"""(a)=>{const I=a.gk==null?null:INSL[a.gk];
   if(I){if(I.en&&I.path&&I.path[30])insArrive(I);else{const c=I.wa||I.ba;toPos(c[0],c[1])}}else{const T=TOWNS[0];toPos(T.cx,T.cy+40)}
   const DW=MAP.DW,dw=(x,z)=>{const X=Math.round(x),Z=Math.round(z);return X<0||Z<0||X>=W||Z>=H?99:DW[Z*W+X]};
   let b=I?[I.x0+3,I.y0+3,I.x0+I.w-3,I.y0+I.h-3]:[TOWNS[0].cx-90,TOWNS[0].cy-70,TOWNS[0].cx+90,TOWNS[0].cy+130];if(a.box)b=a.box;
-  let best=null;for(let z=b[1];z<b[3];z+=2)for(let x=b[0];x<b[2];x+=2){if(dw(x,z)>-1.5||solid(x,z))continue;
+  let best=null;for(let z=b[1];z<b[3];z+=2)for(let x=b[0];x<b[2];x+=2){if(dw(x,z)>-1.5||solid(x,z))continue;if(I&&I.den&&Math.hypot(x-I.ba[0],z-I.ba[1])<PM_DENR+16)continue;   // a den: away from the boss's arena
     for(let k=0;k<16;k++){const yw=k/16*6.2832,ox=Math.sin(yw),oz=Math.cos(yw);let s=0,bk=99;for(let q=.5;q<=8;q+=.5)if(dw(x+ox*q,z+oz*q)>0){s=q;break}
       if(s<2.5||s>5.5)continue;for(let q=.5;q<=16;q+=.5)if(dw(x-ox*q,z-oz*q)>0){bk=q;break}
       const sc=Math.abs(s-4)+(bk<14?5:0);if(!best||sc<best.sc)best={x,z,yaw:yw,s,bk,sc}}}
