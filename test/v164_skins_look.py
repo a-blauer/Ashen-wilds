@@ -1,11 +1,11 @@
-# v164 pictures: Cheddar's exclusive skins (3235) on the hero, a companion and a mount, from a free camera beside the hero.
+# v164 pictures: Cheddar's exclusive skins (3235; v192 3530: coats per companion / mount, set with sk192Set / sk192SetM) on the hero, a companion and a mount, from a free camera beside the hero.
 #   python3 v164_skins_look.py -> <AW_TMP>/v164_skin_<view>.png     VIEWS=name,... CLS=warrior|assassin|mage|paladin|ranger
 import play,os
 VIEWS=[v for v in os.environ.get('VIEWS','').split(',') if v]
 CLS=os.environ.get('CLS','warrior')
 # name: skins worn {race,comp,mount}, ride?, camera offset from the hero [dx,dy,dz] (turned by the hero's facing), look-at height
 V={'none':[{},0,[2.2,1.6,3.2],1.0],'lantern':[{'race':'lantern'},0,[0.45,1.5,1.05],1.38],'sun':[{'race':'sun'},0,[0.45,1.5,1.05],1.38],
-   'rime':[{'comp':'rime'},0,[2.6,1.6,3.4],.6],'wraith':[{'comp':'wraith'},0,[2.6,1.6,3.4],.6],
+   'rime':[{'comp':'rime'},0,[2.6,1.6,3.4],.6],'lanternc':[{'comp':'lantern'},0,[2.6,1.6,3.4],.6],'comp0':[{},0,[2.6,1.6,3.4],.6],'sunm':[{'mount':'sun'},1,[3.4,2.2,3.6],1.1],'wraith':[{'comp':'wraith'},0,[2.6,1.6,3.4],.6],
    'storm':[{'mount':'storm'},1,[3.4,2.2,3.6],1.1],'blood':[{'mount':'blood','race':'lantern'},1,[3.4,2.2,3.6],1.1],'mount0':[{},1,[3.4,2.2,3.6],1.1]}
 def s(pg):
     pg.set_default_timeout(1200000)
@@ -18,11 +18,12 @@ def s(pg):
     pg.wait_for_timeout(3000)
     for k,q in V.items():
         if VIEWS and k not in VIEWS:continue
-        pg.evaluate("""(q)=>{const [w,ride]=q;SKN164.e={race:w.race||null,comp:w.comp||null,mount:w.mount||null};skn164Refresh();
+        pg.evaluate("""(q)=>{const [w,ride]=q;if(typeof sk192Set=='function'){if(party[0])sk192Set(party[0],w.comp||null);const m=mOf(mActive)||mounts[0];if(m)sk192SetM(m,w.mount||null)}
+          else SKN164.e={race:w.race||null,comp:w.comp||null,mount:w.mount||null};skn164Refresh();
           if(ride&&!riding)toggleMount();if(!ride&&riding)dismount(true);
           const f=fols[0];if(f&&!ride){const a=pl.rotation.y+.9;f.position.set(pl.position.x+Math.sin(a)*1.6,f.position.y,pl.position.z+Math.cos(a)*1.6);f.rotation.y=pl.rotation.y}
           window.CAMY=pl.rotation.y;skn164Tick();return 1}""",[q[0],q[1]])
-        pg.evaluate("(o)=>{window.CAMO={p:o[0],t:o[1],lx:o[2],ry:o[3]};return 1}",[q[2],q[3],0.4 if k in ('rime','wraith') else 0,-0.5 if k in ('rime','wraith') else (3.14159 if k in ('lantern','sun','none') else 0)])
+        pg.evaluate("(o)=>{window.CAMO={p:o[0],t:o[1],lx:o[2],ry:o[3]};return 1}",[q[2],q[3],0.4 if k in ('rime','wraith','lanternc','comp0') else 0,-0.5 if k in ('rime','wraith','lanternc','comp0') else (3.14159 if k in ('lantern','sun','none') else 0)])
         pg.wait_for_timeout(3500)
         pg.screenshot(path=play.TMP+'/v164_skin_'+k+'.png',timeout=600000);print('shot',k)
 play.run(s,w=1100,hh=760)

@@ -19,7 +19,7 @@ menu|ui|hud|inventory|tooltip|window|title|banner|icon|dom-swap|layout|cheat|set
 signature|monster|enemy|enemies|wild|rig|low-poly|wolf|bat|bone|spider|drake|fox|gloomcap|wyrm|frog|hawk|stoneshell|wisp|loot|xp|companion-|foes|old-creatures|v137_creature: v137_enemies.py v120_anim.py v113_roster.py v110_fight.py v60t.py v57t.py v180_comp_float.py
 coop|co-op|net: v108_instances.py v116_slots.py
 detail|low-poly-look|0060-|0750-: kqd_detail.py
-cheddar|quest|skins|3235: v164_skins.py v143_lantern_road.py v144_glowmire.py v145_sigils.py v148_cheddar.py v38t.py v114_save.py v108_instances.py v57t.py
+cheddar|quest|skins|3235|3530|v192: v192_cheddar.py v164_skins.py v188_coop_look.py v143_lantern_road.py v144_glowmire.py v145_sigils.py v148_cheddar.py v38t.py v114_save.py v108_instances.py v57t.py
 v135|cheddar|camera|fade|clip|wave|hatch|ring|death|kill|unique|fish|right|mouse|preview|travel: v135_checks.py
 v139|attribut|character|talent|power|flail|xp|preview|inventory: v139_checks.py
 v140|creator|frog-carry|carry|hud-rework|creator-heroic|look: v140_creator.py v117_creator.py
@@ -40,7 +40,7 @@ skilling|gather|grip|1270|2995|3070|anim|weapon|0900|1700: v148_tools.py v148_ed
 0108|1010|3072|mouse|aim|target: v148_mouse.py
 camp|3071|0250|0360|chest|loot|kill|roster|0550: v148_camps.py
 outskirt|3074|1960|kingdom|gather|0102: v148_outskirts.py
-cheddar|3075|quest|board|2350|2380: v148_cheddar.py
+cheddar|3075|quest|board|2350|2380: v148_cheddar.py v192_cheddar.py
 deco|3076|1910|3073|footprint|lot|1860|1870|kingdom|3490|brazier|1030|1830|1850: v148_deco.py v103_kingdom.py v109_kingdom_shops.py v190_deco.py
 3077|splash|compan|0095|0120|hit|enemy-move|moves: v148_splash.py v107_ai.py v85_combat.py
 3079|splash|sov|boss|1970|197[1-6]|305[0-6]|303[23]|vorraxis: v148_boss_splash.py v141_sov.py
