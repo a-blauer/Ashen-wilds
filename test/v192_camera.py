@@ -34,6 +34,9 @@ WATCH=r"""async(n)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));if(window.__l
     else if(dw(x,z)>0&&y<GH(x,z)+.05)bad='in the edge rock';
     if(bad)bad+=' at '+s.toFixed(2)}
   return {cam:[c.x,c.y,c.z].map(v=>+v.toFixed(2)),dist:+L.toFixed(2),bad,step:+mx.toFixed(2),dd:+camDD.toFixed(2),ok:cam172Ok(c.x,c.y,c.z,I)}}"""
+TURN=r"""async(a)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const [y0,y1,n,fr]=a;let mx=0,last=cam.position.clone();
+  for(let i=1;i<=n;i++){camYaw=y0+(y1-y0)*i/n;const f0=window.__lf,t0=performance.now();while(window.__lf<f0+fr&&performance.now()-t0<20000){await sl(15);mx=Math.max(mx,cam.position.distanceTo(last));last.copy(cam.position)}}
+  return {step:+mx.toFixed(2)}}"""
 PLACE="(a)=>{const q=a[0];toPos(q.x,q.z,q.yaw);camYaw=q.yaw;camPitch=a[2];camDist=a[1];camDD=null;try{snapCam()}catch(_){}return 1}"
 # a building between the camera and the hero in Duskhold (as v135_fade_shot / v169_ghost_look)
 HOUSE=r"""()=>{const T=TOWNS[0],rc=new THREE.Raycaster(),V3=THREE.Vector3;let best=null;const M=[];scene.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&!o.isInstancedMesh&&o.visible)M.push(o)});
@@ -89,7 +92,9 @@ def s(pg):
             if r['step']>2.5:fail(name,'pitch',pt,': the camera jumped',r['step'])
             if pt==.3:shot('edge_'+name)
         # turning toward the edge from the open side: smooth, and inside all the way
-        pg.evaluate(PLACE,[dict(q,yaw=q['yaw']+3.14159),12,.3]);pg.evaluate(WATCH,40);pg.evaluate("(y)=>{camYaw=y;return 1}",q['yaw']);r=pg.evaluate(WATCH,90)
+        pg.evaluate(PLACE,[dict(q,yaw=q['yaw']+3.14159),12,.3]);pg.evaluate(WATCH,40)
+        # turned like a player does (a half turn over ~1 s of frames), not in one frame
+        r=pg.evaluate(TURN,[q['yaw']+3.14159,q['yaw'],16,4]);r2=pg.evaluate(WATCH,60);r['bad']=r2['bad'];r['dist']=r2['dist'];r['step']=max(r['step'],r2['step'])
         print('edge',name,'turn in',json.dumps(r),flush=True)
         if r['bad'] and r['dist']>1.35:fail(name,'turning toward the edge: the camera passes the edge:',r['bad'])
         if r['step']>2.5:fail(name,'turning toward the edge: the camera jumped',r['step'])
