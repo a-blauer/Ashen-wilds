@@ -4,6 +4,8 @@
 #   * idle + the v196 poses over many frames: no drift (the relaxed arm comes back to where it started)
 #   * v196 poses: seated paws on the thighs, eating paw at the mouth, clapping paws meet, rim paws beside the hips
 #   * the rest (czRest103) is the bind pose (work poses unchanged); lantern wardens have no relaxed arm
+#   * hero (warrior rat): the empty left hand hangs (elbow <= 26 deg standing, was ~51), the sword arm is unchanged, the empty
+#     elbow bends more on the forward swing than the back swing while walking, and an attack pose is left alone
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -46,10 +48,29 @@ JS=r"""(sps)=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s),V=THREE.Ve
   // lantern wardens keep their weapon poses
   try{const k=Object.keys(MQW143.D)[0],w=mqw143Make(k);if(rlx197Of(w))fail('warden '+k+': has the relaxed arm');else out.info.push('warden '+k+': no relaxed arm (ok)')}catch(e){fail('warden build '+e)}
   return out}"""
+
+HJS=r"""()=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s);window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;POST.render=()=>{};ren.render=()=>{};
+ const STEP=n=>{for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();try{loop(VT)}catch(err){out.err=String(err).slice(0,200)}}};
+ enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});const V=THREE.Vector3,B=pl.bones;
+ const W=k=>{pl.updateMatrixWorld(true);return B[k].getWorldPosition(new V())};
+ const ang=sd=>{const s=W('a'+sd+'0'),e=W('a'+sd+'1'),w=W('a'+sd+'2'),u=s.sub(e).normalize(),v=w.sub(e).normalize();return 180-Math.acos(Math.max(-1,Math.min(1,u.dot(v))))*180/Math.PI};
+ if(!rlx197HEmpty(pl,'L')||rlx197HEmpty(pl,'R'))fail('warrior: expected an empty left hand and a weapon in the right ('+rlx197HEmpty(pl,'L')+','+rlx197HEmpty(pl,'R')+')');
+ STEP(90);const L1=ang('L'),R1=ang('R');RLX197H.on=false;STEP(30);const L0=ang('L'),R0=ang('R');RLX197H.on=true;STEP(30);
+ out.info.push('standing elbows: empty left '+L1.toFixed(1)+' (layer off '+L0.toFixed(1)+'), sword right '+R1.toFixed(1)+' (off '+R0.toFixed(1)+')');
+ if(L1>26)fail('standing: empty left elbow '+L1.toFixed(1)+' deg (want <= 26)');if(Math.abs(R1-R0)>1)fail('standing: the sword arm changed '+R0.toFixed(1)+' -> '+R1.toFixed(1));
+ K.w=true;STEP(40);const sw=[];for(let i=0;i<90;i++){STEP(1);sw.push([B.aL0.rotation.x,ang('L')])}K.w=false;
+ sw.sort((a,b)=>a[0]-b[0]);const n=Math.max(3,sw.length/6|0),fwd=sw.slice(0,n).reduce((a,q)=>a+q[1],0)/n,bk=sw.slice(-n).reduce((a,q)=>a+q[1],0)/n;
+ out.info.push('walking: empty elbow '+fwd.toFixed(1)+' on the forward swing, '+bk.toFixed(1)+' on the back swing');if(!(fwd>bk+8))fail('walking: the empty elbow does not bend more on the forward swing ('+fwd.toFixed(1)+' vs '+bk.toFixed(1)+')');
+ STEP(60);atkCd=0;swing();STEP(4);const a=HA.cur;let mx=0;for(let i=0;i<20&&HA.cur;i++){STEP(1);let s=0;(pl._brU||[]).forEach(u=>{});mx=Math.max(mx,pl._brS?1-pl._brS.a:0)}
+ if(!a)out.info.push('no attack pose started (skipped the attack check)');else if(mx<.5)fail('attack: the arm hold did not ease out ('+mx.toFixed(2)+')');
+ return out}"""
 def s(pg):
     pg.click('[data-dev=desktop]',timeout=600000);pg.click('[data-c="warrior"]',timeout=600000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     errs=[];pg.on('pageerror',lambda e: errs.append(str(e)))
     r=pg.evaluate(JS,SP)
+    h=pg.evaluate(HJS)
+    if h.get('err'):h['fails'].append('hero loop error '+h['err'])
+    r['info']+=h['info'];r['fails']+=h['fails']
     for i in r['info']:print(' ',i)
     for f in r['fails']:print('FAIL',f)
     for e in errs[:6]:print('FAIL page error:',e[:300])

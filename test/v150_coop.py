@@ -108,6 +108,16 @@ ASIG="""()=>{const L=[];try{(CZ103.live||[]).forEach(o=>{if(o.g)L.push(o.g)})}ca
   let n=0,r=0;const E={};L.forEach(g0=>{const g=g0.bones?g0:g0.children.find(c=>c.bones);if(!g||!g.bones.pelvis)return;n++;const A=rlx197Of(g);if(A){r++;const sp=(g.children.find(m=>m.isSkinnedMesh&&m.userData.fk)||{userData:{}}).userData.fk;if(sp)E[sp]=A.E.aL1.map(v=>+v.toFixed(3)).join(',')}});
   return [n,r,Object.keys(E).sort().map(k=>k+':'+E[k]).join(';')]}"""
 r=[pg.evaluate(ASIG) for pg in (KH,KG)]
+PSIG="""()=>{const V=THREE.Vector3,out=[];for(const k in (MP.rh||{})){const m=MP.rh[k]&&MP.rh[k].m;if(!m||!m.bones||!m.bones.aL1)continue;m.updateMatrixWorld(true);
+    const W=n=>m.bones[n].getWorldPosition(new V()),r={};['L','R'].forEach(sd=>{const s=W('a'+sd+'0'),e=W('a'+sd+'1'),w=W('a'+sd+'2'),u=s.sub(e).normalize(),v=w.sub(e).normalize();
+      r[sd]=[+(180-Math.acos(Math.max(-1,Math.min(1,u.dot(v))))*180/Math.PI).toFixed(1),rlx197HEmpty(m,sd)]});out.push(r)}return out}"""
+pp=[];emp=[]
+for i in range(5):
+    for pg in (KH,KG):
+        q=pg.evaluate(PSIG);pp.append(q);emp+=[r[sd][0] for r in q for sd in ('L','R') if r[sd][1]]
+    tick(400)
+# the old fold was a steady ~51 degrees; relaxed it is ~17 standing (more on a forward walking swing), so the least seen is low
+chk('v197 the partner hero empty hand hangs relaxed on the other screen',len(emp)>0 and min(emp)<=30,json.dumps(pp)[:600])
 chk('v197 relaxed folk arms for host and guest',r[0][0]>0 and r[0][1]==r[0][0] and r[1][1]==r[1][0] and r[1][0]>0,json.dumps(r)[:600])
 # the guest's save still holds its own kingdom
 r=KG.evaluate("()=>{const o=x2Save();return [JSON.stringify(o.shp),JSON.stringify(o.kdeco||{})]}")
