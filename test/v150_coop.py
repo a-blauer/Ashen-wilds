@@ -94,7 +94,8 @@ DSIG="""()=>{const T=TOWNS[0];['obelisk','statue','torches','pavilion','beacon']
     return [D.k,n,v,(DC103.col[D.k]||[]).map(c=>[+(c.x-T.cx).toFixed(2),+(c.z-T.cy).toFixed(2)]).join(';')]})}"""
 dh=KH.evaluate(DSIG);dg=KG.evaluate(DSIG)
 ob=KH.evaluate("()=>{const T=TOWNS[0],c=DC103.col.obelisk&&DC103.col.obelisk[0];return c?(+(c.x-T.cx).toFixed(2))+','+(+(c.z-T.cy).toFixed(2)):''}")
-chk('v190 decorations identical for host and guest',dh==dg and any(q[0]=='obelisk' and q[2]>0 and q[3]==ob for q in dh) and ob=='13.9,10.47',json.dumps([ob,dh,dg])[:900]) # v196: the obelisk stands in the ring-A gap at 127 degrees
+dif=[[a,b] for a,b in zip(dh,dg) if a!=b]+([['count',len(dh),len(dg)]] if len(dh)!=len(dg) else [])
+chk('v190 decorations identical for host and guest',dh==dg and any(q[0]=='obelisk' and q[2]>0 and q[3]==ob for q in dh) and ob=='13.9,10.47',json.dumps([ob,dif])[:1400]) # v196: the obelisk stands in the ring-A gap at 127 degrees
 # v196: the round town's buildings at the host's levels (a Trading Post upgrade), and the same sealed entryways
 KH.evaluate("()=>{gold+=1e6;for(const k of Object.keys(RES))mats[k]=9999;shpBuy109('post')}")
 poll(lambda:KH.evaluate("()=>DM196TP.lv")>0 and KG.evaluate("()=>DM196TP.lv")==KH.evaluate("()=>DM196TP.lv"),40000)

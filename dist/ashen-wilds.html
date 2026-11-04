@@ -1080,7 +1080,7 @@ function dm196Ang(x,z){return Math.atan2(x,-z)}
 // (granary, chapel, barracks, keep: 1850). Angles in degrees; w/d = footprint half sizes for the fixed buildings.
 var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0],['NW','A',-127,0],
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
-  ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',18,3],['S4W','B',-18,4],['S4E','B',162,4],['S4M','B',-162,4],
+  ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',18,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
 var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-140,4.5,4.5],chapel:['C',140,4.5,4.5],barracks:['C',-40,4.5,4.5],keep:['C',40,4.5,4.5]};
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
@@ -1205,10 +1205,10 @@ const MAP=(()=>{
        const av=Math.abs(lx)<1.6&&r<D.WR[5]+.5;if(av){m[y][x]='P';continue}
        if(Math.abs(lx)<1.3){m[y][x]='p';continue}
        const ag=Math.abs(dm196Ang(lx,lz))*180/Math.PI,st=(r>19.9&&r<21.3)||(r>29.6&&r<31.5)||(r>42&&r<43.4&&(ag<31||ag>149));if(st&&!onLot(lx,lz,.2)){m[y][x]='p';continue}
-       if(r>D.WR[5]+1.5){const h=hs(x,y,1);m[y][x]=h<.42?'g':h<.5?'a':'.';continue}
+       if(r>D.WR[5]+1.5){const h=hs(x,y,1);m[y][x]=h<.2?'g':h<.3?'a':'.';continue}
        m[y][x]=!onLot(lx,lz,.6)&&hs(x,y,2)<.07?'a':'.';continue}
      // the paths through the forest: dirt down the middle; the rooms: their zone's ground with a few patches
-     const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.3?'g':'.';continue}
+     const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.15?'g':'.';continue}
      if(ri>=0){const p=TWN100_PG[ri],d=Math.hypot(x-p.x,y-p.y),h=(x*7+y*13)%11;m[y][x]=(ri==1&&h<5)||(ri==0&&h<3)?'g':d>p.r-1.5&&h<3?'a':'.';continue}
      m[y][x]='.'}
    // keep the avenues to the paths: from the plaza's north and south edges a dirt trail runs to each room's path
@@ -22183,7 +22183,8 @@ function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],F=typeof kf109=='functi
     if(q.r!=null){const [px,pz]=P(x,z);c.beginPath();c.arc(px,pz,Math.max(1,q.r*s),0,6.283);c.fill()}else{const [px,pz]=P(x-q.hx,z-q.hz);c.fillRect(px,pz,q.hx*2*s,q.hz*2*s)}});
   // fixed landmarks
   const lab=(t,x,z,f)=>{const [px,pz]=P(x,z);c.font=f||(Math.round(s*2.2)+'px serif');c.textAlign='center';c.textBaseline='middle';c.fillText(t,px,pz)};
-  lab('⛲',0,0);lab('🍺',-14,-16);lab('🪙',0,-16);lab('🏰',SHM.st?SHM.st.x-T.cx:-14,SHM.st?SHM.st.z-T.cy:7);
+  lab('⛲',0,0);{const I=typeof dm196Fix=='function'&&dm196Fix('inn'),P0=typeof dm196Fix=='function'&&dm196Fix('post');lab('🍺',I?I.x:-14,I?I.z:-16);lab('🪙',P0?P0.x:0,P0?P0.z:-16)} // v196: the Inn and the Trading Post on the plaza ring
+  lab('🏰',SHM.st?SHM.st.x-T.cx:-14,SHM.st?SHM.st.z-T.cy:7);
   // lots
   const R={};LOT103.forEach(l=>{const k=lotKey103(l.id),[ax,az]=P(l.x-3.5,l.z-3.5),w=7*s;R[l.id]=[ax,az,w];
     const pick=opt.pick!=null,ok=pick&&(!k||k===opt.pick),hov=opt.hover===l.id;
@@ -41794,7 +41795,7 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
   const sp=[START[0],START[1]],npcSt=D.npc.map(n=>n.st),M=D.npc,W=IC151D.walks,legs=[];
   // v151b: the game's own Cheddar on his crate by the quest board (CHQ148); the hero stops 2 m in front of him
   D.ref=dm196IntroRef();{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
-    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
+    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=sp2&&sp2.ry!=null?sp2.ry:C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
   const route=dm196IntroRoute(sp,npcSt,CS); // v196: legs found on the round town's walking grid (3670)
@@ -41909,7 +41910,7 @@ function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});
   if(!D.tags){D.tags=[];const V=THREE.Vector3,w=new V();scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;o.getWorldPosition(w);if(Math.hypot(w.x-40,w.z-305)<80)D.tags.push({o,v:o.visible})})}
   D.tags.forEach(x=>{x.o.visible=false})}
 function ic151DuskDone(S){const D=S&&S.D;if(!D||D.done)return;D.done=true;try{document.body.classList.remove('ic151d');
-    if(D.on){const P=D.end;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=0;camYaw=Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
+    if(D.on){const P=D.end,y=D.endYaw||0;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=y;camYaw=y+Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
     ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0;if(n.g._wk)n.g._wk.ic151H=0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
     if(D.ch&&D.chOwn)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
 // part one ends at IC151.cut; part two runs to IC151.dEnd, then the game resumes; the intro ends at IC151.len
@@ -67413,7 +67414,8 @@ function dm196P(a,R){return [R*Math.sin(a),-R*Math.cos(a)]}
 var DM196_GZ=1.85; // half the gate opening
 function dm196Ring(R){const gA=Math.asin(DM196_GZ/R),n=Math.max(6,Math.round((Math.PI-2*gA)*R/4.4)),seg=[],tw=[];
   [0,1].forEach(h=>{const a0=h*Math.PI+gA,a1=(h+1)*Math.PI-gA;for(let i=0;i<n;i++){const a=a0+(a1-a0)*i/n,b=a0+(a1-a0)*(i+1)/n;seg.push({a,b,h:(Math.cos((a+b)/2)>0)?0:1})}
-    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,big=i>0&&i<n&&i%Math.max(2,Math.round(n/3))==0;if(i==0||i==n||big||i%2==0)tw.push({a,big,gate:i==0||i==n,h:Math.cos(a)>0?0:1})}});
+    const gT=Math.asin(3.5/R)-gA; // the gate towers stand clear of the Gate Avenue (x ±3.5)
+    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n+(i==0?gT:i==n?-gT:0),big=i>0&&i<n&&i%Math.max(2,Math.round(n/3))==0;if(i==0||i==n||big||i%2==0)tw.push({a,big,gate:i==0||i==n,h:Math.cos(a)>0?0:1})}});
   return {seg,tw,gA}}
 TWN100_ringK=function(k,lv,part){const R=kf109().R,G=dm196Ring(R);
   G.seg.forEach(s=>{if(s.h!==part)return;const p=dm196P(s.a,R),q=dm196P(s.b,R),dx=q[0]-p[0],dz=q[1]-p[1],L=Math.hypot(dx,dz);k.at((p[0]+q[0])/2,0,(p[1]+q[1])/2,()=>kdSegK(k,lv,L+.35),Math.atan2(-dz,dx))});
@@ -67425,8 +67427,8 @@ kdWalls=function(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.
   const g=new THREE.Group(),F=kf109();g.name='kdWalls';
   [0,1].forEach(part=>{const key='TWNRING196|'+lv+'|'+part+'|'+F.R;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
   K.wg=g;T.g.add(g);K.wst=F.s;
-  const cols=[],lamps=[],G=dm196Ring(F.R);G.tw.forEach(t=>{const [x,z]=dm196P(t.a,F.R);cols.push({x:T.cx+x,z:T.cy+z,r:t.big?1.45:t.gate?1.05:.95})});
-  [-1,1].forEach(gz=>[-1,1].forEach(q=>{lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+gz*(F.R-1.25)]);if(lv>=3)lamps.push([T.cx+q*2.75,T.ph+1.2,T.cy+gz*(F.R+1.25)])}));
+  const cols=[],lamps=[],G=dm196Ring(F.R);G.tw.forEach(t=>{const [x,z]=dm196P(t.a,F.R);cols.push({x:T.cx+x,z:T.cy+z,r:t.big?1.45:t.gate?.85:.95})});
+  [-1,1].forEach(gz=>[-1,1].forEach(q=>{lamps.push([T.cx+q*2.6,T.ph+1.2,T.cy+gz*(F.R-1.6)]);if(lv>=3)lamps.push([T.cx+q*3.5,T.ph+1.2,T.cy+gz*(F.R+1.25)])}));
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps};
 // the ring's two halves are drawn only within ~56 tiles of their half
 {const f0=townTick;townTick=function(now,pp){f0.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy;
@@ -67435,9 +67437,14 @@ kdWalls=function(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.
 kfTiles109=function(F){const T=TOWNS[0],RX=Math.ceil(DM196.WR[5]+2);
   if(!KF109.base){KF109.base=new Map();for(let dz=-RX;dz<=RX;dz++)for(let dx=-RX;dx<=RX;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x;let b=MAP[y][x];if(b=='W'||(b=='B'&&KL103.tiles.has(t)))b=Math.hypot(dx,dz)<11.2||Math.abs(dx)<1.6?'P':'.';KF109.base.set(t,b)}}
   const R=F.R;for(let dz=-RX;dz<=RX;dz++)for(let dx=-RX;dx<=RX;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x,b=KF109.base.get(t);if(b==null||b=='#')continue;const r=Math.hypot(dx,dz);let c=b;
-    if(Math.abs(r-R)<.8)c=Math.abs(dx)<DM196_GZ-.25?(b=='B'?'P':b):'W';
+    if(Math.abs(r-R)<.8&&!(Math.abs(dx)<=3&&Math.abs(dz)<R-.5))c=Math.abs(dx)<DM196_GZ-.25?(b=='B'?'P':b):'W'; // beside the gates the wall line keeps to the gate's row
     if(c!='W'&&KL103.tiles.has(t))c='B';
     if(MAP[y][x]!==c){MAP[y][x]=c;try{mmPaint(x,y)}catch(_){}}}};
+// a building's footprint is solid ground ('B') whatever it stands on (the lots on the rings stand on meadow and streets, not paving);
+// a freed footprint goes back to the ground it was before
+{const f=lotMark103;lotMark103=function(key){const old=(KL103.own[key]||[]).slice(),r=f.apply(this,arguments);try{if(!KF109.base)return r;
+  old.concat(KL103.own[key]||[]).forEach(t=>{const b=KF109.base.get(t);if(b==null||b=='#')return;const x=t%W,y=(t/W)|0,m=MAP[y][x];if(m=='W')return;
+    const c=KL103.tiles.has(t)?'B':b;if(m!==c){MAP[y][x]=c;try{mmPaint(x,y)}catch(_){}}})}catch(e){console.warn('v196 lot tiles',e)}return r}}
 // the plaza's flagstones only (the streets are paved in the ground's own paint)
 kfPave109=function(){const T=TOWNS[0];if(T.pave){if(T.pave.parent)T.pave.parent.remove(T.pave);try{T.pave.material.dispose()}catch(_){}T.pave=null}
   const R=dkRng(77),L=[];for(let y=T.cy-42;y<=T.cy+42;y++)for(let x=T.cx-42;x<=T.cx+42;x++){if(MAP[y]&&MAP[y][x]=='P'&&Math.hypot(x-T.cx,y-T.cy)>2.6)L.push([x,y])}
@@ -67460,8 +67467,8 @@ kfDoors109=function(){const T=TOWNS[0],F=kf109(),st=.5,R=F.R,x0=-R,z0=-R,nx=Math
 TWN100_lpFor=function(F){const L=[],R=F.R||F.SZ,lotHit=(x,z,p)=>dm196LotHit(x,z,p);
   for(let d=12;d<360;d+=24){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*(R-1.3)<4.2)continue;const [x,z]=dm196P(a,R-1.3);if(!lotHit(x,z,.9))L.push([x,z])}
   [30,90,150,210,270,330].forEach(d=>{const [x,z]=dm196P(d*Math.PI/180,11.6);if(!lotHit(x,z,1.1)&&Math.abs(x)>2.2)L.push([x,z])});
-  L.push([-2.6,-(R-2.4)],[2.6,-(R-2.4)],[-2.6,R-2.4],[2.6,R-2.4]);return L};
-TWN100_WD={crate:[[-6.4,-8.6,0],[6.6,-8.4,1]],bench:[[-5.9,6.4,-.65],[5.9,6.4,.65]],benchZ:0};
+  L.push([-3.4,-(R-2.4)],[3.4,-(R-2.4)],[-3.4,R-2.4],[3.4,R-2.4]);return L};
+TWN100_WD={crate:[[-9.3,-5.2,0],[3.2,-9.5,1]],bench:[[-7.6,-3.4,Math.atan2(7.6,3.4)],[-4.15,7.2,Math.atan2(4.15,-7.2)]],benchZ:0}; // benches face the fountain
 TWN100_wardK=function(k,F){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
       const lx=.32,ly=h-.28;k.p('m',TWC.iron,'cone4',lx,ly+.2,0,.17,.13,.17,0,Math.PI/4,0,0);k.p('m',TWC.iron,'box',lx,ly-.16,0,.2,.04,.2,0,0,0,0);
@@ -67477,15 +67484,21 @@ kfWard109=function(F){const T=TOWNS[0];if(KF109.ward){T.g.remove(KF109.ward);KF1
   const cols=[];TWN100_LP.forEach(([x,z])=>{const a=Math.atan2(z,-x),lx=x+Math.cos(a)*.32,lz=z-Math.sin(a)*.32,l=[T.cx+lx,T.ph+2.0,T.cy+lz];TLAMP.push(l);KF109.wardLamps.push(l);cols.push({x:T.cx+x,z:T.cy+z,r:.2})});
   TWN100_WD.crate.forEach(([x,z,b])=>cols.push({x:T.cx+x,z:T.cy+z,r:b?.36:.45}));TWN100_WD.bench.forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:.6}));kfColSet109(KF109.wardCol,cols)};
 // ---------------- the two market stalls: on the plaza's north-east edge ----------------
-KF109_STALL=[[8.6,-4.2,0x7a3a2a,-1.15],[9.6,1.0,0x2a3a7a,-1.6]];
-kfStalls109=function(){const T=TOWNS[0];if(KF109.stalls)return;const g=new THREE.Group();g.name='stalls109';
+// the market stalls stand on the plaza's east edge between the doors of the inner lots (CE 71°, NM 108°, the Trading Post 146°),
+// facing the fountain; their crates and a barrel sit just behind them
+const DM196_ST=(d,R)=>{const a=d*Math.PI/180;return [+(R*Math.sin(a)).toFixed(2),+(-R*Math.cos(a)).toFixed(2)]};
+KF109_STALL=[[...DM196_ST(90,8.9),0x7a3a2a,-Math.PI/2],[...DM196_ST(127,8.9),0x2a3a7a,-127*Math.PI/180]];
+const DM196_STX=[[...DM196_ST(83,10.5),.55],[...DM196_ST(97,10.5),.4],[...DM196_ST(134,10.4),.3]];
+kfStalls109=function(){const T=TOWNS[0];if(KF109.stalls&&KF109.stalls.userData.v196)return;
+  if(KF109.stalls){if(KF109.stalls.parent)KF109.stalls.parent.remove(KF109.stalls);KF109.stalls=null;kfColSet109(KF109.stallCol,[])} // the v109 stalls (old plaza)
+  const g=new THREE.Group();g.name='stalls109';
   KF109_STALL.forEach(([x,z,c,ry])=>{const st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=ry;twStall(st,c);g.add(st)});
-  {let k=null;if(!twHas('STALL196X')){k=twKit(977);TWN100_crate(k,10.2,-6.2,.55,.3);TWN100_crate(k,10.6,-5.5,.4,.9);TWN100_barrel(k,10.9,3.2,.9)}g.add(twGroup(k,'STALL196X'))}
-  T.g.add(g);KF109.stalls=g;kfColSet109(KF109.stallCol,KF109_STALL.map(([x,z])=>({x:T.cx+x,z:T.cy+z,r:.95})).concat([{x:T.cx+10.4,z:T.cy-5.9,r:.55},{x:T.cx+10.9,z:T.cy+3.2,r:.3}]))};
+  {let k=null;if(!twHas('STALL196Y')){k=twKit(977);TWN100_crate(k,DM196_STX[0][0],DM196_STX[0][1],.55,.3);TWN100_crate(k,DM196_STX[1][0],DM196_STX[1][1],.4,.9);TWN100_barrel(k,DM196_STX[2][0],DM196_STX[2][1],.9)}g.add(twGroup(k,'STALL196Y'))}
+  g.userData.v196=1;T.g.add(g);KF109.stalls=g;kfColSet109(KF109.stallCol,KF109_STALL.map(([x,z])=>({x:T.cx+x,z:T.cy+z,r:.95})).concat(DM196_STX.map(([x,z,r])=>({x:T.cx+x,z:T.cy+z,r:r+.05}))))};
 // ---------------- the old square's dressing: everything except the fountain stays hidden ----------------
 kfLegacy109=function(F){const T=TOWNS[0];
   if(!KF109.leg){const K=typeof KGD!='undefined'&&KGD||{},own=new Set([].concat(K.wcol||[],K.pcol||[],...Object.values(K.up||{}).map(u=>u.col||[]),...Object.values(DC103.col||{}),
-      ...Object.values(typeof HS103!='undefined'&&HS103?HS103.g:{}).map(o=>o.c||[]),...Object.values(TWN100_S.col||{}),KF109.wardCol,KF109.stallCol,KF109.wcol,DM196S.col||[]));
+      ...Object.values(typeof HS103!='undefined'&&HS103?HS103.g:{}).map(o=>o.c||[]),...Object.values(TWN100_S.col||{}),KF109.wardCol,KF109.stallCol,KF109.wcol,DM196S.col||[],typeof CHQ148!='undefined'&&CHQ148.col||[]));
     const skip=new Set([K.wg,KF109.ward,KF109.stalls,K.pg].filter(Boolean));Object.values(K.up||{}).forEach(u=>{if(u.g)skip.add(u.g)});
     const inSq=(x,z)=>Math.abs(x)<44&&Math.abs(z)<56;
     KF109.leg={g:T.g.children.filter(o=>!skip.has(o)&&(Math.abs(o.position.x)+Math.abs(o.position.z)>.5)&&inSq(o.position.x,o.position.z)&&!/^kd|^deco|^house|^wardDress|^stalls109|^kfwild|^dm196/.test(o.name||'')).map(o=>({o,v:o.visible})),
@@ -67505,6 +67518,8 @@ kfWildCand109=function(){if(KF109.cand)return KF109.cand;const T=TOWNS[0],R=dkRn
   for(let z=-46;z<=46;z+=2.5)for(let x=-46;x<=46;x+=2.5){const px=x+(R()-.5)*2.1,pz=z+(R()-.5)*2.1,u=R(),s=.75+R()*.6,ry=R()*6.28,r=Math.hypot(px,pz);
     if(r>DM196.RM-1.6||r<DM196.WR[0]+2.6)continue;const X=Math.round(T.cx+px),Z=Math.round(T.cy+pz),t=MAP[Z]&&MAP[Z][X];if(!(t=='.'||t=='g'||t=='a'))continue;
     if(Math.abs(px)<4.4||ents.some(e=>Math.hypot(px-e[0],pz-e[1])<6))continue;
+    // the straight ways from the gates to the portal entries stay clear (the game's first steps lead out the north gate to Portal I)
+    if(ents.some(e=>{const gz=e[1]<0?-(DM196.WR[0]+1):DM196.WR[0]+1,vx=e[0],vz=e[1]-gz,L2=vx*vx+vz*vz,k=Math.max(0,Math.min(1,(px*vx+(pz-gz)*vz)/L2));return Math.hypot(px-vx*k,pz-gz-vz*k)<2.6}))continue;
     const ar=Math.abs(dm196Ang(px,pz))*180/Math.PI;if(r>41.3&&r<44.1&&(ar<31||ar>149))continue; // the outer path between the gates and the rooms
     L.push({x:px,z:pz,t:u<.3?(u<.12?'dead':'pine'):u<.5?'rock':u<.8?'bush':'grass',s,ry})}
   L.forEach((p,i)=>{p.ci=i});return KF109.cand=L};
@@ -67582,6 +67597,11 @@ czSpots103=function(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l)),F=kf109();
   return L.filter(([x,z])=>kfIn109(x-T.cx,z-T.cy,1))};
 // ---------------- apply now (the kingdom was set up by the older files with the old shapes) ----------------
 try{KF109.base=null;KF109.cand=null;KF109.wsel=null;KF109.leg=null;if(typeof KGD!='undefined'&&KGD){KGD.wl=-1;KGD.pr=-1}kfApply109(true)}catch(e){console.warn('v196 apply',e)}
+// the Steward's plan of the town: framed on the round walls (v103 framed the long square from its north wall)
+{const f=lotPlan103;lotPlan103=function(cv,opt){const k0=kf109;kf109=function(){const F=k0();return Object.assign({},F,{WX:F.R,SZ:20})};try{return f.apply(this,arguments)}finally{kf109=k0}}}
+// turning a building: a turn whose door would open onto something solid (a decoration, a stall, a wall) is refused
+{const f=kfRotate109;kfRotate109=function(key){try{const l0=SH.pos[key]&&LOTM103[SH.pos[key]];if(l0){const r=((SH.rot[key]|0)+1)&3,l=lotRot103(l0,r),d=lotW103(l,0,4.45),T=TOWNS[0];
+    if(Math.hypot(d[0]-T.cx,d[1]-T.cy)>kf109().R-1.2||solid(d[0],d[1])||tcHit(d[0],d[1])){say('🚫 '+lotName103(key)[1]+' cannot face that way: its door would open onto '+(Math.hypot(d[0]-T.cx,d[1]-T.cy)>kf109().R-1.2?'the walls':'something in the way')+'.');return false}}}catch(e){console.warn('v196 turn',e)}return f.apply(this,arguments)}}
 // ================= v196: the forest round Duskhold's meadow and the six portal rooms =================
 // Owner (Nov 3 2026): "I want each portal to have an entry way thats initially blocked (except the first one), but after unlocking
 // the next biome that entry way opens leading into our next themed portal room ... the entry to the portals on the edges of the map
@@ -67605,11 +67625,11 @@ function dm196M(x,y,z,sx,sy,sz,rx,ry,rz){const m=new THREE.Matrix4();m.compose(n
 var DM196K={};
 function dm196Kind(n){if(DM196K[n])return DM196K[n];const R=dkRng(n.length*131+n.charCodeAt(0)),Cy=(a,b,h,s)=>new THREE.CylinderGeometry(a,b,h,s||6,1),Co=(r,h,s)=>new THREE.ConeGeometry(r,h,s||7,1),Ic=d=>new THREE.IcosahedronGeometry(1,d||0),L=[];
   if(n=='pine'||n=='snowpine'){L.push([Cy(.16,.3,4.4),0x3a2a1e,dm196M(0,2.2,0,1,1,1)]);
-    for(let i=0;i<5;i++){const y=2.2+i*1.85,r=2.25-i*.38;L.push([Co(r,2.9-i*.18,8),[0x1c3324,0x203a28,0x24402c,0x1e3626,0x284530][i],dm196M((R()-.5)*.15,y+1.3,(R()-.5)*.15,1,1,1,0,R()*3,0)]);
-      if(n=='snowpine')L.push([Co(r*.82,1.1,8),0xdde6ee,dm196M(0,y+2.35,0,1,1,1,0,R()*3,0)])}}
+    for(let i=0;i<4;i++){const y=2.3+i*2.2,r=2.3-i*.45;L.push([Co(r,3.2-i*.2,6),[0x1c3324,0x203a28,0x24402c,0x284530][i],dm196M((R()-.5)*.15,y+1.3,(R()-.5)*.15,1,1,1,0,R()*3,0)]);
+      if(n=='snowpine'&&i>=2)L.push([Co(r*.82,1.1,6),0xdde6ee,dm196M(0,y+2.5,0,1,1,1,0,R()*3,0)])}}
   else if(n=='oak'||n=='bog'||n=='blood'){const leaf=n=='oak'?[0x24402a,0x2e4c2e,0x355a32,0x2a4630]:n=='bog'?[0x22361e,0x2a3e22,0x1e2e1c,0x34462a]:[0x4a1418,0x5e1a1e,0x3e1016,0x6e2226],bark=n=='blood'?0x2a1a1a:0x34281c;
     L.push([Cy(.32,.62,5.2,7),bark,dm196M(0,2.6,0,1,1,1)]);[[1.1,4.2,.3,-.7],[-.9,4.6,-.5,.6]].forEach(([x,y,z,a])=>L.push([Cy(.12,.22,2.6,5),bark,dm196M(x*.5,y-.6,z*.5,1,1,1,a*.5,0,-x*.5)]));
-    for(let i=0;i<7;i++){const a=i/7*6.283+R(),rr=i?1.5+R()*.6:0,y=i?5.1+R()*1.6:6.6,s=i?1.5+R()*.6:2.1;L.push([Ic(1),leaf[i%4],dm196M(Math.cos(a)*rr,y,Math.sin(a)*rr,s,s*.78,s,R(),R()*3,R())])}
+    for(let i=0;i<5;i++){const a=i/5*6.283+R(),rr=i?1.5+R()*.6:0,y=i?5.1+R()*1.6:6.6,s=i?1.7+R()*.6:2.3;L.push([Ic(1),leaf[i%4],dm196M(Math.cos(a)*rr,y,Math.sin(a)*rr,s,s*.78,s,R(),R()*3,R())])}
     if(n!='blood')L.push([Ic(0),0x3e5a2a,dm196M(.35,1.1,.3,.5,.9,.32,0,.4,.2)]); // moss on the trunk
     if(n=='bog')for(let i=0;i<4;i++){const a=i*1.7;L.push([Cy(.02,.05,1.8,4),0x4a5a36,dm196M(Math.cos(a)*1.6,4.3,Math.sin(a)*1.6,1,1,1)])}} // hanging moss
   else if(n=='dead'){const bark=0x2a2420;L.push([Cy(.14,.42,6.4,6),bark,dm196M(0,3.2,0,1,1,1,0,0,.04)]);
@@ -67621,11 +67641,11 @@ function dm196Kind(n){if(DM196K[n])return DM196K[n];const R=dkRng(n.length*131+n
 var DM196_THEME=[['bog','bog','dead'],['oak','oak','pine'],['snowpine','snowpine','dead'],['spire','spire','cactus'],['dead','dead','pine'],['blood','dead','blood']];
 var DM196_TINT=[[0x8a9a7a,0xa0b090],[0xa8c498,0xc0d8a8],[0xd0dce8,0xe8f0f8],[0xe0c8a0,0xc8b088],[0x8a9098,0xa0a8b0],[0xb08890,0xa07078]];
 // ---------------- the forest ----------------
-function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=1.75;
+function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=2.3;
   for(let y=D.y0;y<D.y0+D.ny;y+=S)for(let x=D.x0;x<D.x0+D.nx;x+=S){const px=x+(R()-.5)*S*.9,pz=y+(R()-.5)*S*.9,X=Math.round(px),Z=Math.round(pz),wd=dm196Wd(X,Z);
-    if(wd==null||wd<1.05||wd>8.5||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.06)continue;
+    if(wd==null||wd<1.05||wd>4.8||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.07)continue; // the backdrop stands behind the last rows
     const r=Math.hypot(px-T.cx,pz-T.cy),ri=dm196Room(px,pz,D.FR+1),pi=ri>=0?ri:dm196Path(px,pz,D.FR+1),th=pi>=0&&(ri>=0||r>D.RM+4)?pi:-1;
-    const k=th>=0?DM196_THEME[th][Math.floor(R()*3)]:(R()<.62?'pine':R()<.75?'dead':'oak'),s=(th==3?.85:1)*(.9+R()*.55)*(1+Math.min(.35,(wd-1)*.05)),ry=R()*6.283;
+    const k=th>=0?DM196_THEME[th][Math.floor(R()*3)]:(R()<.62?'pine':R()<.75?'dead':'oak'),s=(th==3?.85:1)*(1.0+R()*.55)*(1+Math.min(.4,(wd-1)*.08)),ry=R()*6.283;
     const tint=th>=0?DM196_TINT[th][R()<.5?0:1]:[0x9aa896,0xb0bca8,0x8a9888][Math.floor(R()*3)];
     pick.push({x:px,z:pz,k,s,ry,tint,sec:Math.floor((Math.atan2(px-T.cx,pz-T.cy)+Math.PI)/6.283*12)%12})}
   // one instanced mesh per kind and sector; each sector's geometry carries the bounds of its own trees
@@ -67640,6 +67660,14 @@ function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=1.75;
     // the instanced mesh sits at the origin: its bounds are the trees' own (world) bounds
     im.geometry.boundingSphere=g.boundingSphere;im.receiveShadow=true;im.castShadow=false;im.userData.lpsSkip=1;im.userData.dm196=1;im.name='dm196forest';scene.add(im);DM196P.trees.push(im)});
   DM196P.n=pick.length}
+// the forest's far side: a dark wall of undergrowth and trunks standing on the edge of the ground (where the void begins), so
+// nothing of the sky shows between the trees at eye height; it fades into the fog like the woods behind it
+function dm196Backdrop(){const D=DM196,P=[],C=[],c0=new THREE.Color(0x0c140e),c1=new THREE.Color(0x1a2a1c),T=TOWNS[0];
+  const g=(x,y)=>{if(x<D.x0||y<D.y0||x>=D.x0+D.nx||y>=D.y0+D.ny)return 99;return MAP.DW[y*W+x]};
+  const quad=(ax,az,bx,bz)=>{const ya=GH(ax,az)-2.5,yb=GH(bx,bz)-2.5,h=15+2*Math.sin(ax*.7+az*.3);P.push(ax,ya,az,bx,yb,bz,bx,yb+h,bz,ax,ya,az,bx,yb+h,bz,ax,ya+h,az);[0,0,1,0,1,1].forEach(t=>{const q=c0.clone().lerp(c1,t);C.push(q.r,q.g,q.b)})};
+  for(let y=D.y0;y<D.y0+D.ny-1;y++)for(let x=D.x0;x<D.x0+D.nx-1;x++){const a=g(x,y)<0;if(a!==(g(x+1,y)<0))quad(x+.5,y-.5,x+.5,y+.5);if(a!==(g(x,y+1)<0))quad(x-.5,y+.5,x+.5,y+.5)}
+  if(!P.length)return;const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(C,3));geo.computeVertexNormals();geo.computeBoundingSphere();
+  const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:true}));m.userData.lpsSkip=1;m.name='dm196backdrop';m.castShadow=false;m.receiveShadow=false;scene.add(m);DM196P.bd=m}
 // ---------------- the entryways ----------------
 // the frame of entry i in world coords: c = centre of the arch on the path, f = the way in (unit, from the meadow toward the room)
 function dm196EntF(i){const T=TOWNS[0],c=DM196.rooms[i],L=Math.hypot(c[0],c[1]),f=[c[0]/L,c[1]/L],r=DM196.RM+.6;return {x:T.cx+f[0]*r,z:T.cy+f[1]*r,f,ry:Math.atan2(f[0],f[1])}}
@@ -67694,7 +67722,12 @@ TWN100_wmap=function(g,P,lab){PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(
 {const f=signPaint;signPaint=function(c,lines,bg,fg,bd,np){const L=Array.isArray(lines)&&lines.length>1?[Object.assign({},lines[0],{f:(lines[0].f||'700 40px').replace(/\d+px/,m=>Math.round(parseInt(m)*1.18)+'px')})]:lines;return f.call(this,c,L,bg,fg,bd,np)}}
 function dm196Signs(){try{(SGNR||[]).forEach(r=>{if(r&&r.c&&r.a&&Array.isArray(r.a[0])&&r.a[0].length>1){signPaint(r.c,...r.a);r.t.needsUpdate=true}})}catch(e){console.warn('v196 signs',e)}}
 // ---------------- build ----------------
-try{dm196NoRoad();dm196Forest();dm196Entries();dm196Signs();DM196P.built=1;portalRefresh()}catch(e){console.warn('v196 rooms',e)}
+try{dm196NoRoad();dm196Forest();dm196Backdrop();dm196Entries();dm196Signs();DM196P.built=1;portalRefresh()}catch(e){console.warn('v196 rooms',e)}
+// the rooms' plazas and scenery are drawn only near them (they stand 60-80 tiles from the plaza, beyond the trees)
+var DM196RC={t:0,on:[]};
+{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{if(now-DM196RC.t<400)return;DM196RC.t=now;
+  TWN100_PG.forEach((p,i)=>{const on=Math.hypot(pp.x-p.x,pp.z-p.y)<54;if(DM196RC.on[i]===on)return;DM196RC.on[i]=on;
+    const P=TWN100_P[i],X=TWN101.x[i];[P&&P.lit,P&&P.glow,P&&P.mist,X&&X.g,PORT[i]&&PORT[i].g].forEach(o=>{if(o)o.visible=on});if(X&&X.gg)X.gg.visible=on&&pUnlocked(i)})}catch(_){}}}
 // ================= v196: fantasy buildings that grow with their upgrades; the Trading Post and the Inn on the plaza ring =================
 // Owner (Nov 3 2026): "improve the look and feel of each building and make them more fantasy inspired — right now they're pretty basic
 // home models. Add moss, vines, make some out of stone etc. I also want each upgrade to buildings or shops to make the building more
@@ -67820,6 +67853,10 @@ try{dm196Post();dm196Steward()}catch(e){console.warn('v196 post',e)}
 // the forge grows with the kingdom: rebuild it when the walls move
 {const f=kfApply109;kfApply109=function(){const r=f.apply(this,arguments);try{dm196ShopRebuild('smith')}catch(_){}return r}}
 try{dm196HouseSync()}catch(_){}
+// co-op: a partner shown the host's kingdom (3094 dk150Apply) gets every building at the host's levels
+{const f=typeof dk150Apply=='function'?dk150Apply:null;if(f)dk150Apply=function(){const r=f.apply(this,arguments);try{SHOPS.forEach(o=>dm196ShopRebuild(o.k));dm196ShopRebuild('smith');dm196Post();dm196HouseSync();
+  // the wall pieces (banners, ivy, ravens) were placed before the host's walls went up: place them again on those walls
+  if(typeof DC103!='undefined'&&DC103.g){Object.keys(DC103.g).forEach(k=>dcDrop104(k));dc103Sync()}}catch(e){console.warn('v196 coop buildings',e)}return r}}
 // ================= v196: The Last Lantern — an inn you can walk into =================
 // Owner (Nov 3 2026): "Lets make the Inn an actual building you can walk into with a bar, fire, tables — and make it extra cozy."
 // The inn stands on the plaza ring (DM196_FIX.inn in 0045: 11 x 8 tiles, door toward the fountain). Lot-local frame (lotW103):
@@ -67854,7 +67891,7 @@ function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8
   k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
   // the bar: a long counter on the left back, stools, shelves of bottles and casks behind it, a tap barrel
   const bz=-1.9,FL=-.32;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.95,bz,4.2,1.1,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.53,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.95,bz-.9,.5,1.1,1.8,0,0,0,.03)});
-  for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,1.0,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,1.02,bz+.85,.26,.07,.26,0,0,0,.02)})}})
+  for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
   k.as('wood',()=>[1.0,1.6,2.2].forEach(y=>k.p('c',woodD,'box',-3.0,y,-D2+.3,4.6,.06,.34,0,0,0,.02)));
   [1.0,1.6,2.2].forEach((y,j)=>{for(let i=0;i<9;i++){const x=-5.0+i*.5+(j%2)*.2;k.p(R()<.3?'g':'c',[0x3a6a3a,0x6a2a2a,0x2a3a6a,0xd8b060,0x5a3a6a][(i+j)%5],'cyl6',x,y+.17,-D2+.3,.06,.28,.06,0,0,0,0)}});
   [[-5.0,-3.0],[-4.3,-3.0]].forEach(([x,z])=>TWN100_barrel(k,x,z,.9));k.at(-4.65,.82,-3.0,()=>TWN100_barrel(k,0,0,.75));
@@ -67871,12 +67908,12 @@ function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8
   // a rug before the fire, the fireside bench
   k.at(0,FL,0,()=>{
   k.as('cloth',()=>{k.p('c',0x6a1e26,'box',2.4,.41,-.9,2.8,.02,2.0,0,0,0,.01);k.p('c',0xc9a24a,'box',2.4,.415,-.9,2.5,.02,1.7,0,0,0,0);k.p('c',0x4a1018,'box',2.4,.42,-.9,2.2,.02,1.4,0,0,0,.01)});
-  k.as('wood',()=>{k.p('c',0x6a4a2e,'box',2.9,.78,-2.9,2.2,.08,.46,0,0,0,.03);k.p('c',woodD,'box',2.9,1.15,-3.12,2.2,.62,.08,0,0,0,.03);[-.9,.9].forEach(o=>k.L('c',woodD,[2.9+o,.36,-2.9],[2.9+o,.76,-2.9],.06,'box'))});
+  k.as('wood',()=>{k.p('c',0x6a4a2e,'box',2.9,.66,-2.9,2.2,.08,.46,0,0,0,.03);k.p('c',woodD,'box',2.9,1.03,-3.12,2.2,.62,.08,0,0,0,.03);[-.9,.9].forEach(o=>k.L('c',woodD,[2.9+o,.36,-2.9],[2.9+o,.64,-2.9],.06,'box'))});
   // three round tables, chairs, candles, mugs, a loaf and a roast
-  DM196I.tables.forEach(([x,z],ti)=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'cyl8',x,1.08,z,.62,.08,.62,0,0,0,.02);k.L('c',woodD,[x,.36,z],[x,1.04,z],.09,'cyl6');k.p('c',woodD,'cyl8',x,.42,z,.32,.06,.32,0,0,0,.02)});
+  DM196I.tables.forEach(([x,z],ti)=>k.at(0,-.1,0,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'cyl8',x,1.08,z,.62,.08,.62,0,0,0,.02);k.L('c',woodD,[x,.36,z],[x,1.04,z],.09,'cyl6');k.p('c',woodD,'cyl8',x,.42,z,.32,.06,.32,0,0,0,.02)});
     dc190Candle(k,x,1.12,z,.14);k.p('m',0x8a7a5a,'cyl8',x+.3,1.18,z-.1,.07,.14,.07);k.p('m',0x8a7a5a,'cyl8',x-.25,1.18,z+.2,.07,.14,.07);
-    if(ti==0){k.p('c',0xb8843a,'sph',x-.15,1.18,z-.25,.2,.12,.14);k.p('c',0x8a4a2a,'ico',x+.15,1.2,z+.25,.16,.1,.13)}else if(ti==1)k.p('c',0xc89a5a,'sph',x+.1,1.17,z+.1,.18,.1,.12)});
-  DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,0,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
+    if(ti==0){k.p('c',0xb8843a,'sph',x-.15,1.18,z-.25,.2,.12,.14);k.p('c',0x8a4a2a,'ico',x+.15,1.2,z+.25,.16,.1,.13)}else if(ti==1)k.p('c',0xc89a5a,'sph',x+.1,1.17,z+.1,.18,.1,.12)}));
+  DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,-.14,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
       [[-.19,-.18],[.19,-.18],[-.19,.18],[.19,.18]].forEach(([u,v])=>k.L('c',woodD,[u,.36,v],[u,.8,v],.035,'box'));k.p('c',woodD,'box',0,1.18,.2,.46,.58,.06,0,0,0,.03)})},a)});
   });
   // lanterns hanging from the beams, hops and herbs drying, a notice board
@@ -67969,14 +68006,14 @@ function dm196Spots(){const T=TOWNS[0],sig=KL103.ver+'|'+kf109().s+'|'+(shopBuil
   // the Inn: chairs and stools (eat), the fireside bench (warm), reached through the door
   const l=DM196I.l;if(l){const door=lotW103(l,0,5.3),inD=lotW103(l,0,2.6);
     DM196I.seats.forEach(s=>{const [x,z]=lotW103(l,s.x,s.z),[tx,tz]=lotW103(l,s.tx,s.tz),a=Math.hypot(s.x-s.tx,s.z-s.tz)||1,[ax,az]=lotW103(l,s.x+(s.x-s.tx)/a*.55,s.z+(s.z-s.tz)/a*.55);
-      add({k:s.k,act:s.k=='bench'?'warm':'eat',x,z,ry:Math.atan2(tx-x,tz-z),sit:1,h:{chair:.38,stool:.52,bench:.32}[s.k],w:5,via:[door,inD,[ax,az]],inn:1})})}
+      add({k:s.k,act:s.k=='bench'?'warm':'eat',x,z,ry:Math.atan2(tx-x,tz-z),sit:1,h:{chair:.40,stool:.50,bench:.38}[s.k],w:5,via:[door,inD,[ax,az]],inn:1})})}
   // the fountain's rim (eight places, facing out)
-  for(let i=0;i<8;i++){const a=(i+.5)/8*6.283,x=T.cx+Math.sin(a)*2.62,z=T.cy-Math.cos(a)*2.62;add({k:'rim',act:'rim',x,z,ry:Math.atan2(Math.sin(a),-Math.cos(a)),sit:1,h:.62,w:3,app:[T.cx+Math.sin(a)*3.6,T.cy-Math.cos(a)*3.6]})}
+  for(let i=0;i<8;i++){const a=(i+.5)/8*6.283,x=T.cx+Math.sin(a)*2.42,z=T.cy-Math.cos(a)*2.42;add({k:'rim',act:'rim',x,z,ry:Math.atan2(Math.sin(a),-Math.cos(a)),sit:1,h:.74,w:3,app:[T.cx+Math.sin(a)*3.6,T.cy-Math.cos(a)*3.6]})}
   // the plaza benches (two places each)
-  TWN100_WD.bench.forEach(([bx,bz,bry])=>{[-.4,.4].forEach(o=>{const x=T.cx+bx+Math.cos(bry)*o,z=T.cy+bz-Math.sin(bry)*o;add({k:'bench',act:'rest',x,z,ry:bry,sit:1,h:.44,w:2,app:[x+Math.sin(bry)*.8,z+Math.cos(bry)*.8]})})});
+  TWN100_WD.bench.forEach(([bx,bz,bry])=>{[-.4,.4].forEach(o=>{const x=T.cx+bx+Math.cos(bry)*o,z=T.cy+bz-Math.sin(bry)*o;add({k:'bench',act:'rest',x,z,ry:bry,sit:1,h:.54,w:2,app:[x+Math.sin(bry)*.8,z+Math.cos(bry)*.8]})})});
   // before the Bard's Stage: an arc of listeners facing the stage
-  if(shopBuilt('bard')){const bl=lotOf103('bard');if(bl)for(let i=0;i<6;i++){const u=(i-2.5)*1.05,v=7.0+Math.abs(u)*.35,[x,z]=lotW103(bl,u,v),[sx,sz]=lotW103(bl,0,3);
-    if(!kfIn109(x-T.cx,z-T.cy,.5)||dm196LotHit(x-T.cx,z-T.cy,.3))continue;add({k:'listen',act:'listen',x,z,ry:Math.atan2(sx-x,sz-z),sit:0,w:3})}}
+  if(shopBuilt('bard')){const bl=lotOf103('bard');if(bl)for(let i=0;i<6;i++){const u=(i-2.5)*1.05,v=5.6+Math.abs(u)*.25,[x,z]=lotW103(bl,u,v),[sx,sz]=lotW103(bl,0,3);
+    if(!kfIn109(x-T.cx,z-T.cy,.5)||dm196LotHit(x-T.cx,z-T.cy,0))continue;add({k:'listen',act:'listen',x,z,ry:Math.atan2(sx-x,sz-z),sit:0,w:3})}}
   // the market stalls: browse the wares
   KF109_STALL.forEach(([sx,sz,c,ry])=>{const x=T.cx+sx+Math.sin(ry)*1.25,z=T.cy+sz+Math.cos(ry)*1.25;add({k:'stall',act:'browse',x,z,ry:ry+Math.PI,sit:0,w:2})});
   DM196V.spots=S;DM196V.ver=sig;return S}
@@ -67989,7 +68026,7 @@ function dm196R(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;
 function dm196Undo(o){const L=o._pz;if(!L)return;for(const [b,x,y,z,py] of L){if(py!=null){b.position.y=py;continue}b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}o._pz=null}
 function dm196Sit(g,h){const B=g.bones,R=g.userData.rest;if(!B.pelvis||!R)return;
   // thighs forward, shins down; the pelvis drops so the seat carries it (h = seat height)
-  const drop=Math.max(0,(g.userData.hipY||.55)-(h+.07));if(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
+  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto itif(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
   ['lh0','rh0'].forEach(k=>dm196R(g,k,-1.42,0,0));['lh1','rh1'].forEach(k=>dm196R(g,k,1.38,0,0));['lh2','rh2'].forEach(k=>dm196R(g,k,.08,0,0));dm196R(g,'spine',.06)}
 function dm196Pose(o,now){const g=o.g,A=o.act,t=now/1000+(o.i||0)*1.7;if(!A||!g.bones)return;const s=A.s;DM196V.cur=o._pz=[];try{dm196Pose0(o,g,A,s,t)}finally{DM196V.cur=null}}
 function dm196Pose0(o,g,A,s,t){
@@ -68039,20 +68076,23 @@ DC190_SET.length=0;dc190WallClear=function(){return true};
 var DM196W={rc:null};
 function dm196WallAt(d,y){const T=TOWNS[0],K=kdState(),G=K.wg,R=kf109().R;if(!G)return null;G.updateMatrixWorld(true);const rc=DM196W.rc||(DM196W.rc=new THREE.Raycaster()),a=d*Math.PI/180,dir=new THREE.Vector3(Math.sin(a),0,-Math.cos(a));
   rc.set(new THREE.Vector3(T.cx+dir.x*(R-6),T.ph+y,T.cy+dir.z*(R-6)),dir);rc.far=9;const h=rc.intersectObject(G,true)[0];return h?Math.hypot(h.point.x-T.cx,h.point.z-T.cy):null}
-function dm196WallTop(d){const R=kf109().R,[x,z]=dm196A(d,R);let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25]){const [a,b]=dm196A(d,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best}
+function dm196WallTopP(d){const R=kf109().R,W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;let best=null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(!best||t>best[2]))best=[a,b,t]}return best}
+function dm196WallTop(d){const R=kf109().R;let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best} // palisade logs have gaps: sample along the wall too
+// the wall ring must be the current stage's before anything is placed along it (a stage change can rebuild the decorations first)
+function dm196WallsNow(){try{const K=kdState(),T=TOWNS[0],lv=kdLv('walls');if(!K.wg||K.wst!==kf109().s||K.wl!==lv)K.wlamps=kdWalls(T,lv)||[]}catch(e){console.warn('v196 walls',e)}}
 // wall angles kept clear of the gates (|x| < 4.5 at the wall)
 function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*R<4.6)continue;L.push(d)}return L}
 // ---------------- spots ----------------
 dc190Def('obelisk',{sp:[dm196A(127,17.4)]});
 dc190Def('statue',{sp:[dm196A(-153,17.4)]});
-dc190Def('planter',{sp:[dm196A(52.5,17.2),dm196A(-69.5,17.6),[3.8,-9.0],[-3.8,-9.0]],col(D){return D.sp.map(([x,z])=>[x,z,.62])}});
+dc190Def('planter',{sp:[dm196A(52.5,17.2),dm196A(-69.5,17.6),[5.6,-1.0],[-5.6,-1.0]],col(D){return D.sp.map(([x,z])=>[x,z,.62])}});
 dc190Def('trophy',{spf:F=>{const L=[];for(let i=0;i<6;i++){const r=i<3?26.6:28.4,d=86+(i%3)*4.2;L.push(dm196A(d,r))}return L}});
 dc190Def('carts',{sp:[dm196A(61.5,28.0),dm196A(-61.5,28.0)]});
 dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
-dc190Def('brazier',{spf:F=>[[-4.9,F.R-2.3],[4.9,F.R-2.3]]});
-dc190Def('trees',{spf:F=>[dm196A(144,27),dm196A(150.5,28.6),dm196A(147,25.6),dm196A(-144,27),dm196A(-150.5,28.6),dm196A(-147,25.6)]});
-dc190Def('gatepoles',{spf:F=>[[-3.1,F.R-1.5],[3.1,F.R-1.5]]});
+dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-3.4)],[4.9,-(F.R-3.4)]]}); // by the north gate (the way to the first portals)
+dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(142.5,29.4),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-142.5,29.4)]});
+dc190Def('gatepoles',{spf:F=>[[-4.3,F.R-1.9],[4.3,F.R-1.9]]});
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
 dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
@@ -68061,7 +68101,7 @@ dc190Def('garden',{spf:F=>[dm196A(-32.5,27.6)]});
 dc190Def('beacon',{spf:F=>[dm196A(32.5,27.6)]});
 {const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-108.5,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
 // stone benches along the first ring street, each facing it
-{const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(140,23.0),dm196Face(140)]];
+{const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(-147.5,23.2),dm196Face(-147.5)]];
   D.b=function(k,D){D.sp.forEach(([x,z,ry])=>k.at(x,0,z,()=>{dc190B(k,'c',0x77737c,1.55,.1,.46,0,.47,0,0,'ashlar',.02);
     [-1,1].forEach(s=>dc190Ext(k,'c',0x5c5862,'benchleg',[[-.2,0],[.2,0],[.16,.06],[.12,.32],[.18,.42],[-.18,.42],[-.12,.32],[-.16,.06]],.14,dt168Mx(s*.56,0,0,0,Math.PI/2,0),'ashlar',.012))},ry))};
   D.col=function(D){return D.sp.map(([x,z])=>[x,z,.7])}}}
@@ -68072,9 +68112,9 @@ function dm196Move(key,from,to,rot){const D=DECO103.find(q=>q.k==key);if(!D||!D.
 dm196Move('shrine',[14.6,6.4],dm196A(89.5,17.4),dm196Face(89.5));
 dm196Move('well',[-17.4,2.0],dm196A(-108.5,17.3),dm196Face(-108.5));
 // ---------------- along the round walls ----------------
-dc190Def('banner',{b(k,D,W){const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
+dc190Def('banner',{b(k,D,W){dm196WallsNow();const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
     const [x,z]=dm196A(d,r-.06);dc190Banner(k,x,y,z,dm196Face(d),i%2?ban:C.blk,.62,h,i%2?C.brass:C.bone,1)})}});
-dc190Def('ivy',{b(k,D,W){const L=[0x24402a,0x2e4a30,0x35602e,0x1e3626];dm196WallAngles(20,7).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null)return;const P=[];
+dc190Def('ivy',{b(k,D,W){dm196WallsNow();const L=[0x24402a,0x2e4a30,0x35602e,0x1e3626];dm196WallAngles(20,7).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null)return;const P=[];
     for(let j=0;j<7;j++){const y=.05+j*.42;if(y>t-.35)break;const dd=d+.5*Math.sin(j*1.3+i),r=dm196WallAt(dd,y);if(r==null)continue;const [x,z]=dm196A(dd,r-.04);P.push([x,y,z])}
     if(P.length<2)return;dc190Tube(k,'c',0x3a2e20,P,P.map((_,j)=>.028-j*.003),5,'bark');const a=d*Math.PI/180,ox=-Math.sin(a),oz=Math.cos(a);
     P.forEach((p,j)=>{dc190Clump(k,L[(i+j)%4],p[0]+ox*.05,p[1]+.05,p[2]+oz*.05,.22,.24,.22,i+j,'leaf',0);if(j%2==0)dc190Clump(k,L[(i+j+1)%4],p[0]+ox*.04,p[1]-.15,p[2]+oz*.04,.18,.17,.18,i+j+3,'leaf',0)})})}});
@@ -68084,14 +68124,14 @@ dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-69.5,-
     const ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);for(let i=0;i<9;i++){const t=(i+.5)/9;dc190Ext(k,'c',[C.crim,C.blk,0xb8ac90,0x5a1820][(i+j)%4],'pen',[[-.15,0],[.15,0],[0,-.36]],.02,dt168Mx(a[0]+(b[0]-a[0])*t,Y(t)-.01,a[1]+(b[1]-a[1])*t,.08*Math.sin(i*2.1),ry,0),'cloth')}})},
   col(){const o=[];[52.5,90,127,-69.5,-108.5,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
 // flower baskets on the lantern posts along the walls (the arm points toward the plaza)
-dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).forEach(([x,z],i)=>{if(Math.hypot(x,z)<R-3)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
+dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-3).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
     dc190Rod(k,'m',C.iron,[x+ux*.05,1.86,z+uz*.05],[bx,1.86,bz],.012,'iron',4);for(let j=0;j<3;j++){const q=j/3*6.283;dc190Rod(k,'m',C.iron,[bx,1.86,bz],[bx+Math.cos(q)*.15,1.5,bz+Math.sin(q)*.15],.004,'iron',3)}
     dc190L(k,'c',0x6a4e2e,[[0,0],[.08,0],[.17,.08],[.2,.17],[.18,.18],[.13,.06],[0,.05]],10,bx,1.33,bz,0,1,'straw');
     for(let j=0;j<5;j++){const q=j*1.26+i;dc190Clump(k,[0x2a4430,0x324e36][j%2],bx+Math.cos(q)*.1,1.52,bz+Math.sin(q)*.1,.1,.08,.1,i+j);dc190P(k,'c',[0xe8e0f0,0x8a5ac0,0x7a2a3a][(i+j)%3],dc190Ball(),dt168Mx(bx+Math.cos(q)*.13,1.58,bz+Math.sin(q)*.13,0,0,0,.04,.03,.04),'cloth')}})}});
 // ravens along the wall tops, each looking into the town
 {const D=DECO103.find(q=>q.k=='ravens');if(D&&D.an){const a0=D.an;D.an=function(g,D,W){const R=kf109().R,ang=dm196WallAngles(51,23).slice(0,Math.max(3,(D.sp||[]).length));
   const sp0=D.sp;D.sp=ang.map(d=>{const [x,z]=dm196A(d,R);return [x,z,0]});const W2=Object.assign({},W,{F:Object.assign({},W.F,{SZ:0}),top:(x,z)=>W.top(x,z)});
-  let f=null;try{f=a0.call(this,g,D,W2)}finally{}try{g.children.forEach((r,i)=>{const d=ang[i];if(d==null||!r.isGroup)return;const [x,z]=dm196A(d,R),t=dm196WallTop(d);r.position.set(x,(t==null?2.5:t)+.12,z);r.userData.y0=r.position.y;r.rotation.y=dm196Face(d)})}catch(_){}
+  let f=null;try{f=a0.call(this,g,D,W2)}finally{}try{g.children.forEach((r,i)=>{const d=ang[i];if(d==null||!r.isGroup)return;const P=dm196WallTopP(d);if(!P){r.visible=false;return}r.position.set(P[0],P[2]+.12,P[1]);r.userData.y0=r.position.y;r.rotation.y=dm196Face(d)})}catch(_){}
   D.sp=sp0;return f}}}
 // the decorations standing now were placed by the old spots: build them again
 try{if(typeof DC103!='undefined'&&DC103.g)Object.keys(DC103.g).forEach(k=>dcDrop104(k));dc103Sync()}catch(e){console.warn('v196 deco',e)}
@@ -68113,7 +68153,7 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   legs.push(door?[npcSt[1],inD].concat(go(door,npcSt[2])):go(npcSt[1],npcSt[2]));
   legs.push(go(npcSt[2],npcSt[3]));
   legs.push(go(npcSt[3],CS));
-  const gin=[T.cx,T.cy-R+2.2],gout=[T.cx,T.cy-R-1.8];legs.push(go(CS,gin).concat([[T.cx,T.cy-R+.6]]));
+  const gin=[T.cx+.4,T.cy-10.6],gout=[T.cx,T.cy-R-1.8];legs.push(go(CS,gin).concat([[T.cx,T.cy-12.4]])); // up the plaza toward the north gate (the cut picks him up outside it)
   // the cut: outside the north gate, a few steps toward Portal I's entry
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}

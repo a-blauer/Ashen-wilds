@@ -39,8 +39,8 @@ TURN=r"""async(a)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));const [y0,y1,n
   return {step:+mx.toFixed(2)}}"""
 PLACE="(a)=>{const q=a[0];toPos(q.x,q.z,q.yaw);camYaw=q.yaw;camPitch=a[2];camDist=a[1];camDD=null;try{snapCam()}catch(_){}return 1}"
 # a building between the camera and the hero in Duskhold (as v135_fade_shot / v169_ghost_look)
-HOUSE=r"""()=>{const T=TOWNS[0],rc=new THREE.Raycaster(),V3=THREE.Vector3;let best=null;const M=[];scene.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&!o.isInstancedMesh&&o.visible)M.push(o)});
-  for(let z=T.cy-20;z<T.cy+30&&!best;z+=2)for(let x=T.cx-24;x<T.cx+24&&!best;x+=2){if(solid(x,z))continue;
+HOUSE=r"""()=>{const T=TOWNS[0],rc=new THREE.Raycaster(),V3=THREE.Vector3;let best=null;const M=[];scene.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&!o.isInstancedMesh&&o.visible&&!(o.parent&&o.parent.name=='kfwild'))M.push(o)}); // v196: the outskirts' trees are one wide kit, not a building
+  for(let z=T.cy-20;z<T.cy+30&&!best;z+=2)for(let x=T.cx-24;x<T.cx+24&&!best;x+=2){if(solid(x,z)||!kfIn109(x-T.cx,z-T.cy,1))continue;
     for(let a=0;a<8&&!best;a++){const yaw=a/8*Math.PI*2,y=GH(x,z),h=new V3(x,y+1.1,z),c=new V3(x+Math.sin(yaw)*Math.cos(.35)*8,y+1.1+Math.sin(.35)*8,z+Math.cos(yaw)*Math.cos(.35)*8);
       const dir=h.clone().sub(c),L=dir.length();rc.set(c,dir.normalize());rc.far=L-1.5;rc.camera=cam;let I=[];try{I=rc.intersectObjects(M,false)}catch(e){I=[]}
       I=I.filter(q=>q.distance>1.5);const hit=I.find(q=>{const b=new THREE.Box3().setFromObject(q.object);return b.max.y-b.min.y>2.5&&q.point.y>y+1});

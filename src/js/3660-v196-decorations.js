@@ -17,6 +17,8 @@ function dm196WallAt(d,y){const T=TOWNS[0],K=kdState(),G=K.wg,R=kf109().R;if(!G)
   rc.set(new THREE.Vector3(T.cx+dir.x*(R-6),T.ph+y,T.cy+dir.z*(R-6)),dir);rc.far=9;const h=rc.intersectObject(G,true)[0];return h?Math.hypot(h.point.x-T.cx,h.point.z-T.cy):null}
 function dm196WallTopP(d){const R=kf109().R,W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;let best=null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(!best||t>best[2]))best=[a,b,t]}return best}
 function dm196WallTop(d){const R=kf109().R;let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best} // palisade logs have gaps: sample along the wall too
+// the wall ring must be the current stage's before anything is placed along it (a stage change can rebuild the decorations first)
+function dm196WallsNow(){try{const K=kdState(),T=TOWNS[0],lv=kdLv('walls');if(!K.wg||K.wst!==kf109().s||K.wl!==lv)K.wlamps=kdWalls(T,lv)||[]}catch(e){console.warn('v196 walls',e)}}
 // wall angles kept clear of the gates (|x| < 4.5 at the wall)
 function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*R<4.6)continue;L.push(d)}return L}
 // ---------------- spots ----------------
@@ -27,9 +29,9 @@ dc190Def('trophy',{spf:F=>{const L=[];for(let i=0;i<6;i++){const r=i<3?26.6:28.4
 dc190Def('carts',{sp:[dm196A(61.5,28.0),dm196A(-61.5,28.0)]});
 dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
-dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-2.3)],[4.9,-(F.R-2.3)]]}); // by the north gate (the way to the first portals)
-dc190Def('trees',{spf:F=>[dm196A(144,27),dm196A(150.5,28.6),dm196A(147,25.6),dm196A(-144,27),dm196A(-150.5,28.6),dm196A(-147,25.6)]});
-dc190Def('gatepoles',{spf:F=>[[-4.0,F.R-1.6],[4.0,F.R-1.6]]});
+dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-3.4)],[4.9,-(F.R-3.4)]]}); // by the north gate (the way to the first portals)
+dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(142.5,29.4),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-142.5,29.4)]});
+dc190Def('gatepoles',{spf:F=>[[-4.3,F.R-1.9],[4.3,F.R-1.9]]});
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
 dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
@@ -49,9 +51,9 @@ function dm196Move(key,from,to,rot){const D=DECO103.find(q=>q.k==key);if(!D||!D.
 dm196Move('shrine',[14.6,6.4],dm196A(89.5,17.4),dm196Face(89.5));
 dm196Move('well',[-17.4,2.0],dm196A(-108.5,17.3),dm196Face(-108.5));
 // ---------------- along the round walls ----------------
-dc190Def('banner',{b(k,D,W){const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
+dc190Def('banner',{b(k,D,W){dm196WallsNow();const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
     const [x,z]=dm196A(d,r-.06);dc190Banner(k,x,y,z,dm196Face(d),i%2?ban:C.blk,.62,h,i%2?C.brass:C.bone,1)})}});
-dc190Def('ivy',{b(k,D,W){const L=[0x24402a,0x2e4a30,0x35602e,0x1e3626];dm196WallAngles(20,7).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null)return;const P=[];
+dc190Def('ivy',{b(k,D,W){dm196WallsNow();const L=[0x24402a,0x2e4a30,0x35602e,0x1e3626];dm196WallAngles(20,7).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null)return;const P=[];
     for(let j=0;j<7;j++){const y=.05+j*.42;if(y>t-.35)break;const dd=d+.5*Math.sin(j*1.3+i),r=dm196WallAt(dd,y);if(r==null)continue;const [x,z]=dm196A(dd,r-.04);P.push([x,y,z])}
     if(P.length<2)return;dc190Tube(k,'c',0x3a2e20,P,P.map((_,j)=>.028-j*.003),5,'bark');const a=d*Math.PI/180,ox=-Math.sin(a),oz=Math.cos(a);
     P.forEach((p,j)=>{dc190Clump(k,L[(i+j)%4],p[0]+ox*.05,p[1]+.05,p[2]+oz*.05,.22,.24,.22,i+j,'leaf',0);if(j%2==0)dc190Clump(k,L[(i+j+1)%4],p[0]+ox*.04,p[1]-.15,p[2]+oz*.04,.18,.17,.18,i+j+3,'leaf',0)})})}});

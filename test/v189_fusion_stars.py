@@ -32,15 +32,15 @@ def run(pg):
     chk('nm() badge stars (13,6,0,30 fusions)',r['nm']==[2,1,0,3],r['nm'])
     chk('nm() has no old ★ glyphs',not any(r['oldStar']),r['oldStar'])
     chk('HUD companion bars show the badge',r['hud'][:2]==[2,1],r['hud'])
-    pg.screenshot(path=play.TMP+'/v189_hud.png',clip={'x':0,'y':0,'width':420,'height':200})
+    pg.screenshot(timeout=180000,path=play.TMP+'/v189_hud.png',clip={'x':0,'y':0,'width':420,'height':200})
     ev("()=>{try{$('cmp').classList.remove('hide');rC()}catch(e){}}");pg.wait_for_timeout(500)
     r=ev("()=>[...document.querySelectorAll('#cmp .fs189')].length")
     chk('Companions window shows badges',r>=3,r)
-    pg.screenshot(path=play.TMP+'/v189_companions.png')
+    pg.screenshot(timeout=180000,path=play.TMP+'/v189_companions.png')
     ev("()=>{closeWin&&closeWin();$('cmp').classList.add('hide');$('fuseBtn').click()}");pg.wait_for_timeout(500)
     r=ev("()=>({n:document.querySelectorAll('#fz .fs189').length,help:FSM100_helpHTML().includes('fs189')})")
     chk('Fusion window shows badges',r['n']>=3,r);chk('Fusion help explains the stars',r['help'],r)
-    pg.screenshot(path=play.TMP+'/v189_fusion.png')
+    pg.screenshot(timeout=180000,path=play.TMP+'/v189_fusion.png')
     ev("()=>{$('fz').classList.add('hide')}")
     # 3. a fusion: the HUD badge follows; no runes on the model
     r=ev("""()=>{const c=party[0];c.fz++;c.fp=c.fz;c.f=Math.min(10,c.fz);ui();hud();let n=0;fols[0].traverse(o=>{if(o.userData&&o.userData.fr189)n++});

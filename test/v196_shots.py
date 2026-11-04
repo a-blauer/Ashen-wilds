@@ -4,7 +4,7 @@ import os,sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play,v100_lib as L
 OUT=play.TMP
-ONLY=set((os.environ.get('ONLY') or 'air,full,room,entry,street,plaza,inn,shops,deco,folk,meadow').split(','))
+ONLY=set((os.environ.get('ONLY') or 'air,full,room,entry,street,plaza,inn,shops,deco,folk,meadow,plan').split(','))
 FULL="""()=>{gold=1e8;for(const k of Object.keys(RES))mats[k]=9999;['Rock Core','Silk Gland','Ectoplasm'].forEach(k=>mats[k]=999);SHOPS.forEach(o=>SH.shop[o.k]=1);UPK103.forEach(k=>SH.lv[k]=3);SH.lv.walls=3;shApply();
   while(LOT103.some(l=>lotFree103(l.id))&&HS103.h.length<HS103_MAX){if(!hsBuy103(LOT103.find(l=>lotFree103(l.id)).id))break}}"""
 def s(pg):
@@ -64,4 +64,7 @@ def s(pg):
       ev("()=>{const T=TOWNS[0];window.FCAM=null;toPos(T.cx+2,T.cy+26);camYaw=Math.PI*.15;camPitch=.22;camDist=9;STEP(.3)}");L.shot(pg,OUT+'/v196_meadow_s0.png')
       ev("()=>{const T=TOWNS[0];window.FCAM=null;toPos(T.cx-30,T.cy+8);camYaw=Math.PI*.5;camPitch=.18;camDist=8;STEP(.3)}");L.shot(pg,OUT+'/v196_meadow_edge.png')
       ev("()=>{const T=TOWNS[0];window.FCAM=null;toPos(T.cx,T.cy+15);camYaw=0;camPitch=.3;camDist=10;STEP(.3)}");L.shot(pg,OUT+'/v196_meadow_gate.png')
+    if 'plan' in ONLY:
+      ev("()=>{bossDone.clear();for(let i=0;i<3;i++)bossDone.add(i);kfApply109(true)}");ev(FULL)
+      ev("()=>{KM103.tab='kingdom';openX('hold');STEP(.1)}");pg.screenshot(path=OUT+'/v196_plan.png')
 play.run(s)

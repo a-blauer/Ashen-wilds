@@ -37,11 +37,11 @@ function dm196Kind(n){if(DM196K[n])return DM196K[n];const R=dkRng(n.length*131+n
 var DM196_THEME=[['bog','bog','dead'],['oak','oak','pine'],['snowpine','snowpine','dead'],['spire','spire','cactus'],['dead','dead','pine'],['blood','dead','blood']];
 var DM196_TINT=[[0x8a9a7a,0xa0b090],[0xa8c498,0xc0d8a8],[0xd0dce8,0xe8f0f8],[0xe0c8a0,0xc8b088],[0x8a9098,0xa0a8b0],[0xb08890,0xa07078]];
 // ---------------- the forest ----------------
-function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=2.05;
+function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=2.3;
   for(let y=D.y0;y<D.y0+D.ny;y+=S)for(let x=D.x0;x<D.x0+D.nx;x+=S){const px=x+(R()-.5)*S*.9,pz=y+(R()-.5)*S*.9,X=Math.round(px),Z=Math.round(pz),wd=dm196Wd(X,Z);
-    if(wd==null||wd<1.05||wd>5.4||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.07)continue; // the backdrop stands behind the last rows
+    if(wd==null||wd<1.05||wd>4.8||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.07)continue; // the backdrop stands behind the last rows
     const r=Math.hypot(px-T.cx,pz-T.cy),ri=dm196Room(px,pz,D.FR+1),pi=ri>=0?ri:dm196Path(px,pz,D.FR+1),th=pi>=0&&(ri>=0||r>D.RM+4)?pi:-1;
-    const k=th>=0?DM196_THEME[th][Math.floor(R()*3)]:(R()<.62?'pine':R()<.75?'dead':'oak'),s=(th==3?.85:1)*(.9+R()*.55)*(1+Math.min(.35,(wd-1)*.05)),ry=R()*6.283;
+    const k=th>=0?DM196_THEME[th][Math.floor(R()*3)]:(R()<.62?'pine':R()<.75?'dead':'oak'),s=(th==3?.85:1)*(1.0+R()*.55)*(1+Math.min(.4,(wd-1)*.08)),ry=R()*6.283;
     const tint=th>=0?DM196_TINT[th][R()<.5?0:1]:[0x9aa896,0xb0bca8,0x8a9888][Math.floor(R()*3)];
     pick.push({x:px,z:pz,k,s,ry,tint,sec:Math.floor((Math.atan2(px-T.cx,pz-T.cy)+Math.PI)/6.283*12)%12})}
   // one instanced mesh per kind and sector; each sector's geometry carries the bounds of its own trees

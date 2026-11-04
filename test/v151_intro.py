@@ -35,9 +35,14 @@ def s(pg):
     # and the hero's walk never passes through a building (solid meshes standing on the ground, sampled every 0.1 s)
     dk=ev("""()=>{const D=IC151.S.D;if(!D)return null;const V=THREE.Vector3,hit=[];scene.updateMatrixWorld(true);const bx=[];
       scene.traverse(o=>{if(!o.isMesh||!o.geometry)return;let v=true,q=o;while(q){if(q.visible===false)v=false;q=q.parent}if(!v)return;if(o===D.pil||D.ch&&D.ch.root.getObjectById(o.id)||pl.getObjectById(o.id)||(typeof fols!='undefined'&&fols.some(f=>f&&f.getObjectById&&f.getObjectById(o.id))))return;
-        const b=new THREE.Box3().setFromObject(o);if(b.max.x<14||b.min.x>66||b.max.z<255||b.min.z>360)return;const sx=b.max.x-b.min.x,sz=b.max.z-b.min.z,g=GH((b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2);
-        if(sx>30||sz>30||sx*sz<.15||b.min.y>g+.6||b.max.y<g+1.2)return;bx.push(b)});
-      for(const L of D.legs)for(let t=L.a;t<=L.b;t+=.1){const p=ic151DPos(D,t);for(const b of bx)if(p[0]>b.min.x+.05&&p[0]<b.max.x-.05&&p[1]>b.min.z+.05&&p[1]<b.max.z-.05){hit.push([+t.toFixed(1),+p[0].toFixed(1),+p[1].toFixed(1)]);break}}
+        {let q=o;while(q){if(q.name&&q.name.indexOf('dm196inn')==0)return;q=q.parent}} // v196: the Inn is walked into
+        const b=new THREE.Box3().setFromObject(o);if(b.max.x<14||b.min.x>86||b.max.z<255||b.min.z>360)return;const sx=b.max.x-b.min.x,sz=b.max.z-b.min.z,g=GH((b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2);
+        if(sx>30||sz>30||sx*sz<.15||b.min.y>g+.6||b.max.y<g+1.2)return;
+        // v196: buildings stand turned on the round town's rings: test the point in the mesh's own (turned) box, not the world box
+        if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bx.push({b,lb:o.geometry.boundingBox,inv:new THREE.Matrix4().copy(o.matrixWorld).invert(),inst:o.isInstancedMesh})});
+      const P=new THREE.Vector3(),inB=(e,x,z)=>{const b=e.b;if(!(x>b.min.x+.05&&x<b.max.x-.05&&z>b.min.z+.05&&z<b.max.z-.05))return false;if(e.inst)return true;
+        for(const y of [GH(x,z)+.7,GH(x,z)+1.1]){P.set(x,y,z).applyMatrix4(e.inv);const l=e.lb;if(P.x>l.min.x+.05&&P.x<l.max.x-.05&&P.z>l.min.z+.05&&P.z<l.max.z-.05&&P.y>l.min.y&&P.y<l.max.y)return true}return false};
+      for(const L of D.legs)for(let t=L.a;t<=L.b;t+=.1){const p=ic151DPos(D,t);for(const e of bx)if(inB(e,p[0],p[1])){hit.push([+t.toFixed(1),+p[0].toFixed(1),+p[1].toFixed(1)]);break}}
       // v151e: the town wall and gate are one big mesh (skipped above): rays along the walk, at his middle and 0.3 m to each side,
       // must not cross it (he goes out through the gate's opening, not through a post)
       const WL=[];scene.traverse(o=>{const nm=o.name||(o.parent&&o.parent.name)||'';if(o.isMesh&&/^kdWalls/.test(nm))WL.push(o)});const rw=new THREE.Raycaster(),wh=[];

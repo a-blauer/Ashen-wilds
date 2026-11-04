@@ -124,4 +124,6 @@ try{dm196Post();dm196Steward()}catch(e){console.warn('v196 post',e)}
 {const f=kfApply109;kfApply109=function(){const r=f.apply(this,arguments);try{dm196ShopRebuild('smith')}catch(_){}return r}}
 try{dm196HouseSync()}catch(_){}
 // co-op: a partner shown the host's kingdom (3094 dk150Apply) gets every building at the host's levels
-{const f=typeof dk150Apply=='function'?dk150Apply:null;if(f)dk150Apply=function(){const r=f.apply(this,arguments);try{SHOPS.forEach(o=>dm196ShopRebuild(o.k));dm196ShopRebuild('smith');dm196Post();dm196HouseSync()}catch(e){console.warn('v196 coop buildings',e)}return r}}
+{const f=typeof dk150Apply=='function'?dk150Apply:null;if(f)dk150Apply=function(){const r=f.apply(this,arguments);try{SHOPS.forEach(o=>dm196ShopRebuild(o.k));dm196ShopRebuild('smith');dm196Post();dm196HouseSync();
+  // the wall pieces (banners, ivy, ravens) were placed before the host's walls went up: place them again on those walls
+  if(typeof DC103!='undefined'&&DC103.g){Object.keys(DC103.g).forEach(k=>dcDrop104(k));dc103Sync()}}catch(e){console.warn('v196 coop buildings',e)}return r}}
