@@ -66083,6 +66083,9 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // angular rune lines, Deflect sweeping arcs, Tide waves, Swift slanted streaks, Thorns a vine with thorns. Two or three types braid
 // into twisted strands of each colour with blended knots where they cross. The model key carries the runes (mdGD d.key), so a new
 // rune rebuilds the model; the glow channel breathes gently while runed armour is worn (rv194Breathe).
+// v195 (owner, Nov 3 2026: "remove the fissures when a rune is slotted in armor and just have the current subtle sparkle effect"):
+// RV194.lines = 0 — runed armour no longer gets the lit lines, knots, tint or the breathing glow channel; the marks are still
+// laid out the same way, but only as the soft sparkle points (rv194Glow) that ride the bones along them. RV194.lines = 1 brings them back.
 // GPU: shells share the piece's cached geometry (never disposed here); their materials and the mote geometry are cached per look.
 var RV194={on:1,lines:0,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
   // per motif: [mote speed, mote direction (1 up, -1 down, 0 jitter, 2 orbit, 3 along the piece), mote size]
@@ -66763,9 +66766,11 @@ function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;
   D.TR=[[1.25,1.12,1.0,.88,.84,.88,.92,.94,.92,.95,1.05,1.1],[1.12,1.06,.98,.9,.94,1.02,1.06,1.04,1,1,1.05,1.08],[1.15,1.08,1.0,.94,.92,.94,.96,.97,.98,1,1.05,1.08]];
   D.armK=[.86,.9,.84,.78,.82,.74];D.legK=[1.2,1.22,1.1,.9,.86,.76,.7];
   // ---- the tail: bushy, thick at the root, about half the body long, carried low with the end lifting ----
-  D.TP=[[0,.6,-.06,.04],[0,.572,-.125,.046],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
+  D.TP=[[0,.6,-.07,.066],[0,.572,-.13,.05],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
   D.TB.forEach((n,i)=>{const p=D.TP[i];D.HBX[n]=[i?D.TB[i-1]:'pelvis',p[0],p[1],p[2]]});
   D.tailSway=[.06,.09,1.35,2.8];
+  // the forepaws held a little away from the (now fuller) thighs
+  D.pose=Object.assign({},D.pose,{shz:.1});
   // ---- palette: the look's fur graded darker and less saturated (dark fantasy), a warm cream, a dark back ----
   const old=D.cols;
   D.cols=L=>{if(!BF195.on)return old(L);const f=bf195HSLk(mdC(L.skin),.8,.82);
@@ -66822,7 +66827,7 @@ function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;
       O['neck.x']=-.12*e;O['head.x']=-.26*e+.035*tw;O['head.y']=.12*s*e;O['chest.x']=-.04*e}},
     // groom: the free right paw wipes the muzzle a few times
     {id:'groom',dur:2.8,w:2,fn(u,s,O){const e=E(u,.22,.22),rb=Math.sin(u*Math.PI*2*3.5)*SS(.25,.35,u)*(1-SS(.65,.75,u));
-      O['aR0.x']=-1.3*e;O['aR0.z']=.22*e;O['aR1.x']=-1.75*e+.2*rb;O['aR2.x']=.25*e;O['head.x']=.3*e+.05*rb;O['head.z']=-.26*e;O['head.y']=-.22*e;O['neck.x']=.12*e;O['chest.x']=.05*e}},
+      O['aR0.x']=-1.55*e;O['aR0.z']=-.2*e;O['aR1.x']=-1.5*e+.2*rb;O['aR2.x']=.25*e;O['head.x']=.3*e+.05*rb;O['head.z']=-.26*e;O['head.y']=-.22*e;O['neck.x']=.12*e;O['chest.x']=.05*e}},
     // a curious tilt of the head, the tail giving a small flick
     {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.48*s*e;O['head.y']=.2*s*e;O['head.x']=-.1*e;O['neck.z']=.12*s*e}},
     // a glance back over the shoulder with a flick of the tail
