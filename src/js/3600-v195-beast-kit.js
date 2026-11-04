@@ -76,16 +76,19 @@ function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=
   [-1,1].forEach(s=>{const l=s<0?'lh':'rh',Rl=mdLeg(P,s);LR[s]=Rl;
     const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+n)%n:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
     const top=Object.assign({},Rl[1],{p:[Rl[1].p[0],Math.min(Rl[1].p[1],y0-.035),Rl[1].p[2]],w:[['pelvis',.35],[l+'0',.65]]}),use=[top].concat(Rl.slice(2));
-    let prev=root;use.forEach((q,i)=>{const c=q.p,ring=[];
-      for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=(sa>=0?q.f:q.b)*lk;
-        let p=[c[0]+s*ca*q.rx*lk,c[1],c[2]+sa*rf];
+    // the half of the bottom torso ring this leg grows from: the first leg rings start inside it (no lip where a leg is wider
+    // than its half of the hips), then widen into the md leg rings
+    const hx=q0[1]*.5,hr=q0[1]*.52,hf=Math.min(q0[2],q0[3])*.95;
+    let prev=root;use.forEach((q,i)=>{const t=i==0?.35:i==1?.72:1,c=[s*(hx+(Math.abs(q.p[0])-hx)*t),q.p[1],q.p[2]],rx=hr+(q.rx*lk-hr)*t,ring=[];
+      for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=hf+((sa>=0?q.f:q.b)*lk-hf)*t;
+        let p=[c[0]+s*ca*rx,c[1],c[2]+sa*rf];
         if(i<2){const Pv=M.V[root[j]],b=i?.8:.45;p=lerp3([Pv[0],Pv[1]-(i?.5:.3)*lr,Pv[2]],p,b)}
         ring.push(cgVert(M,p,q.w))}
       cgBand(M,prev,ring,'leg',c);prev=ring});
     const ak=use[use.length-1].p;cgCap(M,prev,[ak[0],ak[1]-.02,ak[2]],[[l+'2',1]],'leg',[ak[0],ak[1]+.1,ak[2]])});
   cgOrient(M);const SM=cgSub(M);
   if(F.sculpt)cgSculpt(SM,{torso:1,neck:1,arm:1,leg:1},(x,y,z,nn)=>F.sculpt(x,y,z,nn));
-  SM.shade=cgShade(SM,Object.assign({cav:.55,hk:.24,dk:.16,min:.55,blur:2},F.shade||{}));
+  SM.shade=cgShade(SM,Object.assign({cav:.3,hk:.24,dk:.16,min:.55,blur:3},F.shade||{}));
   // ---- colour: clothes painted crisp per face, as mdBody paints its lofts; uncovered fur flows per corner ----
   const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY,BC=BR.C;
   const furSet=new Set([BC.FUR,BC.BELLY,BC.FURL,BC.FURD,mdC(C.skin)].map(mdC));if(D.handCol)furSet.add(mdC(D.handCol(BC)));

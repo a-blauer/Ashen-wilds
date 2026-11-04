@@ -19,7 +19,7 @@
   // ---- palette: the look's fur graded darker and less saturated (dark fantasy), a warm cream, a dark back ----
   const old=D.cols;
   D.cols=L=>{if(!BF195.on)return old(L);const f=bf195HSLk(mdC(L.skin),.8,.82);
-    return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xe2d6bc,.74),.9,.92),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
+    return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xd8c8a8,.66),.95,.8),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
   D.bf={n:16,torK:1.03,limbK:1.1,
     // the neck: thick, rising from the collar into the back of the skull (human space, before the race's warp)
     neck:T=>[[1.0,.1,.086,.09,-.006],[1.04,.091,.08,.084,-.012],[1.078,.083,.076,.079,-.02],[1.112,.074,.068,.072,-.028],[1.14,.062,.058,.062,-.034]],
@@ -49,11 +49,11 @@
       // colour per corner (smooth): cream lips / chin / throat under a line from the mouth back under the ear, a darker crown
       // and nape, a dark mask round the eyes, a slightly darker bridge
       paint(p,n,C,ao){const x=Math.abs(p[0]),y=p[1],z=p[2],F=bf195Rgb(C.FUR),Bl=bf195Rgb(C.BELLY),Dk=bf195Rgb(C.FURD);
-        const yb=-.027+(.12-z)*.11,cr=Math.max(bf195SS(yb+.006,yb-.006,y),bf195SS(-.4,-.75,n[1])*bf195SS(.02,-.04,z+.0))*(z<-.06?bf195SS(-.11,-.06,z):1);
+        const cr=Math.max(bf195SS(-.12,-.42,n[1])*bf195SS(-.006,-.016,y),bf195SS(-.4,-.7,n[1]))*(z<-.06?bf195SS(-.11,-.06,z):1);
         const crown=bf195SS(.45,.85,n[1])*bf195SS(.08,.0,z)*.35,eye=Math.hypot(x-.043,y-.018,z-.068),mask=(1-bf195SS(.014,.026,eye))*.55,bridge=bf195SS(.06,.1,z)*bf195SS(.5,.85,n[1])*(1-bf195SS(.004,.016,x))*.2;
-        // nose pad and the mouth line, painted per corner (crisp facets read as a zigzag)
-        const nose=bf195SS(.154,.162,z)*bf195SS(-.034,-.028,y)*(1-bf195SS(-.01,-.004,y)),my=-.0335-(z-.12)*.04,mouth=(1-bf195SS(.002,.0055,Math.abs(y-my)))*bf195SS(.085,.1,z)*(1-bf195SS(.15,.158,z))*(1-bf195SS(.026,.034,x));
-        let c=bf195Mix(F,Dk,Math.max(crown,mask,bridge));c=bf195Mix(c,Bl,cr*(1-mask));c=bf195Mix(c,bf195Rgb(C.MOUTH),mouth*.85);return bf195Mix(c,bf195Rgb(C.NOSE),nose)}},
+        // the nose pad, painted per corner (crisp facets, and a painted mouth line, read as a zigzag of teeth)
+        const nose=bf195SS(.154,.162,z)*bf195SS(-.034,-.028,y)*(1-bf195SS(-.01,-.004,y));
+        let c=bf195Mix(F,Dk,Math.max(crown,mask,bridge));c=bf195Mix(c,Bl,cr*(1-mask));return bf195Mix(c,bf195Rgb(C.NOSE),nose)}},
     tail:{r:(i,r)=>r,flat:.92,
       col:(m,C,t)=>{const F=bf195Rgb(C.FUR),Dk=bf195Rgb(C.FURD),tip=[.012,.01,.009],un=bf195Rgb(C.FURL);
         let c=bf195Mix(F,un,bf195SS(-.3,-.8,m.ny)*.45*(1-t));c=bf195Mix(c,Dk,bf195SS(.45,.75,t)*.6);return bf195Mix(c,tip,bf195SS(.72,.92,t))}}};
@@ -75,8 +75,8 @@
       O['neck.x']=-.12*e;O['head.x']=-.26*e+.035*tw;O['head.y']=.12*s*e;O['chest.x']=-.04*e}},
     // groom: the free right paw wipes the muzzle a few times
     {id:'groom',dur:2.8,w:2,fn(u,s,O){const e=E(u,.22,.22),rb=Math.sin(u*Math.PI*2*3.5)*SS(.25,.35,u)*(1-SS(.65,.75,u));
-      O['aR0.x']=-1.0*e;O['aR0.z']=.16*e;O['aR1.x']=-1.45*e+.18*rb;O['aR2.x']=.3*e;O['head.x']=.18*e+.04*rb;O['head.z']=-.2*e;O['head.y']=-.16*e;O['neck.x']=.06*e}},
+      O['aR0.x']=-1.3*e;O['aR0.z']=.22*e;O['aR1.x']=-1.75*e+.2*rb;O['aR2.x']=.25*e;O['head.x']=.3*e+.05*rb;O['head.z']=-.26*e;O['head.y']=-.22*e;O['neck.x']=.12*e;O['chest.x']=.05*e}},
     // a curious tilt of the head, the tail giving a small flick
-    {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.32*s*e;O['head.y']=.14*s*e;O['head.x']=-.06*e}},
+    {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.48*s*e;O['head.y']=.2*s*e;O['head.x']=-.1*e;O['neck.z']=.12*s*e}},
     // a glance back over the shoulder with a flick of the tail
     {id:'glance',dur:1.8,w:2,tail:5,fn(u,s,O){const e=E(u,.2,.32);O['head.y']=.5*s*e;O['neck.y']=.24*s*e;O['spine.y']=.08*s*e;O['chest.y']=.06*s*e}}]}}
