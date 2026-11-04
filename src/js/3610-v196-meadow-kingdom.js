@@ -25,7 +25,8 @@ function dm196P(a,R){return [R*Math.sin(a),-R*Math.cos(a)]}
 var DM196_GZ=1.85; // half the gate opening
 function dm196Ring(R){const gA=Math.asin(DM196_GZ/R),n=Math.max(6,Math.round((Math.PI-2*gA)*R/4.4)),seg=[],tw=[];
   [0,1].forEach(h=>{const a0=h*Math.PI+gA,a1=(h+1)*Math.PI-gA;for(let i=0;i<n;i++){const a=a0+(a1-a0)*i/n,b=a0+(a1-a0)*(i+1)/n;seg.push({a,b,h:(Math.cos((a+b)/2)>0)?0:1})}
-    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,big=i>0&&i<n&&i%Math.max(2,Math.round(n/3))==0;if(i==0||i==n||big||i%2==0)tw.push({a,big,gate:i==0||i==n,h:Math.cos(a)>0?0:1})}});
+    const gT=Math.asin(2.4/R)-gA; // the gate towers stand clear of the way through (x ±2.4)
+    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n+(i==0?gT:i==n?-gT:0),big=i>0&&i<n&&i%Math.max(2,Math.round(n/3))==0;if(i==0||i==n||big||i%2==0)tw.push({a,big,gate:i==0||i==n,h:Math.cos(a)>0?0:1})}});
   return {seg,tw,gA}}
 TWN100_ringK=function(k,lv,part){const R=kf109().R,G=dm196Ring(R);
   G.seg.forEach(s=>{if(s.h!==part)return;const p=dm196P(s.a,R),q=dm196P(s.b,R),dx=q[0]-p[0],dz=q[1]-p[1],L=Math.hypot(dx,dz);k.at((p[0]+q[0])/2,0,(p[1]+q[1])/2,()=>kdSegK(k,lv,L+.35),Math.atan2(-dz,dx))});
@@ -73,7 +74,7 @@ TWN100_lpFor=function(F){const L=[],R=F.R||F.SZ,lotHit=(x,z,p)=>dm196LotHit(x,z,
   for(let d=12;d<360;d+=24){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*(R-1.3)<4.2)continue;const [x,z]=dm196P(a,R-1.3);if(!lotHit(x,z,.9))L.push([x,z])}
   [30,90,150,210,270,330].forEach(d=>{const [x,z]=dm196P(d*Math.PI/180,11.6);if(!lotHit(x,z,1.1)&&Math.abs(x)>2.2)L.push([x,z])});
   L.push([-2.6,-(R-2.4)],[2.6,-(R-2.4)],[-2.6,R-2.4],[2.6,R-2.4]);return L};
-TWN100_WD={crate:[[-6.4,-8.6,0],[6.6,-8.4,1]],bench:[[-5.9,6.4,-.65],[5.9,6.4,.65]],benchZ:0};
+TWN100_WD={crate:[[-9.3,-5.2,0],[9.9,2.4,1]],bench:[[-7.6,-3.4,Math.atan2(7.6,3.4)],[-4.15,7.2,Math.atan2(4.15,-7.2)]],benchZ:0}; // benches face the fountain
 TWN100_wardK=function(k,F){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
       const lx=.32,ly=h-.28;k.p('m',TWC.iron,'cone4',lx,ly+.2,0,.17,.13,.17,0,Math.PI/4,0,0);k.p('m',TWC.iron,'box',lx,ly-.16,0,.2,.04,.2,0,0,0,0);
@@ -97,7 +98,7 @@ kfStalls109=function(){const T=TOWNS[0];if(KF109.stalls)return;const g=new THREE
 // ---------------- the old square's dressing: everything except the fountain stays hidden ----------------
 kfLegacy109=function(F){const T=TOWNS[0];
   if(!KF109.leg){const K=typeof KGD!='undefined'&&KGD||{},own=new Set([].concat(K.wcol||[],K.pcol||[],...Object.values(K.up||{}).map(u=>u.col||[]),...Object.values(DC103.col||{}),
-      ...Object.values(typeof HS103!='undefined'&&HS103?HS103.g:{}).map(o=>o.c||[]),...Object.values(TWN100_S.col||{}),KF109.wardCol,KF109.stallCol,KF109.wcol,DM196S.col||[]));
+      ...Object.values(typeof HS103!='undefined'&&HS103?HS103.g:{}).map(o=>o.c||[]),...Object.values(TWN100_S.col||{}),KF109.wardCol,KF109.stallCol,KF109.wcol,DM196S.col||[],typeof CHQ148!='undefined'&&CHQ148.col||[]));
     const skip=new Set([K.wg,KF109.ward,KF109.stalls,K.pg].filter(Boolean));Object.values(K.up||{}).forEach(u=>{if(u.g)skip.add(u.g)});
     const inSq=(x,z)=>Math.abs(x)<44&&Math.abs(z)<56;
     KF109.leg={g:T.g.children.filter(o=>!skip.has(o)&&(Math.abs(o.position.x)+Math.abs(o.position.z)>.5)&&inSq(o.position.x,o.position.z)&&!/^kd|^deco|^house|^wardDress|^stalls109|^kfwild|^dm196/.test(o.name||'')).map(o=>({o,v:o.visible})),
@@ -196,3 +197,6 @@ czSpots103=function(){const T=TOWNS[0],L=LOT103.map(l=>lotDoor103(l)),F=kf109();
 try{KF109.base=null;KF109.cand=null;KF109.wsel=null;KF109.leg=null;if(typeof KGD!='undefined'&&KGD){KGD.wl=-1;KGD.pr=-1}kfApply109(true)}catch(e){console.warn('v196 apply',e)}
 // the Steward's plan of the town: framed on the round walls (v103 framed the long square from its north wall)
 {const f=lotPlan103;lotPlan103=function(cv,opt){const k0=kf109;kf109=function(){const F=k0();return Object.assign({},F,{WX:F.R,SZ:20})};try{return f.apply(this,arguments)}finally{kf109=k0}}}
+// turning a building: a turn whose door would open onto something solid (a decoration, a stall, a wall) is refused
+{const f=kfRotate109;kfRotate109=function(key){try{const l0=SH.pos[key]&&LOTM103[SH.pos[key]];if(l0){const r=((SH.rot[key]|0)+1)&3,l=lotRot103(l0,r),d=lotW103(l,0,4.45),T=TOWNS[0];
+    if(Math.hypot(d[0]-T.cx,d[1]-T.cy)>kf109().R-1.2||solid(d[0],d[1])||tcHit(d[0],d[1])){say('🚫 '+lotName103(key)[1]+' cannot face that way: its door would open onto '+(Math.hypot(d[0]-T.cx,d[1]-T.cy)>kf109().R-1.2?'the walls':'something in the way')+'.');return false}}}catch(e){console.warn('v196 turn',e)}return f.apply(this,arguments)}}

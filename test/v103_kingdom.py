@@ -39,8 +39,9 @@ def s(pg):
           const reach=(x,z,R)=>{for(let dz=-R;dz<=R;dz+=st)for(let dx=-R;dx<=R;dx+=st){if(dx*dx+dz*dz>R*R)continue;const k=id(x+dx,z+dz);if(k>=0&&seen[k]==1)return true}return false};
           out.unreach=LOT103.filter(l=>!reach(...lotDoor103(l),1.6)).map(l=>l.id);out.gate=reach(T.cx,T.cy+T.sz+1,1.5);out.steward=reach(SHM.st.x,SHM.st.z,2.2);
           // nothing of the garden is left
-          let gr=0;for(let z=15;z<51;z++)for(let x=-20;x<=20;x++){const t=MAP[T.cy+z][T.cx+x];if(t=='g'||t=='#'||t=='r'||t=='.')gr++}out.garden=gr;
-          out.solidLots=LOT103.filter(l=>{const k=lotKey103(l.id);return k&&!k.startsWith('u:')&&!lotTiles103(l,-2,2,-3,0).every(t=>MAP[(t/W)|0][t%W]=='B')}).map(l=>l.id);
+          let gr=0;const RR=kf109().R-1;for(let z=-RR;z<=RR;z++)for(let x=-RR;x<=RR;x++){if(Math.hypot(x,z)>RR)continue;const t=MAP[T.cy+z][T.cx+x];if(t=='g'||t=='#'||t=='r')gr++}out.garden=gr; // v196: no tall grass, forest or rock inside the round walls
+          const fB=(l)=>{const L=lotTiles103(l,-2,2,-3,0);return L.filter(t=>MAP[(t/W)|0][t%W]=='B').length/L.length};window.__fB=fB; // v196: lots stand turned on the rings, so a tile at a rotated edge may be outside the model
+          out.solidLots=LOT103.filter(l=>{const k=lotKey103(l.id);return k&&!k.startsWith('u:')&&fB(l)<.6}).map(l=>l.id);
           out.freeLotsSolid=LOT103.filter(l=>!lotKey103(l.id)&&lotTiles103(l,-3,3,-3,3).some(t=>MAP[(t/W)|0][t%W]=='B')).map(l=>l.id);
           return out}""")
         ok(r['houses']==6 and r['cits']==12,'six houses, twelve citizens',[r['houses'],r['cits']])
@@ -51,7 +52,7 @@ def s(pg):
         ok(not r['freeLotsSolid'],'free lots are open ground',r['freeLotsSolid'])
         # move a shop and a house and an upgrade; old spots open, new ones solid; save + load keeps it
         r=ev("""()=>{const o={},fr=LOT103.filter(l=>lotFree103(l.id)).map(l=>l.id),c0=SH.pos.cook;o.to=[fr[0],fr[1],c0];lotPut103('cook',fr[0]);
-          o.cook=[TWN100_SH.find(q=>q.k=='cook')._lot,lotTiles103(LOTM103[fr[0]],-2,2,-3,0).every(t=>MAP[(t/W)|0][t%W]=='B'),lotTiles103(LOTM103[c0],-2,2,-3,0).some(t=>MAP[(t/W)|0][t%W]=='B')];
+          o.cook=[TWN100_SH.find(q=>q.k=='cook')._lot,__fB(LOTM103[fr[0]])>=.6,__fB(LOTM103[c0])>.1];
           lotPut103('h:0',fr[1]);lotPut103('u:den',c0);
           const T=TOWNS[0],d=lotDoor103(LOTM103[fr[0]]);o.st2=[T.st2.c[0]==d[0],T.st2.c[1]==d[1]];o.den=[KDU.den.x,KDU.den.z,LOTM103[c0].x,LOTM103[c0].z];o.h0=HS103.g[0]&&HS103.g[0].lot;
           saveGame(true);const s=JSON.parse(localStorage.getItem(SAVE_KEY));o.kpos=s.x2&&s.x2.kpos;o.nh=s.x2&&s.x2.khs&&s.x2.khs.length;
@@ -132,9 +133,8 @@ def s(pg):
             r=ev("""(L)=>{const T=TOWNS[0];gold=1e7;DECO103.forEach(D=>{if(SH.deco[D.k]==null)dcBuy103(D.k);SH.deco[D.k]=1});SHU.forEach(u=>SH.lv[u.k]=L);SHOPS.forEach(o=>SH.shop[o.k]=1);shApply();dc103Sync();
               const K=kdState(),G=[K.wg,K.pg].concat(Object.values(K.up).map(u=>u.g),typeof TWN100_MILL!='undefined'?[TWN100_MILL]:[]).filter(Boolean);G.forEach(g=>g.updateMatrixWorld(true));
               const rc=new THREE.Raycaster(),pts=[];
-              DECO103.forEach(D=>{if(D.wall)return;(D.sp||[]).forEach(q=>pts.push([D.k,q[0],q[1],.3]))});
-              const F=kf109();pts.push(['statue',10,5.6,.75],['well',-17.4,2,.9],['shrine',14.6,6.4,.6],['gatepoles',-4.3,F.SZ-1.8,.15],['gatepoles',4.3,F.SZ-1.8,.15],['mosaic',0,9.6,1.2]); // v109 spots (v190: the statue stands south-east of the fountain)
-              [18.35,25.85,33.35,40.85].filter(z=>z<F.SZ-3).forEach(z=>[-3.3,3.3].forEach(x=>pts.push(['garland',x,z,.1]))); // v112: across the Gate Avenue
+              DECO103.forEach(D=>{if(D.wall)return;(DC103.col[D.k]||[]).forEach(c=>pts.push([D.k,+(c.x-T.cx).toFixed(2),+(c.z-T.cy).toFixed(2),Math.min(.9,(c.r!=null?c.r:Math.min(c.hx,c.hz))*.8)]))}); // v196: every decoration's own colliders
+              const F=kf109();pts.push(['mosaic',0,9.6,1.2]);
               for(let i=0;i<8;i++){const a=i/8*6.283+.2;pts.push(['crystals',Math.cos(a)*3.3,Math.sin(a)*3.3,.2])}
               const bad=[];pts.forEach(([k,x,z,r])=>{for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){rc.set(new THREE.Vector3(T.cx+x+dx,T.ph+12,T.cy+z+dz),new THREE.Vector3(0,-1,0));rc.far=13;
                 const h=rc.intersectObjects(G,true)[0];if(h&&h.point.y>T.ph+.3){bad.push(k+'@'+x+','+z+' y'+(h.point.y-T.ph).toFixed(1));break}}});

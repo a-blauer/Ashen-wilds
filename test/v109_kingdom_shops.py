@@ -1,4 +1,4 @@
-# v109: the kingdom grows with every new Sovereign (stage = Sovereigns defeated, first kills only, 0..5): the walls move south
+# v109 (v196: the round town, walls of radius 21..40, gates north and south): the kingdom grows with every new Sovereign (stage = Sovereigns defeated, first kills only, 0..5): the walls move south
 # (x ±20, south wall z 11..51), 5 plots then +3 per stage (20); outlines on empty open plots; locked plots refused; old saves
 # get the stage their buildings need; turning buildings (doors stay reachable); decorations and dressing clear of every lot and
 # door at every stage; shop upgrades (levels, discount, more/better stock, Steward rows). Prints PASS/FAIL lines. SHOT=1 screenshots.
@@ -18,22 +18,23 @@ def s(pg):
         print(('PASS ' if ok else 'FAIL ')+name,'=>',json.dumps(r)[:600])
         if not ok:fails.append(name)
         return r
-    ev("""()=>{window.WALLS=()=>{const T=TOWNS[0],F=kf109(),t=(x,z)=>MAP[T.cy+z][T.cx+x];return [F.s,F.SZ,t(0,F.SZ),t(5,F.SZ),t(F.WX,0),t(-F.WX,5),t(0,F.SZ-1),t(5,F.SZ+2),t(0,F.SZ+3),t(10,F.SZ-1)]}}""")
+    ev("""()=>{window.WALLS=()=>{const T=TOWNS[0],F=kf109(),R=F.R,t=(x,z)=>MAP[T.cy+Math.round(z)][T.cx+Math.round(x)],a=d=>[R*Math.sin(d*Math.PI/180),-R*Math.cos(d*Math.PI/180)];
+      const g=c=>'Pp.'.includes(c)?'open':c;return [F.s,R,g(t(0,R)),t(...a(45)),t(...a(135)),t(...a(270)),g(t(0,-R)),g(t(0,R-2)),g(t(...a(200).map(v=>v*1.08)))]}}""")
     # ---- the kingdom's size ----
     T('new game: stage 0, small walls, 5 plots, smith by the fountain',"""()=>[WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).map(l=>l.id),SH.pos.smith,KL103.ring&&KL103.ring.count,kfDoors109(),areaName()]""",
-      lambda r:r[0]==[0,11,'P','W','W','W','P','.','P','P'] and r[1]==5 and sorted(r[2])==sorted(['CW','CE','NW','NE','NM']) and r[3]=='CW' and r[4]==4 and r[5]==[])
-    T('outside the walls: the outskirts (wild props, no paving)',"""()=>{const T=TOWNS[0];toPos(T.cx+10,T.cy+16);const a=areaName(),w=KF109.wsel.L.length,c=KF109.wcol.length;toPos(T.sp[0],T.sp[1]);
-      return [a,w,c,KF109.wsel.L.every(p=>!(Math.abs(p.x)<22&&p.z<13&&p.z>-23)),T.pave.count]}""",lambda r:'Outskirts' in r[0] and r[1]>100 and r[2]>20 and r[3])
+      lambda r:r[0]==[0,21,'open','W','W','W','open','open','open'] and r[1]==5 and sorted(r[2])==sorted(['CW','CE','NW','NE','NM']) and r[3]=='CW' and r[4]==4 and r[5]==[])
+    T('outside the walls: the outskirts (wild props, no paving)',"""()=>{const T=TOWNS[0];toPos(T.cx+10,T.cy+22);const a=areaName(),w=KF109.wsel.L.length,c=KF109.wcol.length;toPos(T.sp[0],T.sp[1]);
+      return [a,w,c,KF109.wsel.L.every(p=>Math.hypot(p.x,p.z)>=kf109().R+2.4),T.pave.count]}""",lambda r:'Meadow' in r[0] and r[1]>100 and r[2]>20 and r[3])
     T('locked lot refused',"""()=>{gold=1e6;['wood','stone','fiber','iron','glowcap','bone'].forEach(k=>mats[k]=999);const a=lotFree103('S1W'),b=lotFree103('CE');const h0=HS103.h.length;const hb=hsBuy103('S1M');
       KM103.pick={kind:'shop',k:'cook',key:'cook'};kmPlace103('S1E');const c=shopBuilt('cook');KM103.pick={kind:'shop',k:'cook',key:'cook'};kmPlace103('CE');return [a,b,hb,HS103.h.length-h0,c,shopBuilt('cook'),SH.pos.cook]}""",
       lambda r:r[0] is False and r[1] is True and not r[2] and r[3]==0 and r[4] is False and r[5] is True and r[6]=='CE')
     T('first Sovereign: the walls move out, 3 more plots',"""()=>{const T=TOWNS[0];toPos(T.cx+3,T.cy+16);bossDefeated({ar:0});const w=WALLS();const o=[w,lotN109(),['S1W','S1M','S1E'].map(lotOpen109),lotOpen109('S2W'),KL103.ringN.count,lotCounts109(),areaName(),kfDoors109()];toPos(T.sp[0],T.sp[1]);return o}""",
-      lambda r:r[0]==[1,21,'P','W','W','W','P','.','P','P'] and r[1]==8 and all(r[2]) and not r[3] and r[4]==3 and 'Outskirts' not in r[6] and r[7]==[])
+      lambda r:r[0]==[1,30,'open','W','W','W','open','open','open'] and r[1]==8 and all(r[2]) and not r[3] and r[4]==3 and 'Meadow' not in r[6] and r[7]==[])
     T('the same Sovereign again: nothing changes',"""()=>{bossDefeated({ar:0});bossDefeated({ar:0});return [kf109().s,lotN109()]}""",lambda r:r==[1,8])
-    T('every Sovereign: 20 plots, walls at z 51',"""()=>{for(let i=1;i<6;i++)bossDefeated({ar:i});return [WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).length,KF109.SZ]}""",
-      lambda r:r[0][:2]==[5,51] and r[0][2]=='P' and r[0][3]=='W' and r[1]==20 and r[2]==20)
-    T('stage 5: road and gate line up with the Portal Road',"""()=>{const T=TOWNS[0],t=(x,z)=>MAP[T.cy+z][T.cx+x];return [t(0,51),t(0,52),t(1,52),t(-1,53)]}""",lambda r:r[0]=='P' and all(c in 'Pp.' for c in r[1:]))
-    T('save/load: the stage follows the Sovereigns',"""()=>{const x=x2Save();bossDone.clear();bossDone.add(0);bossDone.add(1);x.bossDone=[0,1];x2Load(JSON.parse(JSON.stringify(x)));return [kf109().s,WALLS()[1],lotN109()]}""",lambda r:r==[2,29,11])
+    T('every Sovereign: 20 plots, walls at radius 40',"""()=>{for(let i=1;i<6;i++)bossDefeated({ar:i});return [WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).length,KF109.SZ]}""",
+      lambda r:r[0][:2]==[5,40] and r[0][2]=='open' and r[0][3]=='W' and r[1]==20 and r[2]==20)
+    T('stage 5: both gates open onto the meadow paths',"""()=>{const T=TOWNS[0],t=(x,z)=>MAP[T.cy+z][T.cx+x];return [t(0,40),t(0,41),t(1,42),t(0,-40),t(0,-41),t(-1,-42)]}""",lambda r:all(c in 'Pp.' for c in r))
+    T('save/load: the stage follows the Sovereigns',"""()=>{const x=x2Save();bossDone.clear();bossDone.add(0);bossDone.add(1);x.bossDone=[0,1];x2Load(JSON.parse(JSON.stringify(x)));return [kf109().s,WALLS()[1],lotN109()]}""",lambda r:r==[2,30.5,11])
     T('old v108 save: 14 buildings on old lot ids, 1 Sovereign -> the stage that fits them, all placed, doors reachable',"""()=>{const x=x2Save();bossDone.clear();bossDone.add(0);
       x.kpos={smith:'W1',magic:'NM',cook:'W3',alch:'W2',bard:'W4',merchant:'E1',sage:'E2',trainer:'E3',stable:'E4','u:train':'CE','u:tower':'NE','u:treas':'NW','u:den':'SW','u:hatch':'SE'};delete x.krot;
       x.shp={};['magic','cook','alch','merchant','trainer','bard','sage','stable'].forEach(k=>x.shp[k]=1);x.sh={train:1,tower:1,treas:1,den:1,hatch:1,walls:1};
@@ -44,8 +45,8 @@ def s(pg):
       kfRotate109('smith');const l=lotOf103('smith'),d1=lotDoor103(l),t1=KL103.own.smith.slice().sort().join(),b=TWN100_S.b.smith;toPos(d1[0],d1[1]);const p=TWN100_prompt();toPos(T.sp[0],T.sp[1]);
       return [SH.rot.smith,+(q.ry-ry0).toFixed(3),+(b.rotation.y-l.ry).toFixed(3),d0.map(v=>+v.toFixed(2)),d1.map(v=>+v.toFixed(2)),t0!==t1,p&&p.label,kfDoors109()]}""",
       lambda r:r[0] in (1,2,3) and abs(r[2])<1e-3 and r[3]!=r[4] and r[5] and r[6] and 'Blacksmith' in r[6] and r[7]==[])
-    T('a door that would face the north wall is skipped',"""()=>{const k=lotKey103('NM')||'u:tower';if(!lotKey103('NM'))lotPut103(k,'NM');const o=[];for(let i=0;i<4;i++){kfRotate109(k);o.push(kfFace109(lotOf103(k).ry))}return [k,o,kfDoors109()]}""",
-      lambda r:'north' not in r[1] and r[2]==[])
+    T('no turn puts a door against the walls or onto something solid',"""()=>{const T=TOWNS[0],k=lotKey103('NM')||'u:tower';if(!lotKey103('NM'))lotPut103(k,'NM');const o=[];for(let i=0;i<4;i++){kfRotate109(k);const d=lotDoor103(lotOf103(k));o.push([+(kf109().R-Math.hypot(d[0]-T.cx,d[1]-T.cy)).toFixed(2),tcHit(d[0],d[1])])}return [k,o,kfDoors109()]}""",
+      lambda r:all(q[0]>1.1 and not q[1] for q in r[1]) and r[2]==[])
     T('turns save and load',"""()=>{const k=Object.keys(SH.rot)[0];const x=x2Save();const v=SH.rot[k];SH.rot={};x2Load(JSON.parse(JSON.stringify(x)));return [k,v,SH.rot[k],x.krot[k]]}""",lambda r:r[0] and r[1]==r[2]==r[3])
     T('a house turns too',"""()=>{[0,1,2,3,4,5].forEach(i=>bossDone.add(i));kfApply109();gold=1e7;['wood','stone','fiber','iron','glowcap','bone','petals','crystal'].forEach(k=>mats[k]=9999);if(!HS103.h.length){const id=LOT103.find(l=>lotFree103(l.id)).id;hsBuy103(id)}const g0=HS103.g[0].g.rotation.y;kfRotate109('h:0');const o=HS103.g[0];return [+(o.g.rotation.y-g0).toFixed(3),o.ry===lotOf103('h:0').ry,kfDoors109()]}""",
       lambda r:abs(r[0])>.1 and r[1] and r[2]==[])
@@ -57,13 +58,13 @@ def s(pg):
         const F=kf109(),lots=LOT103.filter(l=>l.st<=st),doors=lots.map(l=>lotDoor103(l));
         const mine=new Set([].concat(KF109.wardCol,KF109.stallCol,...Object.values(DC103.col),KF109.leg.c.map(q=>q.c),KGD.wcol||[]));
         const bad=T.col.filter(c=>mine.has(c)&&(KGD.wcol||[]).indexOf(c)<0).filter(c=>{const x=c.x-T.cx,z=c.z-T.cy,r=c.r!=null?c.r:Math.max(c.hx,c.hz);
-          return lots.some(l=>Math.abs(x-l.x)<3.5+r&&Math.abs(z-l.z)<3.5+r)||doors.some(([dx,dz])=>Math.hypot(T.cx+x-dx,T.cy+z-dz)<1.2+r)||!kfIn109(x,z,-.6)}).map(c=>[+(c.x-T.cx).toFixed(1),+(c.z-T.cy).toFixed(1)]);
+          return lots.some(l=>dm196LotHit(x,z,r)&&LOT103.indexOf(l)>=0&&(()=>{const fx=Math.sin(l.ry),fz=Math.cos(l.ry),dx=x-l.x,dz=z-l.z;return Math.abs(dx*fz-dz*fx)<3.5+r&&Math.abs(dx*fx+dz*fz)<3.5+r})())||doors.some(([dx,dz])=>Math.hypot(T.cx+x-dx,T.cy+z-dz)<1.2+r)||Math.hypot(x,z)>DM196.RM-1}).map(c=>[+(c.x-T.cx).toFixed(1),+(c.z-T.cy).toFixed(1)]);
         // fill every open lot (shops, upgrades, houses) and check the doors
         SHOPS.forEach(o=>SH.shop[o.k]=1);UPK103.forEach(k=>SH.lv[k]=1);shApply();let n=1+SHOPS.length+UPK103.length;while(LOT103.some(l=>lotFree103(l.id))&&HS103.h.length<HS103_MAX){const id=LOT103.find(l=>lotFree103(l.id)).id;gold=1e7;['wood','stone','fiber','iron','glowcap','bone','petals','crystal'].forEach(k=>mats[k]=9999);if(!hsBuy103(id))break}
         lotSync103();const dr=kfDoors109();
         // v112: the Gate Avenue stays open with everything built, whatever way every building is turned: a 6-tile band (|x|<=2.75)
         // straight from the south edge of the plaza (z 10, the spawn is at 8.4) to the south wall, then through the gate (|x|<=0.9)
-        const ave=()=>{const b=[];for(let z=10;z<=F.SZ+2;z+=.25)for(let x=-2.75;x<=2.75;x+=.25){if(z>F.SZ-1.2&&Math.abs(x)>.9)continue;const X=T.cx+x,Z=T.cy+z;if(solid(X,Z)||tcHit(X,Z))b.push([x,+z.toFixed(2)])}return b.slice(0,6)};
+        const ave=()=>{const b=[];for(let z=10.5;z<=F.SZ+2;z+=.25)for(let x=-2.75;x<=2.75;x+=.25){if(z>F.SZ-1.2&&Math.abs(x)>.9)continue;const X=T.cx+x,Z=T.cy+z;if(solid(X,Z)||tcHit(X,Z))b.push([x,+z.toFixed(2)])}return b.slice(0,6)};
         const aveBad=[];const keys=Object.keys(SH.pos);for(let r=0;r<4;r++){keys.forEach(k=>{if(r)SH.rot[k]=r;else delete SH.rot[k]});lotSync103();const b=ave();if(b.length)aveBad.push([r,b])}
         SH.rot={};lotSync103();out.push([st,F.SZ,lots.length,Object.keys(SH.pos).length,bad,dr,aveBad])}
       return out}""",lambda r:all(not q[4] and q[5]==[] and not q[6] for q in r) and r[-1][2]==20)

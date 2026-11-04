@@ -36,11 +36,11 @@ function dm196Spots(){const T=TOWNS[0],sig=KL103.ver+'|'+kf109().s+'|'+(shopBuil
   // the Inn: chairs and stools (eat), the fireside bench (warm), reached through the door
   const l=DM196I.l;if(l){const door=lotW103(l,0,5.3),inD=lotW103(l,0,2.6);
     DM196I.seats.forEach(s=>{const [x,z]=lotW103(l,s.x,s.z),[tx,tz]=lotW103(l,s.tx,s.tz),a=Math.hypot(s.x-s.tx,s.z-s.tz)||1,[ax,az]=lotW103(l,s.x+(s.x-s.tx)/a*.55,s.z+(s.z-s.tz)/a*.55);
-      add({k:s.k,act:s.k=='bench'?'warm':'eat',x,z,ry:Math.atan2(tx-x,tz-z),sit:1,h:{chair:.38,stool:.52,bench:.32}[s.k],w:5,via:[door,inD,[ax,az]],inn:1})})}
+      add({k:s.k,act:s.k=='bench'?'warm':'eat',x,z,ry:Math.atan2(tx-x,tz-z),sit:1,h:{chair:.40,stool:.50,bench:.38}[s.k],w:5,via:[door,inD,[ax,az]],inn:1})})}
   // the fountain's rim (eight places, facing out)
-  for(let i=0;i<8;i++){const a=(i+.5)/8*6.283,x=T.cx+Math.sin(a)*2.42,z=T.cy-Math.cos(a)*2.42;add({k:'rim',act:'rim',x,z,ry:Math.atan2(Math.sin(a),-Math.cos(a)),sit:1,h:.62,w:3,app:[T.cx+Math.sin(a)*3.6,T.cy-Math.cos(a)*3.6]})}
+  for(let i=0;i<8;i++){const a=(i+.5)/8*6.283,x=T.cx+Math.sin(a)*2.42,z=T.cy-Math.cos(a)*2.42;add({k:'rim',act:'rim',x,z,ry:Math.atan2(Math.sin(a),-Math.cos(a)),sit:1,h:.74,w:3,app:[T.cx+Math.sin(a)*3.6,T.cy-Math.cos(a)*3.6]})}
   // the plaza benches (two places each)
-  TWN100_WD.bench.forEach(([bx,bz,bry])=>{[-.4,.4].forEach(o=>{const x=T.cx+bx+Math.cos(bry)*o,z=T.cy+bz-Math.sin(bry)*o;add({k:'bench',act:'rest',x,z,ry:bry,sit:1,h:.44,w:2,app:[x+Math.sin(bry)*.8,z+Math.cos(bry)*.8]})})});
+  TWN100_WD.bench.forEach(([bx,bz,bry])=>{[-.4,.4].forEach(o=>{const x=T.cx+bx+Math.cos(bry)*o,z=T.cy+bz-Math.sin(bry)*o;add({k:'bench',act:'rest',x,z,ry:bry,sit:1,h:.54,w:2,app:[x+Math.sin(bry)*.8,z+Math.cos(bry)*.8]})})});
   // before the Bard's Stage: an arc of listeners facing the stage
   if(shopBuilt('bard')){const bl=lotOf103('bard');if(bl)for(let i=0;i<6;i++){const u=(i-2.5)*1.05,v=5.6+Math.abs(u)*.25,[x,z]=lotW103(bl,u,v),[sx,sz]=lotW103(bl,0,3);
     if(!kfIn109(x-T.cx,z-T.cy,.5)||dm196LotHit(x-T.cx,z-T.cy,0))continue;add({k:'listen',act:'listen',x,z,ry:Math.atan2(sx-x,sz-z),sit:0,w:3})}}
@@ -56,7 +56,7 @@ function dm196R(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;
 function dm196Undo(o){const L=o._pz;if(!L)return;for(const [b,x,y,z,py] of L){if(py!=null){b.position.y=py;continue}b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}o._pz=null}
 function dm196Sit(g,h){const B=g.bones,R=g.userData.rest;if(!B.pelvis||!R)return;
   // thighs forward, shins down; the pelvis drops so the seat carries it (h = seat height)
-  const drop=Math.max(0,(g.userData.hipY||.55)-(h+.07));if(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
+  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto itif(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
   ['lh0','rh0'].forEach(k=>dm196R(g,k,-1.42,0,0));['lh1','rh1'].forEach(k=>dm196R(g,k,1.38,0,0));['lh2','rh2'].forEach(k=>dm196R(g,k,.08,0,0));dm196R(g,'spine',.06)}
 function dm196Pose(o,now){const g=o.g,A=o.act,t=now/1000+(o.i||0)*1.7;if(!A||!g.bones)return;const s=A.s;DM196V.cur=o._pz=[];try{dm196Pose0(o,g,A,s,t)}finally{DM196V.cur=null}}
 function dm196Pose0(o,g,A,s,t){

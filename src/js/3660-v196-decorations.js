@@ -15,18 +15,19 @@ DC190_SET.length=0;dc190WallClear=function(){return true};
 var DM196W={rc:null};
 function dm196WallAt(d,y){const T=TOWNS[0],K=kdState(),G=K.wg,R=kf109().R;if(!G)return null;G.updateMatrixWorld(true);const rc=DM196W.rc||(DM196W.rc=new THREE.Raycaster()),a=d*Math.PI/180,dir=new THREE.Vector3(Math.sin(a),0,-Math.cos(a));
   rc.set(new THREE.Vector3(T.cx+dir.x*(R-6),T.ph+y,T.cy+dir.z*(R-6)),dir);rc.far=9;const h=rc.intersectObject(G,true)[0];return h?Math.hypot(h.point.x-T.cx,h.point.z-T.cy):null}
-function dm196WallTop(d){const R=kf109().R,[x,z]=dm196A(d,R);let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25]){const [a,b]=dm196A(d,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best}
+function dm196WallTopP(d){const R=kf109().R,W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;let best=null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(!best||t>best[2]))best=[a,b,t]}return best}
+function dm196WallTop(d){const R=kf109().R;let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best} // palisade logs have gaps: sample along the wall too
 // wall angles kept clear of the gates (|x| < 4.5 at the wall)
 function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*R<4.6)continue;L.push(d)}return L}
 // ---------------- spots ----------------
 dc190Def('obelisk',{sp:[dm196A(127,17.4)]});
 dc190Def('statue',{sp:[dm196A(-153,17.4)]});
-dc190Def('planter',{sp:[dm196A(52.5,17.2),dm196A(-69.5,17.6),[3.8,-9.0],[-3.8,-9.0]],col(D){return D.sp.map(([x,z])=>[x,z,.62])}});
+dc190Def('planter',{sp:[dm196A(52.5,17.2),dm196A(-69.5,17.6),[5.6,-1.0],[-5.6,-1.0]],col(D){return D.sp.map(([x,z])=>[x,z,.62])}});
 dc190Def('trophy',{spf:F=>{const L=[];for(let i=0;i<6;i++){const r=i<3?26.6:28.4,d=86+(i%3)*4.2;L.push(dm196A(d,r))}return L}});
 dc190Def('carts',{sp:[dm196A(61.5,28.0),dm196A(-61.5,28.0)]});
 dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
-dc190Def('brazier',{spf:F=>[[-4.9,F.R-2.3],[4.9,F.R-2.3]]});
+dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-2.3)],[4.9,-(F.R-2.3)]]}); // by the north gate (the way to the first portals)
 dc190Def('trees',{spf:F=>[dm196A(144,27),dm196A(150.5,28.6),dm196A(147,25.6),dm196A(-144,27),dm196A(-150.5,28.6),dm196A(-147,25.6)]});
 dc190Def('gatepoles',{spf:F=>[[-4.0,F.R-1.6],[4.0,F.R-1.6]]});
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
@@ -60,14 +61,14 @@ dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-69.5,-
     const ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);for(let i=0;i<9;i++){const t=(i+.5)/9;dc190Ext(k,'c',[C.crim,C.blk,0xb8ac90,0x5a1820][(i+j)%4],'pen',[[-.15,0],[.15,0],[0,-.36]],.02,dt168Mx(a[0]+(b[0]-a[0])*t,Y(t)-.01,a[1]+(b[1]-a[1])*t,.08*Math.sin(i*2.1),ry,0),'cloth')}})},
   col(){const o=[];[52.5,90,127,-69.5,-108.5,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
 // flower baskets on the lantern posts along the walls (the arm points toward the plaza)
-dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).forEach(([x,z],i)=>{if(Math.hypot(x,z)<R-3)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
+dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-3).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
     dc190Rod(k,'m',C.iron,[x+ux*.05,1.86,z+uz*.05],[bx,1.86,bz],.012,'iron',4);for(let j=0;j<3;j++){const q=j/3*6.283;dc190Rod(k,'m',C.iron,[bx,1.86,bz],[bx+Math.cos(q)*.15,1.5,bz+Math.sin(q)*.15],.004,'iron',3)}
     dc190L(k,'c',0x6a4e2e,[[0,0],[.08,0],[.17,.08],[.2,.17],[.18,.18],[.13,.06],[0,.05]],10,bx,1.33,bz,0,1,'straw');
     for(let j=0;j<5;j++){const q=j*1.26+i;dc190Clump(k,[0x2a4430,0x324e36][j%2],bx+Math.cos(q)*.1,1.52,bz+Math.sin(q)*.1,.1,.08,.1,i+j);dc190P(k,'c',[0xe8e0f0,0x8a5ac0,0x7a2a3a][(i+j)%3],dc190Ball(),dt168Mx(bx+Math.cos(q)*.13,1.58,bz+Math.sin(q)*.13,0,0,0,.04,.03,.04),'cloth')}})}});
 // ravens along the wall tops, each looking into the town
 {const D=DECO103.find(q=>q.k=='ravens');if(D&&D.an){const a0=D.an;D.an=function(g,D,W){const R=kf109().R,ang=dm196WallAngles(51,23).slice(0,Math.max(3,(D.sp||[]).length));
   const sp0=D.sp;D.sp=ang.map(d=>{const [x,z]=dm196A(d,R);return [x,z,0]});const W2=Object.assign({},W,{F:Object.assign({},W.F,{SZ:0}),top:(x,z)=>W.top(x,z)});
-  let f=null;try{f=a0.call(this,g,D,W2)}finally{}try{g.children.forEach((r,i)=>{const d=ang[i];if(d==null||!r.isGroup)return;const [x,z]=dm196A(d,R),t=dm196WallTop(d);r.position.set(x,(t==null?2.5:t)+.12,z);r.userData.y0=r.position.y;r.rotation.y=dm196Face(d)})}catch(_){}
+  let f=null;try{f=a0.call(this,g,D,W2)}finally{}try{g.children.forEach((r,i)=>{const d=ang[i];if(d==null||!r.isGroup)return;const P=dm196WallTopP(d);if(!P){r.visible=false;return}r.position.set(P[0],P[2]+.12,P[1]);r.userData.y0=r.position.y;r.rotation.y=dm196Face(d)})}catch(_){}
   D.sp=sp0;return f}}}
 // the decorations standing now were placed by the old spots: build them again
 try{if(typeof DC103!='undefined'&&DC103.g)Object.keys(DC103.g).forEach(k=>dcDrop104(k));dc103Sync()}catch(e){console.warn('v196 deco',e)}

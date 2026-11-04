@@ -32,7 +32,7 @@ function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8
   k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
   // the bar: a long counter on the left back, stools, shelves of bottles and casks behind it, a tap barrel
   const bz=-1.9,FL=-.32;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.95,bz,4.2,1.1,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.53,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.95,bz-.9,.5,1.1,1.8,0,0,0,.03)});
-  for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,1.0,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,1.02,bz+.85,.26,.07,.26,0,0,0,.02)})}})
+  for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
   k.as('wood',()=>[1.0,1.6,2.2].forEach(y=>k.p('c',woodD,'box',-3.0,y,-D2+.3,4.6,.06,.34,0,0,0,.02)));
   [1.0,1.6,2.2].forEach((y,j)=>{for(let i=0;i<9;i++){const x=-5.0+i*.5+(j%2)*.2;k.p(R()<.3?'g':'c',[0x3a6a3a,0x6a2a2a,0x2a3a6a,0xd8b060,0x5a3a6a][(i+j)%5],'cyl6',x,y+.17,-D2+.3,.06,.28,.06,0,0,0,0)}});
   [[-5.0,-3.0],[-4.3,-3.0]].forEach(([x,z])=>TWN100_barrel(k,x,z,.9));k.at(-4.65,.82,-3.0,()=>TWN100_barrel(k,0,0,.75));
@@ -49,12 +49,12 @@ function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8
   // a rug before the fire, the fireside bench
   k.at(0,FL,0,()=>{
   k.as('cloth',()=>{k.p('c',0x6a1e26,'box',2.4,.41,-.9,2.8,.02,2.0,0,0,0,.01);k.p('c',0xc9a24a,'box',2.4,.415,-.9,2.5,.02,1.7,0,0,0,0);k.p('c',0x4a1018,'box',2.4,.42,-.9,2.2,.02,1.4,0,0,0,.01)});
-  k.as('wood',()=>{k.p('c',0x6a4a2e,'box',2.9,.78,-2.9,2.2,.08,.46,0,0,0,.03);k.p('c',woodD,'box',2.9,1.15,-3.12,2.2,.62,.08,0,0,0,.03);[-.9,.9].forEach(o=>k.L('c',woodD,[2.9+o,.36,-2.9],[2.9+o,.76,-2.9],.06,'box'))});
+  k.as('wood',()=>{k.p('c',0x6a4a2e,'box',2.9,.66,-2.9,2.2,.08,.46,0,0,0,.03);k.p('c',woodD,'box',2.9,1.03,-3.12,2.2,.62,.08,0,0,0,.03);[-.9,.9].forEach(o=>k.L('c',woodD,[2.9+o,.36,-2.9],[2.9+o,.64,-2.9],.06,'box'))});
   // three round tables, chairs, candles, mugs, a loaf and a roast
-  DM196I.tables.forEach(([x,z],ti)=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'cyl8',x,1.08,z,.62,.08,.62,0,0,0,.02);k.L('c',woodD,[x,.36,z],[x,1.04,z],.09,'cyl6');k.p('c',woodD,'cyl8',x,.42,z,.32,.06,.32,0,0,0,.02)});
+  DM196I.tables.forEach(([x,z],ti)=>k.at(0,-.1,0,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'cyl8',x,1.08,z,.62,.08,.62,0,0,0,.02);k.L('c',woodD,[x,.36,z],[x,1.04,z],.09,'cyl6');k.p('c',woodD,'cyl8',x,.42,z,.32,.06,.32,0,0,0,.02)});
     dc190Candle(k,x,1.12,z,.14);k.p('m',0x8a7a5a,'cyl8',x+.3,1.18,z-.1,.07,.14,.07);k.p('m',0x8a7a5a,'cyl8',x-.25,1.18,z+.2,.07,.14,.07);
-    if(ti==0){k.p('c',0xb8843a,'sph',x-.15,1.18,z-.25,.2,.12,.14);k.p('c',0x8a4a2a,'ico',x+.15,1.2,z+.25,.16,.1,.13)}else if(ti==1)k.p('c',0xc89a5a,'sph',x+.1,1.17,z+.1,.18,.1,.12)});
-  DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,0,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
+    if(ti==0){k.p('c',0xb8843a,'sph',x-.15,1.18,z-.25,.2,.12,.14);k.p('c',0x8a4a2a,'ico',x+.15,1.2,z+.25,.16,.1,.13)}else if(ti==1)k.p('c',0xc89a5a,'sph',x+.1,1.17,z+.1,.18,.1,.12)}));
+  DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,-.14,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
       [[-.19,-.18],[.19,-.18],[-.19,.18],[.19,.18]].forEach(([u,v])=>k.L('c',woodD,[u,.36,v],[u,.8,v],.035,'box'));k.p('c',woodD,'box',0,1.18,.2,.46,.58,.06,0,0,0,.03)})},a)});
   });
   // lanterns hanging from the beams, hops and herbs drying, a notice board

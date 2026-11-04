@@ -1,4 +1,4 @@
-# v190: Duskhold decorations stay out of the way, at every kingdom stage (0..5), with every decoration on and every lot built:
+# v190 (v196: the round town): Duskhold decorations stay out of the way, at every kingdom stage (0..5), with every decoration on and every lot built:
 #   * no decoration's footprint (its colliders) is on a lot, in front of any door a lot's building could face (every turn that does
 #     not face a wall or another lot), at the Trading Post, the tavern, the Steward, Cheddar's board, the arrival spot, the Gate
 #     Avenue or the open ways from the arrival spot to the fountain and from the fountain to the Trading Post;
@@ -10,16 +10,15 @@ import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
 KEEP=r"""
-window.DCK=(st)=>{const T=TOWNS[0],F={SZ:KF109.SZ[st],WX:KF109.WX},Z=[],lots=LOT103.filter(l=>l.st<=st);
-  lots.forEach(l=>{Z.push({k:'lot '+l.id,x:l.x,z:l.z,hx:3.5,hz:3.5});
-    for(let r=0;r<4;r++){const ry=l.ry+r*Math.PI/2,fx=Math.round(Math.sin(ry)),fz=Math.round(Math.cos(ry)),dx=l.x+fx*4.45,dz=l.z+fz*4.45;
-      if(Math.abs(dx)>F.WX-1.7||dz<-TS+1.7||dz>F.SZ-1.7)continue;
-      if(lots.some(o=>o!==l&&Math.abs(dx-o.x)<3.6&&Math.abs(dz-o.z)<3.6))continue;
-      Z.push({k:'door '+l.id+' r'+r,x:l.x+fx*5.1,z:l.z+fz*5.1,hx:fx?1.6:1.8,hz:fz?1.6:1.8})}});
+window.DCK=(st)=>{const T=TOWNS[0],F=kf109(),Z=[],lots=LOT103.filter(l=>l.st<=st); // v196: the round town (lots in rings facing the fountain, two avenues)
+  const loc=(l,a,b)=>{const p=lotW103(l,a,b);return [p[0]-T.cx,p[1]-T.cy]};
+  lots.forEach(l=>{Z.push({k:'lot '+l.id,x:l.x,z:l.z,r:3.7});const d=loc(l,0,5.0);Z.push({k:'door '+l.id+' r0',x:d[0],z:d[1],r:1.5})});
   const pt=(k,p,r)=>{if(p)Z.push({k,x:p[0]-T.cx,z:p[1]-T.cy,r})};
-  pt('trading post',T.mp,2.4);pt('tavern',T.tv,2.4);if(SHM.st)pt('steward',[SHM.st.x,SHM.st.z],2.2);
+  pt('trading post',T.mp,2.0);{const l=dm196Fix('post');Z.push({k:'post hall',x:l.x,z:l.z,r:3.7})}
+  {const l=dm196Fix('inn'),d=loc(l,0,5.6);Z.push({k:'inn',x:l.x,z:l.z,r:6.0},{k:'inn door',x:d[0],z:d[1],r:1.8})}
+  if(SHM.st)pt('steward',[SHM.st.x,SHM.st.z],2.2);
   const c=chq148Spot();if(c){pt('cheddar',[c.cx,c.cz],1.5);pt('board',[c.fx,c.fz],1.5)}
-  Z.push({k:'arrival',x:0,z:8.4,r:1.8},{k:'avenue',x:0,z:(10+F.SZ)/2,hx:2.9,hz:(F.SZ-10)/2+.5},{k:'north way',x:0,z:-8.5,hx:2.1,hz:4.6},{k:'south way',x:0,z:5.6,hx:1.5,hz:2.9});
+  Z.push({k:'arrival',x:0,z:8.4,r:1.8},{k:'south avenue',x:0,z:(10.5+F.R)/2,hx:2.9,hz:(F.R-10.5)/2},{k:'north avenue',x:0,z:-(10.5+F.R)/2,hx:2.9,hz:(F.R-10.5)/2},{k:'south way',x:0,z:5.6,hx:1.5,hz:2.9},{k:'north way',x:0,z:-6.5,hx:1.5,hz:3.5});
   return Z};
 window.DCHIT=(a,b)=>{const ca=a.r!=null,cb=b.r!=null;
   if(ca&&cb)return Math.hypot(a.x-b.x,a.z-b.z)<a.r+b.r;
@@ -36,15 +35,15 @@ CHECK=r"""()=>{const T=TOWNS[0],out=[];const OUTSIDE={totems:1};
   for(let st=0;st<=5;st++){const F=DCSTAGE(st,true),Z=DCK(st),bad=[],ov=[],outw=[],own=[];
     for(const D of DECO103){const C=(DC103.col[D.k]||[]).map(c=>c.r!=null?{x:c.x-T.cx,z:c.z-T.cy,r:c.r}:{x:c.x-T.cx,z:c.z-T.cy,hx:c.hx,hz:c.hz});
       C.forEach(c=>{own.push([D.k,c]);Z.forEach(z=>{if(DCHIT(c,z))bad.push(D.k+'@'+c.x.toFixed(1)+','+c.z.toFixed(1)+' in '+z.k)});
-        if(!OUTSIDE[D.k]&&!kfIn109(c.x,c.z,.2))outw.push(D.k+'@'+c.x.toFixed(1)+','+c.z.toFixed(1))})}
+        if(!OUTSIDE[D.k]&&Math.hypot(c.x,c.z)>DM196.RM-1)outw.push(D.k+'@'+c.x.toFixed(1)+','+c.z.toFixed(1))})} // v196: the meadow holds the pieces the walls have not reached yet
     for(let i=0;i<own.length;i++)for(let j=i+1;j<own.length;j++)if(own[i][0]!==own[j][0]&&DCHIT(own[i][1],own[j][1]))ov.push(own[i][0]+'/'+own[j][0]+'@'+own[i][1].x.toFixed(1)+','+own[i][1].z.toFixed(1));
     // walkable: every door, the gate and the Steward (flood fill from the arrival spot, hero-sized)
-    const s=.25,x0=T.cx-F.WX,z0=T.cy-TS,nx=Math.round(2*F.WX/s),nz=Math.round((F.SZ+TS+4)/s),seen=new Uint8Array(nx*nz),q=[],free=(x,z)=>!CR.some(([a,b])=>solid(x+a,z+b))&&!tcHit(x,z);
+    const s=.25,x0=T.cx-F.R,z0=T.cy-F.R,nx=Math.round(2*F.R/s),nz=Math.round(2*F.R/s),seen=new Uint8Array(nx*nz),q=[],free=(x,z)=>!CR.some(([a,b])=>solid(x+a,z+b))&&!tcHit(x,z);
     const id=(x,z)=>{const i=Math.round((x-x0)/s),j=Math.round((z-z0)/s);return i<0||j<0||i>=nx||j>=nz?-1:j*nx+i};const s0=id(T.sp[0],T.sp[1]);seen[s0]=1;q.push(s0);
     while(q.length){const c=q.pop(),i=c%nx,j=(c/nx)|0;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const ii=i+a,jj=j+b;if(ii<0||jj<0||ii>=nx||jj>=nz)return;const k=jj*nx+ii;if(seen[k])return;const x=x0+ii*s,z=z0+jj*s;if(!free(x,z)){seen[k]=2;return}seen[k]=1;q.push(k)})}
     const reach=(x,z,R)=>{for(let dz=-R;dz<=R;dz+=s)for(let dx=-R;dx<=R;dx+=s){if(dx*dx+dz*dz>R*R)continue;const k=id(x+dx,z+dz);if(k>=0&&seen[k]==1)return true}return false};
     const unreach=LOT103.filter(l=>l.st<=st).filter(l=>{const k=lotKey103(l.id),d=lotDoor103((k&&lotOf103(k))||l);return !reach(d[0],d[1],1.6)}).map(l=>l.id);
-    const gate=reach(T.cx,T.cy+F.SZ+1,1.5),stw=reach(SHM.st.x,SHM.st.z,2.2),tp=reach(T.mp[0],T.mp[1],2),tv=reach(T.tv[0],T.tv[1],2);
+    const gate=reach(T.cx,T.cy+F.R-1.2,1.5)&&reach(T.cx,T.cy-F.R+1.2,1.5),stw=reach(SHM.st.x,SHM.st.z,2.2),tp=reach(T.mp[0],T.mp[1],2),tv=reach(T.tv[0],T.tv[1],2);
     const shown=DECO103.filter(D=>{const g=DC103.g[D.k];let n=0;if(g)g.traverse(o=>{if(o.isMesh)n++});return n>0}).map(D=>D.k);
     out.push({st,SZ:F.SZ,bad:bad.slice(0,12),nbad:bad.length,ov:ov.slice(0,8),outw,unreach,gate,stw,tp,tv,shown:shown.length,missing:DECO103.filter(D=>D.k!='fireworks'&&shown.indexOf(D.k)<0).map(D=>D.k)})}
   const tri=DECO103.map(D=>{let n=0;const g=DC103.g[D.k];if(g)g.traverse(o=>{if(o.isMesh&&o.geometry){const G=o.geometry;n+=(G.index?G.index.count:G.attributes.position.count)/3*(o.isInstancedMesh?o.count:1)}});return [D.k,Math.round(n)]});

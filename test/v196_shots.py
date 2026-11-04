@@ -56,6 +56,8 @@ def s(pg):
       ev("()=>{const S=dm196Spots(),want=['chair','chair','chair','stool','bench','rim','rim','rim','listen','listen','stall','bench'];CZ103.live.forEach((o,i)=>{const k=want[i];if(!k)return;const s=S.find(q=>q.k==k&&!q.busy);if(!s)return;s.busy=o;o.act={s,a:s.act,ph:'do',t:0,dur:999};o.mode='';o.g.position.set(s.x,TOWNS[0].ph,s.z)});STEP(.3)}")
       ev("()=>{const T=TOWNS[0],l=dm196Fix('inn'),[cx,cz]=lotW103(l,0,3.4),[tx,tz]=lotW103(l,0,-1.5);toPos(...lotW103(l,0,1.0));STEP(.2);FC([cx,T.ph+4.2,cz],[tx,T.ph+.6,tz])}");L.shot(pg,OUT+'/v196_folk_inn.png')
       ev("()=>{const T=TOWNS[0];toPos(T.cx,T.cy+8);STEP(.2);FC([T.cx+5,T.ph+4.5,T.cy+6],[T.cx,T.ph+.5,T.cy])}");L.shot(pg,OUT+'/v196_folk_fountain.png')
+      ev("()=>{const T=TOWNS[0],l=dm196Fix('inn'),[cx,cz]=lotW103(l,-.8,2.4),[tx,tz]=lotW103(l,-3.3,1.4);FC([cx,T.ph+1.6,cz],[tx,T.ph+.5,tz])}");L.shot(pg,OUT+'/v196_folk_table.png')
+      ev("()=>{const T=TOWNS[0];FC([T.cx+2.2,T.ph+1.3,T.cy+5.6],[T.cx+.6,T.ph+.6,T.cy+2.2])}");L.shot(pg,OUT+'/v196_folk_rim.png')
       r=ev("()=>CZ103.live.map(o=>o.act?o.act.a+':'+o.act.ph:o.mode||'-').join(' ')");print('ACTS',r)
     if 'meadow' in ONLY:
       ev("()=>{bossDone.clear();KF109.s=-1;SH.shop={};SH.lv={};SH.pos={};HS103.h=[];HS103.cit=[];for(const i in HS103.g)hsDrop103(+i);shApply();lotSync103();kfApply109(true);portalRefresh()}")
