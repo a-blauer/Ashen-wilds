@@ -17375,7 +17375,8 @@ function mdHeadX(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i
 function mdDome(R,k){if(!R||R.length<2)return R;const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(d[0],d[1],d[2])||1,r=Math.max(a.rx,a.f==null?a.rx:a.f,a.b==null?a.rx:a.b)*(k||1);
   const ring=(t,s)=>Object.assign({},a,{p:[a.p[0]+d[0]/l*r*t,a.p[1]+d[1]/l*r*t,a.p[2]+d[2]/l*r*t],rx:a.rx*s,f:(a.f==null?a.rx:a.f)*s,b:(a.b==null?a.rx:a.b)*s});
   return [ring(.85,.42),ring(.55,.8)].concat(R)}
-function mdBody(B,P){const C=P.col,T=mdTorso(P);P._T=T;
+function mdBody(B,P){if(typeof bf195Use=='function'&&bf195Use(P))return bf195Body(B,P);   // v195: beast-kit races get one cage body (3600)
+  const C=P.col,T=mdTorso(P);P._T=T;
   // torso: lower part (hips/pants), belt band, upper (shirt), neck skin
   const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY;
   if(!P.noTorso)mdLoft(B,T,{seg:12,capA:true,sq:P.sq||0,col:m=>m.y>1.0?C.neck:m.y>.985&&!P.highNeck?C.neck:Math.abs(m.y-belt)<.026&&C.belt!=null?C.belt:m.y<belt?(P.paint.torsoLo?P.paint.torsoLo(m):C.torsoLo==C.torso&&m.y<.5?C.pants:C.torsoLo):tp?tp(m):C.torso});
@@ -66478,7 +66479,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 // into twisted strands of each colour with blended knots where they cross. The model key carries the runes (mdGD d.key), so a new
 // rune rebuilds the model; the glow channel breathes gently while runed armour is worn (rv194Breathe).
 // GPU: shells share the piece's cached geometry (never disposed here); their materials and the mote geometry are cached per look.
-var RV194={on:1,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
+var RV194={on:1,lines:0,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
   // per motif: [mote speed, mote direction (1 up, -1 down, 0 jitter, 2 orbit, 3 along the piece), mote size]
   mote:{ember:[.55,1,7],frost:[.3,-1,5],storm:[1.6,0,5],venom:[.35,-1,6],might:[.35,1,5],leech:[.3,2,6],vigor:[.5,1,5],ward:[.25,2,4],deflect:[.4,2,4],tide:[.4,-1,5],swift:[1.1,3,4],thorns:[.3,-1,6]},
   // where the glow starts along the piece (0 grip → 1 tip)
@@ -66593,9 +66594,12 @@ function rv194Tint(B,L,R){if(!L.length)return;const R2=R*R;let y0=1e9,y1=-1e9;L.
   ['c','m'].forEach(t=>{const b=B.L[t];if(!b)return;const p=b.p,c=b.c;for(let i=0;i+8<p.length;i+=9){const x=(p[i]+p[i+3]+p[i+6])/3,y=(p[i+1]+p[i+4]+p[i+7])/3,z=(p[i+2]+p[i+5]+p[i+8])/3;if(y<y0-R||y>y1+R)continue;
     let best=R2,bq=null;for(const q of L){const dx=x-q.p[0],dy=y-q.p[1],dz=z-q.p[2],d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;bq=q}}if(!bq)continue;
     const k=.42*(1-Math.sqrt(best)/R);C.setHex(bq.col);for(let v=0;v<3;v++){const j=i+v*3;c[j]+=(C.r-c[j])*k;c[j+1]+=(C.g-c[j+1])*k;c[j+2]+=(C.b-c[j+2])*k}}})}
-function rv194Draw(B,k,bn,types,marks,proj,wf,rr,dir){const T=[];marks.forEach(base=>{rv194Strands(base,types).forEach(S=>{const pts=proj(S.pts);rv194Line(k,bn,pts,rr,S.q.T.col,wf);pts.forEach(p=>T.push({p,col:S.q.T.col}));if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});
+function rv194Draw(B,k,bn,types,marks,proj,wf,rr,dir){const T=[];marks.forEach(base=>{rv194Strands(base,types).forEach(S=>{const pts=proj(S.pts);
+    // v195 (owner): no lit fissures on armour any more, only the soft sparkle points that ride along where the lines were
+    if(!RV194.lines){if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});return}
+    rv194Line(k,bn,pts,rr,S.q.T.col,wf);pts.forEach(p=>T.push({p,col:S.q.T.col}));if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});
     if(S.q.t=='thorns')pts.forEach((p,i)=>{if(i%2==1){const l=Math.hypot(p[0],p[2])||1;k.L(bn,'g',S.q.T.col,p,[p[0]+p[0]/l*.012,p[1]+.005,p[2]+p[2]/l*.012],.0028,.0003,3);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});
-    rv194Knots(base,types).forEach(q=>{const pp=proj([q]);if(pp[0]){const p=pp[0];k.p(bn,'oct','g',rv194Mix(types),p[0],p[1],p[2],.0055,.0055,.0038);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});return T}
+    if(RV194.lines)rv194Knots(base,types).forEach(q=>{const pp=proj([q]);if(pp[0]){const p=pp[0];k.p(bn,'oct','g',rv194Mix(types),p[0],p[1],p[2],.0055,.0055,.0038);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});return T}
 function rv194Chest(B,P,d){const types=rv194Types(d.ru);if(!types.length)return;const k=dkKit(),rnd=rv194Rnd('c'+d.key),rk=Math.max(...types.map(q=>q.r)),rr=.0011+.0003*rk,sty=RV194_STY[types[0].t]||'crack';
   const n=6+2*rk,marks=[];for(let i=0;i<n;i++){const th=(i/n)*Math.PI*2+(rnd()-.5)*.45,up=i%2==0,y=up?.69+rnd()*.06:.86+rnd()*.08,dy=(up?1:-1)*(.02+rnd()*.008);marks.push(rv194Mark(sty,rnd,y,th,dy,6+(rnd()*3|0)))}
   const proj=L=>o176Path(B,P,L.map(([y,th])=>[Math.max(.64,Math.min(.97,y)),th]),.0085);
@@ -66617,7 +66621,7 @@ function rv194Boots(B,P,d,R){const types=rv194Types(d.ru);if(!types.length||!R)r
   mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;if(d&&d.key)run(rv194Boots,B,P,d,{n0,n1});return r}}
 // the glow channel breathes while runed armour is worn (heartbeat for Vigor, a slow swell otherwise)
 function rv194Breathe(h,E){if(!h||!h._mdM||!h._mdM.g)return;const types=rv194Types(['helm','chest','boots'].flatMap(s=>E&&E[s]?rn194Ru(E[s]):[]));const M=h._mdM.g;
-  (h._mdX||[]).forEach(m=>{if(m.material!==M)return;if(!types.length){M.color.setScalar(1);return}
+  (h._mdX||[]).forEach(m=>{if(m.material!==M)return;if(!types.length||!RV194.lines){M.color.setScalar(1);if(m.onBeforeRender&&m.onBeforeRender.rv194)delete m.onBeforeRender;return}
     const vg=types.some(q=>q.t=='vigor'),fn=function(){const t=performance.now()/1000,b=vg?Math.pow(.5+.5*Math.sin(t*5.2),6)+.5*Math.pow(.5+.5*Math.sin(t*5.2-.9),6):.5+.5*Math.sin(t*1.6);M.color.setScalar(.8+.2*Math.min(1,b))};fn.rv194=1;m.onBeforeRender=fn})}
 
 // ---------------- armour glow: soft points along the lines, riding the bones (true additive light; breathes) ----------------
@@ -66889,4 +66893,333 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes cu194f{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media (max-width:760px){#xw .cu194-curs.n2{grid-template-columns:1fr}}
 </style>`);
+// ================= v195: the beast kit — heroes and townsfolk built like the v181 cage foes =================
+// Owner (Nov 3 2026): "Our animal models for companions and townsfolk seem a little outdated compared to our newer enemies
+// with the upgraded modeling techniques and logic. Can we build a more advanced modeling framework like we did for the
+// humanoids — but this time for our characters/townsfolk? I want their proportions to be better and their
+// animations/gestures to be smoother and more natural. Let's start with the weasel ranger."
+//
+// The v114 beast heroes (and the v137 folk on the same engine) were separate tubes pushed into each other: a 12-sided torso,
+// 7-sided arms and 8-sided legs, a skull loft with spheres glued on for eyes, ears and nose, and fur painted per ring in
+// blocky panels. A race (or later a folk species) that sets `D.bf` is built with this kit instead:
+//  * body (`bf195Body`): ONE cage of the whole figure, the way the v181 foes are built (3393): torso rings → the neck flowing
+//    up into the skull, the arms grown out of shoulder sockets cut in the torso, the legs out of the split bottom ring with a
+//    crotch, then one Catmull-Clark step (`cgSub`). The cage rings are the race's own md rings (mdTorso / mdArm / mdLeg, which
+//    the beast engine already scales per race), so every armour shell, sleeve, boot and hood built from those rings still fits.
+//    Joints get proper weights from the rings, the shoulders and hips are real joined shapes, the torso is shaped by the
+//    race's `bf.tpush` (keel, flat back, tucked belly). Clothes painted on the body (shirts, breeches, belts: P.col / P.paint)
+//    stay crisp per face; fur is coloured per corner by the race's `bf.fur` (a flowing throat / belly line, a darker back),
+//    so colour follows form instead of stepping ring by ring. Shading is baked into the vertex colours (`cgShade`: creases,
+//    height, top light). Hands (palm) and feet stay the md lofts the paws, toes and boots are built on.
+//  * head (`bf195Head`): sculpted from anatomy (the v142 folk method: ellipsoids and round cones in `bf.head.forms`, meshed
+//    by `fksLoft` as flat-faceted rings), coloured per corner (`bf.head.paint`), with ambient occlusion read from the
+//    sculpt's own distance field (eye sockets, under the jaw, behind the cheeks darken) and a top light. The skull rings
+//    (D.SN), the eye frame (EYEP / eyeR) and the ears' ellipsoids are measured from the sculpt, so every helmet, hood, mask
+//    and goggle of the class fits the new head. Eyes are set into the surface along their gaze, ears are lofted and pressed
+//    into the skull (no edge off the head), whiskers root on the whisker pads.
+//  * tail (`bf195Tail`): a cage tube (8 sides, smoothed) from inside the pelvis to a rounded tip, thick at the root, coloured
+//    per corner (`bf.tail.col`).
+//  * motion (`bf195Motion`, after every other animation layer, through the beast engine's exact undo `brAddR`): critically
+//    damped springs, so nothing snaps: the head leads into turns and steadies against the body's bob, the spine follows the
+//    gait with a little lag and settles with a soft overshoot when you stop, the arms swing with follow-through, and the race's
+//    own idle gestures (`bf.gest`) play now and then between the v93 fidgets (never at the same time, never in combat or
+//    while attacking). Gestures are local cosmetics: every client runs them on every hero model it draws (co-op partners
+//    included), like the v93 idle.
+// `BF195.on=false` builds and animates the old models.
+var BF195={on:true,limbK:1.1,torK:1.04};
+function bf195Use(P){return !!(BF195&&BF195.on&&BR.on&&BR.R&&BR.R.bf&&P&&!P.noTorso)}
+function bf195SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+function bf195Cl(x,a,b){return x<a?a:x>b?b:x}
+// HSL helpers for palettes (linear colours, as everywhere in the game)
+function bf195HSL(c,s,l){const C=new THREE.Color(mdC(c)),h={};C.getHSL(h);C.setHSL(h.h,s==null?h.s:s,l==null?h.l:l);return C.getHex()}
+function bf195HSLk(c,ks,kl){const C=new THREE.Color(mdC(c)),h={};C.getHSL(h);C.setHSL(h.h,Math.min(1,h.s*ks),Math.min(1,h.l*kl));return C.getHex()}
+// mix as RGB arrays (per-corner colours)
+function bf195Rgb(c){const C=new THREE.Color(mdC(c));return [C.r,C.g,C.b]}
+function bf195Mix(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t]}
+function bf195Hex(q){return new THREE.Color(Math.max(0,q[0]),Math.max(0,q[1]),Math.max(0,q[2])).getHex()}
+// torso / neck weights by height (human space: chest → neck → head over the neck)
+function bf195TW(y){return y<=.97?mdTorsoW(y):y<=1.03?mdWb('chest','neck',(y-.97)/.06):y<=1.12?mdWb('neck','head',(y-1.03)/.09):[['head',1]]}
+
+// ---------------- the body cage ----------------
+function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=cgMesh(B),n=F.n||16,H=n/2,Q=n/4,tk=F.torK||BF195.torK,lk=F.limbK||BF195.limbK;
+  // torso rings up to the collar, then the race's neck rings (the neck flows up into the back of the skull)
+  const TR=T.filter(r=>r.y<.99).map(r=>[r.y,r.rx*tk,r.f*tk,r.b*tk,r.p[2]]).concat((F.neck?F.neck(T):[]));
+  // the hip rings share their weight with the thigh on each side, so a flexed hip bends the buttock with the leg (no ledge
+  // where the body's bottom ring stays behind a thigh swung forward)
+  const hipW=(y,j,a)=>{const k=y<TR[0][0]+.005?.38:y<TR[0][0]+.07?.14:0,c=Math.cos(a);if(!k||Math.abs(c)<.2)return bf195TW(y);return [['pelvis',1-k*Math.min(1,Math.abs(c)*1.4)],[(c>0?'rh0':'lh0'),k*Math.min(1,Math.abs(c)*1.4)]]};
+  const tr=TR.map((q,i)=>cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],n,q[1],q[2],q[3],q[0]<TR[0][0]+.07?(j,a)=>hipW(q[0],j,a):bf195TW(q[0]),{a0:0,push:F.tpush?(j,a)=>F.tpush(q[0],a,q):null}));
+  // the shoulder sockets: the three torso rings round the arm's root
+  let ia=0;{const ay=mdArm(P,1)[1].p[1];let bd=1e9;for(let i=1;i+2<TR.length;i++){const d=Math.abs(TR[i+1][0]-ay);if(d<bd&&TR[i+2][0]<1.0){bd=d;ia=i}}}
+  const sock=(i,j)=>i>=ia&&i<ia+2&&(j==n-1||j==0||j==H-1||j==H),cent=i=>[0,(TR[i][0]+TR[i+1][0])/2,((TR[i][4]||0)+(TR[i+1][4]||0))/2];
+  for(let i=0;i<tr.length-1;i++)cgBand(M,tr[i],tr[i+1],TR[i+1][0]>1.0?'neck':'torso',cent(i),j=>sock(i,j));
+  const top=TR[TR.length-1];cgCap(M,tr[tr.length-1],[0,top[0]+.01,(top[4]||0)],[['head',1]],'neck',[0,top[0]-.06,top[4]||0]);
+  const AR={},LR={};
+  // arms: the socket boundary (8 vertices) → the md arm rings 1 (below the shoulder) … 5 (wrist)
+  [-1,1].forEach(s=>{const bn=s<0?'aL':'aR',R=mdArm(P,s),R0=tr[ia],R1=tr[ia+1],R2=tr[ia+2];AR[s]=R;
+    const c1=s>0?[1,0,n-1]:[H-1,H,H+1],root=[R0[c1[0]],R0[c1[1]],R0[c1[2]],R1[c1[2]],R2[c1[2]],R2[c1[1]],R2[c1[0]],R1[c1[0]]];
+    const sc=root.reduce((a,i)=>add3(a,mul3(M.V[i].slice(0,3),1/8)),[0,0,0]),sO=nrm3([sc[0],0,sc[2]-(TR[ia+1][4]||0)]);
+    const use=R.slice(1,6),pts=use.map(r=>r.p),r0=Math.max(use[0].rx,use[0].f)*lk;
+    let prev=root;use.forEach((q,i)=>{const c=pts[i],dn=nrm3(sub3(pts[Math.min(i+1,pts.length-1)],i?pts[i-1]:sc)),
+      u0=nrm3(sub3([s,0,0],mul3(dn,dn[0]*s))),fv=nrm3(cross3(dn,u0)),f0=fv[2]<0?mul3(fv,-1):fv,ring=[];
+      for(let j=0;j<8;j++){const a=(j-5)*Math.PI/4,ca=Math.cos(a),sa=Math.sin(a),ro=q.rx*lk,rf=(sa>=0?q.f:q.b)*lk;
+        let p=[c[0]+u0[0]*ca*ro+f0[0]*sa*rf,c[1]+u0[1]*ca*ro+f0[1]*sa*rf,c[2]+u0[2]*ca*ro+f0[2]*sa*rf];
+        // the shoulder grows out of the body (v181 j2): the first two rings start from the socket pushed outward
+        if(i<2){const Pv=M.V[root[j]],b=i?.78:.42,o2=(i?.55:.3)*r0;p=lerp3([Pv[0]+sO[0]*o2,Pv[1]+sO[1]*o2,Pv[2]+sO[2]*o2],p,b)}
+        ring.push(cgVert(M,p,q.w))}
+      cgBand(M,prev,ring,'arm',c);prev=ring});
+    const a1=pts[pts.length-2],a2=pts[pts.length-1];cgCap(M,prev,add3(a2,mul3(nrm3(sub3(a2,a1)),.01)),[[bn+'2',1]],'arm',a1)});
+  // legs: the bottom torso ring split in two halves with a crotch line, then the md leg rings below the crotch
+  const R=tr[0],q0=TR[0],y0=q0[0],L0=mdLeg(P,1),lr=Math.max(L0[1].rx,L0[1].f)*lk;
+  const cf=cgVert(M,[0,y0-.03,q0[2]*.5+(q0[4]||0)],[['pelvis',1]]),cm=cgVert(M,[0,y0-(.3*lr+.02),q0[4]||0],[['pelvis',1]]),cb=cgVert(M,[0,y0-.03,-q0[3]*.5+(q0[4]||0)],[['pelvis',1]]);
+  [-1,1].forEach(s=>{const l=s<0?'lh':'rh',Rl=mdLeg(P,s);LR[s]=Rl;
+    const half=[];for(let i=0;i<=H;i++)half.push(s>0?(Q-i+n)%n:Q+i);const root=half.map(j=>R[j]).concat([cb,cm,cf]),LN=root.length;
+    const top=Object.assign({},Rl[1],{p:[Rl[1].p[0],Math.min(Rl[1].p[1],y0-.035),Rl[1].p[2]],w:[['pelvis',.35],[l+'0',.65]]}),use=[top].concat(Rl.slice(2));
+    // the half of the bottom torso ring this leg grows from: the first leg rings start inside it (no lip where a leg is wider
+    // than its half of the hips), then widen into the md leg rings
+    const hx=q0[1]*.5,hr=q0[1]*.52,hf=Math.min(q0[2],q0[3])*.95;
+    let prev=root;use.forEach((q,i)=>{const t=i==0?.35:i==1?.72:1,c=[s*(hx+(Math.abs(q.p[0])-hx)*t),q.p[1],q.p[2]],rx=hr+(q.rx*lk-hr)*t,ring=[];
+      for(let j=0;j<LN;j++){const a=(j<=H?90-j*180/H:[-135,180,135][j-H-1])*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),rf=hf+((sa>=0?q.f:q.b)*lk-hf)*t;
+        let p=[c[0]+s*ca*rx,c[1],c[2]+sa*rf];
+        if(i<2){const Pv=M.V[root[j]],b=i?.8:.45;p=lerp3([Pv[0],Pv[1]-(i?.5:.3)*lr,Pv[2]],p,b)}
+        ring.push(cgVert(M,p,q.w))}
+      cgBand(M,prev,ring,'leg',c);prev=ring});
+    const ak=use[use.length-1].p;cgCap(M,prev,[ak[0],ak[1]-.02,ak[2]],[[l+'2',1]],'leg',[ak[0],ak[1]+.1,ak[2]])});
+  cgOrient(M);const SM=cgSub(M);
+  if(F.sculpt)cgSculpt(SM,{torso:1,neck:1,arm:1,leg:1},(x,y,z,nn)=>F.sculpt(x,y,z,nn));
+  SM.shade=cgShade(SM,Object.assign({cav:.3,hk:.24,dk:.16,min:.55,blur:3},F.shade||{}));
+  // ---- colour: clothes painted crisp per face, as mdBody paints its lofts; uncovered fur flows per corner ----
+  const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY,BC=BR.C;
+  const furSet=new Set([BC.FUR,BC.BELLY,BC.FURL,BC.FURD,mdC(C.skin)].map(mdC));if(D.handCol)furSet.add(mdC(D.handCol(BC)));
+  // the fur shades the bare model / outfits paint from the palette (thigh fronts, wrists, toes) count as fur too
+  [[BC.FUR,BC.BELLY,.4],[BC.FUR,C.hand,.3],[BC.FUR,C.boot,.5],[BC.FUR,BC.BELLY,.5]].forEach(q=>{if(q[1]!=null)furSet.add(mdC(mdMix(q[0],q[1],q[2])))});
+  const tIdx=y=>{for(let i=0;i<T.length-1;i++)if(y<=T[i+1].y)return i+Math.max(0,Math.min(1,(y-T[i].y)/(T[i+1].y-T[i].y)));return T.length-1};
+  // nearest point on a ring polyline → fractional ring index
+  const along=(Rr,p)=>{let best=1e9,bi=0;for(let i=0;i<Rr.length-1;i++){const a=Rr[i].p,b=Rr[i+1].p,ab=sub3(b,a),l2=ab[0]*ab[0]+ab[1]*ab[1]+ab[2]*ab[2]||1e-9,t=bf195Cl(((p[0]-a[0])*ab[0]+(p[1]-a[1])*ab[1]+(p[2]-a[2])*ab[2])/l2,0,1),
+      q=add3(a,mul3(ab,t)),d=(q[0]-p[0])**2+(q[1]-p[1])**2+(q[2]-p[2])**2;if(d<best){best=d;bi=i+t}}return bi};
+  const mdm=m=>{if(m.part=='torso'||m.part=='neck'){const fi=tIdx(m.y),z0=T[Math.min(T.length-1,Math.round(fi))].p[2],dx=m.x,dz=m.z-z0,l=Math.hypot(dx,dz)||1;
+      return {x:m.x,y:m.y,z:m.z,s:dz/l,c:-dx/l,i:fi,r:T[Math.min(T.length-1,Math.round(fi))],kind:'t'}}
+    const s=m.x<0?-1:1;if(m.part=='arm'){const Rr=AR[s],fi=along(Rr,[m.x,m.y,m.z]);return {x:m.x,y:m.y,z:m.z,s:m.nz,c:m.nx*s,i:fi+2,r:Rr[Math.min(Rr.length-1,Math.round(fi))],kind:'a',side:s}}
+    const Rr=LR[s],fi=along(Rr,[m.x,m.y,m.z]);return {x:m.x,y:m.y,z:m.z,s:m.nz,c:m.nx*s,i:fi+2,r:Rr[Math.min(Rr.length-1,Math.round(fi))],kind:'l',side:s}};
+  const colT=m=>m.y>1.0?C.neck:m.y>.985&&!P.highNeck?C.neck:Math.abs(m.y-belt)<.026&&C.belt!=null?C.belt:m.y<belt?(P.paint.torsoLo?P.paint.torsoLo(m):C.torsoLo==C.torso&&m.y<.5?C.pants:C.torsoLo):tp?tp(m):C.torso;
+  const colA=(m,s)=>{const p=m.r.part;return p=='hand'?(P.paint.hand?P.paint.hand(m,s):C.hand):p=='up'||(p=='el'&&m.i<5.5)?(P.paint.sleeve?P.paint.sleeve(m,s):C.sleeve):(P.paint.fore?P.paint.fore(m,s):C.fore)};
+  const colL=(m,s)=>{const p=m.r.part;return (P.paint.leg?P.paint.leg(m,s):null)||(p=='shin'||p=='ankle'||(p=='knee'&&m.i>5.5)?C.shin:C.pants)};
+  const col=m=>{const q=mdm(m),c=q.kind=='t'?colT(q):q.kind=='a'?colA(q,q.side):colL(q,q.side);if(c==null)return null;const h=mdC(c);return furSet.has(h)&&F.fur?null:h};
+  cgEmit(B,SM,col,{vcol:F.fur?(m=>{const c=F.fur(m,BC,mdm(m));return Array.isArray(c)?bf195Hex(c):c}):null});
+  // the palms the paws grow from: the md hand rings, starting inside the wrist
+  [-1,1].forEach(s=>{const Rr=AR[s],w=Rr[5],d=nrm3(sub3(Rr[6].p,w.p)),st=Object.assign({},w,{p:sub3(w.p,mul3(d,.006)),rx:w.rx*.8,f:w.f*.8,b:w.b*.8});
+    mdLoft(B,[st].concat(Rr.slice(6)),{seg:7,capB:true,col:m=>P.paint.hand?P.paint.hand(m,s):C.hand})});
+  // feet: the md foot lofts (bare toes and boots are built on them), as mdBody does
+  [-1,1].forEach(s=>mdLoft(B,mdFoot(P,s),{seg:7,ref:[0,1,0],capA:true,capB:true,col:m=>m.y<.022?C.sole:C.boot}));
+  P.bf195=SM;return SM}
+
+// ---------------- the sculpted head ----------------
+// S = D.bf.head: {forms (FKH shapes, head-local metres from FKS.C0, +z forward), bb, seg, rings, eye {c, g, r}, ear {p, len, w, th,
+// out, back, tw}, paint(p, n, C, ao) → colour or [r,g,b], whisk {p, n, len}, ao strength}
+function bf195Grad(S,p,e){e=e||.0015;const f=fksEval;const g=[f(S,[p[0]+e,p[1],p[2]])-f(S,[p[0]-e,p[1],p[2]]),f(S,[p[0],p[1]+e,p[2]])-f(S,[p[0],p[1]-e,p[2]]),f(S,[p[0],p[1],p[2]+e])-f(S,[p[0],p[1],p[2]-e])];return nrm3(g)}
+// ambient occlusion from the distance field: how much the surface is enclosed a few mm out along its normal
+function bf195AO(S,p,n){let o=0;const H=[.006,.013,.022,.034];for(let i=0;i<H.length;i++){const h=H[i],d=fksEval(S,[p[0]+n[0]*h,p[1]+n[1]*h,p[2]+n[2]*h]);o+=Math.max(0,h-d)/h*(1/(i+1))}
+  return bf195Cl(1-o*(S.ao==null?.55:S.ao),.45,1)}
+// measure the skull for the helmets (rings, eye frame, ears) once per recipe
+function bf195HeadSetup(D){const S=D.bf.head;if(S._set)return;S._set=1;const C0=FKS.C0;
+  D.SN=fksRings(S,20);D.muzzleZ=S.muzzleZ!=null?S.muzzleZ+C0[2]:D.SN[D.SN.length-1][0]-.05;
+  const e=S.eye,g=nrm3(e.g);let t=-.04;while(t<.05&&bf195EvalSolid(S,add3(e.c,mul3(g,t)))<0)t+=.0005;S._eyeS=add3(e.c,mul3(g,t));
+  D.EYEP=[S._eyeS[0]+C0[0],S._eyeS[1]+C0[1],S._eyeS[2]+C0[2]];D.eyeR=e.r*1.35;D.eyeFw=e.fw==null?.8:e.fw;D.eyeIns=0;
+  // ear base on the skull, the ear ellipsoid for the helmets' ear openings (right ear; mirrored)
+  if(S.ear){const q=S.ear,d=bf195EarDir(q);let b=q.p.slice(),k=0;while(k<60&&fksEval(S,b)<0){b=add3(b,mul3(d,.001));k++}S._earB=b;
+    const c=add3(b,mul3(d,q.len*.42));D.EAR=[c[0]+C0[0],c[1]+C0[1],c[2]+C0[2]];D.earR=q.w*.95;
+    D.earE=[D.EAR[0],D.EAR[1],D.EAR[2],q.w*1.05,q.len*.6,q.th*1.4,-(q.back||0),(q.out||0)*.9,(q.out||0)*.7]}}
+function bf195EarDir(q){const o=q.out||0,b=q.back||0;return nrm3([Math.sin(o),Math.cos(o)*Math.cos(b),-Math.cos(o)*Math.sin(b)])}
+// the head mesh: fksLoft's rings (z slices, rays from each slice's centre), but every slice uses a smoothed centre line, so the
+// rings' sides run straight along the head and each quad is nearly flat (fksLoft's per-slice centre jumped between slices and
+// twisted the quads: their two triangles caught the light differently, a zigzag of 'teeth' along the muzzle)
+function bf195Loft(S){const bb=S.bb,M=S.seg||16,n=S.rings||21,st=.0015,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
+  let zA=bb[2],zB=bb[5];for(let z=bb[2];z<bb[5];z+=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zA=z;break}}
+  for(let z=bb[5];z>bb[2];z-=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zB=z;break}}
+  const Z=[],Y=[];for(let i=0;i<n;i++){const u=i/(n-1),z=zA+.004+(zB-zA-.008)*(u<.5?Math.pow(u*2,1.1)/2:1-Math.pow((1-u)*2,1.25)/2);
+    let top=null,bot=null;for(let y=bb[4];y>bb[1];y-=st)if(ins(0,y,z)){top=y;break}for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){bot=y;break}if(top==null)continue;Z.push(z);Y.push((top+bot)/2)}
+  for(let k=0;k<3;k++)for(let i=1;i<Y.length-1;i++)Y[i]=(Y[i-1]+2*Y[i]+Y[i+1])/4;
+  const R=Z.map((z,i)=>{const yc=Y[i],ring=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2,dx=Math.sin(a),dy=Math.cos(a);let r=.24;while(r>0&&!ins(dx*r,yc+dy*r,z))r-=st;
+      let lo=Math.max(0,r),hi=r+st;for(let k=0;k<8;k++){const m=(lo+hi)/2;if(ins(dx*m,yc+dy*m,z))lo=m;else hi=m}const rr=Math.max(.003,lo);ring.push([dx*rr,yc+dy*rr,z])}return {z,yc,ring}});
+  const V=[],T=[];R.forEach(q=>q.ring.forEach(p=>V.push(p)));const id=(i,j)=>i*M+(j%M);
+  // split each quad along its shorter diagonal (the flatter fold)
+  for(let i=0;i+1<R.length;i++)for(let j=0;j<M;j++){const a=id(i,j),b=id(i,j+1),c=id(i+1,j+1),d=id(i+1,j),q=[0,1,2].map(k=>(V[a][k]+V[b][k]+V[c][k]+V[d][k])/4),
+      d1=Math.hypot(V[a][0]-V[c][0],V[a][1]-V[c][1],V[a][2]-V[c][2]),d2=Math.hypot(V[b][0]-V[d][0],V[b][1]-V[d][1],V[b][2]-V[d][2]);
+    const t1=d1<=d2?[a,b,c]:[a,b,d],t2=d1<=d2?[a,c,d]:[b,c,d];t1.q=q;t2.q=q;T.push(t1,t2)}
+  const b0=V.length;V.push([0,R[0].yc,zA]);const f0=V.length;V.push([0,R[R.length-1].yc,zB]);const L=R.length-1;
+  for(let j=0;j<M;j++){T.push([b0,id(0,j+1),id(0,j)]);T.push([f0,id(L,j),id(L,j+1)])}
+  // wind outward (by the field's gradient)
+  T.forEach(t=>{const a=V[t[0]],b=V[t[1]],c=V[t[2]],u=sub3(b,a),w=sub3(c,a),nn=cross3(u,w),m=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],g=bf195Grad(S,m,.002);
+    if(nn[0]*g[0]+nn[1]*g[1]+nn[2]*g[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
+  return {V,T}}
+// the field without its carved parts (eye sockets): where the skin would be, for setting the eyes into it
+function bf195EvalSolid(S,p){if(!S._solid)S._solid={forms:S.forms.filter(f=>!f.sub),bb:S.bb};return fksEval(S._solid,p)}
+function bf195Head(B,P,D){const S=D.bf.head,C=BR.C,C0=FKS.C0;bf195HeadSetup(D);const Ms=S._mesh||(S._mesh=bf195Loft(S));
+  // per vertex: normal from the field, occlusion, top light, colour from the recipe's paint (blended across the facets)
+  if(!S._vx||S._vk!==C){const vc=new Map();S._vk=C;S._vx=Ms.V.map(p=>{const n=bf195Grad(S,p),ao=bf195AO(S,p,n),lit=.86+.2*(.5*n[1]+.5),pc=S.paint(p,n,C,ao),rgb=Array.isArray(pc)?pc:bf195Rgb(pc);
+      return {n,k:ao*lit,rgb}})}
+  const w=mdW(B,[['head',1]]),VV=Ms.V.map((p,i)=>({x:p[0]+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],w,k:S._vx[i].k,rgb:S._vx[i].rgb}));
+  for(const t of Ms.T){// crisp regions (nose pad, mouth line): the recipe's crisp(p) gives one colour for the whole facet
+    const a=Ms.V[t[0]],b=Ms.V[t[1]],c=Ms.V[t[2]],m=t.q||[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],cr=S.crisp?S.crisp(m,C):null;
+    if(cr!=null){const q=bf195Rgb(cr),f=x=>Object.assign({},x,{rgb:q});mdTri(B,'c',f(VV[t[0]]),f(VV[t[1]]),f(VV[t[2]]),0)}
+    else mdTri(B,'c',VV[t[0]],VV[t[1]],VV[t[2]],0)}
+  const k=dkKit();bf195Eyes(k,D,S,C);if(S.whisk)fksWhiskers(k,D,S.whisk,C);if(S.extra)S.extra(k,B,D,C);mdKit(B,k);
+  if(S.ear)bf195Ears(B,D,S,C)}
+// eyes: a glossy ball set into the surface along its gaze (about half of it shows), the iris and pupil on its front, a glint
+function bf195Eyes(k,D,S,C){const e=S.eye,C0=FKS.C0,g=nrm3(e.g),r=e.r,c=add3(S._eyeS,mul3(g,-r*(e.sink==null?.42:e.sink)));
+  [-1,1].forEach(s=>{const G=[s*g[0],g[1],g[2]],ry=Math.atan2(G[0],G[2]),rx=-Math.asin(bf195Cl(G[1],-1,1)),P=(o,t)=>{const q=add3([s*c[0],c[1],c[2]],mul3(G,t));return [q[0]+C0[0],q[1]+C0[1]+(o||0),q[2]+C0[2]]};
+    let q=P(0,0);k.p('head','sph2','c',e.ball||0x0a0807,q[0],q[1],q[2],r,r*(e.al||.92),r,rx,ry,0);
+    q=P(0,r*.62);k.p('head','sph2','c',C.EYE,q[0],q[1],q[2],r*.66,r*.62*(e.al||.92),r*.42,rx,ry,0);
+    q=P(0,r*.8);k.p('head','sph2','c',0x050404,q[0],q[1],q[2],r*(e.pup||.34),r*(e.pupH||.34),r*.26,rx,ry,0);
+    q=P(r*.32,r*.86);k.p('head','sph2','c',0xd8d4cc,q[0]+s*r*.05,q[1],q[2],r*.13,r*.13,r*.08,rx,ry,0);
+    if(e.lid){q=P(r*.55,r*.12);k.p('head','sph2','c',e.lid(C),q[0],q[1],q[2],r*1.08,r*.42,r*.9,rx-.25,ry,0)}})}
+// ears: a loft of 8-sided rings root → tip on the right, mirrored; the root pressed into the skull; the front cupped and painted
+function bf195Ears(B,D,S,C){const q=S.ear,C0=FKS.C0,d=bf195EarDir(q),base=S._earB,tw=q.tw||0,V3=THREE.Vector3;
+  const dv=new V3(...d),f0=new V3(0,0,1).applyAxisAngle(dv,tw),fwd=f0.sub(dv.clone().multiplyScalar(dv.dot(f0))).normalize(),side=new V3().crossVectors(dv,fwd).normalize();
+  const fur=q.col?q.col(C):C.FUR,inn=q.inner?q.inner(C):C.PINK,rim=q.rim?q.rim(C):fur,M=8,ts=[0,.14,.32,.52,.72,.88,1],wf=FKS_EAR[q.t||'round']||FKS_EAR.round;
+  const ev=p=>fksEval(S,p),rings=ts.map((t,ri)=>{const c=add3(base,mul3(d,q.len*t)),wd=q.w*Math.max(.1,wf(t)),th=q.th*(1-.55*t),R=[];
+    for(let j=0;j<M;j++){const a=j/M*Math.PI*2,cup=(j==2&&ri>0&&t<.9)?-.95:0;let p=[c[0]+side.x*wd*Math.cos(a)+fwd.x*th*(Math.sin(a)+cup),c[1]+side.y*wd*Math.cos(a)+fwd.y*th*(Math.sin(a)+cup),c[2]+side.z*wd*Math.cos(a)+fwd.z*th*(Math.sin(a)+cup)];
+      if(ri==0){let k=0;while(k<40&&ev(p)>-.005){p=sub3(p,mul3(d,.002));k++}}R.push(p)}return {t,c,R}});
+  const w=mdW(B,[['head',1]]),sh=t=>.78+.22*t;
+  [1,-1].forEach(sg=>{const vx=(p,t)=>({x:p[0]*sg+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],w,k:sh(t)}),tri=(a,b,c,col)=>{if(sg>0)mdTri(B,'c',a,b,c,col);else mdTri(B,'c',a,c,b,col)};
+    for(let i=0;i+1<rings.length;i++){const A=rings[i],Bq=rings[i+1];for(let j=0;j<M;j++){const cc=Bq.t>=.88?rim:(j==1||j==2||j==3)&&A.t>=.1?inn:fur,col=mdC(cc);
+      tri(vx(A.R[j],A.t),vx(A.R[(j+1)%M],A.t),vx(Bq.R[(j+1)%M],Bq.t),col);tri(vx(A.R[j],A.t),vx(Bq.R[(j+1)%M],Bq.t),vx(Bq.R[j],Bq.t),col)}}
+    const Lr=rings[rings.length-1];for(let j=0;j<M;j++)tri(vx(Lr.R[j],1),vx(Lr.R[(j+1)%M],1),vx(Lr.c,1),mdC(rim))})}
+
+// ---------------- the tail: a smoothed cage tube ----------------
+// rings from D.TP ([x, y, z, r] per bone point; D.bf.tail.r(i, r) may reshape the radius), weighted like brTail
+function bf195Tail(B){const D=BR.R,TP=D.TP,Ft=D.bf.tail||{};if(!TP||!TP.length)return;const M=cgMesh(B),last=D.TB.length-1,n=8,R=[];
+  TP.forEach((t,i)=>{const w=i==0?[['pelvis',.6],['tl0',.4]]:i>last?[['tl'+last,1]]:[['tl'+(i-1),.4],['tl'+i,.6]],p=[t[0],t[1],t[2]],nx=TP[Math.min(i+1,TP.length-1)],pv=TP[Math.max(i-1,0)],
+      dn=nrm3(sub3([nx[0],nx[1],nx[2]],[pv[0],pv[1],pv[2]])),u=nrm3(sub3([1,0,0],mul3(dn,dn[0]))),v=nrm3(cross3(dn,u)),r=Ft.r?Ft.r(i,t[3]):t[3],ry=r*(Ft.flat||.92),ring=[];
+    for(let j=0;j<n;j++){const a=j*Math.PI*2/n;ring.push(cgVert(M,[p[0]+u[0]*Math.cos(a)*r+v[0]*Math.sin(a)*ry,p[1]+u[1]*Math.cos(a)*r+v[1]*Math.sin(a)*ry,p[2]+u[2]*Math.cos(a)*r+v[2]*Math.sin(a)*ry],w))}R.push({ring,p,dn})});
+  for(let i=0;i+1<R.length;i++)cgBand(M,R[i].ring,R[i+1].ring,'tail',R[i].p);
+  const L=R[R.length-1],lw=TP.length-1<=last?[['tl'+Math.max(0,TP.length-2),1]]:[['tl'+last,1]];
+  cgCap(M,L.ring,add3(L.p,mul3(L.dn,TP[TP.length-1][3]*.9)),lw,'tail',R[R.length-2].p);cgCap(M,R[0].ring,sub3(R[0].p,mul3(R[0].dn,.01)),[['pelvis',1]],'tail',R[1].p);
+  cgOrient(M);const SM=cgSub(M);SM.shade=cgShade(SM,{cav:.4,hk:.15,dk:.18,min:.6,blur:2});
+  // the position along the tail (0 root → 1 tip) for the colour
+  const zs=TP.map(t=>t[2]),z0=zs[0],z1=zs[zs.length-1];
+  cgEmit(B,SM,()=>null,{vcol:m=>{const c=Ft.col?Ft.col(m,BR.C,bf195Cl((m.z-z0)/(z1-z0||-1),0,1)):BR.C.FUR;return Array.isArray(c)?bf195Hex(c):c}})}
+{const f=brTail;brTail=function(B){if(BF195.on&&BR.on&&BR.R&&BR.R.bf&&BR.R.bf.tail)return bf195Tail(B);return f.apply(this,arguments)}}
+
+// ---------------- motion: springs, follow-through and the race's own gestures ----------------
+// Runs after every other layer (outermost animHero wrapper) and writes through brAddR, so the beast engine's exact undo takes
+// every offset back before the next frame (no drift, no stacking with the v93 idle's own undo).
+// D.bf.motion = {lead, bank, stop, start, flex, armLag} strengths (0 turns a part off); D.bf.gest = [{id, dur, w, fn(u, s, O, t)}]:
+// fn adds bone offsets to O ('bone.axis' → radians) for gesture progress u (0..1), side s (±1), seconds t into it.
+var BF195M={gmin:6,gmax:13};
+// riding: your own hero (riding) or a partner's copy whose presence carries a mount (v150 r.mt150): no gait springs, no gestures
+function bf195Rides(H){if(H===pl)return typeof riding!='undefined'&&!!riding;try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const r=MP.rh[k];if(r&&r.m===H)return !!r.mt150}}catch(_){}return false}
+function bf195Spr(A,i,tg,om,z,dt){const x=A[i]-tg;A[i+1]+=(-2*z*om*A[i+1]-om*om*x)*dt;A[i]+=A[i+1]*dt;return A[i]}
+function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bfm;
+  if(!S)S=H._bfm={t:null,sp:new Float64Array(16),wl:0,gT:BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin),g:null,a0:{}};
+  let dt=S.t==null?0:(now-S.t)/1000;S.t=now;if(!(dt>=0)||dt>.25){dt=0;S.sp.fill(0)}dt=Math.min(dt,.05);
+  const G=H._ga,w=G?bf195Cl(G.w,0,1):(H.mvW||0),turn=G?bf195Cl(G.turn,-6,6):0,acc=G?bf195Cl(G.acc,-30,30):0,ph=G?G.ph:0,A=S.sp;
+  const arm=H._brS?bf195Cl(H._brS.a,0,1):1,rid=bf195Rides(H),O={},add=(k,v)=>{O[k]=(O[k]||0)+v};
+  if(dt>0){const sub=dt>.02?2:1,h=dt/sub;for(let k=0;k<sub;k++){
+    // turn lead: the head and neck look into a turn first (and the body banks a little while moving)
+    bf195Spr(A,0,bf195Cl(turn*(Mo.lead==null?.11:Mo.lead),-.5,.5),11,1,h);
+    // stopping: the body pitches on with a soft overshoot and settles; a start leans a touch into the push
+    bf195Spr(A,2,bf195Cl(Math.max(0,-acc)*(Mo.stop==null?.022:Mo.stop)-Math.max(0,acc)*(Mo.start==null?.006:Mo.start),-.12,.2),9,.42,h)}}
+  const lead=A[0],stop=A[2];
+  if(!rid){add('neck.y',lead*.38*arm);add('head.y',lead*.55*arm);add('spine.z',-lead*(Mo.bank==null?.12:Mo.bank)*w);
+    add('spine.x',stop*.5);add('chest.x',stop*.35);add('head.x',-stop*.6*arm);
+    // running: the spine flexes with the stride (a supple, bounding body), twice per cycle, eased in with the gait
+    const fl=(Mo.flex==null?.045:Mo.flex)*w*bf195SS(.5,3.5,G?G.v:0);if(fl>1e-4){const c=Math.sin(ph*Math.PI*4);add('spine.x',fl*c);add('chest.x',-fl*.6*c);add('head.x',-fl*.4*c)}
+    // arms: the forearm trails the upper arm's swing (follow-through), only while walking / running and no attack pose plays
+    if((Mo.armLag==null?1:Mo.armLag)&&arm>.5&&w>.05)['aL','aR'].forEach((bn,i)=>{const u=b[bn+'0'];if(!u)return;const x=u.rotation.x,a0=S.a0[bn];S.a0[bn]=x;if(a0==null||dt<=0)return;
+      const v=bf195Cl((x-a0)/dt,-12,12),j=4+i*2;bf195Spr(A,j,v*.045*(Mo.armLag==null?1:Mo.armLag),14,.8,dt);add(bn+'1.x',bf195Cl(A[j],-.25,.25)*w*arm)})}
+  // gestures: only standing quiet (no gait, no attack, no combat stance, no v93 fidget playing), never riding
+  const I=H._idl,cw=I&&I.sp?bf195Cl(I.sp[2],0,1):0,quiet=!rid&&w<.04&&arm>.97&&cw<.1&&(!I||(I.iw>.85&&I.fid<0)),L=F.gest||[];
+  // pictures / tests: BF195M.pose = {id, u, s} shows one gesture at progress u
+  const fp=BF195M.pose;if(fp){const G3=L.find(q=>q.id==fp.id);if(G3){const Og={};G3.fn(fp.u,fp.s||1,Og,fp.u*G3.dur);for(const q in Og)add(q,Og[q])}S.g=null}
+  else if(S.g){const g=S.g;g.t+=dt;if(quiet&&g.out==null)g.u+=dt/g.d;else{if(g.out==null)g.out=1;g.fo=(g.fo||0)+dt/.35}
+    if(g.u>=1||(g.out!=null&&g.fo>=1))S.g=null;
+    else{const k=g.out!=null?1-bf195SS(0,1,g.fo):1,Og={};g.G.fn(g.u,g.s,Og,g.t);for(const q in Og)add(q,Og[q]*k);if(I)I.fT=Math.max(I.fT||0,2.5)}}
+  else if(L.length&&quiet&&dt>0){S.gT-=dt;if(S.gT<=0){let tot=0;L.forEach(q=>tot+=q.w||1);let r=Math.random()*tot,G2=L[0];for(const q of L){r-=q.w||1;if(r<=0){G2=q;break}}
+      S.g={G:G2,u:0,t:0,d:G2.dur,s:Math.random()<.5?-1:1};S.gT=BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin);if(G2.tail&&H._brT)bf195TailKick(H,G2.tail*S.g.s)}}
+  else if(!quiet&&S.gT<2)S.gT=2;
+  S.gs=0;if(fp||S.g)for(const k in O)S.gs+=Math.abs(O[k]);
+  for(const k in O){const v=O[k];if(!v)continue;const d=k.indexOf('.');brAddR(H,k.slice(0,d),k.slice(d+1),v)}}
+// a flick of the tail: a sideways push on its springs (brTailAnim's state), rolling down to the tip
+function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;i++)T.y[i*2+1]+=v*(1+i*.15)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
+  try{const D=H&&H._race?BRD[H._race]:null;if(BF195.on&&D&&D.bf&&H.bones&&!H._foe)bf195Motion(H,D,now||0)}catch(e){if(!BF195.err){BF195.err=1;console.warn('v195 motion',e)}}return r}}
+// ================= v195: the weasel Ranger on the beast kit (3600) =================
+// The first race on the new kit (owner: "Let's start with the weasel ranger").
+// Outline first (recipe §0): a long, supple body that stands upright with a gentle forward curve, a deep narrow chest, a
+// thick muscular neck as wide as the head at its base, a small flat wedge-shaped head held level, short sturdy legs, short
+// forelimbs carried in front, a bushy tail thick at the root. Paint: rich brown above, a cream throat / chest / belly whose
+// edge waves along the flanks (as on a real weasel), a darker back and crown, cream lips and chin, a dark nose and a
+// darkening tail tip. Black beady eyes (the look's eye colour tints the iris).
+{const D=BRD[5];
+  // ---- proportions (v99 plan of the race; bone lengths and thickness) ----
+  D.pre={pelvis:[.82,1.08,.84],spine:[.76,1.36,.8],chest:[.76,1.22,.84],neck:[.95,1.42,.95],head:.8,arm:[.8,.86],hand:.9,leg:[.74,1],foot:.9,cape:[1.05,1]};
+  D.shear={spine:.14,chest:.28,neck:.4};D.crouch=[.26,.46];D._pl=null;
+  // a slimmer waist, a deeper chest; thicker thighs, slim shins
+  D.TR=[[1.25,1.12,1.0,.88,.84,.88,.92,.94,.92,.95,1.05,1.1],[1.12,1.06,.98,.9,.94,1.02,1.06,1.04,1,1,1.05,1.08],[1.15,1.08,1.0,.94,.92,.94,.96,.97,.98,1,1.05,1.08]];
+  D.armK=[.86,.9,.84,.78,.82,.74];D.legK=[1.2,1.22,1.1,.9,.86,.76,.7];
+  // ---- the tail: bushy, thick at the root, about half the body long, carried low with the end lifting ----
+  D.TP=[[0,.6,-.06,.04],[0,.572,-.125,.046],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
+  D.TB.forEach((n,i)=>{const p=D.TP[i];D.HBX[n]=[i?D.TB[i-1]:'pelvis',p[0],p[1],p[2]]});
+  D.tailSway=[.06,.09,1.35,2.8];
+  // ---- palette: the look's fur graded darker and less saturated (dark fantasy), a warm cream, a dark back ----
+  const old=D.cols;
+  D.cols=L=>{if(!BF195.on)return old(L);const f=bf195HSLk(mdC(L.skin),.8,.82);
+    return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xd8c8a8,.66),.95,.8),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
+  D.bf={n:16,torK:1.03,limbK:1.1,shade:{dk:.1,hk:.2},
+    // the neck: thick, rising from the collar into the back of the skull (human space, before the race's warp)
+    neck:T=>[[1.0,.1,.086,.09,-.006],[1.04,.091,.08,.084,-.012],[1.078,.083,.076,.079,-.02],[1.112,.074,.068,.072,-.028],[1.14,.062,.058,.062,-.034]],
+    // torso shape: a keel at the chest, a flatter back, the belly a little tucked (extra radius in metres; a from +x toward +z)
+    tpush:(y,a,q)=>{const s=Math.sin(a),f=Math.max(0,s),b=Math.max(0,-s);return .014*Math.pow(f,4)*bf195SS(.72,.8,y)*(1-bf195SS(.9,.97,y))-.007*Math.pow(b,3)*bf195SS(.6,.7,y)*(1-bf195SS(.9,.98,y))-.008*Math.pow(f,2)*bf195SS(.58,.64,y)*(1-bf195SS(.66,.72,y))},
+    // fur per corner: the cream underside with a waving edge along the flanks, a darker back, lighter inner thighs
+    fur:(m,C,q)=>{const F=bf195Rgb(C.FUR),Bl=bf195Rgb(C.BELLY),Dk=bf195Rgb(C.FURD);
+      if(q.kind=='t'){const y=m.y,s=q.s,edge=.22+.11*Math.sin(y*29+1.3)+.05*Math.sin(y*71+.4)-.12*bf195SS(.9,1.08,y),cr=bf195SS(edge-.07,edge+.07,s)*bf195SS(.36,.5,y),dk=bf195SS(-.45,-.85,s)*.38;
+        return bf195Mix(bf195Mix(F,Dk,dk),Bl,cr)}
+      if(q.kind=='l'){const inner=bf195SS(.25,.75,-m.nx*q.side)*bf195SS(.22,.42,m.y)*.55;return bf195Mix(F,Bl,inner)}
+      if(q.kind=='a'){const inner=bf195SS(.3,.85,-m.nx*q.side)*(1-bf195SS(1.5,2.5,q.i))*.28;return bf195Mix(F,Bl,inner)}
+      return F},
+    // the head (head-local metres from FKS.C0 = model [0, 1.16, −.01]; +z forward)
+    head:{R:.09,bb:[-.13,-.13,-.16,.13,.12,.22],seg:16,rings:25,ao:.32,muzzleZ:.12,
+      forms:[FKH.E([0,.004,-.008],[.084,.064,.086]),                       // brain case: broad and flat
+        FKH.E([0,-.002,-.052],[.068,.056,.048],{k:.03}),                      // the back of the skull
+        FKH.E([.054,-.014,.03],[.03,.027,.042],{k:.045}),                     // cheekbones behind the eyes
+        FKH.RC([0,-.016,.055],[0,-.027,.156],.042,.023,{k:.05,sq:[1.12,1.02]}),  // the muzzle and jaw, one blunt wedge (a separate jaw left a dark groove)
+        FKH.E([0,-.02,.167],[.013,.011,.01],{k:.006}),                        // nose pad
+        FKH.SP([.043,.018,.068],.0125,{sub:1,k:.008})],                       // eye socket
+      eye:{c:[.043,.018,.068],g:[.64,.1,.76],r:.0118,sink:.4,fw:.8,al:.9},
+      ear:{p:[.058,.034,-.036],len:.03,w:.027,th:.013,out:1.0,back:.55,tw:-.3,t:'round',inner:C=>mdMix(C.FURD,C.PINK,.4),rim:C=>mdMix(C.FUR,C.BELLY,.3)},
+      whisk:{p:[.022,-.03,.138],n:3,len:.085,col:0x1c1814},
+      // colour per corner (smooth): cream lips / chin / throat under a line from the mouth back under the ear, a darker crown
+      // and nape, a dark mask round the eyes, a slightly darker bridge
+      paint(p,n,C,ao){const x=Math.abs(p[0]),y=p[1],z=p[2],F=bf195Rgb(C.FUR),Bl=bf195Rgb(C.BELLY),Dk=bf195Rgb(C.FURD);
+        const cr=Math.max(bf195SS(-.12,-.42,n[1])*bf195SS(-.006,-.016,y),bf195SS(-.4,-.7,n[1]))*(z<-.06?bf195SS(-.11,-.06,z):1);
+        const crown=bf195SS(.45,.85,n[1])*bf195SS(.08,.0,z)*.35,eye=Math.hypot(x-.043,y-.018,z-.068),mask=(1-bf195SS(.014,.026,eye))*.55,bridge=bf195SS(.06,.1,z)*bf195SS(.5,.85,n[1])*(1-bf195SS(.004,.016,x))*.2;
+        // the nose pad, painted per corner (crisp facets, and a painted mouth line, read as a zigzag of teeth)
+        const nose=bf195SS(.154,.162,z)*bf195SS(-.034,-.028,y)*(1-bf195SS(-.01,-.004,y));
+        let c=bf195Mix(F,Dk,Math.max(crown,mask,bridge));c=bf195Mix(c,Bl,cr*(1-mask));return bf195Mix(c,bf195Rgb(C.NOSE),nose)}},
+    tail:{r:(i,r)=>r,flat:.92,
+      col:(m,C,t)=>{const F=bf195Rgb(C.FUR),Dk=bf195Rgb(C.FURD),tip=[.012,.01,.009],un=bf195Rgb(C.FURL);
+        let c=bf195Mix(F,un,bf195SS(-.3,-.8,m.ny)*.45*(1-t));c=bf195Mix(c,Dk,bf195SS(.45,.75,t)*.6);return bf195Mix(c,tip,bf195SS(.72,.92,t))}}};
+  // the head: sculpted (3600 bf195Head); the old builder stays for BF195.on=false
+  const oh=D.head;D.head=function(B,P,o){if(!BF195.on)return oh.call(this,B,P,o);P.head={w:.9,jaw:.85,top:1,len:.95,fwd:-.01};const H=P._H=mdHeadR(P);bf195Head(B,P,this);return H};
+  // the helmets read the skull rings, eyes and ears: measure them now (the first model may be an item picture)
+  try{bf195HeadSetup(D)}catch(e){console.warn('v195 weasel head',e)}}
+// ---- motion (3600 bf195Motion): a supple body; the weasel's own idle gestures between the v93 fidgets ----
+// signs (hero bones): x − raises an arm forward / lifts the head, x + bends the spine forward; elbows bend with x −
+{const D=BRD[5];if(D.bf){D.bf.motion={lead:.11,bank:.1,stop:.024,start:.006,flex:.05,armLag:1};
+  const E=(u,a,b)=>idlEnv(u,a,b),SS=bf195SS;
+  D.bf.gest=[
+    // rise up tall and scan the surroundings, forepaws tucked to the chest (the weasel's sentry pose)
+    {id:'scan',dur:3.6,w:3,fn(u,s,O){const e=E(u,.18,.2),sw=Math.sin((u-.2)/.6*Math.PI*2)*SS(.18,.3,u)*(1-SS(.72,.84,u));
+      O['spine.x']=-.13*e;O['chest.x']=-.09*e;O['neck.x']=-.1*e;O['head.x']=.14*e;O['head.y']=.55*sw*s;O['neck.y']=.22*sw*s;
+      O['aR0.x']=-.3*e;O['aR1.x']=-.6*e;O['aR2.x']=.5*e;O['aL0.x']=-.12*e;O['aL1.x']=-.2*e}},
+    // lift the nose and sniff the air in quick little twitches
+    {id:'sniff',dur:2.1,w:3,fn(u,s,O){const e=E(u,.2,.25),tw=Math.sin(u*Math.PI*2*6)*SS(.25,.35,u)*(1-SS(.7,.8,u));
+      O['neck.x']=-.12*e;O['head.x']=-.26*e+.035*tw;O['head.y']=.12*s*e;O['chest.x']=-.04*e}},
+    // groom: the free right paw wipes the muzzle a few times
+    {id:'groom',dur:2.8,w:2,fn(u,s,O){const e=E(u,.22,.22),rb=Math.sin(u*Math.PI*2*3.5)*SS(.25,.35,u)*(1-SS(.65,.75,u));
+      O['aR0.x']=-1.3*e;O['aR0.z']=.22*e;O['aR1.x']=-1.75*e+.2*rb;O['aR2.x']=.25*e;O['head.x']=.3*e+.05*rb;O['head.z']=-.26*e;O['head.y']=-.22*e;O['neck.x']=.12*e;O['chest.x']=.05*e}},
+    // a curious tilt of the head, the tail giving a small flick
+    {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.48*s*e;O['head.y']=.2*s*e;O['head.x']=-.1*e;O['neck.z']=.12*s*e}},
+    // a glance back over the shoulder with a flick of the tail
+    {id:'glance',dur:1.8,w:2,tail:5,fn(u,s,O){const e=E(u,.2,.32);O['head.y']=.5*s*e;O['neck.y']=.24*s*e;O['spine.y']=.08*s*e;O['chest.y']=.06*s*e}}]}}
 </script></body></html>

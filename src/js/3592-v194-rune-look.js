@@ -17,6 +17,9 @@
 // angular rune lines, Deflect sweeping arcs, Tide waves, Swift slanted streaks, Thorns a vine with thorns. Two or three types braid
 // into twisted strands of each colour with blended knots where they cross. The model key carries the runes (mdGD d.key), so a new
 // rune rebuilds the model; the glow channel breathes gently while runed armour is worn (rv194Breathe).
+// v195 (owner, Nov 3 2026: "remove the fissures when a rune is slotted in armor and just have the current subtle sparkle effect"):
+// RV194.lines = 0 — runed armour no longer gets the lit lines, knots, tint or the breathing glow channel; the marks are still
+// laid out the same way, but only as the soft sparkle points (rv194Glow) that ride the bones along them. RV194.lines = 1 brings them back.
 // GPU: shells share the piece's cached geometry (never disposed here); their materials and the mote geometry are cached per look.
 var RV194={on:1,lines:0,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
   // per motif: [mote speed, mote direction (1 up, -1 down, 0 jitter, 2 orbit, 3 along the piece), mote size]

@@ -373,6 +373,25 @@ enemy: keys `E137…` are skipped) with the recipe:
 - **Crop your own close-ups** before a review: whole head per crop (open and shut), front 3/4 of the serpents with the
   head inside the frame, one crop per level; check every item of the review list on those crops, not the full sheet.
 
+## 4e. Heroes and townsfolk on the beast kit (v195, `3600`; first: the weasel Ranger, `3601`)
+
+The animal heroes / folk keep the humanoid skeleton (every animation, grip and worn item) but are built like the cage foes:
+- **One cage from the race's own rings.** Feed the md rings (mdTorso / mdArm / mdLeg, already scaled by the race) into the cage
+  instead of writing a new spec: armour, sleeves, boots and hoods are built from the same rings, so they still fit. CC shrinks the
+  surface inside its cage: scale torso rings ~1.03 and limb rings ~1.1 (`torK`, `limbK`).
+- **Legs seated in the hips:** start the first two leg rings inside the half of the bottom torso ring (centre and radius blended
+  toward the leg), and make the hip rings wide enough (`TR[i][0]`) that the thigh doesn't stand out under them; share the hip
+  rings' weight with the thighs (~38% at the bottom ring) or a flexed hip leaves a ledge at the buttock.
+- **Paint split:** clothes stay crisp per face (the md paint functions, emulated); fur goes per corner (`vcol`) and a fur pattern
+  is a smooth function (a waving belly edge), never ring steps. cgEmit's `vcol` must return a hex colour, not an RGB array.
+- **Heads from a sculpt:** use `bf195Loft`, not `fksLoft`: a per-slice centre that jumps twists the quads and the two triangles of
+  each quad shade differently — a row of dark "teeth" along a muzzle. Smooth unions wide (k ≥ .045) where the muzzle meets the
+  cheek; a separate lower-jaw form left a dark groove (weasel: one muzzle form, cream painted below by the normal). Don't paint
+  mouth lines per corner on long facets (zigzag); paint by normal so the edge runs along the ring sides. A brow form left an
+  "angry" slash: skip it. Eyes go on the *solid* skin (the field without carved sockets), or they sink out of sight.
+- **Motion:** springs only (no lerps that stop dead), offsets through `brAddR` after everything else; gestures fade in / out with
+  `idlEnv` and never overlap the v93 fidgets.
+
 ## 5. Checklist for every new or reworked model
 
 1. **Silhouette:** front and side pictures. Every triangle-heavy feature changes the outline; everything else is paint.
