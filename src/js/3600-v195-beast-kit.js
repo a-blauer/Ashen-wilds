@@ -211,12 +211,14 @@ function bf195Tail(B){const D=BR.R,TP=D.TP,Ft=D.bf.tail||{};if(!TP||!TP.length)r
 // D.bf.motion = {lead, bank, stop, start, flex, armLag} strengths (0 turns a part off); D.bf.gest = [{id, dur, w, fn(u, s, O, t)}]:
 // fn adds bone offsets to O ('bone.axis' → radians) for gesture progress u (0..1), side s (±1), seconds t into it.
 var BF195M={gmin:6,gmax:13};
+// riding: your own hero (riding) or a partner's copy whose presence carries a mount (v150 r.mt150): no gait springs, no gestures
+function bf195Rides(H){if(H===pl)return typeof riding!='undefined'&&!!riding;try{if(typeof MP!='undefined'&&MP.rh)for(const k in MP.rh){const r=MP.rh[k];if(r&&r.m===H)return !!r.mt150}}catch(_){}return false}
 function bf195Spr(A,i,tg,om,z,dt){const x=A[i]-tg;A[i+1]+=(-2*z*om*A[i+1]-om*om*x)*dt;A[i]+=A[i+1]*dt;return A[i]}
 function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bfm;
   if(!S)S=H._bfm={t:null,sp:new Float64Array(16),wl:0,gT:BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin),g:null,a0:{}};
   let dt=S.t==null?0:(now-S.t)/1000;S.t=now;if(!(dt>=0)||dt>.25){dt=0;S.sp.fill(0)}dt=Math.min(dt,.05);
   const G=H._ga,w=G?bf195Cl(G.w,0,1):(H.mvW||0),turn=G?bf195Cl(G.turn,-6,6):0,acc=G?bf195Cl(G.acc,-30,30):0,ph=G?G.ph:0,A=S.sp;
-  const arm=H._brS?bf195Cl(H._brS.a,0,1):1,rid=H===pl&&typeof riding!='undefined'&&!!riding,O={},add=(k,v)=>{O[k]=(O[k]||0)+v};
+  const arm=H._brS?bf195Cl(H._brS.a,0,1):1,rid=bf195Rides(H),O={},add=(k,v)=>{O[k]=(O[k]||0)+v};
   if(dt>0){const sub=dt>.02?2:1,h=dt/sub;for(let k=0;k<sub;k++){
     // turn lead: the head and neck look into a turn first (and the body banks a little while moving)
     bf195Spr(A,0,bf195Cl(turn*(Mo.lead==null?.11:Mo.lead),-.5,.5),11,1,h);
