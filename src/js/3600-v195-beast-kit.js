@@ -127,14 +127,38 @@ function bf195AO(S,p,n){let o=0;const H=[.006,.013,.022,.034];for(let i=0;i<H.le
 // measure the skull for the helmets (rings, eye frame, ears) once per recipe
 function bf195HeadSetup(D){const S=D.bf.head;if(S._set)return;S._set=1;const C0=FKS.C0;
   D.SN=fksRings(S,20);D.muzzleZ=S.muzzleZ!=null?S.muzzleZ+C0[2]:D.SN[D.SN.length-1][0]-.05;
-  const e=S.eye,g=nrm3(e.g);let t=0;while(t<.05&&fksEval(S,add3(e.c,mul3(g,t)))<0)t+=.0005;S._eyeS=add3(e.c,mul3(g,t));
+  const e=S.eye,g=nrm3(e.g);let t=-.04;while(t<.05&&bf195EvalSolid(S,add3(e.c,mul3(g,t)))<0)t+=.0005;S._eyeS=add3(e.c,mul3(g,t));
   D.EYEP=[S._eyeS[0]+C0[0],S._eyeS[1]+C0[1],S._eyeS[2]+C0[2]];D.eyeR=e.r*1.35;D.eyeFw=e.fw==null?.8:e.fw;D.eyeIns=0;
   // ear base on the skull, the ear ellipsoid for the helmets' ear openings (right ear; mirrored)
   if(S.ear){const q=S.ear,d=bf195EarDir(q);let b=q.p.slice(),k=0;while(k<60&&fksEval(S,b)<0){b=add3(b,mul3(d,.001));k++}S._earB=b;
     const c=add3(b,mul3(d,q.len*.42));D.EAR=[c[0]+C0[0],c[1]+C0[1],c[2]+C0[2]];D.earR=q.w*.95;
     D.earE=[D.EAR[0],D.EAR[1],D.EAR[2],q.w*1.05,q.len*.6,q.th*1.4,-(q.back||0),(q.out||0)*.9,(q.out||0)*.7]}}
 function bf195EarDir(q){const o=q.out||0,b=q.back||0;return nrm3([Math.sin(o),Math.cos(o)*Math.cos(b),-Math.cos(o)*Math.sin(b)])}
-function bf195Head(B,P,D){const S=D.bf.head,C=BR.C,C0=FKS.C0;bf195HeadSetup(D);const Ms=S._mesh||(S._mesh=fksLoft(S));
+// the head mesh: fksLoft's rings (z slices, rays from each slice's centre), but every slice uses a smoothed centre line, so the
+// rings' sides run straight along the head and each quad is nearly flat (fksLoft's per-slice centre jumped between slices and
+// twisted the quads: their two triangles caught the light differently, a zigzag of 'teeth' along the muzzle)
+function bf195Loft(S){const bb=S.bb,M=S.seg||16,n=S.rings||21,st=.0015,ins=(x,y,z)=>fksEval(S,[x,y,z])<0;
+  let zA=bb[2],zB=bb[5];for(let z=bb[2];z<bb[5];z+=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zA=z;break}}
+  for(let z=bb[5];z>bb[2];z-=st){let h=false;for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){h=true;break}if(h){zB=z;break}}
+  const Z=[],Y=[];for(let i=0;i<n;i++){const u=i/(n-1),z=zA+.004+(zB-zA-.008)*(u<.5?Math.pow(u*2,1.1)/2:1-Math.pow((1-u)*2,1.25)/2);
+    let top=null,bot=null;for(let y=bb[4];y>bb[1];y-=st)if(ins(0,y,z)){top=y;break}for(let y=bb[1];y<bb[4];y+=st)if(ins(0,y,z)){bot=y;break}if(top==null)continue;Z.push(z);Y.push((top+bot)/2)}
+  for(let k=0;k<3;k++)for(let i=1;i<Y.length-1;i++)Y[i]=(Y[i-1]+2*Y[i]+Y[i+1])/4;
+  const R=Z.map((z,i)=>{const yc=Y[i],ring=[];for(let j=0;j<M;j++){const a=j/M*Math.PI*2,dx=Math.sin(a),dy=Math.cos(a);let r=.24;while(r>0&&!ins(dx*r,yc+dy*r,z))r-=st;
+      let lo=Math.max(0,r),hi=r+st;for(let k=0;k<8;k++){const m=(lo+hi)/2;if(ins(dx*m,yc+dy*m,z))lo=m;else hi=m}const rr=Math.max(.003,lo);ring.push([dx*rr,yc+dy*rr,z])}return {z,yc,ring}});
+  const V=[],T=[];R.forEach(q=>q.ring.forEach(p=>V.push(p)));const id=(i,j)=>i*M+(j%M);
+  // split each quad along its shorter diagonal (the flatter fold)
+  for(let i=0;i+1<R.length;i++)for(let j=0;j<M;j++){const a=id(i,j),b=id(i,j+1),c=id(i+1,j+1),d=id(i+1,j),q=[0,1,2].map(k=>(V[a][k]+V[b][k]+V[c][k]+V[d][k])/4),
+      d1=Math.hypot(V[a][0]-V[c][0],V[a][1]-V[c][1],V[a][2]-V[c][2]),d2=Math.hypot(V[b][0]-V[d][0],V[b][1]-V[d][1],V[b][2]-V[d][2]);
+    const t1=d1<=d2?[a,b,c]:[a,b,d],t2=d1<=d2?[a,c,d]:[b,c,d];t1.q=q;t2.q=q;T.push(t1,t2)}
+  const b0=V.length;V.push([0,R[0].yc,zA]);const f0=V.length;V.push([0,R[R.length-1].yc,zB]);const L=R.length-1;
+  for(let j=0;j<M;j++){T.push([b0,id(0,j+1),id(0,j)]);T.push([f0,id(L,j),id(L,j+1)])}
+  // wind outward (by the field's gradient)
+  T.forEach(t=>{const a=V[t[0]],b=V[t[1]],c=V[t[2]],u=sub3(b,a),w=sub3(c,a),nn=cross3(u,w),m=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],g=bf195Grad(S,m,.002);
+    if(nn[0]*g[0]+nn[1]*g[1]+nn[2]*g[2]<0){const x=t[1];t[1]=t[2];t[2]=x}});
+  return {V,T}}
+// the field without its carved parts (eye sockets): where the skin would be, for setting the eyes into it
+function bf195EvalSolid(S,p){if(!S._solid)S._solid={forms:S.forms.filter(f=>!f.sub),bb:S.bb};return fksEval(S._solid,p)}
+function bf195Head(B,P,D){const S=D.bf.head,C=BR.C,C0=FKS.C0;bf195HeadSetup(D);const Ms=S._mesh||(S._mesh=bf195Loft(S));
   // per vertex: normal from the field, occlusion, top light, colour from the recipe's paint (blended across the facets)
   if(!S._vx||S._vk!==C){const vc=new Map();S._vk=C;S._vx=Ms.V.map(p=>{const n=bf195Grad(S,p),ao=bf195AO(S,p,n),lit=.86+.2*(.5*n[1]+.5),pc=S.paint(p,n,C,ao),rgb=Array.isArray(pc)?pc:bf195Rgb(pc);
       return {n,k:ao*lit,rgb}})}
