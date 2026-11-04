@@ -46,6 +46,7 @@ v136_icons.py
 v137_enemies.py
 v137_npcs.py
 NOSHEET=1 v142_folk.py
+v197_arms.py
 PART=checks,cast v137_evolve.py
 v137_items.py
 v178_gear_audit.py

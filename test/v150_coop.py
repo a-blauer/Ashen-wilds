@@ -103,6 +103,12 @@ r=[KH.evaluate("()=>[DM196TP.lv,SHP109.lv.post|0]"),KG.evaluate("()=>[DM196TP.lv
 chk('v196 partner sees the Trading Post at the host level',r[0][0]>0 and r[0]==r[1],json.dumps(r))
 r=[pg.evaluate("()=>[DM196P.seal.map(s=>s?s.g.visible:null).join(','),!!DM196I.g,DM196P.trees.length,!!(TOWNS[0].tv&&TOWNS[0].mp)]") for pg in (KH,KG)]
 chk('v196 same seals, inn and forest for host and guest',r[0]==r[1] and r[0][1] and r[0][2]>10,json.dumps(r))
+# v197: the townsfolk have relaxed arms on both sides (every client builds the folk with the same arm data)
+ASIG="""()=>{const L=[];try{(CZ103.live||[]).forEach(o=>{if(o.g)L.push(o.g)})}catch(e){}try{(npc.all||[]).forEach(g=>L.push(g))}catch(e){}
+  let n=0,r=0;const E={};L.forEach(g0=>{const g=g0.bones?g0:g0.children.find(c=>c.bones);if(!g||!g.bones.pelvis)return;n++;const A=rlx197Of(g);if(A){r++;const sp=(g.children.find(m=>m.isSkinnedMesh&&m.userData.fk)||{userData:{}}).userData.fk;if(sp)E[sp]=A.E.aL1.map(v=>+v.toFixed(3)).join(',')}});
+  return [n,r,Object.keys(E).sort().map(k=>k+':'+E[k]).join(';')]}"""
+r=[pg.evaluate(ASIG) for pg in (KH,KG)]
+chk('v197 relaxed folk arms for host and guest',r[0][0]>0 and r[0][1]==r[0][0] and r[1][1]==r[1][0] and r[1][0]>0,json.dumps(r)[:600])
 # the guest's save still holds its own kingdom
 r=KG.evaluate("()=>{const o=x2Save();return [JSON.stringify(o.shp),JSON.stringify(o.kdeco||{})]}")
 chk('guest save keeps own kingdom',r[0]==own,json.dumps([r,own]))
