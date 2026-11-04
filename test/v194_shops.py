@@ -24,7 +24,10 @@ JS=r"""()=>{const R={},ok=(k,v)=>{R[k]=v};const T=(k,f)=>{try{ok(k,f())}catch(e)
   T('hero_stats',()=>{eq.weapon={id:90001,tp:W,lv:34,req:1,r:3,up:0,aff:[],rs:2,ru:[]};eq.chest={id:90002,tp:C,lv:34,req:1,r:3,up:0,aff:[],rs:2,ru:[]};hsDirty();const a=HS();const h0=a.hp,p0=a.pa,d0=a.defl||0;
     eq.chest.ru=['r_vigor3','r_deflect'];eq.weapon.ru=['r_might2'];hsDirty();const b=HS();return {hp:+(b.hp/h0).toFixed(3),pa:+(b.pa/p0).toFixed(3),defl:b.defl,d0}});
   T('proc_burn',()=>{eq.weapon.ru=['r_ember3','r_venom3'];hsDirty();const e={dead:false,c:{h:1e9,st:{hp:1e9,pa:1,ma:1,pd:1,md:1},l:30,en:'x'},m:new THREE.Group(),dots:[]};scene.add(e.m);
-    let burn=0,poi=0;for(let i=0;i<60;i++){e.dots=[];heroHit(e,100,'p',{});if(e.dots.some(d=>d.k=='burn'))burn++;if(e.dots.some(d=>d.k=='poison'))poi++}scene.remove(e.m);return {burn,poi}});
+    let burn=0,poi=0,sk=0;for(let i=0;i<60;i++){e.dots=[];heroHit(e,100,'p',{s:{basic:1}});if(e.dots.some(d=>d.k=='burn'))burn++;if(e.dots.some(d=>d.k=='poison'))poi++;e.dots=[];heroHit(e,100,'p',{s:{col:0xffffff}});if(e.dots.length)sk++}
+    eq.weapon.ru=['r_leech3'];hsDirty();hero.hp=10;heroHit(e,1000,'p',{s:{col:0xffffff}});const hs=hero.hp;heroHit(e,1000,'p',{s:{basic:1}});const hb=hero.hp;scene.remove(e.m);return {burn,poi,sk,leechSkill:hs>10,leechBasic:hb>hs}});
+  T('swift_dash',()=>{const d0=(eq.chest.ru=[],hsDirty(),HS().dash);eq.chest.ru=['r_swift'];hsDirty();const a=HS().dash;eq.chest.ru=['r_swift3','r_swift2'];hsDirty();const b=HS().dash;eq.chest.ru=[];hsDirty();return [a-d0,b-d0]});
+  T('comp_basic_el',()=>{const c=party[0];c.evo=3;c.runes=['r_ember'];delete c._rn194;let a,b;const o=runeEl;RN194.cb=true;a=runeEl(c);RN194.cb=false;b=runeEl(c);return [a,b]});
   T('deflect',()=>{eq.chest.ru=['r_deflect3','r_deflect3'];hsDirty();const s=HS();return s.defl});
   // ---- companion slots ----
   T('comp_slots',()=>{const c=party[0];const o=c.evo;const r=[];[0,1,2,3].forEach(e=>{c.evo=e;r.push(rn194CSlots(c))});c.evo=o;return r});
@@ -83,7 +86,9 @@ def s(pg):
     S=r['slots'];chk('slots only on rare+ weapons/armour, 3 only on epic+',isinstance(S,dict) and S['bad']==0 and not any(k in S['n'] for k in ('r2s3',)),S)
     chk('slots rarer at low level, never common',isinstance(r['slots_low'],float) and isinstance(r['slots_high'],float) and r['slots_low']<r['slots_high']<.45,[r['slots_low'],r['slots_high']])
     hs=r['hero_stats'];chk('armour/weapon runes raise hero stats',isinstance(hs,dict) and hs['hp']>1.1 and hs['pa']>1.05 and hs['defl']>=.04,hs)
-    pb=r['proc_burn'];chk('weapon procs: burn and poison',isinstance(pb,dict) and pb['burn']>10 and pb['poi']>15,pb)
+    pb=r['proc_burn'];chk('weapon procs: burn and poison on normal attacks only; leech heals from normal attacks only',isinstance(pb,dict) and pb['burn']>10 and pb['poi']>15 and pb['sk']==0 and not pb['leechSkill'] and pb['leechBasic'],pb)
+    chk('swift: +1 dash per rank, at most +3',r['swift_dash']==[1,3],r['swift_dash'])
+    chk('companion rune element only on normal attacks',r['comp_basic_el']==['fire',None],r['comp_basic_el'])
     chk('deflect stacks (capped)',isinstance(r['deflect'],float) and .19<r['deflect']<=.35,r['deflect'])
     chk('companion slots by evolution 0/1/1/2',r['comp_slots']==[0,1,1,2],r['comp_slots'])
     chk('old companion runes go back to the bag',r['comp_fix']=={'left':0,'back':1},r['comp_fix'])

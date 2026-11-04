@@ -66104,28 +66104,28 @@ var RN194={busy:0,rk:['I','II','III'],
    // ---- weapon runes ----
    ember:{n:'Ember',i:'🔥',sl:'w',col:0xff5a14,c2:0xffc040,el:'fire',
      h:{pr:'burn',ch:[.25,.32,.4],k:[.2,.3,.4],dur:3},c:{att:[.05,.08,.12]},
-     hd:r=>`Hits have a ${P_(r.h.ch)} chance to set the enemy ablaze. It burns for 3 s, taking ${P_(r.h.k)} of your attack each second.`,
-     cd:r=>`Its attacks burn (fire element) · +${P_(r.c.att)} attack.`},
+     hd:r=>`Normal attacks have a ${P_(r.h.ch)} chance to set the enemy ablaze. It burns for 3 s, taking ${P_(r.h.k)} of your attack each second.`,
+     cd:r=>`Its normal attacks burn (fire element) · +${P_(r.c.att)} attack.`},
    frost:{n:'Frost',i:'❄️',sl:'w',col:0x7ad8ff,c2:0xe8fbff,el:'frost',
      h:{pr:'chill',ch:[.25,.33,.42],v:[.08,.12,.16],dur:2.5},c:{att:[.05,.08,.12]},
-     hd:r=>`Hits have a ${P_(r.h.ch)} chance to chill the enemy for 2.5 s: it is slowed and takes ${P_(r.h.v)} more damage from you.`,
-     cd:r=>`Its attacks chill (frost element) · +${P_(r.c.att)} attack.`},
+     hd:r=>`Normal attacks have a ${P_(r.h.ch)} chance to chill the enemy for 2.5 s: it is slowed and takes ${P_(r.h.v)} more damage from you.`,
+     cd:r=>`Its normal attacks chill (frost element) · +${P_(r.c.att)} attack.`},
    storm:{n:'Storm',i:'⚡',sl:'w',col:0x8aa8ff,c2:0xf0f4ff,el:'shock',
      h:{pr:'arc',ch:[.15,.2,.26],k:[.4,.55,.7],n:2},c:{att:[.05,.08,.12]},
-     hd:r=>`Hits have a ${P_(r.h.ch)} chance to arc lightning to up to 2 nearby enemies for ${P_(r.h.k)} of your attack.`,
-     cd:r=>`Its attacks shock (lightning element) · +${P_(r.c.att)} attack.`},
+     hd:r=>`Normal attacks have a ${P_(r.h.ch)} chance to arc lightning to up to 2 nearby enemies for ${P_(r.h.k)} of your attack.`,
+     cd:r=>`Its normal attacks shock (lightning element) · +${P_(r.c.att)} attack.`},
    venom:{n:'Venom',i:'☠️',sl:'w',col:0x7ae04a,c2:0xd8ff6a,el:'poison',
      h:{pr:'poison',ch:[.35,.45,.55],k:[.15,.22,.3],dur:4},c:{att:[.05,.08,.12]},
-     hd:r=>`Hits have a ${P_(r.h.ch)} chance to poison the enemy for 4 s, ${P_(r.h.k)} of your attack each second.`,
-     cd:r=>`Its attacks poison (poison element) · +${P_(r.c.att)} attack.`},
+     hd:r=>`Normal attacks have a ${P_(r.h.ch)} chance to poison the enemy for 4 s, ${P_(r.h.k)} of your attack each second.`,
+     cd:r=>`Its normal attacks poison (poison element) · +${P_(r.c.att)} attack.`},
    might:{n:'Might',i:'💪',sl:'w',col:0xffb238,c2:0xffe7a0,
      h:{st:{paP:[.06,.1,.15],maP:[.06,.1,.15]}},c:{att:[.15,.22,.3]},
      hd:r=>`+${P_(r.h.st.paP)} physical and magical attack.`,
      cd:r=>`+${P_(r.c.att)} attack.`},
    leech:{n:'Leech',i:'🩸',sl:'w',col:0xd01c3a,c2:0xff7a8a,
-     h:{st:{ls:[.02,.03,.045]}},c:{leech:[.08,.12,.16]},
-     hd:r=>`Heals you for ${P_(r.h.st.ls)} of the damage you deal.`,
-     cd:r=>`Heals it for ${P_(r.c.leech)} of the damage it deals.`},
+     h:{lb:[.02,.03,.045]},c:{leech:[.08,.12,.16]},
+     hd:r=>`Normal attacks heal you for ${P_(r.h.lb)} of the damage they deal (not spells or abilities).`,
+     cd:r=>`Its normal attacks heal it for ${P_(r.c.leech)} of the damage they deal.`},
    // ---- armour runes ----
    vigor:{n:'Vigor',i:'❤️',sl:'a',col:0xff2a1a,c2:0xff9a4a,
      h:{st:{hpP:[.06,.1,.15]}},c:{hp:[.2,.28,.36]},
@@ -66140,8 +66140,8 @@ var RN194={busy:0,rk:['I','II','III'],
      h:{st:{regen:[.0025,.004,.006]}},c:{regen:[.01,.015,.02]},
      hd:r=>`Restores ${P_(r.h.st.regen,2)} of your max health every second in combat.`,cd:r=>`Restores ${P_(r.c.regen,1)} of its health every second.`},
    swift:{n:'Swift',i:'💨',sl:'a',col:0xa8ffd8,c2:0xeafff6,
-     h:{st:{cdr:[.05,.08,.12]}},c:{swift:[.43,.6,.8]},
-     hd:r=>`Abilities recharge faster: +${P_(r.h.st.cdr)} cooldown reduction.`,cd:r=>`Its spells recharge ${['30%','38%','44%'][r._k|0]} faster.`},
+     h:{st:{dash:[1,2,3]}},c:{swift:[.43,.6,.8]},
+     hd:r=>`+${['1 dash charge','2 dash charges','3 dash charges'][RN194._r|0]} (at most +3 from all your Swift runes).`,cd:r=>`Its spells recharge ${['30%','38%','44%'][r._k|0]} faster.`},
    thorns:{n:'Thorns',i:'🥀',sl:'a',col:0xb0205a,c2:0xff6aa8,
      h:{st:{thorns:[.1,.16,.24]}},c:{thorns:[.15,.22,.3]},
      hd:r=>`Reflects ${P_(r.h.st.thorns)} of the damage you take back at the attacker.`,cd:r=>`Reflects ${P_(r.c.thorns)} of the damage it takes back at the attacker.`}},
@@ -66194,13 +66194,16 @@ function rn194HeroRunes(){const L=[];try{SLOTS.forEach(k=>{const it=eq[k];if(it&
 function rn194HeroSum(){const S={};rn194HeroRunes().forEach(k=>{const p=rn194Parse(k),st=p&&p.T.h.st;if(!st)return;for(const q in st)S[q]=(S[q]||0)+st[q][p.r-1]});return S}
 {const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._rn194){s._rn194=1;try{const A=rn194HeroSum();
   if(A.hpP)s.hp*=1+A.hpP;if(A.paP)s.pa*=1+A.paP;if(A.maP)s.ma*=1+A.maP;if(A.pdP)s.pd*=1+A.pdP;if(A.mdP)s.md*=1+A.mdP;
-  ['ls','regen','cdr','thorns','defl'].forEach(k=>{if(A[k])s[k]=(s[k]||0)+A[k]});if(s.defl)s.defl=Math.min(.35,s.defl)}catch(e){console.warn('v194 HS',e)}}return s}}
+  ['ls','regen','cdr','thorns','defl'].forEach(k=>{if(A[k])s[k]=(s[k]||0)+A[k]});if(s.defl)s.defl=Math.min(.35,s.defl);if(A.dash)s.dash=(s.dash||0)+Math.min(3,Math.round(A.dash))}catch(e){console.warn('v194 HS',e)}}return s}}
 // weapon procs (outermost heroHit wrapper)
+function rn194LB(){const w=eq&&eq.weapon;if(!w||!canUse(w))return 0;let n=0;rn194Ru(w).forEach(k=>{const p=rn194Parse(k);if(p&&p.T.h.lb)n+=p.T.h.lb[p.r-1]});return n}
 function rn194WProcs(){const w=eq&&eq.weapon;if(!w||!canUse(w))return [];return rn194Ru(w).map(rn194Parse).filter(p=>p&&p.T.h.pr)}
 {const f=heroHit;heroHit=function(e,raw,mt,o){
   if(e&&!e.dead&&e._rnCh&&e._rnCh>nowP())raw*=1+(e._rnChV||0);
   const d=f.apply(this,[e,raw,mt,o]);
-  if(d>0&&e&&!RN194.busy&&!(o&&o.proc===false)&&!(typeof ABX!='undefined'&&ABX.ctx)){const L=rn194WProcs();if(L.length){RN194.busy++;try{rn194Proc(e,L,mt)}catch(err){console.warn('v194 proc',err)}finally{RN194.busy--}}}
+  const basic=!!(o&&o.s&&o.s.basic);
+  if(d>0&&basic&&!RN194.busy&&!(typeof ABX!='undefined'&&ABX.ctx)){const lb=rn194LB();if(lb)try{healHero(d*lb,true)}catch(_){}}
+  if(d>0&&e&&basic&&!RN194.busy&&!(o&&o.proc===false)&&!(typeof ABX!='undefined'&&ABX.ctx)){const L=rn194WProcs();if(L.length){RN194.busy++;try{rn194Proc(e,L,mt)}catch(err){console.warn('v194 proc',err)}finally{RN194.busy--}}}
   return d}}
 function rn194Proc(e,L,mt){const A=atkOf(mt||heroMt()),now=nowP(),at=()=>e.m?gY(e.m.position,.8):null;
   L.forEach(p=>{const H=p.T.h,i=p.r-1;if(Math.random()>=H.ch[i])return;
@@ -66211,6 +66214,8 @@ function rn194Proc(e,L,mt){const A=atkOf(mt||heroMt()),now=nowP(),at=()=>e.m?gY(
     else if(H.pr=='arc'){const from=e.m.position,L2=enemies.filter(q=>q!==e&&!q.dead&&!q.hid&&d2(q.m.position,from)<30).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from)).slice(0,H.n);
       L2.forEach(q=>{try{bolt(gY(from,.9),gY(q.m.position,.8),p.T.col)}catch(_){}heroHit(q,A*H.k[i],'m',{s:{col:p.T.col,noel:1},proc:false})});
       if(L2.length)try{sfx('zap',.5)}catch(_){}}})}
+// a companion's normal attack is compHit(c, foe, 1) with no spell effect (0860); spells pass a multiplier and / or an effect
+{const f=compHit;compHit=function(c,e,mult,fx){const o=RN194.cb;RN194.cb=arguments.length<4&&(mult==null||mult===1);try{return f.apply(this,arguments)}finally{RN194.cb=o}}}
 // deflect (outermost hitHero wrapper): the hit never lands
 {const f=hitHero;hitHero=function(e,mult,mt){try{if(e&&hero.hp>0&&!(hero.iv>0)&&townAt(pl.position.x,pl.position.z,.5)<0&&!(typeof AWD!='undefined'&&AWD.dead)&&!(typeof RV148!='undefined'&&RV148.down)){
     const s=HS();if(s.defl>0&&Math.random()<s.defl){dn(pl.position,'Deflected!','#dfe6ff',-18);burst(gY(pl.position,1),0xdfe6ff,10,1.6,1,.3);try{sfx('blunt',.5)}catch(_){}return}}}catch(_){}
@@ -66219,9 +66224,9 @@ function rn194Proc(e,L,mt){const A=atkOf(mt||heroMt()),now=nowP(),at=()=>e.m?gY(
 function rn194CSum(c){const sig=(c.runes||[]).join(',');if(c._rn194&&c._rn194.k===sig)return c._rn194.v;const S={el:null};
   (c.runes||[]).forEach(k=>{const p=rn194Parse(k);if(!p)return;const C=p.T.c;for(const q in C)S[q]=(S[q]||0)+C[q][p.r-1];if(p.T.el&&!S.el)S.el=p.T.el});
   try{Object.defineProperty(c,'_rn194',{value:{k:sig,v:S},writable:true,configurable:true,enumerable:false})}catch(_){c._rn194={k:sig,v:S}}return S}
-runeEl=function(c){return c&&c.runes&&c.runes.length?rn194CSum(c).el:null};
+runeEl=function(c){return RN194.cb&&c&&c.runes&&c.runes.length?rn194CSum(c).el:null};
 runeMul=function(c,k){if(!c||!c.runes||!c.runes.length)return 1;const S=rn194CSum(c);return 1+((k=='pa'||k=='ma')?(S.att||0):k=='hp'?(S.hp||0):(k=='pd'||k=='md')?(S.def||0):0)};
-runeHit=function(c,d){if(!c||!c.runes||!c.runes.length||!(c.h>0))return;const l=rn194CSum(c).leech;if(l)c.h=Math.min(M(c),c.h+d*l)};
+runeHit=function(c,d){if(!RN194.cb||!c||!c.runes||!c.runes.length||!(c.h>0))return;const l=rn194CSum(c).leech;if(l)c.h=Math.min(M(c),c.h+d*l)};
 runeTick=function(dt){if(dt<=0)return;party.slice(0,actN141()).forEach(c=>{if(!c||!c.runes||!c.runes.length||!(c.h>0))return;const S=rn194CSum(c);
   if(S.swift&&c.cdm)for(const k in c.cdm)c.cdm[k]=Math.max(0,c.cdm[k]-dt*S.swift);
   if(S.regen&&c.h<M(c))c.h=Math.min(M(c),c.h+M(c)*S.regen*dt)})};
