@@ -26,6 +26,7 @@ function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
     // cancel most of the race's elbow (less while running); then the swing: forward (x below its average) bends the elbow
     const fw=Math.max(-1,Math.min(1,(m-x)/.22)),flex=(-(RLX197H.base+RLX197H.flex*Math.max(0,fw))+RLX197H.open*run*Math.max(0,-fw))*w; // running: the elbow also opens on the back swing (the arm pumps)
     const off=(-el*(1-RLX197H.keep*run)+flex)*arm;if(Math.abs(off)>1e-5)brAddR(H,'a'+sd+'1','x',off)})}
-{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
-  try{const D=H&&H._race?BRD[H._race]:null,rid=H===pl&&typeof riding!='undefined'&&!!riding;
-    if(RLX197H.on&&D&&H.bones&&!H._foe&&!rid)rlx197HArms(H,D,now)}catch(e){if(!RLX197H.err){RLX197H.err=1;console.warn('v197 hero arms',e)}}return r}}
+// placed right after the v114 race layer (its last step calls brTailAnim), so every later arm layer (the Whirlwind's two-hand
+// hold, fishing, gathering, drilling, the raven's wand IK, the v195 follow-through) still has the last word
+{const f=brTailAnim;brTailAnim=function(H,D,b,now,w){const r=f.apply(this,arguments);
+  try{const rid=H===pl&&typeof riding!='undefined'&&!!riding;if(RLX197H.on&&D&&H&&H.bones&&!H._foe&&!rid)rlx197HArms(H,D,now)}catch(e){if(!RLX197H.err){RLX197H.err=1;console.warn('v197 hero arms',e)}}return r}}

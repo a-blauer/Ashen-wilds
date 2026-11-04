@@ -45,6 +45,10 @@ JS=r"""(sps)=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s),V=THREE.Ve
     q=pose('listen',{},2000*Math.PI/9);{const d=q.wL.distanceTo(q.wR);if(d>.12)fail(sp+' clap: paws '+d.toFixed(2)+' m apart');if(Math.abs(q.eL.x)<.08||Math.abs(q.eR.x)<.08)fail(sp+' clap: an elbow inside the chest')}
     q=pose('rim',{sit:1,h:.62},1000);['L','R'].forEach(sd=>{const d=q['w'+sd].distanceTo(q['h'+sd]);if(d>.3)fail(sp+' rim '+sd+': paw '+d.toFixed(2)+' m from the hip')});
   });
+  // every animal townsperson already in the game (built while the script loaded, before this file) gets the relaxed arm too
+  {let n=0,r=0;const L=[];try{(npc.all||[]).forEach(g=>L.push(g))}catch(e){}try{(CZ103.live||[]).forEach(o=>o.g&&L.push(o.g))}catch(e){}
+    L.forEach(g0=>{const g=g0.bones?g0:g0.children.find(c=>c.bones);if(!g||!g.bones.pelvis||!g.children.some(m=>m.isSkinnedMesh&&m.userData.fk))return;n++;if(rlx197Of(g))r++});
+    out.info.push('live folk with the relaxed arm: '+r+' / '+n);if(r<n)fail('live folk without the relaxed arm: '+(n-r)+' of '+n)}
   // lantern wardens keep their weapon poses
   try{const k=Object.keys(MQW143.D)[0],w=mqw143Make(k);if(rlx197Of(w))fail('warden '+k+': has the relaxed arm');else out.info.push('warden '+k+': no relaxed arm (ok)')}catch(e){fail('warden build '+e)}
   return out}"""

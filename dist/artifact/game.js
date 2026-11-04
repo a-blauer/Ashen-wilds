@@ -67792,10 +67792,10 @@ var RLX197={U:[-.17,-1,-.05],F:[.05,-1,.24],tw:0,on:true,_q:null};
 // relaxed arm rotations for a folk rig in its bind pose (bones straight from mkBones, not yet posed)
 function rlx197Calc(B){if(!B||!B.pelvis||!B.aL0||!B.aL1||!B.aL2||!B.aR0||!B.aR1||!B.aR2)return null;
   let root=B.pelvis;while(root.parent)root=root.parent;root.updateMatrixWorld(true);
-  const V=THREE.Vector3,Q=THREE.Quaternion,E={},BD={};
+  const V=THREE.Vector3,Q=THREE.Quaternion,E={},BD={},Mi=(B.pelvis.parent?B.pelvis.parent.getWorldQuaternion(new Q()):new Q()).invert(); // the model's own frame
   ['L','R'].forEach(s=>{const m=s=='L'?1:-1,a0=B['a'+s+'0'],a1=B['a'+s+'1'],a2=B['a'+s+'2'];
     BD['a'+s+'0']=[a0.rotation.x,a0.rotation.y,a0.rotation.z];BD['a'+s+'1']=[a1.rotation.x,a1.rotation.y,a1.rotation.z];
-    const Qp=a0.parent.getWorldQuaternion(new Q()),Qpi=Qp.clone().invert();
+    const Qp=Mi.clone().multiply(a0.parent.getWorldQuaternion(new Q())),Qpi=Qp.clone().invert();
     const U=new V(RLX197.U[0]*m,RLX197.U[1],RLX197.U[2]).normalize(),F=new V(RLX197.F[0]*m,RLX197.F[1],RLX197.F[2]).normalize();
     // upper arm: turn the shoulder so the elbow lies along U (keeps the bind twist)
     const cur0=a1.position.clone().normalize().applyQuaternion(a0.quaternion),want0=U.clone().applyQuaternion(Qpi).normalize();
@@ -67807,7 +67807,14 @@ function rlx197Calc(B){if(!B||!B.pelvis||!B.aL0||!B.aL1||!B.aL2||!B.aR0||!B.aR1|
     const e0=new THREE.Euler().setFromQuaternion(q0),e1=new THREE.Euler().setFromQuaternion(q1);
     E['a'+s+'0']=[e0.x,e0.y,e0.z];E['a'+s+'1']=[e1.x,e1.y,e1.z]});
   return {E,B:BD,seed:Math.random()*100,L:null}}
-function rlx197Of(g){const b=g&&g.bones&&g.bones.pelvis;return b&&b.userData.rlx197||null}
+function rlx197Of(g){const b=g&&g.bones&&g.bones.pelvis;if(!b)return null;return b.userData.rlx197||(b.userData.rlx197N?null:rlx197Ensure(g))}
+// figures built before this file loaded (towns are built while the script runs): measure them now, in their rest pose
+function rlx197Ensure(g){const b=g.bones.pelvis;b.userData.rlx197N=1;if(!RLX197.on||(g.userData&&(g.userData.mq||g.userData.rlxNo)))return null;
+  const m=g.children&&g.children.find(c=>c.isSkinnedMesh&&c.userData&&c.userData.fk);if(!m)return null;
+  const R=(g._wk&&g._wk.rest)||(g.userData&&g.userData.rest)||null,keep=[];
+  for(const k in g.bones){const o=g.bones[k];keep.push([o,o.rotation.x,o.rotation.y,o.rotation.z]);const r=R&&R[k];if(r)o.rotation.set(r[0],r[1],r[2]);else o.rotation.set(0,0,0)}
+  let A=null;try{A=rlx197Calc(g.bones);if(A){A.nose=rlx197Nose({meshes:[m],bones:g.bones});b.userData.rlx197=A}}catch(e){console.warn('v197 arms (late)',e)}
+  finally{keep.forEach(([o,x,y,z])=>o.rotation.set(x,y,z))}return A}
 function rlx197Set(g,A){const B=g.bones;for(const k in A.E){const b=B[k],e=A.E[k];if(b)b.rotation.set(e[0],e[1],e[2])}A.L=null;A.on=1}
 // the idle layer: undo last frame's drift exactly (or by subtraction if a pose layer touched the bones since)
 function rlx197Undo(g,A){const L=A.L;if(!L)return;A.L=null;for(const it of L){const b=it[0].rotation;
@@ -67829,7 +67836,7 @@ function rlx197Nose(rig){const m=rig.meshes[0],G=m&&m.geometry;if(!G)return null
   return G.userData.rlx197N=r}
 {const f=idlNpcBody;idlNpcBody=function(o){const rig=f.apply(this,arguments);try{if(RLX197.on&&rig&&rig.fk&&rig.bones){const A=rlx197Calc(rig.bones);if(A){A.nose=rlx197Nose(rig);rig.bones.pelvis.userData.rlx197=A}}}catch(e){console.warn('v197 arms',e)}return rig}}
 // the lantern wardens hold weapons with poses of their own: no relaxed arms there
-{const f=mqw143Make;mqw143Make=function(){const g=f.apply(this,arguments);try{const b=g&&g.bones&&g.bones.pelvis;if(b&&b.userData.rlx197){const A=b.userData.rlx197;rlx197Undo(g,A);
+{const f=mqw143Make;mqw143Make=function(){const g=f.apply(this,arguments);try{if(g&&g.userData)g.userData.rlxNo=1;const b=g&&g.bones&&g.bones.pelvis;if(b&&b.userData.rlx197){const A=b.userData.rlx197;rlx197Undo(g,A);
       for(const k in A.B){const r=A.B[k];g.bones[k].rotation.set(r[0],r[1],r[2])}delete b.userData.rlx197}}catch(e){console.warn('v197 wardens',e)}return g}}
 // the rest stays the bind pose (work poses and the walk are measured from it)
 {const f=czRest103;czRest103=function(g){const R=f.apply(this,arguments);try{const A=rlx197Of(g);if(A)for(const k in A.B)if(R[k]){const r=A.B[k];R[k][0]=r[0];R[k][1]=r[1];R[k][2]=r[2]}}catch(e){}return R}}
@@ -67949,6 +67956,7 @@ function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
     // cancel most of the race's elbow (less while running); then the swing: forward (x below its average) bends the elbow
     const fw=Math.max(-1,Math.min(1,(m-x)/.22)),flex=(-(RLX197H.base+RLX197H.flex*Math.max(0,fw))+RLX197H.open*run*Math.max(0,-fw))*w; // running: the elbow also opens on the back swing (the arm pumps)
     const off=(-el*(1-RLX197H.keep*run)+flex)*arm;if(Math.abs(off)>1e-5)brAddR(H,'a'+sd+'1','x',off)})}
-{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
-  try{const D=H&&H._race?BRD[H._race]:null,rid=H===pl&&typeof riding!='undefined'&&!!riding;
-    if(RLX197H.on&&D&&H.bones&&!H._foe&&!rid)rlx197HArms(H,D,now)}catch(e){if(!RLX197H.err){RLX197H.err=1;console.warn('v197 hero arms',e)}}return r}}
+// placed right after the v114 race layer (its last step calls brTailAnim), so every later arm layer (the Whirlwind's two-hand
+// hold, fishing, gathering, drilling, the raven's wand IK, the v195 follow-through) still has the last word
+{const f=brTailAnim;brTailAnim=function(H,D,b,now,w){const r=f.apply(this,arguments);
+  try{const rid=H===pl&&typeof riding!='undefined'&&!!riding;if(RLX197H.on&&D&&H&&H.bones&&!H._foe&&!rid)rlx197HArms(H,D,now)}catch(e){if(!RLX197H.err){RLX197H.err=1;console.warn('v197 hero arms',e)}}return r}}
