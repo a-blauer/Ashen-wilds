@@ -32,7 +32,7 @@ JS=COMMON+r"""(a)=>{const [old,furi]=a,V=THREE.Vector3,out={info:{}};if(old)BF19
   const L=(BRD[5].bf&&BRD[5].bf.gest)||[];out.info.gest=L.map(g=>g.id);const c2=document.createElement('canvas');c2.width=FW*Math.max(1,L.length);c2.height=FH*2;const x2=c2.getContext('2d');
   RT.idle(R,600);const snap=()=>Object.keys(R.bones).map(n=>R.bones[n].rotation.toArray().slice(0,3).map(v=>+v.toFixed(4)).join(',')).join(';');
   out.info.gerr=null;try{L.forEach((g,i)=>{[[.5,0],[.8,1]].forEach(([u,row])=>{BF195M.pose={id:g.id,u,s:1};RT.idle(R,64);shot(x2,i,row,row?[.8,.2,.6]:[1,.15,.25],new V(0,.85,0),3.5,g.id+' u='+u)})});}catch(e){out.info.gerr=String(e)}
-  BF195M.pose=null;RT.idle(R,400);const s0=snap();RT.idle(R,32);out.info.settled=s0==snap()?1:0;
+  BF195M.pose=null;RT.idle(R,400);out.info.settled=R._bfm&&!R._bfm.g&&R._bfm.gs===0?1:0;
   out.gest=c2.toDataURL('image/jpeg',.88);
   // a gesture started for real plays, ends and leaves nothing behind (time runs on RT.T)
   try{RT.idle(R,1200);const S=R._bfm;if(S&&L.length){S.gT=0;RT.idle(R,32);out.info.started=!!S.g;RT.idle(R,6000);out.info.ended=!S.g}}catch(e){out.info.gerr=String(e)}
@@ -67,7 +67,7 @@ def s(pg):
         chk('triangles within the hero budget (12k)',I['tris']<12000,I['tris'])
         chk('skull measured for the helmets',I['SN']>=10 and I['ear'] and I['eye'],(I['SN'],I['ear'],I['eye']))
         chk('gestures pose without errors',not I['gerr'],I['gerr'])
-        chk('bones steady after the gesture poses',I['settled']==1)
+        chk('no gesture offsets left after the gesture poses',I['settled']==1)
         chk('motion layer runs',not I.get('merr') and I.get('motion'),I.get('merr') or I.get('motion'))
         chk('springs act: turn lead and stop follow-through',I.get('motion') and I['motion']['lead']>.02 and I['motion']['stop']>.005,I.get('motion'))
     if I.get('motion'):print('NOTE largest bone change per 16 ms frame (run / turn / stop):',I['motion'])

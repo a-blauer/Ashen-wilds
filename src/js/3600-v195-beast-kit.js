@@ -213,6 +213,7 @@ function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bf
   else if(L.length&&quiet&&dt>0){S.gT-=dt;if(S.gT<=0){let tot=0;L.forEach(q=>tot+=q.w||1);let r=Math.random()*tot,G2=L[0];for(const q of L){r-=q.w||1;if(r<=0){G2=q;break}}
       S.g={G:G2,u:0,t:0,d:G2.dur,s:Math.random()<.5?-1:1};S.gT=BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin);if(G2.tail&&H._brT)bf195TailKick(H,G2.tail*S.g.s)}}
   else if(!quiet&&S.gT<2)S.gT=2;
+  S.gs=0;if(fp||S.g)for(const k in O)S.gs+=Math.abs(O[k]);
   for(const k in O){const v=O[k];if(!v)continue;const d=k.indexOf('.');brAddR(H,k.slice(0,d),k.slice(d+1),v)}}
 // a flick of the tail: a sideways push on its springs (brTailAnim's state), rolling down to the tip
 function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;i++)T.y[i*2+1]+=v*(1+i*.15)}
