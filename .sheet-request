@@ -1,0 +1,1 @@
+["ONLY=air,full,room,entry python3 v196_shots.py", "ONLY=street,plaza,inn,shops python3 v196_shots.py", "ONLY=deco,folk,meadow python3 v196_shots.py"]
