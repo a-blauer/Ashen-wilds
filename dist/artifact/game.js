@@ -66797,7 +66797,9 @@ var BF195_Q={a:null};
 function bf195Chain(H,K){const b=H.bones,Q=BF195_Q.a||(BF195_Q.a={q:new THREE.Quaternion(),h:new THREE.Quaternion(),i:new THREE.Quaternion(),e:new THREE.Euler()});
   (K.chains||[]).forEach(ch=>{const root=b[ch[0]];if(!root)return;const n=ch.length;Q.q.copy(root.quaternion);Q.h.copy(Q.i.identity()).slerp(Q.q,1/n);
     Q.e.setFromQuaternion(Q.h,root.rotation.order);['x','y','z'].forEach(ax=>{const d=Q.e[ax]-root.rotation[ax];if(Math.abs(d)>1e-9)brAddR(H,ch[0],ax,d)});
-    for(let i=1;i<n;i++){const bn=b[ch[i]];if(bn)bn.quaternion.copy(Q.h)}})}
+    for(let i=1;i<n;i++){const bn=b[ch[i]];if(bn)bn.quaternion.copy(Q.h)}})
+  // the race's resting curve along its chains (K.curve: bone → [x, y, z]; root bones through brAddR, inserted ones directly)
+  const C=K.curve;if(C)for(const n in C){const bn=b[n],c=C[n];if(!bn)continue;if(BR_XB[n]){if(c[0])bn.rotateX(c[0]);if(c[1])bn.rotateY(c[1]);if(c[2])bn.rotateZ(c[2])}else{if(c[0])brAddR(H,n,'x',c[0]);if(c[1])brAddR(H,n,'y',c[1]);if(c[2])brAddR(H,n,'z',c[2])}}}
 {const f=bf195Motion;bf195Motion=function(H,D,now){f.apply(this,arguments);const K=D.skel;if(!K||!H.bones)return;
   try{bf195Chain(H,K);if(K.drive)K.drive(H,H._bfm,now)}catch(e){if(!BF195.err2){BF195.err2=1;console.warn('v195 skeleton motion',e)}}}}
 
@@ -66905,6 +66907,10 @@ function bf195Chain(H,K){const b=H.bones,Q=BF195_Q.a||(BF195_Q.a={q:new THREE.Qu
     remap:[{from:'spine',bones:['spine','sp1','sp2'],ax:'y',at:[.65,.7167,.7833,.85]},{from:'neck',bones:['neck','nk1'],ax:'y',at:[1.0,1.05,1.1]},
       {from:'lh2',bones:['lh2','lt'],ax:'z',at:[-.1,.1,.26]},{from:'rh2',bones:['rh2','rt'],ax:'z',at:[-.1,.1,.26]}],
     chains:[['spine','sp1','sp2'],['neck','nk1']],
+    // the weasel's curve at rest: the lower back leaning in, the upper back coming upright (an S down the spine), the neck
+    // reaching forward off the shoulders and rising to the head; every curve sums to zero, so the chest and the head keep
+    // the orientation the animation gave them (weapons, aim and the head levelling are untouched)
+    curve:{sp1:[.0,0,0],sp2:[-.07,0,0],spine:[.07,0,0],nk1:[-.26,0,0],neck:[.26,0,0]},
     drive(H,S,now){const b=H.bones;if(!S)return;const G=H._ga,w=G?bf195Cl(G.w,0,1):0,ph=G?G.ph:0,dt=S._dt2==null?0:Math.min(.05,Math.max(0,(now-S._dt2)/1000));S._dt2=now;
       // a wave down the back while running (sp1 then sp2, each a little later)
       const a=.05*w*bf195SS(.5,3.5,G?G.v:0);if(a>1e-4&&b.sp1&&b.sp2){b.sp1.rotateX(a*Math.sin(ph*Math.PI*4-.7));b.sp2.rotateX(a*Math.sin(ph*Math.PI*4-1.4))}

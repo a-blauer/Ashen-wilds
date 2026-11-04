@@ -94,6 +94,10 @@
     remap:[{from:'spine',bones:['spine','sp1','sp2'],ax:'y',at:[.65,.7167,.7833,.85]},{from:'neck',bones:['neck','nk1'],ax:'y',at:[1.0,1.05,1.1]},
       {from:'lh2',bones:['lh2','lt'],ax:'z',at:[-.1,.1,.26]},{from:'rh2',bones:['rh2','rt'],ax:'z',at:[-.1,.1,.26]}],
     chains:[['spine','sp1','sp2'],['neck','nk1']],
+    // the weasel's curve at rest: the lower back leaning in, the upper back coming upright (an S down the spine), the neck
+    // reaching forward off the shoulders and rising to the head; every curve sums to zero, so the chest and the head keep
+    // the orientation the animation gave them (weapons, aim and the head levelling are untouched)
+    curve:{sp1:[.0,0,0],sp2:[-.07,0,0],spine:[.07,0,0],nk1:[-.26,0,0],neck:[.26,0,0]},
     drive(H,S,now){const b=H.bones;if(!S)return;const G=H._ga,w=G?bf195Cl(G.w,0,1):0,ph=G?G.ph:0,dt=S._dt2==null?0:Math.min(.05,Math.max(0,(now-S._dt2)/1000));S._dt2=now;
       // a wave down the back while running (sp1 then sp2, each a little later)
       const a=.05*w*bf195SS(.5,3.5,G?G.v:0);if(a>1e-4&&b.sp1&&b.sp2){b.sp1.rotateX(a*Math.sin(ph*Math.PI*4-.7));b.sp2.rotateX(a*Math.sin(ph*Math.PI*4-1.4))}

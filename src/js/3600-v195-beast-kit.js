@@ -288,7 +288,9 @@ var BF195_Q={a:null};
 function bf195Chain(H,K){const b=H.bones,Q=BF195_Q.a||(BF195_Q.a={q:new THREE.Quaternion(),h:new THREE.Quaternion(),i:new THREE.Quaternion(),e:new THREE.Euler()});
   (K.chains||[]).forEach(ch=>{const root=b[ch[0]];if(!root)return;const n=ch.length;Q.q.copy(root.quaternion);Q.h.copy(Q.i.identity()).slerp(Q.q,1/n);
     Q.e.setFromQuaternion(Q.h,root.rotation.order);['x','y','z'].forEach(ax=>{const d=Q.e[ax]-root.rotation[ax];if(Math.abs(d)>1e-9)brAddR(H,ch[0],ax,d)});
-    for(let i=1;i<n;i++){const bn=b[ch[i]];if(bn)bn.quaternion.copy(Q.h)}})}
+    for(let i=1;i<n;i++){const bn=b[ch[i]];if(bn)bn.quaternion.copy(Q.h)}})
+  // the race's resting curve along its chains (K.curve: bone → [x, y, z]; root bones through brAddR, inserted ones directly)
+  const C=K.curve;if(C)for(const n in C){const bn=b[n],c=C[n];if(!bn)continue;if(BR_XB[n]){if(c[0])bn.rotateX(c[0]);if(c[1])bn.rotateY(c[1]);if(c[2])bn.rotateZ(c[2])}else{if(c[0])brAddR(H,n,'x',c[0]);if(c[1])brAddR(H,n,'y',c[1]);if(c[2])brAddR(H,n,'z',c[2])}}}
 {const f=bf195Motion;bf195Motion=function(H,D,now){f.apply(this,arguments);const K=D.skel;if(!K||!H.bones)return;
   try{bf195Chain(H,K);if(K.drive)K.drive(H,H._bfm,now)}catch(e){if(!BF195.err2){BF195.err2=1;console.warn('v195 skeleton motion',e)}}}}
 
