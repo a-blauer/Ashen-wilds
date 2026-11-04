@@ -7,10 +7,10 @@
 // darkening tail tip. Black beady eyes (the look's eye colour tints the iris).
 {const D=BRD[5];
   // ---- proportions (v99 plan of the race; bone lengths and thickness) ----
-  D.pre={pelvis:[.82,1.08,.84],spine:[.76,1.36,.8],chest:[.76,1.22,.84],neck:[.95,1.42,.95],head:.8,arm:[.8,.86],hand:.9,leg:[.74,1],foot:.9,cape:[1.05,1]};
-  D.shear={spine:.14,chest:.28,neck:.4};D.crouch=[.26,.46];D._pl=null;
+  D.pre={pelvis:[.82,1.08,.84],spine:[.76,1.36,.8],chest:[.76,1.22,.84],neck:[.86,1.42,.86],head:.8,arm:[.8,.86],hand:.9,leg:[.84,1],foot:.95,cape:[1.05,1]};
+  D.shear={spine:.14,chest:.28,neck:.4};D.crouch=[.12,.24];D.foot={len:1.05,w:.85,h:.8};D._pl=null;
   // a slimmer waist, a deeper chest; thicker thighs, slim shins
-  D.TR=[[1.25,1.12,1.0,.88,.84,.88,.92,.94,.92,.95,1.05,1.1],[1.12,1.06,.98,.9,.94,1.02,1.06,1.04,1,1,1.05,1.08],[1.15,1.08,1.0,.94,.92,.94,.96,.97,.98,1,1.05,1.08]];
+  D.TR=[[1.25,1.1,1.0,.88,.84,.88,.92,.94,.92,.95,1.05,1.1],[1.12,1.06,.98,.9,.94,1.02,1.06,1.04,1,1,1.05,1.08],[1.15,1.08,1.0,.94,.92,.94,.96,.97,.98,1,1.05,1.08]];
   D.armK=[.86,.9,.84,.78,.82,.74];D.legK=[1.2,1.22,1.1,.9,.86,.76,.7];
   // ---- the tail: bushy, thick at the root, about half the body long, carried low with the end lifting ----
   D.TP=[[0,.6,-.07,.066],[0,.572,-.13,.05],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
@@ -24,7 +24,9 @@
     return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xd8c8a8,.66),.95,.8),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
   D.bf={n:16,torK:1.03,limbK:1.1,shade:{dk:.1,hk:.2},
     // the neck: thick, rising from the collar into the back of the skull (human space, before the race's warp)
-    neck:T=>[[1.0,.1,.086,.09,-.006],[1.04,.091,.08,.084,-.012],[1.078,.083,.076,.079,-.02],[1.112,.074,.068,.072,-.028],[1.14,.062,.058,.062,-.034]],
+    neck:T=>[[1.0,.088,.076,.08,-.006],[1.04,.074,.067,.071,-.012],[1.078,.066,.061,.065,-.02],[1.112,.06,.056,.06,-.028],[1.14,.052,.049,.052,-.034]],
+    // the legs grow from the ring at the hip joints (y .5), not from under the hips: the thighs start high on the body's sides
+    hipY:.49,
     // torso shape: a keel at the chest, a flatter back, the belly a little tucked (extra radius in metres; a from +x toward +z)
     tpush:(y,a,q)=>{const s=Math.sin(a),f=Math.max(0,s),b=Math.max(0,-s);return .014*Math.pow(f,4)*bf195SS(.72,.8,y)*(1-bf195SS(.9,.97,y))-.007*Math.pow(b,3)*bf195SS(.6,.7,y)*(1-bf195SS(.9,.98,y))-.008*Math.pow(f,2)*bf195SS(.58,.64,y)*(1-bf195SS(.66,.72,y))},
     // fur per corner: the cream underside with a waving edge along the flanks, a darker back, lighter inner thighs
