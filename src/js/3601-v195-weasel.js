@@ -22,7 +22,7 @@
   const old=D.cols;
   D.cols=L=>{if(!BF195.on)return old(L);const f=bf195HSLk(mdC(L.skin),.8,.82);
     return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xd8c8a8,.66),.95,.8),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
-  D.bf={n:16,torK:1.06,limbK:1.15,sh0:[.035,.9],shade:{dk:.1,hk:.2},
+  D.bf={n:16,torK:1.06,limbK:1.15,sh0:[.035,.9],shade:{dk:.1,hk:.2,cav:0},
     // the neck: thick, rising from the collar into the back of the skull (human space, before the race's warp)
     neck:T=>[[1.0,.088,.076,.08,-.006],[1.04,.074,.067,.071,-.012],[1.078,.066,.061,.065,-.02],[1.112,.06,.056,.06,-.028],[1.14,.052,.049,.052,-.034]],
     // the legs grow from the ring at the hip joints (y .5), not from under the hips: the thighs start high on the body's sides
