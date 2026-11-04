@@ -89,6 +89,8 @@ function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=
   // ---- colour: clothes painted crisp per face, as mdBody paints its lofts; uncovered fur flows per corner ----
   const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY,BC=BR.C;
   const furSet=new Set([BC.FUR,BC.BELLY,BC.FURL,BC.FURD,mdC(C.skin)].map(mdC));if(D.handCol)furSet.add(mdC(D.handCol(BC)));
+  // the fur shades the bare model / outfits paint from the palette (thigh fronts, wrists, toes) count as fur too
+  [[BC.FUR,BC.BELLY,.4],[BC.FUR,C.hand,.3],[BC.FUR,C.boot,.5],[BC.FUR,BC.BELLY,.5]].forEach(q=>{if(q[1]!=null)furSet.add(mdC(mdMix(q[0],q[1],q[2])))});
   const tIdx=y=>{for(let i=0;i<T.length-1;i++)if(y<=T[i+1].y)return i+Math.max(0,Math.min(1,(y-T[i].y)/(T[i+1].y-T[i].y)));return T.length-1};
   // nearest point on a ring polyline → fractional ring index
   const along=(Rr,p)=>{let best=1e9,bi=0;for(let i=0;i<Rr.length-1;i++){const a=Rr[i].p,b=Rr[i+1].p,ab=sub3(b,a),l2=ab[0]*ab[0]+ab[1]*ab[1]+ab[2]*ab[2]||1e-9,t=bf195Cl(((p[0]-a[0])*ab[0]+(p[1]-a[1])*ab[1]+(p[2]-a[2])*ab[2])/l2,0,1),
@@ -101,7 +103,7 @@ function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=
   const colA=(m,s)=>{const p=m.r.part;return p=='hand'?(P.paint.hand?P.paint.hand(m,s):C.hand):p=='up'||(p=='el'&&m.i<5.5)?(P.paint.sleeve?P.paint.sleeve(m,s):C.sleeve):(P.paint.fore?P.paint.fore(m,s):C.fore)};
   const colL=(m,s)=>{const p=m.r.part;return (P.paint.leg?P.paint.leg(m,s):null)||(p=='shin'||p=='ankle'||(p=='knee'&&m.i>5.5)?C.shin:C.pants)};
   const col=m=>{const q=mdm(m),c=q.kind=='t'?colT(q):q.kind=='a'?colA(q,q.side):colL(q,q.side);if(c==null)return null;const h=mdC(c);return furSet.has(h)&&F.fur?null:h};
-  cgEmit(B,SM,col,{vcol:F.fur?(m=>F.fur(m,BC,mdm(m))):null});
+  cgEmit(B,SM,col,{vcol:F.fur?(m=>{const c=F.fur(m,BC,mdm(m));return Array.isArray(c)?bf195Hex(c):c}):null});
   // the palms the paws grow from: the md hand rings, starting inside the wrist
   [-1,1].forEach(s=>{const Rr=AR[s],w=Rr[5],d=nrm3(sub3(Rr[6].p,w.p)),st=Object.assign({},w,{p:sub3(w.p,mul3(d,.006)),rx:w.rx*.8,f:w.f*.8,b:w.b*.8});
     mdLoft(B,[st].concat(Rr.slice(6)),{seg:7,capB:true,col:m=>P.paint.hand?P.paint.hand(m,s):C.hand})});
@@ -170,5 +172,46 @@ function bf195Tail(B){const D=BR.R,TP=D.TP,Ft=D.bf.tail||{};if(!TP||!TP.length)r
   cgOrient(M);const SM=cgSub(M);SM.shade=cgShade(SM,{cav:.4,hk:.15,dk:.18,min:.6,blur:2});
   // the position along the tail (0 root → 1 tip) for the colour
   const zs=TP.map(t=>t[2]),z0=zs[0],z1=zs[zs.length-1];
-  cgEmit(B,SM,()=>null,{vcol:m=>Ft.col?Ft.col(m,BR.C,bf195Cl((m.z-z0)/(z1-z0||-1),0,1)):BR.C.FUR})}
+  cgEmit(B,SM,()=>null,{vcol:m=>{const c=Ft.col?Ft.col(m,BR.C,bf195Cl((m.z-z0)/(z1-z0||-1),0,1)):BR.C.FUR;return Array.isArray(c)?bf195Hex(c):c}})}
 {const f=brTail;brTail=function(B){if(BF195.on&&BR.on&&BR.R&&BR.R.bf&&BR.R.bf.tail)return bf195Tail(B);return f.apply(this,arguments)}}
+
+// ---------------- motion: springs, follow-through and the race's own gestures ----------------
+// Runs after every other layer (outermost animHero wrapper) and writes through brAddR, so the beast engine's exact undo takes
+// every offset back before the next frame (no drift, no stacking with the v93 idle's own undo).
+// D.bf.motion = {lead, bank, stop, start, flex, armLag} strengths (0 turns a part off); D.bf.gest = [{id, dur, w, fn(u, s, O, t)}]:
+// fn adds bone offsets to O ('bone.axis' → radians) for gesture progress u (0..1), side s (±1), seconds t into it.
+var BF195M={gmin:6,gmax:13};
+function bf195Spr(A,i,tg,om,z,dt){const x=A[i]-tg;A[i+1]+=(-2*z*om*A[i+1]-om*om*x)*dt;A[i]+=A[i+1]*dt;return A[i]}
+function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bfm;
+  if(!S)S=H._bfm={t:null,sp:new Float64Array(16),wl:0,gT:BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin),g:null,a0:{}};
+  let dt=S.t==null?0:(now-S.t)/1000;S.t=now;if(!(dt>=0)||dt>.25){dt=0;S.sp.fill(0)}dt=Math.min(dt,.05);
+  const G=H._ga,w=G?bf195Cl(G.w,0,1):(H.mvW||0),turn=G?bf195Cl(G.turn,-6,6):0,acc=G?bf195Cl(G.acc,-30,30):0,ph=G?G.ph:0,A=S.sp;
+  const arm=H._brS?bf195Cl(H._brS.a,0,1):1,rid=H===pl&&typeof riding!='undefined'&&!!riding,O={},add=(k,v)=>{O[k]=(O[k]||0)+v};
+  if(dt>0){const sub=dt>.02?2:1,h=dt/sub;for(let k=0;k<sub;k++){
+    // turn lead: the head and neck look into a turn first (and the body banks a little while moving)
+    bf195Spr(A,0,bf195Cl(turn*(Mo.lead==null?.11:Mo.lead),-.5,.5),11,1,h);
+    // stopping: the body pitches on with a soft overshoot and settles; a start leans a touch into the push
+    bf195Spr(A,2,bf195Cl(Math.max(0,-acc)*(Mo.stop==null?.022:Mo.stop)-Math.max(0,acc)*(Mo.start==null?.006:Mo.start),-.12,.2),9,.42,h)}}
+  const lead=A[0],stop=A[2];
+  if(!rid){add('neck.y',lead*.38*arm);add('head.y',lead*.55*arm);add('spine.z',-lead*(Mo.bank==null?.12:Mo.bank)*w);
+    add('spine.x',stop*.5);add('chest.x',stop*.35);add('head.x',-stop*.6*arm);
+    // running: the spine flexes with the stride (a supple, bounding body), twice per cycle, eased in with the gait
+    const fl=(Mo.flex==null?.045:Mo.flex)*w*bf195SS(.5,3.5,G?G.v:0);if(fl>1e-4){const c=Math.sin(ph*Math.PI*4);add('spine.x',fl*c);add('chest.x',-fl*.6*c);add('head.x',-fl*.4*c)}
+    // arms: the forearm trails the upper arm's swing (follow-through), only while walking / running and no attack pose plays
+    if((Mo.armLag==null?1:Mo.armLag)&&arm>.5&&w>.05)['aL','aR'].forEach((bn,i)=>{const u=b[bn+'0'];if(!u)return;const x=u.rotation.x,a0=S.a0[bn];S.a0[bn]=x;if(a0==null||dt<=0)return;
+      const v=bf195Cl((x-a0)/dt,-12,12),j=4+i*2;bf195Spr(A,j,v*.045*(Mo.armLag==null?1:Mo.armLag),14,.8,dt);add(bn+'1.x',bf195Cl(A[j],-.25,.25)*w*arm)})}
+  // gestures: only standing quiet (no gait, no attack, no combat stance, no v93 fidget playing), never riding
+  const I=H._idl,cw=I&&I.sp?bf195Cl(I.sp[2],0,1):0,quiet=!rid&&w<.04&&arm>.97&&cw<.1&&(!I||(I.iw>.85&&I.fid<0)),L=F.gest||[];
+  // pictures / tests: BF195M.pose = {id, u, s} shows one gesture at progress u
+  const fp=BF195M.pose;if(fp){const G3=L.find(q=>q.id==fp.id);if(G3){const Og={};G3.fn(fp.u,fp.s||1,Og,fp.u*G3.dur);for(const q in Og)add(q,Og[q])}S.g=null}
+  else if(S.g){const g=S.g;g.t+=dt;if(quiet&&g.out==null)g.u+=dt/g.d;else{if(g.out==null)g.out=1;g.fo=(g.fo||0)+dt/.35}
+    if(g.u>=1||(g.out!=null&&g.fo>=1))S.g=null;
+    else{const k=g.out!=null?1-bf195SS(0,1,g.fo):1,Og={};g.G.fn(g.u,g.s,Og,g.t);for(const q in Og)add(q,Og[q]*k);if(I)I.fT=Math.max(I.fT||0,2.5)}}
+  else if(L.length&&quiet&&dt>0){S.gT-=dt;if(S.gT<=0){let tot=0;L.forEach(q=>tot+=q.w||1);let r=Math.random()*tot,G2=L[0];for(const q of L){r-=q.w||1;if(r<=0){G2=q;break}}
+      S.g={G:G2,u:0,t:0,d:G2.dur,s:Math.random()<.5?-1:1};S.gT=BF195M.gmin+Math.random()*(BF195M.gmax-BF195M.gmin);if(G2.tail&&H._brT)bf195TailKick(H,G2.tail*S.g.s)}}
+  else if(!quiet&&S.gT<2)S.gT=2;
+  for(const k in O){const v=O[k];if(!v)continue;const d=k.indexOf('.');brAddR(H,k.slice(0,d),k.slice(d+1),v)}}
+// a flick of the tail: a sideways push on its springs (brTailAnim's state), rolling down to the tip
+function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;i++)T.y[i*2+1]+=v*(1+i*.15)}
+{const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
+  try{const D=H&&H._race?BRD[H._race]:null;if(BF195.on&&D&&D.bf&&H.bones&&!H._foe)bf195Motion(H,D,now||0)}catch(e){if(!BF195.err){BF195.err=1;console.warn('v195 motion',e)}}return r}}

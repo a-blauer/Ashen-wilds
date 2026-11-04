@@ -51,10 +51,9 @@
       paint(p,n,C,ao){const x=Math.abs(p[0]),y=p[1],z=p[2],F=bf195Rgb(C.FUR),Bl=bf195Rgb(C.BELLY),Dk=bf195Rgb(C.FURD);
         const yb=-.027+(.12-z)*.11,cr=Math.max(bf195SS(yb+.006,yb-.006,y),bf195SS(-.4,-.75,n[1])*bf195SS(.02,-.04,z+.0))*(z<-.06?bf195SS(-.11,-.06,z):1);
         const crown=bf195SS(.45,.85,n[1])*bf195SS(.08,.0,z)*.35,eye=Math.hypot(x-.043,y-.018,z-.068),mask=(1-bf195SS(.014,.026,eye))*.55,bridge=bf195SS(.06,.1,z)*bf195SS(.5,.85,n[1])*(1-bf195SS(.004,.016,x))*.2;
-        let c=bf195Mix(F,Dk,Math.max(crown,mask,bridge));return bf195Mix(c,Bl,cr*(1-mask))},
-      // crisp facets: the nose pad and the mouth line
-      crisp(p,C){const x=Math.abs(p[0]),y=p[1],z=p[2];if(z>.159&&y>-.031&&y<-.008)return C.NOSE;
-        if(z>.085&&z<.158&&Math.abs(y-(-.0335-(z-.12)*.04))<.0034&&x<.032)return C.MOUTH;return null}},
+        // nose pad and the mouth line, painted per corner (crisp facets read as a zigzag)
+        const nose=bf195SS(.154,.162,z)*bf195SS(-.034,-.028,y)*(1-bf195SS(-.01,-.004,y)),my=-.0335-(z-.12)*.04,mouth=(1-bf195SS(.002,.0055,Math.abs(y-my)))*bf195SS(.085,.1,z)*(1-bf195SS(.15,.158,z))*(1-bf195SS(.026,.034,x));
+        let c=bf195Mix(F,Dk,Math.max(crown,mask,bridge));c=bf195Mix(c,Bl,cr*(1-mask));c=bf195Mix(c,bf195Rgb(C.MOUTH),mouth*.85);return bf195Mix(c,bf195Rgb(C.NOSE),nose)}},
     tail:{r:(i,r)=>r,flat:.92,
       col:(m,C,t)=>{const F=bf195Rgb(C.FUR),Dk=bf195Rgb(C.FURD),tip=[.012,.01,.009],un=bf195Rgb(C.FURL);
         let c=bf195Mix(F,un,bf195SS(-.3,-.8,m.ny)*.45*(1-t));c=bf195Mix(c,Dk,bf195SS(.45,.75,t)*.6);return bf195Mix(c,tip,bf195SS(.72,.92,t))}}};
@@ -62,3 +61,22 @@
   const oh=D.head;D.head=function(B,P,o){if(!BF195.on)return oh.call(this,B,P,o);P.head={w:.9,jaw:.85,top:1,len:.95,fwd:-.01};const H=P._H=mdHeadR(P);bf195Head(B,P,this);return H};
   // the helmets read the skull rings, eyes and ears: measure them now (the first model may be an item picture)
   try{bf195HeadSetup(D)}catch(e){console.warn('v195 weasel head',e)}}
+// ---- motion (3600 bf195Motion): a supple body; the weasel's own idle gestures between the v93 fidgets ----
+// signs (hero bones): x − raises an arm forward / lifts the head, x + bends the spine forward; elbows bend with x −
+{const D=BRD[5];if(D.bf){D.bf.motion={lead:.11,bank:.1,stop:.024,start:.006,flex:.05,armLag:1};
+  const E=(u,a,b)=>idlEnv(u,a,b),SS=bf195SS;
+  D.bf.gest=[
+    // rise up tall and scan the surroundings, forepaws tucked to the chest (the weasel's sentry pose)
+    {id:'scan',dur:3.6,w:3,fn(u,s,O){const e=E(u,.18,.2),sw=Math.sin((u-.2)/.6*Math.PI*2)*SS(.18,.3,u)*(1-SS(.72,.84,u));
+      O['spine.x']=-.13*e;O['chest.x']=-.09*e;O['neck.x']=-.1*e;O['head.x']=.14*e;O['head.y']=.55*sw*s;O['neck.y']=.22*sw*s;
+      O['aR0.x']=-.3*e;O['aR1.x']=-.6*e;O['aR2.x']=.5*e;O['aL0.x']=-.12*e;O['aL1.x']=-.2*e}},
+    // lift the nose and sniff the air in quick little twitches
+    {id:'sniff',dur:2.1,w:3,fn(u,s,O){const e=E(u,.2,.25),tw=Math.sin(u*Math.PI*2*6)*SS(.25,.35,u)*(1-SS(.7,.8,u));
+      O['neck.x']=-.12*e;O['head.x']=-.26*e+.035*tw;O['head.y']=.12*s*e;O['chest.x']=-.04*e}},
+    // groom: the free right paw wipes the muzzle a few times
+    {id:'groom',dur:2.8,w:2,fn(u,s,O){const e=E(u,.22,.22),rb=Math.sin(u*Math.PI*2*3.5)*SS(.25,.35,u)*(1-SS(.65,.75,u));
+      O['aR0.x']=-1.0*e;O['aR0.z']=.16*e;O['aR1.x']=-1.45*e+.18*rb;O['aR2.x']=.3*e;O['head.x']=.18*e+.04*rb;O['head.z']=-.2*e;O['head.y']=-.16*e;O['neck.x']=.06*e}},
+    // a curious tilt of the head, the tail giving a small flick
+    {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.32*s*e;O['head.y']=.14*s*e;O['head.x']=-.06*e}},
+    // a glance back over the shoulder with a flick of the tail
+    {id:'glance',dur:1.8,w:2,tail:5,fn(u,s,O){const e=E(u,.2,.32);O['head.y']=.5*s*e;O['neck.y']=.24*s*e;O['spine.y']=.08*s*e;O['chest.y']=.06*s*e}}]}}
