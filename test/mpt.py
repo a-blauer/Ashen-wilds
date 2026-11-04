@@ -65,7 +65,7 @@ try:
         if os.environ.get('SLOW'):ctx.new_cdp_session(pg).send('Emulation.setCPUThrottlingRate',{'rate':float(os.environ['SLOW'])})   # SLOW=4: a 4x slower CPU once the page has loaded
         pg.evaluate("()=>{window.__rr=ren.render.bind(ren);window.__pr=POST.render;ren.render=()=>{};POST.render=()=>{}}")
     A,B=pgs['A'],pgs['B']
-    setup(A,'warrior','Aria');setup(B,'mage','Bram')
+    setup(A,os.environ.get('MPA','warrior'),'Aria');setup(B,os.environ.get('MPB','mage'),'Bram')   # MPA / MPB: the two classes (v195)
     # the room: both windows must see each other before the steps start (presence goes out every 125 ms of game loop)
     if not mp_until("()=>MP.on&&Object.keys(MP.rh).length>=1&&Object.values(MP.rh).every(r=>r.pr&&typeof r.pr.x=='number')",90000):
         print('FAIL co-op room: the two windows do not see each other',json.dumps([pg.evaluate("()=>[MP.on,MP.me,Object.keys(MP.rh)]") for pg in (A,B)]))
