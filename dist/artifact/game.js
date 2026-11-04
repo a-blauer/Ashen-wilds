@@ -66599,6 +66599,12 @@ function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=
       cgBand(M,prev,ring,'leg',c);prev=ring});
     const ak=use[use.length-1].p;cgCap(M,prev,[ak[0],ak[1]-.02,ak[2]],[[l+'2',1]],'leg',[ak[0],ak[1]+.1,ak[2]])});
   cgOrient(M);const SM=cgSub(M);
+  // Taubin smoothing of the torso and neck (λ / μ, no shrinking): ring-to-ring waviness of the cage shows as light and dark
+  // bands across a pale belly under flat shading
+  {const sel=new Uint8Array(SM.V.length),nb=SM.V.map(()=>new Set());SM.F.forEach(f=>{const on=f.part=='torso'||f.part=='neck';f.v.forEach((a,i)=>{const c=f.v[(i+1)%f.v.length];nb[a].add(c);nb[c].add(a);if(on)sel[a]=1})});
+    const step=k=>{const D=SM.V.map((v,i)=>{if(!sel[i]||!nb[i].size)return null;let x=0,y=0,z=0;nb[i].forEach(j=>{x+=SM.V[j][0];y+=SM.V[j][1];z+=SM.V[j][2]});const n=nb[i].size;return [(x/n-v[0])*k,(y/n-v[1])*k,(z/n-v[2])*k]});
+      D.forEach((d,i)=>{if(d){SM.V[i][0]+=d[0];SM.V[i][1]+=d[1];SM.V[i][2]+=d[2]}})};
+    for(let it=0;it<(F.smooth==null?3:F.smooth);it++){step(.5);step(-.53)}SM.N=null}
   if(F.sculpt)cgSculpt(SM,{torso:1,neck:1,arm:1,leg:1},(x,y,z,nn)=>F.sculpt(x,y,z,nn));
   SM.shade=cgShade(SM,Object.assign({cav:.3,hk:.24,dk:.16,min:.55,blur:3},F.shade||{}));
   // ---- colour: clothes painted crisp per face, as mdBody paints its lofts; uncovered fur flows per corner ----
