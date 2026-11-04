@@ -74,7 +74,7 @@ var DECO103=[
   sp:[[-19,-8.4,1],[-19,-.4,1],[19,8.6,-1]],
   b(k,D){D.sp.forEach(([x,z,s])=>k.at(x,0,z,()=>{[-.55,.55].forEach(q=>twStones(k,TWC.stone,q-.12,0,q+.12,0,0,.42,.36,.22));k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,.46,0,1.5,.1,.42,0,0,0,.02))},Math.PI/2))},
   col(D){return D.sp.map(([x,z])=>[x,z,.25,.78])}},
- {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets by the market stalls and the well.',
+ {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets beside the carts.',
   sp:[[13.4,-9.6],[13.1,-6.6],[-18.4,-.6],[-16.4,9.8]],
   b(k,D){D.sp.forEach(([x,z],i)=>{for(let j=0;j<5;j++){const a=j*1.3+i,r=j?.35:0;k.p('c',[0xd8802a,0xc8701a,0xe8a03a][j%3],'sph',x+Math.cos(a)*r,.2+(j?0:.15),z+Math.sin(a)*r,.24,.18,.24,0,a,0,.05)}
     k.as('straw',()=>k.p('c',0xc8a850,'cyl8',x+.7,.4,z-.2,.18,.8,.18,0,0,.1,.12))})}},

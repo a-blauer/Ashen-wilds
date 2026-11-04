@@ -120,7 +120,7 @@ var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0]
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
   ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
-var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-140,4.5,4.5],chapel:['C',140,4.5,4.5],barracks:['C',-40,4.5,4.5],keep:['C',40,4.5,4.5]};
+var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
 function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));
   for(const k in DM196_FIX){const [ring,deg,w,d]=DM196_FIX[k];L.push(Object.assign(dm196At(ring,deg),{id:k,fix:1,w,d}))}return L}
@@ -249,9 +249,11 @@ const MAP=(()=>{
      const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.15?'g':'.';continue}
      if(ri>=0){const p=TWN100_PG[ri],d=Math.hypot(x-p.x,y-p.y),h=(x*7+y*13)%11;m[y][x]=(ri==1&&h<5)||(ri==0&&h<3)?'g':d>p.r-1.5&&h<3?'a':'.';continue}
      m[y][x]='.'}
-   // keep the avenues to the paths: from the plaza's north and south edges a dirt trail runs to each room's path
-   TWN100_RD.forEach((L,i)=>{const e=L[0],n=Math.ceil(Math.hypot(e[0]-T.cx,e[1]-T.cy));for(let q=0;q<=n;q++){const t=q/n,cx=T.cx+(e[0]-T.cx)*t,cy=T.cy+(e[1]-T.cy)*t;if(Math.hypot(cx-T.cx,cy-T.cy)<D.WR[5]+1)continue;
-     for(let yy=Math.round(cy)-1;yy<=Math.round(cy)+1;yy++)for(let xx=Math.round(cx)-1;xx<=Math.round(cx)+1;xx++)if(Math.hypot(xx-cx,yy-cy)<1.2&&m[yy]&&(m[yy][xx]=='.'||m[yy][xx]=='g'||m[yy][xx]=='a'))m[yy][xx]='p'}});
+   // keep the avenues to the paths: a dirt trail runs straight out from the fountain to each room's path; v198: it starts at the
+   // second ring street, beyond ring B's lots and decorations (it used to start beyond the largest wall) and goes round the lots,
+   // so from every exit in the walls (3610 DM196X, one per portal on this same line) a trail leads on to its portal's entry
+   TWN100_RD.forEach((L,i)=>{const e=L[0],n=Math.ceil(Math.hypot(e[0]-T.cx,e[1]-T.cy));for(let q=0;q<=n;q++){const t=q/n,cx=T.cx+(e[0]-T.cx)*t,cy=T.cy+(e[1]-T.cy)*t;if(Math.hypot(cx-T.cx,cy-T.cy)<D.RB+4.5)continue;
+     for(let yy=Math.round(cy)-1;yy<=Math.round(cy)+1;yy++)for(let xx=Math.round(cx)-1;xx<=Math.round(cx)+1;xx++)if(Math.hypot(xx-cx,yy-cy)<1.2&&m[yy]&&(m[yy][xx]=='.'||m[yy][xx]=='g'||m[yy][xx]=='a')&&!onLot(xx-T.cx,yy-T.cy,.3))m[yy][xx]='p'}});
   }
   if(typeof mq151MoveCamp=='function')mq151MoveCamp(m,props); // v151: Kindlelight I's entrance camp moves off the Lantern Road outpost (3020); after every seeded step above
   if(typeof sp152Map=='function')sp152Map(m,bio,DW); // v152: the special instances' ground (3150; no seeded draws)

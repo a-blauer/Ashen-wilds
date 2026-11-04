@@ -275,8 +275,10 @@ const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotat
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
   const spike=(x,z,k,col)=>put(Q.cone,S(col||0x5a5662),x,k/2,z,k*.22,k,k*.22,rr(-.12,.12),0,rr(-.12,.12));
-  const deadTree=(x,z,h,col,k,tips)=>{k=k||1;blk(x,z,0);take(x,z,.8*k);put(Q.tcyl,S(col),x,h/2,z,.22*k,h,.22*k,rr(-.08,.08),0,rr(-.08,.08));const n=3+Math.floor(rn()*3),T2=[];
-    for(let i=0;i<n;i++){const a=rn()*TAU,y=h*rr(.45,.92),l=rr(.9,1.8)*k,bx=x+Math.cos(a)*l*.35,bz=z+Math.sin(a)*l*.35;put(Q.cyl4,S(col),bx,y+l*.25,bz,.06*k,l,.06*k,0,-a,-.9);T2.push([x+Math.cos(a)*l*.72,gy(x,z)+y+l*.55,z+Math.sin(a)*l*.72])}
+  const deadTree=(x,z,h,col,k,tips)=>{k=k||1;blk(x,z,0);take(x,z,.8*k);const tx=rr(-.08,.08),tz=rr(-.08,.08),g0=gy(x,z);put(Q.tcyl,S(col),x,h/2,z,.22*k,h,.22*k,tx,0,tz);const n=3+Math.floor(rn()*3),T2=[];
+    // v198: each branch grows from the leaning trunk's centre line at its height, over the trunk's own ground (they used the ground
+    // under the branch and the upright line, so on slopes and leaning trunks they stood off the trunk in the air)
+    for(let i=0;i<n;i++){const a=rn()*TAU,y=h*rr(.45,.92),l=rr(.9,1.8)*k,dy=y-h/2,ax=x-dy*Math.sin(tz),az=z+dy*Math.cos(tz)*Math.sin(tx),bx=ax+Math.cos(a)*l*.35,bz=az+Math.sin(a)*l*.35;putY(Q.cyl4,S(col),bx,g0+y+l*.25,bz,.06*k,l,.06*k,0,-a,-.9);T2.push([ax+Math.cos(a)*l*.72,g0+y+l*.55,az+Math.sin(a)*l*.72])}
     if(tips)tips.push(...T2)};
   const log=(x,z,a,len,rad,col,sink)=>{take(x,z,len*.45);const o=put(Q.cyl,S(col||0x3a3026),x,rad*.8-(sink||0),z,rad,len,rad,0,-a,P2);const nx=Math.cos(a),nz=Math.sin(a);for(let q=-len/2+.4;q<len/2;q+=.9)blk(x+nx*q,z+nz*q,0);return o};
   const stump=(x,z,col,h,k)=>{k=k||1;blk(x,z,0);h=h||rr(1,2.2);put(Q.tcyl,S(col||0x3a3026),x,h/2,z,.24*k,h,.28*k);put(Q.cyl4,S(col||0x3a3026),x+.3*k,h*.75,z,.06,1*k,.06,0,0,-.9);put(Q.cyl4,S(col||0x3a3026),x-.25*k,h*.6,z+.1,.05,.8*k,.05,.3,0,.8)};

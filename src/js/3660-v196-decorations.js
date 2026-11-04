@@ -19,8 +19,8 @@ function dm196WallTopP(d){const R=kf109().R,W=typeof dcWall104=='function'?dcWal
 function dm196WallTop(d){const R=kf109().R;let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best} // palisade logs have gaps: sample along the wall too
 // the wall ring must be the current stage's before anything is placed along it (a stage change can rebuild the decorations first)
 function dm196WallsNow(){try{const K=kdState(),T=TOWNS[0],lv=kdLv('walls');if(!K.wg||K.wst!==kf109().s||K.wl!==lv)K.wlamps=kdWalls(T,lv)||[]}catch(e){console.warn('v196 walls',e)}}
-// wall angles kept clear of the gates (|x| < 4.5 at the wall)
-function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*R<4.6)continue;L.push(d)}return L}
+// wall angles kept clear of the exits (v198: all six, beyond their flanking towers; v196 kept |x| < 4.6 clear for the two gates)
+function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180,[x,z]=dm196A(d,R);if(dm196ExAt(x,z,DM196X.t+DM196X.tr+.3)>=0)continue;L.push(d)}return L}
 // ---------------- spots ----------------
 dc190Def('obelisk',{sp:[dm196A(127,17.4)]});
 dc190Def('statue',{sp:[dm196A(-153,17.4)]});

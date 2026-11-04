@@ -1082,7 +1082,7 @@ var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0]
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
   ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
-var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-140,4.5,4.5],chapel:['C',140,4.5,4.5],barracks:['C',-40,4.5,4.5],keep:['C',40,4.5,4.5]};
+var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
 function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));
   for(const k in DM196_FIX){const [ring,deg,w,d]=DM196_FIX[k];L.push(Object.assign(dm196At(ring,deg),{id:k,fix:1,w,d}))}return L}
@@ -1211,9 +1211,11 @@ const MAP=(()=>{
      const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.15?'g':'.';continue}
      if(ri>=0){const p=TWN100_PG[ri],d=Math.hypot(x-p.x,y-p.y),h=(x*7+y*13)%11;m[y][x]=(ri==1&&h<5)||(ri==0&&h<3)?'g':d>p.r-1.5&&h<3?'a':'.';continue}
      m[y][x]='.'}
-   // keep the avenues to the paths: from the plaza's north and south edges a dirt trail runs to each room's path
-   TWN100_RD.forEach((L,i)=>{const e=L[0],n=Math.ceil(Math.hypot(e[0]-T.cx,e[1]-T.cy));for(let q=0;q<=n;q++){const t=q/n,cx=T.cx+(e[0]-T.cx)*t,cy=T.cy+(e[1]-T.cy)*t;if(Math.hypot(cx-T.cx,cy-T.cy)<D.WR[5]+1)continue;
-     for(let yy=Math.round(cy)-1;yy<=Math.round(cy)+1;yy++)for(let xx=Math.round(cx)-1;xx<=Math.round(cx)+1;xx++)if(Math.hypot(xx-cx,yy-cy)<1.2&&m[yy]&&(m[yy][xx]=='.'||m[yy][xx]=='g'||m[yy][xx]=='a'))m[yy][xx]='p'}});
+   // keep the avenues to the paths: a dirt trail runs straight out from the fountain to each room's path; v198: it starts at the
+   // second ring street, beyond ring B's lots and decorations (it used to start beyond the largest wall) and goes round the lots,
+   // so from every exit in the walls (3610 DM196X, one per portal on this same line) a trail leads on to its portal's entry
+   TWN100_RD.forEach((L,i)=>{const e=L[0],n=Math.ceil(Math.hypot(e[0]-T.cx,e[1]-T.cy));for(let q=0;q<=n;q++){const t=q/n,cx=T.cx+(e[0]-T.cx)*t,cy=T.cy+(e[1]-T.cy)*t;if(Math.hypot(cx-T.cx,cy-T.cy)<D.RB+4.5)continue;
+     for(let yy=Math.round(cy)-1;yy<=Math.round(cy)+1;yy++)for(let xx=Math.round(cx)-1;xx<=Math.round(cx)+1;xx++)if(Math.hypot(xx-cx,yy-cy)<1.2&&m[yy]&&(m[yy][xx]=='.'||m[yy][xx]=='g'||m[yy][xx]=='a')&&!onLot(xx-T.cx,yy-T.cy,.3))m[yy][xx]='p'}});
   }
   if(typeof mq151MoveCamp=='function')mq151MoveCamp(m,props); // v151: Kindlelight I's entrance camp moves off the Lantern Road outpost (3020); after every seeded step above
   if(typeof sp152Map=='function')sp152Map(m,bio,DW); // v152: the special instances' ground (3150; no seeded draws)
@@ -19359,11 +19361,14 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
+    // v198: the trunk bends sideways as it rises (y*y*.05 in x, see f above), so each branch, its side twig and its moss start on the
+    // bent centre line at their height (they started on the straight one and stood beside the trunk in the air)
+    const bow=y=>y*y*.05;
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{const b=bow(y);p.push(twig(b,y,0,1.1,s,a,bark,.06));p.push(twig(b-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
     if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
-      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
-    if(o.snow){p.push(F(dome(.1,6),0xf4f8ff,{j:.01},0,2.6,0,0,0,0,[1,.7,1]));return ep185Snow(M(p),.9,.55)}return M(p)};   // v185: snow painted on the tops of the branches (was a 60 cm snowball on a 18 cm trunk)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},bow(y)-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
+    if(o.snow){p.push(F(dome(.1,6),0xf4f8ff,{j:.01},bow(2.6),2.6,0,0,0,0,[1,.7,1]));return ep185Snow(M(p),.9,.55)}return M(p)};   // v185: snow painted on the tops of the branches (was a 60 cm snowball on a 18 cm trunk)
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
   const logG=(bark,moss)=>M([F(cyl(.28,.32,2.6,7),bark,{j:.05,top:moss,tt:.6},0,.26,0,0,0,Math.PI/2),F(disc(.27,7),0x8a6a48,{lo:1,hi:0},1.31,.26,0,0,Math.PI/2),F(cyl(.08,.1,.5,4),bark,{},.4,.5,.1,.6,0,.4)]);
@@ -19382,7 +19387,7 @@ function wdDeco(){const T0=performance.now();
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
   const ironFence=()=>{const p=[F(box(2.4,.08,.06),0x2a2a30,{},0,.9,0),F(box(2.4,.08,.06),0x2a2a30,{},0,.3,0)];for(let i=0;i<7;i++){p.push(F(box(.05,1.1,.05),0x2a2a30,{},-1.1+i*.367,.55,0),F(cone(.06,.18,4),0x3a3a40,{},-1.1+i*.367,1.18,0))}return M(p)};
-  const reeds=(st,hd)=>{const p=[];for(let i=0;i<9;i++){const a=i*2.4,r=.1+(i%3)*.12,h=.8+((i*53)%10)/14;p.push(F(cyl(.012,.025,h,3),st,{},Math.cos(a)*r,h/2,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2));if(i%3==0)p.push(F(cyl(.04,.04,.22,5),hd,{},Math.cos(a)*r,h-.05,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2))}
+  const reeds=(st,hd)=>{const p=[];for(let i=0;i<9;i++){const a=i*2.4,r=.1+(i%3)*.12,h=.8+((i*53)%10)/14;p.push(F(cyl(.012,.025,h,3),st,{},Math.cos(a)*r,h/2,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2));if(i%3==0){const rx=(i%2-.5)*.25,rz=(i%3-1)*.2,u=h/2-.06;p.push(F(cyl(.04,.04,.22,5),hd,{},Math.cos(a)*r-u*Math.cos(rx)*Math.sin(rz),h/2+u*Math.cos(rx)*Math.cos(rz),Math.sin(a)*r+u*Math.sin(rx),rx,0,rz))}} // v198: the head on its stalk's tilted tip (it stood at the upright tip, in the air)
     for(let i=0;i<5;i++){const a=i*1.3;p.push(F(cone(.05,.9,3),st,{lo:.6},Math.cos(a)*.15,.4,Math.sin(a)*.15,Math.cos(a)*.35,0,Math.sin(a)*.35))}return M(p)};
   const fern=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i/7*6.283;p.push(F(cone(.13,.9,3),c,{lo:.55,hi:.6},0,.45,0,0,0,0,[1,1,.25]).rotateZ(1.05).rotateY(a))}return M(p)};
   const flowers=(cols)=>{const p=[];for(let i=0;i<11;i++){const a=i*2.39,r=.15+Math.sqrt(i)*.18,h=.22+((i*31)%10)/40,x=Math.cos(a)*r,z=Math.sin(a)*r;p.push(F(cyl(.01,.014,h,3),0x3a6a2a,{},x,h/2,z),F(disc(.07,5),cols[i%cols.length],{lo:1,hi:0},x,h,z,-Math.PI/2),F(oct(.025),0xffe070,{lo:1,hi:0},x,h+.015,z))}return M(p)};
@@ -22754,7 +22759,7 @@ var DECO103=[
   sp:[[-19,-8.4,1],[-19,-.4,1],[19,8.6,-1]],
   b(k,D){D.sp.forEach(([x,z,s])=>k.at(x,0,z,()=>{[-.55,.55].forEach(q=>twStones(k,TWC.stone,q-.12,0,q+.12,0,0,.42,.36,.22));k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',0,.46,0,1.5,.1,.42,0,0,0,.02))},Math.PI/2))},
   col(D){return D.sp.map(([x,z])=>[x,z,.25,.78])}},
- {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets by the market stalls and the well.',
+ {k:'pumpkins',i:'🎃',n:'Harvest Piles',g:250,d:'Pumpkins, sheaves and baskets beside the carts.',
   sp:[[13.4,-9.6],[13.1,-6.6],[-18.4,-.6],[-16.4,9.8]],
   b(k,D){D.sp.forEach(([x,z],i)=>{for(let j=0;j<5;j++){const a=j*1.3+i,r=j?.35:0;k.p('c',[0xd8802a,0xc8701a,0xe8a03a][j%3],'sph',x+Math.cos(a)*r,.2+(j?0:.15),z+Math.sin(a)*r,.24,.18,.24,0,a,0,.05)}
     k.as('straw',()=>k.p('c',0xc8a850,'cyl8',x+.7,.4,z-.2,.18,.8,.18,0,0,.1,.12))})}},
@@ -30041,8 +30046,10 @@ const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotat
   const crystal=(x,z,k,col,gi)=>put(Q.oct,S(col,{emissive:col,emissiveIntensity:gi==null?.6:gi,roughness:.3}),x,k*.7,z,k*.3,k*.8,k*.3,rr(-.25,.25),rr(0,3),rr(-.25,.25));
   const crystals=(x,z,n,k,col,gi)=>{take(x,z,k*.8);for(let i=0;i<n;i++)crystal(x+rr(-k*.5,k*.5),z+rr(-k*.5,k*.5),k*rr(.5,1),col,gi)};
   const spike=(x,z,k,col)=>put(Q.cone,S(col||0x5a5662),x,k/2,z,k*.22,k,k*.22,rr(-.12,.12),0,rr(-.12,.12));
-  const deadTree=(x,z,h,col,k,tips)=>{k=k||1;blk(x,z,0);take(x,z,.8*k);put(Q.tcyl,S(col),x,h/2,z,.22*k,h,.22*k,rr(-.08,.08),0,rr(-.08,.08));const n=3+Math.floor(rn()*3),T2=[];
-    for(let i=0;i<n;i++){const a=rn()*TAU,y=h*rr(.45,.92),l=rr(.9,1.8)*k,bx=x+Math.cos(a)*l*.35,bz=z+Math.sin(a)*l*.35;put(Q.cyl4,S(col),bx,y+l*.25,bz,.06*k,l,.06*k,0,-a,-.9);T2.push([x+Math.cos(a)*l*.72,gy(x,z)+y+l*.55,z+Math.sin(a)*l*.72])}
+  const deadTree=(x,z,h,col,k,tips)=>{k=k||1;blk(x,z,0);take(x,z,.8*k);const tx=rr(-.08,.08),tz=rr(-.08,.08),g0=gy(x,z);put(Q.tcyl,S(col),x,h/2,z,.22*k,h,.22*k,tx,0,tz);const n=3+Math.floor(rn()*3),T2=[];
+    // v198: each branch grows from the leaning trunk's centre line at its height, over the trunk's own ground (they used the ground
+    // under the branch and the upright line, so on slopes and leaning trunks they stood off the trunk in the air)
+    for(let i=0;i<n;i++){const a=rn()*TAU,y=h*rr(.45,.92),l=rr(.9,1.8)*k,dy=y-h/2,ax=x-dy*Math.sin(tz),az=z+dy*Math.cos(tz)*Math.sin(tx),bx=ax+Math.cos(a)*l*.35,bz=az+Math.sin(a)*l*.35;putY(Q.cyl4,S(col),bx,g0+y+l*.25,bz,.06*k,l,.06*k,0,-a,-.9);T2.push([ax+Math.cos(a)*l*.72,g0+y+l*.55,az+Math.sin(a)*l*.72])}
     if(tips)tips.push(...T2)};
   const log=(x,z,a,len,rad,col,sink)=>{take(x,z,len*.45);const o=put(Q.cyl,S(col||0x3a3026),x,rad*.8-(sink||0),z,rad,len,rad,0,-a,P2);const nx=Math.cos(a),nz=Math.sin(a);for(let q=-len/2+.4;q<len/2;q+=.9)blk(x+nx*q,z+nz*q,0);return o};
   const stump=(x,z,col,h,k)=>{k=k||1;blk(x,z,0);h=h||rr(1,2.2);put(Q.tcyl,S(col||0x3a3026),x,h/2,z,.24*k,h,.28*k);put(Q.cyl4,S(col||0x3a3026),x+.3*k,h*.75,z,.06,1*k,.06,0,0,-.9);put(Q.cyl4,S(col||0x3a3026),x-.25*k,h*.6,z+.1,.05,.8*k,.05,.3,0,.8)};
@@ -67411,24 +67418,45 @@ TWN100_L=function(){const T=TOWNS[0],F=kf109();return {T,R:TS,WX:F.R,IW:F.R,SZ:F
 // ---------------- the walls ----------------
 // angle a (clockwise from north) on the ring of radius R, town-local
 function dm196P(a,R){return [R*Math.sin(a),-R*Math.cos(a)]}
-var DM196_GZ=1.85; // half the gate opening
-function dm196Ring(R){const gA=Math.asin(DM196_GZ/R),n=Math.max(6,Math.round((Math.PI-2*gA)*R/4.4)),seg=[],tw=[];
-  [0,1].forEach(h=>{const a0=h*Math.PI+gA,a1=(h+1)*Math.PI-gA;for(let i=0;i<n;i++){const a=a0+(a1-a0)*i/n,b=a0+(a1-a0)*(i+1)/n;seg.push({a,b,h:(Math.cos((a+b)/2)>0)?0:1})}
-    const gT=Math.asin(3.5/R)-gA; // the gate towers stand clear of the Gate Avenue (x ±3.5)
-    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n+(i==0?gT:i==n?-gT:0),big=i>0&&i<n&&i%Math.max(2,Math.round(n/3))==0;if(i==0||i==n||big||i%2==0)tw.push({a,big,gate:i==0||i==n,h:Math.cos(a)>0?0:1})}});
-  return {seg,tw,gA}}
+var DM196_GZ=1.85; // (v196) half the old gate opening; the v198 exits below replace the two gatehouses
+// ---------------- v198: an open exit through the walls for every portal ----------------
+// owner (Nov 4 2026): "there needs to be an exit area from the duskhold walls for each portal entrance, with a large opening so that
+// players can see which portal is ahead. Right now the castle exits have a low doorway and it blocks the vision of what zone portal
+// lies ahead. There's also not a lot of space between duskhold and the portal entrances at the max Kingdom size so this will help
+// clean up the route to each portal."
+// The ring has six openings, each on the straight line from the fountain to its portal's entryway (I II III north, IV V VI south):
+// nothing overhead (no gatehouse, no lintel), a tall tower either side, braziers out front, a dirt trail straight on to the entry.
+// DM196X.o = half the opening (tiles are open where the side offset from the exit's line is below it); DM196X.t = side offset of
+// the flanking towers' centres (their inner faces at t - 1.15).
+var DM196X={o:3.1,t:4.3,tr:1.15,th:4.0};
+function dm196ExA(){return DM196.rooms.map(c=>dm196Ang(c[0],c[1]))} // the exits' angles, clockwise from north (I..VI)
+// the exit a town-local point lies in front of / behind (within its opening's width, on its side of the fountain), or -1
+function dm196ExAt(x,z,w){w=w==null?DM196X.o:w;const A=dm196ExA();for(let i=0;i<6;i++){const ux=Math.sin(A[i]),uz=-Math.cos(A[i]),al=x*ux+z*uz,lat=Math.abs(x*uz-z*ux);if(al>0&&lat<w)return i}return -1}
+function dm196Ring(R){const A=dm196ExA().map(a=>(a+6.2832)%6.2832).sort((a,b)=>a-b),gO=Math.asin(Math.min(.99,DM196X.o/R)),gT=Math.asin(Math.min(.99,DM196X.t/R)),seg=[],tw=[],ex=[];
+  const half=a=>Math.cos(a)>0?0:1;
+  A.forEach(a=>ex.push({a,h:half(a)}));
+  A.forEach((g,i)=>{const g2=i+1<A.length?A[i+1]:A[0]+6.2832,a0=g+gO,a1=g2-gO;if(a1<=a0)return;
+    // wall stretches from one opening's edge to the next (their ends hide inside the flanking towers)
+    const n=Math.max(1,Math.round((a1-a0)*R/4.4));for(let j=0;j<n;j++){const a=a0+(a1-a0)*j/n,b=a0+(a1-a0)*(j+1)/n;seg.push({a,b,h:half((a+b)/2)})}
+    // the flanking towers; on a short stretch (the smallest kingdom between I-II-III) one big tower stands for both
+    const t0=g+gT,t1=g2-gT;if((t1-t0)*R<2.6){const m=(g+g2)/2;tw.push({a:m,big:true,gate:true,h:half(m)});return}
+    tw.push({a:t0,gate:true,h:half(t0)},{a:t1,gate:true,h:half(t1)});
+    const m=Math.round((t1-t0)*R/8.8);for(let j=1;j<m;j++){const a=t0+(t1-t0)*j/m;tw.push({a,big:m>2&&j==Math.round(m/2),h:half(a)})}});
+  return {seg,tw,ex,gA:gO}}
+// the braziers on plinths out in front of each exit's towers (town-local x, z), two per exit
+function dm196ExBr(R){const L=[];dm196Ring(R).ex.forEach(e=>{const ux=Math.sin(e.a),uz=-Math.cos(e.a),r=R+1.8;[-1,1].forEach(s=>L.push([ux*r+uz*s*DM196X.t,uz*r-ux*s*DM196X.t,e.h]))});return L}
 TWN100_ringK=function(k,lv,part){const R=kf109().R,G=dm196Ring(R);
   G.seg.forEach(s=>{if(s.h!==part)return;const p=dm196P(s.a,R),q=dm196P(s.b,R),dx=q[0]-p[0],dz=q[1]-p[1],L=Math.hypot(dx,dz);k.at((p[0]+q[0])/2,0,(p[1]+q[1])/2,()=>kdSegK(k,lv,L+.35),Math.atan2(-dz,dx))});
-  G.tw.forEach((t,i)=>{if(t.h!==part)return;const [x,z]=dm196P(t.a,R);k.at(x,0,z,()=>t.big?TWN100_tower(k,lv,1.45,4.2):TWN100_tower(k,lv,t.gate?1.05:.95,t.gate?3.6:3.1),t.a*1.7+i)});
-  // the gatehouses: north (part 0) and south (part 1); the town is on the gate's local +x
-  if(part==0)k.at(0,0,-R,()=>kdGateK(k,lv),-Math.PI/2);else k.at(0,0,R,()=>kdGateK(k,lv),Math.PI/2)};
+  G.tw.forEach((t,i)=>{if(t.h!==part)return;const [x,z]=dm196P(t.a,R);k.at(x,0,z,()=>t.big?TWN100_tower(k,lv,1.45,4.2):t.gate?TWN100_tower(k,lv,DM196X.tr,DM196X.th):TWN100_tower(k,lv,.95,3.1),t.a*1.7+i)});
+  // braziers on low stone plinths out in front of each exit
+  dm196ExBr(R).forEach(([x,z,h])=>{if(h!==part)return;twStones(k,TWC.stoneD,x-.3,z,x+.3,z,0,.55,.6,.3);k.as('ashlar',()=>k.p('c',TWC.stoneL,'box',x,.58,z,.74,.08,.74,0,0,0,.03));kdBrazier(k,x,z,.62,.8)})};
 kdWalls=function(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.wg=null}
   o.gate.forEach(q=>q.visible=false);o.tw.forEach(q=>q.visible=false);o.ban.forEach(q=>q.visible=false);
   const g=new THREE.Group(),F=kf109();g.name='kdWalls';
-  [0,1].forEach(part=>{const key='TWNRING196|'+lv+'|'+part+'|'+F.R;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
+  [0,1].forEach(part=>{const key='TWNRING198|'+lv+'|'+part+'|'+F.R;let k=null;if(!twHas(key)){k=twKit(611+lv*3+part);const ts=twStones;twStones=TWN100_coarse;try{TWN100_ringK(k,lv,part)}finally{twStones=ts}}const pg=twGroup(k,key);pg.name='kdWalls'+part;g.add(pg)});
   K.wg=g;T.g.add(g);K.wst=F.s;
-  const cols=[],lamps=[],G=dm196Ring(F.R);G.tw.forEach(t=>{const [x,z]=dm196P(t.a,F.R);cols.push({x:T.cx+x,z:T.cy+z,r:t.big?1.45:t.gate?.85:.95})});
-  [-1,1].forEach(gz=>[-1,1].forEach(q=>{lamps.push([T.cx+q*2.6,T.ph+1.2,T.cy+gz*(F.R-1.6)]);if(lv>=3)lamps.push([T.cx+q*3.5,T.ph+1.2,T.cy+gz*(F.R+1.25)])}));
+  const cols=[],lamps=[],G=dm196Ring(F.R);G.tw.forEach(t=>{const [x,z]=dm196P(t.a,F.R);cols.push({x:T.cx+x,z:T.cy+z,r:t.big?1.45:t.gate?DM196X.tr-.2:.95})});
+  dm196ExBr(F.R).forEach(([x,z])=>{cols.push({x:T.cx+x,z:T.cy+z,r:.42});lamps.push([T.cx+x,T.ph+1.45,T.cy+z])});
   kdCol(T,K.wcol=K.wcol||[],cols);K.wl=lv;return lamps};
 // the ring's two halves are drawn only within ~56 tiles of their half
 {const f0=townTick;townTick=function(now,pp){f0.apply(this,arguments);try{const K=KGD,T=TOWNS[0];if(!K||!K.wg||!T.g.visible)return;const z=pp.z-T.cy;
@@ -67437,7 +67465,7 @@ kdWalls=function(T,lv){const K=kdState(),o=kdOld(T);if(K.wg){T.g.remove(K.wg);K.
 kfTiles109=function(F){const T=TOWNS[0],RX=Math.ceil(DM196.WR[5]+2);
   if(!KF109.base){KF109.base=new Map();for(let dz=-RX;dz<=RX;dz++)for(let dx=-RX;dx<=RX;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x;let b=MAP[y][x];if(b=='W'||(b=='B'&&KL103.tiles.has(t)))b=Math.hypot(dx,dz)<11.2||Math.abs(dx)<1.6?'P':'.';KF109.base.set(t,b)}}
   const R=F.R;for(let dz=-RX;dz<=RX;dz++)for(let dx=-RX;dx<=RX;dx++){const x=T.cx+dx,y=T.cy+dz,t=y*W+x,b=KF109.base.get(t);if(b==null||b=='#')continue;const r=Math.hypot(dx,dz);let c=b;
-    if(Math.abs(r-R)<.8&&!(Math.abs(dx)<=3&&Math.abs(dz)<R-.5))c=Math.abs(dx)<DM196_GZ-.25?(b=='B'?'P':b):'W'; // beside the gates the wall line keeps to the gate's row
+    if(Math.abs(r-R)<.8)c=dm196ExAt(dx,dz)>=0?(b=='B'?'P':b):'W'; // v198: open at the six exits
     if(c!='W'&&KL103.tiles.has(t))c='B';
     if(MAP[y][x]!==c){MAP[y][x]=c;try{mmPaint(x,y)}catch(_){}}}};
 // a building's footprint is solid ground ('B') whatever it stands on (the lots on the rings stand on meadow and streets, not paving);
@@ -67465,9 +67493,10 @@ kfDoors109=function(){const T=TOWNS[0],F=kf109(),st=.5,R=F.R,x0=-R,z0=-R,nx=Math
 // ---------------- lantern posts, benches, crates (ward dressing) ----------------
 // lantern posts on the inner side of the walls (every ~24 degrees, clear of the gates and the lots) and round the plaza's edge
 TWN100_lpFor=function(F){const L=[],R=F.R||F.SZ,lotHit=(x,z,p)=>dm196LotHit(x,z,p);
-  for(let d=12;d<360;d+=24){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*(R-1.3)<4.2)continue;const [x,z]=dm196P(a,R-1.3);if(!lotHit(x,z,.9))L.push([x,z])}
+  for(let d=12;d<360;d+=24){const a=d*Math.PI/180;const [x,z]=dm196P(a,R-1.3);if(dm196ExAt(x,z,DM196X.t+1.6)>=0)continue;if(!lotHit(x,z,.9))L.push([x,z])} // v198: clear of every exit
   [30,90,150,210,270,330].forEach(d=>{const [x,z]=dm196P(d*Math.PI/180,11.6);if(!lotHit(x,z,1.1)&&Math.abs(x)>2.2)L.push([x,z])});
-  L.push([-3.4,-(R-2.4)],[3.4,-(R-2.4)],[-3.4,R-2.4],[3.4,R-2.4]);return L};
+  // a lantern post either side of each exit, just inside (v196: the north and south gates only)
+  dm196ExA().forEach(a=>{const ux=Math.sin(a),uz=-Math.cos(a),r=R-2.4;[-1,1].forEach(q=>{const x=ux*r+uz*q*(DM196X.o+.3),z=uz*r-ux*q*(DM196X.o+.3);if(!lotHit(x,z,.6))L.push([x,z])})});return L};
 TWN100_WD={crate:[[-9.3,-5.2,0],[3.2,-9.5,1]],bench:[[-7.6,-3.4,Math.atan2(7.6,3.4)],[-4.15,7.2,Math.atan2(4.15,-7.2)]],benchZ:0}; // benches face the fountain
 TWN100_wardK=function(k,F){const lampK=(x,z,ry)=>k.at(x,0,z,()=>{const h=2.3;k.as('bark',()=>k.L('c',TWC.woodD,[0,0,0],[0,h+.2,0],.08,'log'));k.p('c',TWC.stoneD,'dod',0,.12,0,.2,.14,.2);
       k.as('wood',()=>k.L('c',TWC.woodD,[0,h+.05,0],[.36,h+.05,0],.04,'box'));k.L('m',TWC.iron,[.32,h+.05,0],[.32,h-.1,0],.012,'cyl6',0);
@@ -67483,18 +67512,12 @@ kfWard109=function(F){const T=TOWNS[0];if(KF109.ward){T.g.remove(KF109.ward);KF1
   TWN100_LP=TWN100_lpFor(F);const key='TWNWARD196|'+F.s;let k=null;if(!twHas(key)){k=twKit(951+F.s);TWN100_wardK(k,F)}const g=twGroup(k,key);g.name='wardDress';T.g.add(g);KF109.ward=g;
   const cols=[];TWN100_LP.forEach(([x,z])=>{const a=Math.atan2(z,-x),lx=x+Math.cos(a)*.32,lz=z-Math.sin(a)*.32,l=[T.cx+lx,T.ph+2.0,T.cy+lz];TLAMP.push(l);KF109.wardLamps.push(l);cols.push({x:T.cx+x,z:T.cy+z,r:.2})});
   TWN100_WD.crate.forEach(([x,z,b])=>cols.push({x:T.cx+x,z:T.cy+z,r:b?.36:.45}));TWN100_WD.bench.forEach(([x,z])=>cols.push({x:T.cx+x,z:T.cy+z,r:.6}));kfColSet109(KF109.wardCol,cols)};
-// ---------------- the two market stalls: on the plaza's north-east edge ----------------
-// the market stalls stand on the plaza's east edge between the doors of the inner lots (CE 71°, NM 108°, the Trading Post 146°),
-// facing the fountain; their crates and a barrel sit just behind them
-const DM196_ST=(d,R)=>{const a=d*Math.PI/180;return [+(R*Math.sin(a)).toFixed(2),+(-R*Math.cos(a)).toFixed(2)]};
-KF109_STALL=[[...DM196_ST(90,8.9),0x7a3a2a,-Math.PI/2],[...DM196_ST(127,8.9),0x2a3a7a,-127*Math.PI/180]];
-const DM196_STX=[[...DM196_ST(83,10.5),.55],[...DM196_ST(97,10.5),.4],[...DM196_ST(134,10.4),.3]];
-kfStalls109=function(){const T=TOWNS[0];if(KF109.stalls&&KF109.stalls.userData.v196)return;
-  if(KF109.stalls){if(KF109.stalls.parent)KF109.stalls.parent.remove(KF109.stalls);KF109.stalls=null;kfColSet109(KF109.stallCol,[])} // the v109 stalls (old plaza)
-  const g=new THREE.Group();g.name='stalls109';
-  KF109_STALL.forEach(([x,z,c,ry])=>{const st=new THREE.Group();st.position.set(x,0,z);st.rotation.y=ry;twStall(st,c);g.add(st)});
-  {let k=null;if(!twHas('STALL196Y')){k=twKit(977);TWN100_crate(k,DM196_STX[0][0],DM196_STX[0][1],.55,.3);TWN100_crate(k,DM196_STX[1][0],DM196_STX[1][1],.4,.9);TWN100_barrel(k,DM196_STX[2][0],DM196_STX[2][1],.9)}g.add(twGroup(k,'STALL196Y'))}
-  g.userData.v196=1;T.g.add(g);KF109.stalls=g;kfColSet109(KF109.stallCol,KF109_STALL.map(([x,z])=>({x:T.cx+x,z:T.cy+z,r:.95})).concat(DM196_STX.map(([x,z,r])=>({x:T.cx+x,z:T.cy+z,r:r+.05}))))};
+// ---------------- no market stalls (v198) ----------------
+// owner (Nov 4 2026): "I dont like the stalls in the town that seem to have no purpose. Please remove." The two stalls on the plaza's
+// east edge (and the crates and barrel behind them) are gone; the v109 stalls of the old plaza stay removed too. KF109_STALL is empty,
+// so the villagers no longer browse them (3650).
+KF109_STALL=[];
+kfStalls109=function(){if(KF109.stalls){if(KF109.stalls.parent)KF109.stalls.parent.remove(KF109.stalls);KF109.stalls=null}kfColSet109(KF109.stallCol,[])};
 // ---------------- the old square's dressing: everything except the fountain stays hidden ----------------
 kfLegacy109=function(F){const T=TOWNS[0];
   if(!KF109.leg){const K=typeof KGD!='undefined'&&KGD||{},own=new Set([].concat(K.wcol||[],K.pcol||[],...Object.values(K.up||{}).map(u=>u.col||[]),...Object.values(DC103.col||{}),
@@ -67518,8 +67541,8 @@ kfWildCand109=function(){if(KF109.cand)return KF109.cand;const T=TOWNS[0],R=dkRn
   for(let z=-46;z<=46;z+=2.5)for(let x=-46;x<=46;x+=2.5){const px=x+(R()-.5)*2.1,pz=z+(R()-.5)*2.1,u=R(),s=.75+R()*.6,ry=R()*6.28,r=Math.hypot(px,pz);
     if(r>DM196.RM-1.6||r<DM196.WR[0]+2.6)continue;const X=Math.round(T.cx+px),Z=Math.round(T.cy+pz),t=MAP[Z]&&MAP[Z][X];if(!(t=='.'||t=='g'||t=='a'))continue;
     if(Math.abs(px)<4.4||ents.some(e=>Math.hypot(px-e[0],pz-e[1])<6))continue;
-    // the straight ways from the gates to the portal entries stay clear (the game's first steps lead out the north gate to Portal I)
-    if(ents.some(e=>{const gz=e[1]<0?-(DM196.WR[0]+1):DM196.WR[0]+1,vx=e[0],vz=e[1]-gz,L2=vx*vx+vz*vz,k=Math.max(0,Math.min(1,(px*vx+(pz-gz)*vz)/L2));return Math.hypot(px-vx*k,pz-gz-vz*k)<2.6}))continue;
+    // v198: each exit's straight way out to its portal's entry stays clear (and the opening's view of it)
+    if(dm196ExAt(px,pz,DM196X.o+1.6)>=0)continue;
     const ar=Math.abs(dm196Ang(px,pz))*180/Math.PI;if(r>41.3&&r<44.1&&(ar<31||ar>149))continue; // the outer path between the gates and the rooms
     L.push({x:px,z:pz,t:u<.3?(u<.12?'dead':'pine'):u<.5?'rock':u<.8?'bush':'grass',s,ry})}
   L.forEach((p,i)=>{p.ci=i});return KF109.cand=L};
@@ -67547,8 +67570,9 @@ kfWild109=function(F){const T=TOWNS[0];if(KF109.wild){T.g.remove(KF109.wild);KF1
   kfColSet109(KF109.wcol,keep.map(p=>{if(p.t!='pine'&&p.t!='dead'&&p.t!='rock')return null;const c={x:T.cx+p.x,z:T.cy+p.z,r:p.t=='rock'?.4*p.s:.3};p.col148=c;return c}).filter(Boolean));
   try{if(typeof OUT141!='undefined')OUT141.src=null}catch(_){}};
 // the gathered list of an older save belonged to the old candidates
-{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.dm196=1;return o}}
-{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!(s&&s.dm196)){OUT148.h=new Set();OUT148.hint=0}}catch(_){}return r}}
+// (v198: the candidates changed again with the six exits' clear ways, so a save from before v198 starts over too)
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.dm196=1;o.dm198=1;return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!(s&&s.dm196&&s.dm198)){OUT148.h=new Set();OUT148.hint=0}}catch(_){}return r}}
 // ---------------- the kingdom buildings (granary, chapel, barracks, keep) on ring C ----------------
 // 1850 builds them at the old square's corners; each site is moved whole (its parts keep their places relative to each other)
 var DM196_PR=[{o:[-28.5,40],k:'granary',z:1},{o:[28.6,37.5],k:'chapel',z:1},{o:[-25.5,-17.1],k:'barracks',z:0},{o:[28.1,-16.3],k:'keep',z:0}];
@@ -67560,20 +67584,29 @@ function dm196PrMap(x,z){const s=dm196PrSite(x,z);if(!s)return null;const l=dm19
   k.at=function(x,y,z,fn,ry){if(depth==0){const m=dm196PrMap(x,z);if(m){depth++;try{return at.call(k,m[0],y,m[1],fn,(ry||0)+m[2])}finally{depth--}}
       if(Math.abs(Math.abs(x)-4.4)<.01&&Math.abs(z-13.2)<.01){depth++;try{return at.call(k,x,y,9.6,fn,ry)}finally{depth--}}} // the statues of the fallen flank the plaza's south way
     depth++;try{return at.call(k,x,y,z,fn,ry)}finally{depth--}};
-  const bz=kdBrazier;kdBrazier=function(k2,x,z,y0,s){if(depth==0&&Math.abs(z-(TOWNS[0].sz||51))<.01&&Math.abs(Math.abs(x)-2.3)<.01)z=R;return bz.apply(this,[k2,x,z,y0,s])};
+  // the beacons over the south gate: v198 has no gatehouse, so each stands on its own tall pillar against the wall's outer face,
+  // beside the south exit's towers (dm196Beacon)
+  const bz=kdBrazier;kdBrazier=function(k2,x,z,y0,s){if(depth==0&&Math.abs(z-(TOWNS[0].sz||51))<.01&&Math.abs(Math.abs(x)-2.3)<.01){const [X,Z]=dm196Beacon(R,Math.sign(x));
+      twStones(k2,TWC.stone,X-.45,Z,X+.45,Z,0,y0-.12,.9,.45);k2.as('ashlar',()=>k2.p('c',TWC.stoneL,'box',X,y0-.07,Z,1.1,.12,1.1,0,0,0,.03));x=X;z=Z}return bz.apply(this,[k2,x,z,y0,s])};
   try{return f.apply(this,arguments)}finally{k.at=at;kdBrazier=bz}}}
 kdPrestige=function(T,P){const K=kdState(),o=kdOld(T);o.ban.forEach(q=>q.visible=false);let lv=0;TWN100_PR.forEach((t,i)=>{if(P>=t)lv=i+1});const st=kf109().s;if(K.pr===lv&&K.prs===st)return null;K.pr=lv;K.prs=st;
   if(K.pg){T.g.remove(K.pg);K.pg=null}if(!lv){kdCol(T,K.pcol=K.pcol||[],[]);return []}
   const key='KDP196|'+lv+'|'+st;let k=null;if(!twHas(key)){k=twKit(521+lv);TWN100_prK(k,lv)}const g=twGroup(k,key);g.name='kdPrestige';T.g.add(g);K.pg=g;
   const lamps=[[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx,sz])=>[T.cx+sx*4.6,T.ph+1.5,T.cy+sz*4.6]),c=[];
   [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>c.push({x:T.cx+sx*4.6,z:T.cy+sz*4.6,r:.42}));
-  const B=(x,z,hx,hz)=>{const m=dm196PrMap(x,z);if(!m)return;const a=Math.abs(Math.sin(m[2])),q=Math.abs(Math.cos(m[2]));c.push({x:T.cx+m[0],z:T.cy+m[1],hx:hx*q+hz*a,hz:hx*a+hz*q})};
+  // v198: a turned building's footprint as a row of circles along its long side (the box round the turned rectangle, v196, was up to
+  // 1.4x too big on the diagonal rings and stood across the exits' ways, e.g. the keep's hall beside exit III)
+  const B=(x,z,hx,hz)=>{const m=dm196PrMap(x,z);if(!m)return;const co=Math.cos(m[2]),sn=Math.sin(m[2]),r=Math.min(hx,hz),L=Math.max(hx,hz)-r,ax=hx>=hz?[co,-sn]:[sn,co],n=Math.max(1,Math.ceil(L/(r*.6)));
+    for(let i=0;i<=n;i++){const t=n?-L+2*L*i/n:0;c.push({x:T.cx+m[0]+ax[0]*t,z:T.cy+m[1]+ax[1]*t,r:r*1.02})}};
   if(lv>=2){B(-28.5,35.5,1.75,2.1);B(-28.5,44.5,1.45,1.45)}
   if(lv>=3){B(28.6,35.5,2.1,3.0);B(28.6,39.5,1.3,1.3)}
   if(lv>=4){B(-28.6,-16.8,2.5,2.2);B(-22.4,-17.4,1.1,1.1)}
   if(lv>=5){B(24.8,-16.4,2.4,3.4);{const m=dm196PrMap(31.4,-16.2);c.push({x:T.cx+m[0],z:T.cy+m[1],r:1.7})}}
+  if(lv>=5)[-1,1].forEach(s=>{const [X,Z]=dm196Beacon(kf109().R,s);c.push({x:T.cx+X,z:T.cy+Z,r:.6})});
   if(lv>=6)[-1,1].forEach(s=>c.push({x:T.cx+s*4.4,z:T.cy+9.6,r:.75}));
-  kdCol(T,K.pcol=K.pcol||[],c);if(lv>=5)[-1,1].forEach(s=>lamps.push([T.cx+s*2.3,T.ph+5.5,T.cy+kf109().R]));return lamps};
+  kdCol(T,K.pcol=K.pcol||[],c);if(lv>=5)[-1,1].forEach(s=>{const [X,Z]=dm196Beacon(kf109().R,s);lamps.push([T.cx+X,T.ph+5.5,T.cy+Z])});return lamps};
+// v198: where a south-gate beacon stands (town-local): outside the wall, past the south exit's tower on side s
+function dm196Beacon(R,s){return [s*(DM196X.t+DM196X.tr+1.0),R+.95]}
 // the windmill's sails follow the granary
 {const f=TWN100_mill;TWN100_mill=function(T,on){const r=f.apply(this,arguments);try{if(TWN100_MILL&&!TWN100_MILL.dm196){TWN100_MILL.dm196=1;const m=dm196PrMap(-28.5+1.85,44.5);
   TWN100_MILL.position.set(T.cx+m[0],T.ph+5.1,T.cy+m[1]);TWN100_MILL.rotation.y=Math.PI/2+m[2];const a=TANIM.find(q=>q.x===T.cx-28.5+1.85);if(a){a.x=TWN100_MILL.position.x;a.z=TWN100_MILL.position.z}}}catch(e){console.warn('v196 mill',e)}return r}}
@@ -68026,7 +68059,9 @@ function dm196R(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;
 function dm196Undo(o){const L=o._pz;if(!L)return;for(const [b,x,y,z,py] of L){if(py!=null){b.position.y=py;continue}b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}o._pz=null}
 function dm196Sit(g,h){const B=g.bones,R=g.userData.rest;if(!B.pelvis||!R)return;
   // thighs forward, shins down; the pelvis drops so the seat carries it (h = seat height)
-  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto itif(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
+  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto it
+  // v198: this line used to share the comment's line above, so it never ran and the body stayed at standing height (inside the rim)
+  if(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
   ['lh0','rh0'].forEach(k=>dm196R(g,k,-1.42,0,0));['lh1','rh1'].forEach(k=>dm196R(g,k,1.38,0,0));['lh2','rh2'].forEach(k=>dm196R(g,k,.08,0,0));dm196R(g,'spine',.06)}
 function dm196Pose(o,now){const g=o.g,A=o.act,t=now/1000+(o.i||0)*1.7;if(!A||!g.bones)return;const s=A.s;DM196V.cur=o._pz=[];try{dm196Pose0(o,g,A,s,t)}finally{DM196V.cur=null}}
 function dm196Pose0(o,g,A,s,t){
@@ -68080,8 +68115,8 @@ function dm196WallTopP(d){const R=kf109().R,W=typeof dcWall104=='function'?dcWal
 function dm196WallTop(d){const R=kf109().R;let best=null;const W=typeof dcWall104=='function'?dcWall104():null;if(!W)return null;for(const o of [0,.25,-.25])for(const e of [0,.35,-.35,.7,-.7]){const [a,b]=dm196A(d+e/R*57.3,R+o),t=W.top(a,b);if(t!=null&&(best==null||t>best))best=t}return best} // palisade logs have gaps: sample along the wall too
 // the wall ring must be the current stage's before anything is placed along it (a stage change can rebuild the decorations first)
 function dm196WallsNow(){try{const K=kdState(),T=TOWNS[0],lv=kdLv('walls');if(!K.wg||K.wst!==kf109().s||K.wl!==lv)K.wlamps=kdWalls(T,lv)||[]}catch(e){console.warn('v196 walls',e)}}
-// wall angles kept clear of the gates (|x| < 4.5 at the wall)
-function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180;if(Math.abs(Math.sin(a))*R<4.6)continue;L.push(d)}return L}
+// wall angles kept clear of the exits (v198: all six, beyond their flanking towers; v196 kept |x| < 4.6 clear for the two gates)
+function dm196WallAngles(step,off){const R=kf109().R,L=[];for(let d=off;d<360;d+=step){const a=d*Math.PI/180,[x,z]=dm196A(d,R);if(dm196ExAt(x,z,DM196X.t+DM196X.tr+.3)>=0)continue;L.push(d)}return L}
 // ---------------- spots ----------------
 dc190Def('obelisk',{sp:[dm196A(127,17.4)]});
 dc190Def('statue',{sp:[dm196A(-153,17.4)]});

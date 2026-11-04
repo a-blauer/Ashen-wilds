@@ -22,11 +22,14 @@ function wdDeco(){const T0=performance.now();
   // ---------- shared shapes ----------
   const twig=(x,y,z,len,rz,ry,hex,th)=>F(cyl(th*.4,th,len,4),hex,{j:.02},0,len/2,0,0,0,0).rotateZ(rz).rotateY(ry).translate(x,y,z);
   const deadTree=(bark,moss,o)=>{o=o||{};const p=[F(cyl(.09,.24,2.6,6),bark,{j:.05,lo:.6,hi:.4,f:(x,y,z)=>{const a=y*.9;return [x*Math.cos(a)-z*Math.sin(a)+y*y*.05,y,x*Math.sin(a)+z*Math.cos(a)]}},0,1.3,0)];
-    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{p.push(twig(0,y,0,1.1,s,a,bark,.06));p.push(twig(-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
+    // v198: the trunk bends sideways as it rises (y*y*.05 in x, see f above), so each branch, its side twig and its moss start on the
+    // bent centre line at their height (they started on the straight one and stood beside the trunk in the air)
+    const bow=y=>y*y*.05;
+    [[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a])=>{const b=bow(y);p.push(twig(b,y,0,1.1,s,a,bark,.06));p.push(twig(b-Math.sin(s)*Math.cos(a)*.55,y+Math.cos(s)*.55,Math.sin(s)*Math.sin(a)*.55,.6,s*1.3,a+.35,bark,.035))   /* v177: the side twig grows out of its branch (it stood off the other side, in the air) */});
     p.push(F(cyl(.25,.38,.25,6),bark,{j:.04},0,.1,0));
     if(moss)[[.9,2.1,.3],[-.8,1.7,2.4],[.7,2.4,4.1],[-.5,2.6,5.3]].forEach(([s,y,a],i)=>{const L=.6+i%3*.25;   // v177: each strand hangs from its branch (they hung beside the trunk, on the far side, in the air)
-      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
-    if(o.snow){p.push(F(dome(.1,6),0xf4f8ff,{j:.01},0,2.6,0,0,0,0,[1,.7,1]));return ep185Snow(M(p),.9,.55)}return M(p)};   // v185: snow painted on the tops of the branches (was a 60 cm snowball on a 18 cm trunk)
+      p.push(F(cone(.07,L,4),moss,{j:.03,lo:.9,hi:.3},bow(y)-.6*Math.sin(s)*Math.cos(a),y+.6*Math.cos(s)-L/2+.03,.6*Math.sin(s)*Math.sin(a),Math.PI))});
+    if(o.snow){p.push(F(dome(.1,6),0xf4f8ff,{j:.01},bow(2.6),2.6,0,0,0,0,[1,.7,1]));return ep185Snow(M(p),.9,.55)}return M(p)};   // v185: snow painted on the tops of the branches (was a 60 cm snowball on a 18 cm trunk)
   const rockG=(hex,top,sx,sy,sd)=>F(dod(1),hex,{j:.25,top,tt:.5},0,sy*.55,0,0,sd||0,0,[sx,sy,sx*.85]);
   const stump=(bark,inner)=>M([F(cyl(.3,.4,.5,7),bark,{j:.05},0,.25,0),F(disc(.29,7),inner,{lo:1,hi:0},0,.505,0,-Math.PI/2),F(cyl(.06,.12,.5,4),bark,{},.35,.12,0,0,0,1.2),F(cyl(.05,.1,.4,4),bark,{},-.3,.1,.15,0,0,-1.3)]);
   const logG=(bark,moss)=>M([F(cyl(.28,.32,2.6,7),bark,{j:.05,top:moss,tt:.6},0,.26,0,0,0,Math.PI/2),F(disc(.27,7),0x8a6a48,{lo:1,hi:0},1.31,.26,0,0,Math.PI/2),F(cyl(.08,.1,.5,4),bark,{},.4,.5,.1,.6,0,.4)]);
@@ -45,7 +48,7 @@ function wdDeco(){const T0=performance.now();
   const crossG=(hex)=>M([F(box(.12,1.1,.1),hex,{j:.02},0,.55,0),F(box(.6,.12,.1),hex,{j:.02},0,.82,0),F(dome(.35,6),0x3e3428,{j:.06},0,0,.5,0,0,0,[1,.35,1.6])]);
   const fenceG=(wood)=>M([F(box(.12,.95,.12),wood,{j:.02},-1.15,.47,0),F(box(.12,.85,.12),wood,{j:.02},1.15,.42,0),F(box(2.5,.1,.06),wood,{j:.02},0,.7,0,0,0,.03),F(box(2.5,.1,.06),wood,{j:.02},0,.38,0,0,0,-.04)]);
   const ironFence=()=>{const p=[F(box(2.4,.08,.06),0x2a2a30,{},0,.9,0),F(box(2.4,.08,.06),0x2a2a30,{},0,.3,0)];for(let i=0;i<7;i++){p.push(F(box(.05,1.1,.05),0x2a2a30,{},-1.1+i*.367,.55,0),F(cone(.06,.18,4),0x3a3a40,{},-1.1+i*.367,1.18,0))}return M(p)};
-  const reeds=(st,hd)=>{const p=[];for(let i=0;i<9;i++){const a=i*2.4,r=.1+(i%3)*.12,h=.8+((i*53)%10)/14;p.push(F(cyl(.012,.025,h,3),st,{},Math.cos(a)*r,h/2,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2));if(i%3==0)p.push(F(cyl(.04,.04,.22,5),hd,{},Math.cos(a)*r,h-.05,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2))}
+  const reeds=(st,hd)=>{const p=[];for(let i=0;i<9;i++){const a=i*2.4,r=.1+(i%3)*.12,h=.8+((i*53)%10)/14;p.push(F(cyl(.012,.025,h,3),st,{},Math.cos(a)*r,h/2,Math.sin(a)*r,(i%2-.5)*.25,0,(i%3-1)*.2));if(i%3==0){const rx=(i%2-.5)*.25,rz=(i%3-1)*.2,u=h/2-.06;p.push(F(cyl(.04,.04,.22,5),hd,{},Math.cos(a)*r-u*Math.cos(rx)*Math.sin(rz),h/2+u*Math.cos(rx)*Math.cos(rz),Math.sin(a)*r+u*Math.sin(rx),rx,0,rz))}} // v198: the head on its stalk's tilted tip (it stood at the upright tip, in the air)
     for(let i=0;i<5;i++){const a=i*1.3;p.push(F(cone(.05,.9,3),st,{lo:.6},Math.cos(a)*.15,.4,Math.sin(a)*.15,Math.cos(a)*.35,0,Math.sin(a)*.35))}return M(p)};
   const fern=(c)=>{const p=[];for(let i=0;i<7;i++){const a=i/7*6.283;p.push(F(cone(.13,.9,3),c,{lo:.55,hi:.6},0,.45,0,0,0,0,[1,1,.25]).rotateZ(1.05).rotateY(a))}return M(p)};
   const flowers=(cols)=>{const p=[];for(let i=0;i<11;i++){const a=i*2.39,r=.15+Math.sqrt(i)*.18,h=.22+((i*31)%10)/40,x=Math.cos(a)*r,z=Math.sin(a)*r;p.push(F(cyl(.01,.014,h,3),0x3a6a2a,{},x,h/2,z),F(disc(.07,5),cols[i%cols.length],{lo:1,hi:0},x,h,z,-Math.PI/2),F(oct(.025),0xffe070,{lo:1,hi:0},x,h+.015,z))}return M(p)};

@@ -56,7 +56,9 @@ function dm196R(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;
 function dm196Undo(o){const L=o._pz;if(!L)return;for(const [b,x,y,z,py] of L){if(py!=null){b.position.y=py;continue}b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}o._pz=null}
 function dm196Sit(g,h){const B=g.bones,R=g.userData.rest;if(!B.pelvis||!R)return;
   // thighs forward, shins down; the pelvis drops so the seat carries it (h = seat height)
-  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto itif(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
+  const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto it
+  // v198: this line used to share the comment's line above, so it never ran and the body stayed at standing height (inside the rim)
+  if(DM196V.cur)DM196V.cur.push([B.pelvis,0,0,0,B.pelvis.position.y]);B.pelvis.position.y=R.pelvis[4]-drop/(g.userData.sy||1);
   ['lh0','rh0'].forEach(k=>dm196R(g,k,-1.42,0,0));['lh1','rh1'].forEach(k=>dm196R(g,k,1.38,0,0));['lh2','rh2'].forEach(k=>dm196R(g,k,.08,0,0));dm196R(g,'spine',.06)}
 function dm196Pose(o,now){const g=o.g,A=o.act,t=now/1000+(o.i||0)*1.7;if(!A||!g.bones)return;const s=A.s;DM196V.cur=o._pz=[];try{dm196Pose0(o,g,A,s,t)}finally{DM196V.cur=null}}
 function dm196Pose0(o,g,A,s,t){

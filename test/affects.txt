@@ -103,5 +103,6 @@ v192|1090-|1910-|1870-|decor|abilit|character-slots|title-screen|creator: v192_m
 v193|blade-title|title-screen|character-slots|0560-|0600-: v193_title.py v73t.py v116_slots.py v94_creator.py
 v194|rune|sanctum|curio|magic-shop|reforge: v194_shops.py v194_rune_look.py v194_coop_runes.py v109_kingdom_shops.py v137_evolve.py
 v195|beast-kit|weasel|3600|3601|1420-|2100|2120: v195_weasel.py v195_coop_weasel.py v114_race.py v136_gear.py v192_hero_fit.py v117_creator.py v137_npcs.py v142_folk.py
-0045|36[0-9][0-9]|duskhold|kingdom|1860|1870|1910|1960|3074|3076|3490|3081: v196_meadow.py v150_coop.py v137_npcs.py v142_folk.py v197_arms.py
+0045|36[0-9][0-9]|duskhold|kingdom|1860|1870|1910|1960|3074|3076|3490|3081: v198_town.py v196_meadow.py v150_coop.py v137_npcs.py v142_folk.py v197_arms.py
 v197|3680|relaxed|arms|elbow: v197_arms.py v137_npcs.py v142_folk.py v196_meadow.py v143_lantern_road.py v150_coop.py
+v198|1680|2270|deadTree|reeds|fountain|rim|stall|exit|v198_limbs: v198_town.py v177_env.py v196_meadow.py v197_arms.py
