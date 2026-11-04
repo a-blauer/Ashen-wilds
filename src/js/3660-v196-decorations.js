@@ -31,7 +31,7 @@ dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
 dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-3.4)],[4.9,-(F.R-3.4)]]}); // by the north gate (the way to the first portals)
 dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(143.5,27.8),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-143.5,27.8)]});
-dc190Def('gatepoles',{spf:F=>[[-4.3,F.R-1.9],[4.3,F.R-1.9]]});
+dc190Def('gatepoles',{spf:F=>{const x=DM196X.t+DM196X.tr+1.0;return [[-x,F.R-2.0],[x,F.R-2.0]]}}); // v198: beside the south exit's towers (they stood inside them)
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
 dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
@@ -63,7 +63,7 @@ dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-69.5,-
     const ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);for(let i=0;i<9;i++){const t=(i+.5)/9;dc190Ext(k,'c',[C.crim,C.blk,0xb8ac90,0x5a1820][(i+j)%4],'pen',[[-.15,0],[.15,0],[0,-.36]],.02,dt168Mx(a[0]+(b[0]-a[0])*t,Y(t)-.01,a[1]+(b[1]-a[1])*t,.08*Math.sin(i*2.1),ry,0),'cloth')}})},
   col(){const o=[];[52.5,90,127,-69.5,-108.5,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
 // flower baskets on the lantern posts along the walls (the arm points toward the plaza)
-dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-3).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
+dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-1.8).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
     dc190Rod(k,'m',C.iron,[x+ux*.05,1.86,z+uz*.05],[bx,1.86,bz],.012,'iron',4);for(let j=0;j<3;j++){const q=j/3*6.283;dc190Rod(k,'m',C.iron,[bx,1.86,bz],[bx+Math.cos(q)*.15,1.5,bz+Math.sin(q)*.15],.004,'iron',3)}
     dc190L(k,'c',0x6a4e2e,[[0,0],[.08,0],[.17,.08],[.2,.17],[.18,.18],[.13,.06],[0,.05]],10,bx,1.33,bz,0,1,'straw');
     for(let j=0;j<5;j++){const q=j*1.26+i;dc190Clump(k,[0x2a4430,0x324e36][j%2],bx+Math.cos(q)*.1,1.52,bz+Math.sin(q)*.1,.1,.08,.1,i+j);dc190P(k,'c',[0xe8e0f0,0x8a5ac0,0x7a2a3a][(i+j)%3],dc190Ball(),dt168Mx(bx+Math.cos(q)*.13,1.58,bz+Math.sin(q)*.13,0,0,0,.04,.03,.04),'cloth')}})}});

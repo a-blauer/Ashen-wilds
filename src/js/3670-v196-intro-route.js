@@ -16,8 +16,8 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   legs.push(door?[npcSt[1],inD].concat(go(door,npcSt[2])):go(npcSt[1],npcSt[2]));
   legs.push(go(npcSt[2],npcSt[3]));
   legs.push(go(npcSt[3],CS));
-  const gin=[T.cx+.4,T.cy-10.6],gout=[T.cx,T.cy-R-1.8];legs.push(go(CS,gin).concat([[T.cx,T.cy-12.4]])); // up the plaza toward the north gate (the cut picks him up outside it)
-  // the cut: outside the north gate, a few steps toward Portal I's entry
+  const gin=[T.cx+.4,T.cy-10.6],a0=dm196ExA()[0],gout=[T.cx+Math.sin(a0)*(R+1.8),T.cy-Math.cos(a0)*(R+1.8)]; // v198: outside Portal I's own exit (v196: the north gate)legs.push(go(CS,gin).concat([[T.cx,T.cy-12.4]])); // up the plaza toward the north gate (the cut picks him up outside it)
+  // the cut: outside Portal I's exit in the walls, a few steps on toward its entry (on the exit's cleared way)
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}
 // the town part is replayed exactly by the intro preview (v159): its random choices (a companion sniffing about while the hero
