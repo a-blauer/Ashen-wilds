@@ -255,7 +255,9 @@ function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bf
 // a flick of the tail: a sideways push on its springs (brTailAnim's state), rolling down to the tip
 function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;i++)T.y[i*2+1]+=v*(1+i*.15)}
 {const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
-  try{const D=H&&H._race?BRD[H._race]:null;if(BF195.on&&D&&D.bf&&H.bones&&!H._foe)bf195Motion(H,D,now||0)}catch(e){if(!BF195.err){BF195.err=1;console.warn('v195 motion',e)}}return r}}
+  try{const D=H&&H._race?BRD[H._race]:null;if(BF195.on&&D&&D.bf&&H.bones&&!H._foe){bf195Motion(H,D,now||0);
+    // the motion layer moves the arms after v135 set the carried bow steady in the hero's frame: set it again (v164 dash grip)
+    if(typeof bow135Carry=='function'&&!(H===pl&&typeof riding!='undefined'&&riding))bow135Carry(H)}}catch(e){if(!BF195.err){BF195.err=1;console.warn('v195 motion',e)}}return r}}
 
 // ---------------- a race's own skeleton ----------------
 // Owner (Nov 3 2026): "we need new bones for each hero so they can match the skeleton of their own animal. weasel should have
