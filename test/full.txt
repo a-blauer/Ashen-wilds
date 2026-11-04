@@ -146,3 +146,4 @@ SHOTS=0 v194_rune_look.py
 v194_coop_runes.py
 v195_weasel.py
 v195_coop_weasel.py
+v196_meadow.py

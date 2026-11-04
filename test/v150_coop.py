@@ -93,7 +93,15 @@ DSIG="""()=>{const T=TOWNS[0];['obelisk','statue','torches','pavilion','beacon']
   return DECO103.filter(D=>SH.deco[D.k]===1&&DC103.g[D.k]).map(D=>{let n=0,v=0;DC103.g[D.k].traverse(m=>{if(m.isMesh&&m.geometry){n++;v+=m.geometry.attributes.position.count}});
     return [D.k,n,v,(DC103.col[D.k]||[]).map(c=>[+(c.x-T.cx).toFixed(2),+(c.z-T.cy).toFixed(2)]).join(';')]})}"""
 dh=KH.evaluate(DSIG);dg=KG.evaluate(DSIG)
-chk('v190 decorations identical for host and guest',dh==dg and any(q[0]=='obelisk' and q[2]>0 and q[3]=='-8.5,4.8' for q in dh),json.dumps([dh,dg])[:900])
+ob=KH.evaluate("()=>{const T=TOWNS[0],c=DC103.col.obelisk&&DC103.col.obelisk[0];return c?(+(c.x-T.cx).toFixed(2))+','+(+(c.z-T.cy).toFixed(2)):''}")
+chk('v190 decorations identical for host and guest',dh==dg and any(q[0]=='obelisk' and q[2]>0 and q[3]==ob for q in dh) and ob=='13.9,10.47',json.dumps([ob,dh,dg])[:900]) # v196: the obelisk stands in the ring-A gap at 127 degrees
+# v196: the round town's buildings at the host's levels (a Trading Post upgrade), and the same sealed entryways
+KH.evaluate("()=>{gold+=1e6;for(const k of Object.keys(RES))mats[k]=9999;shpBuy109('post')}")
+poll(lambda:KH.evaluate("()=>DM196TP.lv")>0 and KG.evaluate("()=>DM196TP.lv")==KH.evaluate("()=>DM196TP.lv"),40000)
+r=[KH.evaluate("()=>[DM196TP.lv,SHP109.lv.post|0]"),KG.evaluate("()=>[DM196TP.lv,SHP109.lv.post|0]")]
+chk('v196 partner sees the Trading Post at the host level',r[0][0]>0 and r[0]==r[1],json.dumps(r))
+r=[pg.evaluate("()=>[DM196P.seal.map(s=>s?s.g.visible:null).join(','),!!DM196I.g,DM196P.trees.length,!!(TOWNS[0].tv&&TOWNS[0].mp)]") for pg in (KH,KG)]
+chk('v196 same seals, inn and forest for host and guest',r[0]==r[1] and r[0][1] and r[0][2]>10,json.dumps(r))
 # the guest's save still holds its own kingdom
 r=KG.evaluate("()=>{const o=x2Save();return [JSON.stringify(o.shp),JSON.stringify(o.kdeco||{})]}")
 chk('guest save keeps own kingdom',r[0]==own,json.dumps([r,own]))

@@ -42,8 +42,8 @@ function dm196Spots(){const T=TOWNS[0],sig=KL103.ver+'|'+kf109().s+'|'+(shopBuil
   // the plaza benches (two places each)
   TWN100_WD.bench.forEach(([bx,bz,bry])=>{[-.4,.4].forEach(o=>{const x=T.cx+bx+Math.cos(bry)*o,z=T.cy+bz-Math.sin(bry)*o;add({k:'bench',act:'rest',x,z,ry:bry,sit:1,h:.44,w:2,app:[x+Math.sin(bry)*.8,z+Math.cos(bry)*.8]})})});
   // before the Bard's Stage: an arc of listeners facing the stage
-  if(shopBuilt('bard')){const bl=lotOf103('bard');if(bl)for(let i=0;i<6;i++){const u=(i-2.5)*1.05,v=7.0+Math.abs(u)*.35,[x,z]=lotW103(bl,u,v),[sx,sz]=lotW103(bl,0,3);
-    if(!kfIn109(x-T.cx,z-T.cy,.5)||dm196LotHit(x-T.cx,z-T.cy,.3))continue;add({k:'listen',act:'listen',x,z,ry:Math.atan2(sx-x,sz-z),sit:0,w:3})}}
+  if(shopBuilt('bard')){const bl=lotOf103('bard');if(bl)for(let i=0;i<6;i++){const u=(i-2.5)*1.05,v=5.6+Math.abs(u)*.25,[x,z]=lotW103(bl,u,v),[sx,sz]=lotW103(bl,0,3);
+    if(!kfIn109(x-T.cx,z-T.cy,.5)||dm196LotHit(x-T.cx,z-T.cy,0))continue;add({k:'listen',act:'listen',x,z,ry:Math.atan2(sx-x,sz-z),sit:0,w:3})}}
   // the market stalls: browse the wares
   KF109_STALL.forEach(([sx,sz,c,ry])=>{const x=T.cx+sx+Math.sin(ry)*1.25,z=T.cy+sz+Math.cos(ry)*1.25;add({k:'stall',act:'browse',x,z,ry:ry+Math.PI,sit:0,w:2})});
   DM196V.spots=S;DM196V.ver=sig;return S}

@@ -56,6 +56,14 @@ function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=1.75;
     // the instanced mesh sits at the origin: its bounds are the trees' own (world) bounds
     im.geometry.boundingSphere=g.boundingSphere;im.receiveShadow=true;im.castShadow=false;im.userData.lpsSkip=1;im.userData.dm196=1;im.name='dm196forest';scene.add(im);DM196P.trees.push(im)});
   DM196P.n=pick.length}
+// the forest's far side: a dark wall of undergrowth and trunks standing on the edge of the ground (where the void begins), so
+// nothing of the sky shows between the trees at eye height; it fades into the fog like the woods behind it
+function dm196Backdrop(){const D=DM196,P=[],C=[],c0=new THREE.Color(0x0c140e),c1=new THREE.Color(0x1a2a1c),T=TOWNS[0];
+  const g=(x,y)=>{if(x<D.x0||y<D.y0||x>=D.x0+D.nx||y>=D.y0+D.ny)return 99;return MAP.DW[y*W+x]};
+  const quad=(ax,az,bx,bz)=>{const ya=GH(ax,az)-2.5,yb=GH(bx,bz)-2.5,h=15+2*Math.sin(ax*.7+az*.3);P.push(ax,ya,az,bx,yb,bz,bx,yb+h,bz,ax,ya,az,bx,yb+h,bz,ax,ya+h,az);[0,0,1,0,1,1].forEach(t=>{const q=c0.clone().lerp(c1,t);C.push(q.r,q.g,q.b)})};
+  for(let y=D.y0;y<D.y0+D.ny-1;y++)for(let x=D.x0;x<D.x0+D.nx-1;x++){const a=g(x,y)<0;if(a!==(g(x+1,y)<0))quad(x+.5,y-.5,x+.5,y+.5);if(a!==(g(x,y+1)<0))quad(x-.5,y+.5,x+.5,y+.5)}
+  if(!P.length)return;const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(C,3));geo.computeVertexNormals();geo.computeBoundingSphere();
+  const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:true}));m.userData.lpsSkip=1;m.name='dm196backdrop';m.castShadow=false;m.receiveShadow=false;scene.add(m);DM196P.bd=m}
 // ---------------- the entryways ----------------
 // the frame of entry i in world coords: c = centre of the arch on the path, f = the way in (unit, from the meadow toward the room)
 function dm196EntF(i){const T=TOWNS[0],c=DM196.rooms[i],L=Math.hypot(c[0],c[1]),f=[c[0]/L,c[1]/L],r=DM196.RM+.6;return {x:T.cx+f[0]*r,z:T.cy+f[1]*r,f,ry:Math.atan2(f[0],f[1])}}
@@ -110,4 +118,4 @@ TWN100_wmap=function(g,P,lab){PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(
 {const f=signPaint;signPaint=function(c,lines,bg,fg,bd,np){const L=Array.isArray(lines)&&lines.length>1?[Object.assign({},lines[0],{f:(lines[0].f||'700 40px').replace(/\d+px/,m=>Math.round(parseInt(m)*1.18)+'px')})]:lines;return f.call(this,c,L,bg,fg,bd,np)}}
 function dm196Signs(){try{(SGNR||[]).forEach(r=>{if(r&&r.c&&r.a&&Array.isArray(r.a[0])&&r.a[0].length>1){signPaint(r.c,...r.a);r.t.needsUpdate=true}})}catch(e){console.warn('v196 signs',e)}}
 // ---------------- build ----------------
-try{dm196NoRoad();dm196Forest();dm196Entries();dm196Signs();DM196P.built=1;portalRefresh()}catch(e){console.warn('v196 rooms',e)}
+try{dm196NoRoad();dm196Forest();dm196Backdrop();dm196Entries();dm196Signs();DM196P.built=1;portalRefresh()}catch(e){console.warn('v196 rooms',e)}

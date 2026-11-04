@@ -28,7 +28,7 @@ dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
 dc190Def('brazier',{spf:F=>[[-4.9,F.R-2.3],[4.9,F.R-2.3]]});
 dc190Def('trees',{spf:F=>[dm196A(144,27),dm196A(150.5,28.6),dm196A(147,25.6),dm196A(-144,27),dm196A(-150.5,28.6),dm196A(-147,25.6)]});
-dc190Def('gatepoles',{spf:F=>[[-3.1,F.R-1.5],[3.1,F.R-1.5]]});
+dc190Def('gatepoles',{spf:F=>[[-4.0,F.R-1.6],[4.0,F.R-1.6]]});
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
 dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
@@ -37,7 +37,7 @@ dc190Def('garden',{spf:F=>[dm196A(-32.5,27.6)]});
 dc190Def('beacon',{spf:F=>[dm196A(32.5,27.6)]});
 {const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-108.5,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
 // stone benches along the first ring street, each facing it
-{const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(140,23.0),dm196Face(140)]];
+{const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(-147.5,23.2),dm196Face(-147.5)]];
   D.b=function(k,D){D.sp.forEach(([x,z,ry])=>k.at(x,0,z,()=>{dc190B(k,'c',0x77737c,1.55,.1,.46,0,.47,0,0,'ashlar',.02);
     [-1,1].forEach(s=>dc190Ext(k,'c',0x5c5862,'benchleg',[[-.2,0],[.2,0],[.16,.06],[.12,.32],[.18,.42],[-.18,.42],[-.12,.32],[-.16,.06]],.14,dt168Mx(s*.56,0,0,0,Math.PI/2,0),'ashlar',.012))},ry))};
   D.col=function(D){return D.sp.map(([x,z])=>[x,z,.7])}}}
