@@ -105,7 +105,7 @@ r=[pg.evaluate("()=>[DM196P.seal.map(s=>s?s.g.visible:null).join(','),!!DM196I.g
 chk('v196 same seals, inn and forest for host and guest',r[0]==r[1] and r[0][1] and r[0][2]>10,json.dumps(r))
 # v197: the townsfolk have relaxed arms on both sides (every client builds the folk with the same arm data)
 ASIG="""()=>{const L=[];try{(CZ103.live||[]).forEach(o=>{if(o.g)L.push(o.g)})}catch(e){}try{(npc.all||[]).forEach(g=>L.push(g))}catch(e){}
-  let n=0,r=0;const E={};L.forEach(g0=>{const g=g0.bones?g0:g0.children.find(c=>c.bones);if(!g||!g.bones.pelvis)return;n++;const A=rlx197Of(g);if(A){r++;const sp=(g.children.find(m=>m.isSkinnedMesh&&m.userData.fk)||{userData:{}}).userData.fk;if(sp)E[sp]=A.E.aL1.map(v=>+v.toFixed(3)).join(',')}});
+  let n=0,r=0;const E={};L.forEach(g0=>{const g=g0.bones?g0:g0.children.find(c=>c.bones);if(!g||!g.bones.pelvis||!g.children.some(m=>m.isSkinnedMesh&&m.userData.fk))return;n++;const A=rlx197Of(g);if(A){r++;const sp=(g.children.find(m=>m.isSkinnedMesh&&m.userData.fk)||{userData:{}}).userData.fk;if(sp)E[sp]=A.E.aL1.map(v=>+v.toFixed(3)).join(',')}});
   return [n,r,Object.keys(E).sort().map(k=>k+':'+E[k]).join(';')]}"""
 r=[pg.evaluate(ASIG) for pg in (KH,KG)]
 PSIG="""()=>{const V=THREE.Vector3,out=[];for(const k in (MP.rh||{})){const m=MP.rh[k]&&MP.rh[k].m;if(!m||!m.bones||!m.bones.aL1)continue;m.updateMatrixWorld(true);

@@ -8,13 +8,13 @@
 // Now, for a side with nothing registered in the hand (no `_grip` entry on that side), outside attack / ability poses and
 // never while riding:
 //   * the race's elbow is taken off again (kept in part while running, where a bent elbow is natural);
-//   * walking: the elbow bends as the arm swings forward and opens as it swings back (forwardness measured from the
+//   * walking and running: the elbow bends as the arm swings forward and opens as it swings back (forwardness measured from the
 //     shoulder's swing against its own slow average, so it follows every race's and class's swing);
 // Written through brAddR, so the v114 layer's exact undo (brUndo) takes it off before the next frame.
 // Partners: their heroes run the same animHero on the guest's machine (0520) with their gear registered (gripReg), so they
 // get the same relaxed hand; nothing random.
 // =====================================================================================================
-var RLX197H={on:true,keep:.55,flex:.34,base:.06,run:[2.4,5]};
+var RLX197H={on:true,keep:.55,flex:.34,base:.06,open:.3,run:[2.4,5]};
 function rlx197HEmpty(H,sd){const G=H._grip;if(!G||!G.L)return true;return !G.L.some(e=>e.side==sd&&e.W&&e.W.parent)}
 function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
   const S=H._rlxH||(H._rlxH={t:null,m:{L:null,R:null}}),dt=S.t==null?0:Math.min(.1,Math.max(0,((now||0)-S.t)/1000));S.t=now||0;
@@ -24,7 +24,7 @@ function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
   ['L','R'].forEach(sd=>{if(!rlx197HEmpty(H,sd)){S.m[sd]=null;return}
     const u=b['a'+sd+'0'],x=u.rotation.x;let m=S.m[sd];if(m==null)m=x;m+=(x-m)*Math.min(1,dt/.6);S.m[sd]=m;
     // cancel most of the race's elbow (less while running); then the swing: forward (x below its average) bends the elbow
-    const fw=Math.max(-1,Math.min(1,(m-x)/.22)),flex=-(RLX197H.base+RLX197H.flex*Math.max(0,fw))*w*(1-.6*run);
+    const fw=Math.max(-1,Math.min(1,(m-x)/.22)),flex=(-(RLX197H.base+RLX197H.flex*Math.max(0,fw))+RLX197H.open*run*Math.max(0,-fw))*w; // running: the elbow also opens on the back swing (the arm pumps)
     const off=(-el*(1-RLX197H.keep*run)+flex)*arm;if(Math.abs(off)>1e-5)brAddR(H,'a'+sd+'1','x',off)})}
 {const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
   try{const D=H&&H._race?BRD[H._race]:null,rid=H===pl&&typeof riding!='undefined'&&!!riding;

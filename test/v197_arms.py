@@ -57,7 +57,8 @@ HJS=r"""()=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s);window.VT=pe
  if(!rlx197HEmpty(pl,'L')||rlx197HEmpty(pl,'R'))fail('warrior: expected an empty left hand and a weapon in the right ('+rlx197HEmpty(pl,'L')+','+rlx197HEmpty(pl,'R')+')');
  STEP(90);const L1=ang('L'),R1=ang('R');RLX197H.on=false;STEP(30);const L0=ang('L'),R0=ang('R');RLX197H.on=true;STEP(30);
  out.info.push('standing elbows: empty left '+L1.toFixed(1)+' (layer off '+L0.toFixed(1)+'), sword right '+R1.toFixed(1)+' (off '+R0.toFixed(1)+')');
- if(L1>26)fail('standing: empty left elbow '+L1.toFixed(1)+' deg (want <= 26)');if(Math.abs(R1-R0)>1)fail('standing: the sword arm changed '+R0.toFixed(1)+' -> '+R1.toFixed(1));
+ if(L1>26)fail('standing: empty left elbow '+L1.toFixed(1)+' deg (want <= 26)');{const seen=[],f0=brAddR;brAddR=function(H,bn){seen.push(bn);return f0.apply(this,arguments)};try{rlx197HArms(pl,BRD[pl._race],VT)}finally{brAddR=f0}brUndo(pl);STEP(2);
+   if(seen.some(n=>/^aR/.test(n)))fail('the layer touched the sword arm: '+seen.join(','));if(!seen.includes('aL1'))fail('the layer did not touch the empty left elbow: '+seen.join(','))}
  K.w=true;STEP(40);const sw=[];for(let i=0;i<90;i++){STEP(1);sw.push([B.aL0.rotation.x,ang('L')])}K.w=false;
  sw.sort((a,b)=>a[0]-b[0]);const n=Math.max(3,sw.length/6|0),fwd=sw.slice(0,n).reduce((a,q)=>a+q[1],0)/n,bk=sw.slice(-n).reduce((a,q)=>a+q[1],0)/n;
  out.info.push('walking: empty elbow '+fwd.toFixed(1)+' on the forward swing, '+bk.toFixed(1)+' on the back swing');if(!(fwd>bk+8))fail('walking: the empty elbow does not bend more on the forward swing ('+fwd.toFixed(1)+' vs '+bk.toFixed(1)+')');

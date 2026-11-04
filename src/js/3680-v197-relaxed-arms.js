@@ -70,7 +70,8 @@ function rlx197Nose(rig){const m=rig.meshes[0],G=m&&m.geometry;if(!G)return null
     rlx197Set(g,A);
     // the arm swings against the leg on its side; the elbow bends as it comes forward and opens as it goes back
     const R=(k,x,z)=>{const b=B[k];if(b){b.rotation.x+=x;b.rotation.z+=z}};
-    R('aL0',.34*s*a,-.03*a);R('aR0',-.34*s*a,.03*a);
+    const sb=v=>v*(v>0?.2:.34); // forward swing (x<0) bigger than the back swing, as in a real walk; a far back swing also tugs the chest skin
+    R('aL0',sb(s)*a,-.03*a);R('aR0',sb(-s)*a,.03*a);
     R('aL1',-(.1+.34*Math.max(0,-s)+.06*Math.max(0,s))*a,0);R('aR1',-(.1+.34*Math.max(0,s)+.06*Math.max(0,-s))*a,0);
     if(B.aL2)B.aL2.rotation.x+=-.12*Math.max(0,-s)*a;if(B.aR2)B.aR2.rotation.x+=-.12*Math.max(0,s)*a}}catch(e){}return r}}
 // ---- arm IK in the chest's frame: the paw at a point, the elbow toward a pole; returns the shoulder / elbow eulers ----
@@ -129,3 +130,20 @@ function rlx197W(g,k){return g.bones[k].getWorldPosition(new THREE.Vector3())}
 dm196R=function(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;const r=b.rotation;if(DM196V.cur)DM196V.cur.push([b,x,y,z,undefined,r.x,r.y,r.z]);r.x+=x;r.y+=y;r.z+=z};
 dm196Undo=function(o){const L=o._pz;if(!L)return;for(let i=L.length-1;i>=0;i--){const [b,x,y,z,py,ox,oy,oz]=L[i];if(py!=null){b.position.y=py;continue}
     if(ox!==undefined)b.rotation.set(ox,oy,oz);else{b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}}o._pz=null};
+
+// ---- v197: the Rune Sage's rune necklace moves with the skin it sits on. The stones were tied rigidly to the chest bone, but
+//      the chest's skin near the shoulder is partly weighted to the upper arm; with the arm now hanging and swinging, that skin
+//      moved off the outer stones (5-8 mm, v142_folk walk). The same ray as fk142Hug; the result also carries the hit
+//      triangle's skin weights ([[bone, w] ...], up to 4) for gkW. ----
+function rlx197Hug(B,P,y,a,off){const q=mdTorsoAt(P,y),cz=q.z||0,dx=Math.sin(a),dz=Math.cos(a),ox=dx*.5,oz=cz+dz*.5;let best=1e9,hit=null;
+  for(const t of ['c','m']){const L=B.L[t],p=L&&L.p;if(!p)continue;
+    for(let i=0;i+8<p.length;i+=9){const ay=p[i+1],by=p[i+4],cy=p[i+7];if((ay<y&&by<y&&cy<y)||(ay>y&&by>y&&cy>y))continue;
+      const e1x=p[i+3]-p[i],e1y=by-ay,e1z=p[i+5]-p[i+2],e2x=p[i+6]-p[i],e2y=cy-ay,e2z=p[i+8]-p[i+2];
+      const rx=-dx,rz=-dz,px=-rz*e2y,py=rz*e2x-rx*e2z,pz=rx*e2y,det=e1x*px+e1y*py+e1z*pz;if(Math.abs(det)<1e-12)continue;
+      const iv=1/det,tx=ox-p[i],ty=y-ay,tz=oz-p[i+2],u=(tx*px+ty*py+tz*pz)*iv;if(u<0||u>1)continue;
+      const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,v=(rx*qx+rz*qz)*iv;if(v<0||u+v>1)continue;
+      const s=(e2x*qx+e2y*qy+e2z*qz)*iv;if(s>0&&s<best){best=s;hit=[L,i/9,u,v]}}}
+  if(best>=1e9)return mdTP(P,y,a,(P.tOff||0)+off);const s=best-off,r=[ox-dx*s,y,oz-dz*s];
+  if(hit&&hit[0].si&&B.O){const [L,ti,u,v]=hit,bw=[1-u-v,u,v],acc={};for(let c=0;c<3;c++){const vi=(ti*3+c)*4;for(let j=0;j<4;j++){const w=L.sw[vi+j]*bw[c];if(w>0){const n=B.O[L.si[vi+j]];acc[n]=(acc[n]||0)+w}}}
+    const W=Object.entries(acc).sort((x,y)=>y[1]-x[1]).slice(0,4);if(W.length)r.w=W}
+  return r}
