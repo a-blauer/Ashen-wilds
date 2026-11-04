@@ -7,7 +7,7 @@
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
-SP=os.environ.get('SP','fox,bear,hare,mouse,boar,owl,stag,hedgehog').split(',')
+SP=os.environ.get('SP','fox,bear,hare,mouse,boar,owl,stag,hedgehog,goat,wolf').split(',')
 JS=r"""(sps)=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s),V=THREE.Vector3;
   const mk=sp=>{const rig=idlNpcBody({robe:0x6a4a3a,trim:0xc9a24a,hat:'',fkSp:sp,fkFur:0,label:''});const g=new THREE.Group();rig.meshes.forEach(m=>g.add(m));g.bones=rig.bones;g.userData.rest=czRest103(g);return g};
   const W=(g,k)=>{g.updateMatrixWorld(true);return g.bones[k].getWorldPosition(new V())};
@@ -39,7 +39,7 @@ JS=r"""(sps)=>{const out={fails:[],info:[]},fail=s=>out.fails.push(s),V=THREE.Ve
     const pose=(a,s,t)=>{czReset103(g);g._idl=null;IDL.on=false;const o={g,i:0,act:{a,s}};dm196Pose(o,t);g.updateMatrixWorld(true);const r={wL:W(g,'aL2'),wR:W(g,'aR2'),eL:W(g,'aL1'),eR:W(g,'aR1'),h:W(g,'head'),
         tL:W(g,'lh0').lerp(W(g,'lh1'),.5),tR:W(g,'rh0').lerp(W(g,'rh1'),.5),hL:W(g,'lh0'),hR:W(g,'rh0')};dm196Undo(o);IDL.on=true;return r};
     let q=pose('sit',{sit:1,h:.45},1000);['L','R'].forEach(sd=>{const d=q['w'+sd].distanceTo(q['t'+sd]);if(d>.16)fail(sp+' rest '+sd+': paw '+d.toFixed(2)+' m from the thigh')});
-    q=pose('eat',{sit:1,h:.45},1111);{const d=q.wR.distanceTo(q.h);if(d>.24)fail(sp+' eat: paw '+d.toFixed(2)+' m from the head')}
+    q=pose('eat',{sit:1,h:.45},1111);{const N=A.nose;if(!N)fail(sp+': no snout tip measured');else{czReset103(g);g._idl=null;IDL.on=false;const o={g,i:0,act:{a:'eat',s:{sit:1,h:.45}}};dm196Pose(o,1111);g.updateMatrixWorld(true);const mo=g.bones.head.localToWorld(new V(0,N[1]-.045,N[2]*.78)),d=W(g,'aR2').distanceTo(mo);dm196Undo(o);IDL.on=true;out.info.push(sp+': eating wrist '+d.toFixed(3)+' m from the mouth');if(d>.14)fail(sp+' eat: wrist '+d.toFixed(2)+' m from the mouth')}}
     q=pose('listen',{},2000*Math.PI/9);{const d=q.wL.distanceTo(q.wR);if(d>.12)fail(sp+' clap: paws '+d.toFixed(2)+' m apart');if(Math.abs(q.eL.x)<.08||Math.abs(q.eR.x)<.08)fail(sp+' clap: an elbow inside the chest')}
     q=pose('rim',{sit:1,h:.62},1000);['L','R'].forEach(sd=>{const d=q['w'+sd].distanceTo(q['h'+sd]);if(d>.3)fail(sp+' rim '+sd+': paw '+d.toFixed(2)+' m from the hip')});
   });

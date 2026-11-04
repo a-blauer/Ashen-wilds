@@ -46,7 +46,14 @@ function rlx197Life(g,A,now){const B=g.bones,t=now/1000+A.seed,L=A.L=[];
     add('a'+s+'0',.035*Math.sin(t*.47+p)+.02*Math.sin(t*1.13+p*2),0,m*(-.025-.02*Math.sin(t*.31+p)));
     add('a'+s+'1',-.06-.05*Math.sin(t*.53+p+.8)-.03*Math.sin(t*1.27+p)-.12*sh,0,0)})}
 // ---- the rig ----
-{const f=idlNpcBody;idlNpcBody=function(o){const rig=f.apply(this,arguments);try{if(RLX197.on&&rig&&rig.fk&&rig.bones){const A=rlx197Calc(rig.bones);if(A)rig.bones.pelvis.userData.rlx197=A}}catch(e){console.warn('v197 arms',e)}return rig}}
+// the snout tip in the head's frame (front-most bind vertex skinned to the head), cached on the shared geometry; the eating
+// paw aims just under it, so long muzzles (stag, fox) and short faces (owl, mouse) both get the food at the mouth
+function rlx197Nose(rig){const m=rig.meshes[0],G=m&&m.geometry;if(!G)return null;if(G.userData.rlx197N!==undefined)return G.userData.rlx197N;
+  let r=null;try{const hb=rig.bones.head,arr=m.skeleton.bones,pa=G.attributes.position,si=G.attributes.skinIndex,sw=G.attributes.skinWeight,inH=arr.map(b=>{let p=b;while(p){if(p===hb)return 1;p=p.parent}return 0});
+    let bi=-1,bz=-1e9;for(let i=0;i<pa.count;i++){let w=0;for(let j=0;j<4;j++)if(inH[si.array[i*4+j]])w+=sw.array[i*4+j];if(w>=.6&&pa.getZ(i)>bz){bz=pa.getZ(i);bi=i}}
+    if(bi>=0){let root=hb;while(root.parent)root=root.parent;root.updateMatrixWorld(true);const v=new THREE.Vector3(pa.getX(bi),pa.getY(bi),pa.getZ(bi)).applyMatrix4(m.matrixWorld);r=hb.worldToLocal(v).toArray()}}catch(e){r=null}
+  return G.userData.rlx197N=r}
+{const f=idlNpcBody;idlNpcBody=function(o){const rig=f.apply(this,arguments);try{if(RLX197.on&&rig&&rig.fk&&rig.bones){const A=rlx197Calc(rig.bones);if(A){A.nose=rlx197Nose(rig);rig.bones.pelvis.userData.rlx197=A}}}catch(e){console.warn('v197 arms',e)}return rig}}
 // the lantern wardens hold weapons with poses of their own: no relaxed arms there
 {const f=mqw143Make;mqw143Make=function(){const g=f.apply(this,arguments);try{const b=g&&g.bones&&g.bones.pelvis;if(b&&b.userData.rlx197){const A=b.userData.rlx197;rlx197Undo(g,A);
       for(const k in A.B){const r=A.B[k];g.bones[k].rotation.set(r[0],r[1],r[2])}delete b.userData.rlx197}}catch(e){console.warn('v197 wardens',e)}return g}}
@@ -90,13 +97,16 @@ function rlx197W(g,k){return g.bones[k].getWorldPosition(new THREE.Vector3())}
   const rel=(sd,x,y,z)=>{const S=sh(sd);return new V(S.x+m(sd)*x,S.y+y,S.z+z)}; // a point from the shoulder (x>0 = outward)
   const relW=(sd,k)=>rlx197Loc(g,rlx197W(g,'a'+sd+k));
   // a paw resting on the thigh (seated)
-  const lapT=sd=>{const h=sd=='L'?'l':'r',a=rlx197W(g,h+'h0'),b=rlx197W(g,h+'h1');return rlx197Loc(g,a.lerp(b,.5).add(new V(0,.1,0)))};
+  const lapT=sd=>{const h=sd=='L'?'l':'r',a=rlx197W(g,h+'h0'),b=rlx197W(g,h+'h1');return rlx197Loc(g,a.lerp(b,.62).add(new V(0,.09,0)))}; // forward of a round belly
   const lap=sd=>{g.updateMatrixWorld(true);const T=lapT(sd);T.x+=m(sd)*.025;rlx197Put(g,X,sd,T,pole(sd,1,-.2,-.5));R('a'+sd+'2',.45,0,0)};
   if(s.sit){dm196Sit(g,s.h);g.updateMatrixWorld(true);
     if(A.a=='eat'){// left paw on the lap; the right lifts food to the mouth every few seconds
       const p=(t*.45+o.i*.3)%3,lift=p<1?Math.sin(p*Math.PI):0;lap('L');
-      const L=lapT('R');L.x+=.025;const H=rlx197Loc(g,rlx197W(g,'head'));const M=new V(.035,H.y-.06,H.z+.15);rlx197Put(g,X,'R',L.lerp(M,lift),pole('R',1,-.4-.4*lift,-.4+.3*lift),-.5*lift);
-      R('aR2',.45*(1-lift)-.35*lift,0,0);R('head',.18-.22*lift,0,0);R('spine',.08)}
+      const L=lapT('R');L.x+=.025;const hb=g.bones.head,N=X.nose||[0,.08,.16];
+      // the mouth: a little behind and under the snout tip; the wrist below it and to the side, so the paw comes up to it
+      const Mw=hb.localToWorld(new V(0,N[1]-.045,N[2]*.78-.01)),M=rlx197Loc(g,Mw);M.x+=.04;M.y-=.055;M.z-=.015;
+      rlx197Put(g,X,'R',L.lerp(M,lift),pole('R',1,-.6-.3*lift,-.3+.6*lift),-.6*lift);
+      R('aR2',.45*(1-lift)-.55*lift,0,0);R('head',.18-.22*lift,0,0);R('spine',.08)}
     else if(A.a=='warm'){// both paws held out toward the fire, rubbed together now and then
       const rb=Math.max(0,Math.sin(t*.37+o.i))**4,w=.025*rb*Math.sin(t*7);
       ['L','R'].forEach((sd,i)=>{const S=sh(sd),T=new V(m(sd)*(.07+(i?w:-w)),S.y-.17,S.z+.34);rlx197Put(g,X,sd,T,pole(sd,1,-1,-.2),m(sd)*.5);R('a'+sd+'2',-.25,0,0)});
