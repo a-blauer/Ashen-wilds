@@ -43,7 +43,7 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
   const sp=[START[0],START[1]],npcSt=D.npc.map(n=>n.st),M=D.npc,W=IC151D.walks,legs=[];
   // v151b: the game's own Cheddar on his crate by the quest board (CHQ148); the hero stops 2 m in front of him
   D.ref=dm196IntroRef();{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
-    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
+    if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=sp2&&sp2.ry!=null?sp2.ry:C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
   const route=dm196IntroRoute(sp,npcSt,CS); // v196: legs found on the round town's walking grid (3670)
@@ -158,7 +158,7 @@ function ic151DTags(D,back){if(back){(D.tags||[]).forEach(x=>{x.o.visible=x.v});
   if(!D.tags){D.tags=[];const V=THREE.Vector3,w=new V();scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;o.getWorldPosition(w);if(Math.hypot(w.x-40,w.z-305)<80)D.tags.push({o,v:o.visible})})}
   D.tags.forEach(x=>{x.o.visible=false})}
 function ic151DuskDone(S){const D=S&&S.D;if(!D||D.done)return;D.done=true;try{document.body.classList.remove('ic151d');
-    if(D.on){const P=D.end;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=0;camYaw=Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
+    if(D.on){const P=D.end,y=D.endYaw||0;pl.position.set(P[0],GH(P[0],P[1]),P[1]);pl.rotation.y=y;camYaw=y+Math.PI;cam.fov=D.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined')camK=camPitch;snapCam()}
     ic151DTags(D,true);D.npc.forEach(n=>{n.g.rotation.y=n.ry0;if(n.g._wk)n.g._wk.ic151H=0});if(D.ch){if(D.chOwn){if(D.ch.root.parent)D.ch.root.parent.remove(D.ch.root)}else{D.ch.root.position.y=D.chY0;D.ch.root.rotation.y=D.chR0;try{D.ch.setPose('idle')}catch(_){}}}if(D.pil&&D.pil.parent){D.pil.parent.remove(D.pil);D.pil.geometry.dispose();D.pil.material.dispose()}
     if(D.ch&&D.chOwn)D.ch.root.traverse(o=>{if(o.isMesh&&o.geometry)o.geometry.dispose()})}catch(e){console.warn('intro town hand-back',e)}}
 // part one ends at IC151.cut; part two runs to IC151.dEnd, then the game resumes; the intro ends at IC151.len

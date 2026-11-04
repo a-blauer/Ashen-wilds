@@ -21,11 +21,11 @@ function dm196M(x,y,z,sx,sy,sz,rx,ry,rz){const m=new THREE.Matrix4();m.compose(n
 var DM196K={};
 function dm196Kind(n){if(DM196K[n])return DM196K[n];const R=dkRng(n.length*131+n.charCodeAt(0)),Cy=(a,b,h,s)=>new THREE.CylinderGeometry(a,b,h,s||6,1),Co=(r,h,s)=>new THREE.ConeGeometry(r,h,s||7,1),Ic=d=>new THREE.IcosahedronGeometry(1,d||0),L=[];
   if(n=='pine'||n=='snowpine'){L.push([Cy(.16,.3,4.4),0x3a2a1e,dm196M(0,2.2,0,1,1,1)]);
-    for(let i=0;i<5;i++){const y=2.2+i*1.85,r=2.25-i*.38;L.push([Co(r,2.9-i*.18,8),[0x1c3324,0x203a28,0x24402c,0x1e3626,0x284530][i],dm196M((R()-.5)*.15,y+1.3,(R()-.5)*.15,1,1,1,0,R()*3,0)]);
-      if(n=='snowpine')L.push([Co(r*.82,1.1,8),0xdde6ee,dm196M(0,y+2.35,0,1,1,1,0,R()*3,0)])}}
+    for(let i=0;i<4;i++){const y=2.3+i*2.2,r=2.3-i*.45;L.push([Co(r,3.2-i*.2,6),[0x1c3324,0x203a28,0x24402c,0x284530][i],dm196M((R()-.5)*.15,y+1.3,(R()-.5)*.15,1,1,1,0,R()*3,0)]);
+      if(n=='snowpine'&&i>=2)L.push([Co(r*.82,1.1,6),0xdde6ee,dm196M(0,y+2.5,0,1,1,1,0,R()*3,0)])}}
   else if(n=='oak'||n=='bog'||n=='blood'){const leaf=n=='oak'?[0x24402a,0x2e4c2e,0x355a32,0x2a4630]:n=='bog'?[0x22361e,0x2a3e22,0x1e2e1c,0x34462a]:[0x4a1418,0x5e1a1e,0x3e1016,0x6e2226],bark=n=='blood'?0x2a1a1a:0x34281c;
     L.push([Cy(.32,.62,5.2,7),bark,dm196M(0,2.6,0,1,1,1)]);[[1.1,4.2,.3,-.7],[-.9,4.6,-.5,.6]].forEach(([x,y,z,a])=>L.push([Cy(.12,.22,2.6,5),bark,dm196M(x*.5,y-.6,z*.5,1,1,1,a*.5,0,-x*.5)]));
-    for(let i=0;i<7;i++){const a=i/7*6.283+R(),rr=i?1.5+R()*.6:0,y=i?5.1+R()*1.6:6.6,s=i?1.5+R()*.6:2.1;L.push([Ic(1),leaf[i%4],dm196M(Math.cos(a)*rr,y,Math.sin(a)*rr,s,s*.78,s,R(),R()*3,R())])}
+    for(let i=0;i<5;i++){const a=i/5*6.283+R(),rr=i?1.5+R()*.6:0,y=i?5.1+R()*1.6:6.6,s=i?1.7+R()*.6:2.3;L.push([Ic(1),leaf[i%4],dm196M(Math.cos(a)*rr,y,Math.sin(a)*rr,s,s*.78,s,R(),R()*3,R())])}
     if(n!='blood')L.push([Ic(0),0x3e5a2a,dm196M(.35,1.1,.3,.5,.9,.32,0,.4,.2)]); // moss on the trunk
     if(n=='bog')for(let i=0;i<4;i++){const a=i*1.7;L.push([Cy(.02,.05,1.8,4),0x4a5a36,dm196M(Math.cos(a)*1.6,4.3,Math.sin(a)*1.6,1,1,1)])}} // hanging moss
   else if(n=='dead'){const bark=0x2a2420;L.push([Cy(.14,.42,6.4,6),bark,dm196M(0,3.2,0,1,1,1,0,0,.04)]);
@@ -37,9 +37,9 @@ function dm196Kind(n){if(DM196K[n])return DM196K[n];const R=dkRng(n.length*131+n
 var DM196_THEME=[['bog','bog','dead'],['oak','oak','pine'],['snowpine','snowpine','dead'],['spire','spire','cactus'],['dead','dead','pine'],['blood','dead','blood']];
 var DM196_TINT=[[0x8a9a7a,0xa0b090],[0xa8c498,0xc0d8a8],[0xd0dce8,0xe8f0f8],[0xe0c8a0,0xc8b088],[0x8a9098,0xa0a8b0],[0xb08890,0xa07078]];
 // ---------------- the forest ----------------
-function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=1.75;
+function dm196Forest(){const T=TOWNS[0],D=DM196,R=dkRng(19607),pick=[],S=2.05;
   for(let y=D.y0;y<D.y0+D.ny;y+=S)for(let x=D.x0;x<D.x0+D.nx;x+=S){const px=x+(R()-.5)*S*.9,pz=y+(R()-.5)*S*.9,X=Math.round(px),Z=Math.round(pz),wd=dm196Wd(X,Z);
-    if(wd==null||wd<1.05||wd>8.5||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.06)continue;
+    if(wd==null||wd<1.05||wd>5.4||MAP[Z][X]!=='#'||!(MAP.DW[Z*W+X]<-.6))continue;if(R()>1.05-wd*.07)continue; // the backdrop stands behind the last rows
     const r=Math.hypot(px-T.cx,pz-T.cy),ri=dm196Room(px,pz,D.FR+1),pi=ri>=0?ri:dm196Path(px,pz,D.FR+1),th=pi>=0&&(ri>=0||r>D.RM+4)?pi:-1;
     const k=th>=0?DM196_THEME[th][Math.floor(R()*3)]:(R()<.62?'pine':R()<.75?'dead':'oak'),s=(th==3?.85:1)*(.9+R()*.55)*(1+Math.min(.35,(wd-1)*.05)),ry=R()*6.283;
     const tint=th>=0?DM196_TINT[th][R()<.5?0:1]:[0x9aa896,0xb0bca8,0x8a9888][Math.floor(R()*3)];
@@ -119,3 +119,8 @@ TWN100_wmap=function(g,P,lab){PMAP.forEach((p,i)=>{const q=TWN100_PG[i],[x,y]=P(
 function dm196Signs(){try{(SGNR||[]).forEach(r=>{if(r&&r.c&&r.a&&Array.isArray(r.a[0])&&r.a[0].length>1){signPaint(r.c,...r.a);r.t.needsUpdate=true}})}catch(e){console.warn('v196 signs',e)}}
 // ---------------- build ----------------
 try{dm196NoRoad();dm196Forest();dm196Backdrop();dm196Entries();dm196Signs();DM196P.built=1;portalRefresh()}catch(e){console.warn('v196 rooms',e)}
+// the rooms' plazas and scenery are drawn only near them (they stand 60-80 tiles from the plaza, beyond the trees)
+var DM196RC={t:0,on:[]};
+{const f=townTick;townTick=function(now,pp){f.apply(this,arguments);try{if(now-DM196RC.t<400)return;DM196RC.t=now;
+  TWN100_PG.forEach((p,i)=>{const on=Math.hypot(pp.x-p.x,pp.z-p.y)<54;if(DM196RC.on[i]===on)return;DM196RC.on[i]=on;
+    const P=TWN100_P[i],X=TWN101.x[i];[P&&P.lit,P&&P.glow,P&&P.mist,X&&X.g,PORT[i]&&PORT[i].g].forEach(o=>{if(o)o.visible=on});if(X&&X.gg)X.gg.visible=on&&pUnlocked(i)})}catch(_){}}}

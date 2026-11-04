@@ -116,7 +116,8 @@ def s(pg):
     chk('cleaned up',ev("()=>!IC151.run&&!IC151.on&&!document.getElementById('ic151')&&!ren.domElement.style.filter"))
     if dk:
         ho=ev("()=>({p:[pl.position.x,pl.position.z],cls:document.body.classList.contains('ic151d'),ch:(()=>{const D=window._icD,C=D&&D.ch;if(!C)return 'none';if(D.chOwn)return C.root.parent?'left':'ok';return C.root.parent===scene&&Math.abs(C.root.rotation.y-D.chR0)<1e-6&&Math.abs(C.root.position.y-D.chY0)<1e-6?'ok':'moved'})()})")
-        chk('game starts on the Portal Road in Duskhold',abs(ho['p'][0]-40)<.3 and abs(ho['p'][1]-349.4)<.3 and not ho['cls'] and ho['ch']=='ok',ho)
+        ex=ev("()=>{const D=window._icD;return D&&D.end}")
+        chk('game starts outside the north gate, on the way to Portal I',ex is not None and abs(ho['p'][0]-ex[0])<.3 and abs(ho['p'][1]-ex[1])<.3 and not ho['cls'] and ho['ch']=='ok',[ho,ex]) # v196: the round town
         chk('name tags back after the cinematic',ev(TAGS)>=3,ev(TAGS))
 play.run(s,w=W,hh=H)
 if FAIL:print('FAILED',FAIL)

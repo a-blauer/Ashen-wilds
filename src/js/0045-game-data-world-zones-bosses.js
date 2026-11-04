@@ -243,10 +243,10 @@ const MAP=(()=>{
        const av=Math.abs(lx)<1.6&&r<D.WR[5]+.5;if(av){m[y][x]='P';continue}
        if(Math.abs(lx)<1.3){m[y][x]='p';continue}
        const ag=Math.abs(dm196Ang(lx,lz))*180/Math.PI,st=(r>19.9&&r<21.3)||(r>29.6&&r<31.5)||(r>42&&r<43.4&&(ag<31||ag>149));if(st&&!onLot(lx,lz,.2)){m[y][x]='p';continue}
-       if(r>D.WR[5]+1.5){const h=hs(x,y,1);m[y][x]=h<.42?'g':h<.5?'a':'.';continue}
+       if(r>D.WR[5]+1.5){const h=hs(x,y,1);m[y][x]=h<.2?'g':h<.3?'a':'.';continue}
        m[y][x]=!onLot(lx,lz,.6)&&hs(x,y,2)<.07?'a':'.';continue}
      // the paths through the forest: dirt down the middle; the rooms: their zone's ground with a few patches
-     const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.3?'g':'.';continue}
+     const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.15?'g':'.';continue}
      if(ri>=0){const p=TWN100_PG[ri],d=Math.hypot(x-p.x,y-p.y),h=(x*7+y*13)%11;m[y][x]=(ri==1&&h<5)||(ri==0&&h<3)?'g':d>p.r-1.5&&h<3?'a':'.';continue}
      m[y][x]='.'}
    // keep the avenues to the paths: from the plaza's north and south edges a dirt trail runs to each room's path
