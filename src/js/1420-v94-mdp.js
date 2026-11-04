@@ -47,7 +47,8 @@ function mdHeadX(P,y){const H=P._H||(P._H=mdHeadR(P));for(let i=0;i<H.length-1;i
 function mdDome(R,k){if(!R||R.length<2)return R;const a=R[0],b=R[1],d=[a.p[0]-b.p[0],a.p[1]-b.p[1],a.p[2]-b.p[2]],l=Math.hypot(d[0],d[1],d[2])||1,r=Math.max(a.rx,a.f==null?a.rx:a.f,a.b==null?a.rx:a.b)*(k||1);
   const ring=(t,s)=>Object.assign({},a,{p:[a.p[0]+d[0]/l*r*t,a.p[1]+d[1]/l*r*t,a.p[2]+d[2]/l*r*t],rx:a.rx*s,f:(a.f==null?a.rx:a.f)*s,b:(a.b==null?a.rx:a.b)*s});
   return [ring(.85,.42),ring(.55,.8)].concat(R)}
-function mdBody(B,P){const C=P.col,T=mdTorso(P);P._T=T;
+function mdBody(B,P){if(typeof bf195Use=='function'&&bf195Use(P))return bf195Body(B,P);   // v195: beast-kit races get one cage body (3600)
+  const C=P.col,T=mdTorso(P);P._T=T;
   // torso: lower part (hips/pants), belt band, upper (shirt), neck skin
   const tp=P.paint.torso,belt=P.beltY==null?.6:P.beltY;
   if(!P.noTorso)mdLoft(B,T,{seg:12,capA:true,sq:P.sq||0,col:m=>m.y>1.0?C.neck:m.y>.985&&!P.highNeck?C.neck:Math.abs(m.y-belt)<.026&&C.belt!=null?C.belt:m.y<belt?(P.paint.torsoLo?P.paint.torsoLo(m):C.torsoLo==C.torso&&m.y<.5?C.pants:C.torsoLo):tp?tp(m):C.torso});

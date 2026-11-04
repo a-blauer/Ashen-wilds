@@ -18,7 +18,7 @@
 // into twisted strands of each colour with blended knots where they cross. The model key carries the runes (mdGD d.key), so a new
 // rune rebuilds the model; the glow channel breathes gently while runed armour is worn (rv194Breathe).
 // GPU: shells share the piece's cached geometry (never disposed here); their materials and the mote geometry are cached per look.
-var RV194={on:1,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
+var RV194={on:1,lines:0,mat:{},pts:{},thick:[.0065,.008,.0095],str:[.45,.62,.8],
   // per motif: [mote speed, mote direction (1 up, -1 down, 0 jitter, 2 orbit, 3 along the piece), mote size]
   mote:{ember:[.55,1,7],frost:[.3,-1,5],storm:[1.6,0,5],venom:[.35,-1,6],might:[.35,1,5],leech:[.3,2,6],vigor:[.5,1,5],ward:[.25,2,4],deflect:[.4,2,4],tide:[.4,-1,5],swift:[1.1,3,4],thorns:[.3,-1,6]},
   // where the glow starts along the piece (0 grip → 1 tip)
@@ -133,9 +133,12 @@ function rv194Tint(B,L,R){if(!L.length)return;const R2=R*R;let y0=1e9,y1=-1e9;L.
   ['c','m'].forEach(t=>{const b=B.L[t];if(!b)return;const p=b.p,c=b.c;for(let i=0;i+8<p.length;i+=9){const x=(p[i]+p[i+3]+p[i+6])/3,y=(p[i+1]+p[i+4]+p[i+7])/3,z=(p[i+2]+p[i+5]+p[i+8])/3;if(y<y0-R||y>y1+R)continue;
     let best=R2,bq=null;for(const q of L){const dx=x-q.p[0],dy=y-q.p[1],dz=z-q.p[2],d=dx*dx+dy*dy+dz*dz;if(d<best){best=d;bq=q}}if(!bq)continue;
     const k=.42*(1-Math.sqrt(best)/R);C.setHex(bq.col);for(let v=0;v<3;v++){const j=i+v*3;c[j]+=(C.r-c[j])*k;c[j+1]+=(C.g-c[j+1])*k;c[j+2]+=(C.b-c[j+2])*k}}})}
-function rv194Draw(B,k,bn,types,marks,proj,wf,rr,dir){const T=[];marks.forEach(base=>{rv194Strands(base,types).forEach(S=>{const pts=proj(S.pts);rv194Line(k,bn,pts,rr,S.q.T.col,wf);pts.forEach(p=>T.push({p,col:S.q.T.col}));if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});
+function rv194Draw(B,k,bn,types,marks,proj,wf,rr,dir){const T=[];marks.forEach(base=>{rv194Strands(base,types).forEach(S=>{const pts=proj(S.pts);
+    // v195 (owner): no lit fissures on armour any more, only the soft sparkle points that ride along where the lines were
+    if(!RV194.lines){if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});return}
+    rv194Line(k,bn,pts,rr,S.q.T.col,wf);pts.forEach(p=>T.push({p,col:S.q.T.col}));if(RV194.acc&&dir)pts.forEach((p,i)=>{if(i%2==0)RV194.acc.push({p,n:dir(p),col:S.q.T.col,bn})});
     if(S.q.t=='thorns')pts.forEach((p,i)=>{if(i%2==1){const l=Math.hypot(p[0],p[2])||1;k.L(bn,'g',S.q.T.col,p,[p[0]+p[0]/l*.012,p[1]+.005,p[2]+p[2]/l*.012],.0028,.0003,3);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});
-    rv194Knots(base,types).forEach(q=>{const pp=proj([q]);if(pp[0]){const p=pp[0];k.p(bn,'oct','g',rv194Mix(types),p[0],p[1],p[2],.0055,.0055,.0038);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});return T}
+    if(RV194.lines)rv194Knots(base,types).forEach(q=>{const pp=proj([q]);if(pp[0]){const p=pp[0];k.p(bn,'oct','g',rv194Mix(types),p[0],p[1],p[2],.0055,.0055,.0038);if(wf)mdOW(k,typeof wf=='function'?wf(p):wf)}})});return T}
 function rv194Chest(B,P,d){const types=rv194Types(d.ru);if(!types.length)return;const k=dkKit(),rnd=rv194Rnd('c'+d.key),rk=Math.max(...types.map(q=>q.r)),rr=.0011+.0003*rk,sty=RV194_STY[types[0].t]||'crack';
   const n=6+2*rk,marks=[];for(let i=0;i<n;i++){const th=(i/n)*Math.PI*2+(rnd()-.5)*.45,up=i%2==0,y=up?.69+rnd()*.06:.86+rnd()*.08,dy=(up?1:-1)*(.02+rnd()*.008);marks.push(rv194Mark(sty,rnd,y,th,dy,6+(rnd()*3|0)))}
   const proj=L=>o176Path(B,P,L.map(([y,th])=>[Math.max(.64,Math.min(.97,y)),th]),.0085);
@@ -157,7 +160,7 @@ function rv194Boots(B,P,d,R){const types=rv194Types(d.ru);if(!types.length||!R)r
   mdBoots=function(B,P,d){const n0={};for(const t in B.L)n0[t]=B.L[t].p.length;const r=b.apply(this,arguments);const n1={};for(const t in B.L)n1[t]=B.L[t].p.length;if(d&&d.key)run(rv194Boots,B,P,d,{n0,n1});return r}}
 // the glow channel breathes while runed armour is worn (heartbeat for Vigor, a slow swell otherwise)
 function rv194Breathe(h,E){if(!h||!h._mdM||!h._mdM.g)return;const types=rv194Types(['helm','chest','boots'].flatMap(s=>E&&E[s]?rn194Ru(E[s]):[]));const M=h._mdM.g;
-  (h._mdX||[]).forEach(m=>{if(m.material!==M)return;if(!types.length){M.color.setScalar(1);return}
+  (h._mdX||[]).forEach(m=>{if(m.material!==M)return;if(!types.length||!RV194.lines){M.color.setScalar(1);if(m.onBeforeRender&&m.onBeforeRender.rv194)delete m.onBeforeRender;return}
     const vg=types.some(q=>q.t=='vigor'),fn=function(){const t=performance.now()/1000,b=vg?Math.pow(.5+.5*Math.sin(t*5.2),6)+.5*Math.pow(.5+.5*Math.sin(t*5.2-.9),6):.5+.5*Math.sin(t*1.6);M.color.setScalar(.8+.2*Math.min(1,b))};fn.rv194=1;m.onBeforeRender=fn})}
 
 // ---------------- armour glow: soft points along the lines, riding the bones (true additive light; breathes) ----------------
