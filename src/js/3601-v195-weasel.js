@@ -111,3 +111,19 @@
       if(dt>0){bf195Spr(Ea.sp,0,back+up+(Ea.s>0?fl:0),18,.55,dt);bf195Spr(Ea.sp,2,back+up+(Ea.s<0?fl:0),18,.55,dt)}
       if(b.erR)b.erR.rotation.set(Ea.sp[0],0,-.15*Ea.sp[0]);if(b.erL)b.erL.rotation.set(Ea.sp[2],0,.15*Ea.sp[2])}};
   bf195Skel(D)}}
+// ---- the Galewing Mask on the weasel (owner, Nov 3 2026: "Galewing mask looks weird on him") ----
+// The ring-lofted mask cut into the sculpted muzzle and its wing shards stood off the head in mid-air. Now: a cloth mask laid
+// on the sculpted lower face (from under the eyes to just behind the nose, down over the chin), a band round the back of the
+// skull below the ears, and three swept wind-feathers on each side, rooted in the band and lying back along the head.
+{const f=brHelm;brHelm=function(B,P,d){const D=BR.R;if(!(BF195.on&&D&&D.key=='weasel'&&D.bf&&D.bf.head&&D.bf.head._mesh&&d&&d.st=='galemask'))return f.apply(this,arguments);
+  const S=D.bf.head,E=S.eye.c,A=d.A,M=d.M,C0=FKS.C0,k=dkKit(),cloth=mdSh(A,.82),hem=mdSh(A,.58),band=mdSh(M,.75);
+  // the mask: below the eye line, from just in front of the eyes to 1.4 cm behind the nose tip
+  const zA=E[2]+.012,zB=.152,yL=z=>E[1]-.016-(z-zA)*.12;
+  bf195HeadShell(B,D,.0045,(p,n)=>p[2]>zA&&p[2]<zB&&p[1]<yL(p[2]),(p,n)=>p[2]>zB-.01||p[2]<zA+.008||p[1]>yL(p[2])-.006?hem:cloth,'c');
+  // the band round the back of the skull, under the ears
+  const bz=-.03;bf195HeadShell(B,D,.004,(p,n)=>Math.abs(p[2]-bz-p[1]*.35)<.0085&&p[1]<.045,(p,n)=>band,'c');
+  // swept wind-feathers: rooted in the band on each side, lying back and a little up along the head
+  [-1,1].forEach(s=>{[[.018,.07,.0085],[.004,.06,.0075],[-.01,.05,.0065]].forEach(([y,len,r],j)=>{const z=bz+y*.35,root=bf195HeadHit(D,[0,y,z],[s,0,0]),
+      rp=[root[0]-s*.003,root[1],root[2]],dir=nrm3([s*.32,.38-j*.12,-1]),tip=add3(rp,mul3(dir,len)),mid=add3(rp,mul3(dir,len*.5));
+    const W=p=>[p[0]+C0[0],p[1]+C0[1],p[2]+C0[2]];k.L('head','c',j%2?0xd8d8e0:A,W(rp),W(mid),r,r*.7,5).L('head','c',j%2?mdSh(0xd8d8e0,.8):mdSh(A,.75),W(mid),W(tip),r*.7,.0012,5)})});
+  mdKit(B,k)}}

@@ -308,3 +308,17 @@ function bf195Chain(H,K){const b=H.bones,Q=BF195_Q.a||(BF195_Q.a={q:new THREE.Qu
 // capes are pinned on at the shoulders (the v179 foes' rule: the top ring on the back of the collar, not 2–4 cm behind it);
 // on the old tube body a hero's cape only touched the body through the tail
 {const f=mdCape;mdCape=function(B,P){if(!(BF195.on&&BR.on&&BR.R&&BR.R.bf&&typeof SN179!='undefined'))return f.apply(this,arguments);const o=SN179.hum;SN179.hum=1;try{return f.apply(this,arguments)}finally{SN179.hum=o}}}
+
+// ---------------- head gear fitted to the sculpt ----------------
+// The v114 helmets are lofted from the skull rings (D.SN, ellipses per slice); round a sculpted muzzle an ellipse cuts in and
+// out of the real surface. bf195HeadShell lays cloth on the sculpted head itself: the head's own facets chosen by sel(p, n)
+// (head-local, from FKS.C0) pushed out along their normals by off, the rim tucked down to the skin (cgShell's rule), so a
+// mask or a band can't cut through the face or stand off it. col(p, n) gives each facet's colour.
+function bf195HeadShell(B,D,off,sel,col,t){const S=D.bf.head,Ms=S._mesh,VX=S._vx,C0=FKS.C0;if(!Ms||!VX)return;const pick=[],cnt=new Map(),key=(a,b)=>a<b?a+'_'+b:b+'_'+a;
+  Ms.T.forEach((tr,i)=>{if(tr.length!==3)return;const a=Ms.V[tr[0]],b=Ms.V[tr[1]],c=Ms.V[tr[2]],q=tr.q||[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],n=nrm3(add3(add3(VX[tr[0]].n,VX[tr[1]].n),VX[tr[2]].n));
+    if(!sel(q,n))return;pick.push([tr,q,n]);for(let j=0;j<3;j++){const k=key(tr[j],tr[(j+1)%3]);cnt.set(k,(cnt.get(k)||0)+1)}});
+  const rim=new Set();pick.forEach(([tr])=>{for(let j=0;j<3;j++){const k=key(tr[j],tr[(j+1)%3]);if(cnt.get(k)==1){rim.add(tr[j]);rim.add(tr[(j+1)%3])}}});
+  const w=mdW(B,[['head',1]]),P=i=>{const v=Ms.V[i],n=VX[i].n,d=off*(rim.has(i)?.15:1);return {x:v[0]+n[0]*d+C0[0],y:v[1]+n[1]*d+C0[1],z:v[2]+n[2]*d+C0[2],w,k:VX[i].k}};
+  pick.forEach(([tr,q,n])=>mdTri(B,t||'c',P(tr[0]),P(tr[1]),P(tr[2]),mdC(col(q,n))))}
+// the surface point of the sculpt from a head-local point outward along d (for rooting kit in the skin)
+function bf195HeadHit(D,p,d){const S=D.bf.head;d=nrm3(d);let t=-.03;while(t<.08&&fksEval(S,add3(p,mul3(d,t)))<0)t+=.0008;return add3(p,mul3(d,t))}
