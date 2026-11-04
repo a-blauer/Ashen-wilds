@@ -36,6 +36,12 @@ JS=COMMON+r"""(a)=>{const [old,furi]=a,V=THREE.Vector3,out={info:{}};if(old)BF19
   out.gest=c2.toDataURL('image/jpeg',.88);
   // a gesture started for real plays, ends and leaves nothing behind (time runs on RT.T)
   try{RT.idle(R,1200);const S=R._bfm;if(S&&L.length){S.gT=0;RT.idle(R,32);out.info.started=!!S.g;RT.idle(R,6000);out.info.ended=!S.g}}catch(e){out.info.gerr=String(e)}
+  // ---- motion: run, stop, turn while running; the largest change of any bone between two 16 ms frames, and what the springs did ----
+  try{RT.idle(R,800);const names=Object.keys(R.bones),prev=names.map(n=>R.bones[n].quaternion.clone());let mx=0,mxb='',lead=0,stop=0;
+    const step=(mv,yr)=>{RT.T+=16;R.rotation.y+=yr||0;animHero(RT.T,mv,R);R.position.set(0,0,0);names.forEach((n,i)=>{const q=R.bones[n].quaternion,a=2*Math.acos(Math.min(1,Math.abs(q.dot(prev[i]))));if(a>mx){mx=a;mxb=n}prev[i].copy(q)});
+      const A=R._bfm&&R._bfm.sp;if(A){lead=Math.max(lead,Math.abs(A[0]));stop=Math.max(stop,A[2])}};
+    for(let i=0;i<60;i++)step(true,0);for(let i=0;i<60;i++)step(true,.035);for(let i=0;i<90;i++)step(false,0);
+    out.info.motion={maxStep:+mx.toFixed(3),bone:mxb,lead:+lead.toFixed(3),stop:+stop.toFixed(3)}}catch(e){out.info.merr=String(e)}
   sc.remove(R);
   // ---- 3: gear ----
   const ARM='medium',sets=[{n:'class outfit',r:0}].concat([['hood','padded','trail',0],['cowl','vest','stalker',2],['galemask','mantle','gale',4]].map(q=>({n:q[0]+' / '+q[1],helm:q[0],chest:q[1],boots:q[2],r:q[3]})));
@@ -62,6 +68,10 @@ def s(pg):
         chk('skull measured for the helmets',I['SN']>=10 and I['ear'] and I['eye'],(I['SN'],I['ear'],I['eye']))
         chk('gestures pose without errors',not I['gerr'],I['gerr'])
         chk('bones steady after the gesture poses',I['settled']==1)
+        chk('motion layer runs',not I.get('merr') and I.get('motion'),I.get('merr') or I.get('motion'))
+        chk('springs act: turn lead and stop follow-through',I.get('motion') and I['motion']['lead']>.02 and I['motion']['stop']>.005,I.get('motion'))
+    if I.get('motion'):print('NOTE largest bone change per 16 ms frame (run / turn / stop):',I['motion'])
+    if not old:
         chk('a gesture starts and ends on its own',I.get('started') and I.get('ended'),(I.get('started'),I.get('ended')))
 play.run(s,w=900,hh=600)
 print('FAILURES:',FAIL if FAIL else 'none')
