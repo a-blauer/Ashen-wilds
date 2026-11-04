@@ -35,25 +35,26 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
   // the town folk: Steward and Blacksmith have handles; the Merchant and the Innkeeper are the town-folk rigs nearest their counters
   const folk=[];T0.g.traverse(o=>{if(o.bones&&o.children&&o.children.some(c=>c.isSprite))folk.push(o)});T0.g.updateMatrixWorld(true);
   const near=(x,z)=>{let b=null,bd=1e9;folk.forEach(g=>{const p=g.getWorldPosition(new V()),d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=g}});return bd<6?b:null};
-  const G={steward:typeof SHM!='undefined'&&SHM.st&&SHM.st.g,smith:typeof TWN100_S!='undefined'&&TWN100_S.npc&&TWN100_S.npc.smith,inn:near(27.2,271),merchant:near(40,270.95)};
-  const C=new V(40,0,286);D.npc=IC151D.npc.map((n,i)=>{const g=G[n.k];if(!g)return null;g.updateMatrixWorld(true);let rig=g;if(!g.bones){g.traverse(o=>{if(o.bones&&rig===g)rig=o})}const w=rig.getWorldPosition(new V());
-    const u=C.clone().sub(w).setY(0).normalize(),st=n.k==='inn'?w.clone().add(new V(-.3,0,2.6)):w.clone().addScaledVector(u,n.k==='smith'?2.3:1.95);return Object.assign({},n,{g:rig,w,st:[st.x,st.z],ry0:rig.rotation.y,mt:IC151D.meets[i]})});
+  const G={steward:typeof SHM!='undefined'&&SHM.st&&SHM.st.g,smith:typeof TWN100_S!='undefined'&&TWN100_S.npc&&TWN100_S.npc.smith,inn:(typeof DM196I!='undefined'&&DM196I.keeper)||near(27.2,271),merchant:(typeof DM196TP!='undefined'&&DM196TP.npc)||near(40,270.95)}; // v196: the Inn's and the Trading Post's keepers
+  const C=new V(T0.cx,0,T0.cy+2);D.npc=IC151D.npc.map((n,i)=>{const g=G[n.k];if(!g)return null;g.updateMatrixWorld(true);let rig=g;if(!g.bones){g.traverse(o=>{if(o.bones&&rig===g)rig=o})}const w=rig.getWorldPosition(new V());
+    const u=C.clone().sub(w).setY(0).normalize(),st=n.k==='inn'&&T0.tv?(()=>{const q=dm196IntroInn();return new V(q[0],0,q[1])})():w.clone().addScaledVector(u,n.k==='smith'?2.3:1.95);return Object.assign({},n,{g:rig,w,st:[st.x,st.z],ry0:rig.rotation.y,mt:IC151D.meets[i]})});
   if(D.npc.some(n=>!n))D.npc=D.npc.filter(n=>n);
   // the path: walk legs between the stops (eased in and out), a cut from outside the south gate to Portal Road
   const sp=[START[0],START[1]],npcSt=D.npc.map(n=>n.st),M=D.npc,W=IC151D.walks,legs=[];
   // v151b: the game's own Cheddar on his crate by the quest board (CHQ148); the hero stops 2 m in front of him
-  D.ref=[40,353.5];{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
+  D.ref=dm196IntroRef();{let C=null,sp2=null;try{if(typeof chq148Build=='function'&&!CHQ148.board)chq148Build();C=CHQ148.P&&CHQ148.P.ch;sp2=chq148Spot()}catch(_){}
     if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
-  const route=[[sp,[33.5,291.6],npcSt[0]],[npcSt[0],[28.2,284],[27.6,278.2],npcSt[1]],[npcSt[1],[28.0,278.4],[28.6,281.2],[31.0,282.3],npcSt[2]],[npcSt[2],[35.9,281.0],[36.4,276.4],npcSt[3]],[npcSt[3],[43.4,277.6],[43.2,285.0],CS],[CS,[41.2,290.8],[40.05,292.6],[40.0,295.6],[40.2,301.5]],[[40,334],[40,349.4]]];
-  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=[40,349.4];
+  const route=dm196IntroRoute(sp,npcSt,CS); // v196: legs found on the round town's walking grid (3670)
+  for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=route[route.length-1][route[route.length-1].length-1].slice();
+  {const R=route[route.length-1],a=R[R.length-2],b=R[R.length-1];D.endYaw=Math.atan2(b[0]-a[0],b[1]-a[1])}
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not
-  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.ched[0]-.2&&t<IC151D.ched[1])return Math.atan2(D.ched[0]-ic151DPos(D,t)[0],D.ched[1]-ic151DPos(D,t)[1]);if(t>=IC151D.walks[6][1]-.3)return 0;return null};
+  const look=(t)=>{for(const n of M)if(t>=n.mt[0]-.2&&t<n.mt[1])return Math.atan2(n.w.x-ic151DPos(D,t)[0],n.w.z-ic151DPos(D,t)[1]);if(t>=IC151D.ched[0]-.2&&t<IC151D.ched[1])return Math.atan2(D.ched[0]-ic151DPos(D,t)[0],D.ched[1]-ic151DPos(D,t)[1]);if(t>=IC151D.walks[6][1]-.3)return D.endYaw;return null};
   const DT=1/60,TA=IC151D.arr[0],TB=IC151.dEnd+.2,N=Math.ceil((TB-TA)/DT)+1,A=new Float32Array(N*4);let yaw=Math.PI,yv=0,lp=ic151DPos(D,TA),ad=a=>Math.atan2(Math.sin(a),Math.cos(a));
   for(let i=0;i<N;i++){const t=TA+i*DT,p=ic151DPos(D,t),vx=(p[0]-lp[0])/DT,vz=(p[1]-lp[1])/DT,spd=i?Math.hypot(vx,vz):0;lp=p;let tg=look(t);
     if(tg==null)tg=spd>.15?Math.atan2(vx,vz):(t<IC151D.walks[0][0]?Math.PI+.35*Math.sin((t-TA)*.9)*ic151Sm(ic151K(t,57,58.5)):yaw);
-    if(Math.abs(t-IC151D.walks[6][0])<DT*.6){yaw=0;yv=0}
+    if(Math.abs(t-IC151D.walks[6][0])<DT*.6){yaw=D.endYaw;yv=0}
     yv+=(81*ad(tg-yaw)-2*.95*9*yv)*DT;yaw+=yv*DT;A.set([p[0],p[1],yaw,spd>.12?1:0],i*4)}
   D.trk={TA,DT,N,A};
   // a stand-in Cheddar only when the game has none at his board
@@ -98,8 +99,8 @@ function ic151DStart(S){const D=S.D;if(!D||D.on)return D;D.on=true;ic151DCss();d
 function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,gy=(x,z)=>GH(x,z),H=new V(h.x,gy(h.x,h.z),h.z),fw=new V(Math.sin(h.yaw),0,Math.cos(h.yaw)),sd=new V(fw.z,0,-fw.x),up=y=>new V(0,y,0);
   let p,l,fov=50,F=H.clone(),z=-1;const IV=IC151D;
   if(t<IV.arr[1]){const k=Io(K(t,IV.arr[0],IV.arr[1]));p=H.clone().addScaledVector(fw,2.4+4.2*k).addScaledVector(sd,.3+1.6*k).add(up(1.2+1.9*k));l=H.clone().add(up(1.15+.25*k));fov=46}
-  else if(t>=IV.v1[0]){if(t<IV.v1[1]){const k=Io(K(t,IV.v1[0],IV.v1[1]));p=H.clone().add(new V(1.2+2*k,2.2+11*k,-4.5-9*k));l=H.clone().add(up(1.2)).lerp(H.clone().add(new V(0,0,38)),k);fov=52}
-    else if(t<IV.v2[1]){const k=Sm(K(t,IV.v2[0],IV.v2[1]));p=new V(64-26*k,46+4*k,326-8*k);l=new V(40,2,288-4*k);F=new V(40,0,300);fov=50}
+  else if(t>=IV.v1[0]){if(t<IV.v1[1]){const k=Io(K(t,IV.v1[0],IV.v1[1]));p=H.clone().add(new V(1.2+2*k,2.2+11*k,-4.5-9*k));l=H.clone().add(up(1.2)).lerp(H.clone().add(new V(Math.sin(D.endYaw)*38,0,Math.cos(D.endYaw)*38)),k);fov=52}
+    else if(t<IV.v2[1]){const k=Sm(K(t,IV.v2[0],IV.v2[1]));{const T0=TOWNS[0];p=new V(T0.cx+24-26*k,46+4*k,T0.cy+42-8*k);l=new V(T0.cx,2,T0.cy+4-4*k);F=new V(T0.cx,0,T0.cy+10)}fov=50} // v196: over the round town
     else if(t<IV.v3+6*IV.v3d){const i=Math.min(5,Math.floor((t-IV.v3)/IV.v3d)),k=Sm(K(t-IV.v3-i*IV.v3d,0,IV.v3d)),G=D.gates[i];z=i;
       if(G){const P=new V(G.x,gy(G.x,G.z),G.z),a=new V(G.a[0],0,G.a[1]),dr=a.clone().sub(P).setY(0).normalize(),sv=new V(dr.z,0,-dr.x);p=P.clone().addScaledVector(dr,10.5-1.8*k).addScaledVector(sv,(i%2?-1:1)*2.6).add(up(3.0+.5*k));l=P.clone().add(up(2.5));F=P.clone().addScaledVector(dr,4)}
       else{p=H.clone().add(up(5));l=H.clone()}fov=48}
@@ -115,13 +116,12 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
   else{let done=false;for(let i=0;i<D.npc.length;i++){const n=D.npc[i];if(t>=IV.walks[i][0]&&t<n.mt[0]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0),dd=dr.length();dr.normalize();const sv=new V(dr.z,0,-dr.x),k=Sm(K(dd,1.9,6));
         if(i<2){p=H.clone().addScaledVector(dr,-1.9-1.4*k).addScaledVector(sv,-1.15).add(up(1.75+.5*k));l=N.clone().add(up(1.45)).lerp(H.clone().add(up(1.2)),.25*k);fov=44+4*k}
         else{// locked-off cameras on open ground that pan with him: the tavern corner → the smithy front, the lane → the Trading Post
-          const P=i===2?[26.0,283.6,2.3]:[43.7,274.7,2.0];p=new V(P[0],gy(P[0],P[1])+P[2],P[1]);l=H.clone().add(up(1.15));fov=i===2?40:46}
+          p=H.clone().addScaledVector(dr,-2.6-1.2*k).addScaledVector(sv,(i===2?1:-1)*1.6).add(up(2.1+.4*k));l=N.clone().add(up(1.35)).lerp(H.clone().add(up(1.2)),.3*k);fov=46} // v196: follow him (the old locked-off corners are gone)
         done=true;break}
       if(t>=n.mt[0]&&t<n.mt[1]){const N=n.w.clone(),dr=N.clone().sub(H).setY(0).normalize(),sv=new V(dr.z,0,-dr.x),k=Sm(K(t,n.mt[0],n.mt[1]));
         p=H.clone().addScaledVector(dr,-1.9+.3*k).addScaledVector(sv,(i%2?-1:1)*1.15).add(up(1.75));l=N.clone().add(up(1.45));fov=44;done=true;break}}
-    if(!done){const w=IV.walks;if(t>=w[5][0]+1.05&&t<w[5][1]){p=new V(44.6,gy(44.6,309)+2.4,309);l=H.clone().add(up(1.1));fov=48}
-      else if(t>=w[5][0]&&t<w[5][1]){p=new V(37.6,gy(37.6,290.2)+1.9,290.2);l=H.clone().add(up(1.15));fov=50}   // in the square, as he heads for the gate
-      else if(t>=w[6][0]&&t<w[6][1]){p=new V(41.4,gy(41.4,356.5)+1.0,356.5);l=H.clone().add(up(1.05));fov=46}
+    if(!done){const w=IV.walks;if(t>=w[5][0]&&t<w[5][1]){p=H.clone().addScaledVector(fw,-3.6).addScaledVector(sd,1.4).add(up(2.2));l=H.clone().addScaledVector(fw,2.5).add(up(1.15));fov=50}   // v196: behind him, as he heads for the north gate
+      else if(t>=w[6][0]&&t<w[6][1]){p=H.clone().addScaledVector(fw,4.2).addScaledVector(sd,-1.2).add(up(1.0));l=H.clone().add(up(1.05));fov=46}
       else{p=H.clone().addScaledVector(fw,-3.4).addScaledVector(sd,.9).add(up(2.0));l=H.clone().addScaledVector(fw,3).add(up(1.1));fov=50}}}
   p.y=Math.max(p.y,gy(p.x,p.z)+.5);return {p,l,fov,F,z,nf:z>=0||(t>=IV.v2[0]&&t<IV.v2[1])}}
 function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000,dt=Math.max(0,Math.min(.1,D.lt==null?0:t-D.lt)),K=ic151K,Sm=ic151Sm;D.lt=t;

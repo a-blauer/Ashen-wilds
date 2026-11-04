@@ -16,12 +16,8 @@
 // Shops (the TWN100 market kits, the Magic Shop now one of them) and the upgrade structures (KDU) are rebuilt in place
 // when their lot changes; shop footprints are solid tiles ('B'), upgrade structures keep their own colliders.
 // Free lots showed four wooden stakes; since v109 (1960) only open lots exist and show a dim ground outline. The plan view in the Steward's window is drawn by lotPlan103.
-var LOT103=(()=>{const H=Math.PI/2,L=[];
-  L.push({id:'NW',x:-6.4,z:-17.4,ry:0,a:'North row',st:0},{id:'NE',x:6.6,z:-17.4,ry:0,a:'North row',st:0},{id:'NM',x:14.6,z:-17,ry:0,a:'North row',st:0});
-  L.push({id:'CW',x:-7.7,z:-7.1,ry:0,a:'By the fountain',st:0},{id:'CE',x:7.7,z:-7.1,ry:0,a:'By the fountain',st:0});
-  for(let k=1;k<=5;k++){const z=14.6+7.5*(k-1),a='Row '+k,o=k%2?-1:1;
-    L.push({id:'S'+k+'W',x:-7.01,z,ry:H,a,st:k},{id:'S'+k+'M',x:o*14,z,ry:Math.PI,a,st:k},{id:'S'+k+'E',x:7.01,z,ry:-H,a,st:k})}
-  return L})();
+// v196: the lots stand in rings round the fountain (DM196_LOT in 0045); ids, stages and the save format are unchanged
+var LOT103=dm196Lots().filter(l=>!l.fix).map(l=>({id:l.id,x:l.x,z:l.z,ry:l.ry,a:l.a,st:l.st}));
 var LOTM103={};LOT103.forEach(l=>LOTM103[l.id]=l);
 var DEF103={smith:'CW',magic:'NM'};
 var UPK103=['train','tower','treas','den','hatch']; // placeable upgrades (Bastion Walls is the wall ring itself)
@@ -166,7 +162,8 @@ function lotPlan103(cv,opt){opt=opt||{};const T=TOWNS[0],F=typeof kf109=='functi
     if(q.r!=null){const [px,pz]=P(x,z);c.beginPath();c.arc(px,pz,Math.max(1,q.r*s),0,6.283);c.fill()}else{const [px,pz]=P(x-q.hx,z-q.hz);c.fillRect(px,pz,q.hx*2*s,q.hz*2*s)}});
   // fixed landmarks
   const lab=(t,x,z,f)=>{const [px,pz]=P(x,z);c.font=f||(Math.round(s*2.2)+'px serif');c.textAlign='center';c.textBaseline='middle';c.fillText(t,px,pz)};
-  lab('⛲',0,0);lab('🍺',-14,-16);lab('🪙',0,-16);lab('🏰',SHM.st?SHM.st.x-T.cx:-14,SHM.st?SHM.st.z-T.cy:7);
+  lab('⛲',0,0);{const I=typeof dm196Fix=='function'&&dm196Fix('inn'),P0=typeof dm196Fix=='function'&&dm196Fix('post');lab('🍺',I?I.x:-14,I?I.z:-16);lab('🪙',P0?P0.x:0,P0?P0.z:-16)} // v196: the Inn and the Trading Post on the plaza ring
+  lab('🏰',SHM.st?SHM.st.x-T.cx:-14,SHM.st?SHM.st.z-T.cy:7);
   // lots
   const R={};LOT103.forEach(l=>{const k=lotKey103(l.id),[ax,az]=P(l.x-3.5,l.z-3.5),w=7*s;R[l.id]=[ax,az,w];
     const pick=opt.pick!=null,ok=pick&&(!k||k===opt.pick),hov=opt.hover===l.id;

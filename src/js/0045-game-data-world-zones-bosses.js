@@ -102,10 +102,36 @@ const rgAt=(x,y)=>{const I=insAt(x,y);return I?I.g:-1};
 const tierAt=(x,y)=>{const r=regionAt(x,y);return r<0?1:PMAP[r].t};
 var TWN100_SZ=51,TWN100_IW=51,TWN100_WX=36; // v101: one Grand Square — walls at x ±36 (TWN100_WX), z -21..+51; no inner wards (IW = SZ)
 const TOWNS=[
- {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:40,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
+ {n:'Duskhold',tav:'The Last Lantern',cy:284,fx:56,pal:{wall:0x6a6470,wood:0x2a2026,roof:0x3a2a4a,stone:0x5a5662,ban:0x8a2a3a}}
 ].map((t,i)=>{t.i=i;t.cx=t.fx;t.sz=TWN100_SZ;t.mp=[t.cx,t.cy-11.85];t.mv=[t.cx+15.3,t.cy-11.55];t.col=[];t.tv=[t.cx-14.25,t.cy-11.25];t.sp=[t.cx,t.cy+8.4];return t}); // v109: spawn a little north (the smallest kingdom's south wall is at z 11)
 const START=TOWNS[0].sp.slice();
-const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, where the Portal Road begins
+// v196 (owner, Nov 3 2026): Duskhold is a round meadow ringed by a wall of tall trees, no longer a floating rock. Town-local frame:
+// origin = the fountain, +z south, angles clockwise from north (dm196Ang). RM = the meadow's walkable edge, RT = where the forest's
+// ground ends (void beyond). The town walls are round (WR = radius per kingdom stage). Six portal rooms sit in the forest behind the
+// meadow's edge, three north (I II III) and three south (IV V VI), each its own clearing reached by a short path through the trees
+// (cw = the path's half width); a sealed entryway closes each path until its portal opens (3610-v196).
+var DM196={RM:45.5,RT:52,WR:[21,30,30.5,31,31.5,40],RA:15,RB:25.5,RC:35.5,rr:11,cw:2.4,FR:6,
+  rooms:[[-34,-62],[0,-68],[34,-62],[34,62],[0,68],[-34,62]],wd:null,x0:0,y0:0,nx:0,ny:0};
+function dm196Ang(x,z){return Math.atan2(x,-z)}
+// v196: the building lots in rings round the fountain, every one facing the plaza (ry = -angle). Ring A (r 15): the five first lots,
+// the Trading Post and the Inn; ring B (r 25.5): rows 1-4 (3 lots each); ring C (r 35.5): row 5 and the four kingdom buildings
+// (granary, chapel, barracks, keep: 1850). Angles in degrees; w/d = footprint half sizes for the fixed buildings.
+var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0],['NW','A',-127,0],
+  ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
+  ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',18,3],['S4W','B',-18,4],['S4E','B',162,4],['S4M','B',-162,4],
+  ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
+var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-140,4.5,4.5],chapel:['C',140,4.5,4.5],barracks:['C',-40,4.5,4.5],keep:['C',40,4.5,4.5]};
+function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
+function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));
+  for(const k in DM196_FIX){const [ring,deg,w,d]=DM196_FIX[k];L.push(Object.assign(dm196At(ring,deg),{id:k,fix:1,w,d}))}return L}
+function dm196R(x,z){const T=TOWNS[0];return Math.hypot(x-T.cx,z-T.cy)}
+// a portal room's entry on the meadow's edge, and the room's own walkable disc (world coords)
+function dm196Ent(i,r){const T=TOWNS[0],c=DM196.rooms[i],L=Math.hypot(c[0],c[1]);r=r==null?DM196.RM:r;return [T.cx+c[0]/L*r,T.cy+c[1]/L*r]}
+// walkable signed distance in the town area (meadow, paths, rooms); null outside the area
+function dm196Wd(x,y){const D=DM196;if(!D.wd)return null;const i=Math.round(x)-D.x0,j=Math.round(y)-D.y0;if(i<0||j<0||i>=D.nx||j>=D.ny)return null;return D.wd[j*D.nx+i]}
+// the room a world point is in (its disc + 1), or -1
+function dm196Room(x,z,pad){const T=TOWNS[0];pad=pad||0;for(let i=0;i<6;i++){const c=DM196.rooms[i];if(Math.hypot(x-T.cx-c[0],z-T.cy-c[1])<DM196.rr+pad)return i}return -1}
+const PCOURT=[TOWNS[0].cx,TOWNS[0].cy+12]; // v196: no Portal Road any more: the old crossroads spot is the south side of the plaza
 // v100 town: Duskhold's walls run from cy-TS (north) to cy+TWN100_SZ (south). Upper town cy-TS..cy+TS (plaza, north row),
 // market ward cy+TS..cy+TWN100_IW (shop street), inner wall + gate at cy+TWN100_IW, courtyard ward behind it, south gate at
 // cy+TWN100_SZ. Six portal gates stand on their own islands round the castle, joined by roads (TWN100_RD); PCOURT (the
@@ -115,16 +141,18 @@ const PCOURT=[40,347]; // v101: the crossroads just outside the south gate, wher
 const CYD={x:40,y:317,r0:9,dr:1.3,rmax:16.8,r:9,gate:[40,299],gate2:[40,335],nodes:[]};
 // v100: the six portal gates, one island each (x,y centre, r radius, a = the spot in front of the portal: you arrive there)
 // v101: the Portal Road runs straight south from the south gate; gates I..VI stand in order along it, alternating east/west
-const TWN100_PG=[0,1,2,3,4,5].map(i=>{const y=362+i*27,s=i%2?-1:1,x=40+s*16;return {x,y,r:10,a:[x-s*7,y],side:s}});
+const TWN100_PG=[0,1,2,3,4,5].map(i=>{const T=TOWNS[0],c=DM196.rooms[i],L=Math.hypot(c[0],c[1]),ux=-c[0]/L,uz=-c[1]/L,x=T.cx+c[0],y=T.cy+c[1];
+  return {x,y,r:DM196.rr,a:[x+ux*6.5,y+uz*6.5],side:c[0]<0?-1:1,ent:dm196Ent(i)}}); // v196: the six portal rooms (portal at the centre, facing the path in)
 // roads (polylines, 3 tiles wide) make a ring round the castle: east gate -> crossroads (PCOURT) -> Kindlelight; crossroads ->
 // Hillside -> Burningeye; crossroads -> Sands -> Dirge -> Citadel <- south gate; west gate -> Burningeye and -> Citadel
-const TWN100_RD=[[[40,335],[40,TWN100_PG[5].y+7]]].concat(TWN100_PG.map(p=>[[40,p.y],[p.a[0],p.y]]));
+const TWN100_RD=TWN100_PG.map((p,i)=>[dm196Ent(i,DM196.RM-1),[p.x,p.y]]); // v196: each room's path through the trees
 // v100: the market ward's shop plots (town-local tiles): side -1 = west row (facade at x=-5.5, faces the street to the east),
 // +1 = east row; z = plot centre. The 7x5-tile footprint (|x| 6..12, z-2..z+2) is solid ('B'): building or fenced plot.
 // v101: the shops line the west (s=-1, facing +x) and east (s=+1, facing -x) sides of the Grand Square; x = plot centre
 const TWN100_SH=[{k:'smith',s:-1,z:-9},{k:'alch',s:-1,z:2},{k:'cook',s:-1,z:13},{k:'bard',s:-1,z:24},
  {k:'merchant',s:1,z:-9},{k:'sage',s:1,z:2},{k:'trainer',s:1,z:13},{k:'stable',s:1,z:24}].map(q=>Object.assign(q,{x:q.s*29.5,ry:TWN100_ry(q)}));
-const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.abs(x-t.cx)<=TWN100_WX+.5+(pad||0)&&z>=t.cy-TS-.5-(pad||0)&&z<=t.cy+(t.sz||TS)+.5+(pad||0)); // v100: walls reach cy+sz
+const townAt=(x,z,pad)=>TOWNS.findIndex(t=>Math.hypot(x-t.cx,z-t.cy)<=DM196.RT+.5+(pad||0)||dm196Room(x,z,DM196.FR+(pad||0))>=0||dm196Path(x,z,DM196.FR+(pad||0))>=0); // v196: the meadow, its forest and the portal rooms
+function dm196Path(x,z,pad){for(let i=0;i<6;i++){const a=TWN100_RD[i][0],b=TWN100_RD[i][1],dx=b[0]-a[0],dz=b[1]-a[1],L2=dx*dx+dz*dz,t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/L2));if(Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t)<DM196.cw+(pad||0))return i}return -1}
 const BOSSES=[
  {name:'Argus, the Hundred-Eyed',title:'Watcher of Kindlelight',sp:'EyeWolf',lvl:9},
  {name:'The Crest Hydra',title:'Mother of Serpents',sp:'Hydra',lvl:18},
@@ -134,7 +162,7 @@ const BOSSES=[
  {name:'Lord Vaelric',title:'The Crimson King of the Citadel',sp:'VampLord',lvl:51,hum:'vlord'}].map((b,i)=>{b.x=PMAP[i].ba[0];b.y=PMAP[i].ba[1];return b});
 // Every creature type owns a region with its own terrain. gnd/grs/acc/frs/wat = colors, tree/pr = tree and prop kinds, den = [grass, accent, forest, water] density
 const BIOMES=[
- {n:'Duskhold',sp:'Foxlet',x:40,y:284,t:1,gnd:[92,88,96],grs:[70,86,74],acc:[110,104,112],frs:[30,40,34],wat:[46,80,120],tree:['dead','pine'],pr:['rock','pillar'],den:[.3,.5,0,0],tc:[0x3a2a28,0x2a3a30,0x34443a]},
+ {n:'Duskhold',sp:'Foxlet',x:56,y:284,t:1,gnd:[70,84,52],grs:[62,92,48],acc:[112,104,70],frs:[30,40,26],wat:[46,80,120],tree:['dead','pine'],pr:['rock','pillar'],den:[.3,.5,0,0],tc:[0x3a2a28,0x2a3a30,0x34443a]},
  {n:'Kindlelight',sp:'Mossfrog',x:210,y:112,t:1,gnd:[44,52,34],grs:[40,64,30],acc:[66,60,30],frs:[18,28,20],wat:[60,120,30],tree:['dead','dead','oak'],pr:['mush','bones','mush','bush','rock'],den:[1,1,.5,2.4],tc:[0x24301c,0x2a4a24,0x3a5a2a],amp:.35},
  {n:'Hillside Crest',sp:'Foxlet',x:420,y:112,t:2,gnd:[106,128,62],grs:[84,136,52],acc:[168,160,82],frs:[34,72,34],wat:[56,116,168],tree:['oak','oak','pine'],pr:['flower','flower','bush','rock','rock'],den:[1.3,.8,.4,.4],tc:[0x5a3a22,0x3f8a3a,0x58a84a],amp:.9},
  {n:'Burningeye Summit',sp:'Ashwolf',x:630,y:112,t:3,gnd:[206,216,228],grs:[178,194,214],acc:[146,166,190],frs:[34,64,66],wat:[150,200,232],tree:['pine','pine','dead'],pr:['rock','crystal','rock','bush'],den:[.8,.9,.5,.6],tc:[0x3a2a28,0x214a50,0x2a5a60],amp:1.3},
@@ -152,13 +180,14 @@ const MAP=(()=>{
   const stamp=(cx,cy,r)=>{for(let y=Math.max(1,Math.floor(cy-r-5));y<=Math.min(H-2,Math.ceil(cy+r+5));y++)for(let x=Math.max(1,Math.floor(cx-r-5));x<=Math.min(W-2,Math.ceil(cx+r+5));x++){const d=Math.hypot(x-cx,y-cy)-r,k=y*W+x;if(d<DW[k])DW[k]=d}};
   // ---- the floating stronghold: the town square, a road east, and the portal court ----
   const T=TOWNS[0];
-  // v100: the island is a rectangle round the walls (north square + south ward) with a 7-tile apron
-  const SE=T.sz-TS,XE=TWN100_WX-TS; // v101: the island is a rectangle round the Grand Square's walls with a 7-tile apron
-  for(let y=T.cy-31;y<=T.cy+SE+31;y++)for(let x=Math.max(1,T.cx-XE-31);x<=Math.min(W-2,T.cx+XE+31);x++){const ax=Math.abs(x-T.cx),dx=ax>XE?ax-XE:0,dz=y<T.cy?T.cy-y:y>T.cy+SE?y-T.cy-SE:0,d=Math.max(dx,dz)-28-1.5*Math.sin(x*.7+y*.4),k=y*W+x;if(d<DW[k])DW[k]=d}
-  // roads, the crossroads by the main gate and the six portal islands
-  const road=(L,r)=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);for(let q=0;q<=n;q++)stamp(ax+(bx-ax)*q/n,ay+(by-ay)*q/n,r)}};
-  TWN100_RD.forEach(L=>road(L,2.7));stamp(PCOURT[0],PCOURT[1]+1,8.5);
-  TWN100_PG.forEach(p=>{stamp(p.x,p.y,p.r);stamp(p.x+p.r*.35,p.y-p.r*.3,p.r*.72);stamp(p.x-p.r*.4,p.y+p.r*.3,p.r*.7)});
+  // v196: the round meadow, the paths through the forest and the portal rooms (walkable, wd < 0); the forest round them is ground
+  // too (DW < 0) but solid (tile '#', drawn by 3610's tall trees, never chopped); void beyond the forest
+  {const D=DM196,x0=1,y0=T.cy-Math.ceil(D.RT+40),x1=Math.min(W-2,T.cx+Math.ceil(D.RT)+2),y1=T.cy+Math.ceil(D.RT+40);D.x0=x0;D.y0=y0;D.nx=x1-x0+1;D.ny=y1-y0+1;D.wd=new Float32Array(D.nx*D.ny).fill(99);
+   const seg=(ax,az,bx,bz,x,z)=>{const dx=bx-ax,dz=bz-az,L2=dx*dx+dz*dz,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/L2));return Math.hypot(x-ax-dx*t,z-az-dz*t)};
+   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const lx=x-T.cx,lz=y-T.cy,r=Math.hypot(lx,lz);let wd=r-D.RM-.6*Math.sin(Math.atan2(lx,lz)*7)*.5,env=r-D.RT-1.2*Math.sin(Math.atan2(lx,lz)*9+1);
+     D.rooms.forEach((c,i)=>{const q=Math.hypot(lx-c[0],lz-c[1]);wd=Math.min(wd,q-D.rr-.5*Math.sin(Math.atan2(lx-c[0],lz-c[1])*5+i));env=Math.min(env,q-D.rr-D.FR);
+       const e=TWN100_RD[i][0],pq=seg(e[0]-T.cx,e[1]-T.cy,c[0],c[1],lx,lz);wd=Math.min(wd,pq-D.cw);env=Math.min(env,pq-D.cw-D.FR)});
+     D.wd[(y-y0)*D.nx+(x-x0)]=wd;const k=y*W+x;if(env<DW[k])DW[k]=env}}
   // ---- the six portal maps, three instances each (v106) ----
   INSL.forEach(p=>{
     const pts=[];if(p.tri){p.path=[p.wa.slice()];stamp(p.wa[0],p.wa[1],15);for(let y=p.y0;y<p.y0+p.h;y++)for(let x=p.x0;x<p.x0+p.w;x++)bio[y][x]=PMAP[p.z].bi;return}
@@ -199,27 +228,31 @@ const MAP=(()=>{
   // boss arenas: rune floor, ring of columns and four cover pillars
   BOSSES.forEach(b=>{const R=Math.ceil(15.5*DK)+1;for(let y=b.y-R;y<=b.y+R;y++)for(let x=b.x-R;x<=b.x+R;x++)if(Math.hypot(x-b.x,y-b.y)<15.5*DK)m[y][x]='a';
     });
-  // v101: the stronghold town — one Grand Square: walls at |x|=WX and z=-TS / z=sz, a 3-tile south gate, paving inside,
-  // the north row and fountain solid, and the eight shop plots solid (rotated footprints; v103 re-marks them by building lot)
-  TOWNS.forEach(t=>{const WX=TWN100_WX,SZ=t.sz||TS;
-    for(let dy=-TS-3;dy<=SZ+3;dy++)for(let dx=-WX-3;dx<=WX+3;dx++){const x=t.cx+dx,y=t.cy+dy;if(x<1||x>W-2)continue;const ax=Math.abs(dx);
-      if(ax>WX||dy<-TS||dy>SZ){if(m[y][x]=='')m[y][x]='.';continue}
-      if(ax==WX||dy==-TS){m[y][x]='W';continue}
-      if(dy==SZ){m[y][x]=ax<=1?'P':'W';continue}
-      m[y][x]='P'}
-    TWN100_SH.forEach(q=>{const f=[Math.sin(q.ry),Math.cos(q.ry)],a=[f[1],-f[0]];for(let lx=-2.5;lx<=2.5;lx+=.5)for(let lz=-3.5;lz<=3.5;lz+=.5){const x=Math.round(t.cx+q.x+lx*a[0]+lz*f[0]),y=Math.round(t.cy+q.z+lx*a[1]+lz*f[1]);if(m[y][x]=='P')m[y][x]='B'}});
-    const B=(x0,x1,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m[t.cy+y][t.cx+x]='B'};
-    B(-17,-11,-18,-14);B(-2,2,-18,-14);B(12,17,-18,-14);B(-1,1,-12,-12);
-    for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x*x+y*y<=6)m[t.cy+y][t.cx+x]='B';
-  });
-  // v100: dirt roads (3 wide) outside the portal islands; each island takes its zone's ground (bio) with accent patches
-  {const inPG=(x,y)=>TWN100_PG.some(p=>Math.hypot(x-p.x,y-p.y)<p.r-.6);
-   TWN100_RD.forEach(L=>{for(let i=0;i<L.length-1;i++){const [ax,ay]=L[i],[bx,by]=L[i+1],n=Math.ceil(Math.hypot(bx-ax,by-ay)*2);
-     for(let q=0;q<=n;q++){const cx=ax+(bx-ax)*q/n,cy=ay+(by-ay)*q/n;for(let y=Math.round(cy)-2;y<=Math.round(cy)+2;y++)for(let x=Math.round(cx)-2;x<=Math.round(cx)+2;x++)
-       if(Math.hypot(x-cx,y-cy)<1.45&&m[y][x]=='.'&&!inPG(x,y))m[y][x]='p'}}});
-   TWN100_PG.forEach((p,i)=>{const b=PMAP[i].bi;for(let y=Math.floor(p.y-p.r*1.5);y<=p.y+p.r*1.5;y++)for(let x=Math.floor(p.x-p.r*1.5);x<=p.x+p.r*1.5;x++){if(!m[y]||m[y][x]==='')continue;
-     const d=Math.hypot(x-p.x,y-p.y);if(d>p.r*1.4)continue;bio[y][x]=b;if(m[y][x]=='p'&&d<p.r+2)m[y][x]='.';
-     if(m[y][x]=='.'){const h=(x*7+y*13)%11;if(i==1&&h<5)m[y][x]='g';else if(i==0&&h<3)m[y][x]='g';else if(d>p.r-1.5&&h<3)m[y][x]='a'}}})}
+  // v196: Duskhold's tiles: the forest ('#', solid), the meadow ('.' with grass 'g' and wildflower 'a' patches in the outskirts),
+  // the paved plaza and avenues ('P'), dirt streets and paths ('p'), the fountain ('B'). The town walls' ring ('W') and the building
+  // lots ('B') are set at run time by the kingdom's stage (3610 dm196Tiles, 1860 lotMark103). Each portal room takes its zone's ground.
+  {const T=TOWNS[0],D=DM196,hs=(x,y,k)=>{const n=Math.sin(x*12.9898+y*78.233+k*37.7)*43758.5453;return n-Math.floor(n)};
+   const lots=dm196Lots();
+   const onLot=(lx,lz,p)=>lots.some(l=>{const c=Math.cos(l.ry),sn=Math.sin(l.ry),dx=lx-l.x,dz=lz-l.z,u=dx*c-dz*sn,v=dx*sn+dz*c;return Math.abs(u)<(l.w||3.5)+p&&Math.abs(v)<(l.d||3.5)+p});
+   for(let y=D.y0;y<D.y0+D.ny;y++)for(let x=D.x0;x<D.x0+D.nx;x++){const k=y*W+x;if(DW[k]>=0)continue;const wd=D.wd[(y-D.y0)*D.nx+(x-D.x0)],lx=x-T.cx,lz=y-T.cy,r=Math.hypot(lx,lz),ri=dm196Room(x,y,D.FR+.5);
+     if(ri>=0||dm196Path(x,y,D.FR+.5)>=0&&r>D.RM-2){const pi=ri>=0?ri:dm196Path(x,y,D.FR+.5);if(ri>=0||r>D.RM+3)bio[y][x]=PMAP[pi].bi}
+     if(wd>=0){m[y][x]='#';continue}
+     if(r<D.RM+1){
+       if(r<2.5){m[y][x]='B';continue}
+       if(r<11.2){m[y][x]='P';continue}
+       const av=Math.abs(lx)<1.6&&r<D.WR[5]+.5;if(av){m[y][x]='P';continue}
+       if(Math.abs(lx)<1.3){m[y][x]='p';continue}
+       const ag=Math.abs(dm196Ang(lx,lz))*180/Math.PI,st=(r>19.9&&r<21.3)||(r>29.6&&r<31.5)||(r>42&&r<43.4&&(ag<31||ag>149));if(st&&!onLot(lx,lz,.2)){m[y][x]='p';continue}
+       if(r>D.WR[5]+1.5){const h=hs(x,y,1);m[y][x]=h<.42?'g':h<.5?'a':'.';continue}
+       m[y][x]=!onLot(lx,lz,.6)&&hs(x,y,2)<.07?'a':'.';continue}
+     // the paths through the forest: dirt down the middle; the rooms: their zone's ground with a few patches
+     const pi=dm196Path(x,y,0);if(ri<0&&pi>=0){const e=TWN100_RD[pi][0],b=TWN100_RD[pi][1],dx=b[0]-e[0],dz=b[1]-e[1],L=Math.hypot(dx,dz),q=Math.abs((x-e[0])*dz-(y-e[1])*dx)/L;m[y][x]=q<1.1?'p':hs(x,y,3)<.3?'g':'.';continue}
+     if(ri>=0){const p=TWN100_PG[ri],d=Math.hypot(x-p.x,y-p.y),h=(x*7+y*13)%11;m[y][x]=(ri==1&&h<5)||(ri==0&&h<3)?'g':d>p.r-1.5&&h<3?'a':'.';continue}
+     m[y][x]='.'}
+   // keep the avenues to the paths: from the plaza's north and south edges a dirt trail runs to each room's path
+   TWN100_RD.forEach((L,i)=>{const e=L[0],n=Math.ceil(Math.hypot(e[0]-T.cx,e[1]-T.cy));for(let q=0;q<=n;q++){const t=q/n,cx=T.cx+(e[0]-T.cx)*t,cy=T.cy+(e[1]-T.cy)*t;if(Math.hypot(cx-T.cx,cy-T.cy)<D.WR[5]+1)continue;
+     for(let yy=Math.round(cy)-1;yy<=Math.round(cy)+1;yy++)for(let xx=Math.round(cx)-1;xx<=Math.round(cx)+1;xx++)if(Math.hypot(xx-cx,yy-cy)<1.2&&m[yy]&&(m[yy][xx]=='.'||m[yy][xx]=='g'||m[yy][xx]=='a'))m[yy][xx]='p'}});
+  }
   if(typeof mq151MoveCamp=='function')mq151MoveCamp(m,props); // v151: Kindlelight I's entrance camp moves off the Lantern Road outpost (3020); after every seeded step above
   if(typeof sp152Map=='function')sp152Map(m,bio,DW); // v152: the special instances' ground (3150; no seeded draws)
   if(typeof v112Map=='function')v112Map(m,bio,DW,props,stamp); // v112: the themed instances II and III get their own ground (1981)
@@ -233,7 +266,7 @@ const MAP=(()=>{
   if(typeof v124Groves=='function')v124Groves(m); // v124: choppable groves inside the fields (the rim trees are scenery now, 2270)
   return m})();
 
-const tDist=(x,z)=>{let d=1e9;for(const t of TOWNS){const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dz=z<t.cy?t.cy-z:z>t.cy+se?z-t.cy-se:0,q=Math.max(ax>xe?ax-xe:0,dz);if(q<d)d=q}return d}; // v100
+const tDist=(x,z)=>{const T=TOWNS[0],r=Math.hypot(x-T.cx,z-T.cy);let d=Math.max(0,r-DM196.RM+TS+4);if(dm196Room(x,z,4)>=0||dm196Path(x,z,4)>=0)d=Math.min(d,TS);return d}; // v196: < TS+4 inside the meadow, its rooms and paths
 // ---- visual terrain: smooth heightfield (collision stays tile-based) ----
 const smt=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
 const hh2=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)};
@@ -248,13 +281,13 @@ const gY=(p,o)=>new THREE.Vector3(p.x,GH(p.x,p.z)+o,p.z);
 {
   const DW=MAP.DW,sp=x=>x<-5?0:Math.log1p(Math.exp(x*1.5))/1.5;
   const base=(x,y,a)=>.55+sp(1.0+(fbm2(x*.02+3,y*.02+9,4)-.5)*6*a+(fbm2(x*.07,y*.07+4,3)-.5)*1.6*a);
-  const supd=(x,y,t)=>{const se=(t.sz||TS)-TS,xe=TWN100_WX-TS,ax=Math.abs(x-t.cx),dx=ax>xe?ax-xe:0,dy=y<t.cy?t.cy-y:y>t.cy+se?y-t.cy-se:0;return Math.pow(Math.pow(dx,4)+Math.pow(dy,4),.25)}; // v100: walls reach cy+sz
+  const supd=(x,y,t)=>TS+Math.max(0,Math.hypot(x-t.cx,y-t.cy)-41); // v196: flat inside the round walls' widest ring
   TOWNS.forEach(t=>{t.ph=1.6});
   for(let j=-HPD;j<=H+HPD;j++)for(let i=-HPD;i<=W+HPD;i++){
     const tx=Math.max(0,Math.min(W-1,i)),ty=Math.max(0,Math.min(H-1,j)),k=ty*W+tx,I=insAt(tx,ty),r=I?I.z:-1,d=DW[k];let h;
     if(r<0){ // the floating stronghold, and empty sky everywhere else
       h=1.6+.05*fbm2(i*.2,j*.2,2);const dd=Math.max(0,d);h-=48*smt(0,4,dd)*(1+.3*fbm2(i*.1,j*.1,3));
-      TOWNS.forEach(t=>{const q=supd(i,j,t),m=smt(TS+1,TS+6,q);h=h*m+t.ph*(1-m)});
+      TOWNS.forEach(t=>{const q=supd(i,j,t),m=smt(TS+1,TS+6,q);h=h*m+t.ph*(1-m)});{const wq=dm196Wd(tx,ty);if(wq!=null&&wq>0&&d<0)h+=1.1*smt(0,5,wq)*(.6+.4*fbm2(i*.13,j*.13,2))} // v196: the forest floor
     }else{
       const b=BIOMES[PMAP[r].bi],a=b.amp==null?1:b.amp;h=base(i,j,a);
       if(MAP[ty][tx]=='~')h=-1.2;
