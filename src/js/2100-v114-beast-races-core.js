@@ -17,7 +17,8 @@
 // Look fields reused: skin = fur / hide colour, eye = eye colour. Hair, face and body sex are ignored.
 var BR={on:false,R:null,C:null,bare:false,feet:false,P:null,mask:false};
 var BR_MASK={cowl:1,galemask:1,wind:1,deadeye:1,wrap:1,bandana:1,viper:1,ashcowl:1,glassmask:1,stormhood:1,venom:1,dusk:1};
-var BRD={};                                                   // race id -> definition (2110)
+var BRD={};
+var BR_XB={};                                                  // (v195) names of the extra bones races add (brRig drops them on a race change)                                                   // race id -> definition (2110)
 var BR_CLS={warrior:1,assassin:2,mage:3,paladin:4,ranger:5};  // the one animal of each class
 function brOf(cls){return BRD[BR_CLS[cls]]||null}
 // since v114 every hero is its class's animal (there is no human option; old human saves become animals)
@@ -32,6 +33,8 @@ function brDef(id,D){D.id=id;BRD[id]=D;
 function brPlan(D){if(D._pl)return D._pl;const S=AW_PROP99,pn='br'+D.id;S.PRE[pn]=D.pre;
   S.plans.delete(D.HBX);const pl=S.plan(D.HBX,pn),SH=D.shear||{};
   for(const n in SH)pl.M[n][7]=SH[n];
+  // (v195) a race's own extra bones (D.MF: bone → the bone it was split from) scale like that bone, so a split spine keeps its length
+  if(D.MF)for(const n in D.MF){const a=pl.M[n],b=pl.M[D.MF[n]];if(a&&b)for(let j=0;j<9;j++)a[j]=b[j]}
   const mul=(M,x,y,z)=>[M[0]*x+M[1]*y+M[2]*z,M[3]*x+M[4]*y+M[5]*z,M[6]*x+M[7]*y+M[8]*z],a=pl.abs;
   pl.names.forEach(n=>{const p=D.HBX[n][0];if(!p||!pl.N[p]){for(let j=0;j<3;j++)pl.N[n][j]=a[n][j];return}
     const o=mul(pl.M[p],a[n][0]-a[p][0],a[n][1]-a[p][1],a[n][2]-a[p][2]);for(let j=0;j<3;j++)pl.N[n][j]=pl.N[p][j]+o[j]});
@@ -44,10 +47,13 @@ function brPlan(D){if(D._pl)return D._pl;const S=AW_PROP99,pn='br'+D.id;S.PRE[pn
 function brRig(h,race){
   const b=h&&h.bones,body=huBody(h);if(!b||!body||!body.skeleton)return;
   const D=race?BRD[race]:null,S=AW_PROP99,T=D?D.HBX:HB,pl=D?brPlan(D):(S.on?S.plan(HB,'real'):null);
-  // drop the previous race's tail bones, add this one's
-  Object.keys(b).filter(n=>/^tl\d+$/.test(n)&&!(T[n])).forEach(n=>{const bn=b[n];if(bn.parent)bn.parent.remove(bn);delete b[n]});
-  if(D)D.TB.forEach(n=>{if(b[n])return;const bn=new THREE.Bone();b[n]=bn;b[T[n][0]].add(bn)});
-  const names=Object.keys(T),arr=names.map(n=>b[n]);
+  // (v195) every bone of the race's table: create the missing ones, parent each as the table says (a race may insert bones
+  // into the chain: the weasel's chest hangs from sp2, its head from nk1), then drop the bones of another race (tail bones and
+  // the extra bones any race declares, BR_XB) — children are moved first, so nothing is lost
+  const names=Object.keys(T);names.forEach(n=>{if(!b[n])b[n]=new THREE.Bone()});
+  names.forEach(n=>{const p=T[n][0];if(p&&b[p]&&b[n].parent!==b[p])b[p].add(b[n])});
+  Object.keys(b).filter(n=>!T[n]&&(/^tl\d+$/.test(n)||BR_XB[n])).forEach(n=>{const bn=b[n];if(bn.parent)bn.parent.remove(bn);delete b[n]});
+  const arr=names.map(n=>b[n]);
   names.forEach(n=>{const P=pl?pl.N[n]:[T[n][1],T[n][2],T[n][3]],par=T[n][0],Q=par?(pl?pl.N[par]:[T[par][1],T[par][2],T[par][3]]):[0,0,0];b[n].position.set(P[0]-Q[0],P[1]-Q[1],P[2]-Q[2])});
   b.pelvis.userData.y0=b.pelvis.position.y-(D?pl.crouch.drop:0);
   const q=arr.map(x=>x.quaternion.clone());arr.forEach(x=>x.quaternion.identity());

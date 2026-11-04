@@ -20,7 +20,7 @@ JS=COMMON+r"""(a)=>{const [old,furi]=a,V=THREE.Vector3,out={info:{}};if(old)BF19
   BR.bare=true;const R=RT.beast('ranger',5,{});BR.bare=false;sc.add(R);RT.hideW(R);RT.idle(R,800);
   const body=huBody(R),G=body.geometry;let nan=0;const pa=G.attributes.position.array;for(let i=0;i<pa.length;i++)if(!isFinite(pa[i]))nan++;
   let tris=0;R.traverse(o=>{if(o.isMesh&&o.visible&&o.geometry){const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3}});
-  out.info.tris=Math.round(tris);out.info.nan=nan;out.info.bf=!old&&!!BRD[5].bf;out.info.SN=(BRD[5].SN||[]).length;out.info.ear=BRD[5].earE?BRD[5].earE.map(v=>+v.toFixed(3)):null;out.info.eye=BRD[5].EYEP;
+  out.info.bones=['sp1','sp2','nk1','erL','erR','lt','rt'].filter(n=>R.bones[n]&&huBody(R).skeleton.bones.includes(R.bones[n]));out.info.chestP=R.bones.chest.parent===R.bones.sp2;out.info.tris=Math.round(tris);out.info.nan=nan;out.info.bf=!old&&!!BRD[5].bf;out.info.SN=(BRD[5].SN||[]).length;out.info.ear=BRD[5].earE?BRD[5].earE.map(v=>+v.toFixed(3)):null;out.info.eye=BRD[5].EYEP;
   const c1=document.createElement('canvas');c1.width=FW*6;c1.height=FH*2;const x1=c1.getContext('2d');
   const cb=new V(0,.78,0);shot(x1,0,0,[0,.1,1],cb,3.9,'front');shot(x1,1,0,[1,.08,0],cb,3.9,'side');shot(x1,2,0,[0,.15,-1],cb,3.9,'back');shot(x1,3,0,[.8,.2,.6],cb,3.9,'3/4');shot(x1,4,0,[-.7,.3,-.65],cb,3.9,'back 3/4');
   const hp=R.bones.head.getWorldPosition(new V()),hc=new V(hp.x,hp.y+.05,hp.z+.07);
@@ -64,6 +64,7 @@ def s(pg):
     chk('no NaN vertices',I['nan']==0,I['nan'])
     if not old:
         chk('beast kit on',I['bf'])
+        chk("the weasel's own bones (long spine, neck, ears, toes) are on the skeleton",len(I.get('bones',[]))==7 and I.get('chestP'),(I.get('bones'),I.get('chestP')))
         chk('triangles within the hero budget (12k)',I['tris']<12000,I['tris'])
         chk('skull measured for the helmets',I['SN']>=10 and I['ear'] and I['eye'],(I['SN'],I['ear'],I['eye']))
         chk('gestures pose without errors',not I['gerr'],I['gerr'])

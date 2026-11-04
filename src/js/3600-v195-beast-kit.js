@@ -111,7 +111,7 @@ function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=
   const col=m=>{const q=mdm(m),c=q.kind=='t'?colT(q):q.kind=='a'?colA(q,q.side):colL(q,q.side);if(c==null)return null;const h=mdC(c);return furSet.has(h)&&F.fur?null:h};
   cgEmit(B,SM,col,{vcol:F.fur?(m=>{const c=F.fur(m,BC,mdm(m));return Array.isArray(c)?bf195Hex(c):c}):null});
   // the palms the paws grow from: the md hand rings, starting inside the wrist
-  [-1,1].forEach(s=>{const Rr=AR[s],w=Rr[5],d=nrm3(sub3(Rr[6].p,w.p)),st=Object.assign({},w,{p:sub3(w.p,mul3(d,.006)),rx:w.rx*.8,f:w.f*.8,b:w.b*.8});
+  [-1,1].forEach(s=>{const Rr=AR[s],w=Rr[5],d=nrm3(sub3(Rr[6].p,w.p)),st=Object.assign({},w,{p:sub3(w.p,mul3(d,.022)),rx:w.rx*.95,f:w.f*.95,b:w.b*.95});
     mdLoft(B,[st].concat(Rr.slice(6)),{seg:7,capB:true,col:m=>P.paint.hand?P.paint.hand(m,s):C.hand})});
   // feet: the md foot lofts (bare toes and boots are built on them), as mdBody does
   [-1,1].forEach(s=>mdLoft(B,mdFoot(P,s),{seg:7,ref:[0,1,0],capA:true,capB:true,col:m=>m.y<.022?C.sole:C.boot}));
@@ -184,8 +184,10 @@ function bf195Ears(B,D,S,C){const q=S.ear,C0=FKS.C0,d=bf195EarDir(q),base=S._ear
   const ev=p=>fksEval(S,p),rings=ts.map((t,ri)=>{const c=add3(base,mul3(d,q.len*t)),wd=q.w*Math.max(.1,wf(t)),th=q.th*(1-.55*t),R=[];
     for(let j=0;j<M;j++){const a=j/M*Math.PI*2,cup=(j==2&&ri>0&&t<.9)?-.95:0;let p=[c[0]+side.x*wd*Math.cos(a)+fwd.x*th*(Math.sin(a)+cup),c[1]+side.y*wd*Math.cos(a)+fwd.y*th*(Math.sin(a)+cup),c[2]+side.z*wd*Math.cos(a)+fwd.z*th*(Math.sin(a)+cup)];
       if(ri==0){let k=0;while(k<40&&ev(p)>-.005){p=sub3(p,mul3(d,.002));k++}}R.push(p)}return {t,c,R}});
-  const w=mdW(B,[['head',1]]),sh=t=>.78+.22*t;
-  [1,-1].forEach(sg=>{const vx=(p,t)=>({x:p[0]*sg+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],w,k:sh(t)}),tri=(a,b,c,col)=>{if(sg>0)mdTri(B,'c',a,b,c,col);else mdTri(B,'c',a,c,b,col)};
+  const sh=t=>.78+.22*t,hasE=B.O&&B.O.indexOf('erR')>=0,WC={};
+  // weights: the root ring on the head; with ear bones (a race skeleton) the next ring half on the ear, the rest on the ear
+  const wOf=(sg,t)=>{const k=(sg>0?'R':'L')+(t<.07?0:t<.2?1:2);return WC[k]||(WC[k]=mdW(B,!hasE||t<.07?[['head',1]]:t<.2?[['head',.5],[sg>0?'erR':'erL',.5]]:[[sg>0?'erR':'erL',1]]))};
+  [1,-1].forEach(sg=>{const vx=(p,t)=>({x:p[0]*sg+C0[0],y:p[1]+C0[1],z:p[2]+C0[2],w:wOf(sg,t),k:sh(t)}),tri=(a,b,c,col)=>{if(sg>0)mdTri(B,'c',a,b,c,col);else mdTri(B,'c',a,c,b,col)};
     for(let i=0;i+1<rings.length;i++){const A=rings[i],Bq=rings[i+1];for(let j=0;j<M;j++){const cc=Bq.t>=.88?rim:(j==1||j==2||j==3)&&A.t>=.1?inn:fur,col=mdC(cc);
       tri(vx(A.R[j],A.t),vx(A.R[(j+1)%M],A.t),vx(Bq.R[(j+1)%M],Bq.t),col);tri(vx(A.R[j],A.t),vx(Bq.R[(j+1)%M],Bq.t),vx(Bq.R[j],Bq.t),col)}}
     const Lr=rings[rings.length-1];for(let j=0;j<M;j++)tri(vx(Lr.R[j],1),vx(Lr.R[(j+1)%M],1),vx(Lr.c,1),mdC(rim))})}
@@ -194,7 +196,7 @@ function bf195Ears(B,D,S,C){const q=S.ear,C0=FKS.C0,d=bf195EarDir(q),base=S._ear
 // rings from D.TP ([x, y, z, r] per bone point; D.bf.tail.r(i, r) may reshape the radius), weighted like brTail
 function bf195Tail(B){const D=BR.R,TP=D.TP,Ft=D.bf.tail||{};if(!TP||!TP.length)return;const M=cgMesh(B),last=D.TB.length-1,n=8,R=[];
   TP.forEach((t,i)=>{const w=i==0?[['pelvis',.6],['tl0',.4]]:i>last?[['tl'+last,1]]:[['tl'+(i-1),.4],['tl'+i,.6]],p=[t[0],t[1],t[2]],nx=TP[Math.min(i+1,TP.length-1)],pv=TP[Math.max(i-1,0)],
-      dn=nrm3(sub3([nx[0],nx[1],nx[2]],[pv[0],pv[1],pv[2]])),u=nrm3(sub3([1,0,0],mul3(dn,dn[0]))),v=nrm3(cross3(dn,u)),r=Ft.r?Ft.r(i,t[3]):t[3],ry=r*(Ft.flat||.92),ring=[];
+      dn=nrm3(sub3([nx[0],nx[1],nx[2]],[pv[0],pv[1],pv[2]])),u=nrm3(sub3([1,0,0],mul3(dn,dn[0]))),v=nrm3(cross3(dn,u)),r=(Ft.r?Ft.r(i,t[3]):t[3])*(Ft.k||1.1),ry=r*(Ft.flat||.92),ring=[];   // ×1.1: the smoothing step shrinks the tube inside its cage
     for(let j=0;j<n;j++){const a=j*Math.PI*2/n;ring.push(cgVert(M,[p[0]+u[0]*Math.cos(a)*r+v[0]*Math.sin(a)*ry,p[1]+u[1]*Math.cos(a)*r+v[1]*Math.sin(a)*ry,p[2]+u[2]*Math.cos(a)*r+v[2]*Math.sin(a)*ry],w))}R.push({ring,p,dn})});
   for(let i=0;i+1<R.length;i++)cgBand(M,R[i].ring,R[i+1].ring,'tail',R[i].p);
   const L=R[R.length-1],lw=TP.length-1<=last?[['tl'+Math.max(0,TP.length-2),1]]:[['tl'+last,1]];
@@ -248,3 +250,53 @@ function bf195Motion(H,D,now){const F=D.bf,Mo=F.motion||{},b=H.bones;let S=H._bf
 function bf195TailKick(H,v){const T=H._brT;if(!T||!T.y)return;for(let i=0;i<T.n;i++)T.y[i*2+1]+=v*(1+i*.15)}
 {const f=animHero;animHero=function(now,mv,h){const r=f.apply(this,arguments);const H=h||pl;
   try{const D=H&&H._race?BRD[H._race]:null;if(BF195.on&&D&&D.bf&&H.bones&&!H._foe)bf195Motion(H,D,now||0)}catch(e){if(!BF195.err){BF195.err=1;console.warn('v195 motion',e)}}return r}}
+
+// ---------------- a race's own skeleton ----------------
+// Owner (Nov 3 2026): "we need new bones for each hero so they can match the skeleton of their own animal. weasel should have
+// his own skeleton to make him look more like a weasel."
+// A race keeps the hero's bone names (every animation, grip, ability pose, mount pose and worn item drives them) and adds its
+// animal's own bones on top (D.skel):
+//  * ins: [[name, parent, child, t]] — a bone inserted into a chain at fraction t (the weasel's long spine: spine → sp1 → sp2 →
+//    chest; its long neck: neck → nk1 → head). The animations still turn `spine` / `neck`; the motion layer spreads that turn
+//    evenly over the chain (each bone takes an equal share, so the chest and head end where the animation put them) and adds
+//    the animal's own curve on top, so the body bends as one supple curve instead of at one joint.
+//  * add: [[name, parent, x, y, z]] — new bones (ears, toes), driven only by the motion layer.
+//  * mf: {name: bone} — whose v99 proportions the new bone takes (a split spine keeps the spine's length and lean).
+//  * remap: [{from, bones, ax, at, side}] — every vertex of the hero (body, armour, cloth, kit) weighted to `from` is shared
+//    among `bones` by its coordinate `ax` (segment ends `at`, human space), so armour bends exactly like the body under it.
+// brDef / brPlan / brRig (2100) read the table; brRig re-parents and drops other races' extra bones (BR_XB) on a race change.
+function bf195Skel(D){const K=D.skel;if(!K||D._skel)return;D._skel=1;const T={};for(const n in D.HBX)T[n]=D.HBX[n].slice();
+  (K.ins||[]).forEach(([n,par,ch,t])=>{const a=T[par],b=T[ch];T[n]=[par,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t,a[3]+(b[3]-a[3])*t];T[ch][0]=n;BR_XB[n]=1});
+  (K.add||[]).forEach(([n,par,x,y,z])=>{T[n]=[par,x,y,z];BR_XB[n]=1});
+  const out={},done=new Set(),visit=n=>{if(done.has(n))return;const p=T[n][0];if(p)visit(p);done.add(n);out[n]=T[n]};Object.keys(T).forEach(visit);
+  D.HBX=out;D.MF=Object.assign({},K.mf||{});D._pl=null}
+// share the `from` weight of every vertex among a chain of bones by position (hat functions between segment centres)
+function bf195Share(v,at){const n=at.length-1,c=[];for(let k=0;k<n;k++)c.push((at[k]+at[k+1])/2);const w=new Array(n).fill(0);
+  if(v<=c[0])w[0]=1;else if(v>=c[n-1])w[n-1]=1;else for(let k=0;k<n-1;k++)if(v>=c[k]&&v<=c[k+1]){const t=(v-c[k])/(c[k+1]-c[k]);w[k]=1-t;w[k+1]=t;break}return w}
+function bf195Remap(B,K){const O=B.O,I=n=>O.indexOf(n),R=(K.remap||[]).map(q=>Object.assign({},q,{fi:I(q.from),bi:q.bones.map(I)})).filter(q=>q.fi>=0&&q.bi.every(i=>i>=0));if(!R.length)return;
+  for(const t in B.L){const L=B.L[t];if(!L||!L.p||!L.si)continue;const p=L.p,si=L.si,sw=L.sw,nv=p.length/3;
+    for(let v=0;v<nv;v++){let hit=false;for(const q of R)for(let j=0;j<4;j++)if(si[v*4+j]===q.fi&&sw[v*4+j]>0){hit=true;break}if(!hit)continue;
+      const W=new Map();for(let j=0;j<4;j++){const i=si[v*4+j],w=sw[v*4+j];if(w>0)W.set(i,(W.get(i)||0)+w)}
+      for(const q of R){const w0=W.get(q.fi);if(!w0)continue;const x=p[v*3+(q.ax=='x'?0:q.ax=='y'?1:2)];if(q.side&&Math.sign(p[v*3])!==q.side)continue;
+        W.delete(q.fi);bf195Share(x,q.at).forEach((k,j)=>{if(k>0)W.set(q.bi[j],(W.get(q.bi[j])||0)+w0*k)})}
+      const L2=[...W.entries()].sort((a,b)=>b[1]-a[1]).slice(0,4);let s=0;L2.forEach(e=>s+=e[1]);
+      for(let j=0;j<4;j++){const e=L2[j];si[v*4+j]=e?e[0]:0;sw[v*4+j]=e?e[1]/(s||1):0}}}}
+{const f=mdHeroB;mdHeroB=function(cls,L,E){const B=f.apply(this,arguments);try{const r=brRace(L,cls),D=r?BRD[r]:null;if(BF195.on&&D&&D.skel&&B&&B.O)bf195Remap(B,D.skel)}catch(e){console.warn('v195 skeleton weights',e)}return B}}
+// the motion layer's part for the new bones: spread the animation's turn over each inserted chain, then the race's own
+// curve (D.skel.drive(H, S, dt) for ears, toes and the like)
+var BF195_Q={a:null};
+function bf195Chain(H,K){const b=H.bones,Q=BF195_Q.a||(BF195_Q.a={q:new THREE.Quaternion(),h:new THREE.Quaternion(),i:new THREE.Quaternion(),e:new THREE.Euler()});
+  (K.chains||[]).forEach(ch=>{const root=b[ch[0]];if(!root)return;const n=ch.length;Q.q.copy(root.quaternion);Q.h.copy(Q.i.identity()).slerp(Q.q,1/n);
+    Q.e.setFromQuaternion(Q.h,root.rotation.order);['x','y','z'].forEach(ax=>{const d=Q.e[ax]-root.rotation[ax];if(Math.abs(d)>1e-9)brAddR(H,ch[0],ax,d)});
+    for(let i=1;i<n;i++){const bn=b[ch[i]];if(bn)bn.quaternion.copy(Q.h)}})}
+{const f=bf195Motion;bf195Motion=function(H,D,now){f.apply(this,arguments);const K=D.skel;if(!K||!H.bones)return;
+  try{bf195Chain(H,K);if(K.drive)K.drive(H,H._bfm,now)}catch(e){if(!BF195.err2){BF195.err2=1;console.warn('v195 skeleton motion',e)}}}}
+
+// sleeves and shoulder pieces start from the md arm's first ring (mdAS i0 = 0, with a dome over it); on a cage body the
+// shoulder is a smooth slope below that ring, so the dome stood above it (through a hood's mantle). bf.sh0 = [drop, scale]
+// lowers and narrows that first ring for every piece built from it (the cage body itself never uses it).
+{const f=mdArm;mdArm=function(P,s){const R=f.apply(this,arguments);try{if(BF195.on&&BR.on&&BR.R&&BR.R.bf&&BR.R.bf.sh0&&R&&R[0]){const q=BR.R.bf.sh0,r=Object.assign({},R[0]);
+  r.p=[r.p[0],r.p[1]-q[0],r.p[2]];r.rx*=q[1];r.f*=q[1];r.b*=q[1];R[0]=r}}catch(_){}return R}}
+// capes are pinned on at the shoulders (the v179 foes' rule: the top ring on the back of the collar, not 2–4 cm behind it);
+// on the old tube body a hero's cape only touched the body through the tail
+{const f=mdCape;mdCape=function(B,P){if(!(BF195.on&&BR.on&&BR.R&&BR.R.bf&&typeof SN179!='undefined'))return f.apply(this,arguments);const o=SN179.hum;SN179.hum=1;try{return f.apply(this,arguments)}finally{SN179.hum=o}}}

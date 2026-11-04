@@ -34,7 +34,7 @@ RT.pose=(H,mv,k)=>{if(!V100A.T.sword0)V100A_build();const T=V100A.T[mv];if(!T)re
 """
 BASE=COMMON+r"""(a)=>{const [cls,race,mv]=a,V=THREE.Vector3,FW=260,FH=360,{rd,sc,pc}=RT.mk(FW,FH),info={};BR.bare=true;
   const R=RT.beast(cls,race,{});BR.bare=false;sc.add(R);RT.hideW(R);RT.idle(R);
-  info.race=R._race;info.tail=Object.keys(R.bones).filter(n=>/^tl/.test(n)).length;info.bones=huBody(R).skeleton.bones.length;
+  info.race=R._race;info.tail=Object.keys(R.bones).filter(n=>/^tl/.test(n)).length;info.bones=huBody(R).skeleton.bones.length;info.hbx=Object.keys(BRD[race].HBX).length;
   const oc=new THREE.OrthographicCamera(-.62,.62,1.72,0,.01,50);
   const c1=document.createElement('canvas');c1.width=FW*6;c1.height=FH*2;const x1=c1.getContext('2d');
   const ortho=(col,row,dir,l)=>{const d=new V(...dir).normalize().multiplyScalar(5);oc.position.set(d.x,d.y,d.z);oc.lookAt(0,0,0);rd.render(sc,oc);x1.drawImage(rd.domElement,col*FW,row*FH);RT.lbl(x1,l,col*FW,row*FH,FW)};
@@ -81,7 +81,7 @@ def s(pg):
         cls,rid,wt,mv=RACES[race];arm=ARM[cls]
         if 'base' in PART:
             r=ev(BASE,[cls,rid,mv]);print(race,r['info'],r['err']);save('v114_%s_base.jpg'%race,r['a']);save('v114_%s_detail.jpg'%race,r['b'])
-            nt=len(BRD_TAIL[race]);chk(race+' rig: race + tail bones',r['info']['race']==rid and r['info']['tail']==nt and r['info']['bones']==20+nt and not r['err'],r['info'])
+            nt=len(BRD_TAIL[race]);chk(race+' rig: race + tail bones',r['info']['race']==rid and r['info']['tail']==nt and r['info']['bones']==r['info']['hbx'] and not r['err'],r['info'])
         if 'helms' in PART:
             hl=[arm+':'+st for st in STY[arm]+SETS[arm]]
             r=ev(HELMS,[cls,rid,hl]);save('v114_%s_helms.jpg'%race,r['img']);chk(race+' all helm styles found','MISSING' not in r['info'].values() and not r['err'],r.get('err'))

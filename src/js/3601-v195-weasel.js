@@ -13,7 +13,7 @@
   D.TR=[[1.25,1.1,1.0,.88,.84,.88,.92,.94,.92,.95,1.05,1.1],[1.12,1.06,.98,.9,.94,1.02,1.06,1.04,1,1,1.05,1.08],[1.15,1.08,1.0,.94,.92,.94,.96,.97,.98,1,1.05,1.08]];
   D.armK=[.86,.9,.84,.78,.82,.74];D.legK=[1.2,1.22,1.1,.9,.86,.76,.7];
   // ---- the tail: bushy, thick at the root, about half the body long, carried low with the end lifting ----
-  D.TP=[[0,.6,-.07,.066],[0,.572,-.13,.05],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
+  D.TP=[[0,.6,-.035,.066],[0,.572,-.115,.052],[0,.535,-.19,.047],[.004,.495,-.255,.046],[.008,.455,-.32,.044],[.013,.418,-.385,.042],[.018,.39,-.448,.039],[.023,.374,-.51,.036],[.028,.372,-.566,.032],[.033,.384,-.616,.027],[.037,.405,-.656,.02],[.04,.43,-.682,.011]];
   D.TB.forEach((n,i)=>{const p=D.TP[i];D.HBX[n]=[i?D.TB[i-1]:'pelvis',p[0],p[1],p[2]]});
   D.tailSway=[.06,.09,1.35,2.8];
   // the forepaws held a little away from the (now fuller) thighs
@@ -22,13 +22,13 @@
   const old=D.cols;
   D.cols=L=>{if(!BF195.on)return old(L);const f=bf195HSLk(mdC(L.skin),.8,.82);
     return brPal(L,{FUR:f,FURD:bf195HSLk(f,1.05,.55),FURL:mdMix(f,0xd6c8ac,.4),BELLY:bf195HSLk(mdMix(f,0xd8c8a8,.66),.95,.8),NOSE:0x120e0c,PINK:mdMix(f,0x8a6460,.55),MOUTH:0x1a1210,CLAW:0x1a1612})};
-  D.bf={n:16,torK:1.03,limbK:1.1,shade:{dk:.1,hk:.2},
+  D.bf={n:16,torK:1.06,limbK:1.15,sh0:[.035,.9],shade:{dk:.1,hk:.2},
     // the neck: thick, rising from the collar into the back of the skull (human space, before the race's warp)
     neck:T=>[[1.0,.088,.076,.08,-.006],[1.04,.074,.067,.071,-.012],[1.078,.066,.061,.065,-.02],[1.112,.06,.056,.06,-.028],[1.14,.052,.049,.052,-.034]],
     // the legs grow from the ring at the hip joints (y .5), not from under the hips: the thighs start high on the body's sides
     hipY:.49,
-    // torso shape: a keel at the chest, a flatter back, the belly a little tucked (extra radius in metres; a from +x toward +z)
-    tpush:(y,a,q)=>{const s=Math.sin(a),f=Math.max(0,s),b=Math.max(0,-s);return .014*Math.pow(f,4)*bf195SS(.72,.8,y)*(1-bf195SS(.9,.97,y))-.007*Math.pow(b,3)*bf195SS(.6,.7,y)*(1-bf195SS(.9,.98,y))-.008*Math.pow(f,2)*bf195SS(.58,.64,y)*(1-bf195SS(.66,.72,y))},
+    // torso shape: a keel at the chest (extra radius in metres; a from +x toward +z)
+    tpush:(y,a,q)=>{const s=Math.sin(a),f=Math.max(0,s);return .014*Math.pow(f,4)*bf195SS(.72,.8,y)*(1-bf195SS(.9,.97,y))+(.009*f*f+.007)*bf195SS(.5,.56,y)*(1-bf195SS(.64,.7,y))},   // (no flattening / tucking: belts, capes and coats are built at the rings' radius and must lie on the body)
     // fur per corner: the cream underside with a waving edge along the flanks, a darker back, lighter inner thighs
     fur:(m,C,q)=>{const F=bf195Rgb(C.FUR),Bl=bf195Rgb(C.BELLY),Dk=bf195Rgb(C.FURD);
       if(q.kind=='t'){const y=m.y,s=q.s,edge=.22+.11*Math.sin(y*29+1.3)+.05*Math.sin(y*71+.4)-.12*bf195SS(.9,1.08,y),cr=bf195SS(edge-.07,edge+.07,s)*bf195SS(.36,.5,y),dk=bf195SS(-.45,-.85,s)*.38;
@@ -81,3 +81,29 @@
     {id:'tilt',dur:1.7,w:2,tail:2.5,fn(u,s,O){const e=E(u,.2,.3);O['head.z']=.48*s*e;O['head.y']=.2*s*e;O['head.x']=-.1*e;O['neck.z']=.12*s*e}},
     // a glance back over the shoulder with a flick of the tail
     {id:'glance',dur:1.8,w:2,tail:5,fn(u,s,O){const e=E(u,.2,.32);O['head.y']=.5*s*e;O['neck.y']=.24*s*e;O['spine.y']=.08*s*e;O['chest.y']=.06*s*e}}]}}
+// ---- the weasel's own skeleton (3600 bf195Skel): a long supple spine and neck, ears and toes of its own ----
+// spine → sp1 → sp2 → chest (three even links where the hero had one), neck → nk1 → head, ear bones at the ear roots, a toe
+// bone in each long hind foot. Skin, armour and cloth are shared among the new bones by height (spine, neck) or by length
+// along the foot (toes). The motion layer spreads every spine / neck turn over its links, adds a travelling wave down the
+// back while running, keeps the toes flat on the ground when a heel lifts, and moves the ears: folded back at a run, perked
+// up while scanning, a flick now and then.
+{const D=BRD[5];if(D.bf){const S=D.bf.head,C0=FKS.C0,e=S._earB||[.07,.04,-.04],E=[e[0]+C0[0],e[1]+C0[1],e[2]+C0[2]];
+  D.skel={ins:[['sp1','spine','chest',1/3],['sp2','sp1','chest',.5],['nk1','neck','head',.5]],
+    add:[['erL','head',-E[0],E[1],E[2]],['erR','head',E[0],E[1],E[2]],['lt','lh2',-.1,.03,.1],['rt','rh2',.1,.03,.1]],
+    mf:{sp1:'spine',sp2:'spine',nk1:'neck',erL:'head',erR:'head',lt:'lh2',rt:'rh2'},
+    remap:[{from:'spine',bones:['spine','sp1','sp2'],ax:'y',at:[.65,.7167,.7833,.85]},{from:'neck',bones:['neck','nk1'],ax:'y',at:[1.0,1.05,1.1]},
+      {from:'lh2',bones:['lh2','lt'],ax:'z',at:[-.1,.1,.26]},{from:'rh2',bones:['rh2','rt'],ax:'z',at:[-.1,.1,.26]}],
+    chains:[['spine','sp1','sp2'],['neck','nk1']],
+    drive(H,S,now){const b=H.bones;if(!S)return;const G=H._ga,w=G?bf195Cl(G.w,0,1):0,ph=G?G.ph:0,dt=S._dt2==null?0:Math.min(.05,Math.max(0,(now-S._dt2)/1000));S._dt2=now;
+      // a wave down the back while running (sp1 then sp2, each a little later)
+      const a=.05*w*bf195SS(.5,3.5,G?G.v:0);if(a>1e-4&&b.sp1&&b.sp2){b.sp1.rotateX(a*Math.sin(ph*Math.PI*4-.7));b.sp2.rotateX(a*Math.sin(ph*Math.PI*4-1.4))}
+      // toes: keep them flat when the foot pitches heel-up
+      const V=BF195_Q.v||(BF195_Q.v={q:new THREE.Quaternion(),f:new THREE.Vector3()});
+      [['lh2','lt'],['rh2','rt']].forEach(([fb,tb])=>{const F=b[fb],T=b[tb];if(!F||!T)return;F.getWorldQuaternion(V.q);V.f.set(0,0,1).applyQuaternion(V.q);
+        const p=Math.asin(bf195Cl(V.f.y,-1,1));T.rotation.set(bf195Cl(p,-.85,0)*.9,0,0)});
+      // ears: back at a run, up while scanning, a quick flick now and then (springs, so they ease)
+      if(!S.ear)S.ear={sp:new Float64Array(8),t:2+Math.random()*4,f:0,s:1};const Ea=S.ear;Ea.t-=dt;if(Ea.t<=0){Ea.f=1;Ea.s=Math.random()<.5?-1:1;Ea.t=3+Math.random()*7}
+      Ea.f=Math.max(0,Ea.f-dt*4.5);const scan=S.g&&S.g.G&&S.g.G.id=='scan'?1:0,back=-.45*w,up=.25*scan,fl=Ea.f>0?Math.sin((1-Ea.f)*Math.PI)*.5:0;
+      if(dt>0){bf195Spr(Ea.sp,0,back+up+(Ea.s>0?fl:0),18,.55,dt);bf195Spr(Ea.sp,2,back+up+(Ea.s<0?fl:0),18,.55,dt)}
+      if(b.erR)b.erR.rotation.set(Ea.sp[0],0,-.15*Ea.sp[0]);if(b.erL)b.erL.rotation.set(Ea.sp[2],0,.15*Ea.sp[2])}};
+  bf195Skel(D)}}
