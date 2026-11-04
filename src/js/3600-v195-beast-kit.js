@@ -49,7 +49,10 @@ function bf195TW(y){return y<=.97?mdTorsoW(y):y<=1.03?mdWb('chest','neck',(y-.97
 function bf195Body(B,P){const D=BR.R,F=D.bf,C=P.col,T=P._T||(P._T=mdTorso(P)),M=cgMesh(B),n=F.n||16,H=n/2,Q=n/4,tk=F.torK||BF195.torK,lk=F.limbK||BF195.limbK;
   // torso rings up to the collar, then the race's neck rings (the neck flows up into the back of the skull)
   const TR=T.filter(r=>r.y<.99).map(r=>[r.y,r.rx*tk,r.f*tk,r.b*tk,r.p[2]]).concat((F.neck?F.neck(T):[]));
-  const tr=TR.map((q,i)=>cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],n,q[1],q[2],q[3],bf195TW(q[0]),{a0:0,push:F.tpush?(j,a)=>F.tpush(q[0],a,q):null}));
+  // the hip rings share their weight with the thigh on each side, so a flexed hip bends the buttock with the leg (no ledge
+  // where the body's bottom ring stays behind a thigh swung forward)
+  const hipW=(y,j,a)=>{const k=y<TR[0][0]+.005?.38:y<TR[0][0]+.07?.14:0,c=Math.cos(a);if(!k||Math.abs(c)<.2)return bf195TW(y);return [['pelvis',1-k*Math.min(1,Math.abs(c)*1.4)],[(c>0?'rh0':'lh0'),k*Math.min(1,Math.abs(c)*1.4)]]};
+  const tr=TR.map((q,i)=>cgRing(M,[0,q[0],q[4]||0],[1,0,0],[0,0,1],n,q[1],q[2],q[3],q[0]<TR[0][0]+.07?(j,a)=>hipW(q[0],j,a):bf195TW(q[0]),{a0:0,push:F.tpush?(j,a)=>F.tpush(q[0],a,q):null}));
   // the shoulder sockets: the three torso rings round the arm's root
   let ia=0;{const ay=mdArm(P,1)[1].p[1];let bd=1e9;for(let i=1;i+2<TR.length;i++){const d=Math.abs(TR[i+1][0]-ay);if(d<bd&&TR[i+2][0]<1.0){bd=d;ia=i}}}
   const sock=(i,j)=>i>=ia&&i<ia+2&&(j==n-1||j==0||j==H-1||j==H),cent=i=>[0,(TR[i][0]+TR[i+1][0])/2,((TR[i][4]||0)+(TR[i+1][4]||0))/2];

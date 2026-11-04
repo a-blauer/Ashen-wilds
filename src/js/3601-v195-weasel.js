@@ -33,13 +33,12 @@
       if(q.kind=='a'){const inner=bf195SS(.3,.85,-m.nx*q.side)*(1-bf195SS(1.5,2.5,q.i))*.28;return bf195Mix(F,Bl,inner)}
       return F},
     // the head (head-local metres from FKS.C0 = model [0, 1.16, −.01]; +z forward)
-    head:{R:.09,bb:[-.13,-.13,-.16,.13,.12,.22],seg:16,rings:19,ao:.32,muzzleZ:.12,
+    head:{R:.09,bb:[-.13,-.13,-.16,.13,.12,.22],seg:16,rings:25,ao:.32,muzzleZ:.12,
       forms:[FKH.E([0,.004,-.008],[.084,.064,.086]),                       // brain case: broad and flat
         FKH.E([0,-.002,-.052],[.068,.056,.048],{k:.03}),                      // the back of the skull
         FKH.E([.054,-.014,.03],[.03,.027,.042],{k:.026}),                     // cheekbones behind the eyes
         FKH.E([.03,.03,.052],[.026,.012,.022],{k:.016}),                      // brow over the eye
         FKH.RC([0,-.016,.055],[0,-.027,.156],.042,.023,{k:.034,sq:[1.12,1.02]}),  // the muzzle and jaw, one blunt wedge (a separate jaw left a dark groove)
-        FKH.E([.019,-.028,.132],[.019,.015,.021],{k:.018}),                    // whisker pads
         FKH.E([0,-.02,.167],[.013,.011,.01],{k:.006}),                        // nose pad
         FKH.SP([.043,.018,.068],.0125,{sub:1,k:.008})],                       // eye socket
       eye:{c:[.043,.018,.068],g:[.64,.1,.76],r:.0118,sink:.4,fw:.8,al:.9},
