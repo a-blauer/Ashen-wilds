@@ -59,7 +59,11 @@ def s(pg):
     bt=ev("()=>window._bt||[]")   # every banner text shown (they can come and go between two looks on a slow machine)
     chk('welcome banner shown after the intro',any('Welcome' in x for x in bt),bt[-3:])
     pg.screenshot(path=play.TMP+'/v151_live_after.jpg',type='jpeg',timeout=120000)
-    p0=ev("()=>[pl.position.x,pl.position.z]");pg.keyboard.down('w');pg.wait_for_timeout(2500);pg.keyboard.up('w');p1=ev("()=>[pl.position.x,pl.position.z]")
+    p0=ev("()=>[pl.position.x,pl.position.z]");pg.keyboard.down('w');pg.wait_for_timeout(2500)
+    # v196: a frame on the test machine's software GPU can take many seconds while the shader warm-up runs: keep W held until he moves (up to 60 s)
+    try:pg.wait_for_function("p=>Math.abs(pl.position.x-p[0])+Math.abs(pl.position.z-p[1])>.05",arg=p0,timeout=60000)
+    except Exception:pass
+    pg.keyboard.up('w');p1=ev("()=>[pl.position.x,pl.position.z]")
     chk('hero moves again afterwards',abs(p0[0]-p1[0])+abs(p0[1]-p1[1])>.05,(p0,p1))
 os.environ.setdefault('TITLE','')
 play.run(s,w=1100,hh=650)

@@ -685,7 +685,7 @@ function dm196Ang(x,z){return Math.atan2(x,-z)}
 // (granary, chapel, barracks, keep: 1850). Angles in degrees; w/d = footprint half sizes for the fixed buildings.
 var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0],['NW','A',-127,0],
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
-  ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',18,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
+  ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-21,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
 var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-140,4.5,4.5],chapel:['C',140,4.5,4.5],barracks:['C',-40,4.5,4.5],keep:['C',40,4.5,4.5]};
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
@@ -67696,7 +67696,7 @@ dc190Def('carts',{sp:[dm196A(61.5,28.0),dm196A(-61.5,28.0)]});
 dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
 dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-3.4)],[4.9,-(F.R-3.4)]]}); // by the north gate (the way to the first portals)
-dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(142.5,29.4),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-142.5,29.4)]});
+dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(143.5,27.8),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-143.5,27.8)]});
 dc190Def('gatepoles',{spf:F=>[[-4.3,F.R-1.9],[4.3,F.R-1.9]]});
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
@@ -67762,3 +67762,13 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   // the cut: outside the north gate, a few steps toward Portal I's entry
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}
+// the town part is replayed exactly by the intro preview (v159): its random choices (a companion sniffing about while the hero
+// talks, the town folk's errands) come from a generator seeded by the intro's clock, and the preview's reset puts back the
+// companions' whole follow state, not only where they stand
+{const f=ic151Dusk;ic151Dusk=function(S,t){const r=Math.random;let s=(Math.round(t*240)*2654435761)>>>0;
+  Math.random=()=>{s=(s+0x6D2B79F5)>>>0;let z=s;z=Math.imul(z^z>>>15,z|1);z^=z+Math.imul(z^z>>>7,z|61);return((z^z>>>14)>>>0)/4294967296};
+  try{return f.apply(this,arguments)}finally{Math.random=r}}}
+if(typeof kqpvFols=='function'){kqpvFols=function(save){try{const K=['fol','idleT','look','lk','cdA'];
+  if(save)KQPV.fs=(typeof fols!='undefined'?fols:[]).map(f=>f?[f,f.position.clone(),f.rotation.y,f.vel?f.vel.clone():null,f.sniff?f.sniff.clone():null,K.map(k=>f[k])]:null);
+  else(KQPV.fs||[]).forEach(x=>{if(!x)return;const f=x[0];f.position.copy(x[1]);f.rotation.y=x[2];if(x[3]){f.vel=f.vel||x[3].clone();f.vel.copy(x[3])}else if(f.vel)f.vel.set(0,0,0);f.sniff=x[4]?x[4].clone():null;
+    if(x[5])K.forEach((k,i)=>f[k]=x[5][i])})}catch(_){}}}

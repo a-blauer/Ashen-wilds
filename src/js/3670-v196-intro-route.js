@@ -20,3 +20,13 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   // the cut: outside the north gate, a few steps toward Portal I's entry
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}
+// the town part is replayed exactly by the intro preview (v159): its random choices (a companion sniffing about while the hero
+// talks, the town folk's errands) come from a generator seeded by the intro's clock, and the preview's reset puts back the
+// companions' whole follow state, not only where they stand
+{const f=ic151Dusk;ic151Dusk=function(S,t){const r=Math.random;let s=(Math.round(t*240)*2654435761)>>>0;
+  Math.random=()=>{s=(s+0x6D2B79F5)>>>0;let z=s;z=Math.imul(z^z>>>15,z|1);z^=z+Math.imul(z^z>>>7,z|61);return((z^z>>>14)>>>0)/4294967296};
+  try{return f.apply(this,arguments)}finally{Math.random=r}}}
+if(typeof kqpvFols=='function'){kqpvFols=function(save){try{const K=['fol','idleT','look','lk','cdA'];
+  if(save)KQPV.fs=(typeof fols!='undefined'?fols:[]).map(f=>f?[f,f.position.clone(),f.rotation.y,f.vel?f.vel.clone():null,f.sniff?f.sniff.clone():null,K.map(k=>f[k])]:null);
+  else(KQPV.fs||[]).forEach(x=>{if(!x)return;const f=x[0];f.position.copy(x[1]);f.rotation.y=x[2];if(x[3]){f.vel=f.vel||x[3].clone();f.vel.copy(x[3])}else if(f.vel)f.vel.set(0,0,0);f.sniff=x[4]?x[4].clone():null;
+    if(x[5])K.forEach((k,i)=>f[k]=x[5][i])})}catch(_){}}}
