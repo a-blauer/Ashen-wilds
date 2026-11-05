@@ -21,8 +21,8 @@ def s(pg):
     ev("""()=>{window.WALLS=()=>{const T=TOWNS[0],F=kf109(),R=F.R,t=(x,z)=>MAP[T.cy+Math.round(z)][T.cx+Math.round(x)],a=d=>[R*Math.sin(d*Math.PI/180),-R*Math.cos(d*Math.PI/180)];
       const g=c=>'Pp.'.includes(c)?'open':c;return [F.s,R,g(t(0,R)),t(...a(45)),t(...a(135)),t(...a(270)),g(t(0,-R)),g(t(0,R-2)),g(t(...a(200).map(v=>v*1.08)))]}}""")
     # ---- the kingdom's size ----
-    T('new game: stage 0, small walls, 5 plots, smith by the fountain',"""()=>[WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).map(l=>l.id),SH.pos.smith,KL103.ring&&KL103.ring.count,kfDoors109(),areaName()]""",
-      lambda r:r[0]==[0,21,'open','W','W','W','open','open','open'] and r[1]==5 and sorted(r[2])==sorted(['CW','CE','NW','NE','NM']) and r[3]=='CW' and r[4]==4 and r[5]==[])
+    T('new game: stage 0, small walls, 5 plots, smith by the fountain, the Hatchery on one',"""()=>[WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).map(l=>l.id),SH.pos.smith,KL103.ring&&KL103.ring.count,kfDoors109(),areaName()]""",
+      lambda r:r[0]==[0,21,'open','W','W','W','open','open','open'] and r[1]==5 and sorted(r[2])==sorted(['CW','CE','NW','NE','NM']) and r[3]=='CW' and r[4]==3 and r[5]==[])  # v200: the Hatchery stands from the start: 3 free plots, not 4
     T('outside the walls: the outskirts (wild props, no paving)',"""()=>{const T=TOWNS[0];toPos(T.cx+10,T.cy+22);const a=areaName(),w=KF109.wsel.L.length,c=KF109.wcol.length;toPos(T.sp[0],T.sp[1]);
       return [a,w,c,KF109.wsel.L.every(p=>Math.hypot(p.x,p.z)>=kf109().R+2.4),T.pave.count]}""",lambda r:'Meadow' in r[0] and r[1]>100 and r[2]>20 and r[3])
     T('locked lot refused',"""()=>{gold=1e6;['wood','stone','fiber','iron','glowcap','bone'].forEach(k=>mats[k]=999);const a=lotFree103('S1W'),b=lotFree103('CE');const h0=HS103.h.length;const hb=hsBuy103('S1M');
@@ -88,11 +88,11 @@ def s(pg):
     T('Curio Shop: extra wares, fewer resources (v194: paid in resources)',"""()=>{SH.shop.merchant=1;SHP109.lv.merchant=3;CU194.k='';openX('visitor','merchant');const st=cu194Stock().wares,btn=[...document.querySelectorAll('#xw [data-cu194^="w:"]')];const g0=gold;SHP109.lv.merchant=0;const full=cu194Price('pots',cu194T())[0][1];SHP109.lv.merchant=3;
       return [st.length,st.map(q=>q.k),full,st[1].m[0][1],g0-gold,!!document.querySelector('#xw .shpnote'),btn.length]}""",lambda r:r[0]==6 and r[1][3:]==['rune','egg','rune'] and r[3]==-(-r[2]*.85//1) and r[4]==0 and r[5] and r[6]==6)
     T('Rune Sanctum discount',"""()=>{SH.shop.sage=1;SHP109.lv.sage=2;RS194.tab='buy';openX('visitor','sage');const b=document.querySelector('#xw [data-rs="buy:r_ember"]'),t=b.textContent,g0=gold;b.click();return [t,g0-gold]}""",lambda r:'450' in r[0] and r[1]==450)
-    T('Beast Trainer discount',"""()=>{SHP109.lv.trainer=1;const c=party[0];c.l=1;const a=trainCost(c);SHP109.lv.trainer=0;const b=trainCost(c);SHP109.lv.trainer=1;return [a,b]}""",lambda r:r[0]==rnd(r[1]*.95))
+    T('Beast Trainer: a slot per level (v200, no discount)',"""()=>{SHP109.lv.trainer=0;const a=trn200N();SHP109.lv.trainer=3;const b=trn200N();SHP109.lv.trainer=1;return [a,b]}""",lambda r:r==[1,4])
     T('Hearth market: higher crops, discount',"""()=>{SH.shop.cook=1;hero.lvl=5;const T0=townTier();SHP109.lv.cook=0;openX('cook');const a=[...document.querySelectorAll('#xw [data-ibuy][data-n=\"1\"]')].map(b=>[b.dataset.ibuy,+b.dataset.c]);SHP109.lv.cook=2;openX('cook');
       const b=[...document.querySelectorAll('#xw [data-ibuy][data-n=\"1\"]')].map(b=>[b.dataset.ibuy,+b.dataset.c]);closeX();hero.lvl=30;return [T0,a.length,b.length,a[0],b.find(q=>q[0]==a[0][0])]}""",
       lambda r:r[2]>r[1] and r[4][1]==rnd(r[3][1]*.9))
-    T('Stable discount',"""()=>{SH.shop.stable=1;SHP109.lv.stable=3;openX('stable',0);const t=$('xwB').textContent,g0=gold,b=document.querySelector('#xw [data-mbuy]'),T=MOUNTS[b.dataset.mbuy].t;b.click();closeX();return [g0-gold,MPRICE[T-1],t.includes('15% off')]}""",lambda r:r[0]==rnd(r[1]*.85) and r[2])
+    T('Stable: full price, levels open mount tiers (v200)',"""()=>{SH.shop.stable=1;SHP109.lv.stable=3;openX('stable',0);const t=$('xwB').textContent,g0=gold,b=document.querySelector('#xw [data-mbuy]'),T=MOUNTS[b.dataset.mbuy].t;b.click();closeX();return [g0-gold,MPRICE[T-1],t.includes('Tier 1–5 mounts')]}""",lambda r:r[0]==r[1] and r[2])
     T('shop levels save and load',"""()=>{const x=x2Save();SHP109.lv={};x2Load(JSON.parse(JSON.stringify(x)));return [x.shpu,shpL109('post'),shpL109('magic')]}""",lambda r:r[1]==2 and r[2]==3)
     T('Steward window renders',"""()=>{openX('hold');const B=$('xwB');const t=B.textContent;const o=[t.includes('Trading Post'),t.includes('plots used'),B.querySelectorAll('.kmpip').length];return o}""",lambda r:r[0] and r[1] and r[2]>5)
     if shot:

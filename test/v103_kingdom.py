@@ -44,7 +44,7 @@ def s(pg):
           out.solidLots=LOT103.filter(l=>{const k=lotKey103(l.id);return k&&!k.startsWith('u:')&&fB(l)<.6}).map(l=>l.id);
           out.freeLotsSolid=LOT103.filter(l=>!lotKey103(l.id)&&lotTiles103(l,-3,3,-3,3).some(t=>MAP[(t/W)|0][t%W]=='B')).map(l=>l.id);
           return out}""")
-        ok(r['houses']==6 and r['cits']==12,'six houses, twelve citizens',[r['houses'],r['cits']])
+        ok(r['houses']==6 and r['cits']==6,'six houses, six citizens (one each since v200)',[r['houses'],r['cits']])
         ok(all(p for p in r['paths']),'every house has a path to the south gate',r['paths'])
         ok(not r['unreach'] and r['gate'] and r['steward'],'every lot door, the gate and the Steward are reachable on foot',r)
         ok(r['garden']==0,'the garden is gone (no grass, trees or rocks in the south half)',r['garden'])
@@ -60,7 +60,7 @@ def s(pg):
         ok(r['cook'][0]==r['to'][0] and r['cook'][1] and not r['cook'][2],'moving a shop rebuilds it on the new lot and frees the old one',r['cook'])
         ok(all(r['st2']),'the cooking prompt follows the Cookhouse',r['st2'])
         ok(r['den'][:2]==r['den'][2:],'an upgrade structure moves to its lot',r['den'])
-        ok(r['after'].get('cook')==r['to'][0] and r['after'].get('h:0')==r['to'][1] and r['nh2']==6 and r['nc2']==12 and r['cook2']==r['to'][0],'save + load keeps lots, houses and citizens',r)
+        ok(r['after'].get('cook')==r['to'][0] and r['after'].get('h:0')==r['to'][1] and r['nh2']==6 and r['nc2']==6 and r['cook2']==r['to'][0],'save + load keeps lots, houses and citizens',r)
         # gathering: a finished trip pays out, an unlocked material only
         r=ev("""()=>{const c=HS103.cit[1];c.bag=null;c.t0=0;sup.meat=10;czTask103(c,'wood');const w=mats.wood;c.t0=Date.now()-HS103_TRIP*3-10;czTick103();const mid=mats.wood-w;czCollectHouse105(c.h);const got=mats.wood-w;
           const c2=HS103.cit[2];c2.bag=null;c2.t0=0;bossDone.clear();czTask103(c2,'crystal');const t=c2.task;[0,1,2,3,4,5].forEach(i=>bossDone.add(i));return {got,mid,t,av:hsMats103().map(q=>q[0])}}""")
@@ -78,7 +78,7 @@ def s(pg):
               FC([p.x+Math.sin(a+1.3)*3.4,T.ph+1.8,p.z+Math.cos(a+1.3)*3.4],[p.x,T.ph+.9,p.z]);return [o.c.n,o.mode,o.g.visible]}""")
             print('walker',r);L.shot(pg,OUT+'/v103_walker.png')
     if want('menu'):
-        r=ev("""()=>{if(HS103.h.length>2){for(const i in HS103.g)hsDrop103(+i);for(let i=2;i<HS103.h.length;i++)delete SH.pos['h:'+i];HS103.h=HS103.h.slice(0,2);HS103.cit=HS103.cit.filter(c=>c.h<2);lotSync103()}
+        r=ev("""()=>{if(HS103.h.length>4){for(const i in HS103.g)hsDrop103(+i);for(let i=4;i<HS103.h.length;i++)delete SH.pos['h:'+i];HS103.h=HS103.h.slice(0,4);HS103.cit=HS103.cit.filter(c=>c.h<4);lotSync103()}
           if(!HS103.h.length){['S1W','S2E'].forEach(id=>hsBuy103(id))}openX('hold');const o={};o.secs=[...document.querySelectorAll('#xw .sec')].map(s=>s.textContent);o.tabs=document.querySelectorAll('#xw [data-sht]').length;
           o.rows=document.querySelectorAll('#xw .kmrw').length;o.sel=document.querySelectorAll('#xw [data-czk]').length;
           const b=[...document.querySelectorAll('#xw [data-kmb]')].find(x=>x.dataset.kmb=='house:1');if(b)b.click();o.pick=!!KM103.pick;o.pickTxt=($('xwB').querySelector('.kmpick')||{}).textContent||'';return o}""")

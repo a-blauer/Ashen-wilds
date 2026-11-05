@@ -16,7 +16,7 @@ def s(pg):
     chk('menu: kingdom button','kgBtn' in r,r)
     # kingdom window
     r=ev("""()=>{gold=1e6;for(const k of Object.keys(RES))mats[k]=500;[0,1].forEach(i=>bossDone.add(i));try{kfApply109()}catch(_){}
-      if(HS103.h.length<2){LOT103.filter(l=>lotFree103(l.id)&&lotOpen109(l.id)).slice(-2).forEach(l=>hsBuy103(l.id))}
+      if(HS103.h.length<4){LOT103.filter(l=>lotFree103(l.id)&&lotOpen109(l.id)).slice(-(4-HS103.h.length)).forEach(l=>hsBuy103(l.id))}
       giveS&&Object.keys(SUP).filter(k=>SUP[k].c=='food').slice(0,1).forEach(k=>giveS(k,6));
       const C=HS103.cit;if(C[1])czTrain104(C[1],'hunt');if(C[0])czTask103(C[0],czOpts104(C[0]).find(q=>q[2])[0]);if(C[2]){C[2].task=czOpts104(C[2]).find(q=>q[2])[0];C[2].bag=[{t:'gold',n:50}]}
       const o={n:C.length};document.dispatchEvent(new KeyboardEvent('keydown',{key:'b'}));
