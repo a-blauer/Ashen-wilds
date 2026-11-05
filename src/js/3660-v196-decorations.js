@@ -31,7 +31,7 @@ dc190Def('pumpkins',{sp:[dm196A(61.5,25.4),dm196A(-61.5,25.4)]});
 dc190Def('woodpile',{sp:[dm196A(-115.5,26.8),dm196A(-121.5,26.8),dm196A(-115.5,28.6),dm196A(-121.5,28.6)]});
 dc190Def('brazier',{spf:F=>[[-4.9,-(F.R-3.4)],[4.9,-(F.R-3.4)]]}); // by the north gate (the way to the first portals)
 dc190Def('trees',{spf:F=>[dm196A(145.5,26.6),dm196A(148.5,29.2),dm196A(143.5,27.8),dm196A(-145.5,26.6),dm196A(-148.5,29.2),dm196A(-143.5,27.8)]});
-dc190Def('gatepoles',{spf:F=>{const x=DM196X.t+DM196X.tr+1.0;return [[-x,F.R-2.0],[x,F.R-2.0]]}}); // v198: beside the south exit's towers (they stood inside them)
+dc190Def('gatepoles',{spf:F=>[[-DM196X.t,F.R-3.2],[DM196X.t,F.R-3.2]]}); // v198: in line with the south exit's towers, 2 tiles inside them (they stood inside the towers)
 dc190Def('totems',{spf:F=>{const L=[];[3.2,6.6].forEach(dz=>{if(F.R+dz<DM196.RM-1.5)[-2.7,2.7].forEach(x=>L.push([x,F.R+dz]))});return L}});
 dc190Def('garland',{spf:F=>[14.2,24.5,34.5].filter(z=>z<F.R-3).map(z=>[z])});
 dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
