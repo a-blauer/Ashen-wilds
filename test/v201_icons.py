@@ -51,6 +51,7 @@ def s(pg):
         print(n,'icons shown',c['all'],'painted',c['art'])
         if c['all']==0:FAIL.append(n+': no icons shown');print('FAIL',n,'no icons shown')
         if c['old']:FAIL.append(n+': unpainted '+str(c['old']));print('FAIL',n,'unpainted',c['old'])
-        pg.screenshot(path=O+'/v201_%s.png'%n)
+        try:pg.screenshot(path=O+'/v201_%s.png'%n,timeout=180000)  # a picture only, not a check: a slow runner may time out
+        except Exception as e:print('note: no picture for',n,str(e)[:80])
 play.run(s,w=1280,hh=800)
 print('FAILURES:',FAIL if FAIL else 'none')
