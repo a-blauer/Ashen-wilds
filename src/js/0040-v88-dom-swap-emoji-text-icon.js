@@ -5,10 +5,16 @@ var KQ_CSS=(function(){const st=document.createElement('style');st.id='kqiCss';
 .kqi::before{background:rgba(10,6,2,.85);transform:translateY(.07em) scale(1.06)}
 .kqi::after{background:linear-gradient(180deg,var(--ta,#f4ead2),var(--tb,#b8a27c))}
 .kqi.kq-ink::after{background:currentColor}
+.kqi.kqa::before{display:none}.kqi.kqa::after{-webkit-mask:none;mask:none;background:var(--ia) center/contain no-repeat}
 `+Object.entries(KQT).map(([k,v])=>`.kt-${k}{--ta:${v[0]};--tb:${v[1]}}`).join('\n');
   (document.head||document.documentElement).appendChild(st);return st})();
 var KQ_MADE={};
-function kqUse(n){if(KQ_MADE[n])return;KQ_MADE[n]=1;KQIS.icons++;try{KQ_CSS.sheet.insertRule(`.kqi-${n}{--ic:${kqUrl(n)}}`,KQ_CSS.sheet.cssRules.length)}catch(e){}}
+function kqUse(n,t){
+  if(!KQ_MADE[n]){KQ_MADE[n]=1;KQIS.icons++;try{KQ_CSS.sheet.insertRule(`.kqi-${n}{--ic:${kqUrl(n)}}`,KQ_CSS.sheet.cssRules.length)}catch(e){}}
+  // v201: painted art (0035): one PNG per icon + tint
+  const k=n+'.'+t;if(t&&KQA[n]&&!KQ_MADE[k]){KQ_MADE[k]=1;const u=kqArtUrl(n,t);if(u)try{KQ_CSS.sheet.insertRule(`.kqi-${n}.kt-${t}{--ia:url("${u}")}`,KQ_CSS.sheet.cssRules.length)}catch(e){}}}
+// the class list of an icon span (v201: 'kqa' = painted art)
+function kqCls(n,t){kqUse(n,t);return 'kqi kqi-'+n+' kt-'+t+(KQA[n]?' kqa':'')}
 function kqStrip(s){return s.replace(KQ_RXG,m=>kqLook(m)?'':m).replace(/\s{2,}/g,' ').trim()}
 const KQ_SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,TITLE:1,NOSCRIPT:1};
 function kqText(t){
@@ -20,7 +26,7 @@ function kqText(t){
   const f=document.createDocumentFragment();
   for(const q of sg){if(typeof q=='string'){f.appendChild(document.createTextNode(q));continue}
     // the emoji itself rides inside the span (hidden) so textContent/innerText stay exactly as the game wrote them
-    kqUse(q[0]);const i=document.createElement('i');i.className='kqi kqi-'+q[0]+' kt-'+q[1];i.textContent=q[2];f.appendChild(i);KQIS.nodes++}
+    const i=document.createElement('i');i.className=kqCls(q[0],q[1]);i.textContent=q[2];f.appendChild(i);KQIS.nodes++}
   p.replaceChild(f,t)}
 function kqAttr(e){for(const a of ['title','placeholder','aria-label']){const v=e.getAttribute(a);if(v&&KQ_RXT.test(v)){const w=kqStrip(v);if(w!=v)e.setAttribute(a,w)}}}
 function kqEl(e){
@@ -41,7 +47,7 @@ const KQ_TAG=/<[!\/a-zA-Z](?:[^"'>]|"[^"]*"|'[^']*')*>/g,KQ_ATT=/(\s(?:title|pla
 function kqHtml(v){
   let o=KQ_HC.get(v);if(o!==undefined)return o;const t0=performance.now();try{return o=kqHtml0(v)}finally{KQIS.t+=performance.now()-t0}}
 function kqHtml0(v){let o;
-  let mode=0;o='';let last=0;const T=t=>{if(!t)return;if(mode==2)o+=t;else if(mode==1)o+=kqStrip(t);else o+=t.replace(KQ_RXG,m=>{const r=kqLook(m);if(!r)return m;kqUse(r[0]);KQIS.nodes++;return '<i class="kqi kqi-'+r[0]+' kt-'+r[1]+'">'+m+'</i>'})};
+  let mode=0;o='';let last=0;const T=t=>{if(!t)return;if(mode==2)o+=t;else if(mode==1)o+=kqStrip(t);else o+=t.replace(KQ_RXG,m=>{const r=kqLook(m);if(!r)return m;KQIS.nodes++;return '<i class="'+kqCls(r[0],r[1])+'">'+m+'</i>'})};
   v.replace(KQ_TAG,(tag,off)=>{T(v.slice(last,off));last=off+tag.length;
     const nm=(/^<\/?([a-zA-Z0-9-]+)/.exec(tag)||[])[1],lo=nm&&nm.toLowerCase(),close=tag[1]=='/';
     if(lo=='option')mode=close?0:1;else if(lo=='script'||lo=='style'||lo=='textarea'||lo=='title'||lo=='svg')mode=close?0:2;
