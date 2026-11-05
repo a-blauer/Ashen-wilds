@@ -67902,7 +67902,7 @@ try{dm196HouseSync()}catch(_){}
 //  * Walls and furniture are solid (town colliders), the doorway is open; the rest prompt (T.tv) is at the bar, where the innkeeper
 //    stands. The seats are listed for the townsfolk (DM196I.seats: chairs, stools and the bench, with the table they face) — 3650
 //    walks villagers in to sit and eat. Warm point lights come from the hearth and the lanterns (TLAMP).
-var DM196I={g:null,roof:null,col:[],lamps:[],seats:[],an:null,inside:false,keeper:null,l:null};
+var DM196I={barTop:.85,g:null,roof:null,col:[],lamps:[],seats:[],an:null,inside:false,keeper:null,l:null};
 function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8ccb0,wood=0x5a3c24,woodD=0x3a281a,warm=0xffc070;
   // floor and footing
   k.as('board',()=>{for(let x=-W2+.35;x<W2;x+=.5)k.p('c',R()<.3?0x6a4a2e:0x7a5636,'box',x,.05,0,.48,.06,2*D2-.3,0,0,0,.02)});
@@ -67922,14 +67922,14 @@ function dm196InnK(k,R){const W2=5.5,D2=4,H=3.3,st=0x6e6a64,stD=0x55525a,pl=0xd8
   twWindow(k,W2+.12,1.9,2.4,.8,.7,Math.PI/2,warm);twWindow(k,W2-.12,1.9,2.4,.8,.7,-Math.PI/2,warm);
   // ceiling beams and a ring of posts
   k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
-  // the bar: a long counter on the left back, stools, shelves of bottles and casks behind it, a tap barrel
-  const bz=-1.9,FL=-.32;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.95,bz,4.2,1.1,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.53,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.95,bz-.9,.5,1.1,1.8,0,0,0,.03)});
+  // the bar: a long counter on the left back (v199: top at ~.85 above the floor, it stood chest high and hid the innkeeper), stools, shelves of bottles and casks behind it, a tap barrel
+  const bz=-1.9,FL=-.32;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.75,bz,4.2,.7,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.13,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.75,bz-.9,.5,.7,1.8,0,0,0,.03)});
   for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
   k.as('wood',()=>[1.0,1.6,2.2].forEach(y=>k.p('c',woodD,'box',-3.0,y,-D2+.3,4.6,.06,.34,0,0,0,.02)));
   [1.0,1.6,2.2].forEach((y,j)=>{for(let i=0;i<9;i++){const x=-5.0+i*.5+(j%2)*.2;k.p(R()<.3?'g':'c',[0x3a6a3a,0x6a2a2a,0x2a3a6a,0xd8b060,0x5a3a6a][(i+j)%5],'cyl6',x,y+.17,-D2+.3,.06,.28,.06,0,0,0,0)}});
   [[-5.0,-3.0],[-4.3,-3.0]].forEach(([x,z])=>TWN100_barrel(k,x,z,.9));k.at(-4.65,.82,-3.0,()=>TWN100_barrel(k,0,0,.75));
-  k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',0x7a5230,'cyl8',-1.9,1.75,bz-.05,.22,.4,.22,Math.PI/2,0,0,.03)});k.p('m',0xb08a3a,'cyl6',-1.9,1.75,bz+.2,.04,.12,.04,Math.PI/2,0,0,0);
-  [[-2.6,0],[-3.4,.3],[-4.2,-.1]].forEach(([x,o])=>{k.p('m',0x8a7a5a,'cyl8',x,1.66,bz+.1+o*.1,.07,.15,.07);k.p('c',0xe8e0c8,'cyl8',x,1.75,bz+.1+o*.1,.06,.03,.06)})});
+  k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',0x7a5230,'cyl8',-1.9,1.35,bz-.05,.22,.4,.22,Math.PI/2,0,0,.03)});k.p('m',0xb08a3a,'cyl6',-1.9,1.35,bz+.2,.04,.12,.04,Math.PI/2,0,0,0);
+  [[-2.6,0],[-3.4,.3],[-4.2,-.1]].forEach(([x,o])=>{k.p('m',0x8a7a5a,'cyl8',x,1.26,bz+.1+o*.1,.07,.15,.07);k.p('c',0xe8e0c8,'cyl8',x,1.35,bz+.1+o*.1,.06,.03,.06)})});
   // the hearth: a great stone fireplace on the right wall, a fire grate, a mantel with candles, a cauldron, logs
   const hx=W2-.2,hz=-1.1;twStones(k,st,hx-.75,hz-1.15,hx-.75,hz-.55,.36,2.4,.5);twStones(k,st,hx-.75,hz+.55,hx-.75,hz+1.15,.36,2.4,.5);
   twStones(k,stD,hx,hz-1.15,hx,hz+1.15,.36,H,.5);twStones(k,st,hx-.8,hz-1.2,hx-.8,hz+1.2,1.45,2.5,.45);
@@ -68391,4 +68391,16 @@ function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
 // hold, fishing, gathering, drilling, the raven's wand IK, the v195 follow-through) still has the last word
 {const f=brTailAnim;brTailAnim=function(H,D,b,now,w){const r=f.apply(this,arguments);
   try{const rid=H===pl&&typeof riding!='undefined'&&!!riding;if(RLX197H.on&&D&&H&&H.bones&&!H._foe&&!rid)rlx197HArms(H,D,now)}catch(e){if(!RLX197H.err){RLX197H.err=1;console.warn('v197 hero arms',e)}}return r}}
+// ================= v199: the town portals answer again; the inn's bar comes down =================
+// Owner (Nov 4 2026): "In the tavern, the bar is too tall and covers the bartender" · "I can't interact with the portals in town. I walk up to
+// the kindlelight portal and no prompt comes up".
+//  * Portals: since v196 the portal rooms count as Duskhold (townAt takes in the meadow, its paths and the rooms), and promptTick only asks
+//    worldPrompt (which holds portalPrompt and the v196 seal prompt) outside a town, so standing at a portal showed nothing. In Duskhold the
+//    portal and the seal prompts now come first in the town prompts (townPortalPrompt). Co-op: prompts are local; portal unlocks follow the
+//    shared progress (bossDone) as before.
+//  * The bar (3640 dm196InnK) is built lower in 3640 itself: its top stood ~1.25 above the floor, chest high on the ~1.5 tall folk, so the
+//    innkeeper behind it was hidden; now ~.85 (DM196I.barTop; the innkeeper's head is at ~1.1), with the tap and mugs moved down onto it.
+function dm199SealPrompt(){const P=pl.position;for(const S of DM196P.seal){if(!S||S.open)continue;if(Math.hypot(P.x-S.x,P.z-S.z)<3.4){const i=S.i;
+    return {label:'🔒 Portal '+['I','II','III','IV','V','VI'][i]+' is sealed · defeat '+BOSSES[i-1].name+' in '+PMAP[i-1].n,fn:()=>openX('bosses')}}}return null}
+{const f=townPortalPrompt;townPortalPrompt=function(T){if(T&&T===TOWNS[0]){try{const r=portalPrompt()||dm199SealPrompt();if(r)return r}catch(e){console.warn('v199 portal prompt',e)}}return f.apply(this,arguments)}}
 </script></body></html>
