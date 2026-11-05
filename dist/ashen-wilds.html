@@ -5147,16 +5147,16 @@ function permBuff(n,s){hero.buffs.push({n,i:'📖',s,t:Infinity,perm:1,d:n});hsD
 function dexScan(){party.forEach(c=>c&&c.g&&dex.own.add(c.g[0]));eggs.forEach(e=>e&&e.sp&&dex.egg.add(e.sp))}
 function dexPoints(){const enK=Object.keys(EN).filter(k=>!k.startsWith('boss'));return {cre:dex.own.size,en:enK.filter(k=>(kills[k]||0)>=25).length,boss:bossDone.size*2,fish:Object.keys(fishLog).length}}
 const dexTotal=()=>{const p=dexPoints();return p.cre+p.en+p.boss+p.fish};
-XR.dex=()=>{dexScan();const p=dexPoints(),tot=dexTotal();$('xwT').textContent='📖 Bestiary';$('xwS').textContent=tot+' discovery points · companions '+p.cre+'/'+SPK.length+' · enemies '+p.en+' · bosses '+bossDone.size+'/'+BOSSES.length+' · fish '+p.fish+'/'+FISH.length;
-  const tabs=[['cre','🐾 Companions'],['en','💀 Enemies'],['boss','👑 Sovereigns'],['fish','🎣 Fish'],['rew','🎁 Rewards']];
+XR.dex=()=>{dexScan();const p=dexPoints(),tot=dexTotal();$('xwT').textContent='📖 Bestiary';$('xwS').textContent='Companions '+p.cre+'/'+SPK.length+' · enemies '+p.en+' · bosses '+bossDone.size+'/'+BOSSES.length+' · fish '+p.fish+'/'+FISH.length;
+  const tabs=[['cre','🐾 Companions'],['en','💀 Enemies'],['boss','👑 Sovereigns'],['fish','🎣 Fish'],['rew','📜 Collection Log']]; // v200: the points rewards are gone; the log's rewards are claimed at the Scholar's Tower (3708)
   let b='<div class="dexT">'+tabs.map(t=>`<button data-dext="${t[0]}" class="${dexTab==t[0]?'on':''}">${t[1]}</button>`).join('')+'</div>';
   if(dexTab=='cre')b+='<div class="dexG">'+SPK.map(n=>{const q=SP2[n],own=dex.own.has(n),seen=own||dex.egg.has(n);return `<div class="dexC ${own?'own':seen?'seen':''}"><span>${seen?q[3]:'❔'}</span><b>${seen?n:'???'}</b><small>${q[0]} · T${q[1]}${own?' · ✔ tamed':seen?' · egg seen':''}</small></div>`}).join('')+'</div>';
   else if(dexTab=='en')b+='<div class="rows">'+Object.keys(EN).filter(k=>!k.startsWith('boss')).map(k=>{const n=kills[k]||0,E=EN[k];return `<div class="rw" style="--rc:${n>=100?'#fbbf24':n>=25?'#6ee7b7':'transparent'}"><span class="rn">${n?E.e:'❔'} <b>${n?E.n:'Unknown enemy'}</b><small>${n} defeated${n>=25?' · ✔ studied':' · '+Math.max(0,25-n)+' more to study'}${n>=100?' · ★ mastered':''}</small></span></div>`}).join('')+'</div>';
   else if(dexTab=='boss')b+='<div class="rows">'+BOSSES.map((B,i)=>`<div class="rw" style="--rc:${bossDone.has(i)?'#6ee7b7':'transparent'}"><span class="rn">${bossDone.has(i)?B.i:'❔'} <b>${bossDone.has(i)?B.name:'Undefeated Sovereign'}</b><small>${(PMAP[i]||{}).n||''} · Lv ${B.lvl}${bossDone.has(i)?' · ✔ defeated':''}</small></span></div>`).join('')+'</div>';
   else if(dexTab=='fish')b+='<div class="dexG">'+FISH.map(f=>{const n=fishLog[f[0]]||0;return `<div class="dexC ${n?'own':''}"><span>${n?f[1]:'❔'}</span><b>${n?f[0]:'???'}</b><small>${['Common','Uncommon','Rare','Legendary'][f[3]]} · ${PMAP.filter(p=>p.t==f[2]).map(p=>p.n).join(' / ')}${n?' · caught '+n:''}</small></div>`}).join('')+'</div>';
-  else b+='<div class="rows">'+DEXM.map((m,i)=>{const got=dex.claim.has(i),ok=tot>=m[0];return `<div class="rw" style="--rc:${got?'#6ee7b7':ok?'#c9a24a':'transparent'}"><span class="rn"><b>${m[0]} points</b><small>${m[1]}</small></span><span class="ra">${got?'<em style="color:#6ee7b7">✔ Claimed</em>':`<button class="pri" data-dexc="${i}" ${ok?'':'disabled'}>${ok?'Claim':tot+'/'+m[0]}</button>`}</span></div>`}).join('')+'</div>';
-  $('xwB').innerHTML=b;$('xwF').innerHTML='<span class="mut dtl">Earn points by taming species, studying enemies (25 defeats), defeating Sovereigns (2 each), and catching fish.</span>'};
-$('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dext],[data-dexc]');if(!t||t.disabled)return;if(t.dataset.dext)dexTab=t.dataset.dext;else{const i=+t.dataset.dexc,m=DEXM[i];if(dex.claim.has(i)||dexTotal()<m[0])return;dex.claim.add(i);m[2]();say('🎁 Bestiary reward: '+m[1]);sfx('chime');hud();ui()}rX()});
+  else b+=cl200Html(false);
+  $('xwB').innerHTML=b;$('xwF').innerHTML='<span class="mut dtl">'+(dexTab=='rew'?'Fill a section of the log, then claim its reward at the Scholar\'s Tower in Duskhold.':'Tame species, defeat creatures and Sovereigns, and catch fish to fill the Bestiary and the Collection Log.')+'</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dext],[data-dexc]');if(!t||t.disabled)return;if(t.dataset.dext)dexTab=t.dataset.dext;rX()});
 {const b=document.createElement('button');b.id='dexBtn';b.innerHTML='📖 Bestiary <kbd>L</kbd>';$('sysmenu').appendChild(b);b.onclick=()=>{$('sysmenu').classList.add('hide');openX('dex')}}
 addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||fishing)return;const k=e.key.toLowerCase();if(k!='l'||document.activeElement.tagName=='INPUT')return;if(!$('xw').classList.contains('hide')&&xwMode=='dex'){closeX();return}if(!uiOpen())openX('dex')});
 
@@ -5686,7 +5686,7 @@ $('xw').addEventListener('click',e=>{const b=e.target.closest('[data-ibuy]');if(
 {const f=rB0;rB0=function(){f();if(bagTab2==3){$('bl').innerHTML=$('bl').innerHTML.replace('No supplies yet. Cook and brew in Duskhold, hunt for meat and forage for seeds.','No supplies yet. Cook and brew at the hearth and alchemy table in any town.')}
   if(bagTab2==1)$('bl').innerHTML=$('bl').innerHTML.replace(/<div class="sec">Realm items<\/div><div class="mgrid">[\s\S]*?<\/div><\/div>(?=<div class="sec">|$)/,'');
   $('bt').insertAdjacentHTML('beforeend',`<button data-bt="4" class="${bagTab2==4?'on':''}">Eggs${eggs.length?' ('+eggs.length+')':''}</button>`);
-  if(bagTab2==4){$('bl').innerHTML='<div class="mut dtl" style="padding:2px 4px 6px">Eggs hatch after 1 minute in your bag. Click a ready egg to hatch it.</div><div class="rows">'+eggRows()+'</div>'}}}
+  if(bagTab2==4){$('bl').innerHTML='<div class="mut dtl" style="padding:2px 4px 6px">Eggs hatch in the Hatchery in Duskhold (walk up to it and press F).</div><div class="rows">'+eggRows()+'</div>'}}}
 // ---------------- visitors now drop by the town you are in ----------------
 function rwSpots(T,n){const out=[],avoid=[T.mp,T.mv,T.tv,T.st,T.sp,[T.cx-16.2,T.cy+4.65]].concat(T.st2?[T.st2.c,T.st2.a]:[]).filter(Boolean);
   for(let r=7;r<19&&out.length<n;r+=.9)for(let a=0;a<6.283&&out.length<n;a+=.33){const x=T.sp[0]+Math.cos(a)*r,z=T.sp[1]+Math.sin(a)*r;
@@ -5704,25 +5704,25 @@ function visitorPrompt(){for(const v of VIS){if(v.g&&Math.hypot(pl.position.x-v.
 function visStock(){const d=Math.floor(Date.now()/(20*60000));if(visState.day!==d||!visState.stock||visState.stock.some(s=>s.k=='seed'||s.k=='map')){visState.day=d;visState.bard=0;const T=Math.max(1,Math.min(5,tierOfLv(hero.lvl)));
   visState.stock=[{k:'egg',t:T,p:150+T*120,r:RUNEK[0]},{k:'pots',n:3,p:120},{k:'rune',r:RUNEK[R(0,RUNEK.length-1)],p:450}]}return visState.stock}
 $('xw').addEventListener('click',e=>{if(xwMode!='visitor')return;const t=e.target.closest('[data-vbuy]');if(!t||t.disabled)return;const s=visStock()[+t.dataset.vbuy];if(!s||s.k!='egg')return;
-  e.stopImmediatePropagation();if(s.sold||gold<s.p)return;gold-=s.p;s.sold=1;const eg=rollEgg(s.t);eggs.push(eg);say('🥚 Bought a Tier '+(eg.tier+1)+' '+eg.sp+' egg. It hatches after a minute in your bag (U).');hud();ui();rX()},true);
+  e.stopImmediatePropagation();if(s.sold||gold<s.p)return;gold-=s.p;s.sold=1;const eg=rollEgg(s.t);eggs.push(eg);say('🥚 Bought a Tier '+(eg.tier+1)+' '+eg.sp+' egg. Set it in the Hatchery in Duskhold to hatch it.');hud();ui();rX()},true);
 {const f=XR.visitor;XR.visitor=()=>{f();if(xwArg=='merchant'){const st=visStock();$('xwB').querySelectorAll('[data-vbuy]').forEach(b=>{const q=st[+b.dataset.vbuy];if(q&&q.k=='egg'){const n=b.closest('.rw').querySelector('.rn b');if(n)n.textContent='🥚 Mystery Tier '+q.t+' Egg'}})}$('xwS').textContent=$('xwS').textContent.replace('Visiting your Realm','Passing through town');$('xwF').innerHTML='<span class="mut dtl">Visitors travel between the towns. Each stays about 13 minutes, then moves on.</span>'}}
 
 // ---------------- 3. eggs hatch after one minute in your bag ----------------
-var EGG_T=60000,eggNote=new Set(),eggRdyN=-1;
-const eggRdy=e=>!!e.t0&&Date.now()-e.t0>=EGG_T;
-function eggRows(){const now=Date.now();return eggs.length?eggs.map(e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1;
-  return `<button class="rw it egr${rd?' rdy':''}" data-hatch="${e.id}" style="--rc:${RAR[e.tier][1]}" ${rd?'':'disabled'}><span class="rn">${en(e)}<small data-eg="${e.id}">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-(e.t0||now)))/1000))+'s'}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')
+var EGG_T=480000,eggNote=new Set(),eggRdyN=-1;
+const eggRdy=e=>!!e&&!!e.ht&&!!e.t0&&Date.now()-e.t0>=EGG_T; // v200: only eggs set in the Hatchery (e.ht) hatch
+function eggRows(){const now=Date.now();return eggs.length?eggs.map(e=>{const p=ht200P(e),rd=eggRdy(e);
+  return `<button class="rw it egr${rd?' rdy':''}" data-hatch="${e.id}" style="--rc:${RAR[e.tier][1]}" ${rd?'':'disabled'}><span class="rn">${en(e)}<small data-eg="${e.id}">${ht200Txt(e)}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')
   :'<div class="mut" style="padding:8px">No eggs. They are rare drops from monsters, elites and bosses, and some shops sell them.</div>'}
-{const w=$('inc');w.querySelector('h2').textContent='Eggs';const ws=w.querySelector('.wsub');if(ws)ws.textContent='Eggs hatch after 1 minute in your bag · click a ready egg to watch it hatch';
+{const w=$('inc');w.querySelector('h2').textContent='Eggs';const ws=w.querySelector('.wsub');if(ws)ws.textContent='Eggs hatch in the Hatchery in Duskhold';
   w.querySelector('.wb').innerHTML='<div class="rows" id="eggs"></div><div id="islots" class="hide"></div>';
   $('eggs').addEventListener('click',e=>{const b=e.target.closest('[data-hatch]');if(b&&!b.disabled)hatchEgg(+b.dataset.hatch)})}
 $('bag').addEventListener('click',e=>{const b=e.target.closest('[data-hatch]');if(!b)return;e.stopImmediatePropagation();if(!b.disabled)hatchEgg(+b.dataset.hatch)},true);
 $('incBtn').onclick=openInc;
 function hatchCheck(){
   if(typeof incS!='undefined')Object.keys(incS).forEach(t=>{const s=incS[t];if(s&&s.egg){s.egg.t0=s.t0||Date.now();eggs.push(s.egg)}delete incS[t]});
-  let n=0;eggs.forEach(e=>{if(!e.t0)e.t0=Date.now();if(eggRdy(e)){n++;if(!eggNote.has(e.id)){eggNote.add(e.id);say('🥚 Your '+e.sp+' egg is ready to hatch! Open Companions & Eggs (P) and click it.');if(typeof sfx=='function')sfx('chime')}}});
-  const now=Date.now();document.querySelectorAll('[data-egb]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.egb);if(e)el.style.width=Math.min(100,(now-e.t0)/EGG_T*100)+'%'});
-  document.querySelectorAll('small[data-eg]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.eg);if(e&&!eggRdy(e))el.textContent='Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'});
+  let n=0;eggs.forEach(e=>{if(e.t0&&!e.ht)delete e.t0;if(eggRdy(e)){n++;if(!eggNote.has(e.id)){eggNote.add(e.id);say('🥚 Your '+e.sp+' egg is ready! Hatch it at the Hatchery in Duskhold.');if(typeof sfx=='function')sfx('chime')}}});
+  const now=Date.now();document.querySelectorAll('[data-egb]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.egb);if(e)el.style.width=ht200P(e)*100+'%'});
+  document.querySelectorAll('small[data-eg]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.eg);if(e)el.textContent=ht200Txt(e)});
   if(n!==eggRdyN){eggRdyN=n;if(!$('inc').classList.contains('hide'))rI();if(!$('bag').classList.contains('hide')&&bagTab2==4)rB0()}
   for(const k in sup)if(k.startsWith('s_')&&sup[k]>0){const c=k.slice(2);sup[c]=(sup[c]||0)+sup[k];sup[k]=0}
 }
@@ -6454,11 +6454,11 @@ const matN=k=>{const i=matInfo(k);return [i[1],RES[k]?i[0]:k]};
 function shCost(u,l){const c=SHC[l];return u.m.map(([k,n])=>[k,Math.round(n*c.x)])}
 function shPay(gc,ms){gold-=gc;ms.forEach(([k,n])=>{mats[k]=(mats[k]||0)-n;if(mats[k]<=0&&!RES[k])delete mats[k];if(RES[k]&&mats[k]<0)mats[k]=0})}
 const shHas=ms=>ms.every(([k,n])=>(mats[k]||0)>=n);
-const costH=(g,ms)=>'🪙 '+g+' · '+ms.map(([k,n])=>{const q=matN(k),h=mats[k]||0;return `<span style="color:${h>=n?'#bfe8a0':'#f0a0a0'}">${q[0]} ${n} ${q[1]}</span> <span class="mut">(${h})</span>`}).join(' · ');
-function shApply(){EGG_T=[60000,45000,30000,20000][shL('hatch')];hsDirty();try{shBuild();shSites()}catch(err){console.warn(err)}}
-{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._sh){s._sh=1;const a=1+[0,.04,.08,.12][shL('train')],h=1+[0,.05,.1,.15][shL('walls')];
-  if(s.pa!=null)s.pa*=a;if(s.ma!=null)s.ma*=a;if(s.hp!=null)s.hp*=h;s.xp=(s.xp||0)+[0,.05,.1,.15][shL('tower')]}return s}}
-{const f=lootE;lootE=function(e){const g0=gold;const r=f.apply(this,arguments);const dg=gold-g0,b=[0,.1,.2,.3][shL('treas')];if(dg>0&&b){const x=Math.round(dg*b);gold+=x}return r}}
+const costH=(g,ms)=>(g?'🪙 '+g+' · ':'')+ms.map(([k,n])=>{const q=matN(k),h=mats[k]||0;return `<span style="color:${h>=n?'#bfe8a0':'#f0a0a0'}">${q[0]} ${n} ${q[1]}</span> <span class="mut">(${h})</span>`}).join(' · ');
+function shApply(){EGG_T=[480000,420000,360000,300000][shL('hatch')];hsDirty();try{shBuild();shSites()}catch(err){console.warn(err)}}
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._sh){s._sh=1;const a=1,h=1+[0,.05,.1,.15][shL('walls')]; /* v200: the Training Grounds trains offline instead of +attack (3707) */
+  if(s.pa!=null)s.pa*=a;if(s.ma!=null)s.ma*=a;if(s.hp!=null)s.hp*=h;}return s}} /* v200: the Scholar's Tower keeps the collection log instead of +XP (3708) */
+{const f=lootE;lootE=function(e){const g0=gold;const r=f.apply(this,arguments);const dg=gold-g0,b=0; /* v200: the Treasury is the gold market (3706), no more +gold */if(dg>0&&b){const x=Math.round(dg*b);gold+=x}return r}}
 function shCanBuy(u){const l=shL(u.k);if(l>=3)return [false,'Fully upgraded'];const c=SHC[l+1];
   if(bossDone.size<c.b)return [false,'Needs '+c.b+' Sovereigns defeated'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(shCost(u,l+1)))return [false,'Not enough materials'];return [true,'']}
 function shBuy(k){const u=SHU.find(q=>q.k==k);if(!u)return;const ok=shCanBuy(u);if(!ok[0])return say(ok[1]+'.');const l=shL(k)+1;
@@ -6514,7 +6514,7 @@ function rollRare(c,boost){const b=(boost||0)/100+shL('hatch')*.01,r=Math.random
   if(r<.015+b*.5){c.shn=1;rollMod(c);return 'shiny'}
   if(r<.015+b*.5+.06+b){const k=Object.keys(RVAR)[Math.random()*6|0];c.rv=k;c.cl=c.cl.slice();c.cl[0]=RVAR[k];return 'rare'}return ''}
 {const f=hatch;hatch=function(e){const c=f.apply(this,arguments);if(c){const r=rollRare(c);if(r)c._new=r}return c}}
-{const f=cStat;cStat=function(c,k){let v=f(c,k);if(c&&!c.st){if(c.shn)v*=1.1;else if(c.rv)v*=1.05;const d=[0,.05,.1,.15][shL('den')];if(d&&party.includes(c))v*=1+d;
+{const f=cStat;cStat=function(c,k){let v=f(c,k);if(c&&!c.st){if(c.shn)v*=1.1;else if(c.rv)v*=1.05;const d=0; /* v200: the Beast Den is the essence altar (3710), no more +stats */if(d&&party.includes(c))v*=1+d;
   const t=c.tal;if(t){if((k=='pa'||k=='ma')&&t.fer)v*=1+.04*t.fer;if(k=='hp'&&t.tou)v*=1+.05*t.tou;if((k=='pd'||k=='md')&&t.grd)v*=1+.04*t.grd}}return v}}
 // shiny companions glitter
 {const f=cr;cr=function(c){const g=f.apply(this,arguments);if(c&&c.shn&&g){try{const N=18,pos=new Float32Array(N*3);for(let i=0;i<N;i++){const a=i/N*6.283,r=.55+(i%3)*.12;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=.25+((i*7)%10)/10*.9;pos[i*3+2]=Math.sin(a)*r}
@@ -7018,7 +7018,7 @@ var CE={sel:null,hat:null,next:0};   // sel: selected egg id (null = companion v
 #cd .cehb{display:flex;gap:8px;justify-content:center;margin-top:12px}
 `;document.head.appendChild(st)}
 {const w=$('cmp');w.querySelector('h2').textContent='Companions & Eggs';
-  if(!w.querySelector('.wsub'))w.querySelector('h2').insertAdjacentHTML('afterend','<span class="wsub">Eggs hatch after a short wait · click a ready egg to hatch it</span>');
+  if(!w.querySelector('.wsub'))w.querySelector('h2').insertAdjacentHTML('afterend','<span class="wsub">Eggs hatch in the Hatchery in Duskhold</span>');
   const ib=$('incBtn');if(ib)ib.style.setProperty('display','none','important');
   const cb=$('cmpBtn');if(cb)cb.innerHTML='🐾 Companions & Eggs <kbd>P</kbd>'}
 
@@ -7027,25 +7027,25 @@ function ceEggRows(){
   if(!eggs.length)return '';const now=Date.now();
   const ord=eggs.slice().sort((a,b)=>(eggRdy(b)?1:0)-(eggRdy(a)?1:0));
   return `<div class="ceh"><span>Eggs <b>${eggs.length}</b></span><span>${eggs.filter(eggRdy).length?'✨ '+eggs.filter(eggRdy).length+' ready':''}</span></div>`+
-   ord.map(e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1;
-    return `<button class="rw it ceeg${rd?' rdy':''}${CE.sel==e.id?' on':''}" data-cegg="${e.id}" style="--rc:${RAR[e.tier][1]}"><span class="rn">${en(e)}<small data-eg="${e.id}">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-(e.t0||now)))/1000))+'s'}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')+
+   ord.map(e=>{const p=ht200P(e),rd=eggRdy(e);
+    return `<button class="rw it ceeg${rd?' rdy':''}${CE.sel==e.id?' on':''}" data-cegg="${e.id}" style="--rc:${RAR[e.tier][1]}"><span class="rn">${en(e)}<small data-eg="${e.id}">${ht200Txt(e)}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')+
    `<div class="ceh" style="margin-top:12px"><span>Companions <b>${party.length}</b></span></div>`}
 
 // ---------- egg preview: a slowly turning egg that trembles more as it nears hatching ----------
 function ceEggPV(e){
   const E=ceEggMesh(e),grp=new THREE.Group();grp.add(E.g);$('cvw').classList.remove('hatching');
-  pvShow($('cvw'),grp,now=>{const p=Math.min(1,(Date.now()-(e.t0||Date.now()))/EGG_T),t=now/1000;
+  pvShow($('cvw'),grp,now=>{const p=ht200P(e),t=now/1000;
     grp.rotation.y=t*.5;E.g.rotation.z=Math.sin(t*(4+p*14))*.04*(.3+p);E.mat.emissiveIntensity=.04+p*.18+(p>=1?.12*(1+Math.sin(t*4)):0);
     PV.pl.color.setHex(E.ec);PV.pl.intensity=p*.6});
 }
 function ceEggInfo(e){
-  const now=Date.now(),p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1,f=famOf(e.sp),F=typeof FAMD!='undefined'&&FAMD[f];
+  const now=Date.now(),p=ht200P(e),rd=eggRdy(e),f=famOf(e.sp),F=typeof FAMD!='undefined'&&FAMD[f];
   $('cd').innerHTML=`<div class="cedh">${en(e)}</div><div class="mut" style="font-size:.76rem">${RAR[e.tier][0]} egg${F?' · '+F.i+' '+f+' family':''}</div>
    ${F&&F.d?`<p class="mut" style="font-size:.78rem;margin:8px 0 0">${F.d}</p>`:''}
    <div class="cebar"><i data-egb="${e.id}" style="width:${p*100}%"></i></div>
-   <div class="mut" style="font-size:.78rem"><small data-eg="${e.id}" style="font-size:inherit">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'}</small></div>
+   <div class="mut" style="font-size:.78rem"><small data-eg="${e.id}" style="font-size:inherit">${ht200Txt(e)}</small></div>
    <div class="kv"><span>Hatches as</span><b>${e.sp}</b></div><div class="kv"><span>Parent potential</span><b>${Math.round((e.pa||1)*100)}%</b></div>
-   <button class="pri cehatch" data-cehatch="${e.id}" ${rd?'':'disabled'}>${rd?'🥚 Hatch now':'Not ready yet'}</button>`;
+   <button class="pri cehatch" data-cehatch="${e.id}" disabled>${rd?'🥚 Hatch it at the Hatchery':e.ht?'Hatching in the Hatchery…':'Place it in the Hatchery'}</button>`;
 }
 
 // ---------- render ----------
@@ -13843,7 +13843,7 @@ function kqmGearTip(it,o){o=o||{};const t=itT(it),R=RAR[it.r],sl=t.sl,isEq=kqmEq
 function kqmEggTip(e,o){o=o||{};const now=Date.now(),f=typeof famOf=='function'?famOf(e.sp):'',F=typeof FAMD!='undefined'&&FAMD[f],rd=typeof eggRdy=='function'&&e.t0&&eggRdy(e);
   return `<div class="kqm-tn"><span style="color:${RAR[e.tier][1]}">🥚 Tier ${e.tier+1} ${kqmEsc(e.sp)} Egg</span></div><div class="kqm-ts">${RAR[e.tier][0]} egg${F?' · '+F.i+' '+f+' family':''}</div>`+
    (F&&F.d?`<div class="kqm-td">${F.d}</div>`:'')+`<div class="kqm-ts" style="margin-top:4px">Parent potential ${Math.round((e.pa||1)*100)}%</div>`+
-   (e.t0?`<div class="kqm-tx">${rd?'✨ Ready to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'}</div>`:'')+(o.price?`<div class="kqm-tp">${o.price}</div>`:'')+(o.hint?`<div class="kqm-th">${o.hint}</div>`:'')}
+   `<div class="kqm-tx">${ht200Txt(e)}</div>`+(o.price?`<div class="kqm-tp">${o.price}</div>`:'')+(o.hint?`<div class="kqm-th">${o.hint}</div>`:'')}
 function kqmHint(){return KQM.touch?'Tap again to equip · or use the buttons below':'Click to select · double-click to equip'}
 function kqmMatTip(k){const n=matInfo(k)[0],ic=matInfo(k)[1];let src='';try{if(typeof msrcBuild=='function'){if(!MSRC)MSRC=msrcBuild();const H=MSRC[String(n).toLowerCase()]||MSRC[String(k).toLowerCase()];if(H)src=H.t}}catch(_){}
   const up=UPM.findIndex(u=>u[0]==k);
@@ -13907,9 +13907,9 @@ function kqmSupTab(){const grp=[['Food','food'],['Potions & elixirs','pot','elix
   const h=all.map(([n,a])=>a.length?`<div class="kqm-h">${n}</div><div class="kqm-grid">${a.map(t).join('')}${kqmEmpty((8-a.length%8)%8)}</div>`:'').join('');
   return h||'<div class="mut" style="padding:8px">No supplies yet. Cook and brew at the hearth and alchemy table in any town.</div>'}
 function kqmEggTab(){const now=Date.now();
-  const t=e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1,inner=`<span class="kqm-ic">🥚</span><span class="kqm-up">T${e.tier+1}</span><span class="kqm-eb"><i data-egb="${e.id}" style="width:${p*100}%"></i></span>`;
+  const t=e=>{const p=ht200P(e),rd=eggRdy(e),inner=`<span class="kqm-ic">🥚</span><span class="kqm-up">T${e.tier+1}</span><span class="kqm-eb"><i data-egb="${e.id}" style="width:${p*100}%"></i></span>`;
     return rd?`<button class="kqm-slot kqm-rdy" data-hatch="${e.id}" data-kqt="egg:${e.id}" style="--rc:${RAR[e.tier][1]}">${inner}</button>`:`<div class="kqm-slot" data-kqt="egg:${e.id}" style="--rc:${RAR[e.tier][1]}">${inner}</div>`};
-  return '<div class="mut dtl" style="padding:2px 2px 4px">Eggs hatch after a short wait in your bag. Click a glowing egg to hatch it.</div>'+
+  return '<div class="mut dtl" style="padding:2px 2px 4px">Eggs hatch in the Hatchery in Duskhold: walk up to it and press F to set them in.</div>'+
     `<div class="kqm-grid">${eggs.map(t).join('')}${kqmEmpty(Math.max(16,Math.ceil((eggs.length+1)/8)*8)-eggs.length)}</div>`+(eggs.length?'':'<div class="mut" style="padding:4px 2px">No eggs. They are rare drops from monsters, elites and bosses, and some shops sell them.</div>')}
 // ---------------- forge (item upgrades) ----------------
 function kqmForgeItem(){return selI&&selI.k!='p'?kqmFind(selI.k,selI.id):null}
@@ -22260,12 +22260,12 @@ function hsWho103(i){const L=HS103.cit.filter(c=>c.h===i).map(c=>c.n);return L.l
 function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.ry!==l.ry||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
   for(const i in HS103.g)if(!HS103.h[+i])hsDrop103(+i);CZ103.ver=-1}
 function hsCan103(){const n=HS103.h.length,c=hsCost103(n);if(n>=HS103_MAX)return [false,'Every house is built'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(c.m))return [false,'Not enough materials'];return [true,'']}
-// build a house on lot id: pay, raise it, two citizens move in
+// build a house on lot id: pay, raise it, one citizen moves in (two before v200)
 function hsBuy103(id){const ok=hsCan103();if(!ok[0]){say(ok[1]+'.');return false}if(!lotFree103(id))return false;const n=HS103.h.length,c=hsCost103(n);shPay(c.g,c.m);
   const used=new Set(HS103.h.map(h=>h.nm)),nm=(HS103_NM.find(q=>!used.has(q+' House'))||'New')+' House';HS103.h.push({nm,v:n%3});SH.pos['h:'+n]=id;
-  const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<2;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
+  const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<1;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
     HS103.cit.push({n:k,h:n,task:'',t0:0,lk:Math.floor(Math.random()*1e6)})}
-  lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' move in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
+  lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' moves in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
 // ---------- v104/v105: trades, ranks, food and collecting ----------
 // Every citizen starts as a gatherer; the Steward trains them for gold into an egg collector, fisherman or hunter.
 // v105: a trade has a rank (1..5): a citizen only works zones of that tier or lower (Kindlelight 1 … The Citadel 5);
@@ -22333,7 +22333,7 @@ function czGoods105(c){const r=czRole104(c),v=c.task,G=[];
     if(Math.random()<.18){const m=FAMD[fam].mat;got[m]=(got[m]||0)+R(1,2)}if(Math.random()<.1){const m=UPM[T-1][0];got[m]=(got[m]||0)+1}
     if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<.25)meat++;
     if(Math.random()<.035)G.push({t:'gear',it:genItem(L,{minR:0})})}
-  g=Math.round(g*(1+[0,.1,.2,.3][shL('treas')]));G.push({t:'gold',n:g});if(meat)G.push({t:'sup',k:'meat',n:meat});for(const m in got)G.push({t:'mat',k:m,n:got[m]});return G}
+  g=Math.round(g);G.push({t:'gold',n:g});if(meat)G.push({t:'sup',k:'meat',n:meat});for(const m in got)G.push({t:'mat',k:m,n:got[m]});return G}
 function czGoodsTxt105(G){return (G||[]).map(q=>q.t=='mat'?matInfo(q.k)[1]+' '+q.n+' '+matInfo(q.k)[0]:q.t=='sup'?(SUP[q.k]?SUP[q.k].i+' '+q.n+' '+SUP[q.k].n:'🔮 '+q.n+' '+(RUNES[q.k]?RUNES[q.k][0]:q.k)):q.t=='gold'?'🪙 '+q.n:q.t=='egg'?'🥚 '+q.sp+' Egg':q.t=='gear'?icoOf(q.it)+' '+itName(q.it):'').filter(Boolean).join(' · ')}
 // hand over a citizen's goods
 function czCollect105(c){const G=c.bag;if(!G)return '';G.forEach(q=>{if(q.t=='mat')mats[q.k]=(mats[q.k]||0)+q.n;else if(q.t=='sup'){giveS(q.k,q.n);(q.log||[]).forEach(f=>fishLog[f]=(fishLog[f]||0)+1)}
@@ -22529,9 +22529,9 @@ XR.hold=()=>{const T=TOWNS[0];$('xwT').textContent='🏰 Kingdom of Duskhold';
       state:(l>=3?'<em style="color:#6ee7b7">✔ Max</em>':'')+(pl?kmLotTxt103('u:'+u.k):''),btn:b}))});
   // ---- houses ----
   const nH=HS103.h.length,hc=hsCost103(nH),hok=hsCan103();
-  R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · two citizens live in each)</span></div>');
+  R.push('<div class="sec">🏠 Houses <span class="mut" style="text-transform:none;letter-spacing:0">('+nH+' / '+HS103_MAX+' · one citizen lives in each)</span></div>');
   HS103.h.forEach((h,i)=>R.push(kmRow103({i:'🏠',n:h.nm,d:'Home of '+hsWho103(i),state:kmLotTxt103('h:'+i),btn:[mv('h:'+i),rt('h:'+i)],col:'#d8b46a'})));
-  if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'Two new citizens move in. Give them work below.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
+  if(nH<HS103_MAX)R.push(kmRow103({i:'🏗️',n:'New house',d:'A new citizen moves in. Give them work in the Villagers tab.',cost:'Cost: '+costH(hc.g,hc.m),btn:[['Build','data-kmb="house:1"','class="pri" '+(hok[0]&&!P?'':'disabled')+' title="'+hok[1]+'"']]}));
   // ---- citizens: their own Villagers tab since v117 (vlRender116 in 2150) ----
   // ---- plan ----
   const lot=KM103.sel&&LOTM103[KM103.sel],lk=lot&&lotKey103(lot.id),lnm=lk&&lotName103(lk);
@@ -36637,7 +36637,7 @@ function dex141St(k,l,al){const s=enStats(EN[k],l,al,0);return {hp:Math.round(s.
 function dex141Pct(p){if(p>=.995)return '100%';if(p<=0)return '—';if(p<.001)return '1 in '+Math.round(1/p).toLocaleString();const v=p*100;return (v<1?v.toFixed(2):v<10?v.toFixed(1):Math.round(v))+'%'}
 // the drop table at level l, zone tier T (normal and elite)
 function dex141Drops(k,l,T,z){const E=EN[k],fam=E.fam||'Beast',lk=1+((typeof HS=='function'&&HS().loot)||0),keep=.7,eg=typeof EGG92!='undefined'?EGG92.rate:1;
-  const gb=1+([0,.1,.2,.3][typeof shL=='function'?shL('treas'):0]||0),g0=(3+l*1.4)*.65*gb;
+  const gb=1,g0=(3+l*1.4)*.65*gb;
   const rows=[['🪙','Gold',Math.round(g0*.7)+'–'+Math.round(g0*1.3),Math.round(g0*3*.7)+'–'+Math.round(g0*3*1.3)],
     ['⚔️','Gear (any slot, rolled at its level)',dex141Pct(.035*lk*keep),dex141Pct(Math.min(1,.3*lk)*keep)+' <small>uncommon+</small>'],
     ['🥚','Tier '+T+' egg (random family)',dex141Pct(.04*lk*keep*eg),dex141Pct(.12*lk*keep*eg)],
@@ -66867,7 +66867,7 @@ function cu194Stock(){const T=cu194T(),k=cu194Key(),hk=cu194HKey();
   return {wares:CU194.wares,cur:CU194.cur.slice(0,nC)}}
 // ---- what each thing is ----
 function cu194Info(o){const sp=e=>e?`Tier ${e.tier+1} egg (${TGI[e.tag]||''} ${e.tag})`:'';
-  if(o.k=='egg')return {ic:'🥚',n:'Mystery Tier '+o.t+' Egg',d:'You find out what hatches. Hatches after a minute in your bag.',rc:RAR[Math.min(4,o.t-1)][1]};
+  if(o.k=='egg')return {ic:'🥚',n:'Mystery Tier '+o.t+' Egg',d:'You find out what hatches. Set it in the Hatchery in Duskhold.',rc:RAR[Math.min(4,o.t-1)][1]};
   if(o.k=='pots')return {ic:'🧪',n:'3× Health Potion',d:'Each heals 40% of your health.',rc:'#5fcf6a'};
   if(o.k=='rune')return {ic:RUNES[o.r][1],n:rn194Name(o.r),d:rn194Kind(o.r)+': '+rn194Desc(o.r,'h'),rc:'#7a5cff',rune:o.r};
   if(o.k=='shiny')return {ic:'✨',n:'Shimmering Egg',d:'A '+sp(o.egg)+' that always hatches a shiny companion (+10% to every stat, a sparkle, an extra modifier).',rc:'#f5d76e'};
@@ -66877,7 +66877,7 @@ function cu194Info(o){const sp=e=>e?`Tier ${e.tier+1} egg (${TGI[e.tag]||''} ${e
   if(o.k=='fortune')return {ic:'🍀',n:'Elixir of Fortune',d:'+25% loot find for 20 minutes.',rc:'#6ee7b7'};
   return {ic:'📦',n:o.k,d:'',rc:'#888'}}
 function cu194Give(o){
-  if(o.k=='egg'||o.k=='shiny'||o.k=='elder'){eggs.push(o.egg);say('🥚 '+(o.k=='shiny'?'A Shimmering ':'A ')+'Tier '+(o.egg.tier+1)+' '+o.egg.sp+' egg is in your bag. It hatches after a minute.')}
+  if(o.k=='egg'||o.k=='shiny'||o.k=='elder'){eggs.push(o.egg);say('🥚 '+(o.k=='shiny'?'A Shimmering ':'A ')+'Tier '+(o.egg.tier+1)+' '+o.egg.sp+' egg is in your bag. Set it in the Hatchery to hatch it.')}
   else if(o.k=='pots'){pots+=3;say('🧪 3 Health Potions bought.')}
   else if(o.k=='rune'||o.k=='rune2'){giveS(o.r,1);say('🔮 '+rn194Name(o.r)+' bought.')}
   else if(o.k=='armament'){gear.push(o.it);say('⚔️ '+itName(o.it)+' is in your bag ('+o.it.rs+' rune slots).')}
@@ -68403,4 +68403,692 @@ function rlx197HArms(H,D,now){const b=H.bones;if(!b||!b.aL1||!b.aR1)return;
 function dm199SealPrompt(){const P=pl.position;for(const S of DM196P.seal){if(!S||S.open)continue;if(Math.hypot(P.x-S.x,P.z-S.z)<3.4){const i=S.i;
     return {label:'🔒 Portal '+['I','II','III','IV','V','VI'][i]+' is sealed · defeat '+BOSSES[i-1].name+' in '+PMAP[i-1].n,fn:()=>openX('bosses')}}}return null}
 {const f=townPortalPrompt;townPortalPrompt=function(T){if(T&&T===TOWNS[0]){try{const r=portalPrompt()||dm199SealPrompt();if(r)return r}catch(e){console.warn('v199 portal prompt',e)}}return f.apply(this,arguments)}}
+// ================= v200: Duskhold's buildings become stations =================
+// Owner (Nov 5 2026): the Training Grounds, Scholar's Tower, Treasury, Beast Den and Hatchery stop giving passive bonuses and
+// become places you walk up to (F) and use; the Beast Trainer trains companions in slots; the Stable's upgrades open mount
+// tiers; companion food; Curio prices by tier; one villager per house; cheaper top upgrades.
+// This file: the shared parts —
+//  * costs: town upgrades' third level 12,000 → 5,000 gold (SHC); Rune Sanctum levels 1,000 / 2,000 / 5,000 gold; Beast Trainer
+//    levels 1,000 gold each (one more training slot per level); Stable levels cost wood, stone and plant fiber only.
+//  * the upgrade texts (SHU[].d) say what each station level does now (the passive bonuses were taken out of 0530 / 1870 / 2985).
+//  * the Hatchery stands from the start: level 0 is a working Hatchery (3 slots) that takes a lot like any building;
+//    its levels 1-3 are upgrades. Its model shows level 1 at level 0 (kdUp wrapper); the Steward row says "Upgrade".
+//  * walk-up prompts: F at a station's door opens its window (ST200 table; each station file fills in its open()).
+//  * one villager per house (1870 builds one); older saves keep each house's best-ranked villager, the others move away:
+//    their goods are handed over and half of what was spent training and ranking them comes back as gold.
+// Co-op: station levels come from the kingdom you see (the host's while you play together); what you put in a station
+// (eggs, companions, gold, training) is your own and saved with your hero.
+var ST200={k:['hatch','train','tower','treas','den'],open:{},name:{hatch:'Hatchery',train:'Training Grounds',tower:'Scholar\'s Tower',treas:'Treasury',den:'Beast Den'}};
+// ---------------- costs ----------------
+try{SHC[3].g=5000}catch(e){console.warn('v200 SHC',e)}
+var ST200_STB=[null,[['wood',40],['stone',30],['fiber',25]],[['wood',90],['stone',70],['fiber',55]],[['wood',180],['stone',140],['fiber',110]]];
+{const f=shpCost109;shpCost109=function(u,l){const c=f.apply(this,arguments);try{
+  if(u&&u.k=='sage')c.g=[0,1000,2000,5000][l]|0;
+  else if(u&&u.k=='trainer')c.g=1000;
+  else if(u&&u.k=='stable'){c.g=0;c.m=ST200_STB[l]?ST200_STB[l].map(q=>q.slice()):c.m}}catch(_){}return c}}
+// the Beast Trainer and the Stable no longer give discounts: their levels add slots / mount tiers
+{const f=shpP109;shpP109=function(k,c){if(k=='trainer'||k=='stable')return +c||0;return f.apply(this,arguments)}}
+{const f=shpFx109;shpFx109=function(k,l){
+  if(k=='trainer')return (1+l)+' training slot'+(l?'s':'')+' · companions climb to your level in 5 minutes';
+  if(k=='stable')return 'Tier 1–'+Math.min(5,2+l)+' mounts for sale';
+  return f.apply(this,arguments)}}
+{const f=shpNote109;shpNote109=function(k){if(k!='stable'&&k!='trainer')return f.apply(this,arguments);const l=shpL109(k);
+  const pip='<span class="shpip">'+'◆'.repeat(l)+'◇'.repeat(SHP109_MAX-l)+'</span>';
+  return `<div class="shpnote${l?' on':''}">🏪 ${l?'<b>Shop level '+l+'</b> '+pip+' · ':''}${shpFx109(k,l)}${l<SHP109_MAX?' · upgrade it at the Stronghold Steward for '+(k=='stable'?'the next mount tier':'another slot'):''}</div>`}}
+// the shop list's one-line descriptions
+try{SHOPS.find(o=>o.k=='trainer').d='Train companions up to your level in slots (5 minutes, free)';SHOPS.find(o=>o.k=='stable').d='Buy mounts for gold (more tiers with each upgrade). Ride with V for a big boost to move speed.'}catch(_){}
+// ---------------- what each station level does (Steward rows, banners) ----------------
+var ST200_TG=[0,15,30,40],ST200_TR=[0,5000,20000,75000],ST200_DEN=[0,0,.25,.5];
+{const D={
+  train:l=>l?'Train while you are away: +1 level per absence of 8 hours or more, up to Lv '+ST200_TG[l]+(l>=3?' (16 hours per level past Lv 40)':''):'Not built yet',
+  tower:l=>l?'Collection log: claim '+['novice','novice and adept','every'][l-1]+' section rewards':'Not built yet',
+  treas:l=>l?'Gold market: invest up to 🪙 '+ST200_TR[l].toLocaleString():'Not built yet',
+  den:l=>l?'Sacrifice companions for essence'+(ST200_DEN[l]?' (+'+Math.round(ST200_DEN[l]*100)+'%)':'')+', reroll traits':'Not built yet',
+  hatch:l=>(3+l)+' hatching slots · eggs hatch in '+(8-l)+' min'+(l?' · +'+l+'% shiny & rare chance':'')};
+  SHU.forEach(u=>{if(D[u.k])u.d=D[u.k]})}
+// ---------------- the Hatchery stands from the start ----------------
+{const f=lotBuilt103;lotBuilt103=function(key){if(key==='u:hatch')return true;return f.apply(this,arguments)}}
+{const f=kdUp;kdUp=function(T,key,l){if(key==='hatch')l=Math.max(1,l|0);return f.call(this,T,key,l)}}
+// the kingdom's size counts the Hatchery as a building at level 0 too
+kfNeed109=function(){let n=1;try{SHOPS.forEach(o=>{if(shopBuilt(o.k))n++});UPK103.forEach(k=>{if(kdLv(k)>0||k=='hatch')n++});if(typeof HS103!='undefined'&&HS103)n+=HS103.h.length}catch(_){}
+  let s=0;while(s<5&&5+3*s<n)s++;try{for(const k in SH.pos){const l=LOTM103[SH.pos[k]];if(l&&l.st>s)s=l.st}}catch(_){}return s};
+// Steward row: level 0 is built (Upgrade, Move, Turn), not "Build"
+function st200HoldFix(){try{const b=document.querySelector('#xw [data-kmb="up:hatch"]');if(!b)return;const row=b.closest('.rw');b.dataset.kmb='lvl:hatch';b.textContent='Upgrade';
+  const sm=row&&row.querySelector('small');if(sm)sm.innerHTML=sm.innerHTML.replace('Not built yet','Now: '+SHU.find(u=>u.k=='hatch').d(0));
+  const ra=row&&row.querySelector('.ra'),P=KM103&&KM103.pick;if(ra&&!ra.querySelector('[data-kmmv]')){ra.insertAdjacentHTML('beforeend',`<button data-kmmv="u:hatch" ${P?'disabled':''}>Move</button><button data-kmrot="u:hatch" ${P?'disabled':''} title="Turn it a quarter turn">⟳</button>`);
+    const st=ra.querySelector('em,.kmlot');if(!ra.querySelector('.kmlot'))ra.insertAdjacentHTML('afterbegin',kmLotTxt103('u:hatch'))}}catch(e){console.warn('v200 steward',e)}}
+{const f=XR.hold;XR.hold=function(){const r=f.apply(this,arguments);st200HoldFix();return r}}
+// ---------------- walk-up prompts ----------------
+function st200Near(k){const l=lotOf103('u:'+k);if(!l)return false;const p=pl.position,d=lotDoor103(l),c=lotW103(l,0,1.4);
+  return Math.hypot(p.x-d[0],p.z-d[1])<2.9||Math.hypot(p.x-c[0],p.z-c[1])<3.3}
+function st200Prompt(T){if(!T||T!==TOWNS[0])return null;
+  for(const k of ST200.k){if(!ST200.open[k])continue;if(k!=='hatch'&&!(kdLv(k)>0))continue;if(!st200Near(k))continue;
+    return {k,label:'F · '+(SHU.find(u=>u.k==k)||{}).i+' '+ST200.name[k],fn:()=>ST200.open[k]()}}return null}
+// a station whose door is closer than the Stronghold Steward wins (a lot next to the plaza puts both in reach)
+{const f=townPortalPrompt;townPortalPrompt=function(T){let s=null;try{s=st200Prompt(T)}catch(e){console.warn('v200 prompt',e)}
+  if(s){try{const st=SHM&&SHM.st,p=pl.position,l=lotOf103('u:'+s.k),d=lotDoor103(l);if(st&&Math.hypot(p.x-st.x,p.z-st.z)<2.6&&Math.hypot(p.x-d[0],p.z-d[1])<Math.hypot(p.x-st.x,p.z-st.z))return s}catch(_){}}
+  const r=f.apply(this,arguments);return r||s}}
+// ---------------- shared bits for the station windows ----------------
+function st200Esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function st200Clock(ms){ms=Math.max(0,ms);const s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+'h '+String(m).padStart(2,'0')+'m':m+':'+String(x).padStart(2,'0')}
+function st200Lv(k){return kdLv(k)}
+// true while the kingdom on show is a co-op host's, not your own
+function st200Guest(){try{return typeof DK150!='undefined'&&DK150.on&&!!DK150.host&&DK150.host!==MP.me}catch(_){return false}}
+function st200Pips(l){return '<span class="s200-pip">'+'◆'.repeat(l)+'◇'.repeat(3-l)+'</span>'}
+function st200Head(k,extra){const l=st200Lv(k),u=SHU.find(q=>q.k==k);
+  return `<div class="s200-head"><div><b>${u.i} ${u.n}</b> ${st200Pips(l)}<small>${u.d(l)}</small></div>${l<3?`<div class="s200-nx"><small>Next level</small>${u.d(l+1)}<br><span class="mut">Upgrade at the Stronghold Steward</span></div>`:''}${extra||''}</div>`}
+// a companion's little picture (the HUD portrait renderer) or its emoji
+function st200Pic(c){try{const p=cpic(c);if(p)return `<img src="${p}" alt="">`}catch(_){}return `<span>${em(c)}</span>`}
+// the species' tier (1-5)
+function st200Tier(c){return Math.max(1,Math.min(5,tierSp(c&&c.g?c.g[0]:c&&c.n)||1))}
+document.head.insertAdjacentHTML('beforeend',`<style id="s200css">
+#xw .s200-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:flex-start;justify-content:space-between;padding:8px 10px;margin:0 0 10px;border:1px solid rgba(201,162,74,.4);border-radius:8px;background:linear-gradient(135deg,rgba(201,162,74,.12),rgba(0,0,0,.25))}
+#xw .s200-head b{font-size:.95rem}#xw .s200-head small{display:block;color:var(--mut);font-size:.74rem;margin-top:2px}
+#xw .s200-nx{font-size:.74rem;max-width:300px}#xw .s200-nx small{text-transform:uppercase;letter-spacing:.08em;font-size:.6rem;color:#c9a24a}
+#xw .s200-pip{color:#f0cc72;letter-spacing:2px;font-size:.8rem}
+#xw .s200-sec{margin:12px 0 6px;font:700 .72rem/1 var(--kq-head,serif);letter-spacing:.08em;text-transform:uppercase;color:#c9a24a}
+#xw .s200-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+#xw .s200-card{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:4px 10px;align-items:center;padding:8px 10px;border-radius:9px;border:1px solid color-mix(in srgb,var(--rc,#c9a24a) 45%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--rc,#c9a24a) 12%,transparent),rgba(0,0,0,.3) 65%)}
+#xw .s200-card.empty{border-style:dashed;opacity:.75;background:rgba(0,0,0,.15)}
+#xw .s200-card.lock{opacity:.45}
+#xw .s200-ic{width:52px;height:52px;border-radius:9px;background:rgba(0,0,0,.35);display:grid;place-items:center;font-size:1.7rem;overflow:hidden}
+#xw .s200-ic img{width:100%;height:100%;object-fit:cover}
+#xw .s200-t b{font-size:.84rem;display:block;line-height:1.2}#xw .s200-t small{display:block;color:var(--mut);font-size:.7rem;line-height:1.3}
+#xw .s200-bar{grid-column:1/-1;height:6px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden}#xw .s200-bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a24a,#f5d76e)}
+#xw .s200-btns{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#xw .s200-btns button{padding:3px 10px;font-size:.74rem}
+#xw .s200-note{font-size:.74rem;color:var(--mut);margin:4px 0}
+#xw .s200-pick{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+#xw .s200-pick button{display:flex;gap:8px;align-items:center;text-align:left;height:auto;min-height:44px;padding:5px 8px;white-space:normal;line-height:1.2}
+#xw .s200-pick button .s200-ic{width:36px;height:36px;font-size:1.2rem;flex:none}
+#xw .s200-pick button small{display:block;color:var(--mut);font-size:.66rem;font-weight:500}
+@media(max-width:640px){#xw .s200-grid,#xw .s200-pick{grid-template-columns:1fr}}
+</style>`);
+// ---------------- one villager per house ----------------
+function st200OneHome(){if(typeof HS103=='undefined'||!HS103||st200Guest())return 0;let gone=[],back=0;
+  HS103.h.forEach((h,i)=>{const L=HS103.cit.filter(c=>c.h===i);if(L.length<2)return;
+    const keep=L.slice().sort((a,b)=>czRank105(b)-czRank105(a))[0];
+    L.forEach(c=>{if(c===keep)return;try{if(c.bag)czCollect105(c)}catch(_){}const R=CZR104[czRole104(c)],rk=czRank105(c);let spent=R.g||0;for(let r=1;r<rk;r++)spent+=R.up*r;
+      back+=Math.floor(spent/2);gone.push(c.n);HS103.cit.splice(HS103.cit.indexOf(c),1)})});
+  if(!gone.length)return 0;gold+=back;try{czClear103()}catch(_){}try{if(typeof hs103Sync=='function')hs103Sync()}catch(_){}
+  setTimeout(()=>{try{say('🏠 Houses now hold one villager each. '+gone.join(', ')+' moved away'+(back?' and left 🪙 '+back+' (half of what their training and ranks cost)':'')+'; any goods they carried are in your bag.')}catch(_){}},3500);return gone.length}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{st200OneHome()}catch(e){console.warn('v200 houses',e)}return r}}
+// the Hatchery gets its lot now (new characters and older saves alike)
+try{lotSync103()}catch(e){console.warn('v200 hatchery lot',e)}
+// ================= v200: the Hatchery is the only place eggs hatch =================
+// Owner (Nov 5 2026): "make the hatchery the only place where you can hatch eggs. No more hatching from inventory. Players
+// should start with a hatchery in their town. It should start with 3 slots and eggs take 8 minutes to hatch in there.
+// Upgrades … increase likelihood of shiny and rare variants like it does now but also provide more hatching slots and
+// decrease time to hatch by a minute each time."
+//  * An egg in your bag waits. Set it in a Hatchery slot (F at the Hatchery) and it hatches in EGG_T (8 / 7 / 6 / 5 minutes
+//    at Hatchery level 0-3, 0530 shApply). Slots: 3 + level. The egg stays in `eggs` with e.ht = 1 and e.t0 = when it was set in.
+//    Real time: it keeps hatching while you are away. eggRdy (0490) needs e.ht; every egg display reads ht200P / ht200Txt.
+//  * Hatching (the usual animation, hatchEgg in 0570) only runs from the Hatchery window (HT200.go); a ready egg clicked
+//    anywhere else just says where to go. Shiny / rare chances are rollRare's (0530): +0.5% shiny and +1% rare per level.
+//  * Taking an egg back out returns it to your bag and its progress is lost.
+//  * Older saves (no x2.ht200): eggs that were already warming in the bag fill the slots in order (keeping their progress);
+//    the rest wait in the bag.
+// Co-op: personal (your eggs, your save); the slot count follows the Hatchery level of the kingdom you see.
+var HT200={go:0};
+function ht200N(){return 3+kdLv('hatch')}
+function ht200In(){return eggs.filter(e=>e&&e.ht)}
+function ht200P(e){return e&&e.ht&&e.t0?Math.max(0,Math.min(1,(Date.now()-e.t0)/EGG_T)):0}
+function ht200Txt(e){if(!e||!e.ht)return '🥚 Set it in the Hatchery (Duskhold) to hatch it';return eggRdy(e)?'✨ Ready! Hatch it at the Hatchery':'In the Hatchery · '+st200Clock(EGG_T-(Date.now()-(e.t0||Date.now())))}
+// keep the slots honest: every slot egg has a start time, never more slot eggs than slots
+function ht200Norm(){let ch=0;const L=ht200In().sort((a,b)=>(a.t0||0)-(b.t0||0)),n=ht200N();
+  L.forEach((e,i)=>{if(i>=n&&!st200Guest()){delete e.ht;delete e.t0;ch=1}else if(!e.t0){e.t0=Date.now();ch=1}});return ch} // a guest in a smaller Hatchery keeps its eggs
+{const f=hatchCheck;hatchCheck=function(){try{ht200Norm()}catch(_){}return f.apply(this,arguments)}}
+// hatching only at the Hatchery
+{const f=hatchEgg;hatchEgg=function(id){if(!HT200.go){const e=eggs.find(q=>q.id==id);
+    try{say(e&&e.ht?'🥚 That egg is ready: hatch it at the Hatchery in Duskhold.':'🥚 Eggs hatch in the Hatchery in Duskhold: set this one in a slot there.')}catch(_){}return}
+  return f.apply(this,arguments)}}
+function ht200Set(id){const e=eggs.find(q=>q.id==id);if(!e||e.ht)return;if(ht200In().length>=ht200N())return say('🥚 Every Hatchery slot is taken.');
+  e.ht=1;e.t0=Date.now();try{sfx('chime')}catch(_){}say('🥚 The '+e.sp+' egg is warming in the Hatchery: ready in '+Math.round(EGG_T/60000)+' minutes.');try{saveGame(true)}catch(_){}rX()}
+function ht200Out(id){const e=eggs.find(q=>q.id==id);if(!e||!e.ht)return;delete e.ht;delete e.t0;try{eggNote.delete(e.id)}catch(_){}say('🥚 The egg is back in your bag (its warmth is lost).');rX()}
+function ht200Hatch(ids){const L=ids.filter(id=>{const e=eggs.find(q=>q.id==id);return e&&eggRdy(e)});if(!L.length)return;closeX();HT200.go=1;
+  try{L.forEach(id=>hatchEgg(id))}finally{HT200.go=0}}
+function ht200Card(e){const rd=eggRdy(e),p=ht200P(e),rc=RAR[e.tier][1];
+  return `<div class="s200-card" style="--rc:${rc}"><div class="s200-ic ht200-egg${rd?' rdy':''}" style="color:${rc}">🥚</div><div class="s200-t"><b>${en(e)}</b><small data-ht200t="${e.id}">${ht200Txt(e)}</small></div>
+    <div class="s200-bar"><i data-ht200b="${e.id}" style="width:${(p*100).toFixed(1)}%"></i></div>
+    <div class="s200-btns">${rd?`<button class="pri" data-ht200h="${e.id}">🐣 Hatch</button>`:''}<button data-ht200o="${e.id}" title="Back to your bag (its progress is lost)">Take out</button></div></div>`}
+XR.hatch200=function(){const l=kdLv('hatch'),N=ht200N(),In=ht200In().sort((a,b)=>(a.t0||0)-(b.t0||0)),bag=eggs.filter(e=>e&&!e.ht).sort((a,b)=>b.tier-a.tier||(b.pa||1)-(a.pa||1));
+  $('xwT').textContent='🥚 Hatchery';$('xwS').textContent=In.length+' / '+N+' slots in use · eggs hatch in '+Math.round(EGG_T/60000)+' minutes';
+  const rdy=In.filter(eggRdy);let h=st200Head('hatch');
+  h+=`<div class="s200-sec">Slots${rdy.length>1?` <button class="pri" data-ht200all="1" style="margin-left:8px;font-size:.7rem">🐣 Hatch all ${rdy.length}</button>`:''}</div><div class="s200-grid">`;
+  for(let i=0;i<N;i++)h+=In[i]?ht200Card(In[i]):'<div class="s200-card empty"><div class="s200-ic" style="opacity:.45">🥚</div><div class="s200-t"><b>Empty slot</b><small>Set an egg from your bag below</small></div></div>';
+  h+='</div><div class="s200-sec">Your eggs ('+bag.length+')</div>';
+  const full=In.length>=N;
+  h+=bag.length?`<div class="s200-pick">${bag.map(e=>`<button data-ht200s="${e.id}" ${full?'disabled':''} style="--rc:${RAR[e.tier][1]}"><span class="s200-ic" style="color:${RAR[e.tier][1]}">🥚</span><span>${en(e)}<small>${full?'All slots are taken':'Set it in a slot'}</small></span></button>`).join('')}</div>`
+    :'<div class="s200-note">No eggs in your bag. They drop from monsters, elites and Sovereigns, and some shops sell them.</div>';
+  $('xwB').innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">Eggs only hatch here. They keep warming while you are away. Upgrade the Hatchery at the Stronghold Steward: one more slot, one minute faster and a better shiny / rare chance per level.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='hatch200')return;const t=e.target.closest('[data-ht200s],[data-ht200o],[data-ht200h],[data-ht200all]');if(!t||t.disabled)return;const d=t.dataset;
+  if(d.ht200s)ht200Set(+d.ht200s);else if(d.ht200o)ht200Out(+d.ht200o);else if(d.ht200h)ht200Hatch([+d.ht200h]);else ht200Hatch(ht200In().map(q=>q.id))});
+// timers tick while the window is open (a slot that becomes ready redraws for its Hatch button)
+setInterval(()=>{try{if(xwMode!='hatch200'||$('xw').classList.contains('hide'))return;let redraw=false;
+  ht200In().forEach(e=>{const t=document.querySelector('#xw [data-ht200t="'+e.id+'"]'),b=document.querySelector('#xw [data-ht200b="'+e.id+'"]');if(t)t.textContent=ht200Txt(e);if(b)b.style.width=(ht200P(e)*100).toFixed(1)+'%';
+    if(eggRdy(e)&&!document.querySelector('#xw [data-ht200h="'+e.id+'"]'))redraw=true});if(redraw)rX()}catch(_){}},1000);
+ST200.open.hatch=()=>openX('hatch200');
+// older saves: eggs already warming in the bag move into the slots
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.ht200=1;return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!(s&&s.ht200)){const n=3+(Math.min(3,(s&&s.sh&&s.sh.hatch)|0));
+    eggs.filter(e=>e&&e.t0&&!e.ht).sort((a,b)=>a.t0-b.t0).forEach((e,i)=>{if(i<n)e.ht=1;else delete e.t0})}
+  ht200Norm()}catch(e){console.warn('v200 hatchery load',e)}return r}}
+document.head.insertAdjacentHTML('beforeend',`<style id="ht200css">
+#xw .ht200-egg{font-size:2rem;text-shadow:0 0 8px currentColor}#xw .ht200-egg.rdy{animation:ht200w 1.1s ease-in-out infinite}
+@keyframes ht200w{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+</style>`);
+// ================= v200: the Beast Trainer trains companions in slots =================
+// Owner (Nov 5 2026): "make the beast trainer a station where you have to place a companion inside for it to gradually level
+// up to your level. It should take 5 minutes to level up to your level. Instead of upgrades giving discount — make it just have
+// more slots available for training. Each slot costs 1k gold." Training itself is free (owner's choice).
+//  * Slots: 1 + the shop's level (shpL109('trainer'), 0-3; each level costs 1,000 gold at the Steward, 3700).
+//  * A companion set in a slot gets c.tr200 = {t0, a: its level then, b: your level then} (saved with the companion) and climbs
+//    from a to b evenly over TRN200.T (5 minutes, real time: it keeps training while you are away). Done → the slot frees.
+//  * A companion in training does not fight: one from your active team gives its place to the first free reserve companion
+//    (you need one); swapping it back into the team (Companions window) ends its training and keeps the levels it gained.
+//  * The Companion Bond (v141) row stays on top of the window.
+// Co-op: personal (your companions); the slot count follows the trainer's level in the kingdom you see.
+var TRN200={T:5*60000};
+function trn200N(){return 1+shpL109('trainer')}
+function trn200In(){return party.filter(c=>c&&c.tr200)}
+function trn200Lv(c){const t=c.tr200;if(!t)return c.l;const p=Math.max(0,Math.min(1,(Date.now()-t.t0)/TRN200.T));return Math.min(t.b,t.a+Math.floor((t.b-t.a)*p+1e-9))}
+function trn200Left(c){const t=c.tr200;return t?Math.max(0,TRN200.T-(Date.now()-t.t0)):0}
+function trn200To(){return Math.min(hero.lvl,MAXLV)}
+// levels gained so far are written onto the companion; done → out of the slot
+function trn200Tick(quiet){let ch=false;const A=actN141();
+  party.forEach((c,i)=>{const t=c&&c.tr200;if(!t)return;const L=trn200Lv(c);
+    if(L>c.l){const from=c.l;c.l=L;c.x=0;c.h=M(c);ch=true;if(EVLV.some(v=>v>from&&v<=L)&&!quiet)try{say('✨ '+c.n+' reached Lv '+L+' in training and can evolve now (Companions menu).')}catch(_){}}
+    if(L>=t.b||Date.now()-t.t0>=TRN200.T){delete c.tr200;ch=true;if(!quiet)try{say('💪 '+c.n+' finished training: Lv '+t.a+' → Lv '+c.l+'.');sfx('power')}catch(_){}}
+    else if(i<A){delete c.tr200;ch=true;if(!quiet)try{say('🐾 '+c.n+' left training to join you (Lv '+c.l+').')}catch(_){}}});
+  if(ch){try{hsDirty();ui();hud()}catch(_){}}return ch}
+setInterval(()=>{try{if(typeof party!='undefined'&&party.length&&trn200In().length){if(trn200Tick()&&xwMode=='visitor'&&xwArg=='trainer'&&!$('xw').classList.contains('hide'))rX()}}catch(e){console.warn('v200 trainer',e)}},1000);
+function trn200Set(i){const c=party[i];if(!c||c.tr200)return;const to=trn200To();
+  if(trn200In().length>=trn200N())return say('💪 Every training slot is taken.');if(c.l>=to)return say(c.n+' is already at your level.');
+  const A=actN141();if(i<A){const j=party.findIndex((q,k)=>k>=A&&q&&!q.tr200&&q.h>0);if(j<0)return say('🐾 '+c.n+' is in your active team and no reserve companion can take its place. Hatch or tame another first.');
+    const sub=party.splice(j,1)[0];party.splice(i,1,sub);party.push(c);c.emp=false;try{say('🐾 '+sub.n+' takes '+c.n+'\'s place at your side.')}catch(_){}}
+  c.tr200={t0:Date.now(),a:c.l,b:to};try{sfx('chime')}catch(_){}say('💪 '+c.n+' starts training: Lv '+c.l+' → Lv '+to+' in 5 minutes.');try{hsDirty();ui();hud();saveGame(true)}catch(_){}rX()}
+function trn200Stop(i){const c=party[i];if(!c||!c.tr200)return;trn200Tick(true);if(c.tr200){delete c.tr200;say('🐾 '+c.n+' stops training at Lv '+c.l+'.')}try{ui();hud()}catch(_){}rX()}
+function trn200Bond(){if(typeof cs141Has!='function')return '';const has=cs141Has(),rd=cs141Ready(),c=cs141Cost();
+  return `<div class="cs141row" style="display:flex;gap:10px;align-items:center;padding:8px 10px;margin:0 0 8px;border:1px solid rgba(201,162,74,.45);border-radius:8px;background:rgba(201,162,74,.08)">
+    <span style="font-size:1.5rem">🐾</span><div style="flex:1"><b>Companion Bond</b><div class="mut" style="font-size:.72rem">${has?'Learned: you lead two companions at once.':rd?'Learn to lead a second companion into battle.':'Defeat two Sovereigns first ('+bossDone.size+' / '+CS141.need+').'}</div></div>
+    ${has?'<span class="mut">✔ Learned</span>':`<button data-cs141="1" ${rd&&gold>=c?'':'disabled'}>Learn · 🪙 ${c}</button>`}</div>`}
+function trn200Render(){trn200Tick(true);const N=trn200N(),In=trn200In(),to=trn200To(),A=actN141();
+  $('xwT').textContent='🦴 Beast Trainer';$('xwS').textContent=In.length+' / '+N+' training slots in use · companions climb to your level (Lv '+to+') in 5 minutes';
+  let h=shpNote109('trainer')+trn200Bond()+'<div class="s200-sec">Training slots</div><div class="s200-grid">';
+  for(let s=0;s<N;s++){const c=In[s];if(!c){h+='<div class="s200-card empty"><div class="s200-ic">🦴</div><div class="s200-t"><b>Empty slot</b><small>Pick a companion below</small></div></div>';continue}
+    const t=c.tr200,p=Math.max(0,Math.min(1,(Date.now()-t.t0)/TRN200.T)),i=party.indexOf(c);
+    h+=`<div class="s200-card" style="--rc:#c9a24a"><div class="s200-ic">${st200Pic(c)}</div><div class="s200-t"><b>${st200Esc(c.n)}</b><small>Lv <span data-trn200l="${i}">${c.l}</span> → ${t.b} · <span data-trn200t="${i}">${st200Clock(trn200Left(c))}</span> left</small></div>
+      <div class="s200-bar"><i data-trn200b="${i}" style="width:${(p*100).toFixed(1)}%"></i></div><div class="s200-btns"><button data-trn200x="${i}" title="It keeps the levels it has gained">Stop</button></div></div>`}
+  h+='</div><div class="s200-sec">Your companions</div>';
+  const full=In.length>=N,L=party.map((c,i)=>[c,i]).filter(([c])=>c&&!c.tr200);
+  h+=L.length?`<div class="s200-pick">${L.map(([c,i])=>{const ok=!full&&c.l<to,why=c.l>=to?'At your level':full?'All slots are taken':(i<A?'In your team · a reserve takes its place':'Train Lv '+c.l+' → '+to);
+      return `<button data-trn200s="${i}" ${ok?'':'disabled'}><span class="s200-ic">${st200Pic(c)}</span><span>${st200Esc(c.n)} <span class="mut">Lv ${c.l}</span><small>${why}</small></span></button>`}).join('')}</div>`
+    :'<div class="s200-note">Every companion you have is training.</div>';
+  $('xwB').innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">Training is free and keeps going while you are away. A companion in training rests instead of fighting. Each Beast Trainer upgrade at the Steward adds a slot.</span>'}
+{const f=XR.visitor;XR.visitor=function(){if(xwArg=='trainer'){try{return trn200Render()}catch(e){console.warn('v200 trainer',e)}}return f.apply(this,arguments)}}
+$('xw').addEventListener('click',e=>{if(xwMode!='visitor'||xwArg!='trainer')return;const t=e.target.closest('[data-trn200s],[data-trn200x]');if(!t||t.disabled)return;e.stopPropagation();
+  if(t.dataset.trn200s!=null)trn200Set(+t.dataset.trn200s);else trn200Stop(+t.dataset.trn200x)});
+setInterval(()=>{try{if(xwMode!='visitor'||xwArg!='trainer'||$('xw').classList.contains('hide'))return;
+  trn200In().forEach(c=>{const i=party.indexOf(c),q=s=>document.querySelector('#xw [data-trn200'+s+'="'+i+'"]');const a=q('t'),b=q('b'),l=q('l');
+    if(a)a.textContent=st200Clock(trn200Left(c));if(b)b.style.width=(Math.min(1,(Date.now()-c.tr200.t0)/TRN200.T)*100).toFixed(1)+'%';if(l)l.textContent=c.l})}catch(_){}},1000);
+// a companion in training never fights or follows: the swap code (0108) can put it back in the team; the tick then ends it.
+// after loading: catch up on time spent away
+// (the 1-second tick also catches up on time spent away, a few seconds after loading)
+// ================= v200: Stable upgrades open the next tier of mounts =================
+// Owner (Nov 5 2026): "For stables, have the upgrades be the next tier of mount. Make the upgrades just cost wood stone and plant
+// fiber — not gold." A new Stable sells Tier 1 and 2 mounts; levels 1 / 2 / 3 open Tiers 3 / 4 / 5 (owner's choice).
+// Costs and level texts are in 3700 (shpCost109 / shpFx109); the Stable has no discount any more (shpP109).
+// Co-op: the Stable's level is the kingdom's (the host's while you play together).
+function stb200Max(){return Math.min(5,2+shpL109('stable'))}
+function stb200Need(T){return Math.max(0,T-2)}
+// buying a locked tier is refused (capture: runs before the v3 buy handler)
+$('xw').addEventListener('click',e=>{if(xwMode!='stable')return;const t=e.target.closest('[data-mbuy]');if(!t)return;const D=MOUNTS[t.dataset.mbuy];if(!D||D.t<=stb200Max())return;
+  e.stopImmediatePropagation();e.preventDefault();say('🔒 Tier '+D.t+' mounts need the Stable at level '+stb200Need(D.t)+' (upgrade it at the Stronghold Steward).')},true);
+{const f=XR.stable;XR.stable=function(){const r=f.apply(this,arguments);try{const B=$('xwB'),mx=stb200Max();if(!B)return r;
+  B.querySelectorAll('[data-mbuy]').forEach(b=>{const D=MOUNTS[b.dataset.mbuy];if(D&&D.t>mx){b.disabled=true;b.textContent='🔒 Stable Lv '+stb200Need(D.t);b.title='Upgrade the Stable at the Stronghold Steward to sell Tier '+D.t+' mounts'}});
+  B.querySelectorAll('.sec').forEach(s=>{const m=/^Tier (\d)/.exec(s.textContent.trim());if(m&&+m[1]>mx&&!s.querySelector('.stb200'))s.insertAdjacentHTML('beforeend',' <span class="stb200" style="color:#f0a0a0;text-transform:none;letter-spacing:0">· 🔒 Stable level '+stb200Need(+m[1])+'</span>')});
+  B.querySelectorAll('[data-msel]').forEach(rw=>{const D=MOUNTS[rw.dataset.msel];if(D&&D.t>mx)rw.classList.add('stb200-lk')});
+  B.querySelectorAll('.kqm-cell').forEach(c=>{const I=c._kq,k=I&&I.r&&I.r.dataset.msel,D=k&&MOUNTS[k];if(!D||D.t<=mx)return;c.classList.add('stb200-lk');const sl=c.querySelector('.kqm-slot');if(sl&&!sl.querySelector('.stb200b'))sl.insertAdjacentHTML('beforeend','<span class="stb200b">🔒</span>')})}catch(e){console.warn('v200 stable',e)}return r}}
+document.head.insertAdjacentHTML('beforeend','<style id="stb200css">#xw .stb200-lk{opacity:.55}#xw .stb200b{position:absolute;top:1px;right:2px;font-size:.7rem}</style>');
+// ================= v200: companion food (Cooking Hearth) and the companion's food pouch =================
+// Owner (Nov 5 2026): "Add more recipes to the cooking hearth for dedicated companion food. This is food you can craft and put
+// in your companions inventory. When the companion gets low enough, they will automatically eat this food. Have this food heal
+// instantly instead of over time."
+//  * CF200: seven recipes in a "Companion food" group at the Cooking Hearth (supplies keyed cf_*, category 'cfood'; the hero
+//    can't eat them). Each heals a share of the companion's max health at once (v).
+//  * Each companion has a food pouch c.cf200 = [{k,n}] (3 stacks of up to 10, saved with the companion) filled in the
+//    Companions window (P), and an eating point c.cf200t (25 / 40 / 60% health, default 40%).
+//  * An active companion (alive, at your side) below its point eats from its pouch: the food that best covers what it is
+//    missing, at most one bite every CF200.cd seconds. Instant heal; the bite effect (cf200Fx) is relayed to co-op partners.
+var CF200={cd:4,max:3,stack:10,pts:[.25,.4,.6],R:[
+  ['cf_jerky','Jerky Bites','🥓',{meat:2},3,.25,'Chewy strips of dried meat.'],
+  ['cf_fishcake','Fish Cakes','🍥',{fish:2,wheat:1},3,.3,'Pressed fish and grain, a favourite of every family.'],
+  ['cf_marrow','Marrow Biscuits','🦴',{bone:2,wheat:2,honey:1},3,.4,'Hard biscuits baked round crushed bone and honey.'],
+  ['cf_haunch','Hunter\'s Haunch','🍗',{meat:3,pepper:1},2,.5,'A peppered haunch, roasted on the bone.'],
+  ['cf_broth','Ember Bone Broth','🥘',{meat:2,emberroot:1,bone:2},2,.6,'A thick broth that glows faintly from the emberroot.'],
+  ['cf_frost','Frostcap Morsels','🍙',{fish:2,frostcap:1,moonpetal:1},2,.7,'Cold, sweet morsels that wake a tired beast at once.'],
+  ['cf_feast','Starbloom Banquet','🍱',{meat:2,fish:2,starbloom:1,honey:1},2,.9,'A small feast fit for an elder companion.']]};
+CF200.R.forEach(r=>{SUP[r[0]]={n:r[1],i:r[2],c:'cfood',v:r[5],d:'Companion food: heals '+Math.round(r[5]*100)+'% of a companion\'s health at once. Put it in a companion\'s food pouch (P).'}});
+function cf200R(k){return CF200.R.find(r=>r[0]==k)}
+// cooking (make in 0160 only knows FOOD and ALCH)
+{const f=make;make=function(k,n){const r=cf200R(k);if(!r)return f.apply(this,arguments);let m=0;
+  for(let i=0;i<n;i++){if(!recOk(r[3]))break;spend(r[3]);giveS(k,r[4]);m+=r[4]}
+  if(m)say('🍳 Cooked '+r[2]+' '+r[1]+' ×'+m+'. Put it in a companion\'s food pouch (P).');else say('You are missing ingredients.');rX();hud()}}
+function cf200Group(){const row=r=>{const ok=recOk(r[3]),own=cnt(r[0]);
+    return `<div class="rw"><span class="rn">${r[2]} <b>${r[1]}</b> <span class="mut">×${own} · makes ${r[4]}</span><small>Heals ${Math.round(r[5]*100)}% of a companion's health at once<br>${recHTML(r[3])}</small></span><span class="ra"><button class="pri" data-mk="${r[0]}" data-n="1" ${ok?'':'disabled'}>Cook</button><button data-mk="${r[0]}" data-n="5" ${ok?'':'disabled'}>×5</button></span></div>`};
+  return grpHTML('Companion food',CF200.R.map(row).join(''),CF200.R.length,CF200.R.filter(r=>recOk(r[3])).length)}
+{const f=XR.cook;XR.cook=function(){const r=f.apply(this,arguments);try{const L=$('xwB').querySelector('.xcols > div');if(L&&!L.querySelector('[data-g="Companion food"]'))L.insertAdjacentHTML('beforeend',cf200Group());
+  const S=$('xwS');if(S&&!/companion food/i.test(S.textContent))S.textContent+=' · companion food heals at once';
+  const mine=CF200.R.filter(q=>cnt(q[0])>0),sec=[...$('xwB').querySelectorAll('.sec')].find(x=>/^yours/i.test(x.textContent.trim())),rows=sec&&sec.nextElementSibling;
+  if(rows&&mine.length){if(!rows.querySelector('.rw'))rows.innerHTML='';rows.insertAdjacentHTML('beforeend',mine.map(q=>`<div class="rw"><span class="rn">${q[2]} <b>${q[1]}</b> <span class="mut">×${cnt(q[0])}</span><small>Companion food · put it in a companion's food pouch (P)</small></span></div>`).join(''))}}catch(e){console.warn('v200 cook',e)}return r}}
+// ---------------- the pouch ----------------
+function cf200P(c){if(!Array.isArray(c.cf200))c.cf200=[];c.cf200=c.cf200.filter(s=>s&&cf200R(s.k)&&s.n>0);return c.cf200}
+function cf200Put(c,k,n){if(!c||!cf200R(k))return;const P=cf200P(c);let s=P.find(q=>q.k==k);if(!s){if(P.length>=CF200.max)return say('🍖 '+c.n+'\'s pouch holds '+CF200.max+' kinds of food.');s={k,n:0};P.push(s)}
+  const m=Math.min(n,CF200.stack-s.n,cnt(k));if(m<=0)return say(s.n>=CF200.stack?'🍖 That stack is full ('+CF200.stack+').':'You have none left.');sup[k]-=m;s.n+=m;if(!s.n)P.splice(P.indexOf(s),1)}
+function cf200Take(c,k){const P=cf200P(c),s=P.find(q=>q.k==k);if(!s)return;giveS(k,s.n);P.splice(P.indexOf(s),1)}
+// the bite: shown on this page and on co-op partners' pages
+function cf200Fx(x,y,z,amt,ic){try{const p=new THREE.Vector3(x,y,z);burst(p,0x6ee7b7,18,1.6,2,.6);dn(p,(ic||'🍖')+' +'+amt,'#6ee7b7',-12)}catch(_){}}
+try{sg2Reg(['cf200Fx'])}catch(_){}
+function cf200Eat(c,i){const P=cf200P(c);if(!P.length)return false;const mx=M(c),miss=mx-c.h;
+  const L=P.slice().sort((a,b)=>cf200R(a.k)[5]-cf200R(b.k)[5]);let s=L.find(q=>cf200R(q.k)[5]*mx>=miss*.85)||L[L.length-1];
+  const r=cf200R(s.k),amt=Math.max(1,Math.round(mx*r[5]));c.h=Math.min(mx,c.h+amt);c._ph=c.h;s.n--;if(s.n<=0)P.splice(P.indexOf(s),1);
+  const fo=typeof fols!='undefined'&&fols[i];if(fo&&fo.visible){try{mpvRun(cf200Fx,null,[fo.position.x,fo.position.y+.8,fo.position.z,amt,r[2]])}catch(_){cf200Fx(fo.position.x,fo.position.y+.8,fo.position.z,amt,r[2])}}
+  if(!P.length)try{say('🍖 '+c.n+' ate the last food in its pouch.')}catch(_){}return true}
+setInterval(()=>{try{if(typeof party=='undefined'||!party.length||typeof hero=='undefined'||hero.hp<=0)return;const A=actN141(),now=Date.now();
+  party.slice(0,A).forEach((c,i)=>{if(!c||c.h<=0||c.tr200||!c.cf200||!c.cf200.length)return;const t=CF200.pts.includes(c.cf200t)?c.cf200t:.4;
+    if(c.h/M(c)>=t||now-(c._cf200||0)<CF200.cd*1000)return;c._cf200=now;cf200Eat(c,i)})}catch(e){console.warn('v200 pouch',e)}},250);
+// ---------------- the pouch in the Companions window (P) ----------------
+function cf200Html(c){const P=cf200P(c),t=CF200.pts.includes(c.cf200t)?c.cf200t:.4,have=CF200.R.filter(r=>cnt(r[0])>0);
+  let h=`<div class="cf200"><div class="hsec">🍖 Food pouch <span class="mut" style="text-transform:none;letter-spacing:0;font-weight:500">· eats at once below <select data-cf200t="1">${CF200.pts.map(p=>`<option value="${p}" ${p==t?'selected':''}>${Math.round(p*100)}%</option>`).join('')}</select> health</span></div><div class="cf200s">`;
+  for(let i=0;i<CF200.max;i++){const s=P[i],r=s&&cf200R(s.k);h+=r?`<div class="cf200x" title="${st200Esc(r[1])}: heals ${Math.round(r[5]*100)}% at once"><span>${r[2]}</span><b>${s.n}</b><button data-cf200o="${s.k}" title="Take it out">✕</button></div>`:'<div class="cf200x e">empty</div>'}
+  h+='</div>';h+=have.length?`<div class="cf200a">${have.map(r=>`<button data-cf200p="${r[0]}" title="${st200Esc(r[1])} (you have ${cnt(r[0])}) · heals ${Math.round(r[5]*100)}%">${r[2]} +1</button><button data-cf200p="${r[0]}" data-n="5" title="Add 5">+5</button>`).join('')}</div>`
+    :'<div class="mut" style="font-size:.72rem">Cook companion food at the Cooking Hearth in Duskhold to fill the pouch.</div>';
+  return h+'</div>'}
+{const f=rC0;rC0=function(){const r=f.apply(this,arguments);try{if(!party.length||CE.hat||CE.sel!=null)return r;const c=party[cmpSel],cd=$('cd');if(!c||!cd||cd.querySelector('.cf200'))return r;
+  const bt=cd.querySelector('.btns');if(bt)bt.insertAdjacentHTML('beforebegin',cf200Html(c));else cd.insertAdjacentHTML('beforeend',cf200Html(c))}catch(e){console.warn('v200 pouch ui',e)}return r}}
+$('cd').addEventListener('click',e=>{const t=e.target.closest('[data-cf200p],[data-cf200o]');if(!t)return;e.stopImmediatePropagation();const c=party[cmpSel];if(!c)return;
+  if(t.dataset.cf200p)cf200Put(c,t.dataset.cf200p,+t.dataset.n||1);else cf200Take(c,t.dataset.cf200o);try{rC()}catch(_){}},true);
+$('cd').addEventListener('change',e=>{const t=e.target.closest('[data-cf200t]');if(!t)return;const c=party[cmpSel];if(c)c.cf200t=+t.value},true);
+document.head.insertAdjacentHTML('beforeend',`<style id="cf200css">
+#cd .cf200{margin:8px 0}#cd .cf200s{display:flex;gap:6px;margin:4px 0}
+#cd .cf200x{position:relative;flex:1;min-width:0;height:42px;border-radius:7px;border:1px solid rgba(201,162,74,.45);background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:6px;font-size:1.2rem}
+#cd .cf200x.e{border-style:dashed;opacity:.5;font-size:.7rem;color:var(--mut)}#cd .cf200x b{font-size:.8rem}
+#cd .cf200x button{position:absolute;top:1px;right:1px;padding:0 4px;min-height:0;height:16px;line-height:14px;font-size:.6rem}
+#cd .cf200a{display:flex;flex-wrap:wrap;gap:4px}#cd .cf200a button{padding:2px 7px;font-size:.72rem;min-height:0}
+#cd .cf200 select{font-size:.7rem;padding:0 2px}
+</style>`);
+// ================= v200: Curio prices follow the tier of what is sold =================
+// Owner (Nov 5 2026): "Curio items are too cheap relative to the rarity of the item they are selling. Higher tier items should
+// require higher level resources." Eggs and tiered curios now also cost that tier's upgrade material (UPM: Whetstone,
+// Tempered Ore, Cinder Steel, Hollow Silver, Storm Mithril) and much more of the common resources as the tier rises; from
+// Tier 3 up eggs take Crystal Shards instead of Old Bone. Runes are priced by rank, not by your tier. Health potions and the
+// shop-level discount (5% fewer per level, cu194Off) are unchanged. Stock already on the shelf is repriced once (x2.cu200).
+var CU200_EGG=[[10,7,'bone',4,2],[16,12,'bone',7,3],[24,18,'crystal',5,4],[34,26,'crystal',9,6],[46,36,'crystal',14,9]];
+function cu200Egg(T){const q=CU200_EGG[Math.max(1,Math.min(5,T))-1];return [['wood',q[0]],['fiber',q[1]],[q[2],q[3]],[UPM[Math.max(1,Math.min(5,T))-1][0],q[4]]]}
+cu194Price=function(kind,T,fam){T=Math.max(1,Math.min(5,T|0||1));const U=UPM[T-1][0];let P;
+  if(kind=='egg')P=cu200Egg(T);
+  else if(kind=='pots')P=[['glowcap',4+T],['petals',3+T]];
+  else if(kind=='rune')P=[['crystal',5],['bone',7],[UPM[0][0],1]];
+  else if(kind=='rune2')P=[['crystal',16],['bone',14],['Ectoplasm',6],[UPM[2][0],3]];
+  else if(kind=='shiny')P=[['crystal',8+4*T],['glowcap',10+4*T],[fam,4+2*T],[U,2+2*T]];
+  else if(kind=='armament')P=[['iron',14+8*T],['stone',10+6*T],['crystal',4+2*T],[U,3+2*T]];
+  else if(kind=='fortune')P=[['petals',10+3*T],['glowcap',8+3*T],['fiber',8+2*T]];
+  else if(kind=='elder'){const E=Math.min(5,T+1);P=cu200Egg(E).map(([k,n])=>[k,Math.ceil(n*1.25)]).concat([[fam,4+E]])}
+  else P=[];
+  return cu194Off(P.filter(q=>q[0]))};
+// stock already on the shelf: priced again once
+function cu200Reprice(){const T=cu194T();
+  (CU194.wares||[]).forEach(o=>{if(o.sold)return;if(o.k=='egg')o.m=cu194Price('egg',o.t||(o.egg?o.egg.tier+1:T));else if(o.k=='rune')o.m=cu194Price('rune',T)});
+  (CU194.cur||[]).forEach((o,i)=>{if(o.sold)return;const fam=(o.m||[]).map(q=>q[0]).find(k=>Object.values(FAM).some(F=>F[0]==k))||cu194Fam(CU194.hk+(i?'b':''));
+    const t=o.k=='shiny'&&o.egg?o.egg.tier+1:o.k=='armament'&&o.it?tierOfLv(o.it.lv):T;o.m=cu194Price(o.k,t,fam)})}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.cu200=1;return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!(s&&s.cu200))cu200Reprice()}catch(e){console.warn('v200 curio',e)}return r}}
+// ================= v200: the Treasury is a gold market =================
+// Owner (Nov 5 2026): "make the treasury an interactable station where you can deposit gold and trade it like a stock market. The
+// market should fluctuate in a reasonable way providing risk and reward but rise very slightly over time so that it's a safe
+// long term investment. Upgrades to it allow you to invest more."
+//  * Three ventures (TRS200.A), from steady to wild. A price moves every TRS200.S (10 minutes of real time) and is the same
+//    for every player at the same moment (seeded by time, no Math.random): log price = base + a slow upward drift (mu per day)
+//    + a slow swing that wanders and is pulled back toward the trend (sd, over about a day and a half) + a small fast wobble (fs).
+//    Buy low in a dip and sell in a swell for a quick profit, or hold: the trend only goes up.
+//  * Buying costs gold and gives shares; selling turns shares back into gold. Every trade costs a 1% fee.
+//  * How much you may have invested (the gold you put in and haven't taken out) is capped by the Treasury's level:
+//    5,000 / 20,000 / 75,000 (ST200_TR in 3700). Holdings TRS200.h = {venture: {s: shares, c: gold put in}}, saved (x2.trs200).
+// Co-op: prices are the same on every page; holdings are your own.
+var TRS200={S:10*60000,T0:Date.UTC(2026,10,1),fee:.01,h:{},cache:{},A:[
+  {k:'iron',n:'Ironwrights\' Guild',i:'⚒️',d:'Duskhold\'s smiths and their ore contracts. Slow and steady.',p:20,mu:.0004,sd:.03,fs:.005,col:'#9aa4b4'},
+  {k:'caravan',n:'Sunspice Caravans',i:'🐪',d:'Trade runs through the Searing Sands. Good years and bad ones.',p:50,mu:.0006,sd:.07,fs:.012,col:'#e0a84a'},
+  {k:'crystal',n:'Deepcrystal Expedition',i:'💎',d:'Crystal diggers beneath the Citadel. Wild swings, the best long-run rise.',p:100,mu:.0008,sd:.13,fs:.022,col:'#8ab4ff'}]};
+// deterministic noise: a standard normal number for (venture, step)
+function trs200H(a,n){let h=(Math.imul(n+1,2654435761)^Math.imul(a+7,40503))>>>0;h^=h>>>16;h=Math.imul(h,2246822507)>>>0;h^=h>>>13;h=Math.imul(h,3266489909)>>>0;h^=h>>>16;return (h>>>0)/4294967296}
+function trs200Z(a,n){const u=Math.max(1e-9,trs200H(a*3+1,n)),v=trs200H(a*3+2,n);return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307*v)}
+function trs200N(t){return Math.max(0,Math.floor(((t==null?Date.now():t)-TRS200.T0)/TRS200.S))}
+// price history of venture ai up to step n (cached, grows step by step)
+function trs200Hist(ai,n){const A=TRS200.A[ai],C=TRS200.cache[A.k]||(TRS200.cache[A.k]={x:0,y:0,p:new Float64Array(4096),n:-1});
+  if(n>=C.p.length){const q=new Float64Array(Math.max(n+1,C.p.length*2));q.set(C.p);C.p=q}
+  const per=86400000/TRS200.S,th=1/(1.5*per),sg=A.sd*Math.sqrt(2*th),thf=.25,sgf=A.fs*Math.sqrt(2*thf),mu=A.mu/per;
+  for(let i=C.n+1;i<=n;i++){C.x=C.x*(1-th)+sg*trs200Z(ai,i);C.y=C.y*(1-thf)+sgf*trs200Z(ai+7,i);C.p[i]=A.p*Math.exp(mu*i+C.x+C.y);C.n=i}return C.p}
+function trs200P(ai,n){n=n==null?trs200N():n;return trs200Hist(ai,n)[n]}
+function trs200Cap(){return ST200_TR[kdLv('treas')]||0}
+function trs200In(){return TRS200.A.reduce((s,A)=>s+((TRS200.h[A.k]||{}).c||0),0)}
+function trs200Val(){return TRS200.A.reduce((s,A,i)=>s+((TRS200.h[A.k]||{}).s||0)*trs200P(i),0)}
+function trs200Buy(ai,g){const A=TRS200.A[ai];g=Math.floor(Math.min(g,gold,trs200Cap()-trs200In()));if(g<10)return say(gold<10?'Not enough gold.':'💰 You have invested as much as the Treasury allows (🪙 '+trs200Cap().toLocaleString()+'). Upgrade it to invest more.');
+  const p=trs200P(ai),sh=g*(1-TRS200.fee)/p,H=TRS200.h[A.k]||(TRS200.h[A.k]={s:0,c:0});gold-=g;H.s+=sh;H.c+=g;
+  say('💰 Bought '+sh.toFixed(2)+' shares of '+A.n+' at 🪙 '+p.toFixed(2)+' for 🪙 '+g.toLocaleString()+'.');try{sfx('chime')}catch(_){}try{hud();saveGame(true)}catch(_){}rX()}
+function trs200Sell(ai,fr){const A=TRS200.A[ai],H=TRS200.h[A.k];if(!H||!(H.s>0))return;fr=Math.max(0,Math.min(1,fr));const sh=fr>=1?H.s:H.s*fr,p=trs200P(ai),g=Math.floor(sh*p*(1-TRS200.fee));
+  const cb=fr>=1?H.c:H.c*fr;gold+=g;H.s-=sh;H.c-=cb;if(H.s<1e-6||fr>=1){delete TRS200.h[A.k]}
+  const pr=g-cb;say('💰 Sold '+sh.toFixed(2)+' shares of '+A.n+' for 🪙 '+g.toLocaleString()+' ('+(pr>=0?'+':'')+Math.round(pr).toLocaleString()+' '+(pr>=0?'profit':'loss')+').');try{sfx(pr>=0?'power':'chime')}catch(_){}try{hud();saveGame(true)}catch(_){}rX()}
+// a small line chart of the last three days
+function trs200Spark(ai,col){const n=trs200N(),days=3,per=86400000/TRS200.S,from=Math.max(0,n-days*per),P=trs200Hist(ai,n),W=260,H=56;let lo=1e9,hi=-1e9;
+  for(let i=from;i<=n;i++){lo=Math.min(lo,P[i]);hi=Math.max(hi,P[i])}const sp=(hi-lo)||1,pts=[],step=Math.max(1,Math.floor((n-from)/130));
+  for(let i=from;i<=n;i+=step)pts.push(((i-from)/Math.max(1,n-from)*W).toFixed(1)+','+(H-3-(P[i]-lo)/sp*(H-6)).toFixed(1));pts.push(W+','+(H-3-(P[n]-lo)/sp*(H-6)).toFixed(1));
+  return `<svg class="trs200-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg><div class="trs200-ax"><span>3 days ago</span><span>low ${lo.toFixed(1)} · high ${hi.toFixed(1)}</span><span>now</span></div>`}
+function trs200Pct(v){return `<span class="${v>=0?'trs200-up':'trs200-dn'}">${v>=0?'▲':'▼'} ${Math.abs(v*100).toFixed(1)}%</span>`}
+XR.treas200=function(){const n=trs200N(),per=86400000/TRS200.S,cap=trs200Cap(),inv=trs200In(),val=trs200Val(),room=Math.max(0,cap-inv);
+  $('xwT').textContent='💰 Treasury';$('xwS').innerHTML='🪙 <b>'+gold.toLocaleString()+'</b> · invested 🪙 '+Math.round(inv).toLocaleString()+' of '+cap.toLocaleString()+' · worth now 🪙 '+Math.round(val).toLocaleString();
+  let h=st200Head('treas',`<div class="trs200-sum"><small>Your holdings</small><b>🪙 ${Math.round(val).toLocaleString()}</b> ${inv>0?trs200Pct(val/inv-1):''}</div>`);
+  h+='<div class="trs200-grid">'+TRS200.A.map((A,i)=>{const p=trs200P(i,n),p1=trs200P(i,Math.max(0,n-per)),H=TRS200.h[A.k],sv=H?H.s*p:0;
+    const amt=[100,500,1000],can=g=>room>=10&&gold>=10&&g<=Math.min(room,gold);
+    return `<div class="trs200-c" style="--rc:${A.col}"><div class="trs200-t"><span class="trs200-i">${A.i}</span><div><b>${A.n}</b><small>${A.d}</small></div></div>
+      <div class="trs200-pr"><b>🪙 ${p.toFixed(2)}</b> <small>per share</small> ${trs200Pct(p/p1-1)} <small>24 h</small></div>${trs200Spark(i,A.col)}
+      <div class="trs200-h">${H?`You hold <b>${H.s.toFixed(2)}</b> shares · worth 🪙 <b>${Math.floor(sv).toLocaleString()}</b> · paid 🪙 ${Math.round(H.c).toLocaleString()} ${trs200Pct(sv/H.c-1)}`:'<span class="mut">You hold no shares.</span>'}</div>
+      <div class="trs200-b"><span class="mut">Buy</span>${amt.map(g=>`<button data-trs200b="${i}" data-g="${g}" ${can(g)?'':'disabled'}>🪙 ${g}</button>`).join('')}<button data-trs200b="${i}" data-g="max" ${room>=10&&gold>=10?'':'disabled'}>Max</button></div>
+      <div class="trs200-b"><span class="mut">Sell</span>${[[.25,'25%'],[.5,'50%'],[1,'All']].map(([f,l])=>`<button data-trs200s="${i}" data-f="${f}" ${H?'':'disabled'}>${l}</button>`).join('')}</div></div>`}).join('')+'</div>';
+  $('xwB').innerHTML=h;
+  $('xwF').innerHTML='<span class="mut dtl">Prices change every 10 minutes and are the same for everyone. They swing up and down, but every venture rises slowly over time. Each trade costs a 1% fee. Upgrade the Treasury at the Stronghold Steward to invest more.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='treas200')return;const t=e.target.closest('[data-trs200b],[data-trs200s]');if(!t||t.disabled)return;
+  if(t.dataset.trs200b!=null){const g=t.dataset.g=='max'?Math.min(gold,trs200Cap()-trs200In()):+t.dataset.g;trs200Buy(+t.dataset.trs200b,g)}else trs200Sell(+t.dataset.trs200s,+t.dataset.f)});
+// a new price every 10 minutes: redraw an open window when the step changes
+var TRS200_LAST=-1;setInterval(()=>{try{if(xwMode!='treas200'||$('xw').classList.contains('hide'))return;const n=trs200N();if(n!==TRS200_LAST){TRS200_LAST=n;rX()}}catch(_){}},5000);
+ST200.open.treas=()=>{TRS200_LAST=trs200N();openX('treas200')};
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.trs200=JSON.parse(JSON.stringify(TRS200.h));return o}}
+{const f=x2Load;x2Load=function(s){TRS200.h={};try{const q=s&&s.trs200;if(q&&typeof q=='object')TRS200.A.forEach(A=>{const H=q[A.k];if(H&&+H.s>0)TRS200.h[A.k]={s:+H.s,c:Math.max(0,+H.c||0)}})}catch(_){}return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend',`<style id="trs200css">
+#xw .trs200-sum{text-align:right}#xw .trs200-sum small{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:.6rem;color:#c9a24a}#xw .trs200-sum b{font-size:1.05rem}
+#xw .trs200-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+#xw .trs200-c{padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(160deg,color-mix(in srgb,var(--rc) 12%,transparent),rgba(0,0,0,.3) 60%);display:flex;flex-direction:column;gap:6px}
+#xw .trs200-t{display:flex;gap:10px;align-items:center}#xw .trs200-i{font-size:1.6rem}#xw .trs200-t small{display:block;color:var(--mut);font-size:.7rem;line-height:1.3}
+#xw .trs200-pr b{font-size:1.05rem}#xw .trs200-pr small{color:var(--mut);font-size:.66rem}
+#xw .trs200-sp{width:100%;height:56px;background:rgba(0,0,0,.3);border-radius:6px;display:block}
+#xw .trs200-ax{display:flex;justify-content:space-between;font-size:.6rem;color:var(--mut);margin-top:-3px}
+#xw .trs200-h{font-size:.74rem}#xw .trs200-b{display:flex;gap:4px;align-items:center;flex-wrap:wrap}#xw .trs200-b>span{width:30px;font-size:.68rem}
+#xw .trs200-b button{padding:2px 8px;font-size:.72rem;min-height:0}
+#xw .trs200-up{color:#6ee7b7;font-size:.74rem;font-weight:700}#xw .trs200-dn{color:#f87171;font-size:.74rem;font-weight:700}
+@media(max-width:640px){#xw .trs200-grid{grid-template-columns:1fr}}
+</style>`);
+// ================= v200: the Training Grounds train your hero while you are away =================
+// Owner (Nov 5 2026): "make the training ground a place you can interact with where your character will train offline. Tier 1
+// will get you 1 level in 8 hours up to level 15 … Tier 2 is 1 level in 8 hours up to level 30 … Tier 3 is 1 level in 8 hours up to
+// level 40, and then 1 level every 16 hours after 40", at most one level per time away, at every tier (owner's choice).
+//  * At the Training Grounds you start (or stop) training. While it is on, every absence of TG200.need() or longer gives one level
+//    (heroLevelUp, your XP bar is kept) as long as you are below the level the Grounds can teach (ST200_TG in 3700: 15 / 30 / 40;
+//    level 3 goes on past 40 at 16 hours a level).
+//  * An absence = the game closed (time from the last save to the next load) or its tab hidden (time hidden). The last time
+//    the game was seen running is saved (x2.tg200.beat).
+// Co-op: your own hero; the Grounds' level is that of the kingdom you see.
+var TG200={on:0,beat:0,hid:0,last:null,H:3600000};
+function tg200Cap(){const l=kdLv('train');return l>=3?MAXLV:ST200_TG[l]||0}
+function tg200Need(){return kdLv('train')>=3&&hero.lvl>=40?16*TG200.H:8*TG200.H}
+function tg200Can(){return kdLv('train')>0&&hero.lvl<tg200Cap()&&hero.lvl<MAXLV}
+// an absence of ms milliseconds just ended
+function tg200Away(ms){if(!TG200.on||!(ms>0))return;const need=tg200Need();TG200.last={ms,t:Date.now(),ok:false};
+  if(!tg200Can()||ms<need)return;const from=hero.lvl;try{heroLevelUp()}catch(e){console.warn('v200 training',e);return}TG200.last.ok=true;TG200.last.from=from;
+  setTimeout(()=>{try{say('⚔️ You trained at the Training Grounds while you were away ('+st200Clock(ms)+'): Lv '+from+' → Lv '+hero.lvl+'.')}catch(_){}},800);try{hud();ui();saveGame(true)}catch(_){}}
+document.addEventListener('visibilitychange',()=>{try{if(document.hidden){TG200.hid=Date.now()}else if(TG200.hid){const ms=Date.now()-TG200.hid;TG200.hid=0;if(typeof hero!='undefined'&&hero&&party.length)tg200Away(ms)}}catch(e){console.warn('v200 away',e)}});
+setInterval(()=>{if(!document.hidden)TG200.beat=Date.now()},15000);
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.tg200={on:TG200.on?1:0,beat:document.hidden&&TG200.hid?TG200.hid:Date.now()};return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.tg200;TG200.on=q&&q.on?1:0;const b=q&&+q.beat||0;TG200.beat=Date.now();
+    if(TG200.on&&b>0){const ms=Date.now()-b;setTimeout(()=>{try{tg200Away(ms)}catch(e){console.warn('v200 training load',e)}},4000)}}catch(e){console.warn('v200 training',e)}return r}}
+function tg200Toggle(){if(!TG200.on&&!(kdLv('train')>0))return;TG200.on=TG200.on?0:1;
+  say(TG200.on?'⚔️ Training is on: every time you are away for '+Math.round(tg200Need()/TG200.H)+' hours or more, you come back one level stronger.':'⚔️ Training stopped.');try{sfx('chime');saveGame(true)}catch(_){}rX()}
+XR.train200=function(){const l=kdLv('train'),cap=tg200Cap(),need=tg200Need(),can=tg200Can();
+  $('xwT').textContent='⚔️ Training Grounds';$('xwS').textContent='Lv '+hero.lvl+' · the Grounds teach up to Lv '+(l>=3?MAXLV:cap)+' · '+Math.round(need/TG200.H)+' hours away = 1 level';
+  const rows=[[1,'Up to Lv 15','8 hours away = 1 level'],[2,'Up to Lv 30','8 hours away = 1 level'],[3,'Up to Lv 40, then on to Lv '+MAXLV,'8 hours away = 1 level · 16 hours past Lv 40']];
+  let h=st200Head('train');
+  h+=`<div class="tg200-st ${TG200.on?'on':''}"><div class="tg200-ic">${TG200.on?'🏋️':'🪵'}</div><div><b>${TG200.on?'Training while you are away':'Not training'}</b>
+    <small>${!can?(hero.lvl>=MAXLV?'You have reached the highest level.':'You have learned all the Grounds can teach (Lv '+cap+'). Upgrade them at the Stronghold Steward.'):TG200.on?'Close the game or leave it in the background for '+Math.round(need/TG200.H)+' hours or more and you come back one level stronger. One level per time away.':'Start training, then leave for '+Math.round(need/TG200.H)+' hours or more to gain a level.'}</small></div>
+    <button class="${TG200.on?'':'pri'}" data-tg200="1">${TG200.on?'Stop training':'⚔️ Start training'}</button></div>`;
+  if(TG200.last)h+=`<div class="s200-note">Last time away: ${st200Clock(TG200.last.ms)}${TG200.last.ok?' — trained Lv '+TG200.last.from+' → '+(TG200.last.from+1)+'.':' — '+(TG200.last.ms<need?'not long enough for a level.':'nothing more to learn here.')}</div>`;
+  h+='<div class="s200-sec">What each level teaches</div><div class="tg200-t">'+rows.map(([L,a,b])=>`<div class="${l>=L?'on':''}${l===L?' cur':''}"><b>Level ${L}</b><span>${a}</span><small>${b}</small></div>`).join('')+'</div>';
+  $('xwB').innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">At most one level each time you are away, however long. Your XP bar is kept. Time away counts from when the game was closed or its tab hidden.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='train200')return;const t=e.target.closest('[data-tg200]');if(t&&!t.disabled)tg200Toggle()});
+ST200.open.train=()=>openX('train200');
+document.head.insertAdjacentHTML('beforeend',`<style id="tg200css">
+#xw .tg200-st{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+#xw .tg200-st.on{border-color:rgba(110,231,183,.55);background:linear-gradient(135deg,rgba(110,231,183,.12),rgba(0,0,0,.3))}
+#xw .tg200-st>div:nth-child(2){flex:1}#xw .tg200-st small{display:block;color:var(--mut);font-size:.74rem}#xw .tg200-ic{font-size:2rem}
+#xw .tg200-t{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+#xw .tg200-t>div{padding:8px 10px;border-radius:8px;border:1px dashed var(--line);opacity:.6;display:flex;flex-direction:column;gap:2px;font-size:.78rem}
+#xw .tg200-t>div.on{opacity:1;border-style:solid;border-color:rgba(201,162,74,.5)}#xw .tg200-t>div.cur{background:rgba(201,162,74,.12)}
+#xw .tg200-t small{color:var(--mut);font-size:.68rem}
+</style>`);
+// ================= v200: the Scholar's Tower keeps a collection log =================
+// Owner (Nov 5 2026): "make scholars tower a collection log station where you can get rewards for filling out certain sections
+// similar to runescape's collection log. Remove the current collection log system that rewards filling out beastiary."
+//  * CL200.S: 17 sections, each a list of things to collect (creatures defeated, species tamed, fish caught, mounts, runes,
+//    uniques, Sovereigns, rare breeds). A section is complete when every entry is ticked; its reward is claimed at the
+//    Scholar's Tower. The tower's level decides which rewards can be claimed: level 1 novice (★), 2 adept (★★), 3 master (★★★).
+//  * Things the game doesn't remember by itself are recorded as they happen (CL200.got, saved): every unique, mount, rune
+//    (any rank) and rare / shiny companion you have held. cl200Scan looks over your bag, gear, sockets and party.
+//  * Rewards: gold, eggs, runes and permanent bonuses (hero.buffs perm, as the old Bestiary rewards were). Bonuses claimed from the
+//    old Bestiary points (Scholar I / II, Master Tamer) stay with your hero.
+//  * The Bestiary's old Rewards tab now shows the log (read only, 0440).
+// Co-op: personal (your log, your hero); the claim tier follows the tower of the kingdom you see.
+var CL200={got:new Set(),claim:new Set(),open:{}};
+function cl200Add(k){if(k&&!CL200.got.has(k))CL200.got.add(k)}
+function cl200Scan(){try{(gear||[]).concat(Object.values(eq||{})).forEach(it=>{if(!it)return;if(it.u)cl200Add('u:'+it.u);(Array.isArray(it.ru)?it.ru:[]).forEach(r=>{if(typeof r=='string')cl200Add('r:'+r)})});
+  for(const k in sup)if(/^r_[a-z]+[23]?$/.test(k)&&sup[k]>0)cl200Add('r:'+k);
+  (mounts||[]).forEach(m=>m&&m.k&&cl200Add('m:'+m.k));
+  (party||[]).forEach(c=>{if(!c)return;if(c.shn)cl200Add('shn');if(c.rv)cl200Add('rv:'+c.rv);(Array.isArray(c.ru)?c.ru:[]).forEach(r=>{if(typeof r=='string')cl200Add('r:'+r)})});
+  try{dexScan()}catch(_){}}catch(e){console.warn('v200 log scan',e)}}
+setInterval(()=>{try{if(typeof party!='undefined'&&party.length)cl200Scan()}catch(_){}},5000);
+// ---------------- the sections ----------------
+function cl200Zone(z){const W=dex141Where();return dex141Keys().filter(k=>{const w=(W[k]||[])[0];return w&&w.z===z}).map(k=>({n:EN[k].n,ic:EN[k].e||'❔',got:(kills[k]||0)>0}))}
+function cl200Sp(T){return SPK.filter(n=>T.includes(SP2[n][1])).map(n=>({n,ic:SP2[n][3],got:dex.own.has(n)}))}
+function cl200Fish(f){return FISH.filter(f).map(q=>({n:q[0],ic:q[1],got:(fishLog[q[0]]||0)>0}))}
+function cl200Runes(r){return RN194K.map(t=>{const k=r>1?rn194Key(t,r):'r_'+t;return {n:(typeof rn194Name=='function'?rn194Name(k):k),ic:(RUNES[k]||RUNES['r_'+t]||[0,'🔮'])[1],got:CL200.got.has('r:'+k)}})}
+function cl200Buff(n,s,d){return {t:'perm',n,s,d}}
+var CL200_S=[
+  {k:'z0',n:'Kindlelight Wildlife',i:'🕯️',L:1,it:()=>cl200Zone(0),rw:[{g:1000},{egg:1}]},
+  {k:'z1',n:'Hillside Crest Wildlife',i:'⛰️',L:1,it:()=>cl200Zone(1),rw:[{g:2000},{egg:2}]},
+  {k:'tame1',n:'First Bonds',i:'🐾',L:1,d:'Tame every Tier 1 species',it:()=>cl200Sp([1]),rw:[{g:1000},{egg:2}]},
+  {k:'fish1',n:'The Shallows',i:'🎣',L:1,d:'Catch every fish of the first two tiers',it:()=>cl200Fish(q=>q[2]<=2&&q[3]<3),rw:[{g:1500},{rune:3}]},
+  {k:'rune1',n:'Rune Collector',i:'🔮',L:1,d:'Hold every rank I rune',it:()=>cl200Runes(1),rw:[{g:2000},{rune2:1}]},
+  {k:'z2',n:'Burningeye Summit Wildlife',i:'🌋',L:2,it:()=>cl200Zone(2),rw:[{g:3500},{egg:3}]},
+  {k:'z3',n:'Searing Sands Wildlife',i:'🏜️',L:2,it:()=>cl200Zone(3),rw:[{g:5000},{egg:4}]},
+  {k:'tame2',n:'Kindred Spirits',i:'🦊',L:2,d:'Tame every Tier 2 and 3 species',it:()=>cl200Sp([2,3]),rw:[{g:4000},{buff:cl200Buff('Kindred Spirits',{xp:.03},'+3% XP')}]},
+  {k:'mount',n:'Stablemaster',i:'🐎',L:2,d:'Own every mount',it:()=>MNTK.map(k=>({n:MOUNTS[k].n,ic:MOUNTS[k].i,got:CL200.got.has('m:'+k)})),rw:[{g:5000},{buff:cl200Buff('Stablemaster',{mspd:.05},'+5% move speed')}]},
+  {k:'fish2',n:'Deep Waters',i:'🐠',L:2,d:'Catch every rarer fish',it:()=>cl200Fish(q=>!(q[2]<=2&&q[3]<3)),rw:[{g:4000},{buff:cl200Buff('Angler\'s Luck',{loot:.05},'+5% loot find')}]},
+  {k:'z4',n:'The Dirge Wildlife',i:'🌫️',L:3,it:()=>cl200Zone(4),rw:[{g:7000},{egg:5}]},
+  {k:'z5',n:'The Citadel Wildlife',i:'🏰',L:3,it:()=>cl200Zone(5),rw:[{g:10000},{egg:5},{buff:cl200Buff('Scholar of the Wilds',{xp:.05},'+5% XP')}]},
+  {k:'sov',n:'Sovereign Slayer',i:'👑',L:3,d:'Defeat every Sovereign',it:()=>BOSSES.map((B,i)=>({n:B.name,ic:B.i||'👑',got:bossDone.has(i)})),rw:[{g:8000},{buff:cl200Buff('Sovereign\'s Bane',{hpP:.04,paP:.04,maP:.04,pdP:.04,mdP:.04},'+4% health, attack and defense')}]},
+  {k:'tame3',n:'Elder Tamer',i:'🐲',L:3,d:'Tame every Tier 4 and 5 species',it:()=>cl200Sp([4,5]),rw:[{g:10000},{buff:cl200Buff('Elder Tamer',{paP:.04,maP:.04},'+4% physical and magic attack')}]},
+  {k:'unq',n:'Relic Hunter',i:'✦',L:3,d:'Find every zone unique',it:()=>[].concat(...UNQ135_ZK.map(L=>L||[])).map(k=>({n:UNQ135[k].n,ic:'✦',got:CL200.got.has('u:'+k)})),rw:[{g:15000},{buff:cl200Buff('Relic Hunter',{loot:.08},'+8% loot find')}]},
+  {k:'rare',n:'Rare Breeds',i:'✨',L:3,d:'Own a shiny companion and one of every rare colour',it:()=>[{n:'Shiny companion',ic:'✨',got:CL200.got.has('shn')}].concat(Object.keys(RVAR).map(v=>({n:v+' companion',ic:'🎨',got:CL200.got.has('rv:'+v)}))),rw:[{g:10000},{shiny:1}]},
+  {k:'rune3',n:'Runemaster',i:'🔯',L:3,d:'Hold every rune at rank III',it:()=>cl200Runes(3),rw:[{g:12000},{buff:cl200Buff('Runemaster',{hpP:.03,pdP:.03,mdP:.03},'+3% health and defense')}]}];
+function cl200Done(S){const L=S.it();return L.length&&L.every(q=>q.got)}
+function cl200RwTxt(r){if(r.g)return '🪙 '+r.g.toLocaleString();if(r.egg)return '🥚 Tier '+r.egg+' egg';if(r.rune)return '🔮 '+r.rune+' rank I runes';if(r.rune2)return '🔯 A rank II rune';
+  if(r.shiny)return '✨ A Shimmering Egg (hatches shiny)';if(r.buff)return '📖 '+r.buff.n+': '+r.buff.d+' (permanent)';return ''}
+function cl200Give(r){if(r.g)gold+=r.g;else if(r.egg)eggs.push(rollEgg(r.egg));else if(r.rune){for(let i=0;i<r.rune;i++)giveS(RUNEK[R(0,RUNEK.length-1)],1)}
+  else if(r.rune2)giveS(rn194Key(RN194K[R(0,RN194K.length-1)],2),1);else if(r.shiny){const e=rollEgg(Math.max(1,Math.min(5,tierOfLv(hero.lvl))));e.shn=1;eggs.push(e)}
+  else if(r.buff&&!hero.buffs.some(b=>b.perm&&b.n==r.buff.n))permBuff(r.buff.n,r.buff.s)}
+function cl200Claim(k){const S=CL200_S.find(q=>q.k==k);if(!S||CL200.claim.has(k)||!cl200Done(S))return;if(kdLv('tower')<S.L)return say('📜 The Scholar\'s Tower must be level '+S.L+' to grant this reward.');
+  CL200.claim.add(k);S.rw.forEach(cl200Give);try{banner('📜 '+S.n.toUpperCase(),S.rw.map(cl200RwTxt).join(' · '),'Collection Log section complete')}catch(_){}try{sfx('power')}catch(_){}try{hsDirty();hud();ui();saveGame(true)}catch(_){}rX()}
+// the log (claim buttons only at the tower)
+function cl200Html(claim){cl200Scan();const lv=kdLv('tower');let all=0,got=0,done=0;
+  const cards=CL200_S.map(S=>{const L=S.it(),n=L.filter(q=>q.got).length,ok=L.length&&n==L.length,cl=CL200.claim.has(S.k);all+=L.length;got+=n;if(ok)done++;const open=!!CL200.open[S.k];
+    const btn=cl?'<em class="cl200-ok">✔ Claimed</em>':!claim?(ok?'<em class="cl200-rd">Claim at the Scholar\'s Tower</em>':''):ok?(lv>=S.L?`<button class="pri" data-cl200c="${S.k}">Claim</button>`:`<button disabled title="Upgrade the Scholar's Tower">🔒 Tower Lv ${S.L}</button>`):'';
+    return `<div class="cl200-s${ok?' done':''}${cl?' cl':''}"><button class="cl200-h" data-cl200o="${S.k}"><span class="cl200-i">${S.i}</span><span class="cl200-n"><b>${S.n}</b> <span class="cl200-st">${'★'.repeat(S.L)}</span><small>${S.d||'Defeat every creature that lives there'}</small></span>
+      <span class="cl200-c">${n} / ${L.length}</span></button><div class="cl200-bar"><i style="width:${L.length?(n/L.length*100).toFixed(1):0}%"></i></div>
+      <div class="cl200-rw"><span>${S.rw.map(cl200RwTxt).join(' · ')}</span>${btn}</div>
+      ${open?`<div class="cl200-it">${L.map(q=>`<span class="${q.got?'got':''}" title="${st200Esc(q.got?q.n:'Not yet')}"><i>${q.got?q.ic:'❔'}</i>${q.got?st200Esc(q.n):'???'}</span>`).join('')}</div>`:''}</div>`}).join('');
+  return `<div class="cl200-top"><b>📜 Collection Log</b> <span>${got} / ${all} collected · ${done} / ${CL200_S.length} sections complete</span><span class="mut">Scholar's Tower level ${lv}: claims ${lv?['★','★ ★★','★ ★★ ★★★'][lv-1]:'nothing yet'}</span></div><div class="cl200">${cards}</div>`}
+$('xw').addEventListener('click',e=>{if(xwMode!='tower200'&&xwMode!='dex')return;const t=e.target.closest('[data-cl200o],[data-cl200c]');if(!t||t.disabled)return;e.stopPropagation();
+  if(t.dataset.cl200c)cl200Claim(t.dataset.cl200c);else{CL200.open[t.dataset.cl200o]=!CL200.open[t.dataset.cl200o];rX()}});
+XR.tower200=function(){$('xwT').textContent='📚 Scholar\'s Tower';$('xwS').textContent='The Collection Log · fill a section to claim its reward';
+  $('xwB').innerHTML=st200Head('tower')+cl200Html(true);$('xwF').innerHTML='<span class="mut dtl">Tap a section to see its entries. Things you have held once (uniques, mounts, runes, rare companions) stay ticked even after you sell or fuse them. Upgrade the tower at the Stronghold Steward to claim adept (★★) and master (★★★) rewards.</span>'};
+ST200.open.tower=()=>openX('tower200');
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.cl200={g:[...CL200.got],c:[...CL200.claim]};return o}}
+{const f=x2Load;x2Load=function(s){CL200.got=new Set();CL200.claim=new Set();try{const q=s&&s.cl200;if(q){(q.g||[]).forEach(k=>typeof k=='string'&&CL200.got.add(k));(q.c||[]).forEach(k=>typeof k=='string'&&CL200.claim.add(k))}}catch(_){}
+  const r=f.apply(this,arguments);try{cl200Scan()}catch(_){}return r}}
+document.head.insertAdjacentHTML('beforeend',`<style id="cl200css">
+#xw .cl200-top{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 8px;font-size:.78rem}#xw .cl200-top b{font-size:.95rem}
+#xw .cl200{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start}
+#xw .cl200-s{border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.22);padding:6px 8px;display:flex;flex-direction:column;gap:5px}
+#xw .cl200-s.done{border-color:rgba(240,204,114,.6);background:linear-gradient(135deg,rgba(240,204,114,.12),rgba(0,0,0,.25))}#xw .cl200-s.cl{border-color:rgba(110,231,183,.45)}
+#xw .cl200-h{display:flex;gap:8px;align-items:center;text-align:left;background:none;border:0;padding:0;height:auto;min-height:0;white-space:normal;line-height:1.2;width:100%;cursor:pointer}
+#xw .cl200-i{font-size:1.4rem;width:1.6em;text-align:center}#xw .cl200-n{flex:1;min-width:0}#xw .cl200-n small{display:block;color:var(--mut);font-size:.68rem;font-weight:500}
+#xw .cl200-st{color:#f0cc72;font-size:.66rem;letter-spacing:1px}#xw .cl200-c{font-weight:800;font-size:.8rem;font-variant-numeric:tabular-nums}
+#xw .cl200-bar{height:5px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden}#xw .cl200-bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a24a,#f5d76e)}
+#xw .cl200-s.cl .cl200-bar i{background:#6ee7b7}
+#xw .cl200-rw{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:.7rem;color:#e8d8b0}#xw .cl200-rw button{padding:2px 10px;font-size:.72rem;min-height:0}
+#xw .cl200-ok{color:#6ee7b7;font-style:normal;font-weight:700;white-space:nowrap}#xw .cl200-rd{color:#f0cc72;font-style:normal;white-space:nowrap}
+#xw .cl200-it{display:flex;flex-wrap:wrap;gap:4px}#xw .cl200-it span{display:inline-flex;gap:4px;align-items:center;font-size:.68rem;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.3);opacity:.5}
+#xw .cl200-it span.got{opacity:1;background:rgba(201,162,74,.16)}#xw .cl200-it i{font-style:normal}
+@media(max-width:640px){#xw .cl200{grid-template-columns:1fr}}
+</style>`);
+// ================= v200: every Bestiary tab gets pages like the creature (enemy) tab =================
+// Owner (Nov 5 2026): "Improve the beastiary to make each section look like our creature portion with the mockup and stats and drop
+// table where applicable." The Companions, Sovereigns and Fish tabs become a list plus a page (the v141 layout and styles, 2985):
+//  * Companions: a full-body picture of the species, its family and tier, base stats at Lv 1 and Lv 50 (an average C-grade
+//    companion), its signature ability, evolution levels, where its eggs come from and its fusion material. Unknown species stay
+//    hidden until you see an egg of them; full details once tamed.
+//  * Sovereigns: picture, where and level, health / attack / defense, and the drop table of a kill.
+//  * Fish: picture (the fish's mark), rarity, how often it bites in each zone and what each catch gives.
+// Pictures are rendered one at a time on the companion portrait renderer (CPIC), as the v141 enemy pictures are.
+var DEX200={sel:{cre:null,boss:null,fish:null},pic:{},q:[],busy:false};
+function dex200Pic(key,mk){if(DEX200.pic[key]!==undefined)return DEX200.pic[key];DEX200.pic[key]=null;DEX200.q.push([key,mk]);dex200Pump();return null}
+function dex200Pump(){if(DEX200.busy||!DEX200.q.length)return;DEX200.busy=true;setTimeout(()=>{const [k,mk]=DEX200.q.shift();
+  try{DEX200.pic[k]=dex200Shot(mk())||''}catch(e){console.warn('dex200 pic',k,e);DEX200.pic[k]=''}
+  DEX200.busy=false;try{document.querySelectorAll('#xwB [data-dex200pic="'+k+'"]').forEach(el=>{if(DEX200.pic[k])el.innerHTML='<img src="'+DEX200.pic[k]+'" alt="">'})}catch(_){}dex200Pump()},30)}
+function dex200Shot(m){if(!m||!cpicInit())return null;const R=CPIC.r,W=DEX141.W,H=DEX141.H;m.position.set(0,0,0);m.rotation.set(0,0,0);CPIC.sc.add(m);
+  try{try{if(m.rig)m.rig(0,false,0)}catch(_){}m.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(m),sz=box.getSize(new THREE.Vector3()),ctr=box.getCenter(new THREE.Vector3());
+    const r=Math.max(sz.y*.62,Math.hypot(sz.x,sz.z)*.5,.3),dist=r/Math.tan(15*Math.PI/180)*1.05;R.setSize(W,H,false);CPIC.cam.aspect=W/H;CPIC.cam.updateProjectionMatrix();
+    CPIC.cam.position.set(ctr.x+dist*.55,ctr.y+dist*.22,ctr.z+dist*.8);CPIC.cam.lookAt(ctr);R.render(CPIC.sc,CPIC.cam);return R.domElement.toDataURL('image/png')}
+  finally{CPIC.sc.remove(m);R.setSize(112,112,false);CPIC.cam.aspect=1;CPIC.cam.updateProjectionMatrix()}}
+function dex200PicBox(key,mk,fallback,cls){const p=mk?dex200Pic(key,mk):null;return `<div class="d141-pic${cls?' '+cls:''}" data-dex200pic="${key}">${p?`<img src="${p}" alt="">`:`<span>${fallback}</span>`}</div>`}
+// the list on the left (v141 look)
+function dex200List(groups,tab){return '<div class="d141-l">'+groups.map(g=>`<div class="d141-g">${g.n}</div>`+g.L.map(o=>`<button class="d141-r${DEX200.sel[tab]==o.k?' on':''}" data-dex200="${tab}:${o.k}" style="--rc:${o.rc||'transparent'}"><span class="e">${o.ic}</span><span class="n">${o.n}<small>${o.sub}</small></span></button>`).join('')).join('')+'</div>'}
+function dex200Tbl(head,rows){return `<table class="d141-t"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+var DEX200_SN=[['hp','Health'],['pa','Phys. attack'],['ma','Magic attack'],['pd','Phys. defense'],['md','Magic defense']];
+// ---------------- Companions ----------------
+function dex200SpC(n,l){const c=mkC(n,l,0,'',{hp:1,a:1,d:1});c.tr='';c.mods=[];return c}
+function dex200SpPage(n){const q=SP2[n],own=dex.own.has(n),seen=own||dex.egg.has(n),fam=q[0],F=FAMD[fam]||{},T=q[1];
+  if(!seen)return `<div class="d141-page d141-unk"><div class="d141-pic">❔</div><b>Unknown companion</b><p class="mut">Find an egg of it, or tame one, to learn about it.<br>${F.i||''} ${fam} family · Tier ${T}</p></div>`;
+  const c1=dex200SpC(n,1),c50=dex200SpC(n,MAXLV),st=k=>[Math.round(cStat(c1,k)),Math.round(cStat(c50,k))],w=F.w||{},hint=k=>{const v=w[k]||1;return v>=1.15?'<em class="hi">high</em>':v<=.75?'<em class="lo">low</em>':''};
+  const sp=(c1.sp||[]).map(s=>CSP[s]?`${CSP[s].i||''} <b>${s}</b> <span class="mut" style="font-size:.74rem">${CSP[s].d||''}${CSP[s].cd?' · '+CSP[s].cd+'s cooldown':''}</span>`:s).join('<br>');
+  const zones=PMAP.map((p,i)=>p.t==T?p.n:null).filter(Boolean);
+  return `<div class="d141-page"><div class="d141-top">${dex200PicBox('sp:'+n,()=>cr(dex200SpC(n,1)),q[3])}
+    <div class="d141-id"><b>${q[3]} ${n}</b><div class="mut">${F.i||''} ${fam} family · Tier ${T} · ${F.mt=='m'?'magic':'physical'} attacks</div>
+    <div class="d141-kc">${own?'✔ Tamed':'🥚 Egg seen — tame one for the full page'}</div><div class="d141-mv"><small>Signature ability</small><br>${sp||'—'}</div>
+    <div class="d141-wh"><small>Eggs found</small><br>${zones.length?zones.join(', ')+' (Tier '+T+' zones)':'Tier '+T+' zones'} · Magic Shop and Curio Shop eggs of your tier</div></div></div>
+    ${F.d?`<p class="mut" style="font-size:.78rem;margin:8px 0 0">${F.d}</p>`:''}
+    <div class="d141-sec">Stats <small class="mut">an average (grade C) ${n}, before traits and gear</small></div>
+    ${own?dex200Tbl(['','Lv 1','Lv '+MAXLV],DEX200_SN.map(([k,l])=>{const v=st(k);return [l+' '+hint(k),v[0],v[1]]})):'<p class="mut" style="font-size:.78rem">Tame one to see its stats.</p>'}
+    <div class="d141-sec">Growth and fusion</div>${dex200Tbl(['',''],[['Evolves at','Lv '+EVLV.join(' · Lv ')],['Fusion material',(F.mi||'🧩')+' '+(F.mat||'—')],['Family speed',(F.spd||1)+'×']])}</div>`}
+function dex200SpTab(){const groups=FAMK.map(f=>({n:FAMD[f].i+' '+f,L:SPK.filter(n=>SP2[n][0]==f).sort((a,b)=>SP2[a][1]-SP2[b][1]).map(n=>{const own=dex.own.has(n),seen=own||dex.egg.has(n);
+    return {k:n,ic:seen?SP2[n][3]:'❔',n:seen?n:'???',sub:'Tier '+SP2[n][1]+(own?' · ✔ tamed':seen?' · egg seen':''),rc:own?'#6ee7b7':seen?'#c9a24a':'transparent'}})}));
+  if(!DEX200.sel.cre||!SP2[DEX200.sel.cre])DEX200.sel.cre=SPK.find(n=>dex.own.has(n))||SPK[0];
+  return `<div class="d141">${dex200List(groups,'cre')}${dex200SpPage(DEX200.sel.cre)}</div>`}
+// ---------------- Sovereigns ----------------
+function dex200BossModel(i){const k='boss'+i;if(!EN[k])return null;const c=enemyC(k,BOSSES[i].lvl,{boss:1});return cr(c)}
+function dex200BossPage(i){const d=BOSSES[i],done=bossDone.has(i),P=PMAP[i]||{};
+  if(!done)return `<div class="d141-page d141-unk"><div class="d141-pic">❔</div><b>Undefeated Sovereign</b><p class="mut">It waits in the Sovereign's Den at the end of ${P.n||'its zone'} (Lv ${d.lvl}). Defeat it to fill this page.</p></div>`;
+  const E=EN['boss'+i],fam=(E&&FAMD[E.fam]?E.fam:famOf(d.sp)),F=FAMD[fam]||{},T=Math.max(1,Math.min(5,P.t||tierOfLv(d.lvl))),s=enStats({w:{hp:.8,pa:1,ma:1,pd:1.05,md:1.05}},d.lvl,0,1),hp=Math.round(s.hp*(typeof PACE!='undefined'?PACE.hp:1)),g0=(3+d.lvl*1.4)*13*.65;
+  const drops=[['🪙 Gold',Math.round(g0*.7)+'–'+Math.round(g0*1.3)],['⚔️ Gear (rare or better)','2'],['🥚 Tier '+T+' egg','1'],[UPM[T-1][1]+' '+UPM[T-1][0],'3–5'],[(F.mi||'🧩')+' '+(F.mat||'Family parts'),'5–8']];
+  if(['Beast','Sky','Dragon','Earth'].includes(fam))drops.push(['🍖 Raw meat','2–3']);
+  return `<div class="d141-page"><div class="d141-top">${dex200PicBox('bs:'+i,()=>dex200BossModel(i),d.i||'👑')}
+    <div class="d141-id"><b>${d.i||'👑'} ${d.name}</b><div class="mut">${F.i||''} ${fam} · Lv ${d.lvl}</div><div class="d141-kc">✔ Defeated</div>
+    <div class="d141-wh"><small>Lair</small><br>The Sovereign's Den of ${P.n||'—'}</div><div class="d141-wh"><small>Posture</small><br>Fill its posture bar to stagger it (+35% damage taken).</div></div></div>
+    <div class="d141-sec">Stats</div>${dex200Tbl(['','Lv '+d.lvl],[['Health',hp.toLocaleString()],['Phys. attack',Math.round(s.pa)],['Magic attack',Math.round(s.ma)],['Phys. defense',Math.round(s.pd)],['Magic defense',Math.round(s.md)]])}
+    <div class="d141-sec">Drops <small class="mut">every kill</small></div>${dex200Tbl(['','Amount'],drops)}</div>`}
+function dex200BossTab(){const L=BOSSES.map((B,i)=>{const d=bossDone.has(i);return {k:String(i),ic:d?B.i||'👑':'❔',n:d?B.name:'Undefeated Sovereign',sub:((PMAP[i]||{}).n||'')+' · Lv '+B.lvl+(d?' · ✔ defeated':''),rc:d?'#6ee7b7':'transparent'}});
+  if(DEX200.sel.boss==null||!BOSSES[+DEX200.sel.boss])DEX200.sel.boss=String([...bossDone][0]||0);
+  return `<div class="d141">${dex200List([{n:'Sovereigns',L}],'boss')}${dex200BossPage(+DEX200.sel.boss)}</div>`}
+// ---------------- Fish ----------------
+var DEX200_RAR=['Common','Uncommon','Rare','Legendary'],DEX200_RC=['#a8a8a8','#5fcf6a','#5a96ff','#ff9a2a'];
+function dex200FishOdds(f,T){const pool=FISH.filter(q=>q[2]<=T);if(!pool.includes(f))return 0;const w=q=>[8,3,1,.15][q[3]]*(q[2]==T?1.5:1);return w(f)/pool.reduce((s,q)=>s+w(q),0)}
+function dex200FishPage(i){const f=FISH[i],n=fishLog[f[0]]||0;
+  if(!n)return `<div class="d141-page d141-unk"><div class="d141-pic">❔</div><b>Unknown fish</b><p class="mut">${DEX200_RAR[f[3]]} · bites in Tier ${f[2]}+ waters. Catch one to fill this page.</p></div>`;
+  const zones=PMAP.map((p,z)=>[p,dex200FishOdds(f,p.t)]).filter(q=>q[1]>0);
+  return `<div class="d141-page"><div class="d141-top"><div class="d141-pic dex200-fish" style="--rc:${DEX200_RC[f[3]]}"><span>${f[1]}</span></div>
+    <div class="d141-id"><b>${f[1]} ${f[0]}</b><div class="mut" style="color:${DEX200_RC[f[3]]}">${DEX200_RAR[f[3]]} · Tier ${f[2]}</div><div class="d141-kc">${n} caught</div>
+    <div class="d141-wh"><small>Bites in</small><br>${zones.map(q=>q[0].n).join(', ')}</div></div></div>
+    <div class="d141-sec">Bite chance <small class="mut">of each catch at the water</small></div>${dex200Tbl(['Zone','Chance'],zones.map(([p,o])=>[p.n+' <small class="mut">T'+p.t+'</small>',dex141Pct(o)]))}
+    <div class="d141-sec">Each catch gives</div>${dex200Tbl(['','Chance'],[['🐟 Fish ×'+(f[3]+1)+' (cooking)','100%'],['🥚 An egg of the zone\'s tier',dex141Pct(f[3]>=2?.08:.012)]].concat(f[3]>=2?[['🔮 A rank I rune','35%']]:[]))}</div>`}
+function dex200FishTab(){const L=FISH.map((f,i)=>{const n=fishLog[f[0]]||0;return {k:String(i),ic:n?f[1]:'❔',n:n?f[0]:'???',sub:DEX200_RAR[f[3]]+' · Tier '+f[2]+(n?' · caught '+n:''),rc:n?DEX200_RC[f[3]]:'transparent'}});
+  if(DEX200.sel.fish==null||!FISH[+DEX200.sel.fish])DEX200.sel.fish=String(Math.max(0,FISH.findIndex(f=>fishLog[f[0]])));
+  return `<div class="d141">${dex200List([{n:'Fish',L}],'fish')}${dex200FishPage(+DEX200.sel.fish)}</div>`}
+// ---------------- the tabs ----------------
+{const f=XR.dex;XR.dex=function(){const r=f.apply(this,arguments);try{const t=dexTab,fn={cre:dex200SpTab,boss:dex200BossTab,fish:dex200FishTab}[t];if(!fn)return r;
+  const B=$('xwB'),T=B.querySelector('.dexT');B.innerHTML=(T?T.outerHTML:'')+fn();
+  const F=$('xwF');if(F)F.innerHTML='<span class="mut dtl">Pick an entry to see its page.</span>'}catch(e){console.warn('dex200',e)}return r}}
+$('xw').addEventListener('click',e=>{if(xwMode!='dex')return;const t=e.target.closest('[data-dex200]');if(!t)return;e.stopImmediatePropagation();const [tab,k]=t.dataset.dex200.split(':');DEX200.sel[tab]=k;rX()},true);
+document.head.insertAdjacentHTML('beforeend',`<style id="dex200css">
+#xw .dex200-fish{background:radial-gradient(ellipse at 50% 55%,color-mix(in srgb,var(--rc) 35%,transparent),rgba(10,30,50,.7) 70%);font-size:5rem}
+#xw .dex200-fish span{filter:drop-shadow(0 0 12px var(--rc))}
+</style>`);
+// ================= v200: the Beast Den is an essence altar =================
+// Owner (Nov 5 2026): "make the beast den an area where you can sacrifice companions for essence. This companion essence can be
+// used to reroll your current companions traits and give it a chance to become shiny or a rare variant. Doing this will not
+// change its base stats — it will only increase them if it becomes shiny or a rare variant by the normal amount. Higher tier
+// companions would yield more essence. Higher tier companions should cost more to reroll as well. Shiny and rare variant rolls
+// should still be hard to get here."
+//  * Sacrifice: a reserve companion (not locked, not in your team, not training) becomes essence: DEN200.Y[tier] × (1 + level/100)
+//    × (1.25 per evolution) × (3 shiny / 1.5 rare colour) × (1 + the den's bonus: +25% at level 2, +50% at level 3). Food in its
+//    pouch comes back to you.
+//  * Reroll (DEN200.C[tier] essence): a new trait (Horned / Bulky / Armored / Spiked, Universal, or none, with the hatching odds)
+//    and new modifiers (as many as it had). Its base stats (grades), level, evolutions and abilities stay. Each reroll has a
+//    DEN200.shn (0.75%) chance to turn it shiny (+10% stats and a bonus modifier, as when hatched) or else DEN200.rv (3%) to give
+//    it a rare colour (+5%) — never both, and a shiny or rare companion keeps what it has.
+//  * Essence is saved with your hero (x2.den200).
+// Co-op: the new look (trait, colour, shiny) reaches partners through the companion's look (mpvLookOf: tr, cl, shn, rv).
+var DEN200={ess:0,Y:[6,14,28,50,85],C:[10,22,40,65,100],shn:.0075,rv:.03,sel:null,conf:null};
+function den200T(c){return st200Tier(c)}
+function den200Yield(c){const lv=Math.max(1,kdLv('den'));return Math.round(DEN200.Y[den200T(c)-1]*(1+(c.l||1)/100)*Math.pow(1.25,c.evo||0)*(c.shn?3:c.rv?1.5:1)*(1+(ST200_DEN[lv]||0)))}
+function den200Cost(c){return DEN200.C[den200T(c)-1]}
+function den200Why(c,i){if(c.lock)return 'Locked';if(i<actN141())return 'In your team';if(c.tr200)return 'Training';if(party.length<=1)return 'Your last companion';return ''}
+function den200Sac(i){const c=party[i];if(!c)return;const w=den200Why(c,i);if(w)return say('🐾 '+c.n+' can\'t be sacrificed: '+w.toLowerCase()+'.');
+  if(DEN200.conf!==i){DEN200.conf=i;rX();return}DEN200.conf=null;const y=den200Yield(c);
+  try{(c.cf200||[]).forEach(s=>{if(s&&s.n>0)giveS(s.k,s.n)})}catch(_){}
+  party.splice(i,1);if(typeof cmpSel!='undefined'&&cmpSel>=party.length)cmpSel=Math.max(0,party.length-1);if(DEN200.sel===c)DEN200.sel=null;
+  DEN200.ess+=y;try{const p=pl.position;burst(gY(p,1),0xa070ff,26,2,2,.8)}catch(_){}try{sfx('power')}catch(_){}
+  say('🔥 '+c.n+' returns to the wild as essence: +'+y+' ✦ ('+DEN200.ess+' ✦).');try{hsDirty();ui();hud();saveGame(true)}catch(_){}rX()}
+function den200Reroll(c){if(!c||!party.includes(c))return;const cost=den200Cost(c);if(DEN200.ess<cost)return say('Not enough essence ('+DEN200.ess+' / '+cost+' ✦).');
+  DEN200.ess-=cost;const nMods=Math.max(1,(c.mods||[]).length-(c.shn?1:0)),r=Math.random();
+  c.tr=Math.random()<.06?'Universal':Math.random()<.3?['Horned','Bulky','Armored','Spiked'][R(0,3)]:'';
+  c.mods=[];for(let i=0;i<nMods;i++)rollMod(c);
+  let news='';if(!c.shn&&r<DEN200.shn){c.shn=1;news='shiny'}else if(!c.shn&&!c.rv&&r<DEN200.shn+DEN200.rv){const k=Object.keys(RVAR)[R(0,Object.keys(RVAR).length-1)];c.rv=k;c.cl=c.cl.slice();c.cl[0]=RVAR[k];news='rare'}
+  if(c.shn)rollMod(c);
+  try{if(c.h>M(c))c.h=M(c)}catch(_){}try{hsDirty();ui();hud();cbarSig=''}catch(_){}
+  if(news=='shiny'){try{banner('✨ A SHINY '+c.n.toUpperCase()+' ✨','The essence set it glittering: +10% to every stat and a bonus modifier','Beast Den');mSfx('rare')}catch(_){}}
+  else if(news=='rare'){try{banner('🎨 A '+c.rv.toUpperCase()+' '+c.n.toUpperCase(),'A rare colour: +5% to every stat','Beast Den');mSfx('rare')}catch(_){}}
+  else{try{sfx('chime')}catch(_){}say('✦ '+c.n+' rerolled: '+(c.tr||'no trait')+' · '+(c.mods.join(', ')||'no modifiers')+'.')}
+  try{saveGame(true)}catch(_){}rX()}
+function den200Desc(c){const t=c.tr?(TR[c.tr]?c.tr+' ('+TR[c.tr][3]+')':c.tr):'No trait';
+  return `<div class="den200-tr"><b>Trait</b> ${st200Esc(t)}</div><div class="den200-tr"><b>Modifiers</b> ${(c.mods||[]).map(m=>MODS[m]?MODS[m].i+' '+m:m).join(' · ')||'none'}</div>
+    <div class="den200-tr"><b>Look</b> ${c.shn?'✨ Shiny':c.rv?'🎨 '+c.rv:'Normal'}${c.v?' · '+c.v:''}</div>`}
+XR.den200=function(){const lv=kdLv('den'),A=actN141();if(DEN200.sel&&!party.includes(DEN200.sel))DEN200.sel=null;if(!DEN200.sel&&party.length)DEN200.sel=party[0];const c=DEN200.sel;
+  $('xwT').textContent='🐾 Beast Den';$('xwS').innerHTML='Essence <b>'+DEN200.ess+' ✦</b> · sacrifice companions for essence, spend it to reroll traits';
+  let h=st200Head('den',`<div class="den200-ess"><small>Essence</small><b>${DEN200.ess} ✦</b></div>`);
+  h+='<div class="den200"><div><div class="s200-sec">Reroll a companion</div><div class="s200-pick">'+party.map((q,i)=>`<button data-den200p="${i}" class="${q===c?'on':''}"><span class="s200-ic">${st200Pic(q)}</span><span>${st200Esc(q.n)} <span class="mut">Lv ${q.l}</span><small>Tier ${den200T(q)} · reroll ${den200Cost(q)} ✦${q.shn?' · ✨':q.rv?' · 🎨':''}</small></span></button>`).join('')+'</div>';
+  if(c){const cost=den200Cost(c);h+=`<div class="den200-sel"><div class="s200-ic big">${st200Pic(c)}</div><div><b>${st200Esc(c.n)}</b> <span class="mut">Lv ${c.l} · Tier ${den200T(c)}</span>${den200Desc(c)}</div>
+      <div class="den200-go"><button class="pri" data-den200r="1" ${DEN200.ess>=cost?'':'disabled'}>✦ Reroll · ${cost} ✦</button><small>New trait and modifiers. Grades, level and abilities stay.<br>${c.shn?'Already shiny.':'Each reroll: '+(DEN200.shn*100).toFixed(2)+'% shiny'+(c.rv?'':', '+(DEN200.rv*100)+'% rare colour')+'.'}</small></div></div>`}
+  h+='</div><div><div class="s200-sec">Sacrifice for essence</div><div class="s200-pick">'+party.map((q,i)=>{const w=den200Why(q,i),y=den200Yield(q),cf=DEN200.conf===i;
+      return `<button data-den200s="${i}" ${w?'disabled':''} class="${cf?'den200-cf':''}"><span class="s200-ic">${st200Pic(q)}</span><span>${st200Esc(q.n)} <span class="mut">Lv ${q.l}</span><small>${w||(cf?'Click again to sacrifice for '+y+' ✦':'+'+y+' ✦ essence')}</small></span></button>`}).join('')+'</div></div></div>';
+  $('xwB').innerHTML=h;$('xwF').innerHTML='<span class="mut dtl">Higher-tier, higher-level, evolved, shiny and rare companions give more essence; higher tiers cost more to reroll. Locked companions, your active team and companions in training can\'t be sacrificed. Upgrade the den for more essence per sacrifice.</span>'};
+$('xw').addEventListener('click',e=>{if(xwMode!='den200')return;const t=e.target.closest('[data-den200p],[data-den200r],[data-den200s]');if(!t||t.disabled)return;const d=t.dataset;
+  if(d.den200p!=null){DEN200.sel=party[+d.den200p]||null;DEN200.conf=null;rX()}else if(d.den200r)den200Reroll(DEN200.sel);else den200Sac(+d.den200s)});
+ST200.open.den=()=>{DEN200.conf=null;openX('den200')};
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.den200=DEN200.ess|0;return o}}
+{const f=x2Load;x2Load=function(s){DEN200.ess=Math.max(0,(s&&s.den200)|0);DEN200.sel=null;return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend',`<style id="den200css">
+#xw .den200{display:grid;grid-template-columns:1fr 1fr;gap:14px}#xw .den200 .s200-pick{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));max-height:260px;overflow:auto}
+#xw .den200 .s200-pick button.on{outline:2px solid #c9a24a;background:rgba(201,162,74,.16)}#xw .den200-cf{outline:2px solid #f87171!important;background:rgba(248,113,113,.15)!important}
+#xw .den200-ess{text-align:right}#xw .den200-ess small{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:.6rem;color:#c9a24a}#xw .den200-ess b{font-size:1.2rem;color:#c8a8ff}
+#xw .den200-sel{display:grid;grid-template-columns:72px 1fr;gap:6px 12px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid rgba(160,112,255,.45);background:linear-gradient(135deg,rgba(160,112,255,.12),rgba(0,0,0,.3))}
+#xw .den200-sel .s200-ic.big{width:72px;height:72px}#xw .den200-tr{font-size:.74rem;margin-top:3px}#xw .den200-tr b{color:#c9a24a;font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+#xw .den200-go{grid-column:1/-1;display:flex;gap:10px;align-items:center}#xw .den200-go small{color:var(--mut);font-size:.68rem}
+@media(max-width:700px){#xw .den200{grid-template-columns:1fr}}
+</style>`);
 </script></body></html>

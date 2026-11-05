@@ -28,9 +28,9 @@ function kqmSupTab(){const grp=[['Food','food'],['Potions & elixirs','pot','elix
   const h=all.map(([n,a])=>a.length?`<div class="kqm-h">${n}</div><div class="kqm-grid">${a.map(t).join('')}${kqmEmpty((8-a.length%8)%8)}</div>`:'').join('');
   return h||'<div class="mut" style="padding:8px">No supplies yet. Cook and brew at the hearth and alchemy table in any town.</div>'}
 function kqmEggTab(){const now=Date.now();
-  const t=e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1,inner=`<span class="kqm-ic">🥚</span><span class="kqm-up">T${e.tier+1}</span><span class="kqm-eb"><i data-egb="${e.id}" style="width:${p*100}%"></i></span>`;
+  const t=e=>{const p=ht200P(e),rd=eggRdy(e),inner=`<span class="kqm-ic">🥚</span><span class="kqm-up">T${e.tier+1}</span><span class="kqm-eb"><i data-egb="${e.id}" style="width:${p*100}%"></i></span>`;
     return rd?`<button class="kqm-slot kqm-rdy" data-hatch="${e.id}" data-kqt="egg:${e.id}" style="--rc:${RAR[e.tier][1]}">${inner}</button>`:`<div class="kqm-slot" data-kqt="egg:${e.id}" style="--rc:${RAR[e.tier][1]}">${inner}</div>`};
-  return '<div class="mut dtl" style="padding:2px 2px 4px">Eggs hatch after a short wait in your bag. Click a glowing egg to hatch it.</div>'+
+  return '<div class="mut dtl" style="padding:2px 2px 4px">Eggs hatch in the Hatchery in Duskhold: walk up to it and press F to set them in.</div>'+
     `<div class="kqm-grid">${eggs.map(t).join('')}${kqmEmpty(Math.max(16,Math.ceil((eggs.length+1)/8)*8)-eggs.length)}</div>`+(eggs.length?'':'<div class="mut" style="padding:4px 2px">No eggs. They are rare drops from monsters, elites and bosses, and some shops sell them.</div>')}
 // ---------------- forge (item upgrades) ----------------
 function kqmForgeItem(){return selI&&selI.k!='p'?kqmFind(selI.k,selI.id):null}

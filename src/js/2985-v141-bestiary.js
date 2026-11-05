@@ -17,7 +17,7 @@ function dex141St(k,l,al){const s=enStats(EN[k],l,al,0);return {hp:Math.round(s.
 function dex141Pct(p){if(p>=.995)return '100%';if(p<=0)return '—';if(p<.001)return '1 in '+Math.round(1/p).toLocaleString();const v=p*100;return (v<1?v.toFixed(2):v<10?v.toFixed(1):Math.round(v))+'%'}
 // the drop table at level l, zone tier T (normal and elite)
 function dex141Drops(k,l,T,z){const E=EN[k],fam=E.fam||'Beast',lk=1+((typeof HS=='function'&&HS().loot)||0),keep=.7,eg=typeof EGG92!='undefined'?EGG92.rate:1;
-  const gb=1+([0,.1,.2,.3][typeof shL=='function'?shL('treas'):0]||0),g0=(3+l*1.4)*.65*gb;
+  const gb=1,g0=(3+l*1.4)*.65*gb;
   const rows=[['🪙','Gold',Math.round(g0*.7)+'–'+Math.round(g0*1.3),Math.round(g0*3*.7)+'–'+Math.round(g0*3*1.3)],
     ['⚔️','Gear (any slot, rolled at its level)',dex141Pct(.035*lk*keep),dex141Pct(Math.min(1,.3*lk)*keep)+' <small>uncommon+</small>'],
     ['🥚','Tier '+T+' egg (random family)',dex141Pct(.04*lk*keep*eg),dex141Pct(.12*lk*keep*eg)],

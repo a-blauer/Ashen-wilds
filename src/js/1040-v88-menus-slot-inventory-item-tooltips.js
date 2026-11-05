@@ -165,7 +165,7 @@ function kqmGearTip(it,o){o=o||{};const t=itT(it),R=RAR[it.r],sl=t.sl,isEq=kqmEq
 function kqmEggTip(e,o){o=o||{};const now=Date.now(),f=typeof famOf=='function'?famOf(e.sp):'',F=typeof FAMD!='undefined'&&FAMD[f],rd=typeof eggRdy=='function'&&e.t0&&eggRdy(e);
   return `<div class="kqm-tn"><span style="color:${RAR[e.tier][1]}">🥚 Tier ${e.tier+1} ${kqmEsc(e.sp)} Egg</span></div><div class="kqm-ts">${RAR[e.tier][0]} egg${F?' · '+F.i+' '+f+' family':''}</div>`+
    (F&&F.d?`<div class="kqm-td">${F.d}</div>`:'')+`<div class="kqm-ts" style="margin-top:4px">Parent potential ${Math.round((e.pa||1)*100)}%</div>`+
-   (e.t0?`<div class="kqm-tx">${rd?'✨ Ready to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'}</div>`:'')+(o.price?`<div class="kqm-tp">${o.price}</div>`:'')+(o.hint?`<div class="kqm-th">${o.hint}</div>`:'')}
+   `<div class="kqm-tx">${ht200Txt(e)}</div>`+(o.price?`<div class="kqm-tp">${o.price}</div>`:'')+(o.hint?`<div class="kqm-th">${o.hint}</div>`:'')}
 function kqmHint(){return KQM.touch?'Tap again to equip · or use the buttons below':'Click to select · double-click to equip'}
 function kqmMatTip(k){const n=matInfo(k)[0],ic=matInfo(k)[1];let src='';try{if(typeof msrcBuild=='function'){if(!MSRC)MSRC=msrcBuild();const H=MSRC[String(n).toLowerCase()]||MSRC[String(k).toLowerCase()];if(H)src=H.t}}catch(_){}
   const up=UPM.findIndex(u=>u[0]==k);

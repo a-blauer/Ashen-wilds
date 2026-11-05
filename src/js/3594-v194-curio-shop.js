@@ -49,7 +49,7 @@ function cu194Stock(){const T=cu194T(),k=cu194Key(),hk=cu194HKey();
   return {wares:CU194.wares,cur:CU194.cur.slice(0,nC)}}
 // ---- what each thing is ----
 function cu194Info(o){const sp=e=>e?`Tier ${e.tier+1} egg (${TGI[e.tag]||''} ${e.tag})`:'';
-  if(o.k=='egg')return {ic:'🥚',n:'Mystery Tier '+o.t+' Egg',d:'You find out what hatches. Hatches after a minute in your bag.',rc:RAR[Math.min(4,o.t-1)][1]};
+  if(o.k=='egg')return {ic:'🥚',n:'Mystery Tier '+o.t+' Egg',d:'You find out what hatches. Set it in the Hatchery in Duskhold.',rc:RAR[Math.min(4,o.t-1)][1]};
   if(o.k=='pots')return {ic:'🧪',n:'3× Health Potion',d:'Each heals 40% of your health.',rc:'#5fcf6a'};
   if(o.k=='rune')return {ic:RUNES[o.r][1],n:rn194Name(o.r),d:rn194Kind(o.r)+': '+rn194Desc(o.r,'h'),rc:'#7a5cff',rune:o.r};
   if(o.k=='shiny')return {ic:'✨',n:'Shimmering Egg',d:'A '+sp(o.egg)+' that always hatches a shiny companion (+10% to every stat, a sparkle, an extra modifier).',rc:'#f5d76e'};
@@ -59,7 +59,7 @@ function cu194Info(o){const sp=e=>e?`Tier ${e.tier+1} egg (${TGI[e.tag]||''} ${e
   if(o.k=='fortune')return {ic:'🍀',n:'Elixir of Fortune',d:'+25% loot find for 20 minutes.',rc:'#6ee7b7'};
   return {ic:'📦',n:o.k,d:'',rc:'#888'}}
 function cu194Give(o){
-  if(o.k=='egg'||o.k=='shiny'||o.k=='elder'){eggs.push(o.egg);say('🥚 '+(o.k=='shiny'?'A Shimmering ':'A ')+'Tier '+(o.egg.tier+1)+' '+o.egg.sp+' egg is in your bag. It hatches after a minute.')}
+  if(o.k=='egg'||o.k=='shiny'||o.k=='elder'){eggs.push(o.egg);say('🥚 '+(o.k=='shiny'?'A Shimmering ':'A ')+'Tier '+(o.egg.tier+1)+' '+o.egg.sp+' egg is in your bag. Set it in the Hatchery to hatch it.')}
   else if(o.k=='pots'){pots+=3;say('🧪 3 Health Potions bought.')}
   else if(o.k=='rune'||o.k=='rune2'){giveS(o.r,1);say('🔮 '+rn194Name(o.r)+' bought.')}
   else if(o.k=='armament'){gear.push(o.it);say('⚔️ '+itName(o.it)+' is in your bag ('+o.it.rs+' rune slots).')}

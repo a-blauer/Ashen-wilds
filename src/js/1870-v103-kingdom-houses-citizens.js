@@ -54,12 +54,12 @@ function hsWho103(i){const L=HS103.cit.filter(c=>c.h===i).map(c=>c.n);return L.l
 function hs103Sync(){if(typeof HS103=="undefined"||!HS103)return;HS103.h.forEach((h,i)=>{const l=lotOf103('h:'+i),o=HS103.g[i];if(o&&(!l||o.lot!==l.id||o.ry!==l.ry||o.who!==hsWho103(i)))hsDrop103(i);if(l&&!HS103.g[i]){hsBuild103(i);HS103.g[i].who=hsWho103(i)}});
   for(const i in HS103.g)if(!HS103.h[+i])hsDrop103(+i);CZ103.ver=-1}
 function hsCan103(){const n=HS103.h.length,c=hsCost103(n);if(n>=HS103_MAX)return [false,'Every house is built'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(c.m))return [false,'Not enough materials'];return [true,'']}
-// build a house on lot id: pay, raise it, two citizens move in
+// build a house on lot id: pay, raise it, one citizen moves in (two before v200)
 function hsBuy103(id){const ok=hsCan103();if(!ok[0]){say(ok[1]+'.');return false}if(!lotFree103(id))return false;const n=HS103.h.length,c=hsCost103(n);shPay(c.g,c.m);
   const used=new Set(HS103.h.map(h=>h.nm)),nm=(HS103_NM.find(q=>!used.has(q+' House'))||'New')+' House';HS103.h.push({nm,v:n%3});SH.pos['h:'+n]=id;
-  const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<2;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
+  const taken=new Set(HS103.cit.map(c=>c.n)),pool=HS103_CN.filter(q=>!taken.has(q));for(let j=0;j<1;j++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0]||('Citizen '+(HS103.cit.length+1));
     HS103.cit.push({n:k,h:n,task:'',t0:0,lk:Math.floor(Math.random()*1e6)})}
-  lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' move in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
+  lotSync103();const who=hsWho103(n);banner('🏠 '+nm.toUpperCase(),who+' moves in','Give them work at the Stronghold Steward');sfx('power');hud();ui();try{saveGame(true)}catch(_){}return true}
 // ---------- v104/v105: trades, ranks, food and collecting ----------
 // Every citizen starts as a gatherer; the Steward trains them for gold into an egg collector, fisherman or hunter.
 // v105: a trade has a rank (1..5): a citizen only works zones of that tier or lower (Kindlelight 1 … The Citadel 5);
@@ -127,7 +127,7 @@ function czGoods105(c){const r=czRole104(c),v=c.task,G=[];
     if(Math.random()<.18){const m=FAMD[fam].mat;got[m]=(got[m]||0)+R(1,2)}if(Math.random()<.1){const m=UPM[T-1][0];got[m]=(got[m]||0)+1}
     if(['Beast','Sky','Dragon','Earth'].includes(fam)&&Math.random()<.25)meat++;
     if(Math.random()<.035)G.push({t:'gear',it:genItem(L,{minR:0})})}
-  g=Math.round(g*(1+[0,.1,.2,.3][shL('treas')]));G.push({t:'gold',n:g});if(meat)G.push({t:'sup',k:'meat',n:meat});for(const m in got)G.push({t:'mat',k:m,n:got[m]});return G}
+  g=Math.round(g);G.push({t:'gold',n:g});if(meat)G.push({t:'sup',k:'meat',n:meat});for(const m in got)G.push({t:'mat',k:m,n:got[m]});return G}
 function czGoodsTxt105(G){return (G||[]).map(q=>q.t=='mat'?matInfo(q.k)[1]+' '+q.n+' '+matInfo(q.k)[0]:q.t=='sup'?(SUP[q.k]?SUP[q.k].i+' '+q.n+' '+SUP[q.k].n:'🔮 '+q.n+' '+(RUNES[q.k]?RUNES[q.k][0]:q.k)):q.t=='gold'?'🪙 '+q.n:q.t=='egg'?'🥚 '+q.sp+' Egg':q.t=='gear'?icoOf(q.it)+' '+itName(q.it):'').filter(Boolean).join(' · ')}
 // hand over a citizen's goods
 function czCollect105(c){const G=c.bag;if(!G)return '';G.forEach(q=>{if(q.t=='mat')mats[q.k]=(mats[q.k]||0)+q.n;else if(q.t=='sup'){giveS(q.k,q.n);(q.log||[]).forEach(f=>fishLog[f]=(fishLog[f]||0)+1)}

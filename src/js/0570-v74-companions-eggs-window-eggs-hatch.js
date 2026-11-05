@@ -27,7 +27,7 @@ var CE={sel:null,hat:null,next:0};   // sel: selected egg id (null = companion v
 #cd .cehb{display:flex;gap:8px;justify-content:center;margin-top:12px}
 `;document.head.appendChild(st)}
 {const w=$('cmp');w.querySelector('h2').textContent='Companions & Eggs';
-  if(!w.querySelector('.wsub'))w.querySelector('h2').insertAdjacentHTML('afterend','<span class="wsub">Eggs hatch after a short wait · click a ready egg to hatch it</span>');
+  if(!w.querySelector('.wsub'))w.querySelector('h2').insertAdjacentHTML('afterend','<span class="wsub">Eggs hatch in the Hatchery in Duskhold</span>');
   const ib=$('incBtn');if(ib)ib.style.setProperty('display','none','important');
   const cb=$('cmpBtn');if(cb)cb.innerHTML='🐾 Companions & Eggs <kbd>P</kbd>'}
 
@@ -36,25 +36,25 @@ function ceEggRows(){
   if(!eggs.length)return '';const now=Date.now();
   const ord=eggs.slice().sort((a,b)=>(eggRdy(b)?1:0)-(eggRdy(a)?1:0));
   return `<div class="ceh"><span>Eggs <b>${eggs.length}</b></span><span>${eggs.filter(eggRdy).length?'✨ '+eggs.filter(eggRdy).length+' ready':''}</span></div>`+
-   ord.map(e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1;
-    return `<button class="rw it ceeg${rd?' rdy':''}${CE.sel==e.id?' on':''}" data-cegg="${e.id}" style="--rc:${RAR[e.tier][1]}"><span class="rn">${en(e)}<small data-eg="${e.id}">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-(e.t0||now)))/1000))+'s'}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')+
+   ord.map(e=>{const p=ht200P(e),rd=eggRdy(e);
+    return `<button class="rw it ceeg${rd?' rdy':''}${CE.sel==e.id?' on':''}" data-cegg="${e.id}" style="--rc:${RAR[e.tier][1]}"><span class="rn">${en(e)}<small data-eg="${e.id}">${ht200Txt(e)}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')+
    `<div class="ceh" style="margin-top:12px"><span>Companions <b>${party.length}</b></span></div>`}
 
 // ---------- egg preview: a slowly turning egg that trembles more as it nears hatching ----------
 function ceEggPV(e){
   const E=ceEggMesh(e),grp=new THREE.Group();grp.add(E.g);$('cvw').classList.remove('hatching');
-  pvShow($('cvw'),grp,now=>{const p=Math.min(1,(Date.now()-(e.t0||Date.now()))/EGG_T),t=now/1000;
+  pvShow($('cvw'),grp,now=>{const p=ht200P(e),t=now/1000;
     grp.rotation.y=t*.5;E.g.rotation.z=Math.sin(t*(4+p*14))*.04*(.3+p);E.mat.emissiveIntensity=.04+p*.18+(p>=1?.12*(1+Math.sin(t*4)):0);
     PV.pl.color.setHex(E.ec);PV.pl.intensity=p*.6});
 }
 function ceEggInfo(e){
-  const now=Date.now(),p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1,f=famOf(e.sp),F=typeof FAMD!='undefined'&&FAMD[f];
+  const now=Date.now(),p=ht200P(e),rd=eggRdy(e),f=famOf(e.sp),F=typeof FAMD!='undefined'&&FAMD[f];
   $('cd').innerHTML=`<div class="cedh">${en(e)}</div><div class="mut" style="font-size:.76rem">${RAR[e.tier][0]} egg${F?' · '+F.i+' '+f+' family':''}</div>
    ${F&&F.d?`<p class="mut" style="font-size:.78rem;margin:8px 0 0">${F.d}</p>`:''}
    <div class="cebar"><i data-egb="${e.id}" style="width:${p*100}%"></i></div>
-   <div class="mut" style="font-size:.78rem"><small data-eg="${e.id}" style="font-size:inherit">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'}</small></div>
+   <div class="mut" style="font-size:.78rem"><small data-eg="${e.id}" style="font-size:inherit">${ht200Txt(e)}</small></div>
    <div class="kv"><span>Hatches as</span><b>${e.sp}</b></div><div class="kv"><span>Parent potential</span><b>${Math.round((e.pa||1)*100)}%</b></div>
-   <button class="pri cehatch" data-cehatch="${e.id}" ${rd?'':'disabled'}>${rd?'🥚 Hatch now':'Not ready yet'}</button>`;
+   <button class="pri cehatch" data-cehatch="${e.id}" disabled>${rd?'🥚 Hatch it at the Hatchery':e.ht?'Hatching in the Hatchery…':'Place it in the Hatchery'}</button>`;
 }
 
 // ---------- render ----------

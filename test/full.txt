@@ -150,3 +150,5 @@ v195_coop_weasel.py
 v196_meadow.py
 v198_town.py
 v199_town.py
+v200_stations.py
+v200_coop.py

@@ -42,7 +42,7 @@ $('xw').addEventListener('click',e=>{const b=e.target.closest('[data-ibuy]');if(
 {const f=rB0;rB0=function(){f();if(bagTab2==3){$('bl').innerHTML=$('bl').innerHTML.replace('No supplies yet. Cook and brew in Duskhold, hunt for meat and forage for seeds.','No supplies yet. Cook and brew at the hearth and alchemy table in any town.')}
   if(bagTab2==1)$('bl').innerHTML=$('bl').innerHTML.replace(/<div class="sec">Realm items<\/div><div class="mgrid">[\s\S]*?<\/div><\/div>(?=<div class="sec">|$)/,'');
   $('bt').insertAdjacentHTML('beforeend',`<button data-bt="4" class="${bagTab2==4?'on':''}">Eggs${eggs.length?' ('+eggs.length+')':''}</button>`);
-  if(bagTab2==4){$('bl').innerHTML='<div class="mut dtl" style="padding:2px 4px 6px">Eggs hatch after 1 minute in your bag. Click a ready egg to hatch it.</div><div class="rows">'+eggRows()+'</div>'}}}
+  if(bagTab2==4){$('bl').innerHTML='<div class="mut dtl" style="padding:2px 4px 6px">Eggs hatch in the Hatchery in Duskhold (walk up to it and press F).</div><div class="rows">'+eggRows()+'</div>'}}}
 // ---------------- visitors now drop by the town you are in ----------------
 function rwSpots(T,n){const out=[],avoid=[T.mp,T.mv,T.tv,T.st,T.sp,[T.cx-16.2,T.cy+4.65]].concat(T.st2?[T.st2.c,T.st2.a]:[]).filter(Boolean);
   for(let r=7;r<19&&out.length<n;r+=.9)for(let a=0;a<6.283&&out.length<n;a+=.33){const x=T.sp[0]+Math.cos(a)*r,z=T.sp[1]+Math.sin(a)*r;
@@ -60,25 +60,25 @@ function visitorPrompt(){for(const v of VIS){if(v.g&&Math.hypot(pl.position.x-v.
 function visStock(){const d=Math.floor(Date.now()/(20*60000));if(visState.day!==d||!visState.stock||visState.stock.some(s=>s.k=='seed'||s.k=='map')){visState.day=d;visState.bard=0;const T=Math.max(1,Math.min(5,tierOfLv(hero.lvl)));
   visState.stock=[{k:'egg',t:T,p:150+T*120,r:RUNEK[0]},{k:'pots',n:3,p:120},{k:'rune',r:RUNEK[R(0,RUNEK.length-1)],p:450}]}return visState.stock}
 $('xw').addEventListener('click',e=>{if(xwMode!='visitor')return;const t=e.target.closest('[data-vbuy]');if(!t||t.disabled)return;const s=visStock()[+t.dataset.vbuy];if(!s||s.k!='egg')return;
-  e.stopImmediatePropagation();if(s.sold||gold<s.p)return;gold-=s.p;s.sold=1;const eg=rollEgg(s.t);eggs.push(eg);say('🥚 Bought a Tier '+(eg.tier+1)+' '+eg.sp+' egg. It hatches after a minute in your bag (U).');hud();ui();rX()},true);
+  e.stopImmediatePropagation();if(s.sold||gold<s.p)return;gold-=s.p;s.sold=1;const eg=rollEgg(s.t);eggs.push(eg);say('🥚 Bought a Tier '+(eg.tier+1)+' '+eg.sp+' egg. Set it in the Hatchery in Duskhold to hatch it.');hud();ui();rX()},true);
 {const f=XR.visitor;XR.visitor=()=>{f();if(xwArg=='merchant'){const st=visStock();$('xwB').querySelectorAll('[data-vbuy]').forEach(b=>{const q=st[+b.dataset.vbuy];if(q&&q.k=='egg'){const n=b.closest('.rw').querySelector('.rn b');if(n)n.textContent='🥚 Mystery Tier '+q.t+' Egg'}})}$('xwS').textContent=$('xwS').textContent.replace('Visiting your Realm','Passing through town');$('xwF').innerHTML='<span class="mut dtl">Visitors travel between the towns. Each stays about 13 minutes, then moves on.</span>'}}
 
 // ---------------- 3. eggs hatch after one minute in your bag ----------------
-var EGG_T=60000,eggNote=new Set(),eggRdyN=-1;
-const eggRdy=e=>!!e.t0&&Date.now()-e.t0>=EGG_T;
-function eggRows(){const now=Date.now();return eggs.length?eggs.map(e=>{const p=Math.min(1,(now-(e.t0||now))/EGG_T),rd=p>=1;
-  return `<button class="rw it egr${rd?' rdy':''}" data-hatch="${e.id}" style="--rc:${RAR[e.tier][1]}" ${rd?'':'disabled'}><span class="rn">${en(e)}<small data-eg="${e.id}">${rd?'✨ Ready! Click to hatch':'Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-(e.t0||now)))/1000))+'s'}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')
+var EGG_T=480000,eggNote=new Set(),eggRdyN=-1;
+const eggRdy=e=>!!e&&!!e.ht&&!!e.t0&&Date.now()-e.t0>=EGG_T; // v200: only eggs set in the Hatchery (e.ht) hatch
+function eggRows(){const now=Date.now();return eggs.length?eggs.map(e=>{const p=ht200P(e),rd=eggRdy(e);
+  return `<button class="rw it egr${rd?' rdy':''}" data-hatch="${e.id}" style="--rc:${RAR[e.tier][1]}" ${rd?'':'disabled'}><span class="rn">${en(e)}<small data-eg="${e.id}">${ht200Txt(e)}</small></span><span class="ra"><span class="hpm egp"><i data-egb="${e.id}" style="width:${p*100}%"></i></span></span></button>`}).join('')
   :'<div class="mut" style="padding:8px">No eggs. They are rare drops from monsters, elites and bosses, and some shops sell them.</div>'}
-{const w=$('inc');w.querySelector('h2').textContent='Eggs';const ws=w.querySelector('.wsub');if(ws)ws.textContent='Eggs hatch after 1 minute in your bag · click a ready egg to watch it hatch';
+{const w=$('inc');w.querySelector('h2').textContent='Eggs';const ws=w.querySelector('.wsub');if(ws)ws.textContent='Eggs hatch in the Hatchery in Duskhold';
   w.querySelector('.wb').innerHTML='<div class="rows" id="eggs"></div><div id="islots" class="hide"></div>';
   $('eggs').addEventListener('click',e=>{const b=e.target.closest('[data-hatch]');if(b&&!b.disabled)hatchEgg(+b.dataset.hatch)})}
 $('bag').addEventListener('click',e=>{const b=e.target.closest('[data-hatch]');if(!b)return;e.stopImmediatePropagation();if(!b.disabled)hatchEgg(+b.dataset.hatch)},true);
 $('incBtn').onclick=openInc;
 function hatchCheck(){
   if(typeof incS!='undefined')Object.keys(incS).forEach(t=>{const s=incS[t];if(s&&s.egg){s.egg.t0=s.t0||Date.now();eggs.push(s.egg)}delete incS[t]});
-  let n=0;eggs.forEach(e=>{if(!e.t0)e.t0=Date.now();if(eggRdy(e)){n++;if(!eggNote.has(e.id)){eggNote.add(e.id);say('🥚 Your '+e.sp+' egg is ready to hatch! Open Companions & Eggs (P) and click it.');if(typeof sfx=='function')sfx('chime')}}});
-  const now=Date.now();document.querySelectorAll('[data-egb]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.egb);if(e)el.style.width=Math.min(100,(now-e.t0)/EGG_T*100)+'%'});
-  document.querySelectorAll('small[data-eg]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.eg);if(e&&!eggRdy(e))el.textContent='Hatching in '+Math.max(1,Math.ceil((EGG_T-(now-e.t0))/1000))+'s'});
+  let n=0;eggs.forEach(e=>{if(e.t0&&!e.ht)delete e.t0;if(eggRdy(e)){n++;if(!eggNote.has(e.id)){eggNote.add(e.id);say('🥚 Your '+e.sp+' egg is ready! Hatch it at the Hatchery in Duskhold.');if(typeof sfx=='function')sfx('chime')}}});
+  const now=Date.now();document.querySelectorAll('[data-egb]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.egb);if(e)el.style.width=ht200P(e)*100+'%'});
+  document.querySelectorAll('small[data-eg]').forEach(el=>{const e=eggs.find(q=>q.id==el.dataset.eg);if(e)el.textContent=ht200Txt(e)});
   if(n!==eggRdyN){eggRdyN=n;if(!$('inc').classList.contains('hide'))rI();if(!$('bag').classList.contains('hide')&&bagTab2==4)rB0()}
   for(const k in sup)if(k.startsWith('s_')&&sup[k]>0){const c=k.slice(2);sup[c]=(sup[c]||0)+sup[k];sup[k]=0}
 }

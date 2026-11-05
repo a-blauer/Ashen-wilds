@@ -26,11 +26,11 @@ const matN=k=>{const i=matInfo(k);return [i[1],RES[k]?i[0]:k]};
 function shCost(u,l){const c=SHC[l];return u.m.map(([k,n])=>[k,Math.round(n*c.x)])}
 function shPay(gc,ms){gold-=gc;ms.forEach(([k,n])=>{mats[k]=(mats[k]||0)-n;if(mats[k]<=0&&!RES[k])delete mats[k];if(RES[k]&&mats[k]<0)mats[k]=0})}
 const shHas=ms=>ms.every(([k,n])=>(mats[k]||0)>=n);
-const costH=(g,ms)=>'🪙 '+g+' · '+ms.map(([k,n])=>{const q=matN(k),h=mats[k]||0;return `<span style="color:${h>=n?'#bfe8a0':'#f0a0a0'}">${q[0]} ${n} ${q[1]}</span> <span class="mut">(${h})</span>`}).join(' · ');
-function shApply(){EGG_T=[60000,45000,30000,20000][shL('hatch')];hsDirty();try{shBuild();shSites()}catch(err){console.warn(err)}}
-{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._sh){s._sh=1;const a=1+[0,.04,.08,.12][shL('train')],h=1+[0,.05,.1,.15][shL('walls')];
-  if(s.pa!=null)s.pa*=a;if(s.ma!=null)s.ma*=a;if(s.hp!=null)s.hp*=h;s.xp=(s.xp||0)+[0,.05,.1,.15][shL('tower')]}return s}}
-{const f=lootE;lootE=function(e){const g0=gold;const r=f.apply(this,arguments);const dg=gold-g0,b=[0,.1,.2,.3][shL('treas')];if(dg>0&&b){const x=Math.round(dg*b);gold+=x}return r}}
+const costH=(g,ms)=>(g?'🪙 '+g+' · ':'')+ms.map(([k,n])=>{const q=matN(k),h=mats[k]||0;return `<span style="color:${h>=n?'#bfe8a0':'#f0a0a0'}">${q[0]} ${n} ${q[1]}</span> <span class="mut">(${h})</span>`}).join(' · ');
+function shApply(){EGG_T=[480000,420000,360000,300000][shL('hatch')];hsDirty();try{shBuild();shSites()}catch(err){console.warn(err)}}
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&!s._sh){s._sh=1;const a=1,h=1+[0,.05,.1,.15][shL('walls')]; /* v200: the Training Grounds trains offline instead of +attack (3707) */
+  if(s.pa!=null)s.pa*=a;if(s.ma!=null)s.ma*=a;if(s.hp!=null)s.hp*=h;}return s}} /* v200: the Scholar's Tower keeps the collection log instead of +XP (3708) */
+{const f=lootE;lootE=function(e){const g0=gold;const r=f.apply(this,arguments);const dg=gold-g0,b=0; /* v200: the Treasury is the gold market (3706), no more +gold */if(dg>0&&b){const x=Math.round(dg*b);gold+=x}return r}}
 function shCanBuy(u){const l=shL(u.k);if(l>=3)return [false,'Fully upgraded'];const c=SHC[l+1];
   if(bossDone.size<c.b)return [false,'Needs '+c.b+' Sovereigns defeated'];if(gold<c.g)return [false,'Not enough gold'];if(!shHas(shCost(u,l+1)))return [false,'Not enough materials'];return [true,'']}
 function shBuy(k){const u=SHU.find(q=>q.k==k);if(!u)return;const ok=shCanBuy(u);if(!ok[0])return say(ok[1]+'.');const l=shL(k)+1;
@@ -86,7 +86,7 @@ function rollRare(c,boost){const b=(boost||0)/100+shL('hatch')*.01,r=Math.random
   if(r<.015+b*.5){c.shn=1;rollMod(c);return 'shiny'}
   if(r<.015+b*.5+.06+b){const k=Object.keys(RVAR)[Math.random()*6|0];c.rv=k;c.cl=c.cl.slice();c.cl[0]=RVAR[k];return 'rare'}return ''}
 {const f=hatch;hatch=function(e){const c=f.apply(this,arguments);if(c){const r=rollRare(c);if(r)c._new=r}return c}}
-{const f=cStat;cStat=function(c,k){let v=f(c,k);if(c&&!c.st){if(c.shn)v*=1.1;else if(c.rv)v*=1.05;const d=[0,.05,.1,.15][shL('den')];if(d&&party.includes(c))v*=1+d;
+{const f=cStat;cStat=function(c,k){let v=f(c,k);if(c&&!c.st){if(c.shn)v*=1.1;else if(c.rv)v*=1.05;const d=0; /* v200: the Beast Den is the essence altar (3710), no more +stats */if(d&&party.includes(c))v*=1+d;
   const t=c.tal;if(t){if((k=='pa'||k=='ma')&&t.fer)v*=1+.04*t.fer;if(k=='hp'&&t.tou)v*=1+.05*t.tou;if((k=='pd'||k=='md')&&t.grd)v*=1+.04*t.grd}}return v}}
 // shiny companions glitter
 {const f=cr;cr=function(c){const g=f.apply(this,arguments);if(c&&c.shn&&g){try{const N=18,pos=new Float32Array(N*3);for(let i=0;i<N;i++){const a=i/N*6.283,r=.55+(i%3)*.12;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=.25+((i*7)%10)/10*.9;pos[i*3+2]=Math.sin(a)*r}
