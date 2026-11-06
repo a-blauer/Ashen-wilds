@@ -70894,7 +70894,7 @@ document.head.insertAdjacentHTML('beforeend',`<style id="den200css">
 // the joints are the bones of the SkinnedMesh, so every pose, spring and move drives the skin directly. Extra bones: tab
 // (tabard), hr0-2 (his long hair). Rigid pieces stay on joints: the flamberge (swd), the eyes, the bat wings (Phase II), the
 // halo and the floor glyph.
-var VLR202={on:1,K:2.25,geo:null,ms:0,tris:0};
+var VLR202={on:1,K:2.25,geo:null,ms:0,tris:0,tilt:.7};
 var VLR202_JM={pelvis:'hips',spine:'spine',chest:'chest',neck:'neck',head:'head',aR0:'shL',aR1:'elL',aR2:'hdL',aL0:'shR',aL1:'elR',aL2:'hdR',
   rh0:'thL',rh1:'knL',rh2:'ftL',lh0:'thR',lh1:'knR',lh2:'ftR',cp0:'cp0',cp1:'cp1',cp2:'cp2',tab:'tab',hr0:'hr0',hr1:'hr1',hr2:'hr2'};
 // palette (linear hex, like every md model): black plate, crimson plate, crimson edge, gold, leather, mail, cape
@@ -70953,12 +70953,12 @@ function vlr202Dress(B,k,C,S){const M=C.M,T=S.torso,J=S.J,c=VLR202C,cl=va_C,wy=T
       [-1,1].forEach(s=>{let p=[s*.018,r0[1]-.015,r0[2]+.001];for(let i=0;i<4;i++){const q=sp(ch-.01-i*.03,s*(.25+i*.22));if(!q)continue;const nn=[q[0],q[1],q[2]];ns(L('chest','g',c.glow,p,nn,.0035-i*.0006,.003-i*.0006,4));p=nn}})}}
   // ---- pauldrons: three dome lames (black, crimson, black) with gilded rims, a row of rivets, three gold spikes; a skull
   //      trophy on the left; couters with a spike; rerebrace and vambrace shells, gilded cuffs, a rune line ----
-  [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],Lg=s<0?'lh':'rh';
-    [[.055,.17,.12,.18,c.pl],[.0,.16,.1,.17,c.pl2],[-.05,.145,.08,.155,c.pl]].forEach(([dy,sx,sy,sz,col],j)=>{P(A+'0','hem','m',col,a[0]+s*(.035+j*.016),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.13));
-      P(A+'0','tube','m',c.gd,a[0]+s*(.035+j*.016),a[1]+dy+.003,a[2],sx*1.012,.014,sz*1.012,0,0,s*(.42+j*.13))});
-    for(let j=0;j<3;j++)L(A+'0','m',c.gd,[a[0]+s*(.05+j*.03),a[1]+.12-j*.012,a[2]-.06+j*.06],[a[0]+s*(.1+j*.035),a[1]+.25-j*.02,a[2]-.08+j*.07],.022,.002,4);
-    if(s>0){const p=[a[0]+s*.16,a[1]+.02,a[2]+.11];ns(P(A+'0','sph','c',c.bone,p[0],p[1],p[2],.034,.038,.034));ns(P(A+'0','sph','c',mdSh(c.bone,.8),p[0],p[1]-.03,p[2]+.01,.024,.014,.022));
-      [-1,1].forEach(q=>ns(P(A+'0','sph','g',c.glow,p[0]+q*.012,p[1]+.004,p[2]+.03,.006,.006,.005)))}
+  [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a=J[A+'0'],Lg=s<0?'lh':'rh',pw=x=>{x.w=[[A+'0',.7],['chest',.3]];return x};   /* the pauldron rides the shoulder: 70% the arm, 30% the chest */
+    [[.055,.17,.12,.18,c.pl],[.0,.16,.1,.17,c.pl2],[-.05,.145,.08,.155,c.pl]].forEach(([dy,sx,sy,sz,col],j)=>{pw(P(A+'0','hem','m',col,a[0]+s*(.035+j*.016),a[1]+dy,a[2],sx,sy,sz,0,0,s*(.42+j*.13)));
+      pw(P(A+'0','tube','m',c.gd,a[0]+s*(.035+j*.016),a[1]+dy+.003,a[2],sx*1.012,.014,sz*1.012,0,0,s*(.42+j*.13)))});
+    for(let j=0;j<3;j++)pw(L(A+'0','m',c.gd,[a[0]+s*(.05+j*.03),a[1]+.12-j*.012,a[2]-.06+j*.06],[a[0]+s*(.1+j*.035),a[1]+.25-j*.02,a[2]-.08+j*.07],.022,.002,4));
+    if(s>0){const p=[a[0]+s*.16,a[1]+.02,a[2]+.11];pw(ns(P(A+'0','sph','c',c.bone,p[0],p[1],p[2],.034,.038,.034)));pw(ns(P(A+'0','sph','c',mdSh(c.bone,.8),p[0],p[1]-.03,p[2]+.01,.024,.014,.022)));
+      [-1,1].forEach(q=>pw(ns(P(A+'0','sph','g',c.glow,p[0]+q*.012,p[1]+.004,p[2]+.03,.006,.006,.005))))}
     va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<a[1]-.07&&m.y>ey+.035,.022,m=>Math.round(m.y*26)%2?c.pl:c.pl2,{t:'m'});
     va_Sh(B,M,m=>m.part=='arm'&&Math.sign(m.x)==s&&m.y<ey-.03&&m.y>wr-.03,.024,m=>m.y<wr+.025?c.gd:m.s>.5&&Math.abs(m.y-(ey+wr)/2)<.07?c.ed:c.pl2,{t:'m'});
     va_Sh(B,M,m=>(m.part=='hand'||(m.part=='arm'&&m.y<wr-.03))&&Math.sign(m.x)==s,.012,c.pl,{t:'m'});
@@ -71021,7 +71021,7 @@ function vlr202Build(R,e){const V=VLR202,Q=vlr202Geo(),S=Q.S,J=S.J,K=V.K,W=n=>J[
   jt('hips','root',W('pelvis'));jt('spine','hips',W('spine'));jt('chest','spine',W('chest'));jt('neck','chest',W('neck'));jt('head','neck',W('head'));
   [['L','aR','rh'],['R','aL','lh']].forEach(([s,a,l])=>{jt('sh'+s,'chest',W(a+'0'));jt('el'+s,'sh'+s,W(a+'1'));jt('hd'+s,'el'+s,W(a+'2'));jt('th'+s,'hips',W(l+'0'));jt('kn'+s,'th'+s,W(l+'1'));jt('ft'+s,'kn'+s,W(l+'2'))});
   jt('cp0','chest',W('cp0'));jt('cp1','cp0',W('cp1'));jt('cp2','cp1',W('cp2'));jt('tab','hips',W('tab'));jt('hr0','head',W('hr0'));jt('hr1','hr0',W('hr1'));jt('hr2','hr1',W('hr2'));
-  const gp=S.grip['-1'];jt('swd','hdR',add3(W('aL2'),mul3(gp,K)));
+  const gp=S.grip['-1'];jt('swd','hdR',add3(W('aL2'),mul3(gp,K)),V.tilt,0,0);   /* the blade angled down along the forearm in the fist (a natural hammer grip), not at 90° to it */
   // the skinned body
   R.root.updateMatrixWorld(true);const sk=new THREE.Skeleton(Q.O.map(n=>R.J[VLR202_JM[n]]));
   const mc=svMat(R,0xffffff,{vertexColors:true,skinning:true,roughness:.9,metalness:.04,side:THREE.DoubleSide}),mm=svMat(R,0xffffff,{vertexColors:true,skinning:true,roughness:.62,metalness:.4,side:THREE.DoubleSide}),
@@ -71083,25 +71083,31 @@ if(VLR202.on&&SVB[5]){vlrBuild=vlr202Build;SVB[5].build=vlr202Build;
 // slash's cone and the first Danse Macabre circle are cut to the blade's real reach (they were 0.8 m / 0.4 m beyond it).
 var VLR202S={on:1};
 if(VLR202.on&&VLR202S.on&&typeof VLRP!='undefined'&&typeof VLRM!='undefined'){const A=(n,o)=>{VLRP[n]=Object.assign({},VLRP[n]||{},o)},
-    G={shR:[-.579,.109,.023],elR:[-.087,0,0],hdR:[.852,.087,-.098]};
-  A('s1Up',{shR:[-1.607,-.073,-.443],elR:[-1.529,0,0],hdR:[1.573,-.615,.266]});
-  A('s1Cut',{hips:[0,.05,0,0,-.12,.1],chest:[.12,.05,0],shL:[-.3,0,.6],head:[0,0,0],thL:[-.5,0,0],knL:[.45,0,0],thR:[.15,0,0],shR:[-1.07,-.227,.081],elR:[-.041,0,0],hdR:[1.349,-.134,.147]});
-  A('s1Hit',{shR:[-.979,.035,.318],elR:[.052,0,0],hdR:[1.171,-.21,.009]});
-  A('s2Cut',{hips:[0,-.05,0,0,-.12,.15],chest:[.12,-.05,0],shL:[-.4,0,.4],head:[0,0,0],thR:[-.45,0,0],knR:[.45,0,0],thL:[.15,0,0],shR:[-.811,-.473,.552],elR:[.024,0,0],hdR:[1.124,-.242,.17]});
-  A('s2Hit',{shR:[-.812,-.41,.397],elR:[.017,0,0],hdR:[1.044,-.178,.115]});
-  A('thUp',{shR:[1.242,-.096,.368],elR:[-1.256,0,0],hdR:[.212,-.547,-.128]});
-  A('thHit',{shR:[-1.275,.012,.499],elR:[.056,0,0],hdR:[1.223,-.104,.039]});
-  A('lDraw',{shR:[-3.008,-.107,1.065],elR:[-1.571,0,0],hdR:[-.426,-.379,.218]});
-  A('lGo',{shR:[-1.392,-.122,.442],elR:[.056,0,0],hdR:[1.199,-.162,.081]});
-  A('rLow',{shR:[-.138,-.381,-.295],elR:[-.186,0,0],hdR:[.824,-.414,.105]});
-  A('rCut',{hips:[0,0,0,0,-.15,0],chest:[.1,0,0],shL:[-.3,0,.5],thL:[-.5,0,0],knL:[.6,0,0],shR:[-1.01,-.23,.243],elR:[-.091,0,0],hdR:[1.162,-.122,.057]});
-  A('rHigh',{shR:[-2.125,-.147,1.094],elR:[.052,0,0],hdR:[1.059,-.287,.36]});
-  A('wDn',{shR:[-1.252,-.294,.202],elR:[.054,0,0],hdR:[1.281,-.161,.135]});
-  A('dmOut',{shR:[-.427,-.19,-.641],elR:[.05,0,0],hdR:[1.31,-.624,.566]});
+    H=v=>{v.t202=1;return v},G={shR:[-0.456,0.104,-0.001],elR:[-0.12,0,0],hdR:H([0.069,0.15,-0.023])};
+  A('s1Up',{shR:[-1.442,-0.192,-0.159],elR:[-1.657,0,0],hdR:H([0.552,-0.405,-0.343]),chest:[0,-0.441,0]});
+  A('s1Cut',{hips:[0,.05,0,0,-.12,.1],chest:[.12,.05,0],shL:[-.3,0,.6],head:[0,0,0],thL:[-.5,0,0],knL:[.45,0,0],thR:[.15,0,0],shR:[-0.962,-0.324,-0.027],elR:[-0.114,0,0],hdR:H([0.561,-0.238,0.026]),chest:[0.12,0.162,0],spine:[0,0.096,0]});
+  A('s1Hit',{shR:[-0.754,-0.004,0.111],elR:[-0.117,0,0],hdR:H([0.41,-0.233,-0.22]),chest:[0.1,0.748,0],spine:[0,0.156,0]});
+  A('s2Cut',{hips:[0,-.05,0,0,-.12,.15],chest:[.12,-.05,0],shL:[-.4,0,.4],head:[0,0,0],thR:[-.45,0,0],knR:[.45,0,0],thL:[.15,0,0],shR:[-0.831,-0.59,0.323],elR:[-0.12,0,0],hdR:H([0.378,-0.371,-0.093]),chest:[0.12,0.216,0],spine:[0,0.196,0]});
+  A('s2Hit',{shR:[-0.697,-0.44,0.226],elR:[-0.117,0,0],hdR:H([0.246,-0.235,-0.112]),chest:[0.1,-0.388,0],spine:[0,0.141,0]});
+  A('thUp',{shR:[1.458,-0.23,0.627],elR:[-1.258,0,0],hdR:H([-0.511,-0.03,-0.404])});
+  A('thHit',{shR:[-1.115,-0.014,0.199],elR:[-0.116,0,0],hdR:H([0.553,-0.17,-0.093]),chest:[0.15,0.207,0]});
+  A('lDraw',{shR:[-3.164,-0.316,1.381],elR:[-1.736,0,0],hdR:H([-0.539,0.193,-0.401])});
+  A('lGo',{shR:[-1.297,-0.15,0.069],elR:[-0.118,0,0],hdR:H([0.552,-0.223,-0.096]),chest:[0.15,0.323,0]});
+  A('rLow',{shR:[-0.038,-0.412,-0.207],elR:[-0.219,0,0],hdR:H([-0.004,-0.384,-0.24])});
+  A('rCut',{hips:[0,0,0,0,-.15,0],chest:[.1,0,0],shL:[-.3,0,.5],thL:[-.5,0,0],knL:[.6,0,0],shR:[-0.981,-0.263,0.142],elR:[-0.12,0,0],hdR:H([0.457,-0.156,-0.079]),chest:[0.1,0.176,0]});
+  A('rHigh',{shR:[-1.954,-0.063,1.194],elR:[-0.119,0,0],hdR:H([0.331,-0.403,0.015])});
+  A('wDn',{shR:[-1.075,-0.311,0.283],elR:[-0.109,0,0],hdR:H([0.561,-0.231,-0.003])});
+  A('dmOut',{shR:[-0.761,-0.472,-0.962],elR:[-0.115,0,0],hdR:H([0.559,-0.388,-0.075])});
   A('cRec',{shR:G.shR,elR:G.elR,hdR:G.hdR});
   // the rear leg of the kneels lies along the floor (shin flat, foot pointed back) instead of hanging in the air; the lunge's
   // trailing leg reaches the floor
   A('kneel',{thR:[.5,0,0],knR:[1.05,0,0],ftR:[.9,0,0]});A('tpPlunge',{thR:[.05,0,0],knR:[1.45,0,0],ftR:[.9,0,0]});A('lGo',{thR:[.55,0,0],knR:[.05,0,0]});
+  // the sword now sits angled in the fist (VLR202.tilt): every other pose's wrist turns back by the same angle (exactly, as a
+  // rotation after the wrist's own), so the blade points where it did and the wrist bends that much less
+  const qt=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-VLR202.tilt),E=new THREE.Euler(),Qq=new THREE.Quaternion();
+  VLR202.conv=h=>{E.set(h[0]||0,h[1]||0,h[2]||0);Qq.setFromEuler(E).multiply(qt);E.setFromQuaternion(Qq,'XYZ');const o=[+E.x.toFixed(4),+E.y.toFixed(4),+E.z.toFixed(4)].concat(h.slice(3));o.t202=1;return o};
+  for(const n in VLRP){const P=VLRP[n];if(P.hdR&&!P.hdR.t202)P.hdR=VLR202.conv(P.hdR)}
+  VLR202.gHd=G.hdR;
   const M=VLRM;
   M.combo.trk=[[.38,'s1Up','io'],[.5,'s1Up','l',.01],[.61,'s1Cut','i'],[.71,'s1Hit','o'],[.86,'s1Hit','l'],[.97,'s2Cut','i'],[1.07,'s2Hit','o'],[1.3,'thUp','io'],[1.55,'thUp','l',.012],[1.68,'thHit','i'],[2.0,'cRec','io'],[2.35,'cRec','l']];
   M.combo5.trk=[[.3,'s1Up','io'],[.44,'s1Cut','i'],[.54,'s1Hit','o'],[.66,'s1Hit','l'],[.77,'s2Cut','i'],[.87,'s2Hit','o'],[.98,'s1Up','io'],[1.11,'s1Cut','i'],[1.21,'s1Hit','o'],[1.36,'s1Hit','l'],
@@ -71120,7 +71126,7 @@ function vlr202Loco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2.2);S.gp=
   O.hips[4]+=.03*Math.sin(t*1.4)+(.07*Math.abs(Math.sin(g))-.05)*a;O.hips[1]+=.07*Math.sin(g)*a;O.spine[0]+=.05*a;O.chest[0]+=.015*Math.sin(t*1.4)+.04*a;O.chest[1]-=.09*Math.sin(g)*a;O.head[1]+=.08*Math.sin(t*.5)+.05*Math.sin(g)*a;
   ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph)*.45*a,lf=Math.max(0,Math.cos(ph))*.8*a;O['th'+s][0]+=-sw-lf*.22;O['kn'+s][0]+=lf+.06*a;O['ft'+s][0]+=-lf*.3+Math.max(0,-Math.sin(ph))*.18*a});
   // the guard: sword low and forward, the tip at a hero's chest, pointing at them; the left claw open, swinging a little
-  O.shR[0]+=-.579+.04*Math.sin(t*1.2);O.shR[1]+=.109;O.shR[2]+=.023;O.elR[0]+=-.087;O.hdR[0]+=.852;O.hdR[1]+=.087;O.hdR[2]+=-.098;
+  O.shR[0]+=-0.456+.04*Math.sin(t*1.2);O.shR[1]+=0.104;O.shR[2]+=-0.001;O.elR[0]+=-0.12;const gh=VLR202.gHd||[.852,.087,-.098];O.hdR[0]+=gh[0];O.hdR[1]+=gh[1];O.hdR[2]+=gh[2];
   O.shL[0]+=.16*Math.sin(g)*a+.1;O.shL[2]+=.18;O.elL[0]+=-.3-.12*a;O.hdL[0]+=.1+.05*Math.sin(t*1.7);
   O.cp0[0]+=.15+.06*Math.sin(t*1.6)+.4*a;O.cp1[0]+=.05+.05*Math.sin(t*1.6-.8)+.15*a;O.cp2[0]+=.04*Math.sin(t*1.6-1.6)+.1*a;O.tab[0]+=.03*Math.sin(t*1.6+.5)-.12*a;
   if(S.ph>1){const fl=S.mv&&S.mv.id==='skyfall'?Math.sin(t*9)*.45:.12*Math.sin(t*1.8);O.wgL[1]+=fl;O.wgR[1]-=fl;O.wgL[2]+=fl*.5;O.wgR[2]-=fl*.5;
