@@ -136,6 +136,8 @@ var KQG=(function(){const f=v=>+(+v).toFixed(2);
      for(let i=0;i<n;i++){const a=i/n*Math.PI*2-Math.PI/2,k=1-j+rn()*j*2;pts.push([cx+Math.cos(a)*r*k,cy+Math.sin(a)*(ry||r)*k])}return P(...pts)};
   return {C,E,R,ST,P,RT,SC,TR,MX,JAG,f}})();
 // hook: the canvas layer (0030 kqBitmap) and the DOM layer (0040 kqUse) use the paintings where one exists
-{const f=kqBitmap;kqBitmap=function(n,tint,s){return KQA[n]?kqArtBmp(n,tint,s):f(n,tint,s)}}
+// sizes go in steps (callers draw the bitmap at their own size), so text that grows or shrinks every frame reuses a few paintings
+var KQA_SZ=[12,16,20,24,28,32,40,48,56,64,80,96,128,160,192,256];
+{const f=kqBitmap;kqBitmap=function(n,tint,s){if(!KQA[n])return f(n,tint,s);const z=KQA_SZ.find(v=>v>=s)||256;return kqArtBmp(n,tint,z)}}
 // emoji the game uses that had no icon (they showed the fallback rune)
 Object.assign(KQE,{'🧍':['figure'],'📤':['crate'],'📥':['crate']});
