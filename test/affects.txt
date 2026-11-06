@@ -30,7 +30,7 @@ ability-balance|v138|2300-v127-balance|0580-|1710-|abilit|balance|evo-|helpers-n
 lantern|v143|1680-|ripper|warden: v143_lantern_road.py v145_sigils.py v108_instances.py v124_edge_test.py v148_cheddar.py v113_roster.py v38t.py v114_save.py v142_folk.py
 glowmire|v144|vorraxis|lair|1970-|2440-: v144_glowmire.py v143_lantern_road.py v108_instances.py v141_sov.py v114_save.py
 sigil|v145|ghostwolf|rune: v145_sigils.py v143_lantern_road.py v144_glowmire.py v108_instances.py v113_roster.py v114_save.py
-v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-|3078-: v146_sovs.py v149_ssithra.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py v192_sov_range.py v202_vaelric_form.py
+v146|sovereign|1970-|1971-|1972-|1973-|1974-|1975-|1976-|305[0-9]-|3078-: v146_sovs.py v149_ssithra.py v141_sov.py v110_fight.py v133_sov_spacing.py v112_argus.py v112_hydra.py v112_wraith.py v112_ssithra.py v112_bloated.py v112_vaelric.py v192_sov_range.py v202_vaelric.py
 # The animation viewer (viewer/, a separate artifact built from the game): every subject and action still plays
 ^viewer/|sov|boss|vorraxis|lair|abilit|evo-|signature|monster|compan|2240-: kv_viewer.py
 # v149
@@ -108,4 +108,4 @@ v197|3680|relaxed|arms|elbow: v197_arms.py v137_npcs.py v142_folk.py v196_meadow
 v198|1680|2270|deadTree|reeds|fountain|rim|stall|exit|v198_limbs: v198_town.py v177_env.py v196_meadow.py v197_arms.py
 v199|3690|inn|tavern|portal-rooms|portalPrompt|townPortalPrompt|promptTick: v199_town.py v196_meadow.py v32t.py v108_instances.py
 v200|37[01][0-9]|station|hatch|egg|trainer|stable|cook|curio|treasur|scholar|bestiary|beast-den|0440|0490|0570|1040|1050|0530|1870|1880|2985: v200_stations.py v200_coop.py v103_kingdom.py v109_kingdom_shops.py v117_menus.py v57t.py v100_fusemenu.py v198_town.py v190_deco.py v122_support.py
-3720|v202|vaelric: v202_vaelric_form.py v202_coop.py v112_vaelric.py v146_sovs.py v110_fight.py v179_enemy_parts.py
+3720|v202|vaelric: v202_vaelric.py v202_coop.py v146_sovs.py v110_fight.py v141_sov.py v192_sov_range.py v179_enemy_parts.py

@@ -63,7 +63,7 @@ v160_frozen_gate.py
 v170_mountain_drill.py
 v151_coop.py
 v146_sovs.py
-v202_vaelric_form.py
+v202_vaelric.py
 v202_coop.py
 v192_sov_range.py
 v149_ssithra.py
