@@ -143,6 +143,7 @@ v186_knife.py
 v192_misc.py
 v192_hero_fit.py
 v193_title.py
+NOREN=1 v201_dusk_music.py
 v194_shops.py
 SHOTS=0 v194_rune_look.py
 v194_coop_runes.py
