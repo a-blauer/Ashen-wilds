@@ -64,7 +64,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   for(let i=0;i<40;i++)walk(pl,.3,0);const [lu]=rt165L(R,pl.position.x,pl.position.z);out.edge=+lu.toFixed(2);
   tough();R.s=P.S*.3;R.ph='run';tick(14);out.W=R.W.length;out.clung=R.W.some(w=>w.st=='cling');tick(16);out.lost=Math.round(R.cells.reduce((a,C)=>a+(RT165.hp-Math.max(0,C.hp)),0));
   // kill a clinging drowned: it sinks and goes
-  {const w=R.W.find(q=>q.st=='cling'&&!q.e.dead);if(w){hurt(w.e,M(w.e.c)*3,{col:0xffffff},false);out.dead=!!w.e.dead;await wait(3500);tick(.1);out.gone=!enemies.includes(w.e)}}
+  {const w=R.W.find(q=>q.st=='cling'&&!q.e.dead);if(w){hurt(w.e,M(w.e.c)*3,{col:0xffffff},false);out.dead=!!w.e.dead;const tw0=performance.now();await wait(3500);tick(.1);out.gone=!enemies.includes(w.e);out.gdbg={errs:errs.slice(-6),ss:!!(w.e.m&&w.e.m._ssDead),vis:w.e.m&&w.e.m.visible,el:Math.round(performance.now()-tw0),kq:typeof KQAS!='undefined'?KQAS:0,tws:typeof TWS!='undefined'?TWS.length:-1}}}
   // too few planks: the raft breaks and drags you under
   R.cells.forEach(C=>{if(C.alive&&rt165Alive(R)>RT165.min+1)rt165Break(R,C,true)});out.alive=rt165Alive(R);rt165Break(R,R.cells.find(C=>C.alive),true);out.broken=R.ph;hero.hp=heroMax();tick(2.6);out.raftDeath=AWD.dead;
   if(AWD.dead&&AWD.res){const f=AWD.res;AWD.res=null;f();AWD.dead=0;document.body.classList.remove('awdead');$('dth').classList.add('hide')}tick(.1);out.fresh=[RT165R&&RT165R.id!==R.id,RT165R&&rt165Alive(RT165R)];
@@ -111,6 +111,7 @@ def s(pg):
     e(r['quay'] and r['portal2Hidden'] and 'raft' in r['lq'],'II: the quay with the raft replaces the gateway (%s)'%r['lq'])
     e(r['inC'] and r['cells']==35 and abs(r['edge'])<2.95,'raft: aboard; you cannot walk off the deck (%s %s)'%(r['cells'],r['edge']))
     e(r['W']>=2 and r['clung'] and r['lost']>=1,'raft: the drowned come, cling and tear planks away (%s %s %s)'%(r['W'],r['clung'],r['lost']))
+    if not r.get('gone'):F('dbg '+json.dumps(r.get('gdbg'))[:600]+' pageerrors '+str(errs[-4:])[:600])
     e(r.get('dead') and r.get('gone'),'raft: a killed drowned sinks and is gone (%s %s)'%(r.get('dead'),r.get('gone')))
     e(r['broken']=='broken' and r['raftDeath'] and r['fresh'][0] and r['fresh'][1]==35,'raft: too few planks break the raft and kill; you wake on a fresh raft (%s %s %s)'%(r['broken'],r['raftDeath'],r['fresh']))
     e(r['iii']==22 and r['rst']==2,'raft: the channel\'s end leads to III (%s %s)'%(r['iii'],r['rst']))
