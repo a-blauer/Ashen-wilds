@@ -1,6 +1,7 @@
 # v202 co-op: Lord Vaelric's cage body and his strike poses are the same on both partners' screens. Two windows (host A, guest
 # B) each build the boss through the registry (SVB[5].build, the path the den uses on every client) and compare the frame
-# (hips, knees, neck), a checksum of every vertex and of the strike poses: equal on both, and the v202 body on both.
+# (hips, knees, neck), a checksum of every vertex and of the strike poses: equal on both, and the v202 body on both. And the
+# humanoid foes' natural wrists (3721) bend the same on both screens.
 # Run: python3 mpt.py v202_coop.py
 if 'A' not in globals():  # run directly (the test suite): open the two co-op windows through mpt.py
     import os,sys,subprocess;sys.exit(subprocess.call([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),'mpt.py'),os.path.abspath(__file__)]))
@@ -21,4 +22,11 @@ chk('guest builds the v202 body',gu['v202'] and gu['n']>1000,gu['hips'])
 chk('same frame on both',ha['hips']==gu['hips'] and ha['knee']==gu['knee'] and ha['neck']==gu['neck'])
 chk('same mesh on both (vertex checksum)',ha['n']==gu['n'] and abs(ha['sum']-gu['sum'])<1e-3,'%s / %s'%(ha['sum'],gu['sum']))
 chk('same strike poses on both',abs(ha['pose']-gu['pose'])<1e-6,'%s / %s'%(ha['pose'],gu['pose']))
+# the foes' natural wrists (3721) play the same on both screens: a Brigand's charge and an Orc's strike, the weapon wrist's bend
+WJS=r"""()=>{const out={};let T=5000;for(const [k,mv] of [['brigand','charge'],['orc','strike'],['jotun','strike']]){const g=cr(enemyC(k,20,{}));let B=null;g.traverse(o=>{if(o.isBone&&o.name=='aR2')B=o});
+  for(let t=0;t<600;t+=16){T+=16;animC(g,T,false,0)}let mx=0;for(let kk=0;kk<=1.001;kk+=.1){g.ak={n:mv,ph:1,k:kk};for(let t=0;t<48;t+=16){T+=16;animC(g,T,false,0)}
+    const q=B.quaternion;mx=Math.max(mx,Math.abs(q.x)+Math.abs(q.y)+Math.abs(q.z))}out[k]=+mx.toFixed(4)}return {on:typeof FW202!='undefined'&&FW202.on,out}}"""
+wa=A.evaluate(WJS);wb=B.evaluate(WJS);print('wrists host',json.dumps(wa),'guest',json.dumps(wb))
+chk('the natural-wrist layer is on for both',wa['on'] and wb['on'])
+chk('the foes\' wrists play the same on both',all(abs(wa['out'][k]-wb['out'][k])<5e-3 for k in wa['out']),'%s / %s'%(wa['out'],wb['out']))
 print('==== v202_coop: %d fails'%len(fails))
