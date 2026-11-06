@@ -1031,6 +1031,9 @@ KQAP={gold:['#f7e6a6','#d4a54c','#9a6c26','#5c3c14','#261606'],steel:['#eef2f5',
  white:['#ffffff','#e0e2e8','#a5a9b6','#666a78','#282a33'],cloth:['#e8a490','#a6443a','#6b2422','#3a1012','#170406'],
  flesh:['#f6d2b8','#cf9a7c','#946250','#57362a','#231410'],ink:['#5a4c40','#2c231c','#1a140f','#0e0a07','#060403']};
 var KQA_INK='#0b0705';
+// every canvas the painter uses is a small CPU canvas (willReadFrequently): on a GPU canvas each read-back (getImageData,
+// toDataURL, canvas-to-canvas copies) waits for the GPU — ~200 ms a painting on a busy software-GL machine instead of ~1 ms
+function kqaCv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h==null?w:h;c.getContext('2d',{willReadFrequently:true});return c}
 // pull every palette a little toward grey: weathered, not candy-bright
 (function(){const ds=(h,k)=>{const n=parseInt(h.slice(1),16),r=n>>16,g=n>>8&255,b=n&255,l=.3*r+.59*g+.11*b,m=v=>Math.round(v+(l-v)*k);
   return '#'+((1<<24)|(m(r)<<16)|(m(g)<<8)|m(b)).toString(16).slice(1)};for(const k in KQAP)KQAP[k]=KQAP[k].map(h=>ds(h,.12))})();
@@ -1043,15 +1046,16 @@ function kqaCol(p,tint){ // one CSS colour for a paint
   const P=kqaTone(p,tint),t=p.split('.')[1];return P['hlmdp'.indexOf(t||'m')]||P[2]}
 function kqaPath(key,d){let p=KQA_P2[key];if(!p)p=KQA_P2[key]=new Path2D(d);return p}
 function kqaXf(g,M){if(!M)return;const L=typeof M[0]=='number'?[M]:M;for(const m of L)g.transform(m[0],m[1],m[2],m[3],m[4],m[5])}
+var KQA_BXC=null;
 // bounding box of a layer in 64-unit space (rasterised once)
 function kqaBox(key,p,M,w){let b=KQA_BB[key];if(b)return b;
-  const c=document.createElement('canvas');c.width=c.height=80;const g=c.getContext('2d');g.translate(8,8);kqaXf(g,M);
+  const c=KQA_BXC||(KQA_BXC=kqaCv(80)),g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,80,80);g.translate(8,8);kqaXf(g,M);
   if(w){g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.stroke(p)}else g.fill(p);
   const D=g.getImageData(0,0,80,80).data;let x0=80,y0=80,x1=-1,y1=-1;
   for(let y=0;y<80;y++)for(let x=0;x<80;x++)if(D[(y*80+x)*4+3]>40){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
   if(x1<0)b=[0,0,64,64];else b=[x0-8,y0-8,x1-x0+1,y1-y0+1];return KQA_BB[key]=b}
 var KQA_NOISE=null;
-function kqaNoise(){if(KQA_NOISE)return KQA_NOISE;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),im=g.createImageData(64,64);
+function kqaNoise(){if(KQA_NOISE)return KQA_NOISE;const c=kqaCv(64),g=c.getContext('2d'),im=g.createImageData(64,64);
   let s=1234567;const r=()=>(s=(s*16807)%2147483647)/2147483647;
   for(let i=0;i<64*64;i++){const v=r()<.5?0:255,a=Math.floor(r()*r()*150);im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=a}
   g.putImageData(im,0,0);return KQA_NOISE=c}
@@ -1099,7 +1103,7 @@ function kqaPaint(g,h,n,tint){
 // a finished icon: shadow, ink outline, glow, the painting, a little grain (s px square, cached)
 function kqArtBmp(n,tint,s){
   s=Math.max(8,Math.min(256,Math.round(s)));const key=n+'|'+tint+'|'+s;let c=KQA_C[key];if(c)return c;
-  const t0=performance.now(),mk=()=>{const c=document.createElement('canvas');c.width=c.height=s;return c};
+  const t0=performance.now(),mk=()=>kqaCv(s);
   const k=s/64,pad=0;
   const a=mk(),ga=a.getContext('2d');ga.setTransform(k,0,0,k,0,0);
   const hc=mk(),gh=hc.getContext('2d');gh.setTransform(k,0,0,k,0,0);
