@@ -70378,9 +70378,12 @@ document.head.insertAdjacentHTML('beforeend',`<style id="den200css">
 #xw .den200-go{grid-column:1/-1;display:flex;gap:10px;align-items:center}#xw .den200-go small{color:var(--mut);font-size:.68rem}
 @media(max-width:700px){#xw .den200{grid-template-columns:1fr}}
 </style>`);
-// ================= v201: a composed Duskhold theme, "Lanterns over the Meadow" =================
+// ================= v201: composed place music =================
 // Owner, Nov 6 2026: "more atmospheric … a little more memorable with a resolving melody instead of droning notes".
-// Replaces the generative town music (MTH.town) with a written piece, played through the v193 score hook in muStep.
+// Pieces are written out and played through the v193 score hook in muStep (a theme with `score` skips the generative parts).
+//
+// 1) "Lanterns over the Meadow" (dk201Score): the first try for Duskhold. The owner liked it but it was not homely enough
+//    for the town; kept, unused, for a zone instance later (it already has the combat layer).
 // D minor, 72 bpm, 20 bars (~67 s) looping:
 //   bars 0-3   intro / breath: harp, low strings, choir pad and wind only (Dm Bb Gm A, the tune's own chords)
 //   bars 4-19  the song, four 4-bar phrases A A' B A'':
@@ -70437,4 +70440,44 @@ function dk201Score(t,bar,s){
   if(F>.05){const B=D.fight.bass[s];if(B!='.'){const r=D.root[chn];muBass(muF(r>47?r-12:r),t,sp*1.6,.14*Math.max(.6,F)*(B=='X'?1.2:1))}
     for(const nm in D.fight.drums){const ch=D.fight.drums[nm][s];if(ch&&ch!='.')MUDR[nm](t,F*(ch=='X'?1:ch=='g'?.35:.7))}}
 }
-MTH.town=Object.assign({},MTH.town,{bpm:DK201.bpm,score:dk201Score});
+
+// 2) "Hearth and Home" (hm201Score): Duskhold's theme. Owner: "a place of safety … a place you call home. It should feel cozy
+//    and put you at ease". A slow waltz (3/4, 80 bpm) in F major, 36 bars (~81 s) looping:
+//      bars 0-3   intro: the waltz alone (plucked bass on one, soft harp chords on two and three), a music box twinkles
+//      bars 4-11  A   the wooden flute's lullaby, ending on C (wants to go on)
+//      bars 12-19 A'  the same tune coming home to F (4-3-2-1)
+//      bars 20-27 B   the warm cello sings the bridge (Bb F Gm C), a soft pad comes in
+//      bars 28-35 A'' the flute again with the music box an octave up, home to F
+//    Every second loop the first A is played by the music box instead of the flute. A faint hearth crackle under it all.
+//    Duskhold has no fights, so this theme has no combat layer. The engine counts 16-step bars; a waltz bar is 12 steps,
+//    so the score keeps its own position (bar*16+step).
+var HM201={bpm:80,bar:12,bars:36,
+  ch:{F:[41,[57,60,65]],Bb:[46,[58,62,65]],C:[48,[55,60,64]],C7:[48,[58,60,64]],Dm:[50,[57,62,65]],Gm:[43,[58,62,67]]},
+  prog:['F','Bb','F','C', 'F','Bb','F','C','Dm','Bb','C','C', 'F','Bb','F','C','Dm','Bb','C','F',
+        'Bb','F','Gm','C','Bb','F','Gm','C7', 'F','Bb','F','C','Dm','Bb','C','F'],
+  A:[[[72,6],[74,2],[72,4]],[[74,6],[72,2],[70,4]],[[69,8],[72,4]],[[67,12]],[[69,4],[74,4],[77,4]],[[74,6],[72,2],[70,4]]],
+  endA:[[[67,4],[69,4],[70,4]],[[72,12]]], home:[[[72,4],[70,4],[67,4]],[[65,12]]],
+  B:[[[70,6],[72,2],[74,4]],[[72,8],[69,4]],[[70,6],[69,2],[67,4]],[[64,4],[67,4],[72,4]],[[77,8],[74,4]],[[72,8],[77,4]],[[74,4],[72,4],[70,4]],[[67,6],[69,2],[70,4]]]};
+{const H=HM201;H.on={};const put=(bars,b0,part)=>bars.forEach((bar,k)=>{let s=0;bar.forEach(([n,l])=>{H.on[(b0+k)*H.bar+s]=[n,l,part];s+=l})});
+  put(H.A.concat(H.endA),4,'A1');put(H.A.concat(H.home),12,'A2');put(H.B,20,'B');put(H.A.concat(H.home),28,'A3')}
+function hm201Crackle(t,v){muNz(t,.012+Math.random()*.02,'bandpass',1400+Math.random()*2600,900,1.2,v,0,.001)}
+function hm201Score(t,bar,s){
+  const H=HM201,sp=60/H.bpm/4,pos=bar*16+s,L=H.bars*H.bar,p=pos%L,cyc=Math.floor(pos/L)%2,b=Math.floor(p/H.bar),ms=p%H.bar,
+    cn=H.prog[b],[bs,up]=H.ch[cn],late=b>=20;
+  // the waltz: a plucked bass on one, soft harp chords on two and three, a little ripple before the next bar now and then
+  if(ms==0)muPluck(muF(bs),t,.2,'triangle');
+  if(ms==4||ms==8)up.forEach((n,i)=>muPluck(muF(n),t+i*.012,ms==4?.06:.05,'triangle'));
+  if(ms==10&&b%4==3)[up[2]+12,up[1]+12].forEach((n,i)=>muPluck(muF(n),t+i*sp,.045,'triangle'));
+  // a warm pad under the second half (B and A'')
+  if(ms==0&&late)muPad(up.map(muF),t,sp*12,.008,{cut:560});
+  // the intro's music box
+  if(b<4&&(ms==0||ms==8))muCelesta(muF(up[ms?1:2]+24),t,ms?.04:.06);
+  // the melody
+  const e=H.on[p];if(e){const [n,l,part]=e,dur=sp*l*.95;
+    if(part=='B')muCello(muF(n-12),t,dur,.12);
+    else if(part=='A1'&&cyc==1)muCelesta(muF(n+12),t,.13);
+    else{muFlute(muF(n),t,dur,.09);if(part=='A3')muCelesta(muF(n+12),t,.045)}}
+  // the hearth: a few soft pops
+  if(Math.random()<.18)hm201Crackle(t+Math.random()*sp,.03+Math.random()*.04);
+}
+MTH.town=Object.assign({},MTH.town,{bpm:HM201.bpm,score:hm201Score});
