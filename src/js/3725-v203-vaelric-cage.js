@@ -1,4 +1,4 @@
-// ================= v202 Lord Vaelric rebuilt on the humanoid cage body (owner, Nov 6 2026) =================
+// ================= v203 Lord Vaelric rebuilt on the humanoid cage body (owner, Nov 6 2026) =================
 // Owner: "The proportions of the citadel boss are all wrong. His legs are too short and his torso is too long … make him more
 // refined. Refit his armor after updating his form." Then: "his model needs an upgrade to our current humanoid skeleton and
 // structure with our new modeling methods."

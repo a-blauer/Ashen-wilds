@@ -70773,7 +70773,28 @@ document.head.insertAdjacentHTML('beforeend',`<style id="den200css">
 #xw .den200-go{grid-column:1/-1;display:flex;gap:10px;align-items:center}#xw .den200-go small{color:var(--mut);font-size:.68rem}
 @media(max-width:700px){#xw .den200{grid-template-columns:1fr}}
 </style>`);
-// ================= v202 Lord Vaelric rebuilt on the humanoid cage body (owner, Nov 6 2026) =================
+// ================= v202 free the bone textures of models that left the scene =================
+// Owner, Nov 6 2026 (an article on three.js lag; "Just fix the leak"). Every skinned model (monsters, folk, companions,
+// mounts) has a Skeleton, and three.js r128 gives each skeleton a small float texture of its bone matrices the first time
+// it is drawn. Removing the model from the scene never freed that texture, so every trip between instances left ~12
+// behind in GPU memory (measured: 58 -> 165 textures over 10 round trips Kindlelight I <-> II, with ~70 skeletons in the
+// scene the whole time). Every SK202.every ms, `sk202Sweep` lists the skeletons of every skinned mesh in the scene
+// (hidden ones too) and frees the bone texture of any skeleton it saw last time that is no longer there.
+// Safe for anything that comes back: r128 builds a fresh bone texture (and copies the bone matrices) whenever a skeleton
+// without one is drawn, so a model put back in the scene, or drawn in another scene, just gets a new one.
+// Local GPU housekeeping only: nothing changes in play or looks, nothing to relay in co-op.
+var SK202={on:true,every:2000,t:0,reg:new Set(),freed:0,err:0};
+function sk202Sweep(){
+  const live=new Set();
+  scene.traverse(o=>{if(o.isSkinnedMesh&&o.skeleton)live.add(o.skeleton)});
+  for(const s of SK202.reg)if(!live.has(s)){if(s.boneTexture){s.dispose();SK202.freed++}SK202.reg.delete(s)}
+  for(const s of live)SK202.reg.add(s);
+  return SK202.freed}
+{const f=loop;loop=function(now){const r=f.apply(this,arguments);
+  try{if(SK202.on){const t=performance.now();if(t-SK202.t>SK202.every){SK202.t=t;sk202Sweep()}}}
+  catch(e){if(!SK202.err){SK202.err=1;console.error('sk202',e)}}
+  return r}}
+// ================= v203 Lord Vaelric rebuilt on the humanoid cage body (owner, Nov 6 2026) =================
 // Owner: "The proportions of the citadel boss are all wrong. His legs are too short and his torso is too long … make him more
 // refined. Refit his armor after updating his form." Then: "his model needs an upgrade to our current humanoid skeleton and
 // structure with our new modeling methods."
@@ -71030,7 +71051,7 @@ function vlr202Loco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2.2);S.gp=
   O.cp0[0]+=.15+.06*Math.sin(t*1.6)+.4*a;O.cp1[0]+=.05+.05*Math.sin(t*1.6-.8)+.15*a;O.cp2[0]+=.04*Math.sin(t*1.6-1.6)+.1*a;O.tab[0]+=.03*Math.sin(t*1.6+.5)-.12*a;
   if(S.ph>1){const fl=S.mv&&S.mv.id==='skyfall'?Math.sin(t*9)*.45:.12*Math.sin(t*1.8);O.wgL[1]+=fl;O.wgR[1]-=fl;O.wgL[2]+=fl*.5;O.wgR[2]-=fl*.5;
     const fo=.15+.12*Math.sin(t*1.8-.6);O.wfL[1]+=fo;O.wfR[1]-=fo}}
-// ================= v202 natural wrists for the humanoid foes (owner, Nov 6 2026: "Fix the 40 humanoid enemies") =================
+// ================= v203 natural wrists for the humanoid foes (owner, Nov 6 2026: "Fix the 40 humanoid enemies") =================
 // Measured on every humanoid foe (idle, walk, each attack, twist about the forearm left out): 24 of the 40 bent the weapon
 // hand 64–85° at the wrist in their blows (the v181 attack solver allowed flex / extend 65° plus 35° of ulnar deviation, the
 // anatomical edge), and the Brigand's and the Orc's charge (a move v181 does not drive) folded it back 120°. A real wrist

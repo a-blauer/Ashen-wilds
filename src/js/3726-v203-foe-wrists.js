@@ -1,4 +1,4 @@
-// ================= v202 natural wrists for the humanoid foes (owner, Nov 6 2026: "Fix the 40 humanoid enemies") =================
+// ================= v203 natural wrists for the humanoid foes (owner, Nov 6 2026: "Fix the 40 humanoid enemies") =================
 // Measured on every humanoid foe (idle, walk, each attack, twist about the forearm left out): 24 of the 40 bent the weapon
 // hand 64–85° at the wrist in their blows (the v181 attack solver allowed flex / extend 65° plus 35° of ulnar deviation, the
 // anatomical edge), and the Brigand's and the Orc's charge (a move v181 does not drive) folded it back 120°. A real wrist
