@@ -70496,8 +70496,8 @@ function vlr202Dress(B,k,C,S){const M=C.M,T=S.torso,J=S.J,c=VLR202C,cl=va_C,wy=T
   cgEars(k,M,S,c.sk,1.632,.075,.5,.85,.014,0x5a4450);
   S.eyes=[-1,1].map(s=>{const q=S.hp(s*.036,1.629,0);return cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1],{head:1})});
   // long white locks down the back, on the three hair bones (they sway on springs)
-  {const h0=J.hr0,h1=J.hr1,h2=J.hr2;for(let i=0;i<11;i++){const u=(i-5)/5,a=Math.PI+u*1.05,o=S.hp(Math.sin(a)*.3,1.66-Math.abs(u)*.04,Math.cos(a)*.3),p=cgRay(M,o,nrm3(sub3(S.hp(0,1.63,0),o)),{head:1});if(!p)continue;
-    const r=.011-.002*Math.abs(u),sw=Math.sin(a),b=[p[0]+sw*.004,p[1],p[2]+.004],m1=[p[0]*1.18+sw*.01,h1[1]+.03,h1[2]-.012-Math.abs(sw)*.01],m2=[p[0]*1.3+sw*.02,h2[1]+.02,h2[2]-.02],tip=[p[0]*1.32+sw*.02,h2[1]-.13-a181H(i,7)*.04,h2[2]-.03];
+  {const h0=J.hr0,h1=J.hr1,h2=J.hr2;for(let i=0;i<9;i++){const u=(i-4)/4,a=Math.PI+u*.62,o=S.hp(Math.sin(a)*.3,1.66-Math.abs(u)*.04,Math.cos(a)*.3),p=cgRay(M,o,nrm3(sub3(S.hp(0,1.63,0),o)),{head:1});if(!p)continue;
+    const r=.011-.002*Math.abs(u),sw=Math.sin(a),b=[p[0]+sw*.004,p[1],p[2]+.004],m1=[p[0]*.9,h1[1]+.03,h1[2]-.012-Math.abs(sw)*.01],m2=[p[0]*.7,h2[1]+.03,h2[2]-.02],tip=[p[0]*.6,h2[1]-.06-a181H(i,7)*.03,h2[2]-.03];
     const R=[{p:b,rx:r,f:r*.45,b:r*.45,w:[['head',1]]},{p:lerp3(b,m1,.4),rx:r*1.1,f:r*.5,b:r*.5,w:[['head',.4],['hr0',.6]]},{p:m1,rx:r*1.05,f:r*.45,b:r*.45,w:[['hr0',.5],['hr1',.5]]},
       {p:m2,rx:r*.85,f:r*.4,b:r*.4,w:[['hr1',.5],['hr2',.5]]},{p:tip,rx:r*.15,f:r*.1,b:r*.1,w:[['hr2',1]]}];
     mdLoft(B,R,{seg:6,ref:nrm3([sw,0,Math.cos(a)]),capB:true,col:m=>mdMix(c.hr2,c.hr,cl(.7-m.i*.08+(i%2)*.15,0,1))})}}
@@ -70603,6 +70603,9 @@ if(VLR202.on&&VLR202S.on&&typeof VLRP!='undefined'&&typeof VLRM!='undefined'){co
   A('wDn',{shR:[-1.252,-.294,.202],elR:[.054,0,0],hdR:[1.281,-.161,.135]});
   A('dmOut',{shR:[-.427,-.19,-.641],elR:[.05,0,0],hdR:[1.31,-.624,.566]});
   A('cRec',{shR:G.shR,elR:G.elR,hdR:G.hdR});
+  // the rear leg of the kneels lies along the floor (shin flat, foot pointed back) instead of hanging in the air; the lunge's
+  // trailing leg reaches the floor
+  A('kneel',{thR:[.5,0,0],knR:[1.05,0,0],ftR:[.9,0,0]});A('tpPlunge',{thR:[.05,0,0],knR:[1.45,0,0],ftR:[.9,0,0]});A('lGo',{thR:[.55,0,0],knR:[.05,0,0]});
   const M=VLRM;
   M.combo.trk=[[.38,'s1Up','io'],[.5,'s1Up','l',.01],[.61,'s1Cut','i'],[.71,'s1Hit','o'],[.86,'s1Hit','l'],[.97,'s2Cut','i'],[1.07,'s2Hit','o'],[1.3,'thUp','io'],[1.55,'thUp','l',.012],[1.68,'thHit','i'],[2.0,'cRec','io'],[2.35,'cRec','l']];
   M.combo5.trk=[[.3,'s1Up','io'],[.44,'s1Cut','i'],[.54,'s1Hit','o'],[.66,'s1Hit','l'],[.77,'s2Cut','i'],[.87,'s2Hit','o'],[.98,'s1Up','io'],[1.11,'s1Cut','i'],[1.21,'s1Hit','o'],[1.36,'s1Hit','l'],
