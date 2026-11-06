@@ -66,7 +66,7 @@ void ob192Fade(float f){if(uOb192A>.5){ob192a=min(ob192a,clamp(f,0.,1.));if(ob19
 `}
 function ob176Shader(sh){if(!OB176.U.uOb192A)OB176.U.uOb192A={value:0};for(const k in OB176.U)sh.uniforms[k]=OB176.U[k];
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+OB176.HEAD+ob192Glsl())
-    .replace('#include <dithering_fragment>','#include <dithering_fragment>\n gl_FragColor.a=ob192a;')}   // (opaque scenery: its own alpha never mattered, so it is replaced, not multiplied)
+    .replace('#include <dithering_fragment>','#include <dithering_fragment>\n#ifdef OB203_KEEPA\n gl_FragColor.a*=ob192a;\n#else\n gl_FragColor.a=ob192a;\n#endif')}   // (opaque scenery: its own alpha never mattered, so it is replaced, not multiplied; v203: see-through ones, OB203_KEEPA, keep it)
 if(!OB176.U.uOb192A)OB176.U.uOb192A={value:0};
 function ob192Msaa(){try{return CAM192.a2c&&POST.on&&ren.capabilities.isWebGL2&&(ren.capabilities.maxSamples|0)>=2&&!(PSXON&&PSXH>0)&&!(typeof IC151!='undefined'&&IC151.on)}catch(_){return false}}
 CAM192.a2c=true;
