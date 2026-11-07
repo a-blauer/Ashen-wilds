@@ -296,7 +296,7 @@ body.psx #wmap canvas{filter:saturate(.9) brightness(.9)}
 </style></head><body>
 <div class="wrap">
 <h1>Kill Quest</h1>
-<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-6 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q feed the most hurt companion · Z health potion · X mana potion · E / R empower · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
+<p class="sub">WASD move · Right click turns mouse-look on / off (rotate the camera) · Left click attack · 1-6 class skills · Shift dash (2 charges) · C character · K abilities · B kingdom · Tab target · Q feed the most hurt companion · Z health potion · X mana potion · F interact (shops, tavern, gathering) · I inventory · P companions · U eggs · M menu · T recall to Duskhold · O settings · Y co-op · Tab target enemy · Mouse wheel zoom · Attack 3× quickly for a combo, watch for red ground warnings and dash out</p>
 <div class="stage" id="stage">
   <div id="gl"></div>
   <div id="topl" class="glass"><div class="row"><span id="lvT">Lv 1</span><span id="goldT">🪙 0</span></div><div id="areaT" style="font-size:.68rem;color:var(--mut)"></div><div id="act" class="actrow"></div><div id="buffs"></div></div>
@@ -416,10 +416,9 @@ body.psx #wmap canvas{filter:saturate(.9) brightness(.9)}
 //  * Skipped: typing in text boxes, Ctrl/Alt/Cmd shortcuts, the title screen and the intro film.
 var KB161={A:[
   ['up','Move forward','w','Movement'],['down','Move back','s','Movement'],['left','Move left','a','Movement'],['right','Move right','d','Movement'],
-  ['dash','Dash','shift','Combat'],['cmd','Command companions to attack (jump in a chase)',' ','Combat'],['tgt','Target nearest enemy','tab','Combat'],
+  ['dash','Dash','shift','Combat'],['cmd','Engage: companions attack your target','e','Combat'],['ret','Retreat: companions run back to you','r','Combat'],['tgt','Target nearest enemy','tab','Combat'],
   ['a1','Ability 1','1','Combat'],['a2','Ability 2','2','Combat'],['a3','Ability 3','3','Combat'],['a4','Ability 4','4','Combat'],['a5','Ability 5','5','Combat'],['a6','Ability 6','6','Combat'],
   ['hp','Health potion','z','Combat'],['mp','Mana potion','x','Combat'],['feed','Feed the most hurt companion','q','Combat'],
-  ['emp1','Empower companion 1','e','Combat'],['emp2','Empower companion 2','r','Combat'],
   ['act','Interact (talk, gather, fish)','f','World'],['mount','Ride / dismount','v','World'],['recall','Recall to Duskhold','t','World'],
   ['camL','Turn camera left','[','Camera'],['camR','Turn camera right',']','Camera'],
   ['inv','Inventory','i','Windows'],['char','Character','c','Windows'],['abil','Abilities','k','Windows'],['comp','Companions','p','Windows'],
@@ -4329,7 +4328,7 @@ addEventListener('keydown',e=>{
   {const tw={i:'bag',p:'cmp',u:'inc',g:'fz',n:'wmap',o:'setw',c:'tal',h:'xw',j:'xw'}[k];if(tw&&!$(tw).classList.contains('hide')){$(tw).classList.add('hide');return}}
   if(uiOpen())return;
   if(k>='1'&&k<='6')cast(+k-1);
-  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')feedLowest141();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drink();if(k=='x'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='e')toggleEmp(0);if(k=='r')toggleEmp(1);if(k=='shift')dodge();
+  if(k==' ')swing();if(k=='n')openWMap();if(k=='o')openSet();if(k=='c')openTal();if((k=='['||k==']'))camYaw+=(k=='['?.2:-.2);if(k=='f')interact();if(k=='t')doRecall();{const hk={i:'bagBtn',p:'cmpBtn',u:'incBtn',g:'fuseBtn',m:'sysBtn'};if(hk[k])$(hk[k]).click()}if(k=='q')feedLowest141();if(k=='z'&&!e.ctrlKey&&!e.metaKey)drink();if(k=='x'&&!e.ctrlKey&&!e.metaKey)drinkMana();if(k=='v')toggleMount();if(k=='h')openMounts();if(k=='j')openBosses();if(k=='shift')dodge();
 });
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=0});
 $('wmClose').onclick=()=>$('wmap').classList.add('hide');
@@ -11713,7 +11712,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
   const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
-  const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
+  const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press '+kb161Label(kb161Get('cmd'))+' to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
   // v164: the quick first strike is given once per companion every CMD164.gap ms (owner: pressing Space over and over made them attack as fast as you pressed)
@@ -11724,11 +11723,12 @@ function commandAttack(){
 // v167: Space belongs to a level that uses it (the Hilltop Ascent's jump): its key listener is added after this one, so this one
 // steps aside instead of swallowing the key (Space never jumped in the chase before). (v168: the drill's hold-to-heat is gone.)
 function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false}catch(_){}return true}
-addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey||!cmd167Free())return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
-  e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;commandAttack()},true);
-{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);
+// v206 (owner: "have 'e' be engage, where the companion attacks your target (instead of spacebar)"): E sends them in, R calls them back (3770)
+addEventListener('keydown',e=>{if((e.key!=='e'&&e.key!=='r')||e.ctrlKey||e.metaKey||e.altKey)return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;if(e.key==='r')retreat206();else commandAttack()},true);
+{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Engage: companions attack your target';b.textContent='📣';mb.appendChild(b);
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();commandAttack()})}}
-{const s=document.querySelector('.sub');if(s)s.innerHTML=s.innerHTML.replace('Tab target ·','Tab target · Space command companions to attack ·')}
+{const s=document.querySelector('.sub');if(s)s.innerHTML=s.innerHTML.replace('Tab target ·','Tab target · E engage · R retreat ·')}
 
 // a magic bolt from a companion to its foe; the hit lands when the bolt arrives
 function compBolt(f,c,foe,done){const col=(FAMD[famOf(c.g[0])]||{}).col||0x9ad8ff,s=gY(f.position,.75),m=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),addMat(col));m.position.copy(s);scene.add(m);
@@ -43407,8 +43407,8 @@ function ic151Want(){if(window.KQ_INTRO)return true;if(window.AW_NOTITLE||naviga
 // v151c: mode 'p1' = part one only (a new game: the woodland → the change, then the hero creator), 'p2' = part two only
 // (after "Begin your journey": the light clears on Duskhold), 'all' = the whole film (tests and the video)
 function ic151Play(done,mode){if(IC151.run)return;mode=mode||'all';IC151.mode=mode;let S;try{S=mode==='p2'?ic151BuildP2(innerWidth,innerHeight):ic151Build(innerWidth,innerHeight)}catch(e){console.warn('intro build',e);IC151.mode='all';if(done)done();return}
-  IC151.S=S;IC151.run=true;IC151.on=true;IC151.done=done;ic151Layer(S);if(mode==='p2')S.dom.el.classList.add('p2');const L=IC151.live={t0:performance.now(),off:mode==='p2'?IC151.cut:0,timers:[],ac:null,raf:0};
-  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9;out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();if(mode==='p2'){if(typeof ic151ScoreD=='function')ic151ScoreD(ac,out,ac.currentTime+.05-IC151.cut)}else ic151Score(ac,out,ac.currentTime+.05)}catch(e){console.warn('intro sound',e)}
+  IC151.S=S;IC151.run=true;IC151.on=true;IC151.done=done;ic151Layer(S);if(mode==='p2')S.dom.el.classList.add('p2');const L=IC151.live={t0:performance.now(),off:mode==='p2'?ic151P2From():0,timers:[],ac:null,raf:0};
+  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9;out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();if(mode==='p2'){if(typeof ic151ScoreD=='function')ic151ScoreD(ac,out,ac.currentTime+.05-ic151P2From())}else ic151Score(ac,out,ac.currentTime+.05)}catch(e){console.warn('intro sound',e)}
   try{if(typeof MU!='undefined'&&MU.g&&MU.a){L.mu=1;MU.g.gain.setTargetAtTime(0,MU.a.currentTime,.1)}}catch(_){}
   if(IC151.speak)try{ic151Speak(0)}catch(_){}  // text only for now (IC151.speak=true turns the browser voice back on)
   const onKey=e=>{if(!IC151.run)return;if(IC151.on){e.stopImmediatePropagation();e.preventDefault();if(e.type=='keydown'&&/^(Escape|Enter| |Spacebar)$/.test(e.key))ic151Skip()}};L.onKey=onKey;
@@ -43615,7 +43615,8 @@ ic151Seek=function(t){const S=IC151.S;if(!S)return;
 {const f=ic151Score;ic151Score=function(ac,out,T0){f.apply(this,arguments);try{ic151ScoreD(ac,out,T0)}catch(e){console.warn('intro score 2',e)}}}
 function ic151ScoreD(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.gain.value=v||0;return g};
   const rv=ac.createConvolver(),IR=ac.createBuffer(2,ac.sampleRate*3.2,ac.sampleRate);for(let c=0;c<2;c++){const d=IR.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4)}rv.buffer=IR;const wet=G(.5);rv.connect(wet);wet.connect(out);
-  const osc=(type,f,a,dur,pk,at,rel,o)=>{o=o||{};const s=ac.createOscillator();s.type=type;s.frequency.setValueAtTime(f,T(a));if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,T(a+(o.ft||dur)));if(o.det)s.detune.value=o.det;
+  const osc=(type,f,a,dur,pk,at,rel,o)=>{if(T(a)<ac.currentTime-.01)return;o=o||{};const s=ac.createOscillator();   // v206: part two may start later in the score: notes already past are left out
+    s.type=type;s.frequency.setValueAtTime(f,T(a));if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,T(a+(o.ft||dur)));if(o.det)s.detune.value=o.det;
     const g=G(0);g.gain.setValueAtTime(0,T(a));g.gain.linearRampToValueAtTime(pk,T(a+at));g.gain.setValueAtTime(pk,T(a+Math.max(at,dur-rel)));g.gain.linearRampToValueAtTime(0,T(a+dur));let n=g;s.connect(g);
     if(o.lp){const fl=ac.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;g.connect(fl);n=fl}const d=G(o.dry==null?1:o.dry);n.connect(d);d.connect(out);if(o.wet){const w=G(o.wet);n.connect(w);w.connect(rv)}s.start(T(a));s.stop(T(a+dur+.05))};
   // arrival: a bright chord out of the light
@@ -50287,7 +50288,7 @@ function kb161Labels(){
   const sub=document.querySelector('.wrap>.sub');if(sub){if(!sub.dataset.kb0)sub.dataset.kb0=sub.innerHTML;
     if(!KB161.on){if(sub.innerHTML!==sub.dataset.kb0)sub.innerHTML=sub.dataset.kb0}
     else{const L=id=>kb161Label(kb161Get(id));
-      sub.textContent=`${L('up')}${L('left')}${L('down')}${L('right')} move · Right click turns mouse-look on / off · Left click attack · ${['a1','a2','a3','a4','a5','a6'].map(L).join(' ')} abilities · ${L('dash')} dash · ${L('cmd')} command companions · ${L('tgt')} target · ${L('char')} character · ${L('abil')} abilities · ${L('king')} kingdom · ${L('feed')} feed companion · ${L('hp')} / ${L('mp')} potions · ${L('emp1')} / ${L('emp2')} empower · ${L('act')} interact · ${L('inv')} inventory · ${L('comp')} companions · ${L('eggs')} eggs · ${L('menu')} menu · ${L('recall')} recall · ${L('set')} settings · ${L('coop')} co-op · ${L('mount')} mount · Mouse wheel zoom · keys can be changed in Settings`}}}
+      sub.textContent=`${L('up')}${L('left')}${L('down')}${L('right')} move · Right click turns mouse-look on / off · Left click attack · ${['a1','a2','a3','a4','a5','a6'].map(L).join(' ')} abilities · ${L('dash')} dash · ${L('cmd')} engage · ${L('ret')} retreat · ${L('tgt')} target · ${L('char')} character · ${L('abil')} abilities · ${L('king')} kingdom · ${L('feed')} feed companion · ${L('hp')} / ${L('mp')} potions · ${L('act')} interact · ${L('inv')} inventory · ${L('comp')} companions · ${L('eggs')} eggs · ${L('menu')} menu · ${L('recall')} recall · ${L('set')} settings · ${L('coop')} co-op · ${L('mount')} mount · Mouse wheel zoom · keys can be changed in Settings`}}}
 {const a=$('acts');if(a)new MutationObserver(()=>{if(KB161.on)try{kb161Labels()}catch(_){}}).observe(a,{childList:true})}
 setTimeout(()=>{try{kb161Labels()}catch(_){}},0);
 try{ui161Lay(true)}catch(_){}
@@ -72608,4 +72609,159 @@ function co205OnMir(q){const k=q[1],i=q[2]|0,C=CQ205.c3;if(i<0||i>2)return;
     vh180Sync(t);co205USync(t);co205Flush(t);const g=vh180Has()?1:0;if(g!==CO205.v1){CO205.v1=g;MP.lastPres=''}}}catch(err){if(!CO205.err++)console.warn('v205 co-op tick',err)}return r}}
 // leaving the group: what was sent or heard is forgotten (a new group gets it again)
 {const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);CO205.got={};CO205.cq=[];CO205.hq=0;CO205.shd={};return r}}
+// ================= v206: companion orders — E engage, R retreat (empower removed) =================
+// Owner (Nov 7 2026): "Remove the mechanic of companions being able to empower you by pressing e and r. Instead have 'e' be
+// engage — where the companion attacks your target (instead of spacebar). Have 'r' be retreat where companion attempts to flee
+// to the character."
+//  * E = commandAttack (0860, the old Space command; the key listener there now takes E and R, KB161 'cmd' / 'ret').
+//    Space is no longer a companion key: it falls through to the plain attack (0108, like a left click).
+//  * R = retreat206: the active companions drop their fight and run back to the hero for RET206.ms (teamFoe gives them no
+//    foe, so compTick and compSpells (0860 / 0870) run them home at follow speed). E cancels a retreat; R cancels an engage.
+//  * Empower is gone: toggleEmp does nothing, the ⚡ buttons on the companion bars are gone, any c.emp left on is cleared.
+//    (Cheddar's "Borrowed Strength" quest, the only one that needed empower, is no longer on his board, so nothing else changes.)
+//  * Co-op: companions' positions and moves already reach partners (2170), so an engage or a retreat shows there as it is.
+var RET206={t:0,ms:6000};
+function ret206On(){return nowP()<RET206.t}
+function retreat206(){
+  const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&fols[i]&&fols[i].visible);
+  if(!act.length)return say('No companion is out to call back.');
+  CMD={e:null,t:0};RET206.t=nowP()+RET206.ms;
+  act.forEach(c=>{const f=fols[party.indexOf(c)];if(!f)return;f.fol=1;f.kb164=0;dn(f.position,'↩','#7ac8ff',-10,700)});
+  try{ring(pl.position,0x7ac8ff,2.2,500)}catch(_){}
+  say('↩️ '+act.map(c=>c.n).join(' and ')+(act.length>1?' fall back to you!':' falls back to you!'));try{sfx('chime',.35)}catch(_){}}
+// a retreat: the team has no foe until it ends
+{const f=teamFoe;teamFoe=function(){if(ret206On())return null;return f.apply(this,arguments)}}
+// engage ends a retreat
+{const f=commandAttack;commandAttack=function(){const t0=CMD.t;const r=f.apply(this,arguments);try{if(CMD.e&&CMD.t!==t0)RET206.t=0}catch(_){}return r}}
+// mobile: a retreat button next to the engage button (📣)
+{const mb=$('mbtn');if(mb&&!mb.querySelector('[data-m=ret]')){const b=document.createElement('button');b.dataset.m='ret';b.title='Retreat: companions run back to you';b.textContent='↩️';mb.appendChild(b);
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();retreat206()})}}
+
+// ---------------- empower removed ----------------
+toggleEmp=function(){};
+{const f=compRegen;compRegen=function(dt,now){try{party.forEach(c=>{if(c&&c.emp){c.emp=false;c.empL=0;c.empCd=0;try{hsDirty()}catch(_){}}})}catch(_){}return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend','<style id="v206ord">.cbar button[data-e],#act button[data-e]{display:none!important}.cbar .e92bar{display:none!important}</style>');
+
+// ================= v206: threat — monsters turn on the companion that hurts them most =================
+// Owner (Nov 7 2026): "Enemy focus and threat should target the companion if they're doing enough damage. The tank companions
+// like turtle should generate a little extra threat naturally so they tend to tank."
+//  * Every monster keeps a threat table e.th206 = {h: the hero, c: [lead, 2nd]} filled by the damage each one deals it (hurt,
+//    direct hits only; CH127 names the companion during compHit, 2300) and fading with a half-life of about TH206.half s.
+//  * Earth companions (Stoneshell / the turtle line, Mossfrog, Cragback, Bogmaw, …) are the tanks: their damage counts
+//    TH206.tank times, and while they stand next to a monster that is fighting they add TH206.pres of its max health per second.
+//  * eTarget (0290, 3091 …) runs first; then a companion whose threat is over TH206.take × the hero's takes the monster (at most
+//    TH206.cap monsters on one companion, TH206.capT on a tank), and it keeps it until the hero's threat is TH206.back × its own.
+//  * Not for Sovereigns, scripted foes or mirrored (co-op guest) monsters; in co-op the host's monsters weigh the host's own hero
+//    and companions this way (partners' companions keep the closest-first rule of v150).
+var TH206={half:6,take:1.15,back:1.35,tank:1.75,pres:.025,presR:3,cap:2,capT:3,reach:12,min:1};
+function th206Tank(c){try{return famOf(c.g[0])==='Earth'}catch(_){return false}}
+function th206Of(e){let T=e.th206;const n=nowP();if(!T)T=e.th206={h:0,c:[0,0],t:n};const dt=(n-T.t)/1000;if(dt>0){const k=Math.pow(.5,dt/TH206.half);T.h*=k;T.c[0]*=k;T.c[1]*=k;T.t=n}return T}
+function th206Skip(e){return !e||e.dead||e.boss||e.sv||e.mir||e.dprop||e.hunt||e.minion&&!e.agg}
+// damage → threat
+{const f=hurt;hurt=function(e,d,s,crit,dot){const h0=e&&e.c?e.c.h:null;const r=f.apply(this,arguments);
+  try{if(h0!=null&&!dot&&!th206Skip(e)&&!(typeof MP!='undefined'&&MP.ap)){const got=h0-Math.max(0,e.c.h);if(got>0){const T=th206Of(e),C=typeof CH127!='undefined'&&CH127&&CH127.e===e?CH127.c:null;
+    if(C){const i=party.indexOf(C);if(i>=0&&i<2)T.c[i]+=got*(th206Tank(C)?TH206.tank:1)}else T.h+=got}}}catch(_){}return r}}
+// a tank's presence: threat while it stands next to a monster that is fighting
+setInterval(()=>{try{if(typeof enemies=='undefined'||!party.length)return;const A=actN141();
+  for(let i=0;i<Math.min(2,A);i++){const c=party[i],fo=fols[i];if(!c||c.h<=0||!fo||!fo.visible||!th206Tank(c))continue;
+    enemies.forEach(e=>{if(th206Skip(e)||!e.agg||!e.m)return;if(d2(e.m.position,fo.position)>TH206.presR)return;th206Of(e).c[i]+=M(e.c)*TH206.pres*.25})}}catch(_){}},250);
+// who the monster goes for
+function th206Pick(e,m,tg){
+  if(th206Skip(e)||!e.th206)return tg;
+  const mine=tg===pl||fols.indexOf(tg)>=0;if(!mine)return tg;   // a partner's hero or companion, or a scripted target: left alone
+  const T=th206Of(e),cnt=[0,0];enemies.forEach(o=>{if(o!==e&&!o.dead&&o.agg&&o.th206F!=null)cnt[o.th206F]++});
+  const ok=i=>{const c=party[i],f=fols[i];return i<actN141()&&c&&c.h>0&&f&&f.visible&&m.position.distanceTo(f.position)<TH206.reach&&cnt[i]<(th206Tank(c)?TH206.capT:TH206.cap)};
+  const H=Math.max(T.h,TH206.min);
+  // keep the companion it already turned on, until the hero clearly out-threatens it
+  if(e.th206F!=null){const i=e.th206F;if(ok(i)&&T.h<T.c[i]*TH206.back){e.tgI=i;return fols[i]}e.th206F=null}
+  let best=-1,bv=0;for(let i=0;i<2;i++){if(!ok(i))continue;if(T.c[i]>H*TH206.take&&T.c[i]>bv){bv=T.c[i];best=i}}
+  if(best>=0){e.th206F=best;e.tgI=best;return fols[best]}
+  // otherwise the old rule stands (the hero, or a companion clearly closer than the hero: 0290)
+  return tg}
+{const f=eTarget;eTarget=function(e,m,dpl){const tg=f.apply(this,arguments);try{return th206Pick(e,m,tg)}catch(_){return tg}}}
+// ================= v206: fishing only at real water =================
+// Owner (Nov 7 2026): "Change fishing to only be available in ponds that are a decent amount of water. There are many 'ponds'
+// that are fishable but they don't even show any visible water."
+// nearWater (0400) offered F · Fish beside any water tile ('~'), but about 1 in 10 of them sit above the water surface (y .02:
+// the shelving banks of v177 / v185 and the camps' own ground raise them), so nothing shows there. Now a tile is fishable only
+// when the water over it is at least FP206.dep deep and it belongs to a body of such water of FP206.min tiles or more (counted
+// once, 4-way connected, the first time anyone fishes). The spot looked for reaches FP206.r tiles from the hero.
+var FP206={dep:.12,min:20,r:3,ok:null};
+function fp206Build(){const ok=new Uint8Array(W*H),lab=new Int32Array(W*H),sz=[0],st=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(MAP[y][x]!='~')continue;const b=BIOMES[MAP.bio[y][x]];if(!b||b.lava)continue;if(.02-GHv(x,y)>=FP206.dep)ok[y*W+x]=1}
+  for(let k=0;k<W*H;k++){if(!ok[k]||lab[k])continue;const id=sz.length;let n=0;lab[k]=id;st.push(k);
+    while(st.length){const q=st.pop();n++;const x=q%W,y=(q/W)|0;
+      if(x>0&&ok[q-1]&&!lab[q-1]){lab[q-1]=id;st.push(q-1)}if(x<W-1&&ok[q+1]&&!lab[q+1]){lab[q+1]=id;st.push(q+1)}
+      if(y>0&&ok[q-W]&&!lab[q-W]){lab[q-W]=id;st.push(q-W)}if(y<H-1&&ok[q+W]&&!lab[q+W]){lab[q+W]=id;st.push(q+W)}}
+    sz.push(n)}
+  const F=new Uint8Array(W*H);for(let k=0;k<W*H;k++)if(lab[k]&&sz[lab[k]]>=FP206.min)F[k]=1;FP206.ok=F;return F}
+function fp206Ok(x,y){if(x<0||y<0||x>=W||y>=H)return false;const F=FP206.ok||fp206Build();return !!F[y*W+x]}
+// the nearest fishable tile within reach of the hero (the hook the cast flies to)
+nearWater=(f=>function(){if(!f.apply(this,arguments))return null;   // keeps every rule of the wrappers (raft, the Dirge sanctum …)
+  const px=Math.round(pl.position.x),pz=Math.round(pl.position.z),R=FP206.r;let best=null,bd=1e9;
+  for(let j=-R;j<=R;j++)for(let i=-R;i<=R;i++){const d=i*i+j*j;if(d>R*R+1||d>=bd)continue;if(fp206Ok(px+i,pz+j)){bd=d;best=[px+i,pz+j]}}
+  return best})(nearWater);
+// ================= v206: the food pouch's "Add food" button =================
+// Owner (Nov 7 2026): "Add a button in the companion food pouch where you can add food from your inventory into the pouch."
+// The v200 pouch (3704) only showed small "+1 / +5" icon buttons, and only for food you carried. Now the pouch has one clear
+// "＋ Add food" button (and each empty slot is one too): it opens a list of every companion food in your bag with its name, how
+// many you carry, what it heals, and +1 / +5 / All buttons. With none in the bag the list says where to cook it.
+// cf200Html is replaced here (its only caller is the rC0 wrapper in 3704); cf200Put / cf200Take and the click handler stay.
+var CF206={open:false};
+cf200Html=function(c){const P=cf200P(c),t=CF200.pts.includes(c.cf200t)?c.cf200t:.4,have=CF200.R.filter(r=>cnt(r[0])>0),E=st200Esc;
+  let h=`<div class="cf200"><div class="hsec cf206h"><span>🍖 Food pouch <span class="mut" style="text-transform:none;letter-spacing:0;font-weight:500">· eats at once below <select data-cf200t="1">${CF200.pts.map(p=>`<option value="${p}" ${p==t?'selected':''}>${Math.round(p*100)}%</option>`).join('')}</select> health</span></span>`+
+    `<button class="cf206b${CF206.open?' on':''}" data-cf206="1" title="Put companion food from your bag into the pouch">＋ Add food</button></div><div class="cf200s">`;
+  for(let i=0;i<CF200.max;i++){const s=P[i],r=s&&cf200R(s.k);h+=r?`<div class="cf200x" title="${E(r[1])}: heals ${Math.round(r[5]*100)}% at once"><span>${r[2]}</span><b>${s.n}</b><button data-cf200o="${s.k}" title="Take it out">✕</button></div>`
+    :`<button class="cf200x e cf206e" data-cf206="1" title="Add food from your bag">＋ add food</button>`}
+  h+='</div>';
+  if(CF206.open){h+='<div class="cf206l">';
+    if(!have.length)h+='<div class="mut cf206n">No companion food in your bag. Cook it at the Cooking Hearth in Duskhold (Companion food recipes).</div>';
+    else have.forEach(r=>{const own=cnt(r[0]),s=P.find(q=>q.k==r[0]),room=s?CF200.stack-s.n:(P.length<CF200.max?CF200.stack:0),ok=room>0;
+      h+=`<div class="cf206r"><span class="cf206i">${r[2]}</span><span class="cf206t"><b>${E(r[1])}</b><small>×${own} in your bag · heals ${Math.round(r[5]*100)}%${ok?'':s?' · stack full':' · pouch full'}</small></span>`+
+        `<button data-cf200p="${r[0]}" data-n="1" ${ok?'':'disabled'}>+1</button><button data-cf200p="${r[0]}" data-n="5" ${ok&&own>1?'':'disabled'}>+5</button><button data-cf200p="${r[0]}" data-n="${CF200.stack}" ${ok&&own>1?'':'disabled'}>All</button></div>`});
+    h+='</div>'}
+  return h+'</div>'};
+// open / close the list (capture: before the pouch's own handler, which ignores these buttons)
+$('cd').addEventListener('click',e=>{const t=e.target.closest('[data-cf206]');if(!t)return;e.stopImmediatePropagation();CF206.open=!CF206.open||t.classList.contains('cf206e');try{rC()}catch(_){}},true);
+document.head.insertAdjacentHTML('beforeend',`<style id="cf206css">
+#cd .cf206h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#cd .cf206b{padding:3px 10px;font-size:.74rem;min-height:0;white-space:nowrap}
+#cd .cf206b.on{border-color:#c9a24a;color:#f0cc72}
+#cd button.cf200x.cf206e{cursor:pointer;font:inherit;font-size:.72rem;color:var(--mut);padding:0;min-height:0}
+#cd button.cf200x.cf206e:hover{opacity:.9;color:#f0cc72;border-color:#c9a24a}
+#cd .cf206l{display:flex;flex-direction:column;gap:4px;margin:4px 0 2px;padding:6px;border:1px solid rgba(201,162,74,.35);border-radius:7px;background:rgba(0,0,0,.28)}
+#cd .cf206r{display:flex;align-items:center;gap:6px}
+#cd .cf206i{font-size:1.15rem;width:24px;text-align:center}
+#cd .cf206t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}#cd .cf206t b{font-size:.78rem}#cd .cf206t small{font-size:.66rem;color:var(--mut)}
+#cd .cf206r button{padding:2px 8px;font-size:.72rem;min-height:0}
+#cd .cf206n{font-size:.72rem;padding:2px}
+</style>`);
+// ================= v206: no town tour in the intro, a brighter floating lantern, the menu over the quest list =================
+// Owner (Nov 7 2026):
+//  1. "Remove cinematic that introduces townfolk in duskhold. It is now outdated." After "Begin your journey", part two of the
+//     intro (3081) no longer walks the town meeting the Steward, Innkeeper, Blacksmith, Merchant and Cheddar (55.9–93.8 s): it
+//     starts at IC151.p2From, just before the voice ("Greetings, Upright…") over the town and the six portals, out of black
+//     (IC151.p2Fade s). The score's notes before that are left out (3081 osc). The whole film ('all': tests, the video) is unchanged.
+//  2. "Improve the characters floating lamp light's visibility by 40%." While the floating lantern (FLAN, 1380) is out, its
+//     light (torch) is FLAN206.k times as bright and reaches FLAN206.d times as far, and its glow (halo) is a little larger.
+//  3. "The menu screen is blocked by the quest list. Make sure that when the menu button is pressed it goes over the quest list."
+//     The quest trackers (UI161_TRK: main quest, Cheddar, …) sit in the page body at z-index 6 and the menu (#sysmenu, in the
+//     stage) at 4, in the same spot under the minimap. While the menu is open the trackers step aside (body.sm206) and the menu
+//     is lifted above them.
+IC151.p2From=93.8;IC151.p2Fade=1.4;
+function ic151P2From(){return IC151.p2From>IC151.cut?IC151.p2From:IC151.cut}
+{const f=ic151Dom;ic151Dom=function(S,t){const r=f.apply(this,arguments);try{const D=S&&S.dom,a=ic151P2From();if(D&&IC151.mode==='p2'&&a>IC151.cut){
+  D.fk.style.opacity=(1-ic151K(t,a,a+IC151.p2Fade)).toFixed(3);if(t<a+.5&&D.sub)D.sub.innerHTML=''}}catch(_){}return r}}
+
+// ---------------- the floating lantern's light ----------------
+var FLAN206={k:1.4,d:1.15,halo:1.15};
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{if(typeof FLAN!='undefined'&&FLAN.root&&FLAN.root.visible){torch.intensity*=FLAN206.k;torch.distance*=FLAN206.d;
+  if(FLAN.halo)FLAN.halo.scale.multiplyScalar(FLAN206.halo)}}catch(_){}return r}}   // flanStep sets the glow's size fresh every frame
+
+// ---------------- the menu over the quest trackers ----------------
+function sm206Sync(){try{const sm=$('sysmenu'),on=!!sm&&!sm.classList.contains('hide')&&!!sm.offsetParent;document.body.classList.toggle('sm206',on)}catch(_){}}
+try{new MutationObserver(sm206Sync).observe($('sysmenu'),{attributes:true,attributeFilter:['class','style']})}catch(_){}
+setInterval(sm206Sync,500);
+(function(){const ids=(typeof UI161_TRK!='undefined'?UI161_TRK:[]).concat(['mqt143','mqt152','fs160','dr170h','chqt132']).filter((v,i,a)=>a.indexOf(v)==i);
+  document.head.insertAdjacentHTML('beforeend','<style id="sm206css">#sysmenu{z-index:30!important}'+ids.map(id=>'body.sm206 #'+id).join(',')+'{visibility:hidden!important}</style>')})();
 </script></body></html>

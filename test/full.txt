@@ -162,3 +162,5 @@ v205_unsealing.py
 v205_vharog.py
 v205_mirrors.py
 v205_coop.py
+v206_owner.py
+v206_coop.py

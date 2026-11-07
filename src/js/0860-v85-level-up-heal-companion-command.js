@@ -20,7 +20,7 @@ function cmdTarget(){if(tgt&&!tgt.dead&&enemies.includes(tgt)&&d2(tgt.m.position
 function commandAttack(){
   if(townAt(pl.position.x,pl.position.z,0)>=0)return say('There is nothing to fight here.');
   const act=party.slice(0,actN141()).filter((c,i)=>c&&c.h>0&&!c.emp&&fols[i]);if(!act.length)return say('No companion is out to command (empowering companions stay with you).');
-  const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press Space to send your companions in.');
+  const e=cmdTarget();if(!e)return say('Target an enemy first (Tab), then press '+kb161Label(kb161Get('cmd'))+' to send your companions in.');
   CMD={e,t:nowP()+CMD_MS};if(!tgt||tgt.dead)tgt=e;
   ring(e.m.position,0xffd24a,2.2,500);burst(gY(e.m.position,1.6),0xffd24a,14,1.2,1.6,.5);
   // v164: the quick first strike is given once per companion every CMD164.gap ms (owner: pressing Space over and over made them attack as fast as you pressed)
@@ -31,11 +31,12 @@ function commandAttack(){
 // v167: Space belongs to a level that uses it (the Hilltop Ascent's jump): its key listener is added after this one, so this one
 // steps aside instead of swallowing the key (Space never jumped in the chase before). (v168: the drill's hold-to-heat is gone.)
 function cmd167Free(){try{if(typeof ch153Run=='function'&&ch153Run())return false}catch(_){}return true}
-addEventListener('keydown',e=>{if(e.key!==' '||e.ctrlKey||e.metaKey||!cmd167Free())return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
-  e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;commandAttack()},true);
-{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Command companions to attack';b.textContent='📣';mb.appendChild(b);
+// v206 (owner: "have 'e' be engage, where the companion attacks your target (instead of spacebar)"): E sends them in, R calls them back (3770)
+addEventListener('keydown',e=>{if((e.key!=='e'&&e.key!=='r')||e.ctrlKey||e.metaKey||e.altKey)return;const a=document.activeElement;if(a&&(a.tagName=='INPUT'||a.tagName=='TEXTAREA'))return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.repeat||uiOpen())return;if(e.key==='r')retreat206();else commandAttack()},true);
+{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='cmd';b.title='Engage: companions attack your target';b.textContent='📣';mb.appendChild(b);
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();commandAttack()})}}
-{const s=document.querySelector('.sub');if(s)s.innerHTML=s.innerHTML.replace('Tab target ·','Tab target · Space command companions to attack ·')}
+{const s=document.querySelector('.sub');if(s)s.innerHTML=s.innerHTML.replace('Tab target ·','Tab target · E engage · R retreat ·')}
 
 // a magic bolt from a companion to its foe; the hit lands when the bolt arrives
 function compBolt(f,c,foe,done){const col=(FAMD[famOf(c.g[0])]||{}).col||0x9ad8ff,s=gY(f.position,.75),m=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),addMat(col));m.position.copy(s);scene.add(m);

@@ -173,7 +173,8 @@ ic151Seek=function(t){const S=IC151.S;if(!S)return;
 {const f=ic151Score;ic151Score=function(ac,out,T0){f.apply(this,arguments);try{ic151ScoreD(ac,out,T0)}catch(e){console.warn('intro score 2',e)}}}
 function ic151ScoreD(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.gain.value=v||0;return g};
   const rv=ac.createConvolver(),IR=ac.createBuffer(2,ac.sampleRate*3.2,ac.sampleRate);for(let c=0;c<2;c++){const d=IR.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4)}rv.buffer=IR;const wet=G(.5);rv.connect(wet);wet.connect(out);
-  const osc=(type,f,a,dur,pk,at,rel,o)=>{o=o||{};const s=ac.createOscillator();s.type=type;s.frequency.setValueAtTime(f,T(a));if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,T(a+(o.ft||dur)));if(o.det)s.detune.value=o.det;
+  const osc=(type,f,a,dur,pk,at,rel,o)=>{if(T(a)<ac.currentTime-.01)return;o=o||{};const s=ac.createOscillator();   // v206: part two may start later in the score: notes already past are left out
+    s.type=type;s.frequency.setValueAtTime(f,T(a));if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,T(a+(o.ft||dur)));if(o.det)s.detune.value=o.det;
     const g=G(0);g.gain.setValueAtTime(0,T(a));g.gain.linearRampToValueAtTime(pk,T(a+at));g.gain.setValueAtTime(pk,T(a+Math.max(at,dur-rel)));g.gain.linearRampToValueAtTime(0,T(a+dur));let n=g;s.connect(g);
     if(o.lp){const fl=ac.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;g.connect(fl);n=fl}const d=G(o.dry==null?1:o.dry);n.connect(d);d.connect(out);if(o.wet){const w=G(o.wet);n.connect(w);w.connect(rv)}s.start(T(a));s.stop(T(a+dur+.05))};
   // arrival: a bright chord out of the light
