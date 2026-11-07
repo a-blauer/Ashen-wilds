@@ -71387,7 +71387,7 @@ function vh205Merge(R){const by=new Map();R.root.traverse(o=>{if(o.isMesh&&o.use
 function vh205WingGeo(){return svG('vh_wing',()=>{const s=new THREE.Shape(),P=[[0,0],[.35,.25],[.9,.35],[1.7,.3],[2.6,.15],[3.4,-.15],[3.05,-.45],[2.75,-.55],[2.45,-.9],[2.05,-.95],[1.75,-1.35],[1.3,-1.4],[.95,-1.8],[.5,-1.6],[.15,-1.1]];
   P.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);g.computeVertexNormals();
   return vh205Paint(g.index?g.toNonIndexed():g,(x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.set(0x3a1e28);const v=Math.abs(Math.sin(Math.atan2(y-.1,x)*6+x*.6));if(v<.12)C.lerp(T.vein,.8);C.multiplyScalar(.7+.25*Math.min(1,x/3.4)+.15*(y+.5))})})}
-function vh205Build(R,e){
+function vh205Build(R,e){R.no179=1;   // the v179 boss snap would pull the limb pieces about: every part here is placed on its joint by hand
   R.skin=svMat(R,0xffffff,{vertexColors:true,roughness:.86});const fur=svMat(R,0x1c1418,{roughness:.98}),fur2=svMat(R,0x3a141c,{roughness:.98}),bone=svMat(R,0xcfc4a8,{roughness:.6}),boneD=svMat(R,0x6a5a48,{roughness:.7}),
     iron=svMat(R,0x34343a,{roughness:.5,metalness:.6}),ironR=svMat(R,0x4a2a20,{roughness:.8,metalness:.3}),mouth=svMat(R,0x3a0a12,{roughness:.6}),gum=svMat(R,0x5a1a24,{roughness:.6}),
     eye=svGlowMat(R,0xff2a2a),vein=svGlowMat(R,0xb01020),wingM=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.8,flatShading:true,side:THREE.DoubleSide});wingM.userData.e0=0;wingM.userData.ei0=1;R.mats.push(wingM);
@@ -71395,7 +71395,7 @@ function vh205Build(R,e){
   const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz),G=(k,f)=>svG('vh'+k,f),rn=svRng(2051);
   const PM=(j,k,f,fn,x,y,z,rx,ry,rz,sx,sy,sz)=>vh205PM(R,j,G(k,f),fn,x,y,z,rx,ry,rz,sx,sy,sz);
   // ---------------- the skeleton ----------------
-  J('root',null,0,0,0);J('hips','root',0,2.42,-1.25);J('spine','hips',0,.18,.95);J('chest','spine',0,.12,1.0);J('neck','chest',0,.42,.95,-.15);J('head','neck',0,.12,.72,.15);J('jaw','head',0,-.2,.12);
+  J('root',null,0,0,0);J('hips','root',0,2.6,-1.25);J('spine','hips',0,.18,.95);J('chest','spine',0,.12,1.0);J('neck','chest',0,.42,.95,-.15);J('head','neck',0,.12,.72,.15);J('jaw','head',0,-.2,.12);
   [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.36,.36,-.1,-.25,0,s*-.55);R.J['ear'+L].scale.setScalar(.72);J('wg'+L,'chest',s*1.02,.55,.35,0,s*.1,s*.32);
     J('sh'+L,'chest',s*1.02,-.02,.38);J('el'+L,'sh'+L,0,-1.32,.06);J('wr'+L,'el'+L,0,-1.18,.14);
     J('th'+L,'hips',s*.72,-.12,-.05);J('kn'+L,'th'+L,0,-.95,.52);J('hk'+L,'kn'+L,0,-.82,-.58);J('ft'+L,'hk'+L,0,-.5,.12)});
@@ -71403,7 +71403,7 @@ function vh205Build(R,e){
   // ---------------- the torso: haunches, the lean waist, the barrel of ribs, the hump of the shoulders ----------------
   PM('hips','hp',()=>svLoftZ([[-.75,.7,.55,0,.05],[-.35,.86,.7,0,.02],[.15,.88,.72,0,0],[.6,.74,.64,0,-.02]],18),vh205TorsoCol(0,3),0,0,0);
   [-1,1].forEach(s=>PM('hips','hm',()=>svLump(.62,1,.16,2101),vh205TorsoCol(0,4),s*.5,-.05,-.12,0,0,0,1,1.15,1.15));
-  PM('spine','sp',()=>svLoftZ([[-.15,.72,.62,0,-.02],[.35,.8,.7,0,-.06],[.85,1.0,.86,0,-.1],[1.12,1.08,.92,0,-.12]],18),vh205TorsoCol(9,5),0,0,0);
+  PM('spine','sp',()=>svLoftZ([[-.5,.72,.6,0,.0],[-.15,.74,.63,0,-.02],[.35,.8,.7,0,-.06],[.85,1.0,.86,0,-.1],[1.12,1.08,.92,0,-.12]],18),vh205TorsoCol(9,5),0,0,0);
   PM('chest','ch',()=>svLoftZ([[-.1,1.08,.94,0,-.1],[.3,1.2,1.06,0,-.14],[.7,1.2,1.08,0,-.12],[1.05,1.06,.96,0,-.04],[1.32,.74,.7,0,.1]],20),vh205TorsoCol(8.5,6),0,0,0);
   // the hump over the shoulders and the shoulder masses
   PM('chest','hu',()=>svLump(.85,1,.18,2102),vh205TorsoCol(0,7),0,.62,.45,0,0,0,1.25,.7,1.05);
@@ -71509,7 +71509,7 @@ var VH205P={
   lunge:{hips:[.05,0,0,0,.25,0],chest:[0,0,0],shL:[-1.5,0,.2],shR:[-1.5,0,-.2],elL:[-.1,0,0],elR:[-.1,0,0],thL:[.85,0,0],thR:[.85,0,0],knL:[-.2,0,0],knR:[-.2,0,0],neck:[.15,0,0],jaw:[.9,0,0],wgL:[0,-.9,.5],wgR:[0,.9,-.5]},
   chained:{hips:[.25,.2,.25,0,-.75,0],chest:[.3,0,.15],neck:[.4,.3,0],head:[.4,.4,.3],jaw:[.8,0,0],shL:[.4,0,.6],shR:[.6,0,-.5],elL:[-.6,0,0],elR:[-.4,0,0],wgL:[.3,-.5,.2],wgR:[.3,.3,-.1],thL:[-.3,0,0],thR:[-.2,0,.1],knL:[.6,0,0],knR:[.5,0,0]},
   stag:{hips:[.25,.15,.2,0,-.5,0],chest:[.25,0,.12],neck:[.3,0,0],head:[.45,.3,.25],jaw:[.6,0,0],shL:[.3,0,.5],shR:[.45,0,-.3],elL:[-.4,0,0],elR:[-.3,0,0]},
-  sleep:{hips:[.1,0,.08,0,-1.15,0],chest:[.08,0,.05],neck:[.55,.4,0],head:[.35,.3,.2],jaw:[.05,0,0],shL:[-1.2,0,.25],shR:[-1.3,0,-.15],elL:[1.0,0,0],elR:[1.1,0,0],wrL:[.5,0,0],wrR:[.6,0,0],thL:[-1.2,0,.15],thR:[-1.15,0,-.1],knL:[2.0,0,0],knR:[2.0,0,0],hkL:[-1.0,0,0],hkR:[-1.0,0,0],tail0:[-.2,.8,0],tail1:[0,.5,0],wgL:[-.1,.1,.1],wgR:[-.1,-.1,-.1],earL:[.3,0,.2],earR:[.3,0,-.2]},
+  sleep:{hips:[.1,0,.08,0,-1.15,0],chest:[.08,0,.05],neck:[.3,.45,0],head:[.25,.3,.2],jaw:[.05,0,0],shL:[-1.2,0,.25],shR:[-1.3,0,-.15],elL:[1.0,0,0],elR:[1.1,0,0],wrL:[.5,0,0],wrR:[.6,0,0],thL:[-1.2,0,.15],thR:[-1.15,0,-.1],knL:[2.0,0,0],knR:[2.0,0,0],hkL:[-1.0,0,0],hkR:[-1.0,0,0],tail0:[-.2,.8,0],tail1:[0,.5,0],wgL:[-.1,.1,.1],wgR:[-.1,-.1,-.1],earL:[.3,0,.2],earR:[.3,0,-.2]},
   dead:{hips:[.2,0,1.25,0,-1.25,0],chest:[.15,0,.2],neck:[.45,.5,0],head:[.5,.5,.3],jaw:[.95,0,0],shL:[.6,0,.8],shR:[-.9,0,-1.2],elL:[-.8,0,0],elR:[-.3,0,0],thL:[-.6,0,.3],thR:[.2,0,-.2],knL:[1.2,0,0],knR:[.6,0,0],wgL:[.4,-1.0,.6],wgR:[.1,.4,-.2],tail0:[0,.6,0]}};
 // ---------------- the procedural layer: breathing, a four-limbed gait, the tail, ears and wings, the head tracking you ----------------
 function vh205Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/3.2),run=Math.max(0,Math.min(1,(sp-3.4)/2.5));S.gp=(S.gp||0)+dt*(1.8+sp*1.55);const g=S.gp,br=Math.sin(t*1.5);
@@ -72005,7 +72005,7 @@ function dm205Trace(){const S=DM205.S;if(!S)return;const C=CQ205.c3,R=dm205Court
     // the door's seal: the plane at a = reach - .6, |b| < 3.2
     const [pa,pb]=F.L2(p.x,p.z),da=d[0]*F.fx+d[1]*F.fz,db=d[0]*F.lx+d[1]*F.lz;let td=99;if(da>.05){const t=(F.reach-.6-pa)/da,b=pb+db*t;if(t>.5&&Math.abs(b)<3.2)td=t}
     // the edge: the first blocked tile along the ray
-    let te=30;for(let t=1;t<30;t+=.5){const x=p.x+d[0]*t,z=p.z+d[1]*t,X=Math.round(x),Z=Math.round(z);if(solid(X,Z)&&!CBLK.has(Z*W+X)||MAP.DW[Z*W+X]>-.2){te=t;break}}
+    let te=30;for(let t=1;t<30;t+=.5){const x=p.x+d[0]*t,z=p.z+d[1]*t,X=Math.round(x),Z=Math.round(z);if(solid(X,Z)&&!CBLK.has(Z*W+X)||MAP.DW[Z*W+X]>-.2||Math.hypot(x-F.x,z-F.z)>F.reach+1){te=t;break}}
     if(best!=null&&bt<Math.min(td,te)){const s=R.st[best];pts.push([s.x,s.z]);lit[best]=1;from=best;p={x:s.x,z:s.z};d=dm205Dir(done?R.solve[best]:C.rot[best]);continue}
     if(td<te){pts.push([p.x+d[0]*td,p.z+d[1]*td]);hitDoor=true;break}
     pts.push([p.x+d[0]*te,p.z+d[1]*te]);break}

@@ -105,7 +105,7 @@ function dm205Trace(){const S=DM205.S;if(!S)return;const C=CQ205.c3,R=dm205Court
     // the door's seal: the plane at a = reach - .6, |b| < 3.2
     const [pa,pb]=F.L2(p.x,p.z),da=d[0]*F.fx+d[1]*F.fz,db=d[0]*F.lx+d[1]*F.lz;let td=99;if(da>.05){const t=(F.reach-.6-pa)/da,b=pb+db*t;if(t>.5&&Math.abs(b)<3.2)td=t}
     // the edge: the first blocked tile along the ray
-    let te=30;for(let t=1;t<30;t+=.5){const x=p.x+d[0]*t,z=p.z+d[1]*t,X=Math.round(x),Z=Math.round(z);if(solid(X,Z)&&!CBLK.has(Z*W+X)||MAP.DW[Z*W+X]>-.2){te=t;break}}
+    let te=30;for(let t=1;t<30;t+=.5){const x=p.x+d[0]*t,z=p.z+d[1]*t,X=Math.round(x),Z=Math.round(z);if(solid(X,Z)&&!CBLK.has(Z*W+X)||MAP.DW[Z*W+X]>-.2||Math.hypot(x-F.x,z-F.z)>F.reach+1){te=t;break}}
     if(best!=null&&bt<Math.min(td,te)){const s=R.st[best];pts.push([s.x,s.z]);lit[best]=1;from=best;p={x:s.x,z:s.z};d=dm205Dir(done?R.solve[best]:C.rot[best]);continue}
     if(td<te){pts.push([p.x+d[0]*td,p.z+d[1]*td]);hitDoor=true;break}
     pts.push([p.x+d[0]*te,p.z+d[1]*te]);break}
