@@ -149,14 +149,14 @@ var VH205MV={
   // the hunt ran out: he drops on you, feeds, the Crimson Howl (cast by the controller)
   hfail:VH205_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.1,'air','l'],[.6,'land','s'],[1.6,'drink','io'],[2.6,'drink','l',.02],[3.0,'roar','o'],[4.0,'roar','l',.03],[4.6,'rec','io']],
     hit:[{t:.6,s:{k:'c',r:3.4},o:c=>{const p=vh205HeroIn(pl.position.clone());return {x:p.x,z:p.z,a:0}},dm:1.6,w:.55,kb:2,on:VH205_CLAW}],
-    go(c){c.e.m.visible=true;const p=vh205HeroIn(pl.position.clone());c.m.position.x=p.x+.8;c.m.position.z=p.z+.8},
+    go(c){c.e.m.visible=true;try{vh205HuntClear()}catch(_){}const p=vh205HeroIn(pl.position.clone());c.m.position.x=p.x+.8;c.m.position.z=p.z+.8},
     ev:[[.6,c=>vh205Crash(c.m.position.clone(),3.6,1.6,c.e)],[1.7,c=>{svSnd('squelch',1,.5);try{sk146Heal(c.e,.12,0xff4a4a)}catch(_){}}],[3.0,c=>{svSnd('roar',1.2,.5);try{sk146RingWave(c.e,c.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030);cq205After(.8,()=>{if(!c.e.dead)sk146RingWave(c.e,c.e.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030)})}catch(err){console.error('vh howl',err)}}]]}),
   // chained by three harpoons: a long stagger
   broken:VH205_NO141({dur:5.0,trk:[[.05,'land','l'],[.6,'chained','o'],[4.4,'chained','l',.035],[5.0,'rec','io']],
-    go(c){c.e.m.visible=true;c.S.stg=5;c.S.dr=0;c.S.hunt=0;svSnd('stag',1.2,.7);svSnd('roar',.9,.4);popT(c.m.position,'CHAINED','#e8e8ff',true);burst(gY(c.m.position,2),0xd8d8ff,80,4,3,.9);svShock(c.m.position,0xd8d8ff,6,.6)},
+    go(c){c.e.m.visible=true;VH205.H=null;VH205.cr=null;c.S.stg=5;c.S.dr=0;c.S.hunt=0;svSnd('stag',1.2,.7);svSnd('roar',.9,.4);popT(c.m.position,'CHAINED','#e8e8ff',true);burst(gY(c.m.position,2),0xd8d8ff,80,4,3,.9);svShock(c.m.position,0xd8d8ff,6,.6)},
     tk(c,dt){c.S.stg=Math.max(0,5-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'neck',0,0,0);burst(p,0xe8e8ff,1,.5,.6,.5)}},end(c){c.S.stg=0;try{vh205ChainsOff()}catch(_){}}})};
 VH205MV.rend.ph1only=1;
 // the moves' hit flags: bite catches you (pinned) when it lands
-VH205MV.bite.hit[0].fx=(c,an,hit)=>{if(hit&&vh205Pin())cq205After(0,()=>{if(!c.e.dead&&c.e.sv&&c.e.sv.mv&&c.e.sv.mv.id==='bite')svCast(c.e,'feed')})};
+VH205MV.bite.hit[0].fx=(c,an,hit)=>{if(hit&&(typeof vh180Auth!='function'||vh180Auth())&&vh205Pin())cq205After(0,()=>{if(!c.e.dead&&c.e.sv&&c.e.sv.mv&&c.e.sv.mv.id==='bite')svCast(c.e,'feed')})};
 // the hits' on-callbacks receive (c, an) from the engine
 for(const id in VH205MV){const D=VH205MV[id];(D.hit||[]).forEach(h=>{if(h.on===VH205_CLAW){h.on=(c)=>VH205_CLAW(c)}})}

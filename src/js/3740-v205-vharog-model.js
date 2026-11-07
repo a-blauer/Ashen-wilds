@@ -20,16 +20,16 @@ var VH205M={col:0xff2a3a,tris:0,sheet:{}};
 // ---------------- painted skin: vertex colours by form (value first: dark back, pale belly, ribs, veins) ----------------
 function vh205Paint(g,fn){const P=g.attributes.position,N=g.attributes.normal,c=new Float32Array(P.count*3),C=new THREE.Color();
   for(let i=0;i<P.count;i++){fn(P.getX(i),P.getY(i),P.getZ(i),N?N.getX(i):0,N?N.getY(i):1,N?N.getZ(i):0,C);c[i*3]=C.r;c[i*3+1]=C.g;c[i*3+2]=C.b}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
-const VH205C={base:new THREE.Color(0x56485a),dark:new THREE.Color(0x2c2430),pale:new THREE.Color(0x8a7882),vein:new THREE.Color(0x7a1424),rib:new THREE.Color(0x6e5e6a),scar:new THREE.Color(0x9a8a8c),inner:new THREE.Color(0x3a1a22),tmp:new THREE.Color()};
+const VH205C={base:new THREE.Color(0x4c4050),dark:new THREE.Color(0x2c2430),pale:new THREE.Color(0x8a7882),vein:new THREE.Color(0x7a1424),rib:new THREE.Color(0x6e5e6a),scar:new THREE.Color(0x9a8a8c),inner:new THREE.Color(0x3a1a22),tmp:new THREE.Color()};
 function vh205N(x,y,z,s){return Math.sin(x*5.3+s)*Math.cos(y*4.7+s*1.7)*Math.sin(z*5.9+s*.6)*.5+Math.sin(x*11.1+y*9.3+z*7.7+s*2.3)*.25}
 // a torso piece lofted along +z: the back (ny>0) darker, the belly paler, ribs on the flanks (rib: spacing along z), veins
 function vh205TorsoCol(rib,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const up=ny;if(up>0)C.lerp(T.dark,Math.min(1,up*.9));else C.lerp(T.pale,Math.min(1,-up*.8));
     if(rib){const side=Math.abs(nx);const r=Math.sin(z*rib+.6);if(side>.45&&ny<.4&&ny>-.6){if(r>.55)C.lerp(T.rib,.55);else if(r<-.35)C.lerp(T.dark,.35)}}
-    const v=vh205N(x,y,z,seed||1);if(Math.abs(v)<.05&&ny>-.3)C.lerp(T.vein,.75);if(v>.62)C.lerp(T.scar,.25);C.multiplyScalar(.82+.22*(.5*ny+.5))}}
+    const v=vh205N(x,y,z,seed||1);if(Math.abs(v)<.018&&ny<.35&&ny>-.5)C.lerp(T.vein,.55);C.multiplyScalar(.82+.22*(.5*ny+.5))}}
 // a limb lofted along -y (o: +1 outward is +x); the inside of the limb paler, the outside darker; knuckles and tips darker
 function vh205LimbCol(s,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const out=nx*s;if(out>.2)C.lerp(T.dark,Math.min(1,out*.7));else if(out<-.2)C.lerp(T.pale,Math.min(1,-out*.6));
-    if(nz>.5)C.lerp(T.dark,.15);const v=vh205N(x*1.4,y,z*1.4,seed||2);if(Math.abs(v)<.045)C.lerp(T.vein,.7);C.multiplyScalar(.85+.18*Math.max(-1,Math.min(1,y*.2+.5)))}}
-function vh205HeadCol(x,y,z,nx,ny,nz,C){const T=VH205C;C.copy(T.base);if(ny>.3)C.lerp(T.dark,.6);if(ny<-.3)C.lerp(T.pale,.4);if(z>.35&&ny<.2)C.lerp(T.inner,.35);const v=vh205N(x*2,y*2,z*2,7);if(Math.abs(v)<.04)C.lerp(T.vein,.6);C.multiplyScalar(.85+.2*(.5*ny+.5))}
+    if(nz>.5)C.lerp(T.dark,.15);const v=vh205N(x*1.4,y,z*1.4,seed||2);if(Math.abs(v)<.016&&out<0)C.lerp(T.vein,.5);C.multiplyScalar(.85+.18*Math.max(-1,Math.min(1,y*.2+.5)))}}
+function vh205HeadCol(x,y,z,nx,ny,nz,C){const T=VH205C;C.copy(T.base);if(ny>.3)C.lerp(T.dark,.6);if(ny<-.3)C.lerp(T.pale,.4);if(z>.35&&ny<.2)C.lerp(T.inner,.35);C.multiplyScalar(.85+.2*(.5*ny+.5))}
 // a painted mesh (one material, vertex colours): merged per joint at the end (vh205Merge), so the paint survives svMerge
 function vh205PM(R,j,geo,fn,x,y,z,rx,ry,rz,sx,sy,sz){const g=geo.index?geo.toNonIndexed():geo;if(!g.attributes.color){g.computeVertexNormals();vh205Paint(g,fn)}const m=svM(R,j,g,R.skin,x,y,z,rx,ry,rz,sx,sy,sz);m.userData.noMerge=1;m.userData.vh=1;return m}
 function vh205Merge(R){const by=new Map();R.root.traverse(o=>{if(o.isMesh&&o.userData.vh&&o.parent){if(!by.has(o.parent))by.set(o.parent,[]);by.get(o.parent).push(o)}});
@@ -50,7 +50,7 @@ function vh205Build(R,e){
   const PM=(j,k,f,fn,x,y,z,rx,ry,rz,sx,sy,sz)=>vh205PM(R,j,G(k,f),fn,x,y,z,rx,ry,rz,sx,sy,sz);
   // ---------------- the skeleton ----------------
   J('root',null,0,0,0);J('hips','root',0,2.42,-1.25);J('spine','hips',0,.18,.95);J('chest','spine',0,.12,1.0);J('neck','chest',0,.42,.95,-.15);J('head','neck',0,.12,.72,.15);J('jaw','head',0,-.2,.12);
-  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.42,.38,-.12,0,0,s*-.35);J('wg'+L,'chest',s*.62,.62,-.15,0,s*.08,0);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.36,.36,-.1,-.25,0,s*-.55);R.J['ear'+L].scale.setScalar(.72);J('wg'+L,'chest',s*1.02,.55,.35,0,s*.1,s*.32);
     J('sh'+L,'chest',s*1.02,-.02,.38);J('el'+L,'sh'+L,0,-1.32,.06);J('wr'+L,'el'+L,0,-1.18,.14);
     J('th'+L,'hips',s*.72,-.12,-.05);J('kn'+L,'th'+L,0,-.95,.52);J('hk'+L,'kn'+L,0,-.82,-.58);J('ft'+L,'hk'+L,0,-.5,.12)});
   J('tail0','hips',0,.1,-.72,-.25);J('tail1','tail0',0,0,-.62,-.15);J('tail2','tail1',0,0,-.55,-.1);J('chain','neck',0,-.45,.2);J('mane','neck',0,.05,0,Math.PI/2,0,0);
@@ -69,15 +69,15 @@ function vh205Build(R,e){
   gb151Cover(R,'mane',[[-.25,.6,.64,0,0],[.25,.56,.6,0,0],[.7,.48,.52,0,0]],{geo:gb151Tuft(),n:12,rows:3,size:.44,seed:2111,lift:.55,w:.6,jit:.3,dir:1,
     skip:(t)=>Math.cos(t)>.2,mat:(t,u,r,k)=>(k+r)%3?fur:fur2});
   // ---------------- the head: a bat's skull grown huge ----------------
-  PM('head','hd',()=>svLoftZ([[-.35,.48,.5,0,.05],[-.05,.58,.55,0,.08],[.25,.56,.46,0,.02],[.48,.42,.34,0,-.06],[.62,.3,.26,0,-.1]],14),vh205HeadCol,0,0,0);
-  PM('head','br',()=>svLump(.3,1,.12,2121),vh205HeadCol,0,.32,.28,0,0,0,1.8,.6,1.0);                       // the brow
-  PM('head','sn',()=>svLump(.26,1,.14,2122),vh205HeadCol,0,-.02,.68,0,0,0,1.25,.85,.75);                    // the pug snout
-  Mm('head',G('nl',()=>{const s=new THREE.Shape();[[0,.28],[.11,.1],[.13,-.06],[0,-.14],[-.13,-.06],[-.11,.1]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);return g}),gum,0,.1,.86,-.25,0,0);   // the nose-leaf
-  [-1,1].forEach(s=>{Mm('head',G('nos',()=>new THREE.SphereGeometry(.05,5,4)),mouth,s*.08,-.02,.88);
-    Mm('head',G('sock',()=>svLump(.13,1,.1,2123)),mouth,s*.24,.2,.5,0,0,0,1.2,.8,.6);Mm('head',G('eye',()=>new THREE.IcosahedronGeometry(.06,1)),eye,s*.24,.2,.56,0,0,0,1.4,.8,.8);svSpr(R,'head',0xff2020,.5,s*.24,.2,.62);
+  PM('head','hd',()=>svLoftZ([[-.35,.42,.44,0,.05],[-.05,.5,.48,0,.08],[.28,.46,.4,0,.03],[.58,.34,.3,0,-.05],[.86,.24,.22,0,-.1],[.98,.18,.16,0,-.12]],14),vh205HeadCol,0,0,0);
+  [-1,1].forEach(s=>PM('head','br',()=>svLump(.24,1,.12,2121),vh205HeadCol,s*.2,.3,.42,0,s*-.3,s*.35,1.3,.55,.9));                       // the brow
+  PM('head','sn',()=>svLump(.22,1,.14,2122),vh205HeadCol,0,-.02,.95,0,0,0,1.1,.8,.8);                    // the pug snout
+  Mm('head',G('nl',()=>{const s=new THREE.Shape();[[0,.28],[.11,.1],[.13,-.06],[0,-.14],[-.13,-.06],[-.11,.1]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);return g}),gum,0,.1,1.1,-.35,0,0);   // the nose-leaf
+  [-1,1].forEach(s=>{Mm('head',G('nos',()=>new THREE.SphereGeometry(.05,5,4)),mouth,s*.08,-.02,1.13);
+    Mm('head',G('sock',()=>svLump(.12,1,.1,2123)),mouth,s*.22,.17,.58,0,0,s*.3,1.3,.6,.6);Mm('head',G('eye',()=>new THREE.IcosahedronGeometry(.06,1)),eye,s*.22,.17,.64,0,0,s*.35,1.6,.6,.8);svSpr(R,'head',0xff2020,.45,s*.22,.17,.7);
     // the upper fangs and the tusks at the corners of the mouth
-    Mm('head',G('fg',()=>{const q=new THREE.ConeGeometry(.055,.42,5);q.rotateX(Math.PI);q.translate(0,-.21,0);return q}),bone,s*.15,-.16,.8,-.12,0,s*-.05);
-    Mm('head',G('fg2',()=>{const q=new THREE.ConeGeometry(.04,.24,5);q.rotateX(Math.PI);q.translate(0,-.12,0);return q}),bone,s*.24,-.14,.6,-.1,0,s*-.1);
+    Mm('head',G('fg',()=>{const q=new THREE.ConeGeometry(.055,.42,5);q.rotateX(Math.PI);q.translate(0,-.21,0);return q}),bone,s*.14,-.14,.9,-.12,0,s*-.05);
+    Mm('head',G('fg2',()=>{const q=new THREE.ConeGeometry(.04,.24,5);q.rotateX(Math.PI);q.translate(0,-.12,0);return q}),bone,s*.2,-.14,.72,-.1,0,s*-.1);
     // cheek frills of skin and bristle under the ears
     Mm('head',G('chk',()=>svBlade([[0,0],[.3,.12],[.42,-.1],[.25,-.28],[0,-.18]],.04)),fur,s*.45,-.05,.15,0,s>0?-.9:Math.PI+.9,0)});
   // the crest of mane on the crown
@@ -87,10 +87,10 @@ function vh205Build(R,e){
       fur,0,0,0,0,s>0?.3:-.3,0);
     Mm('ear'+L,G('eari'+L,()=>{const q=new THREE.Shape();ord([[-.1,.1],[.15,.25],[.22,.75],[.14,1.25],[.02,.95],[-.14,.55],[-.2,.25]]).forEach(([x,y],i)=>i?q.lineTo(x,y):q.moveTo(x,y));return new THREE.ShapeGeometry(q)}),gum,0,0,.06,0,s>0?.3:-.3,0)});
   // the jaw: heavy, underslung, with long lower fangs; the mouth inside is dark red
-  PM('jaw','jw',()=>svLoftZ([[-.15,.36,.14,0,-.02],[.2,.36,.16,0,-.06],[.5,.26,.12,0,-.04],[.62,.16,.08,0,0]],12),vh205HeadCol,0,-.02,0);
-  Mm('jaw',G('mo',()=>svLoftZ([[-.1,.3,.06],[.45,.22,.05]],10)),mouth,0,.08,0);Mm('jaw',G('tg',()=>svLump(.14,1,.15,2124)),gum,0,.1,.25,0,0,0,1,.4,2);
-  [-1,1].forEach(s=>{Mm('jaw',G('lf',()=>{const q=new THREE.ConeGeometry(.05,.26,5);q.translate(0,.13,0);return q}),bone,s*.27,.04,.42,.15,0,s*.12);for(let k=0;k<3;k++)Mm('jaw',G('lt',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.translate(0,.05,0);return q}),bone,s*(.2+k*.05),.06,.4-k*.12)});
-  for(let k=0;k<4;k++)Mm('head',G('ut',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.rotateX(Math.PI);q.translate(0,-.05,0);return q}),bone,(k-1.5)*.07,-.14,.76);
+  PM('jaw','jw',()=>svLoftZ([[-.15,.34,.14,0,-.02],[.25,.32,.16,0,-.06],[.62,.22,.12,0,-.04],[.9,.13,.08,0,0]],12),vh205HeadCol,0,-.02,0);
+  Mm('jaw',G('mo',()=>svLoftZ([[-.1,.28,.06],[.75,.16,.05]],10)),mouth,0,.08,0);Mm('jaw',G('tg',()=>svLump(.14,1,.15,2124)),gum,0,.1,.25,0,0,0,1,.4,2);
+  [-1,1].forEach(s=>{Mm('jaw',G('lf',()=>{const q=new THREE.ConeGeometry(.05,.26,5);q.translate(0,.13,0);return q}),bone,s*.2,.04,.72,.15,0,s*.12);for(let k=0;k<4;k++)Mm('jaw',G('lt',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.translate(0,.05,0);return q}),bone,s*(.15+k*.03),.06,.62-k*.14)});
+  for(let k=0;k<6;k++)Mm('head',G('ut',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.rotateX(Math.PI);q.translate(0,-.05,0);return q}),bone,k<4?(k-1.5)*.07:(k-4.5)*.3,-.14,k<4?.98:.82);
   // ---------------- the collar and its broken chain ----------------
   Mm('neck',G('col',()=>new THREE.TorusGeometry(.66,.1,6,16)),iron,0,0,.05,0,0,0,1,1.05,1);
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2;Mm('neck',G('cs',()=>new THREE.ConeGeometry(.06,.24,4)),iron,Math.cos(a)*.75,Math.sin(a)*.75,.05,0,0,a-Math.PI/2)}
@@ -109,7 +109,7 @@ function vh205Build(R,e){
     Mm(wr,G('cwt',()=>svHorn(.05,.28,0,-.15,5,4)),bone,s*.26,-.18,.2,.6,s*.6,0);
     // the wing: lies along the back, its leading edge a long finger bone
     const wg='wg'+L;const wm=Mm(wg,vh205WingGeo(),wingM,0,0,0,0,Math.PI/2,0);wm.userData.noMerge=1;
-    Mm(wg,G('wb',()=>svTube([[0,0,0],[0,.32,-.9],[0,.3,-1.7],[0,.15,-2.6],[0,-.15,-3.4]],[.07,.06,.05,.04,.02],5)),boneD,0,0,0);
+    Mm(wg,G('wb',()=>svTube([[0,0,0],[0,.32,-.9],[0,.3,-1.7],[0,.15,-2.6],[0,-.15,-3.4]],[.07,.06,.05,.04,.02],5)),boneD,0,0,0);wm.scale.set(1,.85,1);
     Mm(wg,G('wh',()=>svHorn(.05,.3,0,.15,4,3)),bone,0,.05,.05,-1.2,0,0);
     // ---------------- the legs: heavy thighs, digitigrade shins, long clawed feet ----------------
     const th='th'+L,kn='kn'+L,hk='hk'+L,ft='ft'+L;

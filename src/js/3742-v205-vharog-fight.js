@@ -60,7 +60,7 @@ function vh205MistTex(){if(VH205.tex)return VH205.tex;const c=document.createEle
   const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'rgba(80,10,20,0)');g.addColorStop(.3,'rgba(90,10,20,.35)');g.addColorStop(1,'rgba(60,5,12,.8)');x.fillStyle=g;x.fillRect(0,0,256,128);
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return VH205.tex=t}
 function vh205WallMake(){if(VH205.wall)return VH205.wall;const A=vh205Arena(),g=new THREE.Group();g.name='VharogWall';const geo=new THREE.CylinderGeometry(1,1,1,56,1,true);geo.translate(0,.5,0);const L=[];
-  [[1,4.6,.5,1],[1.05,6.2,.3,-.6],[.97,2.8,.42,1.5]].forEach(([s,h,op,sp],i)=>{const t=vh205MistTex().clone();t.needsUpdate=true;t.repeat.set(5+i*2,1);const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,fog:true,color:0xd03040}));
+  [[1,4.6,.42,1],[1.05,6.2,.24,-.6],[.97,2.8,.34,1.5]].forEach(([s,h,op,sp],i)=>{const t=vh205MistTex().clone();t.needsUpdate=true;t.repeat.set(5+i*2,1);const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.BackSide,depthWrite:false,fog:true,color:0xd03040}));
     m.scale.set(A.r0+.9*s,h,A.r0+.9*s);m.renderOrder=3;m.userData.lpsSkip=1;g.add(m);L.push({m,t,sp,s,op})});
   g.position.set(A.cx,A.y-.6,A.cz);g.visible=false;scene.add(g);VH205.wall={g,L,k:0,want:0};return VH205.wall}
 function vh205WallSet(on){const W=vh205WallMake();W.want=on?1:0;if(on)W.g.visible=true}
@@ -146,7 +146,7 @@ function vh205AI(e,dt,now){const S=e.sv,A=VH205A,m=e.m;if(!A)return;if(e.hb)e.hb
   {const p=pl.position;if(S.hp0&&dt>0){const vx=(p.x-S.hp0.x)/dt,vz=(p.z-S.hp0.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv=S.hv||{x:0,z:0};S.hv.x+=(vx-S.hv.x)*a;S.hv.z+=(vz-S.hv.z)*a}}S.hp0={x:p.x,z:p.z}}
   if(!A.f){// asleep: the sleep pose (healed), breathing; wake when a hero comes close
     if(!S.mv||S.mv.id!=='sleep')svStart(e,'sleep',1);e.c.h=M(e.c);e.agg=0;if(S.mv)svTickMove(e,dt,now);svApply(e,dt,now);
-    if(vh205Here()&&hero.hp>0&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<VH205.wake&&(typeof vh180Auth!='function'||vh180Auth())){vh205Wake();if(typeof co205Wake=='function')co205Wake()}return}
+    if(vh205Here()&&hero.hp>0&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<VH205.wake){vh205Wake();if(typeof co205Wake=='function')co205Wake()}return}
   if(vh205End()){vh205Reset(true);if(typeof vh180Ended=='function')vh180Ended();return}
   VH205.ft+=dt;e.agg=1;
   if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(vh180Auth())svCast(e,'intro')}

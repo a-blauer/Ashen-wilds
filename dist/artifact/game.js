@@ -71366,16 +71366,16 @@ var VH205M={col:0xff2a3a,tris:0,sheet:{}};
 // ---------------- painted skin: vertex colours by form (value first: dark back, pale belly, ribs, veins) ----------------
 function vh205Paint(g,fn){const P=g.attributes.position,N=g.attributes.normal,c=new Float32Array(P.count*3),C=new THREE.Color();
   for(let i=0;i<P.count;i++){fn(P.getX(i),P.getY(i),P.getZ(i),N?N.getX(i):0,N?N.getY(i):1,N?N.getZ(i):0,C);c[i*3]=C.r;c[i*3+1]=C.g;c[i*3+2]=C.b}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
-const VH205C={base:new THREE.Color(0x56485a),dark:new THREE.Color(0x2c2430),pale:new THREE.Color(0x8a7882),vein:new THREE.Color(0x7a1424),rib:new THREE.Color(0x6e5e6a),scar:new THREE.Color(0x9a8a8c),inner:new THREE.Color(0x3a1a22),tmp:new THREE.Color()};
+const VH205C={base:new THREE.Color(0x4c4050),dark:new THREE.Color(0x2c2430),pale:new THREE.Color(0x8a7882),vein:new THREE.Color(0x7a1424),rib:new THREE.Color(0x6e5e6a),scar:new THREE.Color(0x9a8a8c),inner:new THREE.Color(0x3a1a22),tmp:new THREE.Color()};
 function vh205N(x,y,z,s){return Math.sin(x*5.3+s)*Math.cos(y*4.7+s*1.7)*Math.sin(z*5.9+s*.6)*.5+Math.sin(x*11.1+y*9.3+z*7.7+s*2.3)*.25}
 // a torso piece lofted along +z: the back (ny>0) darker, the belly paler, ribs on the flanks (rib: spacing along z), veins
 function vh205TorsoCol(rib,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const up=ny;if(up>0)C.lerp(T.dark,Math.min(1,up*.9));else C.lerp(T.pale,Math.min(1,-up*.8));
     if(rib){const side=Math.abs(nx);const r=Math.sin(z*rib+.6);if(side>.45&&ny<.4&&ny>-.6){if(r>.55)C.lerp(T.rib,.55);else if(r<-.35)C.lerp(T.dark,.35)}}
-    const v=vh205N(x,y,z,seed||1);if(Math.abs(v)<.05&&ny>-.3)C.lerp(T.vein,.75);if(v>.62)C.lerp(T.scar,.25);C.multiplyScalar(.82+.22*(.5*ny+.5))}}
+    const v=vh205N(x,y,z,seed||1);if(Math.abs(v)<.018&&ny<.35&&ny>-.5)C.lerp(T.vein,.55);C.multiplyScalar(.82+.22*(.5*ny+.5))}}
 // a limb lofted along -y (o: +1 outward is +x); the inside of the limb paler, the outside darker; knuckles and tips darker
 function vh205LimbCol(s,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const out=nx*s;if(out>.2)C.lerp(T.dark,Math.min(1,out*.7));else if(out<-.2)C.lerp(T.pale,Math.min(1,-out*.6));
-    if(nz>.5)C.lerp(T.dark,.15);const v=vh205N(x*1.4,y,z*1.4,seed||2);if(Math.abs(v)<.045)C.lerp(T.vein,.7);C.multiplyScalar(.85+.18*Math.max(-1,Math.min(1,y*.2+.5)))}}
-function vh205HeadCol(x,y,z,nx,ny,nz,C){const T=VH205C;C.copy(T.base);if(ny>.3)C.lerp(T.dark,.6);if(ny<-.3)C.lerp(T.pale,.4);if(z>.35&&ny<.2)C.lerp(T.inner,.35);const v=vh205N(x*2,y*2,z*2,7);if(Math.abs(v)<.04)C.lerp(T.vein,.6);C.multiplyScalar(.85+.2*(.5*ny+.5))}
+    if(nz>.5)C.lerp(T.dark,.15);const v=vh205N(x*1.4,y,z*1.4,seed||2);if(Math.abs(v)<.016&&out<0)C.lerp(T.vein,.5);C.multiplyScalar(.85+.18*Math.max(-1,Math.min(1,y*.2+.5)))}}
+function vh205HeadCol(x,y,z,nx,ny,nz,C){const T=VH205C;C.copy(T.base);if(ny>.3)C.lerp(T.dark,.6);if(ny<-.3)C.lerp(T.pale,.4);if(z>.35&&ny<.2)C.lerp(T.inner,.35);C.multiplyScalar(.85+.2*(.5*ny+.5))}
 // a painted mesh (one material, vertex colours): merged per joint at the end (vh205Merge), so the paint survives svMerge
 function vh205PM(R,j,geo,fn,x,y,z,rx,ry,rz,sx,sy,sz){const g=geo.index?geo.toNonIndexed():geo;if(!g.attributes.color){g.computeVertexNormals();vh205Paint(g,fn)}const m=svM(R,j,g,R.skin,x,y,z,rx,ry,rz,sx,sy,sz);m.userData.noMerge=1;m.userData.vh=1;return m}
 function vh205Merge(R){const by=new Map();R.root.traverse(o=>{if(o.isMesh&&o.userData.vh&&o.parent){if(!by.has(o.parent))by.set(o.parent,[]);by.get(o.parent).push(o)}});
@@ -71396,7 +71396,7 @@ function vh205Build(R,e){
   const PM=(j,k,f,fn,x,y,z,rx,ry,rz,sx,sy,sz)=>vh205PM(R,j,G(k,f),fn,x,y,z,rx,ry,rz,sx,sy,sz);
   // ---------------- the skeleton ----------------
   J('root',null,0,0,0);J('hips','root',0,2.42,-1.25);J('spine','hips',0,.18,.95);J('chest','spine',0,.12,1.0);J('neck','chest',0,.42,.95,-.15);J('head','neck',0,.12,.72,.15);J('jaw','head',0,-.2,.12);
-  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.42,.38,-.12,0,0,s*-.35);J('wg'+L,'chest',s*.62,.62,-.15,0,s*.08,0);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.36,.36,-.1,-.25,0,s*-.55);R.J['ear'+L].scale.setScalar(.72);J('wg'+L,'chest',s*1.02,.55,.35,0,s*.1,s*.32);
     J('sh'+L,'chest',s*1.02,-.02,.38);J('el'+L,'sh'+L,0,-1.32,.06);J('wr'+L,'el'+L,0,-1.18,.14);
     J('th'+L,'hips',s*.72,-.12,-.05);J('kn'+L,'th'+L,0,-.95,.52);J('hk'+L,'kn'+L,0,-.82,-.58);J('ft'+L,'hk'+L,0,-.5,.12)});
   J('tail0','hips',0,.1,-.72,-.25);J('tail1','tail0',0,0,-.62,-.15);J('tail2','tail1',0,0,-.55,-.1);J('chain','neck',0,-.45,.2);J('mane','neck',0,.05,0,Math.PI/2,0,0);
@@ -71415,15 +71415,15 @@ function vh205Build(R,e){
   gb151Cover(R,'mane',[[-.25,.6,.64,0,0],[.25,.56,.6,0,0],[.7,.48,.52,0,0]],{geo:gb151Tuft(),n:12,rows:3,size:.44,seed:2111,lift:.55,w:.6,jit:.3,dir:1,
     skip:(t)=>Math.cos(t)>.2,mat:(t,u,r,k)=>(k+r)%3?fur:fur2});
   // ---------------- the head: a bat's skull grown huge ----------------
-  PM('head','hd',()=>svLoftZ([[-.35,.48,.5,0,.05],[-.05,.58,.55,0,.08],[.25,.56,.46,0,.02],[.48,.42,.34,0,-.06],[.62,.3,.26,0,-.1]],14),vh205HeadCol,0,0,0);
-  PM('head','br',()=>svLump(.3,1,.12,2121),vh205HeadCol,0,.32,.28,0,0,0,1.8,.6,1.0);                       // the brow
-  PM('head','sn',()=>svLump(.26,1,.14,2122),vh205HeadCol,0,-.02,.68,0,0,0,1.25,.85,.75);                    // the pug snout
-  Mm('head',G('nl',()=>{const s=new THREE.Shape();[[0,.28],[.11,.1],[.13,-.06],[0,-.14],[-.13,-.06],[-.11,.1]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);return g}),gum,0,.1,.86,-.25,0,0);   // the nose-leaf
-  [-1,1].forEach(s=>{Mm('head',G('nos',()=>new THREE.SphereGeometry(.05,5,4)),mouth,s*.08,-.02,.88);
-    Mm('head',G('sock',()=>svLump(.13,1,.1,2123)),mouth,s*.24,.2,.5,0,0,0,1.2,.8,.6);Mm('head',G('eye',()=>new THREE.IcosahedronGeometry(.06,1)),eye,s*.24,.2,.56,0,0,0,1.4,.8,.8);svSpr(R,'head',0xff2020,.5,s*.24,.2,.62);
+  PM('head','hd',()=>svLoftZ([[-.35,.42,.44,0,.05],[-.05,.5,.48,0,.08],[.28,.46,.4,0,.03],[.58,.34,.3,0,-.05],[.86,.24,.22,0,-.1],[.98,.18,.16,0,-.12]],14),vh205HeadCol,0,0,0);
+  [-1,1].forEach(s=>PM('head','br',()=>svLump(.24,1,.12,2121),vh205HeadCol,s*.2,.3,.42,0,s*-.3,s*.35,1.3,.55,.9));                       // the brow
+  PM('head','sn',()=>svLump(.22,1,.14,2122),vh205HeadCol,0,-.02,.95,0,0,0,1.1,.8,.8);                    // the pug snout
+  Mm('head',G('nl',()=>{const s=new THREE.Shape();[[0,.28],[.11,.1],[.13,-.06],[0,-.14],[-.13,-.06],[-.11,.1]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);return g}),gum,0,.1,1.1,-.35,0,0);   // the nose-leaf
+  [-1,1].forEach(s=>{Mm('head',G('nos',()=>new THREE.SphereGeometry(.05,5,4)),mouth,s*.08,-.02,1.13);
+    Mm('head',G('sock',()=>svLump(.12,1,.1,2123)),mouth,s*.22,.17,.58,0,0,s*.3,1.3,.6,.6);Mm('head',G('eye',()=>new THREE.IcosahedronGeometry(.06,1)),eye,s*.22,.17,.64,0,0,s*.35,1.6,.6,.8);svSpr(R,'head',0xff2020,.45,s*.22,.17,.7);
     // the upper fangs and the tusks at the corners of the mouth
-    Mm('head',G('fg',()=>{const q=new THREE.ConeGeometry(.055,.42,5);q.rotateX(Math.PI);q.translate(0,-.21,0);return q}),bone,s*.15,-.16,.8,-.12,0,s*-.05);
-    Mm('head',G('fg2',()=>{const q=new THREE.ConeGeometry(.04,.24,5);q.rotateX(Math.PI);q.translate(0,-.12,0);return q}),bone,s*.24,-.14,.6,-.1,0,s*-.1);
+    Mm('head',G('fg',()=>{const q=new THREE.ConeGeometry(.055,.42,5);q.rotateX(Math.PI);q.translate(0,-.21,0);return q}),bone,s*.14,-.14,.9,-.12,0,s*-.05);
+    Mm('head',G('fg2',()=>{const q=new THREE.ConeGeometry(.04,.24,5);q.rotateX(Math.PI);q.translate(0,-.12,0);return q}),bone,s*.2,-.14,.72,-.1,0,s*-.1);
     // cheek frills of skin and bristle under the ears
     Mm('head',G('chk',()=>svBlade([[0,0],[.3,.12],[.42,-.1],[.25,-.28],[0,-.18]],.04)),fur,s*.45,-.05,.15,0,s>0?-.9:Math.PI+.9,0)});
   // the crest of mane on the crown
@@ -71433,10 +71433,10 @@ function vh205Build(R,e){
       fur,0,0,0,0,s>0?.3:-.3,0);
     Mm('ear'+L,G('eari'+L,()=>{const q=new THREE.Shape();ord([[-.1,.1],[.15,.25],[.22,.75],[.14,1.25],[.02,.95],[-.14,.55],[-.2,.25]]).forEach(([x,y],i)=>i?q.lineTo(x,y):q.moveTo(x,y));return new THREE.ShapeGeometry(q)}),gum,0,0,.06,0,s>0?.3:-.3,0)});
   // the jaw: heavy, underslung, with long lower fangs; the mouth inside is dark red
-  PM('jaw','jw',()=>svLoftZ([[-.15,.36,.14,0,-.02],[.2,.36,.16,0,-.06],[.5,.26,.12,0,-.04],[.62,.16,.08,0,0]],12),vh205HeadCol,0,-.02,0);
-  Mm('jaw',G('mo',()=>svLoftZ([[-.1,.3,.06],[.45,.22,.05]],10)),mouth,0,.08,0);Mm('jaw',G('tg',()=>svLump(.14,1,.15,2124)),gum,0,.1,.25,0,0,0,1,.4,2);
-  [-1,1].forEach(s=>{Mm('jaw',G('lf',()=>{const q=new THREE.ConeGeometry(.05,.26,5);q.translate(0,.13,0);return q}),bone,s*.27,.04,.42,.15,0,s*.12);for(let k=0;k<3;k++)Mm('jaw',G('lt',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.translate(0,.05,0);return q}),bone,s*(.2+k*.05),.06,.4-k*.12)});
-  for(let k=0;k<4;k++)Mm('head',G('ut',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.rotateX(Math.PI);q.translate(0,-.05,0);return q}),bone,(k-1.5)*.07,-.14,.76);
+  PM('jaw','jw',()=>svLoftZ([[-.15,.34,.14,0,-.02],[.25,.32,.16,0,-.06],[.62,.22,.12,0,-.04],[.9,.13,.08,0,0]],12),vh205HeadCol,0,-.02,0);
+  Mm('jaw',G('mo',()=>svLoftZ([[-.1,.28,.06],[.75,.16,.05]],10)),mouth,0,.08,0);Mm('jaw',G('tg',()=>svLump(.14,1,.15,2124)),gum,0,.1,.25,0,0,0,1,.4,2);
+  [-1,1].forEach(s=>{Mm('jaw',G('lf',()=>{const q=new THREE.ConeGeometry(.05,.26,5);q.translate(0,.13,0);return q}),bone,s*.2,.04,.72,.15,0,s*.12);for(let k=0;k<4;k++)Mm('jaw',G('lt',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.translate(0,.05,0);return q}),bone,s*(.15+k*.03),.06,.62-k*.14)});
+  for(let k=0;k<6;k++)Mm('head',G('ut',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.rotateX(Math.PI);q.translate(0,-.05,0);return q}),bone,k<4?(k-1.5)*.07:(k-4.5)*.3,-.14,k<4?.98:.82);
   // ---------------- the collar and its broken chain ----------------
   Mm('neck',G('col',()=>new THREE.TorusGeometry(.66,.1,6,16)),iron,0,0,.05,0,0,0,1,1.05,1);
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2;Mm('neck',G('cs',()=>new THREE.ConeGeometry(.06,.24,4)),iron,Math.cos(a)*.75,Math.sin(a)*.75,.05,0,0,a-Math.PI/2)}
@@ -71455,7 +71455,7 @@ function vh205Build(R,e){
     Mm(wr,G('cwt',()=>svHorn(.05,.28,0,-.15,5,4)),bone,s*.26,-.18,.2,.6,s*.6,0);
     // the wing: lies along the back, its leading edge a long finger bone
     const wg='wg'+L;const wm=Mm(wg,vh205WingGeo(),wingM,0,0,0,0,Math.PI/2,0);wm.userData.noMerge=1;
-    Mm(wg,G('wb',()=>svTube([[0,0,0],[0,.32,-.9],[0,.3,-1.7],[0,.15,-2.6],[0,-.15,-3.4]],[.07,.06,.05,.04,.02],5)),boneD,0,0,0);
+    Mm(wg,G('wb',()=>svTube([[0,0,0],[0,.32,-.9],[0,.3,-1.7],[0,.15,-2.6],[0,-.15,-3.4]],[.07,.06,.05,.04,.02],5)),boneD,0,0,0);wm.scale.set(1,.85,1);
     Mm(wg,G('wh',()=>svHorn(.05,.3,0,.15,4,3)),bone,0,.05,.05,-1.2,0,0);
     // ---------------- the legs: heavy thighs, digitigrade shins, long clawed feet ----------------
     const th='th'+L,kn='kn'+L,hk='hk'+L,ft='ft'+L;
@@ -71686,15 +71686,15 @@ var VH205MV={
   // the hunt ran out: he drops on you, feeds, the Crimson Howl (cast by the controller)
   hfail:VH205_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.1,'air','l'],[.6,'land','s'],[1.6,'drink','io'],[2.6,'drink','l',.02],[3.0,'roar','o'],[4.0,'roar','l',.03],[4.6,'rec','io']],
     hit:[{t:.6,s:{k:'c',r:3.4},o:c=>{const p=vh205HeroIn(pl.position.clone());return {x:p.x,z:p.z,a:0}},dm:1.6,w:.55,kb:2,on:VH205_CLAW}],
-    go(c){c.e.m.visible=true;const p=vh205HeroIn(pl.position.clone());c.m.position.x=p.x+.8;c.m.position.z=p.z+.8},
+    go(c){c.e.m.visible=true;try{vh205HuntClear()}catch(_){}const p=vh205HeroIn(pl.position.clone());c.m.position.x=p.x+.8;c.m.position.z=p.z+.8},
     ev:[[.6,c=>vh205Crash(c.m.position.clone(),3.6,1.6,c.e)],[1.7,c=>{svSnd('squelch',1,.5);try{sk146Heal(c.e,.12,0xff4a4a)}catch(_){}}],[3.0,c=>{svSnd('roar',1.2,.5);try{sk146RingWave(c.e,c.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030);cq205After(.8,()=>{if(!c.e.dead)sk146RingWave(c.e,c.e.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030)})}catch(err){console.error('vh howl',err)}}]]}),
   // chained by three harpoons: a long stagger
   broken:VH205_NO141({dur:5.0,trk:[[.05,'land','l'],[.6,'chained','o'],[4.4,'chained','l',.035],[5.0,'rec','io']],
-    go(c){c.e.m.visible=true;c.S.stg=5;c.S.dr=0;c.S.hunt=0;svSnd('stag',1.2,.7);svSnd('roar',.9,.4);popT(c.m.position,'CHAINED','#e8e8ff',true);burst(gY(c.m.position,2),0xd8d8ff,80,4,3,.9);svShock(c.m.position,0xd8d8ff,6,.6)},
+    go(c){c.e.m.visible=true;VH205.H=null;VH205.cr=null;c.S.stg=5;c.S.dr=0;c.S.hunt=0;svSnd('stag',1.2,.7);svSnd('roar',.9,.4);popT(c.m.position,'CHAINED','#e8e8ff',true);burst(gY(c.m.position,2),0xd8d8ff,80,4,3,.9);svShock(c.m.position,0xd8d8ff,6,.6)},
     tk(c,dt){c.S.stg=Math.max(0,5-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'neck',0,0,0);burst(p,0xe8e8ff,1,.5,.6,.5)}},end(c){c.S.stg=0;try{vh205ChainsOff()}catch(_){}}})};
 VH205MV.rend.ph1only=1;
 // the moves' hit flags: bite catches you (pinned) when it lands
-VH205MV.bite.hit[0].fx=(c,an,hit)=>{if(hit&&vh205Pin())cq205After(0,()=>{if(!c.e.dead&&c.e.sv&&c.e.sv.mv&&c.e.sv.mv.id==='bite')svCast(c.e,'feed')})};
+VH205MV.bite.hit[0].fx=(c,an,hit)=>{if(hit&&(typeof vh180Auth!='function'||vh180Auth())&&vh205Pin())cq205After(0,()=>{if(!c.e.dead&&c.e.sv&&c.e.sv.mv&&c.e.sv.mv.id==='bite')svCast(c.e,'feed')})};
 // the hits' on-callbacks receive (c, an) from the engine
 for(const id in VH205MV){const D=VH205MV[id];(D.hit||[]).forEach(h=>{if(h.on===VH205_CLAW){h.on=(c)=>VH205_CLAW(c)}})}
 // ================= v205 The Citadel II · the rampart gate and Vharog, the Bloodgorged: the fight =================
@@ -71759,7 +71759,7 @@ function vh205MistTex(){if(VH205.tex)return VH205.tex;const c=document.createEle
   const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'rgba(80,10,20,0)');g.addColorStop(.3,'rgba(90,10,20,.35)');g.addColorStop(1,'rgba(60,5,12,.8)');x.fillStyle=g;x.fillRect(0,0,256,128);
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return VH205.tex=t}
 function vh205WallMake(){if(VH205.wall)return VH205.wall;const A=vh205Arena(),g=new THREE.Group();g.name='VharogWall';const geo=new THREE.CylinderGeometry(1,1,1,56,1,true);geo.translate(0,.5,0);const L=[];
-  [[1,4.6,.5,1],[1.05,6.2,.3,-.6],[.97,2.8,.42,1.5]].forEach(([s,h,op,sp],i)=>{const t=vh205MistTex().clone();t.needsUpdate=true;t.repeat.set(5+i*2,1);const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,fog:true,color:0xd03040}));
+  [[1,4.6,.42,1],[1.05,6.2,.24,-.6],[.97,2.8,.34,1.5]].forEach(([s,h,op,sp],i)=>{const t=vh205MistTex().clone();t.needsUpdate=true;t.repeat.set(5+i*2,1);const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.BackSide,depthWrite:false,fog:true,color:0xd03040}));
     m.scale.set(A.r0+.9*s,h,A.r0+.9*s);m.renderOrder=3;m.userData.lpsSkip=1;g.add(m);L.push({m,t,sp,s,op})});
   g.position.set(A.cx,A.y-.6,A.cz);g.visible=false;scene.add(g);VH205.wall={g,L,k:0,want:0};return VH205.wall}
 function vh205WallSet(on){const W=vh205WallMake();W.want=on?1:0;if(on)W.g.visible=true}
@@ -71845,7 +71845,7 @@ function vh205AI(e,dt,now){const S=e.sv,A=VH205A,m=e.m;if(!A)return;if(e.hb)e.hb
   {const p=pl.position;if(S.hp0&&dt>0){const vx=(p.x-S.hp0.x)/dt,vz=(p.z-S.hp0.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv=S.hv||{x:0,z:0};S.hv.x+=(vx-S.hv.x)*a;S.hv.z+=(vz-S.hv.z)*a}}S.hp0={x:p.x,z:p.z}}
   if(!A.f){// asleep: the sleep pose (healed), breathing; wake when a hero comes close
     if(!S.mv||S.mv.id!=='sleep')svStart(e,'sleep',1);e.c.h=M(e.c);e.agg=0;if(S.mv)svTickMove(e,dt,now);svApply(e,dt,now);
-    if(vh205Here()&&hero.hp>0&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<VH205.wake&&(typeof vh180Auth!='function'||vh180Auth())){vh205Wake();if(typeof co205Wake=='function')co205Wake()}return}
+    if(vh205Here()&&hero.hp>0&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<VH205.wake){vh205Wake();if(typeof co205Wake=='function')co205Wake()}return}
   if(vh205End()){vh205Reset(true);if(typeof vh180Ended=='function')vh180Ended();return}
   VH205.ft+=dt;e.agg=1;
   if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(vh180Auth())svCast(e,'intro')}
@@ -71898,3 +71898,318 @@ function vh205Tick(dt,now){const here=vh205Here(),t=now/1000;if(here&&!VH205.G){
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{vh205Tick(dt,now)}catch(err){if(!VH205.err++)console.warn('v205 vharog tick',err)}return r}}
 // a save made during the fight loads before it (he sleeps again); a save after the kill keeps the gate open
 CQ205L.push(()=>{if(VH205A&&VH205A.f)vh205Reset(false);vh205GateSync()});
+// ================= v205 The Citadel III · The Dawn Mirrors: bring the sunrise to the Citadel and open the Eclipse Door =================
+// The owner: "For instance 3 think of something yourself that would fit the zone and have it be a meaningful last quest step before
+// the epic final boss." The court has lived under a blood eclipse for an age; Lord Vaelric's den is shut by the Eclipse Door, a
+// seal of black sun that only true sunlight burns. Before the door lies the old Sun Court of the keep, from the days before the
+// vampires: a sunwell lens on a pillar that still catches one thin shaft of dawn through the clouds, and three empty mirror stands.
+//  * Cheddar (a second copy of the model) waits in the Sun Court and tells the story (XR.dm205): the court tore the three Dawn
+//    Mirrors down and hid them in blood shrines across III; take them back.
+//  * The shrines (dm205Plan: off the road at 30 / 56 / 82% of III's road, like the sigils of v145): a mirror sealed in a cocoon of
+//    blood on a dais, bone stakes and banners round it; its Mirror-Warden (an elite Crimson Executioner, Nosferatu or Blood
+//    Magister, DM205.W) rises when you come near. Slay it and the cocoon bursts; F takes the mirror (quest item).
+//  * The Sun Court (dm205Court, a fixed layout in the clearing's frame): F at an empty stand mounts a mirror. With all three
+//    mounted, F at a mirror turns it an eighth (DM205.dirs). The lens throws its beam one way; a Dawn Mirror gathers the light
+//    that reaches it and casts it the way it faces. Lead the beam lens → all three mirrors → the door's seal. The beam burns any
+//    creature of the court that crosses it.
+//  * Dawnbreak: the beam strikes the seal; the black sun burns away, Vaelric speaks, the light floods the court and the door
+//    opens on his den (F: the Den). Afterwards the beam keeps shining (III's way to the Den stays lit).
+// State in CQ205.c3: st 0 · 1 met · 2 all mounted · 3 the dawn · 4 through; fd / cl / got / mnt masks; rot[3] each mirror's facing.
+var DM205={S:null,C:null,lit:0,err:0,tab:'hi',beams:[],W:[{en:'executioner',n:'Mirror-Warden Ysolde',t:'the Crimson Executioner'},{en:'nosferatu',n:'Mirror-Warden Orlaith',t:'the Nosferatu'},{en:'vampm',n:'Mirror-Warden Casimir',t:'the Blood Magister'}],
+  dirs:[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]],see:24,lv:51,g:[null,null,null],dawn:0,dk:0};
+// the court's layout in the clearing's frame (a along the way out, b across): the lens, the three stands, the door's seal
+function dm205Court(){if(dm205Court.c)return dm205Court.c;const F=cq205F(2),W=(a,b)=>{const [x,z]=F.W2(a,b);return {a,b,x,z,y:GH(x,z)}};
+  const R={F,lens:W(-8,-7),ldir:2,st:[W(-8,2),W(0,-6),W(6,0)],door:W(F.reach+.5,0),seal:W(F.reach-.6,0),ched:W(-3,4.5)};
+  R.solve=[7,1,0];R.start=[3,5,4];return dm205Court.c=R}
+// a direction index → a world direction (in the frame)
+function dm205Dir(i){const F=cq205F(2),d=DM205.dirs[((i%8)+8)%8],l=Math.hypot(d[0],d[1]);const a=d[0]/l,b=d[1]/l;return [F.fx*a+F.lx*b,F.fz*a+F.lz*b]}
+// ---------------- the shrines' places (a pure function of the map data) ----------------
+function dm205Plan(){if(dm205Plan.c)return dm205Plan.c;const I=cq205I(2),P=I.path,N=P.length,DW=MAP.DW,F=cq205F(2);
+  const ok=(x,z,m)=>{const X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='~'||t=='H')return false;const J=insAt(X,Z);if(!J||J.g!==I.g)return false;return DW[Z*W+X]<-(m==null?1:m)};
+  const tan=i=>{const a=P[Math.max(0,i-3)],b=P[Math.min(N-1,i+3)];let dx=b[0]-a[0],dz=b[1]-a[1];const L=Math.hypot(dx,dz)||1;return [dx/L,dz/L]};
+  const avoid=[[I.en[0],I.en[1],20],[F.x,F.z,24]].concat(typeof cs164Avoid=='function'?cs164Avoid(I,16):(I.cl||[]).map(c=>[c[0],c[1],16])),fr=[.3,.56,.82],R={sh:[null,null,null],keep:[]};
+  for(const T of [{m:2.4,sep:30,av:1},{m:1.6,sep:22,av:.75},{m:1.1,sep:14,av:.5}])for(let j=0;j<3;j++){if(R.sh[j])continue;const ix=Math.round((N-1)*fr[j]),sd=j%2?-1:1;let got=null;
+    for(const b of [12,10,14,9,16,7])for(const side of [sd,-sd])for(const da of [0,6,-6,12,-12]){if(got)break;const k=Math.max(0,Math.min(N-1,ix+da)),p=P[k],t=tan(k),x=p[0]-t[1]*b*side,z=p[1]+t[0]*b*side;
+      if(!ok(x,z,T.m)||!avoid.every(([px,pz,r])=>Math.hypot(x-px,z-pz)>=r*T.av)||!R.sh.every(o=>!o||Math.hypot(x-o.x,z-o.z)>=T.sep))continue;got={x:Math.round(x*2)/2,z:Math.round(z*2)/2,i:j,ry:Math.atan2(p[0]-x,p[1]-z)}}
+    if(got)R.sh[j]=got}
+  for(let j=0;j<3;j++)if(!R.sh[j]){const ix=Math.round((N-1)*fr[j]),p=P[ix],t=tan(ix);R.sh[j]={x:p[0]-t[1]*5,z:p[1]+t[0]*5,i:j,ry:0,fb:1}}
+  R.sh.forEach(o=>R.keep.push([o.x,o.z,5]));R.keep.push([F.x,F.z,15]);return dm205Plan.c=R}
+// roaming groups stay away from the shrines and out of the Sun Court
+{const f=rosterBuild;rosterBuild=function(r){const o=f.apply(this,arguments);try{if(r===insG(5,2)&&ROST.r===r){const R=dm205Plan(),L=R.sh.map(c=>[c.x,c.z,14]).concat([[cq205F(2).x,cq205F(2).z,20]]);
+    ROST.slots=ROST.slots.filter(s=>!(s.wild&&L.some(q=>Math.hypot((s.hx==null?s.x:s.hx)-q[0],(s.hz==null?s.z:s.hz)-q[1])<q[2])))}}catch(e){console.warn('v205 mirrors roster',e)}return o}}
+// ---------------- models ----------------
+function dm205MirrorG(){return dt168Group('CQ205|mir',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    P(dt168Geo('dm_rim',()=>new THREE.TorusGeometry(.72,.08,6,20)),'m',0xb8903a,0,0,0);P(dt168Geo('dm_disc',()=>new THREE.CylinderGeometry(.66,.66,.06,20)),'m',0xd8d0c0,0,0,0,Math.PI/2,0,0);
+    for(let i=0;i<12;i++){const a=i/12*Math.PI*2;P(dt168Geo('dm_ray',()=>new THREE.ConeGeometry(.07,.32,4)),'m',0xc8a048,Math.cos(a)*.92,Math.sin(a)*.92,0,0,0,a-Math.PI/2)}
+    P(dt168Geo('dm_gem',()=>new THREE.OctahedronGeometry(.16,0)),'g',0xfff0b0,0,0,.06)},{m:{n:.08,sd:221}})}
+function dm205Stand(){return dt168Group('CQ205|stand',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    P(dt168Lathe([[0,0],[.85,0],[.85,.25],[.7,.32],[.42,.5],[.3,1.2],[.36,1.3],[.2,1.4],[0,1.4]],8),'c',0x6a6260,0,0,0);
+    [-1,1].forEach(s=>P(dt168Geo('dm_fork',()=>svTube([[0,0,0],[.25,.4,0],[.82,.9,0],[.86,1.4,0]],[.07,.06,.06,.05],5)),'m',0x8a6a30,0,1.35,0,0,s>0?0:Math.PI,0))},{c:{g:[1,.3],n:.12,m:[0x2a3a24,.25,.6],sd:222},m:{n:.08,sd:223}})}
+function dm205Lens(){return dt168Group('CQ205|lens',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    P(dt168Lathe([[0,0],[1.1,0],[1.1,.4],[.8,.55],[.55,.7],[.5,5.6],[.7,5.8],[.85,6.1],[0,6.1]],10),'c',0x7a7268,0,0,0);
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2;P(dt168BBox(.08,4.6,.08,.02),'c',0x5a524c,Math.sin(a)*.5,3.15,Math.cos(a)*.5)}
+    P(dt168Geo('dm_lr',()=>new THREE.TorusGeometry(.95,.1,6,22)),'m',0xb8903a,0,7.0,0,0,0,0);[-1,1].forEach(s=>P(dt168Geo('dm_la',()=>svTube([[0,0,0],[.3,.4,0],[.9,.9,0]],[.08,.07,.06],5)),'m',0x8a6a30,0,6.1,0,0,s>0?0:Math.PI,0));
+    P(dt168Geo('dm_lg',()=>new THREE.SphereGeometry(.85,14,10)),'g',0xfff2c0,0,7.0,0,0,0,0,1,1,.45)},{c:{g:[2,.3],n:.12,m:[0x2a3a24,.3,.6],sd:224},m:{n:.08,sd:225}})}
+function dm205Shrine(i){return dt168Group('CQ205|shr',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    P(dt168Lathe([[0,0],[2.2,0],[2.2,.25],[1.9,.35],[1.9,.5],[0,.5]],12),'c',0x3a3036,0,0,0);
+    for(let j=0;j<5;j++){const a=j/5*Math.PI*2;P(dt168Geo('dm_stk',()=>svHorn(.09,1.8,0,.35,5,4)),'c',0xcfc4a8,Math.sin(a)*2.0,.4,Math.cos(a)*2.0,-Math.PI/2+.25,a,0);k.S('',0x5e0a16,Math.sin(a)*2.05,1.9,Math.cos(a)*2.05,.45,1.1,a,0,j);
+      P(dt168Geo('dm_cdl',()=>new THREE.CylinderGeometry(.05,.06,.25,5)),'c',0xe0d8c0,Math.sin(a+.6)*1.6,.62,Math.cos(a+.6)*1.6);P(dt168Geo('dm_fl',()=>new THREE.ConeGeometry(.04,.12,4)),'g',0xff9a40,Math.sin(a+.6)*1.6,.82,Math.cos(a+.6)*1.6)}},{c:{g:[1.2,.3],n:.14,sd:226}})}
+function dm205Cocoon(){const g=new THREE.Group(),m=new THREE.Mesh(svG('dm_coc',()=>svLump(1,1,.28,2261)),new THREE.MeshStandardMaterial({color:0x4a0a12,roughness:.35,metalness:.1,flatShading:true,emissive:0x2a0206}));m.scale.set(1,1.35,.8);m.position.y=1.5;g.add(m);
+  const vm=new THREE.MeshBasicMaterial({color:0xc01020});for(let i=0;i<7;i++){const a=i/7*Math.PI*2,v=new THREE.Mesh(svG('dm_cv'+(i%3),()=>svTube([[0,0,0],[.15,.5,.1],[.05,1.1,.0],[.2,1.7,-.1]],.035,4)),vm);v.position.set(Math.cos(a)*.75,.6,Math.sin(a)*.62);v.rotation.y=-a;g.add(v)}
+  const gl=kqSpr(0xff2030,2.4);gl.position.y=1.5;g.add(gl);g.userData.m=m;return g}
+// a beam segment: a bright core and a soft glow (cylinders along +z, scaled to length)
+function dm205BeamMesh(){const G=DM205.bg||(DM205.bg=(()=>{const g=new THREE.CylinderGeometry(1,1,1,8,1,true);g.translate(0,.5,0);g.rotateX(Math.PI/2);return g})());
+  const core=new THREE.Mesh(G,new THREE.MeshBasicMaterial({color:0xfff2c8,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,fog:false})),glow=new THREE.Mesh(G,new THREE.MeshBasicMaterial({color:0xffc060,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  const g=new THREE.Group();core.scale.set(.09,.09,1);glow.scale.set(.32,.32,1);g.add(core,glow);[core,glow].forEach(q=>{q.userData.lpsSkip=1;q.renderOrder=4});g.userData.c=core;g.userData.g=glow;scene.add(g);return g}
+// ---------------- building the court and the shrines ----------------
+function dm205Build(){if(DM205.S)return DM205.S;const R=dm205Court(),F=R.F,S={st:[],sh:[],beams:[]};DM205.S=S;
+  // the Eclipse Door
+  const G=cq205Gatehouse({kind:'eclipse'}),gs={F,a:F.reach+.5,x:R.door.x,z:R.door.z,ry:Math.atan2(-F.fx,-F.fz),y:F.y0};G.g.position.set(gs.x,gs.y-.05,gs.z);G.g.rotation.y=gs.ry;scene.add(G.g);G.spot=gs;cq205PlaceLights(G);
+  try{G.cleared=cq205ClearFoot(gs,G.dims)}catch(_){}G.tiles=cq205FootTiles(gs,G.dims);G.tiles.T.forEach(k=>CBLK.add(k));S.door=G;
+  // the court's flagstones (a pale disc with a sun carved in it)
+  const fl=new THREE.Mesh(new THREE.CircleGeometry(11,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:dm205CourtTex(),color:0xc8b890,transparent:true,opacity:.5,depthWrite:false,fog:true,polygonOffset:true,polygonOffsetFactor:-4}));
+  const [cx,cz]=F.W2(-1,-1);fl.position.set(cx,GH(cx,cz)+.05,cz);fl.rotation.y=Math.atan2(F.fx,F.fz);fl.userData.lpsSkip=1;scene.add(fl);S.floor=fl;
+  // the lens on its pillar, the shaft of dawn into it
+  const L=dm205Lens();L.position.set(R.lens.x,R.lens.y,R.lens.z);scene.add(L);S.lens=L;CBLK.add(Math.round(R.lens.z)*W+Math.round(R.lens.x));
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.5,1.6,60,10,1,true),new THREE.MeshBasicMaterial({color:0xffe8b0,transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  sh.position.set(R.lens.x,R.lens.y+7+30,R.lens.z);sh.userData.lpsSkip=1;sh.renderOrder=3;scene.add(sh);S.shaft=sh;
+  S.ll=new THREE.PointLight(0xffe0a0,1.4,12,1.5);S.ll.position.set(R.lens.x,R.lens.y+6.5,R.lens.z);scene.add(S.ll);
+  // the stands and their mirrors (a turning group on top)
+  R.st.forEach((p,i)=>{const o=dm205Stand();o.position.set(p.x,p.y,p.z);scene.add(o);CBLK.add(Math.round(p.z)*W+Math.round(p.x));const turn=new THREE.Group();turn.position.y=2.3;o.add(turn);const m=dm205MirrorG();turn.add(m);
+    const gl=kqSpr(0xfff0b0,2.2);gl.material=gl.material.clone();gl.material.opacity=0;gl.position.y=2.3;o.add(gl);S.st.push({o,turn,m,gl,i,yaw:null})});
+  // the shrines (each with its cocoon and the mirror inside)
+  dm205Plan().sh.forEach((p,i)=>{const o=dm205Shrine(i);o.position.set(p.x,GH(p.x,p.z),p.z);o.rotation.y=p.ry;scene.add(o);const c=dm205Cocoon();o.add(c);const mr=dm205MirrorG();mr.position.y=1.5;mr.rotation.x=-.25;mr.scale.setScalar(.8);o.add(mr);
+    const beacon=new THREE.Mesh(new THREE.CylinderGeometry(.2,.6,30,8,1,true),new THREE.MeshBasicMaterial({color:0xff3040,transparent:true,opacity:.12,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));beacon.position.y=15;beacon.userData.lpsSkip=1;o.add(beacon);
+    S.sh.push({o,c,mr,beacon,i,x:p.x,z:p.z})});
+  // Cheddar in the court
+  try{const C=chd132Model({game:true});C.root.scale.setScalar((typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1)*1.12);C.root.userData.psNo=1;C.root.userData.noFarCull=1;C.root.position.set(R.ched.x,R.ched.y,R.ched.z);C.root.rotation.y=Math.atan2(R.lens.x-R.ched.x,R.lens.z-R.ched.z);scene.add(C.root);DM205.C=C}catch(e){console.error('v205 cheddar III',e)}
+  dm205Sync();return S}
+function dm205CourtTex(){if(DM205.ct)return DM205.ct;const N=512,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),C=N/2;x.strokeStyle='#fff';x.fillStyle='#fff';
+  const circ=(r,w)=>{x.lineWidth=w;x.beginPath();x.arc(C,C,r,0,Math.PI*2);x.stroke()};circ(250,6);circ(236,2);circ(120,4);circ(70,3);
+  for(let i=0;i<16;i++){const a=i/16*Math.PI*2;x.lineWidth=i%2?2:5;x.beginPath();x.moveTo(C+Math.cos(a)*126,C+Math.sin(a)*126);x.lineTo(C+Math.cos(a)*(i%2?190:230),C+Math.sin(a)*(i%2?190:230));x.stroke()}
+  for(let r=0;r<6;r++)for(let i=0;i<24;i++){const a=(i+(r%2)*.5)/24*Math.PI*2,rr=140+r*16;x.globalAlpha=.25;x.beginPath();x.arc(C+Math.cos(a)*rr,C+Math.sin(a)*rr,7,0,Math.PI*2);x.stroke()}x.globalAlpha=1;
+  return DM205.ct=new THREE.CanvasTexture(c)}
+// ---------------- state → scene ----------------
+function dm205Sync(){const S=DM205.S;if(!S)return;const C=CQ205.c3,R=dm205Court(),done=cq205Done(3);
+  S.sh.forEach(s=>{const cl=C.cl&(1<<s.i)||done||C.st>=2,tk=(C.got|C.mnt)&(1<<s.i)||done||C.st>=2;s.c.visible=!cl;s.mr.visible=cl&&!tk;s.beacon.visible=!tk;s.beacon.material.color.setHex(cl?0xffe0a0:0xff3040)});
+  S.st.forEach(s=>{const on=C.mnt&(1<<s.i)||done;s.m.visible=!!on;const r=done?R.solve[s.i]:C.rot[s.i];const [dx,dz]=dm205Dir(r);s.yaw=Math.atan2(dx,dz);s.turn.rotation.y=s.yaw});
+  // the door: open once the dawn has come
+  const D=S.door;if(done||C.st>=3){D.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(D.seal)D.seal.g.visible=false;D.light.intensity=1.6;D.haze.material.opacity=.6;D.pass.material.color.setHex(0x6a5030);D.tiles.D.forEach(k=>CBLK.add(k))}
+  else{D.doors.forEach(d=>d.rotation.y=0);if(D.seal){D.seal.g.visible=true;D.seal.sig.material.opacity=.95;D.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});D.seal.chains.forEach(c=>c.visible=true)}D.light.intensity=0;D.haze.material.opacity=0;D.pass.material.color.setHex(0x050203)}
+  dm205Trace()}
+// ---------------- the beam: lens → mirrors (in the light) → wherever it ends ----------------
+function dm205Trace(){const S=DM205.S;if(!S)return;const C=CQ205.c3,R=dm205Court(),F=R.F,done=cq205Done(3)||C.st>=3,pts=[],lit=[0,0,0];let hitDoor=false;
+  let p={x:R.lens.x,z:R.lens.z},d=dm205Dir(R.ldir),from=-1;pts.push([p.x,p.z]);
+  for(let n=0;n<5;n++){// the first stand (mounted, not the one we leave) within .95 of the ray ahead
+    let best=null,bt=99;R.st.forEach((s,i)=>{if(i===from||!(C.mnt&(1<<i))&&!done)return;const vx=s.x-p.x,vz=s.z-p.z,t=vx*d[0]+vz*d[1];if(t<.5)return;const off=Math.abs(vx*d[1]-vz*d[0]);if(off<.95&&t<bt){bt=t;best=i}});
+    // the door's seal: the plane at a = reach - .6, |b| < 3.2
+    const [pa,pb]=F.L2(p.x,p.z),da=d[0]*F.fx+d[1]*F.fz,db=d[0]*F.lx+d[1]*F.lz;let td=99;if(da>.05){const t=(F.reach-.6-pa)/da,b=pb+db*t;if(t>.5&&Math.abs(b)<3.2)td=t}
+    // the edge: the first blocked tile along the ray
+    let te=30;for(let t=1;t<30;t+=.5){const x=p.x+d[0]*t,z=p.z+d[1]*t,X=Math.round(x),Z=Math.round(z);if(solid(X,Z)&&!CBLK.has(Z*W+X)||MAP.DW[Z*W+X]>-.2){te=t;break}}
+    if(best!=null&&bt<Math.min(td,te)){const s=R.st[best];pts.push([s.x,s.z]);lit[best]=1;from=best;p={x:s.x,z:s.z};d=dm205Dir(done?R.solve[best]:C.rot[best]);continue}
+    if(td<te){pts.push([p.x+d[0]*td,p.z+d[1]*td]);hitDoor=true;break}
+    pts.push([p.x+d[0]*te,p.z+d[1]*te]);break}
+  DM205.lit=lit.filter(Boolean).length;DM205.pts=pts;DM205.door=hitDoor;
+  // draw it
+  while(S.beams.length<pts.length-1)S.beams.push(dm205BeamMesh());S.beams.forEach((b,i)=>{if(i>=pts.length-1){b.visible=false;return}const a=pts[i],c=pts[i+1],ya=i===0?R.lens.y+7:GH(a[0],a[1])+2.3,yb=GH(c[0],c[1])+(i===pts.length-2&&hitDoor?4.2:2.3);
+    const A=new THREE.Vector3(a[0],ya,a[1]),B=new THREE.Vector3(c[0],yb,c[1]);b.position.copy(A);b.lookAt(B);b.scale.set(1,1,A.distanceTo(B));b.visible=true;b.userData.A=A;b.userData.B=B});
+  S.st.forEach(s=>{s.gl.material.opacity=lit[s.i]?.9:0});
+  if(!done&&C.st===2&&hitDoor&&DM205.lit>=3)dm205Dawn(true)}
+// ---------------- actions ----------------
+function dm205Take(i,own){const C=CQ205.c3;if(C.got&(1<<i)||C.mnt&(1<<i))return;C.got|=1<<i;C.cl|=1<<i;CQ205.trkK='';dm205Sync();svSnd('bell',.7,1.2);
+  pickup({ic:'🌞',t:'Dawn Mirror',col:'#ffe8a0',sub:'Quest item · '+cq205Bits(C.got|C.mnt)+' of 3 · mount them on the stands of the Sun Court'});if(own!==false&&typeof co205Mir=='function')co205Mir('t',i)}
+function dm205Mount(i,own){const C=CQ205.c3;if(!(C.got&(1<<i))||C.mnt&(1<<i))return;C.got&=~(1<<i);C.mnt|=1<<i;CQ205.trkK='';const R=dm205Court();C.rot[i]=R.start[i];
+  if(C.mnt===7&&C.st<2){C.st=2;say('🐭 Cheddar: “All three! Now turn them — each one throws the light the way it faces. Lead the beam over all three mirrors and onto the door.”')}
+  dm205Sync();svSnd('heavy',.6,1.3);try{const s=DM205.S.st[i];burst(gY(s.o.position,2.3),0xffe0a0,30,1.2,1,.6)}catch(_){}if(own!==false&&typeof co205Mir=='function')co205Mir('m',i)}
+function dm205Turn(i,own,to){const C=CQ205.c3;if(!(C.mnt&(1<<i))||C.st>=3)return;const from=C.rot[i]|0;C.rot[i]=to!=null?to&7:(from+1)%8;const S=DM205.S,s=S.st[i];CQ205.trkK='';
+  try{dg165Snd('grind',.6,1.4)}catch(_){svSnd('heavy',.5,1.4)}const [dx,dz]=dm205Dir(C.rot[i]),y1=Math.atan2(dx,dz),y0=s.turn.rotation.y;let t=0;
+  kqFx({tick(dt){t+=dt||0;const k=svEase.io(Math.min(1,t/.35));s.turn.rotation.y=y0+svAng(y1-y0)*k;return t<.35},end(){s.turn.rotation.y=y1;dm205Trace()}});if(own!==false&&typeof co205Mir=='function')co205Mir('r',i,C.rot[i])}
+// the dawn: the beam on the seal, the black sun burns away, Vaelric speaks, the door opens
+function dm205Dawn(own){const C=CQ205.c3;if(C.st>=3)return;C.st=3;CQ205.trkK='';DM205.dawn=1;const D=DM205.S.door,p=new THREE.Vector3();D.seal.g.getWorldPosition(p);
+  cq205Card('The Citadel · Main Quest','Dawnbreak','For the first time in an age, the sun touches the Citadel','');svSnd('bell',1,.5);shake(.4);try{flash('rgba(255,230,180,.45)')}catch(_){}
+  let t=0;const sg=D.seal;kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/3);sg.sig.material.color.setRGB(1,.7+.3*k,.4+.6*k);sg.rings.forEach((r,i)=>{if(k>(i+1)/5&&r.on)gg205BreakRingOf(sg,r,p)});if(Math.random()<.6)burst(p.clone().add(new THREE.Vector3((Math.random()-.5)*5,(Math.random()-.5)*5,0)),0xffe0a0,2,1,1,.6);return t<3},
+    end(){burst(p,0xfff0c0,140,6,3,1.2);svSnd('crack',1.3,.5);sg.g.visible=false;cq205After(.6,()=>{let u=0;svSnd('heavy',1.1,.45);try{dg165Snd('grind',1,.5)}catch(_){}kqFx({tick(dt){u+=dt||0;const k=svEase.io(Math.min(1,u/4));D.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);D.light.intensity=1.6*k;D.haze.material.opacity=.6*k;return u<4},end(){}})})}});
+  cq205After(1.4,()=>say('🩸 A voice like a bell under water fills the court: “Who brings the sun into my house?” Lord Vaelric. “Come down, then, little light. Come down and burn.”'));
+  cq205After(6,()=>say('🐭 Cheddar: “I’ll… wait here. Someone has to tell Duskhold how this ends. Go — and give him a sunrise he won’t forget.”'));
+  if(own!==false&&typeof co205Mir=='function')co205Mir('d',0);if(typeof co205Credit=='function')co205Credit('c3')}
+function gg205BreakRingOf(sg,r,p){r.on=0;let t=0;const m=r.m;svSnd('crack',.8,1);kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/.5);m.scale.setScalar(r.r*2*(1+k*.5));m.material.opacity=.85*(1-k);return t<.5},end(){m.visible=false}})}
+// ---------------- the wardens ----------------
+function dm205Guard(i){const s=DM205.S.sh[i],w=DM205.W[i];let e=null;try{e=spawnEnemy(w.en,s.x+2,s.z+1,DM205.lv,{elite:1,agg:1})}catch(err){console.error('v205 warden',err)}if(!e)return null;
+  e.dm205=i+1;e.c.n=w.n;try{e.c.st.hp*=2.4;e.c.h=Math.round(M(e.c));e.m.scale.multiplyScalar(1.22)}catch(_){}e.agg=1;e.hunt=1;burst(gY(e.m.position,1),0xff2030,40,2,2,.8);svSnd('roar',.7,.8);
+  say('🩸 '+w.n+', '+w.t+', rises from beside the blood shrine.');DM205.g[i]=e;return e}
+{const f=kill;kill=function(e){const r=f.apply(this,arguments);try{if(e&&e.dm205){const i=e.dm205-1;DM205.g[i]=null;CQ205.c3.cl|=1<<i;CQ205.trkK='';const s=DM205.S&&DM205.S.sh[i];if(s){burst(gY(s.c.position.clone().add(s.o.position),1.5),0xff2030,90,3,3,1);svSnd('splash',1.1,.6)}dm205Sync();say('🌞 The cocoon of blood bursts. A great round mirror lies in the wreck of it, still bright.');if(typeof co205Mir=='function')co205Mir('c',i)}}catch(err){console.warn('v205 warden kill',err)}return r}}
+// ---------------- Cheddar's window ----------------
+var DM205T={hi0:['There you are! Look — the Sun Court. The old keep worshipped the dawn before the court came. That pillar still catches a thread of real sunlight, all the way down through the clouds.','And that door — the Eclipse Door. A black sun, sealed in his blood. Vaelric lives behind it, and nothing but sunlight will burn it away.'],
+  how:['The three stands held the Dawn Mirrors. Each one gathers the light that reaches it and throws it the way it faces. The court tore them down and hid them in blood shrines out on the grounds — you can see the red beacons.','Bring them back, mount them, and turn them until the beam runs from the lens, over all three, and onto that seal.'],
+  wait:['The mirrors are out there in the shrines. Mind the wardens — they won’t give them up quietly.'],
+  turn:['All mounted! Now turn them. Watch where each one throws the light.'],
+  after:['The door is open. Whatever you do down there — I’ll be right here when you come back. You are coming back.']};
+function dm205Talk(){const C=CQ205.c3;if(C.st<1){C.st=1;CQ205.trkK='';DM205.tab='hi0'}else DM205.tab='hi';openX('dm205')}
+XR.dm205=()=>{const C=CQ205.c3,t=DM205.tab||'hi';$('xwT').textContent='🐭 Cheddar';$('xwS').textContent='The Sun Court · before the Eclipse Door';
+  const L=t==='how'?DM205T.how:t==='hi0'?DM205T.hi0:C.st>=3||cq205Done(3)?DM205T.after:C.st>=2?DM205T.turn:DM205T.wait;
+  $('xwB').innerHTML='<div class="cq132say"><span class="cq132who">Cheddar</span>'+L.map(s=>'“'+s+'”').join('<br><br>')+'</div>';const btn=(k,lab,pri)=>'<button class="'+(pri?'pri':'')+'" data-dm205="'+k+'">'+lab+'</button> ';
+  $('xwF').innerHTML=t==='hi0'?btn('how','How do we bring the sun to it?',1):btn('how','Tell me about the mirrors again')+btn('bye','On my way',1)};
+$('xw').addEventListener('click',ev=>{if(xwMode!='dm205')return;const b=ev.target.closest('[data-dm205]');if(!b)return;const k=b.dataset.dm205;if(k==='bye'){closeX();return}DM205.tab=k;rX()});
+// ---------------- prompts ----------------
+function dm205Prompt(){if(!cq205Here(2)||!DM205.S)return null;const P=pl.position,C=CQ205.c3,S=DM205.S,R=dm205Court(),near=(x,z,r)=>Math.hypot(P.x-x,P.z-z)<r;
+  for(const s of S.sh){const cl=C.cl&(1<<s.i),tk=(C.got|C.mnt)&(1<<s.i);if(!near(s.x,s.z,3))continue;if(cl&&!tk&&C.st<2)return {label:'F · Take the Dawn Mirror',fn:()=>dm205Take(s.i,true)};
+    if(!cl&&!cq205Done(3))return {label:'🩸 A blood shrine · a mirror sealed in a cocoon of blood (slay its warden)',fn:()=>say('🩸 The cocoon pulses like a heart. Its warden must be near.')}}
+  if(DM205.C&&near(R.ched.x,R.ched.z,2.6))return {label:'F · Speak with Cheddar',fn:()=>dm205Talk()};
+  for(const s of S.st){const p=R.st[s.i];if(!near(p.x,p.z,2.4))continue;const on=C.mnt&(1<<s.i);
+    if(!on){if(C.got)return {label:'F · Mount a Dawn Mirror on the stand',fn:()=>{const i=s.i;if(C.got&(1<<i))dm205Mount(i,true);else{for(let j=0;j<3;j++)if(C.got&(1<<j)){C.got&=~(1<<j);C.got|=1<<i;break}dm205Mount(i,true)}}};return {label:'🌞 An empty mirror stand',fn:()=>say('🌞 A bronze fork on a stone plinth, made to hold a great round mirror.')}}
+    if(C.st===2)return {label:'F · Turn the Dawn Mirror (⟳ an eighth)',fn:()=>dm205Turn(s.i,true)}}
+  const D=S.door,[x,z]=cq205GW(D.spot,0,D.dims.fz+2.2);if(near(x,z,4)){if(cq205Done(3)||C.st>=3){const N=cq205I(3);return {label:'F · Descend into '+BOSSES[5].name+'’s den',fn:()=>dm205Through()}}
+    return {label:'🔒 The Eclipse Door · a black sun sealed in blood',fn:()=>say('🌑 A black sun burns cold across the door. Cheddar says only sunlight can touch it.')}}
+  return null}
+function dm205Through(){const C=CQ205.c3;if(C.st<4){C.st=4;CQ205.trkK=''}svSnd('whoosh',1,.5);try{insGo(cq205I(3))}catch(e){console.error('v205 den go',e)}}
+{const f=worldPrompt;worldPrompt=function(){try{const r=dm205Prompt();if(r)return r}catch(e){if(!DM205.err++)console.warn('v205 mirrors prompt',e)}return f.apply(this,arguments)}}
+// ---------------- the tick: build, wardens, the beam burns the court, the dawn light ----------------
+function dm205Tick(dt,now){const here=cq205Here(2),t=now/1000;if(here&&!DM205.S){try{dm205Build()}catch(e){if(!DM205.err++)console.error('v205 mirrors build',e)}}const S=DM205.S;if(!S)return;
+  const vis=here;[S.door.g,S.floor,S.lens,S.shaft].forEach(o=>o.visible=vis);S.st.forEach(s=>s.o.visible=vis);S.sh.forEach(s=>s.o.visible=vis);S.beams.forEach(b=>{if(!vis)b.visible=false});if(DM205.C)DM205.C.root.visible=vis;
+  if(!vis){S.ll.intensity=0;S.door.light.intensity=0;return}if(!cq205Done(3)&&CQ205.c3.st<3&&!S.beams.some(b=>b.visible))dm205Trace();
+  S.ll.intensity=1.3+.2*Math.sin(t*2);S.shaft.material.opacity=.16+.04*Math.sin(t*1.3);S.lens.children.forEach(m=>{});
+  if(DM205.C)try{DM205.C.update(t,dt)}catch(_){}
+  // the beam shimmers and burns whatever of the court crosses it
+  S.beams.forEach((b,i)=>{if(!b.visible)return;b.userData.c.material.opacity=.75+.2*Math.sin(t*9+i);b.userData.g.material.opacity=.18+.06*Math.sin(t*5+i);const A=b.userData.A,B=b.userData.B;if(Math.random()<.5)burst(A.clone().lerp(B,Math.random()),0xfff0c0,1,.1,.2,.4);
+    enemies.forEach(e=>{if(e.dead||!e.m||e.boss||e.dprop)return;const ex=e.m.position.x,ez=e.m.position.z,dx=B.x-A.x,dz=B.z-A.z,L2=dx*dx+dz*dz||1,u=Math.max(0,Math.min(1,((ex-A.x)*dx+(ez-A.z)*dz)/L2)),qx=A.x+dx*u,qz=A.z+dz*u;
+      if(Math.hypot(ex-qx,ez-qz)<.8){e.dmBurn=(e.dmBurn||0)-dt;if(e.dmBurn<=0){e.dmBurn=.5;try{hurt(e,Math.max(1,Math.round(M(e.c)*.06)),{col:0xffe8a0},false,true)}catch(_){}burst(gY(e.m.position,1),0xffe0a0,10,.6,1,.5)}}})});
+  // the wardens rise when a hero comes near an unbroken shrine
+  const C=CQ205.c3;if(!cq205Done(3)&&C.st<2&&(typeof co151On!='function'||!co151On()||co151Host()))S.sh.forEach(s=>{const i=s.i;if(C.cl&(1<<i))return;const d=Math.hypot(pl.position.x-s.x,pl.position.z-s.z);
+    if(d<DM205.see&&(!DM205.g[i]||DM205.g[i].dead||!enemies.includes(DM205.g[i]))){if(!(C.fd&(1<<i))){C.fd|=1<<i;CQ205.trkK=''}dm205Guard(i)}});
+  S.sh.forEach(s=>{if(s.c.visible){s.c.userData.m.scale.set(1+.04*Math.sin(t*2.4+s.i),1.35+.05*Math.sin(t*2.4+s.i),.8)}if(s.mr.visible)s.mr.rotation.y+=dt*.6});
+  // the dawn lingers over the court once it has come
+  const want=cq205Done(3)||C.st>=3?1:0;DM205.dk+=(want-DM205.dk)*Math.min(1,dt*.4)}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{dm205Tick(dt,now)}catch(e){if(!DM205.err++)console.warn('v205 mirrors tick',e)}return r}}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{const d=DM205.dk;if(d>.002&&cq205Here(2)){const F=cq205F(2),k=Math.max(0,1-Math.hypot(pl.position.x-F.x,pl.position.z-F.z)/40)*d;if(k>0){sun.intensity*=1+.6*k;hemi.intensity*=1+.35*k;
+      const dc=DM205.dc||(DM205.dc=new THREE.Color(0xd8b890));scene.fog.color.lerp(dc,.35*k);scene.background=scene.fog.color;try{const su=SKY.material.uniforms;su.hor.value.lerp(dc,.5*k)}catch(_){}}}}catch(_){}return r}}
+// the tracker reads DM205.lit; saves rebuild from CQ205.c3
+CQ205L.push(()=>{if(DM205.S)dm205Sync()});
+// the bag lists the Dawn Mirrors carried
+{const f=kqmMatTab;kqmMatTab=function(){const h=f.apply(this,arguments);const n=cq205Bits(CQ205.c3.got);if(!n)return h;const t=`<div class="kqm-slot mi" title="Dawn Mirror · quest item for The Dawn Mirrors: mount them on the stands of the Sun Court before the Eclipse Door."><span class="kqm-ic">🌞</span><span class="kqm-ct">${n}</span><span class="kqm-hold">Dawn Mirror</span></div>`;
+  return /Quest items/.test(h)?h.replace('<div class="kqm-grid">','<div class="kqm-grid">'+t):`<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(7)}</div>`+h}}
+// ================= v205 co-op: the Citadel main quest played together =================
+// Playing together (partners in the same instance, the v58 relay: MP 'ev', entries only from partners in my region MP.rg), every
+// chapter is shared (the v165 Searing Sands pattern, 3305):
+//  · I  The Unsealing: the keys are everyone's (['c5i', i]); handing them over is everyone's (['c5g']). The region host runs the
+//    unbinding: anyone may begin it (a partner asks ['c5a']; the host starts it and tells all ['c5u', 'start']); Cheddar's health,
+//    the seal and the siphons' places go out every 150 ms (['c5ue', t, hp, go, siphon x/z…]); the specials' states (['c5us', nid,
+//    kind, state]: a Mist Stalker hidden in its mist, the Gate-Breaker's wind-up) so partners see what the host's world does; the
+//    Nightwing Dives (['c5dv', id, lanes…]): each player checks their own hero in a lane and tells the host (['c5sh', id]); the host
+//    hurts Cheddar a moment later only if nobody shielded him. The court is the host's shared monsters. Its end: ['c5u', why].
+//  · II Vharog: one beast for everyone. The DRIVER (the lowest peer id among the standing heroes in the clearing who have him)
+//    runs his AI; each move goes out with its seed and his spot (['v1c', …]), his health, phase and posture every 120 ms
+//    (['v1s', …]); the others play the same moves and glide between them; their damage goes to the driver (['v1h', dmg]). He wakes
+//    for everyone (['v1w']); he is put back to sleep only when every hero in the clearing is down (['v1r']); his fall is everyone's
+//    (['v1k']). A ballista loosed by anyone (['v1b', i]) is shown everywhere and counted by the driver.
+//  · III The Dawn Mirrors: the cocoons broken, the mirrors taken, mounted and turned, the dawn (['c5m', k, i, rot]). The wardens are
+//    the host's shared monsters.
+//  · Credit for the whole group, wherever they are (['bq205', key], three times): the seal broken, Vharog slain, the dawn.
+// Playing solo nothing changes (co151On() is false).
+var CO205={rx:0,ap:0,rk:0,hq:0,tH:0,tS:0,tU:0,got:{},cq:[],err:0,shd:{}};
+function co205Rx(f){CO205.rx++;try{return f()}finally{CO205.rx--}}
+function co205Send(e){if(!CO205.rx)co151Send(e)}
+const co205R=v=>Math.round(v*100)/100;
+// ---------------- credit ----------------
+function co205Credit(key){if(typeof MP=='undefined'||!MP.on||!MPX.be||CO205.rx||CO205.got[key])return;CO205.got[key]=1;CO205.cq.push({key,n:3,t:0})}
+function co205Flush(now){if(!CO205.cq.length)return;const l=[];CO205.cq.forEach(q=>{if(now-q.t>700){q.t=now;q.n--;l.push(['bq205',q.key,String(hero.name||'Hero').slice(0,20)])}});
+  CO205.cq=CO205.cq.filter(q=>q.n>0);if(l.length)try{MP.room.emit('ev',{r:MP.rg,l}).catch(()=>{})}catch(_){}}
+function co205Apply(key,by){const who=mpEsc(String(by||'A partner').slice(0,20));co205Rx(()=>{
+  if(key==='c1'){if(CQ205.c1.st<3&&!US205.E){CQ205.c1.st=3;CQ205.c1.ing=0;CQ205.trkK='';try{gg205Sync();ch205Sync()}catch(_){}say('🩸 '+who+' broke the blood seal with Cheddar: the Great Gate stands open for you too.')}}
+  else if(key==='c2'){if(CQ205.c2.st<1){CQ205.c2.st=1;CQ205.trkK='';if(VH205.e&&!VH205.e.dead&&!(VH205A&&VH205A.f))vh205Reset(false);try{vh205GateSync()}catch(_){}say('🦇 '+who+' slew Vharog, the Bloodgorged: the rampart gate stands open for you too.')}}
+  else if(key==='c3'){if(CQ205.c3.st<3){CQ205.c3.st=3;CQ205.c3.mnt=7;CQ205.c3.got=0;CQ205.trkK='';try{dm205Sync()}catch(_){}say('🌞 '+who+' brought the dawn to the Citadel: the Eclipse Door stands open for you too.')}}})}
+// ================= I: the keys, the unbinding =================
+function co205Ing(i){if(co151On())co205Send(['c5i',i|0])}
+function co205Give(){if(co151On())co205Send(['c5g'])}
+function co205Ask(){if(nowP()-(CO205.tA||0)>800){CO205.tA=nowP();co205Send(['c5a'])}}
+function co205Ev(k){if(co151On())co205Send(['c5u',k])}
+function co205USync(now){const E=US205.E;if(!E||!co151On()||!co151Host()||now-CO205.tU<150)return;CO205.tU=now;const sl=[];(E.sl||[]).forEach(p=>sl.push(co205R(p.x),co205R(p.z)));
+  co205Send(['c5ue',Math.round(E.t*10),Math.round(E.hp),E.go|0].concat(sl));
+  // the specials' states, for partners' copies
+  enemies.forEach(e=>{if(!e.us205||e.dead||!e.nid)return;const st=e.us205==='mist'?(e.usM&&e.usM.st||''):e.us205==='brk'?(e.usB&&e.usB.st||''):'';if(!st)return;const k=e.nid+':'+st;if(e.co205k===k)return;e.co205k=k;co205Send(['c5us',e.nid,e.us205,st])})}
+function co205OnU(q){if(co151Host()||!cq205Here(0)||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;let E=US205.E;if(!E){if(CQ205.c1.st!==2||!CH205.C)return;co205Rx(()=>us205Start(false));E=US205.E;if(!E)return}
+  E.t=Math.max(0,(q[1]|0)/10);E.hp=Math.max(0,Math.min(US205.hpM,q[2]|0));if(q[3]&&!E.go&&!CH205.to){E.go=1;CH205.pose='cast'}const sl=[];for(let i=4;i+1<q.length;i+=2)if(isFinite(q[i])&&isFinite(q[i+1]))sl.push({x:+q[i],z:+q[i+1]});E.sl=sl}
+function co205OnUS(q){const e=MP.emap&&MP.emap[q[1]];if(!e)return;e.co205us=q[2]+':'+q[3];
+  if(q[2]==='mist'&&q[3]==='form'){svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},.9,{col:0xb01020})}
+  if(q[2]==='brk'&&q[3]==='wind'){const c=us205C();if(c)svWarn({k:'c',r:2.4},{x:c.x,z:c.z,a:0},2.2,{col:0xd01808})}}
+// a partner's copy of a Mist Stalker hides while the host's is mist
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.mir&&e.co205us){if(e.co205us==='mist:mist'||e.co205us==='mist:form'){e.m.visible=false;if(e.hb)e.hb.visible=false;if(Math.random()<.6)burst(gY(e.m.position,.4),0x7a0a16,1,.6,.6,.6)}}return f.apply(this,arguments)}}
+// the dives: lanes go out from the host; whoever stands in one takes the swarm and says so; the host hurts Cheddar only if no one did
+function co205Dive(lanes){if(!co151On()||!co151Host())return;const E=US205.E;if(!E||!E.dive)return;E.dive.id=(CO205.dvN=(CO205.dvN||0)+1);const l=['c5dv',E.dive.id];lanes.forEach(L=>l.push(co205R(L.x),co205R(L.z),co205R(L.a),co205R(L.len)));co205Send(l)}
+function co205OnDive(q){if(co151Host()||!US205.E)return;const lanes=[];for(let i=2;i+3<q.length;i+=4)lanes.push({x:+q[i],z:+q[i+1],a:+q[i+2],len:+q[i+3]});const id=q[1]|0;
+  lanes.forEach(L=>svWarn({k:'l',w:2.2,l:L.len,b:0},{x:L.x,z:L.z,a:L.a},1.7,{col:0xb01020}));
+  cq205After(1.7,()=>{lanes.forEach(L=>{const P=pl.position,dx=P.x-L.x,dz=P.z-L.z,f=dx*Math.sin(L.a)+dz*Math.cos(L.a),s=Math.abs(dx*Math.cos(L.a)-dz*Math.sin(L.a));
+    try{sk146Swarm(new THREE.Vector3(L.x,GH(L.x,L.z)+1,L.z),new THREE.Vector3(L.x+Math.sin(L.a)*L.len,GH(L.x,L.z)+1,L.z+Math.cos(L.a)*L.len),20,0x1a0a10,'bat',.5,{spread:1})}catch(_){}
+    if(hero.hp>0&&f>-.4&&f<L.len-1.2&&s<1.3){const src=enemies.find(e=>!e.dead)||{c:{mt:'p',l:US205.lv},m:{position:P}};try{hitTarget(src,pl,.9)}catch(_){}popT(P,'SHIELDED HIM','#ffe0a0',true);co205Send(['c5sh',id])}})})}
+// the host defers Cheddar's hurt from a dive by a moment, and skips it if a partner shielded him
+{const f=us205DiveTick;us205DiveTick=function(dt){const E=US205.E;if(!co151On()||!co151Host()||!E||!E.dive)return f.apply(this,arguments);const D=E.dive,hp0=E.hp,fired0=D.fired;const r=f.apply(this,arguments);
+  if(!fired0&&D.fired&&E.hp<hp0){const lost=hp0-E.hp;E.hp=hp0;const id=D.id;cq205After(.35,()=>{const X=US205.E;if(!X)return;if(CO205.shd[id]){X.hp=Math.min(US205.hpM,X.hp+1);return}X.hp-=lost;CH205.hit=.5})}return r}}
+// a partner's copy of the unbinding does not spawn, hurt Cheddar or run the specials (the host's world does)
+{const f=us205Spawn;us205Spawn=function(){if(co151On()&&!co151Host())return null;return f.apply(this,arguments)}}
+// ================= II: Vharog, one beast for everyone =================
+function vh180Has(){const e=VH205.e;return !!(e&&!e.dead&&e.sv&&vh205Here())}
+function vh180Drv(){if(!co151On())return typeof MP!='undefined'?MP.me:'';let h=vh180Has()&&co151Me()?MP.me:null;
+  for(const k in MP.rh){const p=MP.rh[k].pr;if(p&&p.rg===MP.rg&&p.v1&&p.hp>0&&!p.dn&&(h===null||k<h))h=k}return h}
+vh180Auth=function(){if(!co151On())return true;const d=vh180Drv();return d===null||d===MP.me};
+vh180Glide=function(e,dt){const m=e.m,S=e.sv;if(e.nry!=null){const da=svAng(e.nry-m.rotation.y),t=5*dt;m.rotation.y+=Math.max(-t,Math.min(t,da))}
+  if(e.nx!=null&&dt>0){const dx=e.nx-m.position.x,dz=e.nz-m.position.z,l=Math.hypot(dx,dz);if(l>10){m.position.x=e.nx;m.position.z=e.nz}else{const k=Math.min(1,dt*6);m.position.x+=dx*k;m.position.z+=dz*k}S.walkSp=l>.3?2:0}};
+function vh180End(){if(!co151On())return hero.hp<=0||!vh205Here()||(typeof AWD!='undefined'&&AWD.dead);if(!vh205Here())return true;if(!vh180Auth())return false;return !co151Standing()}
+function vh180Ended(){if(co151On()&&vh180Auth())co205Send(['v1r'])}
+function co205Wake(){if(co151On())co205Send(['v1w'])}
+{const f=svCast;svCast=function(e,id,seed){if(e&&e.vh205&&co151On()&&!vh180Auth()&&!CO205.rx)return;const r=f.apply(this,arguments);
+  try{if(e&&e.vh205&&co151On()&&!CO205.rx&&e.sv&&e.sv.mv&&e.sv.mv.id===id){const m=e.m;co205Send(['v1c',id,e.sv.mv.seed,co205R(m.position.x),co205R(m.position.z),co205R(m.rotation.y),e.sv.ph|0])}}catch(_){}return r}}
+// a follower's hits go to the driver (shown here, applied there)
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.vh205&&!e.dead&&co151On()&&!vh180Auth()&&!CO205.ap&&VH205A&&VH205A.f){d=Math.max(0,Math.round(d));if(!isFinite(d)||!d)return;
+    CO205.hq+=d;e.lhT=performance.now();e.c.h+=1e9;try{return f(e,d,s,crit,dot)}finally{e.c.h=Math.max(1,e.c.h-1e9)}}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){const r=f.apply(this,arguments);try{if(e&&e.vh205){CO205.kT=performance.now();if(co151On()&&!CO205.rk){co205Send(['v1k']);co205Send(['v1k'])}}}catch(_){}return r}}
+function vh180Sync(now){const e=VH205.e;if(!co151On()||!vh180Auth()||!vh180Has()||!(VH205A&&VH205A.f)||now-CO205.tS<120||now-(CO205.kT||-1e9)<10000)return;CO205.tS=now;const S=e.sv,m=e.m;
+  co205Send(['v1s',Math.round(e.c.h),S.ph|0,co205R(m.position.x),co205R(m.position.z),co205R(m.rotation.y),Math.round((S.po||0)*100),1,S.mv?S.mv.id:'',S.mv?S.mv.seed|0:0,S.mv?Math.round(S.mv.t*100):0])}
+function vh180OnSync(q){if(!vh205Here()||vh180Auth())return;const e=VH205.e;if(!e||e.dead||!enemies.includes(e))return;const S=e.sv,now=performance.now(),[_,h,ph,x,z,ry,po]=q;if(!isFinite(x)||!isFinite(z))return;
+  if(!(VH205A&&VH205A.f))co205Rx(()=>vh205Wake());e.nx=+x;e.nz=+z;e.nry=+ry||0;const hh=Math.max(1,Math.min(M(e.c),+h||1));e.c.h=now-(e.lhT||0)<600?Math.min(e.c.h,hh):hh;
+  if((ph|0)===2&&S.ph!==2&&!(S.mv&&S.mv.id==='awaken')){S.ph=2;e.bs.ph=2;try{vh205Storm(true)}catch(_){}}S.po=Math.max(0,Math.min(1,(po|0)/100));
+  {const id=q[8],sd=q[9]|0,mt=(q[10]|0)/100;if(typeof id==='string'&&VH205MV[id]&&id!=='sleep'&&sd&&mt<.6&&e.v1sd!==sd&&!(S.mv&&S.mv.seed===sd)){e.v1sd=sd;co205Rx(()=>{svEndMove(e,true);svStart(e,id,sd)})}}
+  if(Math.hypot(e.m.position.x-x,e.m.position.z-z)>14&&!(S.mv&&S.mv.id==='prowl')){e.m.position.x=+x;e.m.position.z=+z}}
+function vh180OnCast(q){if(!vh205Here())return;const e=VH205.e;if(!e||e.dead||!e.sv)return;const [_,id,seed,x,z,ry,ph]=q;if(typeof id!=='string'||!VH205MV[id])return;
+  const m=e.m;if(isFinite(x)&&isFinite(z)&&Math.hypot(m.position.x-x,m.position.z-z)<14){m.position.x=+x;m.position.z=+z;if(isFinite(ry))m.rotation.y=+ry}e.nx=+x;e.nz=+z;e.nry=+ry||0;
+  if(ph===2&&e.sv.ph!==2&&id!=='awaken'){e.sv.ph=2;e.bs.ph=2}if(!(VH205A&&VH205A.f))co205Rx(()=>vh205Wake());e.sv.on=true;
+  if(e.v1sd===(seed|0)&&e.sv.mv&&e.sv.mv.id===id)return;e.v1sd=seed|0;co205Rx(()=>{svEndMove(e,true);svStart(e,id,Math.max(1,seed|0))})}
+function vh180OnKill(){const e=VH205.e;if(!e||e.dead||!vh205Here())return;CO205.rk=1;MP.rk=1;try{e.c.h=0;e.dead=1;if(e.hb)e.hb.visible=false;kill(e)}finally{CO205.rk=0;MP.rk=0}}
+function co205Loose(i){if(co151On())co205Send(['v1b',i|0])}
+// ================= III: the mirrors =================
+function co205Mir(k,i,r){if(co151On())co205Send(['c5m',k,i|0,r|0])}
+function co205OnMir(q){const k=q[1],i=q[2]|0,C=CQ205.c3;if(i<0||i>2)return;
+  if(k==='c'){if(!(C.cl&(1<<i))){C.cl|=1<<i;CQ205.trkK='';try{dm205Sync()}catch(_){}}}
+  else if(k==='t'){if(!((C.got|C.mnt)&(1<<i))){if(DM205.S)dm205Take(i,false);else{C.got|=1<<i;C.cl|=1<<i}}}
+  else if(k==='m'){if(!(C.mnt&(1<<i))){C.got|=1<<i;if(DM205.S)dm205Mount(i,false);else{C.got&=~(1<<i);C.mnt|=1<<i;if(C.mnt===7&&C.st<2)C.st=2}}}
+  else if(k==='r'){if(C.mnt&(1<<i)&&C.st<3){if(DM205.S)dm205Turn(i,false,q[3]|0);else C.rot[i]=q[3]&7}}
+  else if(k==='d'){if(C.st<3){if(DM205.S)dm205Dawn(false);else C.st=3}}}
+// ================= presence and the messages =================
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'){try{p.v1=vh180Has()?1:0}catch(_){}}return f.apply(this,arguments)}}
+{const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&Array.isArray(d.l)){
+    for(const q of d.l.slice(0,60)){if(!Array.isArray(q)||typeof q[0]!=='string')continue;const t=q[0];
+      if(t==='bq205'){if(typeof q[1]==='string'&&/^(c1|c2|c3)$/.test(q[1])&&!CO205.got[q[1]]){CO205.got[q[1]]=1;co205Apply(q[1],q[2]||mpName(msg.peer))}continue}
+      if(!/^(c5|v1)/.test(t)||d.r!==MP.rg||!co151Peer(msg))continue;const fromHost=msg.peer===MP.host,iHost=MP.host===MP.me;
+      co205Rx(()=>{
+      // I
+      if(t==='c5i'){const i=q[1]|0;if(i>=0&&i<4&&CQ205.c1.st===1&&!(CQ205.c1.ing&(1<<i))){CQ205.c1.ing|=1<<i;CQ205.trkK='';const g=CH205.ING[i];say('🩸 A partner took the '+g.n+'.')}}
+      else if(t==='c5g'){if(CQ205.c1.st===1){CQ205.c1.ing=15;ch205Give(false)}else if(CQ205.c1.st<1){CQ205.c1.st=2;CQ205.c1.ing=0;CQ205.trkK=''}}
+      else if(t==='c5a'){if(iHost&&!US205.E&&CQ205.c1.st===2&&cq205Here(0))setTimeout(()=>{if(!US205.E)us205Start(true)},0)}
+      else if(t==='c5u'){if(fromHost){const k=q[1];if(k==='start'&&!US205.E&&cq205Here(0)&&CQ205.c1.st===2)us205Start(false);else if(k==='fall'&&US205.E)us205Stop('fall');else if(k==='won'&&US205.E)us205Win();else if(k==='quiet'&&US205.E)us205Stop('quiet')}}
+      else if(t==='c5ue'){if(fromHost)co205OnU(q)}
+      else if(t==='c5us'){if(fromHost)co205OnUS(q)}
+      else if(t==='c5dv'){if(fromHost)co205OnDive(q)}
+      else if(t==='c5sh'){CO205.shd[q[1]|0]=1}
+      // II
+      else if(t==='v1h'){if(vh180Auth()&&VH205.e&&!VH205.e.dead){const dm=Math.max(0,Math.min(1e6,+q[1]||0));if(dm){CO205.ap=1;try{hurt(VH205.e,dm,{col:0xff6a6a},false,true)}finally{CO205.ap=0}}}}
+      else if(t==='v1k')vh180OnKill();
+      else if(t==='v1w'){if(vh205Here()&&VH205.e&&!VH205.e.dead&&!(VH205A&&VH205A.f))vh205Wake()}
+      else if(t==='v1b'){const i=q[1]|0;if(VH205.H&&VH205.bal[i]&&!VH205.bal[i].used){vh205Loose(i,false);if(vh180Auth())co205Send(['v1b',i])}}
+      else if(msg.peer===vh180Drv()||!vh180Auth()&&(vh180Has()||t==='v1s')){if(t==='v1c')vh180OnCast(q);else if(t==='v1s')vh180OnSync(q);else if(t==='v1r'){if(VH205A&&VH205A.f)vh205Reset(true)}}
+      // III
+      if(t==='c5m')co205OnMir(q)})}}}catch(err){if(!CO205.err++)console.warn('v205 co-op',err)}
+  return f.apply(this,arguments)}}
+// ================= the tick =================
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(typeof MP!='undefined'&&MP.on){const t=performance.now();
+    if(CO205.hq>0&&t-CO205.tH>150){CO205.tH=t;co205Send(['v1h',CO205.hq]);CO205.hq=0}
+    vh180Sync(t);co205USync(t);co205Flush(t);const g=vh180Has()?1:0;if(g!==CO205.v1){CO205.v1=g;MP.lastPres=''}}}catch(err){if(!CO205.err++)console.warn('v205 co-op tick',err)}return r}}
+// leaving the group: what was sent or heard is forgotten (a new group gets it again)
+{const f=mpSolo;mpSolo=function(){const r=f.apply(this,arguments);CO205.got={};CO205.cq=[];CO205.hq=0;CO205.shd={};return r}}

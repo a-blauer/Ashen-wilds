@@ -24,10 +24,15 @@ VIEW=r"""async(k)=>{const wait=ms=>new Promise(r=>setTimeout(r,ms));let p=.42,d=
   const F1=cq205F(1),at1=(a,b)=>{const [x,z]=F1.W2(a,b);toPos(x,z);pl.position.y=GH(x,z)},back1=Math.atan2(-F1.fx,-F1.fz);
   const vhT=n=>{for(let i=0;i<n;i++){const T=performance.now()+i*33;homeTick(1/30,T);const e=VH205.e;if(e&&!e.dead)eTick(e,1/30,T);try{kqFxTick(1/30)}catch(_){}}};
   if(k=='v2gate'){INSR[5]=Math.max(INSR[5]|0,1);at1(-4,0);await wait(400);vhT(30);y=back1;p=.2;d=15}
-  if(k=='v2sleep'){INSR[5]=Math.max(INSR[5]|0,1);at1(-2,0);await wait(400);vhT(30);const e=VH205.e;toPos(e.m.position.x-F1.fx*5-F1.lx*3,e.m.position.z-F1.fz*5-F1.lz*3);vhT(10);y=back1-.5;p=.22;d=7}
+  if(k=='v2sleep'){INSR[5]=Math.max(INSR[5]|0,1);at1(-2,0);await wait(400);vhT(30);const e=VH205.e;toPos(e.m.position.x-F1.fx*8.5-F1.lx*4,e.m.position.z-F1.fz*8.5-F1.lz*4);vhT(10);y=back1-.5;p=.18;d=6}
   if(k=='v2fight'||k=='v2rear'||k=='v2pounce'||k=='v2hunt'||k=='v2screech'){INSR[5]=Math.max(INSR[5]|0,1);at1(-2,0);await wait(400);vhT(30);const e=VH205.e;toPos(e.m.position.x-F1.fx*6,e.m.position.z-F1.fz*6);vhT(5);vh205Wake();vhT(140);
     const id={v2fight:'rend',v2rear:'rend',v2pounce:'pounce',v2screech:'screech',v2hunt:'hunt'}[k];svEndMove(e,true);if(k=='v2hunt'){e.sv.ph=2;vh205Storm(true)}e.m.position.set(VH205A.cx,0,VH205A.cz);pl.position.set(VH205A.cx-F1.fx*6,0,VH205A.cz-F1.fz*6);e.m.rotation.y=Math.atan2(pl.position.x-e.m.position.x,pl.position.z-e.m.position.z);
     svStart(e,id,3);vhT({v2fight:20,v2rear:57,v2pounce:30,v2screech:40,v2hunt:160}[k]);y=back1+.9;p=.25;d=11;if(k=='v2hunt'){y=back1+.4;p=.5;d=16}}
+  const F2=cq205F(2),at2=(a,b)=>{const [x,z]=F2.W2(a,b);toPos(x,z);pl.position.y=GH(x,z)},back2=Math.atan2(-F2.fx,-F2.fz);
+  if(k=='v3court'){INSR[5]=2;at2(-12,-3);await wait(400);TK205(30);y=back2+.4;p=.35;d=17}
+  if(k=='v3shrine'){INSR[5]=2;at2(0,0);await wait(400);TK205(10);const s=DM205.S.sh[1];toPos(s.x+7,s.z+5);await wait(600);TK205(20);y=Math.atan2(7,5);p=.25;d=9}
+  if(k=='v3beam'){INSR[5]=2;at2(-12,-3);await wait(400);TK205(10);const C=CQ205.c3;C.st=2;C.mnt=7;C.cl=7;C.rot=[7,1,4];dm205Sync();TK205(20);y=back2+.5;p=.42;d=18}
+  if(k=='v3dawn'){INSR[5]=2;at2(-6,0);await wait(400);TK205(10);const C=CQ205.c3;C.st=2;C.mnt=7;C.cl=7;C.rot=[7,1,4];dm205Sync();dm205Turn(2,true,0);TK205(400);y=back2;p=.22;d=14}
   if(window.V205X){const r=await V205X(k);if(r){p=r[0];d=r[1];y=r[2]}}
   for(let i=0;i<40;i++)atmos(.05,performance.now());camPitch=p;camDist=d;camYaw=y;window.__snap={p,d,y};snapCam();return ERRS.slice(0,5)}"""
 def s(pg):
