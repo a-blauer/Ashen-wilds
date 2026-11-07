@@ -71221,7 +71221,7 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
   const W0=RAM?12.5:14.5,Ht=RAM?10.5:13,w2=RAM?2.9:3.25,hs=RAM?4.6:5.6,dA=RAM?2.6:3.6,tr=RAM?2.6:3.1,tx=RAM?7.5:8.7,tH=RAM?13.5:16.5,dep=3.0,fz=.6;
   const C=ECL?{st:0x2a2630,st2:0x1c1a22,st3:0x3e3846,trim:0x524a5a,roof:0x18161c,iron:0x26262c,wood:0x1c1416,gold:0x7a6a3a,ban:0x1a1020,ban2:0x6a5a2a,glow:0xffc070}
     :RAM?{st:0x4a4246,st2:0x352f34,st3:0x5c5458,trim:0x6e6468,roof:0x2a2426,iron:0x2c2c32,wood:0x2e2018,gold:0x7a6234,ban:0x5a0c14,ban2:0x8a6a30,glow:0xff2a30}
-    :{st:0x463e46,st2:0x30292f,st3:0x5a5058,trim:0x6c6068,roof:0x231d24,iron:0x2a2a30,wood:0x2a1a14,gold:0x8a6a34,ban:0x5e0a16,ban2:0x9a7a3a,glow:0xff2030};
+    :{st:0x524852,st2:0x342c33,st3:0x645a64,trim:0x7c6e76,roof:0x231d24,iron:0x2a2a30,wood:0x2a1a14,gold:0x8a6a34,ban:0x5e0a16,ban2:0x9a7a3a,glow:0xff2030};
   const key='CQ205|gate|'+kind,BB=dt168BBox,P=(k,geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
   const W={c:{g:[3.2,.32],n:.12,s:.22,m:[0x2a3a24,.35,.62],l:[0x6a6a60,.4],sd:205},m:{g:[2,.2],n:.1,sd:206}};
   const g=new THREE.Group();g.name='CQ205Gate_'+kind;
@@ -71265,6 +71265,8 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
         [-1,1].forEach(q=>P(k,BB(.16,.55,.16,.03),'c',C.st2,gx+q*.3,gy+.05,gz+.45,.25,0,0))}
       else{const gx=s*(w2+2.4),gz=fz+1.8;P(k,dt168Lathe([[0,0],[.75,0],[.85,.2],[.85,1.1],[.75,1.3],[0,1.3]],10),'c',0x5a2a1a,gx,0,gz);P(k,dt168Lathe([[0,0],[.86,0],[.86,.12],[0,.12]],10),'c',0xb8a080,gx,1.3,gz);
         for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;P(k,dt168Geo('cq_sp',()=>new THREE.CylinderGeometry(.04,.04,3.2,5)),'c',C.wood,gx+Math.sin(a)*.95,1.5,gz+Math.cos(a)*.95,.12*Math.cos(a),0,-.12*Math.sin(a));P(k,dt168Geo('cq_spt',()=>new THREE.ConeGeometry(.08,.4,4)),'m',0x8a8a90,gx+Math.sin(a)*1.14,3.2,gz+Math.cos(a)*1.14)}}});
+    // ---- iron sconces on the pilasters (their flames are sprites, their light pooled) ----
+    if(!ECL)[-1,1].forEach(s=>{const x=s*(w2+1.55),y=hs*.72,z=fz+.45;P(k,BB(.16,.5,.16,.02),'m',C.iron,x,y,z+.12);P(k,dt168Geo('cq_sc',()=>new THREE.CylinderGeometry(.2,.1,.32,6)),'m',C.iron,x,y+.35,z+.32);P(k,dt168Geo('cq_scc',()=>svLump(.13,0,.4,2089)),'g',0xff7a2a,x,y+.52,z+.32)});
     // ---- the steps up to the doors ----
     [[0,.15,W0-1.0,3.4],[1,.3,W0-2.6,2.5],[2,.45,2*w2+2.2,1.6]].forEach(([i,y,w,d])=>P(k,BB(w,.15,d,.04),'c',i%2?C.st3:C.st2,0,y-.075,fz+d/2-.05));
     // the deep reveal behind the arch (the jambs' inner faces are the wall's own cut)
@@ -71284,7 +71286,7 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
   // ---- the passage beyond: black until the way opens, then a haze of light ----
   const pass=new THREE.Mesh(dt168Geo('cq_pass'+kind,()=>new THREE.ShapeGeometry(new THREE.Shape(cq205OpenPts(w2,hs,dA).map(p=>new THREE.Vector2(p[0],p[1]))),8)),
     new THREE.MeshBasicMaterial({color:0x050203,fog:false}));pass.position.set(0,0,fz-dep+.15);g.add(pass);
-  const haze=kqSpr(ECL?0xffd890:0xff3a2a,9);haze.material=haze.material.clone();haze.material.opacity=0;haze.position.set(0,hs*.75,fz-dep+.4);g.add(haze);
+  const haze=kqSpr(ECL?0xffd890:0xff3a2a,11);haze.material=haze.material.clone();haze.material.opacity=0;haze.position.set(0,hs*.75,fz-dep+.4);g.add(haze);
   // ---- the seal: sigil, four rings, two chains of blood (blood / eclipse) ----
   let seal=null;if(!RAM){seal={g:new THREE.Group(),rings:[],chains:[]};seal.g.position.set(0,hs*.78,fz+.78);g.add(seal.g);const col=ECL?0xffb040:0xff1a2a;
     const sm=new THREE.MeshBasicMaterial({map:cq205SigilTex(ECL?'eclipse':'blood'),color:col,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide});
@@ -71299,10 +71301,11 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
     seal.light=new THREE.PointLight(col,1.6,16,1.6);seal.light.userData.lp=new THREE.Vector3(0,hs*.8,fz+2.6)}
   // the light that pours out once the way is open
   const light=new THREE.PointLight(ECL?0xffd080:0xff4030,0,18,1.4);light.userData.lp=new THREE.Vector3(0,hs*.7,fz+1.5);
+  const sc=ECL?[]:[-1,1].map(s=>{const f=kqSpr(0xff8a3a,1.1);f.position.set(s*(w2+1.55),hs*.72+.75,fz+.77);g.add(f);const l=new THREE.PointLight(0xff7a30,.9,9,1.7);l.userData.lp=new THREE.Vector3(s*(w2+1.55),hs*.72+.9,fz+1.3);return {f,l}});
   g.userData.psNo=1;g.traverse(q=>{if(q.isMesh)q.userData.lpsSkip=q.material&&q.material.blending===THREE.AdditiveBlending?1:q.userData.lpsSkip});
-  return {g,doors,port,seal,light,pass,haze,dims:{W0,Ht,w2,hs,dA,tr,tx,tH,dep,fz}}}
+  return {g,doors,port,seal,light,pass,haze,sc,dims:{W0,Ht,w2,hs,dA,tr,tx,tH,dep,fz}}}
 // point lights go into the scene itself (0620's pool takes them as sources), at their spot in the placed gatehouse
-function cq205PlaceLights(G){G.g.updateMatrixWorld(true);[G.light,G.seal&&G.seal.light].forEach(l=>{if(!l)return;l.position.copy(l.userData.lp);G.g.localToWorld(l.position);scene.add(l)})}
+function cq205PlaceLights(G){G.g.updateMatrixWorld(true);[G.light,G.seal&&G.seal.light].concat((G.sc||[]).map(q=>q.l)).forEach(l=>{if(!l)return;l.position.copy(l.userData.lp);G.g.localToWorld(l.position);scene.add(l)})}
 // ---------------- the ground it stands on: solid tiles, and the castle wall / decorations it replaces ----------------
 // tiles of a gatehouse spot S (cq205GW frame) that are solid; open: the doorway too
 function cq205FootTiles(S,dims){const T=[],D=new Set(),add=(lx,lz,door)=>{const [x,z]=cq205GW(S,lx,lz),k=Math.round(z)*W+Math.round(x);if(T.indexOf(k)<0){T.push(k);if(door)D.add(k)}};
@@ -71329,12 +71332,12 @@ function gg205Brazier(){const g=dt168Group('CQ205|brz',k=>{const P=(geo,t,col,x,
     P(dt168Geo('cq_coal',()=>svLump(.38,0,.4,2081)),'g',0xff6a2a,0,1.42,0,0,0,0,1,.35,1)},{m:{g:[1.2,.35],n:.12,sd:209}});
   const f=kqSpr(0xff7a30,1.8);f.position.y=1.9;g.add(f);g.userData.f=f;g.userData.psNo=1;return g}
 function gg205Open(){const G=GG205.S;return !!G&&G.open>=1}
-function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;
+function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;G.tok=(G.tok||0)+1;
   if(!G.tiles){G.tiles=cq205FootTiles(S,G.dims)}G.tiles.T.forEach(k=>{if(open&&G.tiles.D.has(k))CBLK.delete(k);else CBLK.add(k)});
   // doorway tiles stay solid even open (the void is behind): the gate's prompt takes you through
   G.tiles.D.forEach(k=>CBLK.add(k));
-  if(open){G.open=1;G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(G.seal){G.seal.g.visible=false;G.seal.light.intensity=0}G.light.intensity=1.5;G.haze.material.opacity=.55}
-  else{G.open=0;G.doors.forEach(d=>d.rotation.y=0);if(G.seal){G.seal.g.visible=true;G.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});G.seal.chains.forEach(c=>{c.visible=true;c.position.set(0,0,0)});G.seal.sig.material.opacity=.95;G.seal.light.intensity=1.6}
+  if(open){G.open=1;G.pass.material.color.setHex(0x4a0a0c);G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(G.seal){G.seal.g.visible=false;G.seal.light.intensity=0}G.light.intensity=1.5;G.haze.material.opacity=.55}
+  else{G.open=0;G.pass.material.color.setHex(0x050203);G.doors.forEach(d=>d.rotation.y=0);if(G.seal){G.seal.g.visible=true;G.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});G.seal.chains.forEach(c=>{c.visible=true;c.position.set(0,0,0)});G.seal.sig.material.opacity=.95;G.seal.light.intensity=1.6}
     G.light.intensity=0;G.haze.material.opacity=0}}
 // how many rings stand (the unbinding breaks them, 3733)
 function gg205RingsUp(){const G=GG205.S;return G&&G.seal?G.seal.rings.filter(r=>r.on).length:0}
@@ -71348,16 +71351,17 @@ function gg205Shatter(){const G=GG205.S;if(!G||G.open)return;G.open=.001;G.seal.
       return t<1.2},end(){c.visible=false}})});
   let t=0;const S=G.seal;kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/.9);S.sig.scale.setScalar(1+k*.8);S.sig.material.opacity=.95*(1-k);S.light.intensity=1.6+4*(1-k)*(k<.2?k*5:1);return t<.9},end(){S.g.visible=false;S.light.intensity=0}});
   // the doors swing in, slowly, with a groan
-  cq205After(.9,()=>{svSnd('heavy',1.1,.4);try{dg165Snd('grind',1,.5);dg165Snd('creak',.9,.45)}catch(_){}let u=0;kqFx({tick(dt){u+=dt||0;const k=svEase.io(Math.min(1,u/4.2));G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);G.light.intensity=1.5*k;G.haze.material.opacity=.55*k;
-      if(Math.random()<.4){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*6,.2,G.dims.fz-.5));burst(q,0x6a5a5a,2,1,.6,.8)}return u<4.2},end(){G.open=1}})})}
+  const tok=G.tok=(G.tok||0)+1;cq205After(.9,()=>{if(G.tok!==tok)return;svSnd('heavy',1.1,.4);try{dg165Snd('grind',1,.5);dg165Snd('creak',.9,.45)}catch(_){}let u=0;kqFx({tick(dt){if(G.tok!==tok)return false;u+=dt||0;const k=svEase.io(Math.min(1,u/4.2));G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);G.light.intensity=2.2*k;G.haze.material.opacity=.7*k;G.pass.material.color.setRGB(.29*k+.02,.04*k+.01,.05*k+.01);
+      if(Math.random()<.4){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*6,.2,G.dims.fz-.5));burst(q,0x6a5a5a,2,1,.6,.8)}return u<4.2},end(){if(G.tok===tok)G.open=1}})})}
 function gg205AtDoor(){const G=GG205.S;if(!G)return false;const P=pl.position,[x,z]=cq205GW(G.spot,0,G.dims.fz+2.2);return Math.hypot(P.x-x,P.z-z)<4.2}
 function gg205Through(){const C=CQ205.c1;if(C.st<4){C.st=4;CQ205.trkK=''}svSnd('whoosh',1,.6);try{insGo(cq205I(1))}catch(e){console.error('v205 gate go',e)}}
 // ---------------- the tick ----------------
 function gg205Tick(dt,now){const here=cq205Here(0),t=now/1000;if(here&&!GG205.S){try{gg205Build()}catch(e){if(!GG205.err++)console.error('v205 gate build',e)}}const G=GG205.S;if(!G)return;
-  G.g.visible=here;G.br.forEach(b=>{b.visible=here;b.userData.l.intensity=here?1.2+.25*Math.sin(t*9+b.position.x):0;b.userData.f.scale.setScalar(1.7+.25*Math.sin(t*11+b.position.z))});if(!here){if(G.seal)G.seal.light.intensity=0;G.light.intensity=0;return}
+  G.g.visible=here;if((G.open===0||G.open>=1)&&cq205Done(1)!==(G.open>=1))gg205Sync();G.br.forEach(b=>{b.visible=here;b.userData.l.intensity=here?1.2+.25*Math.sin(t*9+b.position.x):0;b.userData.f.scale.setScalar(1.7+.25*Math.sin(t*11+b.position.z))});if(!here){if(G.seal)G.seal.light.intensity=0;G.light.intensity=0;(G.sc||[]).forEach(q=>q.l.intensity=0);return}
   if(G.seal&&G.seal.g.visible){G.seal.rings.forEach((r,i)=>{if(r.on)r.m.rotation.z+=dt*r.sp});const pu=.8+.2*Math.sin(t*2.2);G.seal.sig.material.opacity=Math.min(1,(typeof US205!='undefined'&&US205.E?1.05:.9)*pu);
     if(!G.open)G.seal.light.intensity=1.2+.5*Math.sin(t*2.2)+(typeof US205!='undefined'&&US205.E?1.2:0)}
-  if(G.open>=1){G.haze.material.opacity=.45+.12*Math.sin(t*1.7);G.light.intensity=1.3+.3*Math.sin(t*2.3)}}
+  if(G.open>=1){G.haze.material.opacity=.6+.15*Math.sin(t*1.7);G.light.intensity=2+.4*Math.sin(t*2.3)}
+  (G.sc||[]).forEach((q,i)=>{q.l.intensity=.8+.2*Math.sin(t*11+i*2);q.f.scale.setScalar(1+.15*Math.sin(t*13+i))})}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{gg205Tick(dt,now)}catch(e){if(!GG205.err++)console.warn('v205 gate tick',e)}return r}}
 // ---------------- the prompt at the doors ----------------
 function gg205Prompt(){if(!cq205Here(0)||!GG205.S||!gg205AtDoor())return null;const C=CQ205.c1;
@@ -71638,7 +71642,7 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   // threads of gold from his paws into the seal
   if(Math.random()<dt*20&&GG205.S&&GG205.S.seal){const a=new THREE.Vector3(c.x,c.y+1.3,c.z),b=new THREE.Vector3();GG205.S.seal.g.getWorldPosition(b);b.x+=(Math.random()-.5)*5;b.y+=(Math.random()-.5)*5;burst(a.clone().lerp(b,Math.random()),E.siN?0xff3a3a:0xffe0a0,1,.3,.3,.5)}
   // his ward dome
-  if(CH205.dome){const d=CH205.dome;d.position.set(0,0,0);d.scale.setScalar(1+.04*Math.sin(t*3));d.material.opacity=(.07+.05*Math.sin(t*2.4))*(E.hp>30?1:.6+.4*Math.sin(t*14));d.material.color.setHex(E.hp>30?0xffe0a0:0xff7a5a);d.visible=true}
+  if(CH205.dome){const d=CH205.dome;d.position.set(0,0,0);d.scale.setScalar(1+.04*Math.sin(t*3));d.material.opacity=(.05+.035*Math.sin(t*2.4))*(E.hp>30?1:.6+.4*Math.sin(t*14));d.material.color.setHex(E.hp>30?0xffe0a0:0xff7a5a);d.visible=true}
   // the Ward Flare: throws back what is at him
   E.flare-=dt;if(E.flare<=0){E.flare=US205.flare;ring(c,0xffe0a0,4.6,700);burst(gY(c,1),0xffe8b0,50,3.4,1.6,.7);svSnd('gong',.5,1.5);CH205.hit=0;
     enemies.forEach(s=>{if(!s.us205||s.dead||s.us205==='brk'&&s.usB&&s.usB.st==='wind')return;const dx=s.m.position.x-c.x,dz=s.m.position.z-c.z,L=Math.hypot(dx,dz);if(L<4.6&&L>.01){s.vx=(s.vx||0)+dx/L*10;s.vz=(s.vz||0)+dz/L*10;try{eStatus(s,{stun:1.4},0,'h')}catch(_){}}})}
@@ -71735,4 +71739,558 @@ function us205Sky(dt,t){const E=US205.E,here=cq205Here(0),M=US205.moon;const wan
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{us205Tick(dt,now)}catch(e){if(!US205.err++)console.warn('v205 unsealing tick',e)}return r}}
 // a save made during it loads before it (the keys still in the bowls)
 CQ205L.unshift(()=>{if(US205.E)us205Stop('quiet')});
+// ================= v205 Vharog, the Bloodgorged — the model, poses and procedural animation =================
+// The mini boss of The Citadel II's main quest (moves 3741, the fight 3742). The owner: "a large vampiric beast mini boss that guards
+// the gate to the next instance. He should be bipedal with vampiric qualities, is on all fours, and a ferocious appearance."
+// The court's war-beast: built like a man — long arms with hands, legs with knees, a human ribcage — but swollen, hunched and
+// gorged, it runs on its knuckles and hind claws like an ape crossed with a bat, and rears onto its hind legs to kill. Nothing like
+// the zone's Blood Hounds (lean, dog-shaped) or Gargoyles (stone):
+//  * Silhouette: a deep barrel chest and huge shoulders over a lean waist and hips, arms longer than its legs (it stands on its
+//    knuckles), digitigrade hind legs, a short whip tail with bone hooks, folded bat wings lying over its back like a torn cloak
+//    (they open into a vast span when it roars or screeches).
+//  * Head: a bat's skull grown huge: enormous pointed ears, a flat pug snout with a nose-leaf, deep sockets with burning red eyes,
+//    a heavy underslung jaw with long fangs top and bottom; a black mane from the crown down the neck and shoulders.
+//  * Skin (painted, MODEL_DETAIL_RECIPE): ashen mauve, darker down the back, paler on the belly and the insides of the limbs, the
+//    ribs and the cords of muscle showing through, crimson veins that glow (brighter in Phase II, vh205Post), old scars.
+//  * The court's mark: an iron collar studded with spikes and a broken chain hanging from it (it was chained to the gate).
+//  * About twice the triangles of a Blood Hound (VH205M.tris is measured on the first build).
+// Joints (L = +x, the model's left; it faces +z): root · hips · spine · chest · neck · head · jaw · earL/R · wgL/R (wings) ·
+// shL/R · elL/R · wrL/R (hands) · thL/R · knL/R · hkL/R · ftL/R · tail0..2 · chain. Poses (VH205P) are offsets from the rest pose,
+// mirrored with '~' (svPose). In the rest pose it stands on all fours: the torso level, the arms straight down to the knuckles.
+var VH205M={col:0xff2a3a,tris:0,sheet:{}};
+// ---------------- painted skin: vertex colours by form (value first: dark back, pale belly, ribs, veins) ----------------
+function vh205Paint(g,fn){const P=g.attributes.position,N=g.attributes.normal,c=new Float32Array(P.count*3),C=new THREE.Color();
+  for(let i=0;i<P.count;i++){fn(P.getX(i),P.getY(i),P.getZ(i),N?N.getX(i):0,N?N.getY(i):1,N?N.getZ(i):0,C);c[i*3]=C.r;c[i*3+1]=C.g;c[i*3+2]=C.b}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
+const VH205C={base:new THREE.Color(0x56485a),dark:new THREE.Color(0x2c2430),pale:new THREE.Color(0x8a7882),vein:new THREE.Color(0x7a1424),rib:new THREE.Color(0x6e5e6a),scar:new THREE.Color(0x9a8a8c),inner:new THREE.Color(0x3a1a22),tmp:new THREE.Color()};
+function vh205N(x,y,z,s){return Math.sin(x*5.3+s)*Math.cos(y*4.7+s*1.7)*Math.sin(z*5.9+s*.6)*.5+Math.sin(x*11.1+y*9.3+z*7.7+s*2.3)*.25}
+// a torso piece lofted along +z: the back (ny>0) darker, the belly paler, ribs on the flanks (rib: spacing along z), veins
+function vh205TorsoCol(rib,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const up=ny;if(up>0)C.lerp(T.dark,Math.min(1,up*.9));else C.lerp(T.pale,Math.min(1,-up*.8));
+    if(rib){const side=Math.abs(nx);const r=Math.sin(z*rib+.6);if(side>.45&&ny<.4&&ny>-.6){if(r>.55)C.lerp(T.rib,.55);else if(r<-.35)C.lerp(T.dark,.35)}}
+    const v=vh205N(x,y,z,seed||1);if(Math.abs(v)<.05&&ny>-.3)C.lerp(T.vein,.75);if(v>.62)C.lerp(T.scar,.25);C.multiplyScalar(.82+.22*(.5*ny+.5))}}
+// a limb lofted along -y (o: +1 outward is +x); the inside of the limb paler, the outside darker; knuckles and tips darker
+function vh205LimbCol(s,seed){return (x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.copy(T.base);const out=nx*s;if(out>.2)C.lerp(T.dark,Math.min(1,out*.7));else if(out<-.2)C.lerp(T.pale,Math.min(1,-out*.6));
+    if(nz>.5)C.lerp(T.dark,.15);const v=vh205N(x*1.4,y,z*1.4,seed||2);if(Math.abs(v)<.045)C.lerp(T.vein,.7);C.multiplyScalar(.85+.18*Math.max(-1,Math.min(1,y*.2+.5)))}}
+function vh205HeadCol(x,y,z,nx,ny,nz,C){const T=VH205C;C.copy(T.base);if(ny>.3)C.lerp(T.dark,.6);if(ny<-.3)C.lerp(T.pale,.4);if(z>.35&&ny<.2)C.lerp(T.inner,.35);const v=vh205N(x*2,y*2,z*2,7);if(Math.abs(v)<.04)C.lerp(T.vein,.6);C.multiplyScalar(.85+.2*(.5*ny+.5))}
+// a painted mesh (one material, vertex colours): merged per joint at the end (vh205Merge), so the paint survives svMerge
+function vh205PM(R,j,geo,fn,x,y,z,rx,ry,rz,sx,sy,sz){const g=geo.index?geo.toNonIndexed():geo;if(!g.attributes.color){g.computeVertexNormals();vh205Paint(g,fn)}const m=svM(R,j,g,R.skin,x,y,z,rx,ry,rz,sx,sy,sz);m.userData.noMerge=1;m.userData.vh=1;return m}
+function vh205Merge(R){const by=new Map();R.root.traverse(o=>{if(o.isMesh&&o.userData.vh&&o.parent){if(!by.has(o.parent))by.set(o.parent,[]);by.get(o.parent).push(o)}});
+  by.forEach((L,P)=>{if(L.length<2)return;let n=0;L.forEach(o=>{o.updateMatrix();n+=o.geometry.attributes.position.count});const pos=new Float32Array(n*3),col=new Float32Array(n*3),v=new THREE.Vector3();let j=0;
+    L.forEach(o=>{const a=o.geometry.attributes.position,c=o.geometry.attributes.color;const flip=o.matrix.determinant()<0;for(let i=0;i<a.count;i++){const q=flip?(i%3==1?i+1:i%3==2?i-1:i):i;v.fromBufferAttribute(a,q).applyMatrix4(o.matrix);pos[j*3]=v.x;pos[j*3+1]=v.y;pos[j*3+2]=v.z;col[j*3]=c.getX(q);col[j*3+1]=c.getY(q);col[j*3+2]=c.getZ(q);j++}});
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();g.userData.lps=1;g.userData.svOwn=1;
+    const m=new THREE.Mesh(g,R.skin);m.castShadow=true;m.userData.lpsSkip=1;m.userData.noMerge=1;L.forEach(o=>P.remove(o));P.add(m)})}
+// a scalloped bat-wing membrane (folded: lies along -z from the root; spread by rotating the joint), in its joint's frame
+function vh205WingGeo(){return svG('vh_wing',()=>{const s=new THREE.Shape(),P=[[0,0],[.35,.25],[.9,.35],[1.7,.3],[2.6,.15],[3.4,-.15],[3.05,-.45],[2.75,-.55],[2.45,-.9],[2.05,-.95],[1.75,-1.35],[1.3,-1.4],[.95,-1.8],[.5,-1.6],[.15,-1.1]];
+  P.forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);g.computeVertexNormals();
+  return vh205Paint(g.index?g.toNonIndexed():g,(x,y,z,nx,ny,nz,C)=>{const T=VH205C;C.set(0x3a1e28);const v=Math.abs(Math.sin(Math.atan2(y-.1,x)*6+x*.6));if(v<.12)C.lerp(T.vein,.8);C.multiplyScalar(.7+.25*Math.min(1,x/3.4)+.15*(y+.5))})})}
+function vh205Build(R,e){
+  R.skin=svMat(R,0xffffff,{vertexColors:true,roughness:.86});const fur=svMat(R,0x1c1418,{roughness:.98}),fur2=svMat(R,0x3a141c,{roughness:.98}),bone=svMat(R,0xcfc4a8,{roughness:.6}),boneD=svMat(R,0x6a5a48,{roughness:.7}),
+    iron=svMat(R,0x34343a,{roughness:.5,metalness:.6}),ironR=svMat(R,0x4a2a20,{roughness:.8,metalness:.3}),mouth=svMat(R,0x3a0a12,{roughness:.6}),gum=svMat(R,0x5a1a24,{roughness:.6}),
+    eye=svGlowMat(R,0xff2a2a),vein=svGlowMat(R,0xb01020),wingM=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.8,flatShading:true,side:THREE.DoubleSide});wingM.userData.e0=0;wingM.userData.ei0=1;R.mats.push(wingM);
+  R.eyeM=eye;R.veinM=vein;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz),G=(k,f)=>svG('vh'+k,f),rn=svRng(2051);
+  const PM=(j,k,f,fn,x,y,z,rx,ry,rz,sx,sy,sz)=>vh205PM(R,j,G(k,f),fn,x,y,z,rx,ry,rz,sx,sy,sz);
+  // ---------------- the skeleton ----------------
+  J('root',null,0,0,0);J('hips','root',0,2.42,-1.25);J('spine','hips',0,.18,.95);J('chest','spine',0,.12,1.0);J('neck','chest',0,.42,.95,-.15);J('head','neck',0,.12,.72,.15);J('jaw','head',0,-.2,.12);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ear'+L,'head',s*.42,.38,-.12,0,0,s*-.35);J('wg'+L,'chest',s*.62,.62,-.15,0,s*.08,0);
+    J('sh'+L,'chest',s*1.02,-.02,.38);J('el'+L,'sh'+L,0,-1.32,.06);J('wr'+L,'el'+L,0,-1.18,.14);
+    J('th'+L,'hips',s*.72,-.12,-.05);J('kn'+L,'th'+L,0,-.95,.52);J('hk'+L,'kn'+L,0,-.82,-.58);J('ft'+L,'hk'+L,0,-.5,.12)});
+  J('tail0','hips',0,.1,-.72,-.25);J('tail1','tail0',0,0,-.62,-.15);J('tail2','tail1',0,0,-.55,-.1);J('chain','neck',0,-.45,.2);J('mane','neck',0,.05,0,Math.PI/2,0,0);
+  // ---------------- the torso: haunches, the lean waist, the barrel of ribs, the hump of the shoulders ----------------
+  PM('hips','hp',()=>svLoftZ([[-.75,.7,.55,0,.05],[-.35,.86,.7,0,.02],[.15,.88,.72,0,0],[.6,.74,.64,0,-.02]],18),vh205TorsoCol(0,3),0,0,0);
+  [-1,1].forEach(s=>PM('hips','hm',()=>svLump(.62,1,.16,2101),vh205TorsoCol(0,4),s*.5,-.05,-.12,0,0,0,1,1.15,1.15));
+  PM('spine','sp',()=>svLoftZ([[-.15,.72,.62,0,-.02],[.35,.8,.7,0,-.06],[.85,1.0,.86,0,-.1],[1.12,1.08,.92,0,-.12]],18),vh205TorsoCol(9,5),0,0,0);
+  PM('chest','ch',()=>svLoftZ([[-.1,1.08,.94,0,-.1],[.3,1.2,1.06,0,-.14],[.7,1.2,1.08,0,-.12],[1.05,1.06,.96,0,-.04],[1.32,.74,.7,0,.1]],20),vh205TorsoCol(8.5,6),0,0,0);
+  // the hump over the shoulders and the shoulder masses
+  PM('chest','hu',()=>svLump(.85,1,.18,2102),vh205TorsoCol(0,7),0,.62,.45,0,0,0,1.25,.7,1.05);
+  [-1,1].forEach(s=>PM('chest','dl',()=>svLump(.6,1,.15,2103),vh205TorsoCol(0,8),s*.86,.1,.42,0,0,0,1,1.1,1.15));
+  // the ridge of bone spines down the back and the tail
+  for(let i=0;i<9;i++){const j=i<3?'hips':i<6?'spine':'chest',z=[-.5,-.1,.3,.05,.45,.85,.0,.35,.7][i],y=[.6,.7,.7,.6,.68,.76,1.1,1.18,1.15][i];Mm(j,G('sp'+(i%3),()=>svHorn(.09+(i%3)*.02,.5+(i%3)*.15,0,-.18,5,4)),i%2?bone:boneD,0,y,z,-1.9,0,0)}
+  // ---------------- the neck and the mane ----------------
+  PM('neck','nk',()=>svLoftZ([[-.25,.62,.66,0,-.05],[.25,.56,.6,0,0],[.7,.48,.52,0,.02]],14),vh205TorsoCol(0,9),0,0,0);
+  gb151Cover(R,'mane',[[-.25,.6,.64,0,0],[.25,.56,.6,0,0],[.7,.48,.52,0,0]],{geo:gb151Tuft(),n:12,rows:3,size:.44,seed:2111,lift:.55,w:.6,jit:.3,dir:1,
+    skip:(t)=>Math.cos(t)>.2,mat:(t,u,r,k)=>(k+r)%3?fur:fur2});
+  // ---------------- the head: a bat's skull grown huge ----------------
+  PM('head','hd',()=>svLoftZ([[-.35,.48,.5,0,.05],[-.05,.58,.55,0,.08],[.25,.56,.46,0,.02],[.48,.42,.34,0,-.06],[.62,.3,.26,0,-.1]],14),vh205HeadCol,0,0,0);
+  PM('head','br',()=>svLump(.3,1,.12,2121),vh205HeadCol,0,.32,.28,0,0,0,1.8,.6,1.0);                       // the brow
+  PM('head','sn',()=>svLump(.26,1,.14,2122),vh205HeadCol,0,-.02,.68,0,0,0,1.25,.85,.75);                    // the pug snout
+  Mm('head',G('nl',()=>{const s=new THREE.Shape();[[0,.28],[.11,.1],[.13,-.06],[0,-.14],[-.13,-.06],[-.11,.1]].forEach(([x,y],i)=>i?s.lineTo(x,y):s.moveTo(x,y));const g=new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false});g.translate(0,0,-.025);return g}),gum,0,.1,.86,-.25,0,0);   // the nose-leaf
+  [-1,1].forEach(s=>{Mm('head',G('nos',()=>new THREE.SphereGeometry(.05,5,4)),mouth,s*.08,-.02,.88);
+    Mm('head',G('sock',()=>svLump(.13,1,.1,2123)),mouth,s*.24,.2,.5,0,0,0,1.2,.8,.6);Mm('head',G('eye',()=>new THREE.IcosahedronGeometry(.06,1)),eye,s*.24,.2,.56,0,0,0,1.4,.8,.8);svSpr(R,'head',0xff2020,.5,s*.24,.2,.62);
+    // the upper fangs and the tusks at the corners of the mouth
+    Mm('head',G('fg',()=>{const q=new THREE.ConeGeometry(.055,.42,5);q.rotateX(Math.PI);q.translate(0,-.21,0);return q}),bone,s*.15,-.16,.8,-.12,0,s*-.05);
+    Mm('head',G('fg2',()=>{const q=new THREE.ConeGeometry(.04,.24,5);q.rotateX(Math.PI);q.translate(0,-.12,0);return q}),bone,s*.24,-.14,.6,-.1,0,s*-.1);
+    // cheek frills of skin and bristle under the ears
+    Mm('head',G('chk',()=>svBlade([[0,0],[.3,.12],[.42,-.1],[.25,-.28],[0,-.18]],.04)),fur,s*.45,-.05,.15,0,s>0?-.9:Math.PI+.9,0)});
+  // the crest of mane on the crown
+  for(let i=0;i<7;i++){Mm('head',G('mn'+(i%2),()=>svHorn(.08,.55+(i%2)*.2,0,-.25,4,3)),i%2?fur:fur2,(i-3)*.09,.48-(Math.abs(i-3))*.04,-.15,-2.4,0,(i-3)*.12)}
+  // the ears: huge, pointed, ribbed, the insides raw red
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',ord=P=>s>0?P:P.map(([x,y])=>[-x,y]).reverse();Mm('ear'+L,G('ear'+L,()=>{const q=new THREE.Shape();ord([[-.2,0],[.23,.15],[.35,.7],[.27,1.35],[.15,1.7],[-.03,1.2],[-.25,.7],[-.35,.25]]).forEach(([x,y],i)=>i?q.lineTo(x,y):q.moveTo(x,y));const g=new THREE.ExtrudeGeometry(q,{depth:.07,bevelEnabled:true,bevelThickness:.02,bevelSize:.02,bevelSegments:1});g.translate(0,0,-.035);return g}),
+      fur,0,0,0,0,s>0?.3:-.3,0);
+    Mm('ear'+L,G('eari'+L,()=>{const q=new THREE.Shape();ord([[-.1,.1],[.15,.25],[.22,.75],[.14,1.25],[.02,.95],[-.14,.55],[-.2,.25]]).forEach(([x,y],i)=>i?q.lineTo(x,y):q.moveTo(x,y));return new THREE.ShapeGeometry(q)}),gum,0,0,.06,0,s>0?.3:-.3,0)});
+  // the jaw: heavy, underslung, with long lower fangs; the mouth inside is dark red
+  PM('jaw','jw',()=>svLoftZ([[-.15,.36,.14,0,-.02],[.2,.36,.16,0,-.06],[.5,.26,.12,0,-.04],[.62,.16,.08,0,0]],12),vh205HeadCol,0,-.02,0);
+  Mm('jaw',G('mo',()=>svLoftZ([[-.1,.3,.06],[.45,.22,.05]],10)),mouth,0,.08,0);Mm('jaw',G('tg',()=>svLump(.14,1,.15,2124)),gum,0,.1,.25,0,0,0,1,.4,2);
+  [-1,1].forEach(s=>{Mm('jaw',G('lf',()=>{const q=new THREE.ConeGeometry(.05,.26,5);q.translate(0,.13,0);return q}),bone,s*.27,.04,.42,.15,0,s*.12);for(let k=0;k<3;k++)Mm('jaw',G('lt',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.translate(0,.05,0);return q}),bone,s*(.2+k*.05),.06,.4-k*.12)});
+  for(let k=0;k<4;k++)Mm('head',G('ut',()=>{const q=new THREE.ConeGeometry(.025,.1,4);q.rotateX(Math.PI);q.translate(0,-.05,0);return q}),bone,(k-1.5)*.07,-.14,.76);
+  // ---------------- the collar and its broken chain ----------------
+  Mm('neck',G('col',()=>new THREE.TorusGeometry(.66,.1,6,16)),iron,0,0,.05,0,0,0,1,1.05,1);
+  for(let i=0;i<10;i++){const a=i/10*Math.PI*2;Mm('neck',G('cs',()=>new THREE.ConeGeometry(.06,.24,4)),iron,Math.cos(a)*.75,Math.sin(a)*.75,.05,0,0,a-Math.PI/2)}
+  Mm('chain',G('cl',()=>new THREE.TorusGeometry(.11,.035,4,8)),ironR,0,0,0);Mm('chain',G('cl',()=>new THREE.TorusGeometry(.11,.035,4,8)),ironR,0,-.17,0,0,Math.PI/2,0);Mm('chain',G('cl',()=>new THREE.TorusGeometry(.11,.035,4,8)),ironR,0,-.34,0);
+  Mm('chain',G('clb',()=>new THREE.TorusGeometry(.11,.035,4,8,Math.PI*1.3)),ironR,0,-.51,0,0,Math.PI/2,0);
+  // ---------------- the arms: long, corded, ending in great clawed hands on their knuckles ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',sh='sh'+L,el='el'+L,wr='wr'+L;
+    PM(sh,'ua'+L,()=>svLoft([[.25,.46,.5],[-.05,.5,.52],[-.55,.46,.46,s*.04],[-1.05,.36,.38],[-1.36,.34,.36]],12),vh205LimbCol(s,11),0,0,0);
+    PM(sh,'bi'+L,()=>svLump(.3,1,.12,2131),vh205LimbCol(s,12),s*.05,-.55,.16,0,0,0,1,1.4,1);
+    PM(el,'fa'+L,()=>svLoft([[.12,.34,.36],[-.3,.36,.36],[-.8,.28,.29],[-1.15,.24,.26]],12),vh205LimbCol(s,13),0,0,0);
+    for(let k=0;k<3;k++)Mm(el,G('fs',()=>svHorn(.05,.32,0,-.1,4,3)),boneD,s*.22,-.2-k*.25,-.18,-2.6,s*.3,0);   // spurs down the forearm
+    // the hand: a knuckled palm, four fingers curled under onto the ground, black hooked claws, a thumb claw
+    PM(wr,'pa'+L,()=>svLump(.3,1,.1,2132),vh205LimbCol(s,14),0,-.12,.08,0,0,0,1.1,.7,1.15);
+    for(let f=0;f<4;f++){const x=(f-1.5)*.14;PM(wr,'fk'+L+f,()=>svLoftZ([[0,.075,.08],[.22,.07,.07],[.32,.055,.06]],6),vh205LimbCol(s,15),x,-.2,.25,.55,0,0);
+      Mm(wr,G('cw',()=>svHorn(.05,.32,0,-.2,5,4)),bone,x,-.32,.5,.9,0,0)}
+    Mm(wr,G('cwt',()=>svHorn(.05,.28,0,-.15,5,4)),bone,s*.26,-.18,.2,.6,s*.6,0);
+    // the wing: lies along the back, its leading edge a long finger bone
+    const wg='wg'+L;const wm=Mm(wg,vh205WingGeo(),wingM,0,0,0,0,Math.PI/2,0);wm.userData.noMerge=1;
+    Mm(wg,G('wb',()=>svTube([[0,0,0],[0,.32,-.9],[0,.3,-1.7],[0,.15,-2.6],[0,-.15,-3.4]],[.07,.06,.05,.04,.02],5)),boneD,0,0,0);
+    Mm(wg,G('wh',()=>svHorn(.05,.3,0,.15,4,3)),bone,0,.05,.05,-1.2,0,0);
+    // ---------------- the legs: heavy thighs, digitigrade shins, long clawed feet ----------------
+    const th='th'+L,kn='kn'+L,hk='hk'+L,ft='ft'+L;
+    PM(th,'tg'+L,()=>svLoft([[.2,.5,.56],[-.2,.56,.58],[-.6,.46,.48],[-.95,.32,.34]],12),vh205LimbCol(s,16),0,0,.12,-.5);
+    PM(kn,'sh'+L,()=>svLoft([[.1,.3,.32],[-.35,.27,.28],[-.85,.17,.18]],10),vh205LimbCol(s,17),0,0,0,.62);
+    PM(hk,'mt'+L,()=>svLoft([[.08,.17,.17],[-.5,.13,.13]],8),vh205LimbCol(s,18),0,0,0,-.25);
+    PM(ft,'ft'+L,()=>svLoftZ([[-.12,.2,.12],[.2,.22,.11],[.45,.18,.08]],8),vh205LimbCol(s,19),0,-.06,0);
+    for(let f=0;f<3;f++)Mm(ft,G('tc',()=>svHorn(.05,.3,0,-.18,5,4)),bone,(f-1)*.12,-.08,.45,.5,(f-1)*.2,0);
+    Mm(hk,G('hs',()=>svHorn(.05,.26,0,.1,4,3)),boneD,0,0,-.12,2.6,0,0)});   // a spur at the hock
+  // ---------------- the tail: short, whipping, hooked with bone ----------------
+  PM('tail0','t0',()=>svLoftZ([[.1,.3,.28],[-.65,.2,.19]],10),vh205TorsoCol(0,21),0,0,0);PM('tail1','t1',()=>svLoftZ([[.05,.2,.19],[-.6,.13,.12]],8),vh205TorsoCol(0,22),0,0,0);
+  PM('tail2','t2',()=>svLoftZ([[.05,.13,.12],[-.6,.04,.04]],8),vh205TorsoCol(0,23),0,0,0);
+  ['tail0','tail1','tail2'].forEach((t,i)=>Mm(t,G('th'+i,()=>svHorn(.06-i*.01,.28,0,-.12,4,3)),bone,0,.15-i*.03,-.3,-1.7,0,0));Mm('tail2',G('tb',()=>svHorn(.07,.45,0,.25,5,4)),bone,0,0,-.55,Math.PI,0,0);
+  // ---------------- the glowing veins (a few lines that read at a distance) ----------------
+  [[-1,'chest',.0],[1,'chest',.2],[-1,'spine',.5],[1,'hips',-.3]].forEach(([s,j,z],i)=>Mm(j,G('vn'+i,()=>svTube([[0,0,0],[.05,.12,.25],[.02,.3,.5],[.08,.4,.72]],.022,4)),vein,s*(j=='chest'?1.12:j=='spine'?.86:.82),j=='chest'?-.15:-.1,z,0,0,s*.2));
+  vh205Merge(R);
+  if(!VH205M.tris){let n=0;R.root.traverse(o=>{if(o.isMesh){const g=o.geometry;n+=g.index?g.index.count/3:g.attributes.position.count/3}});VH205M.tris=Math.round(n)}
+  R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]) ----------------
+// rear: the torso pitched up onto the hind legs (the thighs turn back so the feet stay planted)
+const VH205_REAR=(k,o)=>Object.assign({hips:[-1.15*k,0,0,0,.95*k,-.35*k],thL:[1.1*k,0,0],thR:[1.1*k,0,0],knL:[.1*k,0,0],knR:[.1*k,0,0],neck:[.65*k,0,0],head:[.35*k,0,0],tail0:[.7*k,0,0]},o||{});
+var VH205P={
+  idle:{},
+  // Rending Claws: the right claw cocked back and out, the swipe across; the left; rearing up and the double slam
+  rUp:{hips:[0,.25,0,0,.15,0],chest:[-.15,.35,.08],shR:[-1.5,.3,-.85],elR:[-.9,0,0],wrR:[.4,0,0],shL:[.15,0,.1],neck:[.1,-.3,0],head:[0,-.2,0],jaw:[.25,0,0]},
+  rHit:{hips:[.05,-.3,0,0,-.05,.3],chest:[.12,-.55,-.1],shR:[-1.25,-.35,.65],elR:[-.2,0,0],wrR:[-.2,0,0],shL:[.2,0,.15],neck:[0,.35,0],head:[0,.25,0],jaw:[.5,0,0]},
+  lUp:{hips:[0,-.25,0,0,.15,0],chest:[-.15,-.35,-.08],shL:[-1.5,-.3,.85],elL:[-.9,0,0],wrL:[.4,0,0],shR:[.15,0,-.1],neck:[.1,.3,0],head:[0,.2,0],jaw:[.25,0,0]},
+  lHit:{hips:[.05,.3,0,0,-.05,.3],chest:[.12,.55,.1],shL:[-1.25,.35,-.65],elL:[-.2,0,0],wrL:[-.2,0,0],shR:[.2,0,-.15],neck:[0,-.35,0],head:[0,-.25,0],jaw:[.5,0,0]},
+  xUp:VH205_REAR(1,{shL:[-2.7,0,.35],shR:[-2.7,0,-.35],elL:[-.5,0,0],elR:[-.5,0,0],wrL:[.5,0,0],wrR:[.5,0,0],jaw:[.7,0,0],wgL:[0,-.5,.3],wgR:[0,.5,-.3]}),
+  xHit:{hips:[.15,0,0,0,-.35,.6],chest:[.3,0,0],thL:[-.3,0,0],thR:[-.3,0,0],knL:[.4,0,0],knR:[.4,0,0],shL:[-.75,0,.1],shR:[-.75,0,-.1],elL:[-.1,0,0],elR:[-.1,0,0],neck:[.2,0,0],head:[-.2,0,0],jaw:[.8,0,0]},
+  rec:{hips:[0,0,0,0,-.05,0],neck:[.05,0,0]},
+  // Pounce: the crouch, the leap (stretched), the landing pinning the ground
+  crouch:{hips:[.12,0,0,0,-.55,-.15],chest:[.1,0,0],shL:[.45,0,.1],shR:[.45,0,-.1],elL:[-.9,0,0],elR:[-.9,0,0],wrL:[.45,0,0],wrR:[.45,0,0],thL:[-.45,0,0],thR:[-.45,0,0],knL:[.7,0,0],knR:[.7,0,0],hkL:[-.35,0,0],hkR:[-.35,0,0],neck:[-.2,0,0],head:[.15,0,0],tail0:[-.3,0,0],jaw:[.3,0,0]},
+  air:{hips:[-.25,0,0,0,1.35,0],chest:[-.1,0,0],shL:[-1.55,0,.25],shR:[-1.55,0,-.25],elL:[-.15,0,0],elR:[-.15,0,0],wrL:[-.5,0,0],wrR:[-.5,0,0],thL:[.95,0,0],thR:[.95,0,0],knL:[-.25,0,0],knR:[-.25,0,0],hkL:[.35,0,0],hkR:[.35,0,0],neck:[.1,0,0],jaw:[.8,0,0],wgL:[0,-.6,.5],wgR:[0,.6,-.5],tail0:[.4,0,0]},
+  land:{hips:[.18,0,0,0,-.45,.2],chest:[.22,0,0],shL:[-.7,0,.3],shR:[-.7,0,-.3],elL:[-.35,0,0],elR:[-.35,0,0],thL:[-.3,0,0],thR:[-.3,0,0],knL:[.5,0,0],knR:[.5,0,0],neck:[.25,0,0],head:[-.15,0,0],jaw:[1.0,0,0]},
+  // Wing Buffet: the wings thrown open, the body wound round
+  spW:{hips:[0,.7,0,0,.1,0],chest:[0,.35,0],neck:[0,-.5,0],wgL:[.2,-1.25,.75],wgR:[.2,1.25,-.75],shL:[-.4,0,.6],shR:[-.4,0,-.6],jaw:[.4,0,0]},
+  spGo:{hips:[0,-.5,0,0,.1,0],chest:[0,-.4,0],neck:[0,.4,0],wgL:[.1,-1.35,.9],wgR:[.1,1.35,-.9],shL:[-.5,0,.7],shR:[-.5,0,-.7],jaw:[.6,0,0]},
+  // Gore Spew: the gulp (head thrown back) and the spew (neck stretched forward and down)
+  gulp:{hips:[-.15,0,0,0,.2,-.2],chest:[-.2,0,0],neck:[-.55,0,0],head:[-.4,0,0],jaw:[.15,0,0],shL:[-.2,0,.15],shR:[-.2,0,-.15]},
+  spew:{hips:[.1,0,0,0,-.1,.3],chest:[.15,0,0],neck:[.35,0,0,0,0,.15],head:[.3,0,0],jaw:[1.05,0,0]},
+  // Screech: rearing half up, the wings half spread, the maw open wide
+  scr:VH205_REAR(.55,{neck:[-.1,0,0],head:[-.25,0,0],jaw:[1.15,0,0],wgL:[.1,-.8,.5],wgR:[.1,.8,-.5],shL:[-1.1,0,.5],shR:[-1.1,0,-.5],earL:[-.4,0,.3],earR:[-.4,0,-.3]}),
+  // Feeding Bite: the lunge with the maw open, the snap
+  bOpen:{hips:[.1,0,0,0,-.1,.55],chest:[.15,0,0],neck:[.3,0,0,0,0,.25],head:[-.2,0,0],jaw:[1.1,0,0],shL:[-.5,0,.1],shR:[-.5,0,-.1]},
+  bSnap:{hips:[.12,0,0,0,-.12,.75],chest:[.18,0,0],neck:[.4,0,0,0,0,.3],head:[.15,0,0],jaw:[0,0,0],shL:[-.55,0,.1],shR:[-.55,0,-.1]},
+  drink:{hips:[.15,0,0,0,-.2,.6],chest:[.2,0,0],neck:[.5,0,0,0,0,.2],head:[.25,0,0],jaw:[.25,0,0],shL:[-.65,0,.2],shR:[-.65,0,-.2],elL:[-.4,0,0],elR:[-.4,0,0]},
+  // Phase II, the hunt, the signature
+  roar:VH205_REAR(1,{neck:[-.2,0,0],head:[-.45,0,0],jaw:[1.2,0,0],shL:[-1.4,0,1.25],shR:[-1.4,0,-1.25],elL:[-.7,0,0],elR:[-.7,0,0],wgL:[.25,-1.4,.95],wgR:[.25,1.4,-.95],earL:[-.5,0,.35],earR:[-.5,0,-.35],tail0:[.9,0,0]}),
+  leapUp:{hips:[-.6,0,0,0,2.6,0],chest:[-.2,0,0],shL:[-2.6,0,.3],shR:[-2.6,0,-.3],thL:[.9,0,0],thR:[.9,0,0],knL:[-.3,0,0],knR:[-.3,0,0],wgL:[.2,-1.2,.8],wgR:[.2,1.2,-.8],jaw:[.6,0,0]},
+  lunge:{hips:[.05,0,0,0,.25,0],chest:[0,0,0],shL:[-1.5,0,.2],shR:[-1.5,0,-.2],elL:[-.1,0,0],elR:[-.1,0,0],thL:[.85,0,0],thR:[.85,0,0],knL:[-.2,0,0],knR:[-.2,0,0],neck:[.15,0,0],jaw:[.9,0,0],wgL:[0,-.9,.5],wgR:[0,.9,-.5]},
+  chained:{hips:[.25,.2,.25,0,-.75,0],chest:[.3,0,.15],neck:[.4,.3,0],head:[.4,.4,.3],jaw:[.8,0,0],shL:[.4,0,.6],shR:[.6,0,-.5],elL:[-.6,0,0],elR:[-.4,0,0],wgL:[.3,-.5,.2],wgR:[.3,.3,-.1],thL:[-.3,0,0],thR:[-.2,0,.1],knL:[.6,0,0],knR:[.5,0,0]},
+  stag:{hips:[.25,.15,.2,0,-.5,0],chest:[.25,0,.12],neck:[.3,0,0],head:[.45,.3,.25],jaw:[.6,0,0],shL:[.3,0,.5],shR:[.45,0,-.3],elL:[-.4,0,0],elR:[-.3,0,0]},
+  sleep:{hips:[.1,0,.08,0,-1.15,0],chest:[.08,0,.05],neck:[.55,.4,0],head:[.35,.3,.2],jaw:[.05,0,0],shL:[-1.2,0,.25],shR:[-1.3,0,-.15],elL:[1.0,0,0],elR:[1.1,0,0],wrL:[.5,0,0],wrR:[.6,0,0],thL:[-1.2,0,.15],thR:[-1.15,0,-.1],knL:[2.0,0,0],knR:[2.0,0,0],hkL:[-1.0,0,0],hkR:[-1.0,0,0],tail0:[-.2,.8,0],tail1:[0,.5,0],wgL:[-.1,.1,.1],wgR:[-.1,-.1,-.1],earL:[.3,0,.2],earR:[.3,0,-.2]},
+  dead:{hips:[.2,0,1.25,0,-1.25,0],chest:[.15,0,.2],neck:[.45,.5,0],head:[.5,.5,.3],jaw:[.95,0,0],shL:[.6,0,.8],shR:[-.9,0,-1.2],elL:[-.8,0,0],elR:[-.3,0,0],thL:[-.6,0,.3],thR:[.2,0,-.2],knL:[1.2,0,0],knR:[.6,0,0],wgL:[.4,-1.0,.6],wgR:[.1,.4,-.2],tail0:[0,.6,0]}};
+// ---------------- the procedural layer: breathing, a four-limbed gait, the tail, ears and wings, the head tracking you ----------------
+function vh205Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/3.2),run=Math.max(0,Math.min(1,(sp-3.4)/2.5));S.gp=(S.gp||0)+dt*(1.8+sp*1.55);const g=S.gp,br=Math.sin(t*1.5);
+  O.chest[4]+=.035*br;O.chest[0]+=-.025*br;O.neck[0]+=.03*br;O.jaw[0]+=.06+.05*Math.max(0,br);
+  // a diagonal gait: the left arm swings with the right leg; a gallop at speed (the arms and legs in pairs)
+  ['L','R'].forEach((s,j)=>{const pa=g+j*Math.PI,pl_=g+(j?0:Math.PI)+run*(j?0:-Math.PI),sw=Math.sin(pa),lf=Math.max(0,Math.cos(pa)),sl=Math.sin(pl_),ll=Math.max(0,Math.cos(pl_)),A=.42+.2*run;
+    O['sh'+s][0]+=-sw*A*a;O['el'+s][0]+=-lf*.55*a;O['wr'+s][0]+=lf*.35*a+sw*.2*a;O['sh'+s][2]+=(j?-1:1)*.04*a;
+    O['th'+s][0]+=-sl*(.48+.15*run)*a;O['kn'+s][0]+=ll*.55*a;O['hk'+s][0]+=-ll*.4*a;O['ft'+s][0]+=ll*.3*a});
+  O.hips[4]+=Math.abs(Math.sin(g))*.09*a+run*.12*Math.sin(g*2);O.chest[2]+=Math.sin(g)*.06*a;O.hips[2]+=-Math.sin(g)*.05*a;O.chest[0]+=.08*a+run*.06*Math.sin(g*2);O.neck[0]+=-.1*a;
+  // the tail whips, the ears flick, the folded wings breathe
+  for(let i=0;i<3;i++){O['tail'+i][1]+=Math.sin(t*2.1-i*.8)*(.18+.12*a)*(1+i*.3);O['tail'+i][0]+=Math.sin(t*1.3-i*.6)*.06}
+  const fl=Math.max(0,Math.sin(t*2.7)*Math.sin(t*1.1));O.earL[2]+=fl*.25;O.earR[2]-=Math.max(0,Math.sin(t*2.3+1)*Math.sin(t*.9))*.25;
+  O.wgL[1]+=-.04*br;O.wgR[1]+=.04*br;O.wgL[2]+=.03*a*Math.sin(g);O.wgR[2]-=.03*a*Math.sin(g);
+  // the head follows the hero (outside moves)
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:(Math.abs(yaw)<1.7?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.75,Math.min(.75,yaw))*k)-(S.hy||0))*Math.min(1,dt*3.5);O.head[1]+=S.hy*.55;O.neck[1]+=S.hy*.4}
+// after the pose: the veins and eyes burn (brighter in Phase II, while charging and hunting), blood drips from the maw
+function vh205Post(e,S,dt,now){const R=S.R,t=now/1000,ph2=S.ph>1,ch=S.chg||0;
+  const k=(ph2?1.25:.75)+.25*Math.sin(t*2.6)+ch*1.2;R.veinM.color.setRGB(Math.min(1,.7*k),Math.min(1,.08*k),Math.min(1,.12*k));R.eyeM.color.setHex(ch>.4||S.hunt?0xffd0d0:ph2?0xff5050:0xff2a2a);
+  if(!S.dieM&&Math.random()<dt*(ph2?4:2)){const p=svWP(e,'jaw',(Math.random()-.5)*.3,-.05,.45);burst(p,0x8a0a14,1,.08,-1.2,.7)}
+  if(S.hunt&&Math.random()<dt*20){const p=svWP(e,'chest',(Math.random()-.5)*2,Math.random(),(Math.random()-.5)*2);burst(p,0x1a0a10,1,.6,.4,.6)}}
+// preview sheets (v143_look PROPS=vharog / vhP:<pose>)
+VH205M.sheet.vharog=()=>{const R=svRig();vh205Build(R,null);svRest(R);svMerge(R);return R.root};
+VH205M.pose=(root,R,name)=>{const P=svPose({P:VH205P},name);for(const k in P){const g=R.J[k],o=P[k];if(!g)continue;const r0=g.userData.r0,p0=g.userData.p0;g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}};
+Object.assign(KQSH151,VH205M.sheet);
+// ================= v205 Vharog, the Bloodgorged — the moves (Sovereign move format, v110 engine) and the engine glue =================
+// Like Qarsul (3273) he runs on the v110 timeline engine outside a Sovereign den: the gateway clearing of The Citadel II (3742) is
+// his arena; svCtx / svHitNow are pointed at it for him only. He never sets e.ar (not a Sovereign defeat).
+// Theme: hunger. A war-beast bred and starved by the court: everything he does is the hunt and the feeding — claws that open
+// wounds, a maw that drinks, the pounce of a predator, the screech of a bat, and in the dark he hunts by your heartbeat.
+// Hemorrhage (his debuff): his claws open wounds (stacks to 3; each stack bleeds you a little every second, ~6 s; a dash does not
+// close them, time does). Pinned: his Feeding Bite holds you in his jaws and drinks (he heals) until you dash free.
+// Pattern (learnable; cooldowns, no repeats, combo strings):
+//  close, front ── Rending Claws: a right swipe, a left swipe, a pause… then he rears onto his hind legs and brings both claws
+//                  down on a line (late: it punishes an early dodge). Every claw that lands opens a wound.
+//  mid, front   ── Pounce: he crouches, haunches up, and leaps onto where you will be (a circle leads you), a crash of blood.
+//  behind/side  ── Wing Buffet: the wings snap open and he whirls a full turn: a ring round him (hug him, or be far out).
+//  any          ── Gore Spew: he gulps, throws his head back, then spews three gouts of blood ahead of you: pools that open wounds.
+//  far, front   ── Night Screech: half rearing, wings spread, a cone of sound in three pulses: Deafened (slowed) if it catches you.
+//  close, any   ── Feeding Bite: a lunging snap; caught, you are Pinned and he drinks (dash to tear free).
+//  Phase II (55%) "The Hunger Wakes": a roar, the blood moon comes out, the mist round the arena closes in and runs red, and
+//                  he rests less. He gains Frenzy (four claws and a pounce), Double Pounce, Bat Storm (three lanes of bats sweep
+//                  the arena) and the signature:
+//  Night Hunt: he leaps away into the dark; the light dies and only his eyes show as he circles the arena, lunging across it
+//                  through you again and again (each lunge's lane is shown). Three siege ballistae stand at the edge: F at one
+//                  fires a silver harpoon into him; three chains and he is dragged down: CHAINED, a long stagger. If the hunt runs
+//                  out first he drops on you, feeds (heals) and lets out the Crimson Howl (two rings to dash through).
+// Weakness: posture (the yellow bar); every break staggers him (+35% damage). Big moves have armour.
+var VH205A=null;   // the arena while he exists: {cx, cz, r (his reach), hr (the hero's), y, f (fight on), r0}
+{const f=svCtx;svCtx=function(e){const c=f.apply(this,arguments);if(e&&e.vh205){c.A=VH205A;c.inA=(p,mg)=>vh205Clamp(p,mg==null?1.2:mg);c.hit=(s,an,dm,o)=>vh205HitNow(e,s,an,dm,o||{})}return c}}
+{const f=svHitNow;svHitNow=function(e,s,an,dm,o){if(e&&e.vh205)return vh205HitNow(e,s,an,dm,o||{});return f.apply(this,arguments)}}
+function vh205Clamp(p,mg){const A=VH205A;if(!A)return p;const dx=p.x-A.cx,dz=p.z-A.cz,d=Math.hypot(dx,dz),lim=A.r-(mg||0);if(d>lim){p.x=A.cx+dx/d*lim;p.z=A.cz+dz/d*lim}return p}
+function vh205HeroIn(p){const A=VH205A;if(!A)return p;const dx=p.x-A.cx,dz=p.z-A.cz,d=Math.hypot(dx,dz);if(d>A.hr){p.x=A.cx+dx/d*A.hr;p.z=A.cz+dz/d*A.hr}return p}
+function vh205HitNow(e,s,an,dm,o){if(!VH205A||!VH205A.f||e.dead)return false;let hit=false;if(o.flash!==false)svFlash(s,an,o.col||VH205M.col,o.fms);
+  if(hero.hp>0&&svIn(s,an,pl.position,o.pad)){hit=true;SVX.st.hits++;if(o.pre)try{o.pre()}catch(_){}const iv=hero.iv>0;bossHit(e,dm);
+    if(!iv&&hero.hp>0){if(o.kb){const dx=pl.position.x-an.x,dz=pl.position.z-an.z,l=Math.hypot(dx,dz)||1,q=vh205HeroIn(pl.position.clone().add(new THREE.Vector3(dx/l*o.kb,0,dz/l*o.kb)));
+        pl.step={x:(q.x-pl.position.x)/(o.kb||1),z:(q.z-pl.position.z)/(o.kb||1),t:.22,sp:(o.kb||1)/.22}}
+      if(o.on)try{o.on()}catch(err){console.error('vh on hit',err)}}}
+  return hit}
+// ---------------- the debuffs ----------------
+var VH205B={n:0,t:0,tk:0,e:null};   // Hemorrhage: stacks and their timer
+function vh205Bleed(e,n){if(hero.hp<=0||hero.iv>0)return;VH205B.n=Math.min(3,VH205B.n+(n||1));VH205B.t=6;VH205B.e=e;dqDebuff('Hemorrhage','🩸',{},6000,'Hemorrhage ×'+VH205B.n+': bleeding');popT(pl.position,'HEMORRHAGE ×'+VH205B.n,'#ff6a6a');svSnd('blood',.8,.9)}
+function vh205BleedTick(dt){const B=VH205B;if(B.n<=0)return;B.t-=dt;if(B.t<=0||hero.hp<=0){B.n=0;return}B.tk-=dt;if(B.tk<=0){B.tk=1;const e=B.e;if(e&&!e.dead&&!(hero.iv>0)&&!(typeof AWD!='undefined'&&AWD.dead)){hitHero(e,.045*B.n,'p');burst(gY(pl.position,1),0xb01020,6+B.n*3,.5,.7,.5)}}}
+function vh205Pin(){if(hero.hp<=0||hero.iv>0)return false;dqDebuff('Pinned','🦷',{mspd:-1},1500,'Pinned in his jaws: dash to tear free');popT(pl.position,'PINNED','#ff8080',true);svSnd('squelch',1,.6);return true}
+function vh205Pinned(){return hero.buffs.some(b=>b&&b.n==='Pinned')}
+function vh205Deaf(){if(hero.hp<=0||hero.iv>0)return;dqDebuff('Deafened','🦇',{mspd:-.4},2500,'Deafened: −40% move speed');popT(pl.position,'DEAFENED','#e0b0ff')}
+// a dash tears you out of his jaws
+{const f=dodge;dodge=function(){const b=hero.buffs.findIndex(q=>q&&q.n==='Pinned');if(b>=0){hero.buffs.splice(b,1);try{hsDirty()}catch(_){}try{if(VH205.e&&VH205.e.sv&&VH205.e.sv.mv&&VH205.e.sv.mv.an)VH205.e.sv.mv.an.free=1}catch(_){}popT(pl.position,'TORN FREE','#ffd8a0')}return f.apply(this,arguments)}}
+// ---------------- effects ----------------
+var VH205X={m:{}};
+function vh205BloodMat(){return VH205X.m.b||(VH205X.m.b=new THREE.MeshStandardMaterial({color:0x5a0a12,roughness:.3,metalness:.1,flatShading:true}))}
+const VH205_HEM=['Hemorrhage','🩸',{},'Hemorrhage: bleeding'];
+// a pool of blood that opens a wound if you stand in it (one stack a second)
+function vh205Pool(e,p,r,ms){if(!VH205A||!VH205A.f)return;const q=vh205Clamp(p.clone(),.3),y=GH(q.x,q.z);svDecal(q,0x5a0a12,r,(ms||5000)/1000,.75);let t=0,tk=.3;
+  const m=new THREE.Mesh(svG('vh_pool',()=>new THREE.CircleGeometry(1,18).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x4a0610,roughness:.15,metalness:.2,transparent:true,opacity:.85,polygonOffset:true,polygonOffsetFactor:-3}));
+  m.position.set(q.x,y+.05,q.z);m.scale.setScalar(.1);m.userData.lpsSkip=1;scene.add(m);
+  kqFx({tick(dt){t+=dt||0;const T=(ms||5000)/1000;m.scale.setScalar(r*Math.min(1,t/.3));if(t>T-.6)m.material.opacity=.85*Math.max(0,(T-t)/.6);tk-=dt||0;
+      if(tk<=0&&hero.hp>0&&VH205A&&VH205A.f&&Math.hypot(pl.position.x-q.x,pl.position.z-q.z)<r){tk=1;vh205Bleed(e,1)}if(Math.random()<.05)burst(new THREE.Vector3(q.x+(Math.random()-.5)*r,y+.1,q.z+(Math.random()-.5)*r),0x8a0a14,1,.2,.5,.4);return t<T},
+    end(){scene.remove(m);m.material.dispose()}})}
+// a crash where he lands: a shockwave, blood thrown up, cracks in the flagstones
+function vh205Crash(p,r,pool,e){svShock(p,VH205M.col,r,.4);burst(gY(p,.3),0x8a0a14,40,r*.9,2.4,.7);svDecal(p,0x3a0a10,r*.8,3,.5);try{sk146Crack(p,0xb01020,r*.9,1.8);sk146Drops(gY(p,.6),0x6a0a14,10,3,4)}catch(_){}shake(.3);svSnd('heavy',1.15,.75);if(pool&&e)vh205Pool(e,p,pool,5200)}
+// a gout of blood from a to b (a glob trailing drops) that leaves a pool
+function vh205Gout(e,a,b,T){const o=new THREE.Mesh(svG('vh_gout',()=>svLump(.3,1,.3,2151)),vh205BloodMat());o.userData.lpsSkip=1;svShot(a,b,T,0x8a0a14,1.1,2.2,()=>{burst(gY(b,.3),0x8a0a14,24,1.6,1.6,.6);vh205Pool(e,b,1.7,5600)},o);return o}
+// where the hero will be (lead seconds ahead), inside the arena
+function vh205Aim(c,lead){const v=c.S.hv||{x:0,z:0};return vh205HeroIn(new THREE.Vector3(pl.position.x+v.x*lead,0,pl.position.z+v.z*lead))}
+// claw trails and the sound of them
+const VH205_TR=(t0,t1)=>[t0,t1,'wrR',[0,-.2,.3],[0,-.45,.65],0xff3a4a,.16];
+const VH205_TL=(t0,t1)=>[t0,t1,'wrL',[0,-.2,.3],[0,-.45,.65],0xff3a4a,.16];
+const VH205_NO141=D=>{D._h141=null;return D};
+// claws that land open a wound
+const VH205_CLAW=(c)=>{vh205Bleed(c.e,1)};
+// ---------------- the moves ----------------
+var VH205MV={
+  // he wakes, tears his chain from the gate and roars (the controller plays the waking before this)
+  intro:VH205_NO141({dur:3.6,inv:[0,3.6],armor:1,trn:[[0,3.6,1.6]],trk:[[.5,'crouch','io'],[1.1,'crouch','l',.02],[1.5,'roar','o'],[3.0,'roar','l',.03],[3.6,'rec','io']],
+    ev:[[1.5,c=>{svSnd('roar',1.25,.5);svSnd('shriek',.6,.6);shake(.5);svShock(c.m.position,VH205M.col,10,.8);burst(gY(c.m.position,3),0x8a0a14,70,6,3,1.1);c.S.chgT=1}],[3.0,c=>{c.S.chgT=0}]]}),
+  // Rending Claws (Phase I): right, left, the rearing double slam on a line
+  rend:VH205_NO141({wt:10,cd:2.6,r:[0,5.8],a:'f',mel:1,dur:2.9,lock:.42,trn:[[0,.42,4.4],[.9,1.05,4.4],[1.45,1.75,3.2]],
+    trk:[[.42,'rUp','io'],[.58,'rUp','l',.012],[.72,'rHit','s'],[.94,'rHit','l'],[1.08,'lUp','io'],[1.2,'lHit','s'],[1.5,'xUp','io'],[1.9,'xUp','l',.02],[2.05,'xHit','s'],[2.45,'rec','io'],[2.9,'rec','l']],
+    rm:[[.6,.72,.8,'o'],[1.1,1.22,.5,'o'],[1.92,2.05,1.4,'o']],
+    hit:[{t:.71,s:{k:'a',r:5.0,h:1.1},f:.3,dm:.95,on:VH205_CLAW},{t:1.19,s:{k:'a',r:4.6,h:1.0},f:.3,ay:.4,dm:.8,kb:1.5,on:VH205_CLAW},
+      {t:2.05,s:{k:'l',w:2.8,l:6.5,b:0},f:.4,dm:1.4,w:.5,on:VH205_CLAW,fx:c=>{vh205Crash(c.at(3.2),3.0,1.6,c.e)}}],
+    tr:[VH205_TR(.62,.78),VH205_TL(1.1,1.26),VH205_TR(1.96,2.08),VH205_TL(1.96,2.08)],
+    ev:[[.6,c=>svSnd('swing',.9,.85)],[1.1,c=>svSnd('swing',.85,1.05)],[1.52,c=>{svSnd('roar',.55,1.0);c.S.chgT=.6}],[1.95,c=>{svSnd('whoosh',1.1,.7);c.S.chgT=0}]],
+    nx:[['pounce',.25,13],['buffet',.3,6.5]],rec:.3}),
+  // Pounce: crouch, leap onto where you will be, crash
+  pounce:VH205_NO141({wt:9,cd:6,r:[4,15],a:'f',armor:1,dur:2.5,lock:.75,trn:[[0,.8,4]],
+    trk:[[.45,'crouch','io'],[.78,'crouch','l',.025],[.95,'air','o'],[1.35,'air','l'],[1.5,'land','s'],[2.1,'land','l'],[2.5,'rec','io']],
+    rm:[[.85,1.5,'tgt','io',1.6,16]],
+    hit:[{t:1.5,s:{k:'c',r:3.0},o:c=>{const p=vh205Aim(c,.55);c.M.an.tg=p;return {x:p.x,z:p.z,a:0}},dm:1.35,w:.85,kb:3,on:VH205_CLAW,fx:(c,an)=>vh205Crash(new THREE.Vector3(an.x,0,an.z),3.6,1.4,c.e)}],
+    ev:[[.4,c=>{svSnd('roar',.7,.9);c.S.chgT=.8}],[.9,c=>{svSnd('whoosh',1.2,.6);c.S.chgT=0;burst(gY(c.m.position,.3),0x8a0a14,20,2,1.4,.6)}]],rec:.35}),
+  // Wing Buffet: wings open, a full turn (only from behind or the side)
+  buffet:VH205_NO141({wt:(e,L,side)=>side==='b'?14:side==='s'?7:0,cd:5.5,r:[0,6.6],a:'sb',dur:2.1,lock:.5,trn:[[0,.5,2.4]],
+    trk:[[.5,'spW','io'],[.85,'spW','l',.015],[.98,'spGo','s'],[1.45,'spGo','l'],[2.1,'rec','io']],
+    hit:[{t:1.1,s:{k:'r',r0:1.8,r:6.4},dm:1.1,kb:4,w:.82,fx:c=>{svShock(c.m.position,VH205M.col,6.6,.4);burst(gY(c.m.position,1),0x2a0a10,60,5.5,1,.6);try{sk146Swarm(gY(c.m.position,1.4),gY(c.m.position,3),14,0x1a0a10,'bat',.9,{spread:6})}catch(_){}svSnd('whoosh',1.25,.55)}}],
+    ev:[[.4,c=>{svSnd('shriek',.5,1.2);c.S.chgT=.5}],[1.5,c=>{c.S.chgT=0}]],
+    tk(c,dt){const M=c.M;if(c.t>=.98&&c.t<=1.42){if(M.an.y0==null)M.an.y0=c.m.rotation.y;const k=svEase.io(Math.min(1,(c.t-.98)/.44));c.m.rotation.y=M.an.y0+k*Math.PI*2}else if(c.t>1.42&&M.an.y0!=null){c.m.rotation.y=M.an.y0;M.an.y0=null}},
+    end(c){if(c.M.an.y0!=null)c.m.rotation.y=c.M.an.y0;c.S.chgT=0},rec:.35}),
+  // Gore Spew: three gouts aimed ahead of you
+  spew:VH205_NO141({wt:8,cd:7,r:[3,30],a:'any',dur:2.6,lock:1.0,trn:[[0,1.05,3]],
+    trk:[[.5,'gulp','io'],[1.0,'gulp','l',.02],[1.15,'spew','s'],[2.1,'spew','l',.01],[2.6,'rec','io']],
+    hit:[1.3,1.5,1.7].map((t,i)=>({t,s:{k:'c',r:1.6},o:c=>{const p=vh205Aim(c,.6+i*.15),a=Math.atan2(p.x-c.m.position.x,p.z-c.m.position.z),off=(i-1)*1.8;return {x:p.x+Math.cos(a)*off,z:p.z-Math.sin(a)*off,a:0}},w:.8,dm:.75,on:VH205_CLAW})),
+    ev:[[.5,c=>{svSnd('squelch',.9,.6);c.S.chgT=.7}],[1.15,c=>{svSnd('splash',1,.6);c.S.chgT=0;for(let i=0;i<3;i++){const an=c.M.an['h'+i]||svAnchor(c.e,VH205MV.spew.hit[i],c);const a=svWP(c.e,'jaw',0,0,.5),b=new THREE.Vector3(an.x,GH(an.x,an.z)+.2,an.z);vh205Gout(c.e,a,b,.15+i*.2)}}]],rec:.35}),
+  // Night Screech: a cone of sound, three pulses
+  screech:VH205_NO141({wt:(e,L)=>L>7?9:3,cd:7.5,r:[5,30],a:'f',dur:2.8,lock:1.0,trn:[[0,1.0,3]],
+    trk:[[.5,'scr','io'],[1.0,'scr','l',.03],[2.4,'scr','l',.04],[2.8,'rec','io']],
+    hit:[1.1,1.5,1.9].map((t,i)=>({t,s:{k:'a',r0:i*3.5,r:5+i*4.5,h:.55},dm:.55,w:i?.3:.9,on:()=>vh205Deaf(),fx:c=>{const p=c.wp('head',0,0,.6);for(let k=0;k<3;k++)svShock(gY(c.m.position,.1),0xe0a0ff,5+i*4.5,.3+k*.05);burst(p,0xe0b0ff,20,1.5,.4,.4)}})),
+    ev:[[1.05,c=>{svSnd('shriek',1.2,.7);svSnd('shriek',.8,1.1);shake(.2);c.S.chgT=1}],[2.3,c=>{c.S.chgT=0}]],rec:.35}),
+  // Feeding Bite: a lunging snap; caught, pinned and drunk from
+  bite:VH205_NO141({wt:(e,L)=>L<4.5?9:2,cd:8,r:[0,5.2],a:'any',dur:1.6,lock:.55,trn:[[0,.55,4.5]],
+    trk:[[.4,'bOpen','io'],[.62,'bOpen','l',.015],[.75,'bSnap','s'],[1.05,'bSnap','l'],[1.6,'rec','io']],
+    rm:[[.62,.78,1.4,'o']],
+    hit:[{t:.76,s:{k:'a',r:3.6,h:.55},f:.4,dm:.85,w:.35,on:null}],
+    ev:[[.35,c=>{svSnd('hiss',.8,.6);c.S.chgT=.5}],[.75,c=>{svSnd('crack',.7,1.4);c.S.chgT=0}]],
+    end(c){c.S.chgT=0},rec:.4}),
+  // caught in the bite: he holds you at his jaws and drinks (cast from the bite when it lands; a dash tears you free)
+  feed:VH205_NO141({dur:2.6,armor:1,trk:[[.25,'drink','io'],[2.2,'drink','l',.02],[2.6,'rec','io']],
+    tk(c,dt){const an=c.M.an;if(an.free||hero.hp<=0||!vh205Pinned()){if(!an.out){an.out=1;c.S.tt=c.M.t=Math.max(c.M.t,2.25)}return}
+      const j=c.wp('jaw',0,0,.7);pl.position.x+=(j.x-pl.position.x)*Math.min(1,dt*10);pl.position.z+=(j.z-pl.position.z)*Math.min(1,dt*10);an.dt=(an.dt||0)-dt;
+      if(an.dt<=0){an.dt=.4;hitHero(c.e,.18,'p');try{sk146Heal(c.e,.01,0xff4a4a)}catch(_){}burst(gY(pl.position,1),0xb01020,10,.6,.8,.4)}
+      if(Math.random()<.6)burst(gY(pl.position,1).lerp(j,Math.random()),0xff2030,1,.1,.1,.3)},rec:.5}),
+  // ---------------- Phase II ----------------
+  awaken:VH205_NO141({dur:4.0,inv:[0,4.0],armor:1,trn:[[0,3.8,1.2]],trk:[[.6,'crouch','io'],[1.3,'crouch','l',.03],[1.6,'roar','o'],[3.4,'roar','l',.035],[4.0,'rec','io']],
+    hit:[{t:1.65,s:{k:'c',r:7},dm:.55,kb:6,w:1.2,fx:c=>{vh205Crash(c.m.position,7,0)}}],
+    ev:[[.05,c=>{cq205Card('Vharog · Phase II','The Hunger Wakes','The blood moon rises; the mist closes in','Watch the sky for the bats');svSnd('roar',.8,.6);c.S.chgT=1.2}],
+      [1.65,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(200,20,40,.3)')}catch(_){}svSnd('roar',1.3,.45);svSnd('shriek',.9,.6);shake(.6);try{vh205Storm(true)}catch(err){console.error('vh storm',err)}}]]}),
+  // Frenzy: four claws and a pounce
+  fury:VH205_NO141({wt:9,cd:3.8,ph:2,r:[0,5.8],a:'f',mel:1,dur:3.7,lock:.3,trn:[[0,.3,4.4],[.6,.7,4.4],[.98,1.08,4.4],[1.36,1.46,4.4],[1.85,2.15,3.4]],
+    trk:[[.28,'rUp','io'],[.42,'rHit','s'],[.6,'lUp','io'],[.74,'lHit','s'],[.96,'rUp','io'],[1.1,'rHit','s'],[1.28,'lUp','io'],[1.44,'lHit','s'],[1.7,'crouch','io'],[1.95,'air','o'],[2.35,'land','s'],[3.1,'rec','io'],[3.7,'rec','l']],
+    rm:[[.36,.44,.6,'o'],[.68,.76,.5,'o'],[1.04,1.12,.6,'o'],[1.38,1.46,.5,'o'],[1.9,2.35,'tgt','io',1.4,8]],
+    hit:[{t:.42,s:{k:'a',r:5.0,h:1.1},f:.3,dm:.8,on:VH205_CLAW},{t:.74,s:{k:'a',r:4.6,h:1.0},f:.3,dm:.7,on:VH205_CLAW},{t:1.1,s:{k:'a',r:5.0,h:1.1},f:.3,dm:.8,on:VH205_CLAW},{t:1.44,s:{k:'a',r:4.6,h:1.0},f:.3,dm:.7,kb:1.5,on:VH205_CLAW},
+      {t:2.35,s:{k:'c',r:3.2},o:'tgt',dm:1.4,w:.55,on:VH205_CLAW,fx:(c,an)=>vh205Crash(new THREE.Vector3(an.x,0,an.z),4,1.6,c.e)}],
+    tr:[VH205_TR(.34,.46),VH205_TL(.66,.78),VH205_TR(1.02,1.14),VH205_TL(1.36,1.48)],
+    ev:[[.34,c=>svSnd('swing',.85,.85)],[.66,c=>svSnd('swing',.8,1.05)],[1.02,c=>svSnd('swing',.85,.9)],[1.36,c=>svSnd('swing',.8,1.1)],[1.9,c=>{svSnd('roar',.8,.85);svSnd('whoosh',1.1,.65)}]],rec:.4}),
+  // Double Pounce: onto you, a turn, and again
+  pounce2:VH205_NO141({wt:9,cd:9,ph:2,r:[3,16],a:'f',armor:1,dur:4.3,lock:.75,trn:[[0,.8,4],[2.1,2.55,6]],
+    trk:[[.45,'crouch','io'],[.75,'crouch','l',.025],[.9,'air','o'],[1.3,'air','l'],[1.45,'land','s'],[2.1,'crouch','io'],[2.55,'air','o'],[2.95,'air','l'],[3.1,'land','s'],[3.7,'land','l'],[4.3,'rec','io']],
+    rm:[[.8,1.45,'tgt','io',1.6,16],[2.45,3.1,'tgt','io',1.6,16]],
+    hit:[{t:1.45,s:{k:'c',r:3.0},o:c=>{const p=vh205Aim(c,.5);return {x:p.x,z:p.z,a:0}},dm:1.2,w:.8,kb:3,on:VH205_CLAW,fx:(c,an)=>vh205Crash(new THREE.Vector3(an.x,0,an.z),3.6,1.3,c.e)},
+      {t:3.1,s:{k:'c',r:3.0},o:c=>{const p=vh205Aim(c,.5);return {x:p.x,z:p.z,a:0}},dm:1.3,w:.7,kb:3,on:VH205_CLAW,fx:(c,an)=>vh205Crash(new THREE.Vector3(an.x,0,an.z),3.6,1.3,c.e)}],
+    ev:[[.4,c=>svSnd('roar',.7,.9)],[.9,c=>svSnd('whoosh',1.2,.6)],[2.5,c=>{svSnd('roar',.6,1);svSnd('whoosh',1.2,.65)}]],rec:.4}),
+  // Bat Storm: three lanes across the arena, bats sweep them one after another
+  bats:VH205_NO141({wt:8,cd:10,ph:2,r:[0,40],a:'any',armor:1,dur:3.4,lock:.6,trn:[[0,.6,3]],
+    trk:[[.5,'scr','io'],[.9,'scr','l',.03],[2.8,'scr','l',.03],[3.4,'rec','io']],
+    hit:[0,1,2].map(i=>({t:1.6+i*.45,s:{k:'l',w:3.2,l:26,b:0},o:c=>{const A=VH205A,P=c.M.an.bp||(c.M.an.bp=pl.position.clone()),a0=c.M.an.ba!=null?c.M.an.ba:(c.M.an.ba=c.rnd()*Math.PI),a=a0+i*Math.PI/3,off=(i-1)*3.2,
+        cx=P.x+Math.cos(a)*off,cz=P.z-Math.sin(a)*off;return {x:cx-Math.sin(a)*13,z:cz-Math.cos(a)*13,a}},w:1.0,dm:.85,on:VH205_CLAW,fx:(c,an)=>{const a=new THREE.Vector3(an.x,GH(an.x,an.z)+1.4,an.z),b=new THREE.Vector3(an.x+Math.sin(an.a)*26,a.y,an.z+Math.cos(an.a)*26);try{sk146Swarm(a,b,26,0x1a0a10,'bat',.7,{spread:1.2})}catch(_){}svSnd('shriek',.8,1.2)}})),
+    ev:[[.9,c=>{svSnd('shriek',1.1,.6);c.S.chgT=1;say('🦇 Bats pour out of the dark — get out of their lanes!')}],[2.8,c=>{c.S.chgT=0}]],rec:.4}),
+  // Night Hunt: he leaps into the dark (the controller runs the hunt and the ballistae)
+  hunt:VH205_NO141({wt:(e,L)=>e.sv.hN?12:30,cd:28,ph:2,r:[0,40],a:'any',armor:1,dur:2.2,inv:[0,2.2],trn:[[0,.6,3]],
+    trk:[[.35,'crouch','io'],[.8,'crouch','l',.03],[1.0,'leapUp','o'],[2.2,'leapUp','l']],
+    ev:[[.35,c=>{svSnd('roar',1.1,.55);c.S.chgT=1}],[1.0,c=>{svSnd('whoosh',1.3,.5);shake(.3);burst(gY(c.m.position,.6),0x8a0a14,50,3,2,.8)}],[2.15,c=>{try{vh205HuntStart(c.e)}catch(err){console.error('vh hunt',err)}}]]}),
+  // circling in the dark (cast by the controller; ends when he is chained or the hunt runs out)
+  prowl:VH205_NO141({dur:20,inv:[0,20],armor:1,trk:[[.1,'lunge','l']],tk(c,dt){try{vh205Prowl(c,dt)}catch(err){console.error('vh prowl',err)}}}),
+  // the hunt ran out: he drops on you, feeds, the Crimson Howl (cast by the controller)
+  hfail:VH205_NO141({dur:4.6,armor:1,inv:[0,4.6],trk:[[.1,'air','l'],[.6,'land','s'],[1.6,'drink','io'],[2.6,'drink','l',.02],[3.0,'roar','o'],[4.0,'roar','l',.03],[4.6,'rec','io']],
+    hit:[{t:.6,s:{k:'c',r:3.4},o:c=>{const p=vh205HeroIn(pl.position.clone());return {x:p.x,z:p.z,a:0}},dm:1.6,w:.55,kb:2,on:VH205_CLAW}],
+    go(c){c.e.m.visible=true;const p=vh205HeroIn(pl.position.clone());c.m.position.x=p.x+.8;c.m.position.z=p.z+.8},
+    ev:[[.6,c=>vh205Crash(c.m.position.clone(),3.6,1.6,c.e)],[1.7,c=>{svSnd('squelch',1,.5);try{sk146Heal(c.e,.12,0xff4a4a)}catch(_){}}],[3.0,c=>{svSnd('roar',1.2,.5);try{sk146RingWave(c.e,c.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030);cq205After(.8,()=>{if(!c.e.dead)sk146RingWave(c.e,c.e.m.position.clone(),1.5,12,1.4,1.2,1.0,0xff2030)})}catch(err){console.error('vh howl',err)}}]]}),
+  // chained by three harpoons: a long stagger
+  broken:VH205_NO141({dur:5.0,trk:[[.05,'land','l'],[.6,'chained','o'],[4.4,'chained','l',.035],[5.0,'rec','io']],
+    go(c){c.e.m.visible=true;c.S.stg=5;c.S.dr=0;c.S.hunt=0;svSnd('stag',1.2,.7);svSnd('roar',.9,.4);popT(c.m.position,'CHAINED','#e8e8ff',true);burst(gY(c.m.position,2),0xd8d8ff,80,4,3,.9);svShock(c.m.position,0xd8d8ff,6,.6)},
+    tk(c,dt){c.S.stg=Math.max(0,5-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'neck',0,0,0);burst(p,0xe8e8ff,1,.5,.6,.5)}},end(c){c.S.stg=0;try{vh205ChainsOff()}catch(_){}}})};
+VH205MV.rend.ph1only=1;
+// the moves' hit flags: bite catches you (pinned) when it lands
+VH205MV.bite.hit[0].fx=(c,an,hit)=>{if(hit&&vh205Pin())cq205After(0,()=>{if(!c.e.dead&&c.e.sv&&c.e.sv.mv&&c.e.sv.mv.id==='bite')svCast(c.e,'feed')})};
+// the hits' on-callbacks receive (c, an) from the engine
+for(const id in VH205MV){const D=VH205MV[id];(D.hit||[]).forEach(h=>{if(h.on===VH205_CLAW){h.on=(c)=>VH205_CLAW(c)}})}
+// ================= v205 The Citadel II · the rampart gate and Vharog, the Bloodgorged: the fight =================
+// The gateway of The Citadel II is gone: the road ends at a gate in the rampart wall (cq205Gatehouse 'rampart': an iron portcullis
+// between two squat towers, war drums and spears) and before it, chained to the gate by its collar, sleeps the court's war-beast.
+//  * Asleep: curled on its side, breathing, its chain looping back to a ring in the gate. Come within VH205.wake of it, or hurt it,
+//    and it wakes: the chain tears out of the stones, it roars, and a wall of red mist rises round the clearing (no leaving, no
+//    recall, no mount: kill it or die). A wipe (every hero down) or nobody left in the clearing puts it back to sleep, healed.
+//  * The arena (VH205A): centred in the clearing a little before the gate, radius VH205.R; Phase II closes it by 1.5.
+//  * Phase II "The Hunger Wakes" (vh205Storm): the blood moon comes out, the light turns red, the mist runs red and closes in,
+//    bats wheel overhead.
+//  * Night Hunt (signature): he leaps away and the light dies; he circles the edge in the dark (only his eyes and the dark smoke
+//    off him show) and lunges across the arena through you every VH205.lg s (the lane shows first). Three siege ballistae stand at
+//    the edge (VH205.bal): F at one cranks it (1 s, stay put) and looses a silver harpoon into him; its chain holds. Three chains
+//    and he is dragged down CHAINED (the 'broken' stagger). If the hunt runs out (VH205.hT s) he drops on you, feeds and howls.
+//  * Slain: the portcullis grinds up; F under it goes to III.
+var VH205={e:null,lv:49,R:10.5,wake:9,lg:2.4,hT:16,G:null,wall:null,storm:null,bal:[],H:null,cr:null,moon:null,dk:0,err:0,ft:0,chainG:null};
+var VH205BOSS={name:'Vharog',col:VH205M.col,body:2.0,ph2:.55,poise:.1,headJ:'head',turnA:3.2,edge:2.2,
+  ai:{pref:3.6,walk:2.8,run:6.2,turn:2.6,rest:[.7,1.3],ph2r:.66,strafe:.55},
+  build:vh205Build,loco:vh205Loco,post:vh205Post,P:VH205P,M:VH205MV,spr:{jaw:[60,8,1],earL:[30,5,1.2],earR:[30,5,1.2],tail1:[25,4,1.4],tail2:[22,4,1.6],wgL:[40,6,.8],wgR:[40,6,.8],chain:[18,3,1.5]},
+  stag:[[.25,'stag','o'],[2.1,'stag','l',.025],[2.6,'rec','io']],stagT:2.6,
+  die:[[.4,'stag','o'],[1.6,'dead','i'],[2.6,'dead','l']]};
+VH205BOSS.M.stagger=svStagDef(VH205BOSS);
+VH205BOSS.M.sleep={dur:9999,trk:[[.4,'sleep','io'],[9999,'sleep','l']]};
+function vh205Here(){return cq205Here(1)}
+function vh205Alive(){const e=VH205.e;return !!(e&&!e.dead&&enemies.includes(e))}
+function vh205Spot(){if(vh205Spot.c)return vh205Spot.c;const F=cq205F(1),a=F.reach+.5,[x,z]=F.W2(a,0),G={F,a,x,z,ry:Math.atan2(-F.fx,-F.fz),y:F.y0};
+  const [cx,cz]=F.W2(1.5,0),[sx,sz]=F.W2(F.reach-6.5,1.2);G.arena={cx,cz,r0:VH205.R};G.sleep={x:sx,z:sz,ry:G.ry+.6};
+  // three ballistae at the edge of the arena, facing its centre
+  G.bal=[70,-70,180].map(d=>{const t=d*Math.PI/180,r=VH205.R-1.2,[x,z]=F.W2(1.5+Math.cos(t)*r,Math.sin(t)*r);return {x,z,ry:Math.atan2(cx-x,cz-z)}});
+  return vh205Spot.c=G}
+function vh205Arena(){const S=vh205Spot();return {cx:S.arena.cx,cz:S.arena.cz,r:S.arena.r0-1.8,hr:S.arena.r0,y:S.y,f:false,r0:S.arena.r0}}
+// ---------------- the rampart gate ----------------
+function vh205GateBuild(){if(VH205.G)return VH205.G;const S=vh205Spot(),G=cq205Gatehouse({kind:'rampart'});G.g.position.set(S.x,S.y-.05,S.z);G.g.rotation.y=S.ry;scene.add(G.g);G.spot=S;cq205PlaceLights(G);
+  try{G.cleared=cq205ClearFoot(S,G.dims)}catch(_){}G.tiles=cq205FootTiles(S,G.dims);G.tiles.T.forEach(k=>CBLK.add(k));
+  // the ring in the stones the chain runs to
+  const [rx,rz]=cq205GW(S,1.6,G.dims.fz+.6);G.ring={x:rx,z:rz,y:GH(rx,rz)+.5};
+  // the ballistae
+  VH205.bal=S.bal.map((b,i)=>{const o=vh205Ballista();o.position.set(b.x,GH(b.x,b.z),b.z);o.rotation.y=b.ry;scene.add(o);CBLK.add(Math.round(b.z)*W+Math.round(b.x));return {o,x:b.x,z:b.z,ry:b.ry,i,used:0,beam:null}});
+  VH205.G=G;vh205GateSync();return G}
+function vh205GateSync(){const G=VH205.G;if(!G)return;const open=cq205Done(2);G.op=open;G.raising=0;G.tok=(G.tok||0)+1;G.port.position.y=open?G.dims.hs+G.dims.dA-.4:0;G.light.intensity=open?1.6:0;G.haze.material.opacity=open?.5:0;G.pass.material.color.setHex(open?0x3a0a0a:0x050203)}
+function vh205Raise(){const G=VH205.G;if(!G)return;G.raising=1;G.op=true;const tok=G.tok=(G.tok||0)+1;svSnd('heavy',1.1,.45);try{dg165Snd('grind',1,.55);dg165Snd('creak',.9,.5)}catch(_){}let t=0;const top=G.dims.hs+G.dims.dA-.4;
+  kqFx({tick(dt){if(G.tok!==tok)return false;t+=dt||0;const k=svEase.io(Math.min(1,t/3.6));G.port.position.y=top*k;G.light.intensity=1.6*k;G.haze.material.opacity=.5*k;G.pass.material.color.setRGB(.23*k+.02,.04*k+.01,.04*k+.01);if(Math.random()<.3){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*5,.3,G.dims.fz-.4));burst(q,0x7a6a6a,2,1,.6,.8)}return t<3.6},end(){if(G.tok===tok)G.raising=0}})}
+// a siege ballista: a trestle, the stock, two bow arms, the string, a winch, a silver harpoon loaded (o.userData.h)
+function vh205Ballista(){const g=dt168Group('CQ205|bal',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz)),BB=dt168BBox,wd=0x4a3220,wd2=0x2e1e14,ir=0x34343a;
+    [-1,1].forEach(s=>{P(BB(.14,1.1,.14,.02),'c',wd2,s*.45,.55,-.4,0,0,s*.15);P(BB(.14,1.1,.14,.02),'c',wd2,s*.45,.55,.4,0,0,s*.15)});P(BB(1.1,.12,1.0,.02),'c',wd,0,1.08,0);
+    P(BB(.22,.2,2.4,.03),'c',wd,0,1.25,.15);P(BB(.08,.06,2.2,.01),'m',ir,0,1.37,.2);
+    [-1,1].forEach(s=>{P(dt168Geo('cq_bar',()=>svTube([[0,0,0],[.5,0,-.12],[1.0,0,-.38],[1.35,0,-.72]],[.07,.06,.05,.04],5)),'c',wd2,s*.12,1.3,1.1,0,s>0?0:Math.PI,0);P(BB(.06,.06,.06,.01),'m',ir,s*1.45,1.3,.38)});
+    P(dt168Geo('cq_str',()=>new THREE.CylinderGeometry(.012,.012,2.9,4)),'c',0xb8a888,0,1.32,.36,0,0,Math.PI/2);
+    P(dt168Geo('cq_win',()=>new THREE.CylinderGeometry(.16,.16,.5,8)),'c',wd2,0,1.2,-.95,0,0,Math.PI/2);[-1,1].forEach(s=>P(BB(.05,.4,.05,.01),'m',ir,s*.32,1.2,-.95))},{c:{g:[1,.3],n:.12,sd:217},m:{n:.1,sd:218}});
+  const h=dt168Group('CQ205|harp',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));P(dt168Geo('cq_hs',()=>new THREE.CylinderGeometry(.04,.04,2.2,5)),'m',0x8a8a92,0,0,0,Math.PI/2,0,0);
+    P(dt168Geo('cq_hh',()=>new THREE.ConeGeometry(.12,.45,4)),'m',0xe8e8f0,0,0,1.3,Math.PI/2,0,0);[-1,1].forEach(s=>P(dt168Geo('cq_hb',()=>new THREE.ConeGeometry(.05,.3,3)),'m',0xd8d8e0,s*.1,0,1.0,-Math.PI/2+.5*s,0,0))},{m:{n:.1,sd:219}});
+  h.position.set(0,1.45,.4);g.add(h);g.userData.h=h;g.userData.psNo=1;return g}
+// ---------------- the chain from his collar to the gate (while he sleeps) ----------------
+function vh205ChainTick(){const e=VH205.e,G=VH205.G;if(!G)return;const asleep=vh205Alive()&&!(VH205A&&VH205A.f)&&!VH205.waking&&vh205Here();
+  if(!VH205.chainG){const g=new THREE.Group(),lg=new THREE.TorusGeometry(.13,.04,4,8),lm=new THREE.MeshStandardMaterial({color:0x4a2e24,roughness:.75,metalness:.4,flatShading:true});for(let i=0;i<22;i++){const l=new THREE.Mesh(lg,lm);l.userData.lpsSkip=1;g.add(l)}scene.add(g);VH205.chainG=g}
+  const g=VH205.chainG;g.visible=asleep;if(!asleep)return;const a=svWP(e,'chain',0,-.45,0),b=new THREE.Vector3(G.ring.x,G.ring.y,G.ring.z),N=g.children.length;
+  g.children.forEach((l,i)=>{const t=i/(N-1);l.position.lerpVectors(a,b,t);l.position.y=Math.max(GH(l.position.x,l.position.z)+.08,l.position.y-Math.sin(t*Math.PI)*.9);const n=g.children[Math.min(N-1,i+1)];if(n!==l)l.lookAt(a.clone().lerp(b,t+.05));l.rotateX(Math.PI/2);if(i%2)l.rotateY(Math.PI/2)})}
+// ---------------- the mist wall round the arena ----------------
+function vh205MistTex(){if(VH205.tex)return VH205.tex;const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');
+  for(let i=0;i<420;i++){const px=Math.random()*256,py=Math.random()*128,l=10+Math.random()*50,a=.06+Math.random()*.25;x.fillStyle='rgba('+(120+Math.random()*80|0)+','+(10+Math.random()*20|0)+','+(20+Math.random()*20|0)+','+a+')';x.fillRect(px,py,l,2+Math.random()*4);x.fillRect(px-256,py,l,2+Math.random()*4)}
+  const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'rgba(80,10,20,0)');g.addColorStop(.3,'rgba(90,10,20,.35)');g.addColorStop(1,'rgba(60,5,12,.8)');x.fillStyle=g;x.fillRect(0,0,256,128);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return VH205.tex=t}
+function vh205WallMake(){if(VH205.wall)return VH205.wall;const A=vh205Arena(),g=new THREE.Group();g.name='VharogWall';const geo=new THREE.CylinderGeometry(1,1,1,56,1,true);geo.translate(0,.5,0);const L=[];
+  [[1,4.6,.5,1],[1.05,6.2,.3,-.6],[.97,2.8,.42,1.5]].forEach(([s,h,op,sp],i)=>{const t=vh205MistTex().clone();t.needsUpdate=true;t.repeat.set(5+i*2,1);const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,fog:true,color:0xd03040}));
+    m.scale.set(A.r0+.9*s,h,A.r0+.9*s);m.renderOrder=3;m.userData.lpsSkip=1;g.add(m);L.push({m,t,sp,s,op})});
+  g.position.set(A.cx,A.y-.6,A.cz);g.visible=false;scene.add(g);VH205.wall={g,L,k:0,want:0};return VH205.wall}
+function vh205WallSet(on){const W=vh205WallMake();W.want=on?1:0;if(on)W.g.visible=true}
+function vh205WallTick(dt,t){const W=VH205.wall;if(!W)return;W.k+=(W.want-W.k)*Math.min(1,dt*1.6);W.g.visible=W.k>.01&&vh205Here();if(!W.g.visible)return;const R=(VH205A?VH205A.hr:vh205Spot().arena.r0)+.9;
+  W.L.forEach(o=>{o.t.offset.x=(t*.06*o.sp)%1;o.t.offset.y=(t*.025)%1;o.m.scale.set(R*o.s,o.m.scale.y,R*o.s);o.m.material.opacity=o.op*W.k*(VH205.storm?1.3:1)});W.g.scale.y=Math.max(.05,W.k);
+  if(Math.random()<dt*14){const a=Math.random()*6.283;burst(new THREE.Vector3(W.g.position.x+Math.cos(a)*R,W.g.position.y+1+Math.random()*4,W.g.position.z+Math.sin(a)*R),0x8a1020,1,.6,.4,.9)}}
+// ---------------- Phase II: the blood moon, the red light, the mist closing in, bats overhead ----------------
+function vh205Storm(on){const A=VH205A;if(!A)return;if(!on){VH205.storm=null;A.r=A.r0-1.8;A.hr=A.r0;return}if(VH205.storm)return;A.r=A.r0-1.8-1.5;A.hr=A.r0-1.5;VH205.storm={bt:2};
+  if(!VH205.moon){const F=cq205F(1),g=new THREE.Group(),m=new THREE.Sprite(new THREE.SpriteMaterial({map:us205MoonTex(),transparent:true,opacity:0,depthWrite:false,fog:false}));m.scale.set(44,44,1);g.add(m);const [x,z]=F.W2(F.reach+150,14);g.position.set(x,F.y0+62,z);scene.add(g);VH205.moon={g,m,k:0}}}
+function vh205StormTick(dt,t){const S=VH205.storm,M=VH205.moon,here=vh205Here();if(M){M.k+=((S&&here?1:0)-M.k)*Math.min(1,dt*.5);M.g.visible=M.k>.01&&here;M.m.material.opacity=M.k*.95}
+  const want=here&&VH205A&&VH205A.f?(VH205.H?.92:S?.45:0):0;VH205.dk+=(want-VH205.dk)*Math.min(1,dt*(want>VH205.dk?1.2:.5));
+  if(!S||!VH205A||!here)return;S.bt-=dt;if(S.bt<=0){S.bt=3+Math.random()*3;const A=VH205A,a=Math.random()*6.283,p0=new THREE.Vector3(A.cx+Math.cos(a)*16,A.y+7,A.cz+Math.sin(a)*16),p1=new THREE.Vector3(A.cx-Math.cos(a)*16,A.y+5,A.cz-Math.sin(a)*16);
+    try{sk146Swarm(p0,p1,14,0x1a0a10,'bat',2.6,{spread:4,arc:2})}catch(_){}}}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{const d=VH205.dk;if(d>.002&&vh205Here()){sun.intensity*=Math.max(.05,1-.85*d);hemi.intensity*=Math.max(.12,1-.7*d);
+      const fc=VH205.fc||(VH205.fc=new THREE.Color(0x2a0408));scene.fog.color.lerp(fc,.8*d);scene.background=scene.fog.color;try{const su=SKY.material.uniforms;su.top.value.lerp(fc,.85*d);su.hor.value.lerp(fc,.7*d)}catch(_){}}}catch(_){}return r}}
+// ---------------- Night Hunt: circling in the dark, lunging, the ballistae ----------------
+function vh205HuntStart(e){vh205HuntClear();const A=VH205A,S=e.sv,rnd=S.mv?S.mv.rnd:Math.random;S.hN=(S.hN||0)+1;S.hunt=1;
+  VH205.H={t:0,left:VH205.hT,ch:0,ang:Math.atan2(e.m.position.x-A.cx,e.m.position.z-A.cz),dir:rnd()<.5?1:-1,next:1.6,ln:null,beams:[]};VH205.bal.forEach(b=>{b.used=0;b.o.userData.h.visible=true});
+  svStart(e,'prowl',S.mv?S.mv.seed:1);say('🌑 Vharog vanishes into the dark. Only his eyes… circling. The ballistae! Harpoon him — three chains will hold him.');svSnd('shriek',.7,.5)}
+function vh205Prowl(c,dt){const H=VH205.H,A=VH205A,e=c.e;if(!H||!A){svEndMove(e,true);return}c.S.hunt=1;H.t+=dt;H.left-=dt;
+  if(H.ln){const L=H.ln;L.t+=dt;if(L.t<.85){c.m.rotation.y=L.a;return}// the lunge: along the lane at speed
+    const u=Math.min(1,(L.t-.85)/.45),x=L.x0+Math.sin(L.a)*L.len*u,z=L.z0+Math.cos(L.a)*L.len*u;c.m.position.x=x;c.m.position.z=z;c.S.rmOn=1;
+    if(!L.hit&&u>.2&&hero.hp>0){const dx=pl.position.x-x,dz=pl.position.z-z;if(Math.hypot(dx,dz)<1.8){L.hit=1;vh205HitNow(e,{k:'c',r:99},{x,z,a:0},1.1,{flash:false,kb:3,on:()=>vh205Bleed(e,1)})}}
+    if(Math.random()<.8)burst(gY(c.m.position,1),0x1a0a10,3,1,.6,.5);if(u>=1){H.ang=Math.atan2(x-A.cx,z-A.cz);H.ln=null;H.next=VH205.lg}return}
+  // circle the edge, eyes in the dark
+  const r=A.r-.4;H.ang+=dt*H.dir*.85;const x=A.cx+Math.sin(H.ang)*r,z=A.cz+Math.cos(H.ang)*r;c.m.position.x=x;c.m.position.z=z;c.m.rotation.y=H.ang+H.dir*Math.PI/2;c.S.spd=6;
+  H.next-=dt;if(H.next<=0&&hero.hp>0){const P=pl.position,a=Math.atan2(P.x-x,P.z-z),dx=Math.sin(a),dz=Math.cos(a),ox=x-A.cx,oz=z-A.cz,b2=ox*dx+oz*dz,cc=ox*ox+oz*oz-r*r,len=Math.max(4,-b2+Math.sqrt(Math.max(0,b2*b2-cc)));
+    H.ln={t:0,x0:x,z0:z,a,len,hit:0};H.ln.W=svWarn({k:'l',w:3.0,l:len,b:0},{x,z,a},.85,{col:0xb01020});svSnd('roar',.5,1.3);c.m.rotation.y=a}}
+function vh205HuntEnd(won){const H=VH205.H,e=VH205.e;if(!H)return;VH205.H=null;VH205.cr=null;if(H.ln&&H.ln.W)try{H.ln.W.kill()}catch(_){}if(!e||e.dead)return;e.sv.hunt=0;svEndMove(e,true);
+  if(won){const A=VH205A,dx=A.cx-e.m.position.x,dz=A.cz-e.m.position.z,l=Math.hypot(dx,dz)||1;e.m.position.x+=dx/l*2.5;e.m.position.z+=dz/l*2.5;svCast(e,'broken')}else{vh205ChainsOff();svCast(e,'hfail')}}
+function vh205HuntClear(){const H=VH205.H;if(H&&H.ln&&H.ln.W)try{H.ln.W.kill()}catch(_){}VH205.H=null;VH205.cr=null;vh205ChainsOff();if(VH205.e&&VH205.e.sv)VH205.e.sv.hunt=0}
+function vh205ChainsOff(){VH205.bal.forEach(b=>{if(b.beam){try{b.beam.stop&&b.beam.stop()}catch(_){}b.beam=null}})}
+function vh205HuntTick(dt){const H=VH205.H;if(!H)return;const e=VH205.e;if(!e||e.dead){vh205HuntClear();return}
+  if(H.left<=0&&!H.ln&&(typeof vh180Auth!='function'||vh180Auth())){vh205HuntEnd(false);return}
+  // the crank: stay put for a second, then loose
+  const C=VH205.cr;if(C){const b=VH205.bal[C.i];C.t+=dt;if(Math.hypot(pl.position.x-b.x,pl.position.z-b.z)>2.6||hero.hp<=0){VH205.cr=null;popT(pl.position,'LET GO','#c0c0c0')}
+    else if(C.t>=1){VH205.cr=null;vh205Loose(b.i,true)}}}
+function vh205Loose(i,own){const b=VH205.bal[i],e=VH205.e,H=VH205.H;if(!b||b.used||!e||e.dead||!H)return;b.used=1;b.o.userData.h.visible=false;svSnd('whoosh',1.3,1.2);svSnd('crack',.8,1.5);
+  const a=new THREE.Vector3(b.x,GH(b.x,b.z)+1.45,b.z),tgt=()=>svWP(e,'chest',0,.2,.4),T=.35,hm=b.o.userData.h.clone();hm.visible=true;
+  svShot(a,tgt(),T,0xe8e8ff,.5,.6,()=>{if(!VH205.H||e.dead)return;VH205.H.ch++;burst(tgt(),0xe8e8ff,30,1.4,1.2,.5);svSnd('heavy',.9,1.4);popT(e.m.position,'CHAINED '+VH205.H.ch+' / 3','#e8e8ff',true);
+    try{b.beam=sk146Beam(()=>new THREE.Vector3(b.x,GH(b.x,b.z)+1.45,b.z),()=>e.dead?null:tgt(),0xd8d8ff,.06)}catch(_){}
+    if(VH205.H.ch>=3&&(typeof vh180Auth!='function'||vh180Auth()))vh205HuntEnd(true)},hm);
+  if(own&&typeof co205Loose=='function')co205Loose(i)}
+// ---------------- spawning, the waking, the fight, the reset, the win ----------------
+function vh205Spawn(){if(vh205Alive())return VH205.e;const S=vh205Spot(),key='vharog';
+  if(!EN[key])EN[key]=Object.assign({},EN.bloodhound||EN.vamp,{n:'Vharog',e:'🦇'});try{MSET[key]=[]}catch(_){}
+  const c=enemyC(key,VH205.lv,{boss:1});c.n='Vharog';const m=cr(c);m.position.set(S.sleep.x,0,S.sleep.z);m.rotation.y=S.sleep.ry;scene.add(m);
+  const hb=bar(true);hb.scale.setScalar(3);
+  const e={c,m,hb,boss:1,vh205:1,tier:4,home:[S.sleep.x,S.sleep.z],cd:1,ch:0,vx:0,vz:0,agg:0,bs:{t:99,lock:0,ph:1,last:'',ult:99,pb:99},wx:S.sleep.x,wz:S.sleep.z,wt:0,dots:[]};enemies.push(e);
+  m.children.forEach(o=>{o.visible=false});const R=svRig();vh205Build(R,e);svRest(R);try{svMerge(R)}catch(err){console.error('vh merge',err)}const bs=m.bs||m.scale.x||1;R.root.scale.setScalar(1/bs);R.root.name='svvh';m.add(R.root);
+  const O={};for(const k in R.J)O[k]=[0,0,0,0,0,0];
+  e.sv={i:'vh',B:VH205BOSS,R,O,P:{},snap:{},aw:0,trk:null,tt:0,mv:null,ph:1,rest:1.5,last:[],cd:{},po:0,poT:0,stg:0,inv:0,spd:0,lp:m.position.clone(),hero:1,body:VH205BOSS.body,on:false,wait:0,act:0,fl:0,chg:0,dr:0};
+  VH205A=vh205Arena();svApply(e,0,performance.now());svStart(e,'sleep',1);VH205.e=e;return e}
+function vh205Wake(){const e=VH205.e;if(!e||e.dead||VH205.waking||VH205A&&VH205A.f)return;VH205.waking=1;VH205A=vh205Arena();vh205WallSet(true);if(riding)try{dismount()}catch(_){}
+  // the chain tears out of the gate
+  try{const G=VH205.G;const p=new THREE.Vector3(G.ring.x,G.ring.y,G.ring.z);burst(p,0x6a5a50,30,2,2,.7);sk146Debris(p,vh205BloodMat(),6,.14,4,5,1.2)}catch(_){}svSnd('crack',1.2,.6);svSnd('heavy',.9,.7);shake(.3);
+  say('🦇 The heap of hide by the gate uncurls. Its chain tears out of the stones — and a wall of red mist rises around you.');vh205Start(e)}
+function vh205Start(e){const S=e.sv,A=VH205A;if(!A||A.f)return;A.f=true;VH205.waking=0;e.agg=1;S.on=false;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;VH205.ft=0;vh205WallSet(true);svEndMove(e,true);
+  try{setTarget(e)}catch(_){}cq205Card('The Rampart Gate','Vharog','the Bloodgorged · war-beast of the court','The mist walls you in: kill it, or die');svSnd('heavy',1,.5)}
+// back to sleep (a wipe, or nobody left in the clearing): he is gone and comes back healed, asleep at the gate
+function vh205Reset(why){const e=VH205.e,A=VH205A;if(A)A.f=false;VH205.waking=0;vh205Storm(false);vh205HuntClear();vh205WallSet(false);VH205B.n=0;
+  if(e&&!e.dead){svEndMove(e,true);try{burst(gY(e.m.position,1.5),0x8a0a14,60,4,2,1)}catch(_){}try{removeE(e)}catch(_){}}VH205.e=null;VH205A=null;
+  if(why)cq205After(1,()=>say('🦇 Vharog drags himself back to the gate, licking his wounds, and curls up in the mist. He will wake again.'))}
+// he falls: the mist sinks, the portcullis grinds up
+function vh205Won(e){const A=VH205A;if(A)A.f=false;CQ205.c2.st=Math.max(CQ205.c2.st,1);CQ205.trkK='';vh205Storm(false);vh205HuntClear();vh205WallSet(false);VH205B.n=0;
+  cq205After(1.8,()=>{try{vh205Raise()}catch(err){console.error('v205 portcullis',err)}});
+  cq205After(2.6,()=>{cq205Card('The Rampart Gate','Vharog Falls','The Bloodgorged bleeds out on the flagstones','The portcullis grinds open');try{mSfx('victory')}catch(_){}say('🦇 Vharog, the Bloodgorged, is slain. Somewhere inside the wall a winch turns: the portcullis rises.')});
+  if(typeof co205Credit=='function')co205Credit('c2');try{hud()}catch(_){}}
+// ---------------- hooks: his AI, his death, the HUD ----------------
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.vh205){try{vh205AI(e,dt,now)}catch(err){if(!VH205.err++)console.error('v205 vharog ai',err)}return true}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){const r=f.apply(this,arguments);if(e&&e.vh205)try{vh205Won(e)}catch(err){console.error('v205 won',err)}return r}}
+// asleep, the first blow wakes him; while he prowls in the dark he cannot be hurt
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.vh205&&!e.dead){if(!(VH205A&&VH205A.f)){vh205Wake();if(typeof co205Wake=='function')co205Wake()}if(e.sv&&e.sv.mv&&e.sv.mv.id==='prowl')return}return f.apply(this,arguments)}}
+function vh205Hud(){const e=VH205.e,on=!!(e&&!e.dead&&VH205A&&VH205A.f&&vh205Here());let p=document.getElementById('vhPo');if(!on){if(p)p.style.display='none';return}
+  const b=$('boss');if(!b)return;b.classList.remove('hide');const S=e.sv,H=VH205.H;$('bossN').textContent='🦇 Vharog · the Bloodgorged · Phase '+(S.ph>1?'II':'I')+(H?' · NIGHT HUNT: harpoon him ('+H.ch+'/3) · '+Math.max(0,Math.ceil(H.left))+'s':'');$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';
+  if(!p){p=document.createElement('div');p.id='vhPo';p.style.cssText='height:5px;margin:4px auto 0;width:70%;background:rgba(0,0,0,.6);border:1px solid rgba(255,216,96,.35);border-radius:2px;overflow:hidden';p.innerHTML='<i style="display:block;height:100%;width:0;background:linear-gradient(90deg,#c89020,#ffe080);transition:width .12s"></i>';const mt=b.querySelector('.meter');if(mt)mt.after(p);else b.appendChild(p)}
+  p.style.display='block';p.firstChild.style.width=(S.stg>0?100:Math.min(100,S.po*100)).toFixed(1)+'%';p.firstChild.style.background=S.stg>0?'#fff4c0':'linear-gradient(90deg,#c89020,#ffe080)'}
+{const f=hud;hud=function(){const r=f.apply(this,arguments);try{vh205Hud()}catch(_){}return r}}
+// his AI: the engine's moves, picks and rests; his own footwork in the arena
+function vh205AI(e,dt,now){const S=e.sv,A=VH205A,m=e.m;if(!A)return;if(e.hb)e.hb.visible=false;m.visible=vh205Here();
+  const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>14?0:ms)-S.spd)*Math.min(1,dt*8);
+  for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);S.chg=(S.chg||0)+((S.chgT||0)-(S.chg||0))*Math.min(1,dt*3);
+  {const p=pl.position;if(S.hp0&&dt>0){const vx=(p.x-S.hp0.x)/dt,vz=(p.z-S.hp0.z)/dt,a=Math.min(1,dt*6);if(Math.hypot(vx,vz)<20){S.hv=S.hv||{x:0,z:0};S.hv.x+=(vx-S.hv.x)*a;S.hv.z+=(vz-S.hv.z)*a}}S.hp0={x:p.x,z:p.z}}
+  if(!A.f){// asleep: the sleep pose (healed), breathing; wake when a hero comes close
+    if(!S.mv||S.mv.id!=='sleep')svStart(e,'sleep',1);e.c.h=M(e.c);e.agg=0;if(S.mv)svTickMove(e,dt,now);svApply(e,dt,now);
+    if(vh205Here()&&hero.hp>0&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<VH205.wake&&(typeof vh180Auth!='function'||vh180Auth())){vh205Wake();if(typeof co205Wake=='function')co205Wake()}return}
+  if(vh205End()){vh205Reset(true);if(typeof vh180Ended=='function')vh180Ended();return}
+  VH205.ft+=dt;e.agg=1;
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(vh180Auth())svCast(e,'intro')}
+  if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.1);
+  if(S.mv)svTickMove(e,dt,now);
+  else if(!vh180Auth())vh180Glide(e,dt);
+  else if(S.ph===1&&e.c.h/M(e.c)<=VH205BOSS.ph2)svCast(e,'awaken');
+  else if(!VH205.H){vh205Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}
+  // the hunt: he prowls until it ends
+  if(VH205.H&&!(S.mv&&(S.mv.id==='prowl'||S.mv.id==='hunt'))&&vh180Auth())svStart(e,'prowl',1);
+  vh205Clamp(m.position,S.mv&&S.mv.id==='prowl'?.2:VH205BOSS.edge);
+  // keep the hero in the arena and out of his body
+  {const p=pl.position,hx=p.x-A.cx,hz=p.z-A.cz,hd=Math.hypot(hx,hz);if(hd>A.hr){p.x=A.cx+hx/hd*A.hr;p.z=A.cz+hz/hd*A.hr}}
+  if(!S.rmOn&&hero.hp>0&&m.visible&&!(S.mv&&(S.mv.id==='feed'||S.mv.id==='prowl'))){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=R0-hl;pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}
+  svApply(e,dt,now)}
+// footwork: to his preferred range at a lope (a gallop when far), circling there, backing off when crowded
+function vh205Move(e,dt){const S=e.sv,ai=VH205BOSS.ai,m=e.m,v=V().subVectors(pl.position,m.position).setY(0),L=v.length()||.01;
+  const da=svAng(Math.atan2(v.x,v.z)-m.rotation.y),tr=ai.turn*(S.ph>1?1.2:1);m.rotation.y+=Math.max(-tr*dt,Math.min(tr*dt,da));
+  let sp=0,ux=0,uz=0;const ws=ai.walk*(S.ph>1?1.15:1);
+  if(L>ai.pref+1.2){sp=L>ai.pref+6?ai.run:ws;ux=v.x/L;uz=v.z/L}else if(L<2.2){sp=ws*.6;ux=-v.x/L;uz=-v.z/L}
+  else{S.sdT=(S.sdT||0)-dt;if(S.sdT<=0){S.sdT=1.6+Math.random()*2;S.sd=Math.random()<.5?-1:1}sp=ws*ai.strafe;ux=-v.z/L*(S.sd||1);uz=v.x/L*(S.sd||1)}
+  const A=VH205A,rx=m.position.x-A.cx,rz=m.position.z-A.cz,rl=Math.hypot(rx,rz)||.01;if(rl>A.r-2.5){const nx=rx/rl,nz=rz/rl,out=ux*nx+uz*nz;if(out>0){ux-=nx*out;uz-=nz*out}}
+  if(sp>0&&Math.abs(da)<1.5){m.position.x+=ux*sp*dt;m.position.z+=uz*sp*dt}else sp=0;S.walkSp=sp}
+function vh205End(){if(typeof vh180End=='function')return vh180End();return hero.hp<=0||!vh205Here()||(typeof AWD!='undefined'&&AWD.dead)}
+// solo defaults (3760 replaces them for co-op)
+function vh180Auth(){return true}
+function vh180Glide(e,dt){}
+// no recall, no mount once he is awake
+function vh205Held(){return !!(VH205A&&VH205A.f)&&vh205Here()}
+{const f=doRecall;doRecall=function(){if(vh205Held())return say('🦇 The red mist holds you in. There is no escape: kill it, or die.');return f.apply(this,arguments)}}
+{const f=toggleMount;toggleMount=function(){if(vh205Held()&&!riding)return say('🦇 No mount will come near that thing.');return f.apply(this,arguments)}}
+// ---------------- prompts: the ballistae, the gate ----------------
+function vh205Prompt(){if(!vh205Here()||!VH205.G)return null;const P=pl.position;
+  if(VH205.H){for(const b of VH205.bal){if(b.used||Math.hypot(P.x-b.x,P.z-b.z)>2.4)continue;if(VH205.cr&&VH205.cr.i===b.i)return {label:'⚙️ Cranking the ballista… hold still',fn:()=>{}};return {label:'F · Crank and loose the ballista (a silver harpoon)',fn:()=>{VH205.cr={i:b.i,t:0};svSnd('step',1,.5);try{dg165Snd('creak',.9,1.2)}catch(_){}}}}}
+  const G=VH205.G,[x,z]=cq205GW(G.spot,0,G.dims.fz+2);if(Math.hypot(P.x-x,P.z-z)<4){if(cq205Done(2)){const N=cq205I(2);return {label:'F · Go under the portcullis to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>vh205Through()}}
+    return {label:'🔒 The rampart gate · the portcullis is down',fn:()=>say('🦇 The portcullis will not lift. Its winch chain runs into the wall — and its other end is round the beast’s neck.')}}
+  return null}
+function vh205Through(){const C=CQ205.c2;if(C.st<2){C.st=2;CQ205.trkK=''}svSnd('whoosh',1,.6);try{insGo(cq205I(2))}catch(e){console.error('v205 rampart go',e)}}
+{const f=worldPrompt;worldPrompt=function(){try{const r=vh205Prompt();if(r)return r}catch(e){if(!VH205.err++)console.warn('v205 vharog prompt',e)}return f.apply(this,arguments)}}
+// ---------------- the tick ----------------
+function vh205Tick(dt,now){const here=vh205Here(),t=now/1000;if(here&&!VH205.G){try{vh205GateBuild()}catch(e){if(!VH205.err++)console.error('v205 rampart gate',e)}}if(!VH205.G)return;
+  const G=VH205.G;G.g.visible=here;if(!G.raising&&cq205Done(2)!==G.op)vh205GateSync();VH205.bal.forEach(b=>b.o.visible=here);if(!here){G.light.intensity=0}else if(cq205Done(2))G.light.intensity=1.4+.3*Math.sin(t*2.1);
+  // he sleeps by the gate while the chapter is open; once slain he is gone
+  if(here&&!cq205Done(2)&&!vh205Alive()&&(typeof vh180Auth!='function'||vh180Auth()||!VH205A))vh205Spawn();
+  if(!here&&VH205.e&&!VH205.e.dead&&!(VH205A&&VH205A.f)){try{removeE(VH205.e)}catch(_){}VH205.e=null;VH205A=null}
+  if(VH205A&&VH205A.f&&!vh205Alive())vh205Reset(false);
+  vh205ChainTick();vh205WallTick(dt,t);vh205StormTick(dt,t);vh205HuntTick(dt);vh205BleedTick(dt);
+  if(VH205.cr){const b=VH205.bal[VH205.cr.i];if(b)b.o.userData.h.position.z=.4-.25*Math.min(1,VH205.cr.t)}
+  VH205.bal.forEach(b=>{if(VH205.H&&!b.used){const e=VH205.e;if(e){const a=Math.atan2(e.m.position.x-b.x,e.m.position.z-b.z);b.o.rotation.y+=svAng(a-b.o.rotation.y)*Math.min(1,dt*3)}if(Math.random()<dt*3)burst(new THREE.Vector3(b.x,GH(b.x,b.z)+2,b.z),0xd8d8ff,1,.2,.8,.6)}})}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{vh205Tick(dt,now)}catch(err){if(!VH205.err++)console.warn('v205 vharog tick',err)}return r}}
+// a save made during the fight loads before it (he sleeps again); a save after the kill keeps the gate open
+CQ205L.push(()=>{if(VH205A&&VH205A.f)vh205Reset(false);vh205GateSync()});
 </script></body></html>

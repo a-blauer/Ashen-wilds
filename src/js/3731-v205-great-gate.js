@@ -55,7 +55,7 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
   const W0=RAM?12.5:14.5,Ht=RAM?10.5:13,w2=RAM?2.9:3.25,hs=RAM?4.6:5.6,dA=RAM?2.6:3.6,tr=RAM?2.6:3.1,tx=RAM?7.5:8.7,tH=RAM?13.5:16.5,dep=3.0,fz=.6;
   const C=ECL?{st:0x2a2630,st2:0x1c1a22,st3:0x3e3846,trim:0x524a5a,roof:0x18161c,iron:0x26262c,wood:0x1c1416,gold:0x7a6a3a,ban:0x1a1020,ban2:0x6a5a2a,glow:0xffc070}
     :RAM?{st:0x4a4246,st2:0x352f34,st3:0x5c5458,trim:0x6e6468,roof:0x2a2426,iron:0x2c2c32,wood:0x2e2018,gold:0x7a6234,ban:0x5a0c14,ban2:0x8a6a30,glow:0xff2a30}
-    :{st:0x463e46,st2:0x30292f,st3:0x5a5058,trim:0x6c6068,roof:0x231d24,iron:0x2a2a30,wood:0x2a1a14,gold:0x8a6a34,ban:0x5e0a16,ban2:0x9a7a3a,glow:0xff2030};
+    :{st:0x524852,st2:0x342c33,st3:0x645a64,trim:0x7c6e76,roof:0x231d24,iron:0x2a2a30,wood:0x2a1a14,gold:0x8a6a34,ban:0x5e0a16,ban2:0x9a7a3a,glow:0xff2030};
   const key='CQ205|gate|'+kind,BB=dt168BBox,P=(k,geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
   const W={c:{g:[3.2,.32],n:.12,s:.22,m:[0x2a3a24,.35,.62],l:[0x6a6a60,.4],sd:205},m:{g:[2,.2],n:.1,sd:206}};
   const g=new THREE.Group();g.name='CQ205Gate_'+kind;
@@ -99,6 +99,8 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
         [-1,1].forEach(q=>P(k,BB(.16,.55,.16,.03),'c',C.st2,gx+q*.3,gy+.05,gz+.45,.25,0,0))}
       else{const gx=s*(w2+2.4),gz=fz+1.8;P(k,dt168Lathe([[0,0],[.75,0],[.85,.2],[.85,1.1],[.75,1.3],[0,1.3]],10),'c',0x5a2a1a,gx,0,gz);P(k,dt168Lathe([[0,0],[.86,0],[.86,.12],[0,.12]],10),'c',0xb8a080,gx,1.3,gz);
         for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;P(k,dt168Geo('cq_sp',()=>new THREE.CylinderGeometry(.04,.04,3.2,5)),'c',C.wood,gx+Math.sin(a)*.95,1.5,gz+Math.cos(a)*.95,.12*Math.cos(a),0,-.12*Math.sin(a));P(k,dt168Geo('cq_spt',()=>new THREE.ConeGeometry(.08,.4,4)),'m',0x8a8a90,gx+Math.sin(a)*1.14,3.2,gz+Math.cos(a)*1.14)}}});
+    // ---- iron sconces on the pilasters (their flames are sprites, their light pooled) ----
+    if(!ECL)[-1,1].forEach(s=>{const x=s*(w2+1.55),y=hs*.72,z=fz+.45;P(k,BB(.16,.5,.16,.02),'m',C.iron,x,y,z+.12);P(k,dt168Geo('cq_sc',()=>new THREE.CylinderGeometry(.2,.1,.32,6)),'m',C.iron,x,y+.35,z+.32);P(k,dt168Geo('cq_scc',()=>svLump(.13,0,.4,2089)),'g',0xff7a2a,x,y+.52,z+.32)});
     // ---- the steps up to the doors ----
     [[0,.15,W0-1.0,3.4],[1,.3,W0-2.6,2.5],[2,.45,2*w2+2.2,1.6]].forEach(([i,y,w,d])=>P(k,BB(w,.15,d,.04),'c',i%2?C.st3:C.st2,0,y-.075,fz+d/2-.05));
     // the deep reveal behind the arch (the jambs' inner faces are the wall's own cut)
@@ -118,7 +120,7 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
   // ---- the passage beyond: black until the way opens, then a haze of light ----
   const pass=new THREE.Mesh(dt168Geo('cq_pass'+kind,()=>new THREE.ShapeGeometry(new THREE.Shape(cq205OpenPts(w2,hs,dA).map(p=>new THREE.Vector2(p[0],p[1]))),8)),
     new THREE.MeshBasicMaterial({color:0x050203,fog:false}));pass.position.set(0,0,fz-dep+.15);g.add(pass);
-  const haze=kqSpr(ECL?0xffd890:0xff3a2a,9);haze.material=haze.material.clone();haze.material.opacity=0;haze.position.set(0,hs*.75,fz-dep+.4);g.add(haze);
+  const haze=kqSpr(ECL?0xffd890:0xff3a2a,11);haze.material=haze.material.clone();haze.material.opacity=0;haze.position.set(0,hs*.75,fz-dep+.4);g.add(haze);
   // ---- the seal: sigil, four rings, two chains of blood (blood / eclipse) ----
   let seal=null;if(!RAM){seal={g:new THREE.Group(),rings:[],chains:[]};seal.g.position.set(0,hs*.78,fz+.78);g.add(seal.g);const col=ECL?0xffb040:0xff1a2a;
     const sm=new THREE.MeshBasicMaterial({map:cq205SigilTex(ECL?'eclipse':'blood'),color:col,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide});
@@ -133,10 +135,11 @@ function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampar
     seal.light=new THREE.PointLight(col,1.6,16,1.6);seal.light.userData.lp=new THREE.Vector3(0,hs*.8,fz+2.6)}
   // the light that pours out once the way is open
   const light=new THREE.PointLight(ECL?0xffd080:0xff4030,0,18,1.4);light.userData.lp=new THREE.Vector3(0,hs*.7,fz+1.5);
+  const sc=ECL?[]:[-1,1].map(s=>{const f=kqSpr(0xff8a3a,1.1);f.position.set(s*(w2+1.55),hs*.72+.75,fz+.77);g.add(f);const l=new THREE.PointLight(0xff7a30,.9,9,1.7);l.userData.lp=new THREE.Vector3(s*(w2+1.55),hs*.72+.9,fz+1.3);return {f,l}});
   g.userData.psNo=1;g.traverse(q=>{if(q.isMesh)q.userData.lpsSkip=q.material&&q.material.blending===THREE.AdditiveBlending?1:q.userData.lpsSkip});
-  return {g,doors,port,seal,light,pass,haze,dims:{W0,Ht,w2,hs,dA,tr,tx,tH,dep,fz}}}
+  return {g,doors,port,seal,light,pass,haze,sc,dims:{W0,Ht,w2,hs,dA,tr,tx,tH,dep,fz}}}
 // point lights go into the scene itself (0620's pool takes them as sources), at their spot in the placed gatehouse
-function cq205PlaceLights(G){G.g.updateMatrixWorld(true);[G.light,G.seal&&G.seal.light].forEach(l=>{if(!l)return;l.position.copy(l.userData.lp);G.g.localToWorld(l.position);scene.add(l)})}
+function cq205PlaceLights(G){G.g.updateMatrixWorld(true);[G.light,G.seal&&G.seal.light].concat((G.sc||[]).map(q=>q.l)).forEach(l=>{if(!l)return;l.position.copy(l.userData.lp);G.g.localToWorld(l.position);scene.add(l)})}
 // ---------------- the ground it stands on: solid tiles, and the castle wall / decorations it replaces ----------------
 // tiles of a gatehouse spot S (cq205GW frame) that are solid; open: the doorway too
 function cq205FootTiles(S,dims){const T=[],D=new Set(),add=(lx,lz,door)=>{const [x,z]=cq205GW(S,lx,lz),k=Math.round(z)*W+Math.round(x);if(T.indexOf(k)<0){T.push(k);if(door)D.add(k)}};
@@ -163,12 +166,12 @@ function gg205Brazier(){const g=dt168Group('CQ205|brz',k=>{const P=(geo,t,col,x,
     P(dt168Geo('cq_coal',()=>svLump(.38,0,.4,2081)),'g',0xff6a2a,0,1.42,0,0,0,0,1,.35,1)},{m:{g:[1.2,.35],n:.12,sd:209}});
   const f=kqSpr(0xff7a30,1.8);f.position.y=1.9;g.add(f);g.userData.f=f;g.userData.psNo=1;return g}
 function gg205Open(){const G=GG205.S;return !!G&&G.open>=1}
-function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;
+function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;G.tok=(G.tok||0)+1;
   if(!G.tiles){G.tiles=cq205FootTiles(S,G.dims)}G.tiles.T.forEach(k=>{if(open&&G.tiles.D.has(k))CBLK.delete(k);else CBLK.add(k)});
   // doorway tiles stay solid even open (the void is behind): the gate's prompt takes you through
   G.tiles.D.forEach(k=>CBLK.add(k));
-  if(open){G.open=1;G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(G.seal){G.seal.g.visible=false;G.seal.light.intensity=0}G.light.intensity=1.5;G.haze.material.opacity=.55}
-  else{G.open=0;G.doors.forEach(d=>d.rotation.y=0);if(G.seal){G.seal.g.visible=true;G.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});G.seal.chains.forEach(c=>{c.visible=true;c.position.set(0,0,0)});G.seal.sig.material.opacity=.95;G.seal.light.intensity=1.6}
+  if(open){G.open=1;G.pass.material.color.setHex(0x4a0a0c);G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(G.seal){G.seal.g.visible=false;G.seal.light.intensity=0}G.light.intensity=1.5;G.haze.material.opacity=.55}
+  else{G.open=0;G.pass.material.color.setHex(0x050203);G.doors.forEach(d=>d.rotation.y=0);if(G.seal){G.seal.g.visible=true;G.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});G.seal.chains.forEach(c=>{c.visible=true;c.position.set(0,0,0)});G.seal.sig.material.opacity=.95;G.seal.light.intensity=1.6}
     G.light.intensity=0;G.haze.material.opacity=0}}
 // how many rings stand (the unbinding breaks them, 3733)
 function gg205RingsUp(){const G=GG205.S;return G&&G.seal?G.seal.rings.filter(r=>r.on).length:0}
@@ -182,16 +185,17 @@ function gg205Shatter(){const G=GG205.S;if(!G||G.open)return;G.open=.001;G.seal.
       return t<1.2},end(){c.visible=false}})});
   let t=0;const S=G.seal;kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/.9);S.sig.scale.setScalar(1+k*.8);S.sig.material.opacity=.95*(1-k);S.light.intensity=1.6+4*(1-k)*(k<.2?k*5:1);return t<.9},end(){S.g.visible=false;S.light.intensity=0}});
   // the doors swing in, slowly, with a groan
-  cq205After(.9,()=>{svSnd('heavy',1.1,.4);try{dg165Snd('grind',1,.5);dg165Snd('creak',.9,.45)}catch(_){}let u=0;kqFx({tick(dt){u+=dt||0;const k=svEase.io(Math.min(1,u/4.2));G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);G.light.intensity=1.5*k;G.haze.material.opacity=.55*k;
-      if(Math.random()<.4){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*6,.2,G.dims.fz-.5));burst(q,0x6a5a5a,2,1,.6,.8)}return u<4.2},end(){G.open=1}})})}
+  const tok=G.tok=(G.tok||0)+1;cq205After(.9,()=>{if(G.tok!==tok)return;svSnd('heavy',1.1,.4);try{dg165Snd('grind',1,.5);dg165Snd('creak',.9,.45)}catch(_){}let u=0;kqFx({tick(dt){if(G.tok!==tok)return false;u+=dt||0;const k=svEase.io(Math.min(1,u/4.2));G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);G.light.intensity=2.2*k;G.haze.material.opacity=.7*k;G.pass.material.color.setRGB(.29*k+.02,.04*k+.01,.05*k+.01);
+      if(Math.random()<.4){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*6,.2,G.dims.fz-.5));burst(q,0x6a5a5a,2,1,.6,.8)}return u<4.2},end(){if(G.tok===tok)G.open=1}})})}
 function gg205AtDoor(){const G=GG205.S;if(!G)return false;const P=pl.position,[x,z]=cq205GW(G.spot,0,G.dims.fz+2.2);return Math.hypot(P.x-x,P.z-z)<4.2}
 function gg205Through(){const C=CQ205.c1;if(C.st<4){C.st=4;CQ205.trkK=''}svSnd('whoosh',1,.6);try{insGo(cq205I(1))}catch(e){console.error('v205 gate go',e)}}
 // ---------------- the tick ----------------
 function gg205Tick(dt,now){const here=cq205Here(0),t=now/1000;if(here&&!GG205.S){try{gg205Build()}catch(e){if(!GG205.err++)console.error('v205 gate build',e)}}const G=GG205.S;if(!G)return;
-  G.g.visible=here;G.br.forEach(b=>{b.visible=here;b.userData.l.intensity=here?1.2+.25*Math.sin(t*9+b.position.x):0;b.userData.f.scale.setScalar(1.7+.25*Math.sin(t*11+b.position.z))});if(!here){if(G.seal)G.seal.light.intensity=0;G.light.intensity=0;return}
+  G.g.visible=here;if((G.open===0||G.open>=1)&&cq205Done(1)!==(G.open>=1))gg205Sync();G.br.forEach(b=>{b.visible=here;b.userData.l.intensity=here?1.2+.25*Math.sin(t*9+b.position.x):0;b.userData.f.scale.setScalar(1.7+.25*Math.sin(t*11+b.position.z))});if(!here){if(G.seal)G.seal.light.intensity=0;G.light.intensity=0;(G.sc||[]).forEach(q=>q.l.intensity=0);return}
   if(G.seal&&G.seal.g.visible){G.seal.rings.forEach((r,i)=>{if(r.on)r.m.rotation.z+=dt*r.sp});const pu=.8+.2*Math.sin(t*2.2);G.seal.sig.material.opacity=Math.min(1,(typeof US205!='undefined'&&US205.E?1.05:.9)*pu);
     if(!G.open)G.seal.light.intensity=1.2+.5*Math.sin(t*2.2)+(typeof US205!='undefined'&&US205.E?1.2:0)}
-  if(G.open>=1){G.haze.material.opacity=.45+.12*Math.sin(t*1.7);G.light.intensity=1.3+.3*Math.sin(t*2.3)}}
+  if(G.open>=1){G.haze.material.opacity=.6+.15*Math.sin(t*1.7);G.light.intensity=2+.4*Math.sin(t*2.3)}
+  (G.sc||[]).forEach((q,i)=>{q.l.intensity=.8+.2*Math.sin(t*11+i*2);q.f.scale.setScalar(1+.15*Math.sin(t*13+i))})}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{gg205Tick(dt,now)}catch(e){if(!GG205.err++)console.warn('v205 gate tick',e)}return r}}
 // ---------------- the prompt at the doors ----------------
 function gg205Prompt(){if(!cq205Here(0)||!GG205.S||!gg205AtDoor())return null;const C=CQ205.c1;

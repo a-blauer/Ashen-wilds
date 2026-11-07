@@ -127,7 +127,7 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   // threads of gold from his paws into the seal
   if(Math.random()<dt*20&&GG205.S&&GG205.S.seal){const a=new THREE.Vector3(c.x,c.y+1.3,c.z),b=new THREE.Vector3();GG205.S.seal.g.getWorldPosition(b);b.x+=(Math.random()-.5)*5;b.y+=(Math.random()-.5)*5;burst(a.clone().lerp(b,Math.random()),E.siN?0xff3a3a:0xffe0a0,1,.3,.3,.5)}
   // his ward dome
-  if(CH205.dome){const d=CH205.dome;d.position.set(0,0,0);d.scale.setScalar(1+.04*Math.sin(t*3));d.material.opacity=(.07+.05*Math.sin(t*2.4))*(E.hp>30?1:.6+.4*Math.sin(t*14));d.material.color.setHex(E.hp>30?0xffe0a0:0xff7a5a);d.visible=true}
+  if(CH205.dome){const d=CH205.dome;d.position.set(0,0,0);d.scale.setScalar(1+.04*Math.sin(t*3));d.material.opacity=(.05+.035*Math.sin(t*2.4))*(E.hp>30?1:.6+.4*Math.sin(t*14));d.material.color.setHex(E.hp>30?0xffe0a0:0xff7a5a);d.visible=true}
   // the Ward Flare: throws back what is at him
   E.flare-=dt;if(E.flare<=0){E.flare=US205.flare;ring(c,0xffe0a0,4.6,700);burst(gY(c,1),0xffe8b0,50,3.4,1.6,.7);svSnd('gong',.5,1.5);CH205.hit=0;
     enemies.forEach(s=>{if(!s.us205||s.dead||s.us205==='brk'&&s.usB&&s.usB.st==='wind')return;const dx=s.m.position.x-c.x,dz=s.m.position.z-c.z,L=Math.hypot(dx,dz);if(L<4.6&&L>.01){s.vx=(s.vx||0)+dx/L*10;s.vz=(s.vz||0)+dz/L*10;try{eStatus(s,{stun:1.4},0,'h')}catch(_){}}})}
