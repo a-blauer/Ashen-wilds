@@ -70697,3 +70697,646 @@ function fw202Clamp(b,q0,mx){const Q=FW202Q,rel=Q[0].copy(q0).invert().multiply(
     if(!sk)return r;['aR2','aL2'].forEach(n=>{const w=b[n];if(!w)return;const q0=fw202Rest(w,sk);if(q0)fw202Clamp(w,q0,FW202.max)})}
   catch(e){if(!FW202.err){FW202.err=1;console.warn('v202 wrists',e)}}
   return r}}
+// ================= v205 The Citadel main quest: the road to Lord Vaelric =================
+// The owner's design (Nov 7 2026), one chapter per field instance; none of the three gateway portals is used any more:
+//  I   The Unsealing (3731–3734): the gateway of The Citadel I is gone; in its place a great gatehouse closes the road, its doors
+//      held by a blood seal. Cheddar is there, studying it. A seal woven in the court's blood unwinds only with the court's own:
+//      four ingredients, one from each kind of creature of I (Grave Ash · Vampire Thrall, Nightwing Heart · Blood Bat, Crimson
+//      Signet · Blood Knight, Sanguine Ink · Blood Magister). Bring them to him and he casts the unbinding: two minutes in which
+//      the court swarms the gate to kill him and you (blood siphons, mist stalkers, diving bats, a gate-breaker; the light dies, the
+//      blood moon rises). Hold, and the seal shatters: the doors open on the way to II.
+//  II  The Bloodgorged (3740–3743): a great iron gate in the rampart wall, and chained before it the court's war-beast Vharog:
+//      bipedal, built like a man, but it runs on all fours; a mini boss to the Vorraxis standard (docs/BOSS_RECIPE.md). Slay it and
+//      the portcullis rises.
+//  III The Dawn Mirrors (3750–3752): the Den's door is the Eclipse Door; only sunlight burns its seal. Cheddar finds the old Sun
+//      Court before it: a sunwell lens and three empty mirror stands. The court tore the three Dawn Mirrors down and hid them in
+//      blood shrines round III, each kept by a warden. Take them back, mount them, turn them until the sunbeam runs from the lens
+//      over all three mirrors onto the door: the dawn breaks over the Citadel for the first time in an age, and Vaelric answers.
+// This file: the shared state (CQ205), each chapter's frame at its gateway clearing, the tracker, the saves, the old portals.
+// Every chapter is also done when the next instance has been reached (insReach), so heroes who are further on are never blocked.
+var CQ205={z:5,
+  c1:{st:0,ing:0,fd:0},         // 0 not met · 1 met (gathering) · 2 ingredients given · 3 the seal broken · 4 through. ing: carried bits (4)
+  c2:{st:0},                    // 0 · 1 Vharog slain (the gate stands open) · 2 through
+  c3:{st:0,fd:0,cl:0,got:0,mnt:0,rot:[0,0,0]},   // 0 not met · 1 met · 2 all mounted · 3 the dawn (the door open) · 4 through; masks of 3
+  trkK:'',err:0};
+function cq205I(k){return INSL[insG(5,k)]}
+function cq205Here(k){try{const I=curIns();return !!I&&I.g===insG(5,k)}catch(_){return false}}
+function cq205Done(c){const r=insReach(5);return c===1?(CQ205.c1.st>=3||r>=1):c===2?(CQ205.c2.st>=1||r>=2):(CQ205.c3.st>=3||r>=3)}
+function cq205Bits(m){let n=0;for(let i=0;i<8;i++)if(m&(1<<i))n++;return n}
+// a chapter's frame at the end of its instance: G the gateway clearing's centre, f away from where the road comes in, l across
+// (to the right looking along f). W2(a,b) local → world; L2(x,z) world → local; reach: how far the clearing goes along f.
+function cq205F(k){const c=cq205F.c||(cq205F.c={});if(c[k])return c[k];const DWm=MAP.DW,I=cq205I(k),P=I.path,q=P[Math.max(0,P.length-14)],G=I.ba;let fx=G[0]-q[0],fz=G[1]-q[1];const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;
+  const lx=-fz,lz=fx,F={I,k,x:G[0],z:G[1],fx,fz,lx,lz,W2:(a,b)=>[G[0]+fx*a+lx*b,G[1]+fz*a+lz*b],L2:(x,z)=>{const dx=x-G[0],dz=z-G[1];return [dx*fx+dz*fz,dx*lx+dz*lz]},yaw:Math.atan2(fx,fz)};
+  const open=(a,b)=>{const [x,z]=F.W2(a,b),X=Math.round(x),Z=Math.round(z);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;const J=insAt(X,Z);return !!J&&J.g===I.g&&DWm[Z*W+X]<-1.2};
+  F.reach=(()=>{for(let a=2;a<40;a+=.5)if(!open(a,0))return a;return 20})();
+  // how wide the clearing is across, a few tiles before the far edge
+  F.half=(()=>{const a=Math.max(0,F.reach-6);let b=0;while(b<30&&open(a,b+.5)&&open(a,-b-.5))b+=.5;return b})();
+  F.y0=GH(G[0],G[1]);return c[k]=F}
+// ---------------- the tracker (#mqt152, the main-quest box) ----------------
+SP152.trk.citadel=I=>{if(!I||I.z!==5||I.den||I.sp||!I.fld)return null;const k=I.k;
+  if(k===0){const C=CQ205.c1;if(C.st>=4||cq205Done(1)&&!(typeof US205!='undefined'&&US205.E))return null;const nm='The Unsealing';
+    if(C.st<1)return {name:nm,lines:[['Follow the road to the sealed gate'],['Someone waits there']]};
+    if(C.st===1){const n=cq205Bits(C.ing),L=[['Take the court’s own blood from its creatures'],['Ingredients',n+' / 4']];
+      CH205.ING.forEach((g,i)=>{if(!(C.ing&(1<<i)))L.push(['· '+g.n+' ('+g.from+')'])});if(n>=4)L.push(['Bring them to Cheddar at the gate',null,true]);return {name:nm,lines:L}}
+    if(C.st===2){const E=typeof US205!='undefined'&&US205.E;if(E)return {name:nm,lines:[['Protect Cheddar while he breaks the seal'],['Seal',Math.min(100,Math.round(E.t/US205.T*100))+'%'],['Cheddar',Math.max(0,Math.round(E.hp/US205.hpM*100))+'%']]};
+      return {name:nm,lines:[['Speak with Cheddar to begin the unbinding',null,true]]}}
+    return {name:nm,lines:[['The seal is broken: go through the gate',null,true]]}}
+  if(k===1){const C=CQ205.c2;if(C.st>=2||cq205Done(2)&&C.st>=1)return null;const nm='The Bloodgorged';
+    if(C.st<1){const on=typeof VH205!='undefined'&&VH205.A&&VH205.A.f;return {name:nm,lines:[[on?'Slay Vharog, the Bloodgorged':'Follow the road to the rampart gate'],[on?'':'Something huge is chained there']].filter(q=>q[0])}}
+    return {name:nm,lines:[['The portcullis is up: go through the gate',null,true]]}}
+  if(k===2){const C=CQ205.c3;if(C.st>=4||cq205Done(3)&&C.st>=3)return null;const nm='The Dawn Mirrors';
+    if(C.st<1)return {name:nm,lines:[['Follow the road to the door of the Den']]};
+    if(C.st<2){const n=cq205Bits(C.got|C.mnt),m=cq205Bits(C.mnt);return {name:nm,lines:[['Take back the three Dawn Mirrors'],['Mirrors found',n+' / 3'],[C.got&~C.mnt?'Mount them on the stands of the Sun Court':'',null,!!(C.got&~C.mnt)],['Mounted',m+' / 3']].filter(q=>q[0])}}
+    if(C.st<3)return {name:nm,lines:[['Turn the mirrors: lead the sunbeam to the Eclipse Door'],['Mirrors in the light',(typeof DM205!='undefined'&&DM205.lit|0)+' / 3']]};
+    return {name:nm,lines:[['The Eclipse Door is open',null,true],['Lord Vaelric waits in his den']]}}
+  return null};
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{const S=CQ205;o.cq205={v:205,c1:{st:S.c1.st|0,ing:S.c1.ing|0,fd:S.c1.fd|0},c2:{st:S.c2.st|0},
+      c3:{st:S.c3.st|0,fd:S.c3.fd|0,cl:S.c3.cl|0,got:S.c3.got|0,mnt:S.c3.mnt|0,rot:S.c3.rot.slice(0,3).map(v=>v|0)}}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.cq205,S=CQ205,cl=(v,a,b)=>Math.max(a,Math.min(b,v|0));
+    S.c1={st:0,ing:0,fd:0};S.c2={st:0};S.c3={st:0,fd:0,cl:0,got:0,mnt:0,rot:[0,0,0]};
+    if(q&&typeof q=='object'){if(q.c1){S.c1.st=cl(q.c1.st,0,4);S.c1.ing=q.c1.ing&15;S.c1.fd=q.c1.fd|0}
+      if(q.c2)S.c2.st=cl(q.c2.st,0,2);
+      if(q.c3){S.c3.st=cl(q.c3.st,0,4);S.c3.fd=q.c3.fd&7;S.c3.cl=q.c3.cl&7;S.c3.got=q.c3.got&7;S.c3.mnt=q.c3.mnt&7;if(Array.isArray(q.c3.rot))S.c3.rot=[0,1,2].map(i=>cl(q.c3.rot[i],0,7))}}
+    S.trkK='';cq205OnLoad()}catch(e){console.warn('v205 load',e)}return r}}
+// chapters hook in here after a load (their scenes rebuild their state from CQ205)
+var CQ205L=[];function cq205OnLoad(){CQ205L.forEach(f=>{try{f()}catch(e){console.warn('v205 load',e)}})}
+// the old gateway portals of the three field instances are hidden (their records stay for older code)
+function cq205HidePortals(){try{RPORT.forEach(r=>{if(r.k=='next'&&r.pi===5&&r.ig>=insG(5,0)&&r.ig<=insG(5,2)){r.g.visible=false;r.cq205=1}})}catch(_){}}
+cq205HidePortals();
+// run fn after sec seconds of game time (follows the game clock, so tests and pauses agree)
+function cq205After(sec,fn){let t=0;kqFx({tick(dt){t+=dt||0;if(t>=sec){try{fn()}catch(err){console.error('v205 after',err)}return false}return true},end(){}})}
+function cq205Card(kick,title,sub,foot){try{zt116Show(ZT116.Z[5],kick,title,sub,foot||'','z5')}catch(_){}}
+// the cheat "All quests complete" finishes the Citadel's chapters too
+{const f=typeof cheatQuests147=='function'?cheatQuests147:null;if(f)cheatQuests147=function(){const r=f.apply(this,arguments);try{CQ205.c1.st=4;CQ205.c1.ing=0;CQ205.c2.st=2;CQ205.c3.st=4;CQ205.c3.mnt=7;CQ205.c3.got=0;CQ205.trkK='';cq205OnLoad()}catch(_){}return r}}
+// ================= v205 The Citadel I · the Great Gate: the gatehouse that replaces I's gateway, its blood seal, its doors =================
+// The owner: "change the portal to a large gate (make it good looking) that leads to the next instance". Where I's road ends, the
+// castle wall round the gateway clearing opens on a gatehouse of the vampire court (cq205Gatehouse, also used for II's rampart gate
+// and III's Eclipse Door with other options):
+//  * a front wall of dark ashlar (bevelled plinth, string courses, pilasters) with a pointed arch: voussoirs, a horned keystone,
+//    a carved bat-winged crest with ruby eyes over it; two round towers (battered plinths, arrow slits glowing red, corbelled
+//    parapets with merlons, slate cones with iron finials); a machicolated gallery between them; crimson banners; gargoyles
+//    crouched on the flanking plinths; three wide steps.
+//  * two iron-bound doors (hinged leaves of black oak: straps, studs, ring knockers) and, while sealed, the BLOOD SEAL across them:
+//    a sigil burnt into the air (a canvas sigil, additive), four seal rings turning at different speeds, and two chains of blood
+//    crossed over the doors, staked into the towers. Each quarter of Cheddar's unbinding (3733) breaks a ring; the last one breaks
+//    the chains and the sigil, the doors grind open on a passage full of red light: F there goes to II.
+// The gatehouse stands at the clearing's far edge (a = reach + .5 along the frame, local +z toward the road); its walls are solid
+// (CBLK), the doorway too while sealed; the castle-wall blocks and decorations inside its footprint are hidden (cq205ClearFoot).
+var GG205={S:null,err:0,F:null};
+function gg205Spot(){const F=cq205F(0),a=F.reach+.5,[x,z]=F.W2(a,0);return {F,a,x,z,ry:Math.atan2(-F.fx,-F.fz),y:F.y0}}
+// local (gate) → world, for a spot: x across (local +x), z toward the road
+function cq205GW(S,lx,lz){const c=Math.cos(S.ry),s=Math.sin(S.ry);return [S.x+lx*c+lz*s,S.z-lx*s+lz*c]}
+// ---------------- shapes ----------------
+// a pointed (two-centred) arch: half width w2, spring height hs, rise d above the spring line; points up the right side and over
+function cq205ArchArc(w2,hs,d,n){const R=(w2*w2+d*d)/(2*w2),cx=w2-R,th=Math.atan2(d,-cx),P=[];for(let i=0;i<=n;i++){const a=th*i/n;P.push([cx+R*Math.cos(a),hs+R*Math.sin(a)])}return P}   // from (w2,hs) to (0,hs+d)
+// the front wall: a slab W x Ht with the arch cut out of its foot (one outline, no holes)
+function cq205WallPts(W,Ht,w2,hs,d){const A=cq205ArchArc(w2,hs,d,10);
+  return [[-W/2,0],[-w2,0]].concat(A.map(p=>[-p[0],p[1]])).concat(A.slice(0,-1).reverse()).concat([[w2,0],[W/2,0],[W/2,Ht],[-W/2,Ht]])}
+// the arch opening itself (for the passage behind the doors)
+function cq205OpenPts(w2,hs,d){const A=cq205ArchArc(w2,hs,d,10);return [[-w2,0],[w2,0]].concat(A).concat(A.slice(0,-1).reverse().map(p=>[-p[0],p[1]]))}
+// one door leaf, its hinge at x 0, reaching toward the middle (sgn +1: to +x, -1: to -x): the half arch
+function cq205LeafPts(w2,hs,d,sgn){const A=cq205ArchArc(w2,hs,d,8);return [[0,0],[w2,0]].concat(A.slice().reverse().map(p=>[w2-p[0],p[1]])).map(p=>[sgn<0?-p[0]:p[0],p[1]])}
+// the blood sigil (canvas): rings of runes, eight spokes, a winged crest at the heart
+function cq205SigilTex(kind){const key='sig_'+(kind||'blood');GG205.tex=GG205.tex||{};if(GG205.tex[key])return GG205.tex[key];const N=512,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),C=N/2,rn=svRng(kind==='eclipse'?2053:2051);
+  x.clearRect(0,0,N,N);x.lineCap='round';x.lineJoin='round';const glow=(w,a)=>{x.lineWidth=w;x.strokeStyle='rgba(255,255,255,'+a+')'};
+  const circ=(r,w,a)=>{glow(w,a);x.beginPath();x.arc(C,C,r,0,Math.PI*2);x.stroke()};
+  circ(246,5,.9);circ(232,2,.6);circ(176,4,.85);circ(160,2,.5);circ(96,3,.8);
+  // runes between the outer rings
+  for(let i=0;i<36;i++){const a=i/36*Math.PI*2,r=204;x.save();x.translate(C+Math.cos(a)*r,C+Math.sin(a)*r);x.rotate(a+Math.PI/2);glow(3,.85);x.beginPath();
+    const k=Math.floor(rn()*5);if(k==0){x.moveTo(-7,-9);x.lineTo(0,9);x.lineTo(7,-9)}else if(k==1){x.moveTo(0,-10);x.lineTo(0,10);x.moveTo(-7,-3);x.lineTo(7,3)}else if(k==2){x.arc(0,0,7,.4,Math.PI*1.6);x.moveTo(0,-10);x.lineTo(0,10)}else if(k==3){x.moveTo(-7,9);x.lineTo(0,-9);x.lineTo(7,9);x.moveTo(-4,2);x.lineTo(4,2)}else{x.moveTo(-6,-8);x.lineTo(6,8);x.moveTo(6,-8);x.lineTo(-6,8);x.moveTo(0,-10);x.lineTo(0,-4)}
+    x.stroke();x.restore()}
+  // the spokes and a star between the inner rings
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;glow(3,.7);x.beginPath();x.moveTo(C+Math.cos(a)*100,C+Math.sin(a)*100);x.lineTo(C+Math.cos(a)*172,C+Math.sin(a)*172);x.stroke()}
+  glow(3,.75);x.beginPath();for(let i=0;i<=7;i++){const a=(i*3/7)*Math.PI*2-Math.PI/2;const px=C+Math.cos(a)*170,py=C+Math.sin(a)*170;i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();
+  // the crest: a bat (blood) or a black sun with a corona (eclipse)
+  if(kind==='eclipse'){x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.arc(C,C,70,0,Math.PI*2);x.fill();x.globalCompositeOperation='destination-out';x.beginPath();x.arc(C+14,C-6,62,0,Math.PI*2);x.fill();x.globalCompositeOperation='source-over';
+    for(let i=0;i<24;i++){const a=i/24*Math.PI*2;glow(2,.6);x.beginPath();x.moveTo(C+Math.cos(a)*76,C+Math.sin(a)*76);x.lineTo(C+Math.cos(a)*(88+(i%2)*8),C+Math.sin(a)*(88+(i%2)*8));x.stroke()}}
+  else{x.fillStyle='rgba(255,255,255,.95)';x.beginPath();const b=[[0,-26],[8,-38],[12,-18],[30,-30],[58,-36],[84,-12],[66,-10],[60,4],[44,-2],[34,14],[20,4],[8,22],[0,34]];
+    x.moveTo(C,C+b[0][1]);b.forEach(p=>x.lineTo(C+p[0],C+p[1]));b.slice().reverse().forEach(p=>x.lineTo(C-p[0],C+p[1]));x.closePath();x.fill();
+    x.globalCompositeOperation='destination-out';[[-9,-14],[9,-14]].forEach(p=>{x.beginPath();x.arc(C+p[0],C+p[1],3.5,0,Math.PI*2);x.fill()});x.globalCompositeOperation='source-over'}
+  const t=new THREE.CanvasTexture(c);t.anisotropy=2;return GG205.tex[key]=t}
+// one ring of the seal (a thin band with notches, canvas), for the four turning rings
+function cq205RingTex(){if(GG205.rtex)return GG205.rtex;const N=512,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),C=N/2;x.strokeStyle='#fff';
+  x.lineWidth=10;x.beginPath();x.arc(C,C,236,0,Math.PI*2);x.stroke();x.lineWidth=3;x.beginPath();x.arc(C,C,218,0,Math.PI*2);x.stroke();
+  for(let i=0;i<24;i++){const a=i/24*Math.PI*2;x.lineWidth=i%3?3:7;x.beginPath();x.moveTo(C+Math.cos(a)*218,C+Math.sin(a)*218);x.lineTo(C+Math.cos(a)*(i%3?236:250),C+Math.sin(a)*(i%3?236:250));x.stroke()}
+  const t=new THREE.CanvasTexture(c);return GG205.rtex=t}
+// ---------------- the gatehouse (o: kind 'blood' | 'rampart' | 'eclipse'; returns {g, doors:[L,R], port, seal, light, pass}) ----------------
+function cq205Gatehouse(o){o=o||{};const kind=o.kind||'blood',RAM=kind==='rampart',ECL=kind==='eclipse';
+  const W0=RAM?12.5:14.5,Ht=RAM?10.5:13,w2=RAM?2.9:3.25,hs=RAM?4.6:5.6,dA=RAM?2.6:3.6,tr=RAM?2.6:3.1,tx=RAM?7.5:8.7,tH=RAM?13.5:16.5,dep=3.0,fz=.6;
+  const C=ECL?{st:0x2a2630,st2:0x1c1a22,st3:0x3e3846,trim:0x524a5a,roof:0x18161c,iron:0x26262c,wood:0x1c1416,gold:0x7a6a3a,ban:0x1a1020,ban2:0x6a5a2a,glow:0xffc070}
+    :RAM?{st:0x4a4246,st2:0x352f34,st3:0x5c5458,trim:0x6e6468,roof:0x2a2426,iron:0x2c2c32,wood:0x2e2018,gold:0x7a6234,ban:0x5a0c14,ban2:0x8a6a30,glow:0xff2a30}
+    :{st:0x463e46,st2:0x30292f,st3:0x5a5058,trim:0x6c6068,roof:0x231d24,iron:0x2a2a30,wood:0x2a1a14,gold:0x8a6a34,ban:0x5e0a16,ban2:0x9a7a3a,glow:0xff2030};
+  const key='CQ205|gate|'+kind,BB=dt168BBox,P=(k,geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+  const W={c:{g:[3.2,.32],n:.12,s:.22,m:[0x2a3a24,.35,.62],l:[0x6a6a60,.4],sd:205},m:{g:[2,.2],n:.1,sd:206}};
+  const g=new THREE.Group();g.name='CQ205Gate_'+kind;
+  g.add(dt168Group(key,k=>{const rn=dkRng(2050+(RAM?1:ECL?2:0));
+    // ---- the front wall with the arch, its plinth, string courses, pilasters, the gallery above ----
+    P(k,dt168Ext('cqw'+kind,cq205WallPts(W0,Ht,w2,hs,dA),dep,.06),'c',C.st,0,0,fz-dep/2);
+    P(k,BB(W0+.6,1.1,dep+.6,.08),'c',C.st2,0,.55,fz-dep/2);                                 // the battered plinth
+    [-1,1].forEach(s=>{const wd=W0/2-w2;P(k,BB(wd+.15,.28,dep+.3,.05),'c',C.trim,s*(w2+wd/2+.07),3.4,fz-dep/2)});
+    [-1,1].forEach(s=>{P(k,BB(.9,Ht-.6,.5,.06),'c',C.st3,s*(w2+1.55),Ht/2,fz+.15);P(k,BB(1.05,.5,.65,.06),'c',C.trim,s*(w2+1.55),Ht-.2,fz+.18)});   // pilasters
+    // the voussoirs round the arch and the horned keystone
+    {const A=cq205ArchArc(w2,hs,dA,9),R=(w2*w2+dA*dA)/(2*w2),cx=w2-R;for(let i=0;i<A.length-1;i++){const p=A[i],q=A[i+1],mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2;let nx=mx-cx,ny=my-hs;const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
+      const ang=Math.atan2(q[1]-p[1],q[0]-p[0]),L=Math.hypot(q[0]-p[0],q[1]-p[1]);[-1,1].forEach(s=>P(k,BB(L*.94,.95,dep+.2,.07),'c',i%2?C.st3:C.trim,s*(mx+nx*.47),my+ny*.47,fz-dep/2+.05,0,0,s>0?ang:Math.PI-ang))}}
+    P(k,BB(1.0,1.5,dep+.5,.1),'c',C.trim,0,hs+dA+.35,fz-dep/2+.12);
+    [-1,1].forEach(s=>P(k,dt168Geo('cq_kh',()=>svHorn(.16,.9,0,.5,6,5)),'c',C.st2,s*.32,hs+dA+.9,fz+.4,-1.1,s*.5,0));
+    // the carved crest over the arch: wings of stone, ruby eyes (blood / rampart), or the black sun (eclipse)
+    if(!ECL){const wing=[[0,0],[1.1,.5],[1.9,1.6],[2.9,1.9],[4.2,1.6],[3.6,1.1],[3.4,.4],[2.7,.75],[2.3,0],[1.6,.4],[1.1,-.5],[.4,-.2]];
+      [-1,1].forEach(s=>P(k,dt168Ext('cqwing',wing,.32,.05),'c',C.st3,s*.35,hs+dA+1.6,fz+.32,0,s>0?0:Math.PI,0,.62,.62,1));
+      P(k,dt168Geo('cq_bh',()=>svLump(.55,1,.18,2061)),'c',C.st3,0,hs+dA+1.75,fz+.3,0,0,0,.9,1,.7);
+      [-1,1].forEach(s=>{P(k,dt168Geo('cq_be',()=>new THREE.OctahedronGeometry(.11,0)),'g',C.glow,s*.2,hs+dA+1.85,fz+.72);P(k,dt168Geo('cq_bear',()=>svHorn(.12,.55,0,.15,5,4)),'c',C.st3,s*.35,hs+dA+2.15,fz+.3,-1.4,s*.35,0)})}
+    else{P(k,dt168Geo('cq_sun',()=>new THREE.CylinderGeometry(1.25,1.25,.3,20)),'c',0x0c0a10,0,hs+dA+2.0,fz+.3,Math.PI/2,0,0);P(k,dt168Geo('cq_sunr',()=>new THREE.TorusGeometry(1.4,.12,4,24)),'m',C.gold,0,hs+dA+2.0,fz+.36);
+      for(let i=0;i<12;i++){const a=i/12*Math.PI*2;P(k,dt168Geo('cq_ray',()=>new THREE.ConeGeometry(.14,.7,4)),'m',C.gold,Math.cos(a)*1.85,hs+dA+2.0+Math.sin(a)*1.85,fz+.33,0,0,a-Math.PI/2)}}
+    // ---- the machicolated gallery across the top: corbels, a parapet, merlons ----
+    for(let i=0;i<13;i++){const x=-W0/2+.8+i*(W0-1.6)/12;P(k,BB(.4,.8,.6,.05),'c',C.st2,x,Ht-.1,fz+.25)}
+    P(k,BB(W0+.2,1.0,.55,.06),'c',C.st,0,Ht+.6,fz+.35);P(k,BB(W0+.2,.25,dep+.6,.05),'c',C.trim,0,Ht+.05,fz-dep/2+.1);
+    for(let i=0;i<9;i++){const x=-W0/2+.6+i*(W0-1.2)/8;P(k,BB(.75,.9,.6,.06),'c',i%2?C.st:C.st3,x,Ht+1.55,fz+.33)}
+    // ---- the towers: battered plinths, shafts, slits, corbelled parapets, slate cones ----
+    [-1,1].forEach(s=>{const X=s*tx,Z=-.5;
+      P(k,dt168Lathe([[0,-6],[tr+.7,-6],[tr+.7,.2],[tr+.5,1.4],[tr+.05,1.9],[tr,tH-1.2],[tr+.35,tH-.6],[tr+.35,tH],[0,tH]],12),'c',C.st,X,0,Z);
+      P(k,dt168Lathe([[tr+.08,0],[tr+.12,.25],[tr+.12,.5],[tr+.08,.75]],12),'c',C.trim,X,5.2,Z);P(k,dt168Lathe([[tr+.08,0],[tr+.12,.25],[tr+.12,.5],[tr+.08,.75]],12),'c',C.trim,X,10.4,Z);
+      for(let i=0;i<10;i++){const a=i/10*Math.PI*2+.31;P(k,BB(.85,1.0,.55,.06),'c',i%2?C.st:C.st3,X+Math.sin(a)*(tr+.2),tH+.45,Z+Math.cos(a)*(tr+.2),0,a,0)}
+      P(k,dt168Lathe([[tr+.2,0],[tr-.2,.6],[.12,(RAM?4.2:5.6)],[0,(RAM?4.3:5.7)]],12),'c',C.roof,X,tH+.6,Z);
+      P(k,dt168Geo('cq_fin',()=>new THREE.ConeGeometry(.09,1.6,5)),'m',C.iron,X,tH+.6+(RAM?4.9:6.4),Z);P(k,dt168Geo('cq_fb',()=>new THREE.SphereGeometry(.16,6,4)),'m',C.gold,X,tH+.6+(RAM?4.25:5.65),Z);
+      // arrow slits facing the clearing, faintly lit from inside
+      [[3.4,0],[7.8,.35],[12,-.3]].forEach(([y,da])=>{if(y>tH-1.6)return;const a=da+(s>0?-.45:.45);const px=X+Math.sin(a)*(tr+.02),pz=Z+Math.cos(a)*(tr+.02);
+        P(k,BB(.42,1.5,.3,.03),'c',0x0c080a,px,y,pz,0,a,0);P(k,BB(.14,1.0,.04,.01),'g',kind==='eclipse'?0x7a5a2a:0x8a1018,px+Math.sin(a)*.13,y,pz+Math.cos(a)*.13,0,a,0)});
+      // the gargoyle on the plinth beside the steps (blood / eclipse) or a war-drum and spears (rampart)
+      if(!RAM){const gx=s*(w2+2.6),gz=fz+1.6,gy=1.35;P(k,BB(1.5,1.3,1.5,.08),'c',C.st2,gx,.65,gz);P(k,BB(1.7,.2,1.7,.05),'c',C.trim,gx,1.32,gz);
+        P(k,dt168Geo('cq_gb',()=>svLump(.55,1,.22,2071)),'c',C.st3,gx,gy+.5,gz,.5,0,0,1,1.15,.9);P(k,dt168Geo('cq_gh',()=>svLump(.32,1,.2,2072)),'c',C.st3,gx,gy+1.12,gz+.32,0,0,0,1,.9,1.1);
+        [-1,1].forEach(q=>{P(k,dt168Geo('cq_gw',()=>svBlade([[0,0],[.5,.5],[.95,1.25],[1.2,1.0],[1.0,.55],[1.25,.35],[.9,.2],[.8,-.15]],.06)),'c',C.st2,gx+q*.35,gy+.75,gz-.2,0,q>0?-.4:Math.PI+.4,q*.2);
+          P(k,dt168Geo('cq_ghn',()=>svHorn(.07,.45,0,.25,5,4)),'c',C.st2,gx+q*.15,gy+1.35,gz+.25,-1.2,q*.4,0);P(k,dt168Geo('cq_ge',()=>new THREE.OctahedronGeometry(.05,0)),'g',C.glow,gx+q*.11,gy+1.18,gz+.6)});
+        [-1,1].forEach(q=>P(k,BB(.16,.55,.16,.03),'c',C.st2,gx+q*.3,gy+.05,gz+.45,.25,0,0))}
+      else{const gx=s*(w2+2.4),gz=fz+1.8;P(k,dt168Lathe([[0,0],[.75,0],[.85,.2],[.85,1.1],[.75,1.3],[0,1.3]],10),'c',0x5a2a1a,gx,0,gz);P(k,dt168Lathe([[0,0],[.86,0],[.86,.12],[0,.12]],10),'c',0xb8a080,gx,1.3,gz);
+        for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;P(k,dt168Geo('cq_sp',()=>new THREE.CylinderGeometry(.04,.04,3.2,5)),'c',C.wood,gx+Math.sin(a)*.95,1.5,gz+Math.cos(a)*.95,.12*Math.cos(a),0,-.12*Math.sin(a));P(k,dt168Geo('cq_spt',()=>new THREE.ConeGeometry(.08,.4,4)),'m',0x8a8a90,gx+Math.sin(a)*1.14,3.2,gz+Math.cos(a)*1.14)}}});
+    // ---- the steps up to the doors ----
+    [[0,.15,W0-1.0,3.4],[1,.3,W0-2.6,2.5],[2,.45,2*w2+2.2,1.6]].forEach(([i,y,w,d])=>P(k,BB(w,.15,d,.04),'c',i%2?C.st3:C.st2,0,y-.075,fz+d/2-.05));
+    // the deep reveal behind the arch (the jambs' inner faces are the wall's own cut)
+    P(k,BB(2*w2+.4,.2,dep,.04),'c',C.st2,0,.1,fz-dep/2);
+    // banners hanging from the gallery (cloth strips) with the court's colours
+    [-1,1].forEach(s=>{const bx=s*(w2+3.4);k.S('',C.ban,bx,Ht+.95,fz+.62,1.25,RAM?4.6:6.2,0,0,3+(s>0?1:0));P(k,BB(1.5,.12,.12,.02),'m',C.gold,bx,Ht+.95,fz+.66);
+      P(k,dt168Geo('cq_bs',()=>new THREE.OctahedronGeometry(.32,0)),'c',C.ban2,bx,Ht-.9,fz+.7,0,0,0,1,1.3,.2)})},W));
+  // ---- the doors (two hinged leaves) or the portcullis ----
+  const leafKey='CQ205|leaf|'+kind,doors=[];let port=null;
+  if(!RAM){[-1,1].forEach(s=>{const piv=new THREE.Group();piv.position.set(s*w2,0,fz-dep/2-.25);g.add(piv);
+      piv.add(dt168Group(leafKey+s,k=>{const L=cq205LeafPts(w2,hs,dA,-s).map(p=>[p[0],p[1]]);P(k,dt168Ext('cqleaf'+kind+s,L,.34,.04),'c',C.wood,0,0,0);
+        for(let i=0;i<5;i++){const y=.8+i*(hs+dA*.4-.8)/4.5,len=w2*(i<4?.96:.7);P(k,BB(len,.2,.42,.03),'m',C.iron,-s*len/2,y,0);for(let j=0;j<4;j++)P(k,dt168Geo('cq_st',()=>new THREE.ConeGeometry(.07,.12,4)),'m',C.iron,-s*(.35+j*len/4.2),y,.23,Math.PI/2,0,0)}
+        P(k,dt168Geo('cq_rg',()=>new THREE.TorusGeometry(.32,.06,4,10)),'m',C.gold,-s*(w2-.55),hs*.55,.3);P(k,dt168Geo('cq_rgb',()=>new THREE.CylinderGeometry(.18,.18,.1,6)),'m',C.iron,-s*(w2-.55),hs*.55+.3,.22,Math.PI/2,0,0)},{c:{g:[2,.25],n:.18,sd:207},m:{n:.1,sd:208}}));
+      doors.push(piv)})}
+  else{port=new THREE.Group();g.add(port);port.add(dt168Group('CQ205|port',k=>{for(let i=0;i<9;i++){const x=-w2+.35+i*(2*w2-.7)/8;P(k,BB(.16,hs+dA-.3,.16,.02),'m',C.iron,x,(hs+dA-.3)/2,0);P(k,dt168Geo('cq_pt',()=>new THREE.ConeGeometry(.13,.45,4)),'m',C.iron,x,-.2,0,Math.PI,0,0)}
+      for(let j=0;j<6;j++){const y=.6+j*(hs+dA-1.2)/5;P(k,BB(2*w2,.14,.2,.02),'m',C.iron,0,y,0)}},{m:{n:.15,g:[3,.3],sd:209}}));port.position.z=fz-dep/2+.3}
+  // ---- the passage beyond: black until the way opens, then a haze of light ----
+  const pass=new THREE.Mesh(dt168Geo('cq_pass'+kind,()=>new THREE.ShapeGeometry(new THREE.Shape(cq205OpenPts(w2,hs,dA).map(p=>new THREE.Vector2(p[0],p[1]))),8)),
+    new THREE.MeshBasicMaterial({color:0x050203,fog:false}));pass.position.set(0,0,fz-dep+.15);g.add(pass);
+  const haze=kqSpr(ECL?0xffd890:0xff3a2a,9);haze.material=haze.material.clone();haze.material.opacity=0;haze.position.set(0,hs*.75,fz-dep+.4);g.add(haze);
+  // ---- the seal: sigil, four rings, two chains of blood (blood / eclipse) ----
+  let seal=null;if(!RAM){seal={g:new THREE.Group(),rings:[],chains:[]};seal.g.position.set(0,hs*.78,fz+.78);g.add(seal.g);const col=ECL?0xffb040:0xff1a2a;
+    const sm=new THREE.MeshBasicMaterial({map:cq205SigilTex(ECL?'eclipse':'blood'),color:col,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide});
+    seal.sig=new THREE.Mesh(new THREE.PlaneGeometry(6.2,6.2),sm);seal.sig.renderOrder=4;seal.g.add(seal.sig);
+    for(let i=0;i<4;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:cq205RingTex(),color:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+      const r=3.35+i*.5;m.scale.set(r*2,r*2,1);m.position.z=.06+i*.02;m.renderOrder=4;seal.g.add(m);seal.rings.push({m,sp:(i%2?-1:1)*(.18+i*.07),r,on:1})}
+    // the chains: two diagonals of glowing links from tower to tower over the doors
+    const lm=new THREE.MeshBasicMaterial({color:ECL?0xd09040:0xc8101e,fog:false}),lg=new THREE.TorusGeometry(.2,.055,4,8);
+    [[-1,1],[1,1]].forEach(([s],ci)=>{const ch=new THREE.Group(),a=new THREE.Vector3(-s*(tx-tr-.2),hs+dA+.6,fz+.62),b=new THREE.Vector3(s*(tx-tr-.2),.9,fz+.62),N=34;
+      for(let i=0;i<N;i++){const t=i/(N-1),p=a.clone().lerp(b,t);p.y-=Math.sin(t*Math.PI)*.5;p.sub(seal.g.position);const l=new THREE.Mesh(lg,lm);l.position.copy(p);l.lookAt(p.clone().add(b.clone().sub(a)));l.rotateX(Math.PI/2);if(i%2)l.rotateY(Math.PI/2);ch.add(l)}
+      seal.g.add(ch);seal.chains.push(ch)});
+    seal.light=new THREE.PointLight(col,1.6,16,1.6);seal.light.userData.lp=new THREE.Vector3(0,hs*.8,fz+2.6)}
+  // the light that pours out once the way is open
+  const light=new THREE.PointLight(ECL?0xffd080:0xff4030,0,18,1.4);light.userData.lp=new THREE.Vector3(0,hs*.7,fz+1.5);
+  g.userData.psNo=1;g.traverse(q=>{if(q.isMesh)q.userData.lpsSkip=q.material&&q.material.blending===THREE.AdditiveBlending?1:q.userData.lpsSkip});
+  return {g,doors,port,seal,light,pass,haze,dims:{W0,Ht,w2,hs,dA,tr,tx,tH,dep,fz}}}
+// point lights go into the scene itself (0620's pool takes them as sources), at their spot in the placed gatehouse
+function cq205PlaceLights(G){G.g.updateMatrixWorld(true);[G.light,G.seal&&G.seal.light].forEach(l=>{if(!l)return;l.position.copy(l.userData.lp);G.g.localToWorld(l.position);scene.add(l)})}
+// ---------------- the ground it stands on: solid tiles, and the castle wall / decorations it replaces ----------------
+// tiles of a gatehouse spot S (cq205GW frame) that are solid; open: the doorway too
+function cq205FootTiles(S,dims){const T=[],D=new Set(),add=(lx,lz,door)=>{const [x,z]=cq205GW(S,lx,lz),k=Math.round(z)*W+Math.round(x);if(T.indexOf(k)<0){T.push(k);if(door)D.add(k)}};
+  for(let lz=-dims.dep-1;lz<=dims.fz+.3;lz+=.5)for(let lx=-dims.W0/2;lx<=dims.W0/2;lx+=.5)add(lx,lz,Math.abs(lx)<dims.w2-.2&&lz>-dims.dep+.4);
+  [-1,1].forEach(s=>{for(let a=0;a<6.3;a+=.2)for(let r=0;r<=dims.tr+.5;r+=.5)add(s*dims.tx+Math.sin(a)*r,-.5+Math.cos(a)*r,false)});
+  return {T,D}}
+// hide the castle-wall blocks (CITW) and decorations (WD) inside the gatehouse's footprint (a box in its frame, plus its towers)
+function cq205ClearFoot(S,dims){const inF=(x,z)=>{const dx=x-S.x,dz=z-S.z,c=Math.cos(S.ry),s=Math.sin(S.ry),lx=dx*c-dz*s,lz=dx*s+dz*c;
+    if(Math.abs(lx)<dims.W0/2+.8&&lz>-dims.dep-6&&lz<dims.fz+3.8)return true;return [-1,1].some(q=>Math.hypot(lx-q*dims.tx,lz+.5)<dims.tr+1.4)};
+  let n=0;const M=new THREE.Matrix4(),Z=new THREE.Matrix4().makeScale(0,0,0);
+  const sweep=m=>{if(!m||!m.isInstancedMesh)return;const a=m.instanceMatrix.array;let ch=false;for(let i=0;i<m.count;i++){const x=a[i*16+12],z=a[i*16+14];if(Math.abs(x-S.x)>30||Math.abs(z-S.z)>30)continue;if(inF(x,z)){m.setMatrixAt(i,Z);ch=true;n++}}if(ch)m.instanceMatrix.needsUpdate=true};
+  try{(window.CITW||[]).forEach(sweep)}catch(e){console.warn('v205 clear walls',e)}
+  try{if(typeof WD!='undefined'&&WD&&WD.ms)WD.ms.forEach(sweep)}catch(e){console.warn('v205 clear deco',e)}
+  return n}
+// ---------------- I's gate: build, state, prompt ----------------
+function gg205Build(){if(GG205.S)return GG205.S;const S=gg205Spot(),G=cq205Gatehouse({kind:'blood'});G.g.position.set(S.x,S.y-.05,S.z);G.g.rotation.y=S.ry;scene.add(G.g);
+  G.spot=S;G.open=0;G.k=0;GG205.S=G;cq205PlaceLights(G);try{G.cleared=cq205ClearFoot(S,G.dims)}catch(_){}
+  // the seal's own torches: two braziers at the foot of the steps
+  G.br=[-1,1].map(s=>{const [x,z]=cq205GW(S,s*(G.dims.w2+1.2),G.dims.fz+3.9);const b=gg205Brazier();b.position.set(x,GH(x,z),z);scene.add(b);const l=new THREE.PointLight(0xff5a28,1.3,10,1.6);l.position.set(x,GH(x,z)+1.6,z);scene.add(l);b.userData.l=l;return b});
+  gg205Sync();return G}
+function gg205Brazier(){const g=dt168Group('CQ205|brz',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    P(dt168Lathe([[0,0],[.42,0],[.36,.12],[.14,.3],[.11,1.0],[.2,1.08],[.5,1.3],[.56,1.42],[.5,1.45],[0,1.45]],8),'m',0x2a2628,0,0,0);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2;P(dt168Geo('cq_bl',()=>svHorn(.05,.5,0,.18,4,3)),'m',0x2a2628,Math.sin(a)*.5,1.35,Math.cos(a)*.5,-.9,a,0)}
+    P(dt168Geo('cq_coal',()=>svLump(.38,0,.4,2081)),'g',0xff6a2a,0,1.42,0,0,0,0,1,.35,1)},{m:{g:[1.2,.35],n:.12,sd:209}});
+  const f=kqSpr(0xff7a30,1.8);f.position.y=1.9;g.add(f);g.userData.f=f;g.userData.psNo=1;return g}
+function gg205Open(){const G=GG205.S;return !!G&&G.open>=1}
+function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;
+  if(!G.tiles){G.tiles=cq205FootTiles(S,G.dims)}G.tiles.T.forEach(k=>{if(open&&G.tiles.D.has(k))CBLK.delete(k);else CBLK.add(k)});
+  // doorway tiles stay solid even open (the void is behind): the gate's prompt takes you through
+  G.tiles.D.forEach(k=>CBLK.add(k));
+  if(open){G.open=1;G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25);if(G.seal){G.seal.g.visible=false;G.seal.light.intensity=0}G.light.intensity=1.5;G.haze.material.opacity=.55}
+  else{G.open=0;G.doors.forEach(d=>d.rotation.y=0);if(G.seal){G.seal.g.visible=true;G.seal.rings.forEach(r=>{r.on=1;r.m.visible=true;r.m.material.opacity=.85});G.seal.chains.forEach(c=>{c.visible=true;c.position.set(0,0,0)});G.seal.sig.material.opacity=.95;G.seal.light.intensity=1.6}
+    G.light.intensity=0;G.haze.material.opacity=0}}
+// how many rings stand (the unbinding breaks them, 3733)
+function gg205RingsUp(){const G=GG205.S;return G&&G.seal?G.seal.rings.filter(r=>r.on).length:0}
+function gg205BreakRing(i){const G=GG205.S;if(!G||!G.seal)return;const r=G.seal.rings[i];if(!r||!r.on)return;r.on=0;const p=new THREE.Vector3();G.seal.g.getWorldPosition(p);
+  svSnd('crack',1.1,.7);svSnd('bell',.7,.5);shake(.25);for(let k=0;k<40;k++){const a=Math.random()*6.283,q=p.clone();q.x+=Math.cos(a)*r.r*Math.cos(G.spot.ry);q.z-=Math.cos(a)*r.r*Math.sin(G.spot.ry);q.y+=Math.sin(a)*r.r;burst(q,0xff2030,2,1.6,1.2,.7)}
+  let t=0;const m=r.m;kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/.6);m.scale.setScalar(r.r*2*(1+k*.6));m.material.opacity=.85*(1-k);return t<.6},end(){m.visible=false;m.scale.setScalar(r.r*2)}})}
+// the last ring: the chains snap, the sigil bursts, the doors grind open
+function gg205Shatter(){const G=GG205.S;if(!G||G.open)return;G.open=.001;G.seal.rings.forEach((r,i)=>{if(r.on)gg205BreakRing(i)});const p=new THREE.Vector3();G.seal.g.getWorldPosition(p);
+  shake(.7);svSnd('crack',1.4,.5);svSnd('roar',.7,.45);try{flash('rgba(255,40,50,.4)')}catch(_){}burst(p,0xff2a3a,140,6,3,1.2);burst(p,0xffe0c0,60,4,2,.9);try{svShock(gY(p,-p.y+GH(p.x,p.z)+.1),0xff3040,12,.9)}catch(_){}
+  G.seal.chains.forEach((c,i)=>{const v=(i?1:-1);let t=0;kqFx({tick(dt){t+=dt||0;c.position.y-=dt*(2+t*9);c.position.x+=v*dt*.6;c.children.forEach((l,j)=>{l.material=l.material})
+      return t<1.2},end(){c.visible=false}})});
+  let t=0;const S=G.seal;kqFx({tick(dt){t+=dt||0;const k=Math.min(1,t/.9);S.sig.scale.setScalar(1+k*.8);S.sig.material.opacity=.95*(1-k);S.light.intensity=1.6+4*(1-k)*(k<.2?k*5:1);return t<.9},end(){S.g.visible=false;S.light.intensity=0}});
+  // the doors swing in, slowly, with a groan
+  cq205After(.9,()=>{svSnd('heavy',1.1,.4);try{dg165Snd('grind',1,.5);dg165Snd('creak',.9,.45)}catch(_){}let u=0;kqFx({tick(dt){u+=dt||0;const k=svEase.io(Math.min(1,u/4.2));G.doors.forEach((d,i)=>d.rotation.y=(i?-1:1)*1.25*k);G.light.intensity=1.5*k;G.haze.material.opacity=.55*k;
+      if(Math.random()<.4){const q=new THREE.Vector3();G.g.localToWorld(q.set((Math.random()-.5)*6,.2,G.dims.fz-.5));burst(q,0x6a5a5a,2,1,.6,.8)}return u<4.2},end(){G.open=1}})})}
+function gg205AtDoor(){const G=GG205.S;if(!G)return false;const P=pl.position,[x,z]=cq205GW(G.spot,0,G.dims.fz+2.2);return Math.hypot(P.x-x,P.z-z)<4.2}
+function gg205Through(){const C=CQ205.c1;if(C.st<4){C.st=4;CQ205.trkK=''}svSnd('whoosh',1,.6);try{insGo(cq205I(1))}catch(e){console.error('v205 gate go',e)}}
+// ---------------- the tick ----------------
+function gg205Tick(dt,now){const here=cq205Here(0),t=now/1000;if(here&&!GG205.S){try{gg205Build()}catch(e){if(!GG205.err++)console.error('v205 gate build',e)}}const G=GG205.S;if(!G)return;
+  G.g.visible=here;G.br.forEach(b=>{b.visible=here;b.userData.l.intensity=here?1.2+.25*Math.sin(t*9+b.position.x):0;b.userData.f.scale.setScalar(1.7+.25*Math.sin(t*11+b.position.z))});if(!here){if(G.seal)G.seal.light.intensity=0;G.light.intensity=0;return}
+  if(G.seal&&G.seal.g.visible){G.seal.rings.forEach((r,i)=>{if(r.on)r.m.rotation.z+=dt*r.sp});const pu=.8+.2*Math.sin(t*2.2);G.seal.sig.material.opacity=Math.min(1,(typeof US205!='undefined'&&US205.E?1.05:.9)*pu);
+    if(!G.open)G.seal.light.intensity=1.2+.5*Math.sin(t*2.2)+(typeof US205!='undefined'&&US205.E?1.2:0)}
+  if(G.open>=1){G.haze.material.opacity=.45+.12*Math.sin(t*1.7);G.light.intensity=1.3+.3*Math.sin(t*2.3)}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{gg205Tick(dt,now)}catch(e){if(!GG205.err++)console.warn('v205 gate tick',e)}return r}}
+// ---------------- the prompt at the doors ----------------
+function gg205Prompt(){if(!cq205Here(0)||!GG205.S||!gg205AtDoor())return null;const C=CQ205.c1;
+  if(GG205.S.open>=1||cq205Done(1)&&GG205.S.open>=1){const N=cq205I(1);return {label:'F · Pass through the Great Gate to '+N.n+' ('+rpTxt139(N.lv[0])+')',fn:()=>gg205Through()}}
+  if(typeof US205!='undefined'&&US205.E)return null;
+  return {label:'🔒 The Great Gate · sealed in blood',fn:()=>say(C.st<1?'🩸 A seal of blood holds the doors: four rings of burning runes and two chains of it, staked into the towers. A small figure in a scarf is studying it.':'🩸 The seal holds. Cheddar says it unwinds only with the court’s own blood.')}}
+{const f=worldPrompt;worldPrompt=function(){try{const r=gg205Prompt();if(r)return r}catch(e){if(!GG205.err++)console.warn('v205 gate prompt',e)}return f.apply(this,arguments)}}
+CQ205L.push(()=>{if(GG205.S)gg205Sync()});
+// the minimap and N map show the gate (2380's marks for Cheddar's gateway spot use the hidden portal's record)
+// ================= v205 The Citadel I · Cheddar at the Great Gate: his window, the four ingredients, the ritual circle =================
+// Cheddar (the quest-giving mouse of Duskhold, chd132Model) has come ahead to the Citadel and stands before the Great Gate, reading
+// the seal. Talking to him (F, window XR.ch205) explains it: a seal woven in the court's blood unwinds only with the court's own.
+//  * The ingredients (CH205.ING): one from each kind of creature of The Citadel I. Once he has asked for them (CQ205.c1.st 1), each
+//    kill of that kind drops its ingredient (CH205.drop, while it is not carried and none lies on the ground); walk over it to take
+//    it (kind 'cq205' through take). They show in the bag's Materials tab under Quest items and on the tracker.
+//  * With all four, F gives them to him (st 2): he sets one in each bowl of his ritual circle (four iron braziers round a circle of
+//    wards painted on the flagstones), and each burns with its own fire. "Begin the unbinding" starts 3733 (US205).
+//  * His poses on top of the model's own (chd132's idle / alert): 'read' (paw at chin, peering up at the seal), 'cast' (both paws
+//    raised, a floating tome, threads of light), 'hurt' (a flinch), 'down' (collapsed), and a walk (legs and arms swinging) when he
+//    moves between his spot by the gate and the circle (CH205.to).
+var CH205={C:null,g:null,ring:null,brz:[],pose:'read',w:{},to:null,sp:0,hit:0,err:0,tab:'hi',drop:.3,
+  ING:[{k:'ash',n:'Grave Ash',from:'Vampire Thrall',en:'vamp',ic:'🏺',col:0xd8d0c8,fl:0xcfd8e8,d:'the dust a thrall leaves when the blood runs out of it'},
+       {k:'heart',n:'Nightwing Heart',from:'Blood Bat',en:'bloodbat',ic:'🦇',col:0x8a1020,fl:0xff2a3a,d:'a blood bat’s heart: still beating, slowly'},
+       {k:'signet',n:'Crimson Signet',from:'Blood Knight',en:'vampk',ic:'💍',col:0xc8a040,fl:0xffc860,d:'the ring each Blood Knight swears on'},
+       {k:'ink',n:'Sanguine Ink',from:'Blood Magister',en:'vampm',ic:'🩸',col:0x6a1430,fl:0xc050ff,d:'the blood-ink the magisters write their seals in'}]};
+// where he stands: by the gate (reading the seal) and at the centre of his circle (casting); the circle's bowls
+function ch205Spots(){if(ch205Spots.c)return ch205Spots.c;const S=gg205Spot(),G={W0:14.5,fz:.6};const W=(lx,lz)=>{const [x,z]=cq205GW(S,lx,lz);return {x,z,y:GH(x,z)}};
+  const c=W(0,G.fz+8.4),R={read:W(-3.2,G.fz+5.4),circ:c,r:3.0,face:Math.atan2(S.x-c.x,S.z-c.z),bowls:[]};
+  for(let i=0;i<4;i++){const a=S.ry+Math.PI/4+i*Math.PI/2,x=c.x+Math.sin(a)*3.0,z=c.z+Math.cos(a)*3.0;R.bowls.push({x,z,y:GH(x,z),a})}
+  return ch205Spots.c=R}
+// ---------------- the models: Cheddar, the circle, the bowls, the ingredients ----------------
+function ch205Ing(i){const key='CQ205|ing'+i;return dt168Group(key,k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    if(i===0){P(dt168Lathe([[0,0],[.09,0],[.13,.06],[.14,.14],[.1,.22],[.06,.25],[.08,.29],[0,.29]],8),'c',0x3a3436,0,0,0);P(dt168Geo('cq_ashp',()=>svLump(.07,0,.4,2091)),'g',0xb8b0a8,0,.27,0,0,0,0,1,.6,1)}
+    else if(i===1){P(dt168Geo('cq_hrt',()=>svLump(.13,1,.25,2092)),'c',0x6a0c18,0,.13,0,0,0,0,1,1.15,.9);for(let v=0;v<4;v++)P(dt168Geo('cq_hv',()=>new THREE.BoxGeometry(.012,.16,.012)),'g',0xff2a3a,Math.sin(v*1.6)*.11,.13,Math.cos(v*1.6)*.1,0,v*1.6,.3);
+      P(dt168Geo('cq_hao',()=>new THREE.CylinderGeometry(.03,.04,.08,6)),'c',0x5a0a14,.03,.28,0,0,0,.4)}
+    else if(i===2){P(dt168Geo('cq_sig',()=>new THREE.TorusGeometry(.1,.028,5,14)),'m',0xc8a040,0,.12,0);P(dt168Geo('cq_sgm',()=>new THREE.OctahedronGeometry(.05,0)),'g',0xff2a30,0,.235,0);P(dt168Geo('cq_sgb',()=>new THREE.CylinderGeometry(.045,.05,.03,6)),'m',0xa08030,0,.21,0)}
+    else{P(dt168Lathe([[0,0],[.06,0],[.08,.05],[.08,.16],[.03,.21],[.03,.26],[0,.26]],8),'c',0x3a2a34,0,0,0);P(dt168Lathe([[0,0],[.07,0],[.07,.14],[0,.14]],8),'g',0xc01848,0,.02,0,0,0,0,.98,1,.98);P(dt168Geo('cq_cork',()=>new THREE.CylinderGeometry(.032,.028,.05,6)),'c',0x6a4a2a,0,.28,0)}},
+    {c:{n:.12,sd:210+i},m:{n:.1,sd:214}})}
+function ch205Bowl(){return dt168Group('CQ205|bowl',k=>{const P=(geo,t,col,x,y,z,rx,ry,rz,sx,sy,sz)=>dt168P(k,geo,t,col,dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
+    for(let i=0;i<3;i++){const a=i/3*Math.PI*2;P(dt168Geo('cq_tl',()=>new THREE.CylinderGeometry(.035,.05,1.0,5)),'m',0x2a2628,Math.sin(a)*.22,.48,Math.cos(a)*.22,-.22*Math.cos(a),0,.22*Math.sin(a))}
+    P(dt168Lathe([[0,0],[.12,0],[.32,.12],[.4,.22],[.37,.24],[.28,.15],[0,.12]],10),'m',0x34302e,0,.92,0);P(dt168Geo('cq_bwc',()=>svLump(.26,0,.35,2093)),'c',0x1a1410,0,1.04,0,0,0,0,1,.25,1)},{m:{g:[1,.3],n:.14,sd:215}})}
+// the wards on the flagstones: a ring of pale runes (canvas), lit as he casts
+function ch205RingTex(){if(CH205.rt)return CH205.rt;const N=512,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),C=N/2,rn=svRng(2095);x.strokeStyle='#fff';x.lineCap='round';
+  const circ=(r,w)=>{x.lineWidth=w;x.beginPath();x.arc(C,C,r,0,Math.PI*2);x.stroke()};circ(244,6);circ(228,2);circ(150,3);circ(138,2);
+  for(let i=0;i<28;i++){const a=i/28*Math.PI*2;x.save();x.translate(C+Math.cos(a)*188,C+Math.sin(a)*188);x.rotate(a);x.lineWidth=3;x.beginPath();const q=Math.floor(rn()*4);
+    if(q==0){x.moveTo(-8,0);x.lineTo(8,0);x.moveTo(0,-9);x.lineTo(0,9)}else if(q==1){x.arc(0,0,7,0,Math.PI*1.5)}else if(q==2){x.moveTo(-8,-8);x.lineTo(0,8);x.lineTo(8,-8)}else{x.moveTo(-7,6);x.lineTo(0,-8);x.lineTo(7,6);x.lineTo(-7,6)}x.stroke();x.restore()}
+  for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;x.lineWidth=4;x.beginPath();x.moveTo(C+Math.cos(a)*140,C+Math.sin(a)*140);x.lineTo(C+Math.cos(a)*236,C+Math.sin(a)*236);x.stroke()}
+  x.lineWidth=3;x.beginPath();for(let i=0;i<=4;i++){const a=i/4*Math.PI*2+Math.PI/4;const px=C+Math.cos(a)*138,py=C+Math.sin(a)*138;i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();
+  const t=new THREE.CanvasTexture(c);return CH205.rt=t}
+function ch205Build(){if(CH205.g)return CH205;const R=ch205Spots();const g=new THREE.Group();g.name='CQ205Cheddar';scene.add(g);CH205.g=g;
+  let C=null;try{C=chd132Model({game:true})}catch(e){console.error('v205 cheddar model',e)}
+  if(C){C.root.scale.setScalar((typeof CHQ132_SC!='undefined'?CHQ132_SC:1.1)*1.12);C.root.userData.psNo=1;C.root.userData.noFarCull=1;g.add(C.root);C.setPose&&C.setPose('idle');CH205.C=C}
+  // his tome, floating in front of him while he casts (open pages, a glow)
+  const tm=new THREE.Group();const pg=new THREE.MeshStandardMaterial({color:0xd8ccaa,roughness:.9,flatShading:true}),cv=new THREE.MeshStandardMaterial({color:0x4a1a12,roughness:.8,flatShading:true});
+  [-1,1].forEach(s=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.17,.01,.22),cv);c.position.set(s*.085,0,0);c.rotation.z=-s*.18;tm.add(c);const p=new THREE.Mesh(new THREE.BoxGeometry(.15,.02,.2),pg);p.position.set(s*.075,.012,0);p.rotation.z=-s*.14;tm.add(p)});
+  const tg=kqSpr(0xffe8b0,.6);tg.position.y=.08;tm.add(tg);tm.visible=false;g.add(tm);CH205.tome=tm;
+  // the ward dome round him while he casts (his health shows in its glow)
+  const dm=new THREE.Mesh(new THREE.SphereGeometry(1.25,18,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshBasicMaterial({color:0xffe0a0,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,fog:false}));
+  dm.userData.lpsSkip=1;dm.renderOrder=3;g.add(dm);CH205.dome=dm;
+  // the circle and its four bowls
+  const rg=new THREE.Mesh(new THREE.CircleGeometry(R.r+.5,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:ch205RingTex(),color:0xffd890,transparent:true,opacity:.28,depthWrite:false,blending:THREE.AdditiveBlending,fog:true,polygonOffset:true,polygonOffsetFactor:-4}));
+  rg.position.set(R.circ.x,R.circ.y+.06,R.circ.z);rg.userData.lpsSkip=1;rg.renderOrder=2;scene.add(rg);CH205.ring=rg;
+  const fl=new THREE.Mesh(new THREE.CircleGeometry(R.r+.9,24).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2428,roughness:.95,flatShading:true,polygonOffset:true,polygonOffsetFactor:-2}));
+  fl.position.set(R.circ.x,R.circ.y+.03,R.circ.z);scene.add(fl);CH205.floor=fl;
+  CH205.brz=R.bowls.map((b,i)=>{const o=ch205Bowl();o.position.set(b.x,b.y,b.z);scene.add(o);const ing=ch205Ing(i);ing.position.set(0,1.1,0);ing.scale.setScalar(1.6);ing.visible=false;o.add(ing);
+    const f=kqSpr(CH205.ING[i].fl,1.2);f.material=f.material.clone();f.material.opacity=0;f.position.y=1.45;o.add(f);const l=new THREE.PointLight(CH205.ING[i].fl,0,7,1.7);l.position.set(b.x,b.y+1.6,b.z);scene.add(l);
+    // each bowl is a little solid
+    CBLK.add(Math.round(b.z)*W+Math.round(b.x));return {o,ing,f,l,i}});
+  g.position.set(R.read.x,R.read.y,R.read.z);g.rotation.y=Math.atan2(gg205Spot().x-R.read.x,gg205Spot().z-R.read.z);ch205Sync();return CH205}
+// where he is and what the circle shows, from the quest state
+function ch205Sync(){if(!CH205.g)return;const R=ch205Spots(),C=CQ205.c1,ev=typeof US205!='undefined'&&US205.E,done=cq205Done(1);
+  const laid=C.st>=2&&!done||!!ev;CH205.brz.forEach(b=>{b.ing.visible=laid;b.f.material.opacity=laid?.9:0;b.l.intensity=laid?1.1:0});
+  if(!ev&&!CH205.to){const at=C.st>=3||done?R.circ:R.read;CH205.g.position.set(at.x,at.y,at.z);CH205.g.rotation.y=C.st>=3||done?R.face+Math.PI:Math.atan2(gg205Spot().x-at.x,gg205Spot().z-at.z)}
+  CH205.pose=ev?'cast':C.st>=3||done?'idle':C.st>=2?'idle':'read'}
+// ---------------- his animation: the model's own idle, plus our layer ----------------
+function ch205Anim(dt,now){const C=CH205.C;if(!C||!CH205.g.visible)return;const t=now/1000;try{C.update(t,dt)}catch(_){}
+  const J=C.J,w=CH205.w,k=1-Math.exp(-dt*6),want={read:CH205.pose==='read'?1:0,cast:CH205.pose==='cast'?1:0,hurt:CH205.hit>0?1:0,down:CH205.pose==='down'?1:0,walk:CH205.sp>.05?1:0};
+  for(const n in want)w[n]=(w[n]||0)+(want[n]-(w[n]||0))*k;CH205.hit=Math.max(0,CH205.hit-dt);
+  const add=(o,x,y,z,m)=>{if(!o||!m)return;o.rotation.x+=x*m;o.rotation.y+=y*m;o.rotation.z+=z*m};
+  // read: right paw at the chin, head up toward the seal
+  add(J.R.sh,-1.25,.2,.55,w.read);add(J.R.el,-1.5,0,0,w.read);add(J.head,-.32,0,.08,w.read);add(J.neck,-.15,0,0,w.read);add(J.L.sh,.15,0,.1,w.read);
+  // cast: both paws raised to the sky, a tremble, the tail stiff
+  const tr=Math.sin(t*23)*.03;add(J.R.sh,-2.4+tr,.1,-.55,w.cast);add(J.L.sh,-2.4-tr,-.1,.55,w.cast);add(J.R.el,-.35,0,0,w.cast);add(J.L.el,-.35,0,0,w.cast);add(J.head,-.42,0,0,w.cast);add(J.spine,-.12,0,0,w.cast);add(J.chest,-.1,0,0,w.cast);
+  // hurt: a flinch
+  add(J.spine,.32,0,.15,w.hurt);add(J.head,.3,.2,0,w.hurt);add(J.R.sh,.4,0,-.4,w.hurt*w.cast);add(J.L.sh,.4,0,.4,w.hurt*w.cast);
+  // walk: legs and arms swing
+  const ph=CH205.wph=(CH205.wph||0)+dt*CH205.sp*7,sw=Math.sin(ph)*.7*w.walk;add(J.LR.th,sw,0,0,1);add(J.LL.th,-sw,0,0,1);add(J.LR.kn,Math.max(0,-Math.sin(ph))*.8*w.walk,0,0,1);add(J.LL.kn,Math.max(0,Math.sin(ph))*.8*w.walk,0,0,1);
+  add(J.R.sh,-sw*.5,0,0,1);add(J.L.sh,sw*.5,0,0,1);
+  // down: he lies on his side
+  C.root.rotation.z=-1.45*svEase.io(Math.min(1,w.down));C.root.position.y=.1*w.down+Math.abs(Math.sin(ph))*.02*w.walk;
+  // the tome and the dome
+  const tm=CH205.tome;tm.visible=w.cast>.15;if(tm.visible){tm.position.set(0,1.3+.05*Math.sin(t*2),.38);tm.rotation.set(-.6+.05*Math.sin(t*3),0,0);tm.scale.setScalar(Math.min(1,w.cast*1.2))}}
+// walk him to a spot (the unbinding: from the gate to his circle), then face it
+function ch205Walk(dt){const T=CH205.to;if(!T){CH205.sp=0;return}const g=CH205.g,dx=T.x-g.position.x,dz=T.z-g.position.z,L=Math.hypot(dx,dz);
+  if(L<.06){g.position.set(T.x,GH(T.x,T.z),T.z);CH205.to=null;CH205.sp=0;if(T.face!=null)g.rotation.y=T.face;if(T.then)try{T.then()}catch(e){console.error('v205 walk',e)}return}
+  const st=Math.min(L,dt*(T.sp||1.6));g.position.x+=dx/L*st;g.position.z+=dz/L*st;g.position.y=GH(g.position.x,g.position.z);CH205.sp=T.sp||1.6;
+  const a=Math.atan2(dx,dz),da=svAng(a-g.rotation.y);g.rotation.y+=Math.max(-dt*6,Math.min(dt*6,da))}
+// ---------------- the window ----------------
+var CH205T={
+  hi0:['Oh! A living face — and one with a weapon. Good. Very good.','Look at it. A blood seal, four rings deep, woven by the court’s magisters. I’ve been reading it for an hour and it has been reading me back.'],
+  seal:['Blood magic binds to blood. Steel won’t cut it, fire won’t burn it — but the court’s own blood will unpick it, thread by thread, if a scholar holds the needle.','Four threads, four keys: ash from a thrall, the heart of a blood bat, a Blood Knight’s signet and a magister’s ink. Every creature on this road carries one or the other.'],
+  go:['Bring me one of each. I’ll prepare the circle while you hunt — and keep your neck covered.'],
+  wait:['Still four keys to find. The thralls, the bats, the knights, the magisters — one from each.'],
+  have:['That’s all four! Hand them here — carefully, the heart is still beating.'],
+  ready:['The keys are in the bowls. When I begin, every fang in the Citadel will feel the seal tearing. It takes two minutes, and I can’t stop once I start.','Keep them off me. If I fall, the seal knits itself back together and we start again.'],
+  after:['Through the gate — before it remembers what it was!'],
+  fell:['Ow. Ow. That… did not go to plan. The seal is whole again, but the keys still burn — speak to me when you are ready to try again.']};
+function ch205Talk(){if(!CH205.C)return;const C=CQ205.c1;if(C.st<1){C.st=1;CQ205.trkK='';CH205.tab='hi0'}else CH205.tab='hi';try{CH205.g.rotation.y=Math.atan2(pl.position.x-CH205.g.position.x,pl.position.z-CH205.g.position.z)}catch(_){}
+  CH205.pose='idle';try{CH205.C.setPose('wave');setTimeout(()=>{try{CH205.C.setPose('idle')}catch(_){}},1400)}catch(_){}openX('ch205')}
+XR.ch205=()=>{const C=CQ205.c1,t=CH205.tab||'hi',n=cq205Bits(C.ing),ev=typeof US205!='undefined'&&US205.E;$('xwT').textContent='🐭 Cheddar';$('xwS').textContent='Scholar of seals · before the Great Gate';
+  let L=CH205T[t]||null;if(!L||t==='hi')L=cq205Done(1)||C.st>=3?CH205T.after:C.st>=2?(CH205.fell?CH205T.fell:CH205T.ready):n>=4?CH205T.have:t==='hi0'?CH205T.hi0:CH205T.wait;
+  let list='';if(C.st===1){list='<div class="cq132g" style="margin-top:6px">'+CH205.ING.map((g,i)=>{const got=C.ing&(1<<i);return '<div style="display:flex;gap:8px;align-items:center;margin:3px 0;opacity:'+(got?1:.8)+'"><span>'+(got?'✅':'▫️')+'</span><b style="color:#f0d8a8">'+g.n+'</b><span class="mut">· from a '+g.from+' — '+g.d+'</span></div>'}).join('')+'</div>'}
+  $('xwB').innerHTML='<div class="cq132say"><span class="cq132who">Cheddar</span>'+L.map(s=>'“'+s+'”').join('<br><br>')+'</div>'+list;
+  const btn=(k,lab,pri)=>'<button class="'+(pri?'pri':'')+'" data-ch205="'+k+'">'+lab+'</button> ';
+  $('xwF').innerHTML=ev?'<span class="mut dtl">He is casting. Keep them off him!</span>':cq205Done(1)||C.st>=3?btn('bye','On my way',1):
+    C.st>=2?btn('begin','Begin the unbinding',1)+btn('bye','Not yet'):n>=4?btn('give','Hand over the four keys',1):
+    t==='hi0'?btn('seal','How do we break it?',1):t==='seal'?btn('go','I’ll bring them',1):btn('seal','Tell me about the keys again')+btn('bye','On my way',1)};
+$('xw').addEventListener('click',ev=>{if(xwMode!='ch205')return;const b=ev.target.closest('[data-ch205]');if(!b)return;const k=b.dataset.ch205;
+  if(k==='bye'){closeX();return}
+  if(k==='begin'){closeX();try{us205Start(true)}catch(err){console.error('v205 unbinding start',err)}return}
+  if(k==='give'){ch205Give(true);rX();return}
+  CH205.tab=k;rX()});
+// all four keys into the bowls
+function ch205Give(own){const C=CQ205.c1;if(C.st!==1||cq205Bits(C.ing)<4)return false;C.st=2;C.ing=0;CQ205.trkK='';CH205.fell=0;ch205Sync();
+  CH205.brz.forEach((b,i)=>{cq205After(.25*i,()=>{const p=new THREE.Vector3();b.o.getWorldPosition(p);p.y+=1.4;burst(p,CH205.ING[i].fl,26,1.2,1.8,.7);svSnd('blood',.6,1.1+i*.1)})});
+  say('🐭 Cheddar sets a key in each bowl of his circle. Ash, heart, signet and ink catch fire, each its own colour.');if(own!==false&&typeof co205Give=='function')co205Give();return true}
+// ---------------- the ingredients: drops, the pickup, the bag ----------------
+function ch205Need(i){const C=CQ205.c1;if(C.st!==1||cq205Done(1)||(C.ing&(1<<i)))return false;try{for(const d of drops)if(d.kind=='cq205'&&d.data.i===i)return false}catch(_){}return true}
+function ch205Drop(i,p){const g=new THREE.Group(),m=ch205Ing(i);m.scale.setScalar(2.2);m.position.y=.32;g.add(m);const beam=new THREE.Mesh(CH205.bG||(CH205.bG=new THREE.CylinderGeometry(.05,.05,1.8,8)),new THREE.MeshBasicMaterial({color:CH205.ING[i].fl,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));
+  beam.position.y=.9;g.add(beam);const a=Math.random()*6.28,d=.5+Math.random()*.8;g.position.set(p.x+Math.cos(a)*d,0,p.z+Math.sin(a)*d);scene.add(g);drops.push({g,gem:m,kind:'cq205',data:{i},t:300});
+  try{burst(gY(g.position,.45),CH205.ING[i].fl,14,1.6,2,.6)}catch(_){}}
+{const f=lootE;lootE=function(e){const r=f.apply(this,arguments);try{if(e&&e.m&&e.c&&!e.boss&&!e.dprop&&!e.us205){const i=CH205.ING.findIndex(g=>g.en===e.c.en);
+    if(i>=0&&ch205Need(i)){const P=e.m.position,I=insAt(Math.round(P.x),Math.round(P.z));if(I&&I.g===insG(5,0)&&Math.random()<CH205.drop)ch205Drop(i,P)}}}catch(err){console.warn('v205 drop',err)}return r}}
+{const f=take;take=function(d){if(d&&d.kind=='cq205'){const i=d.data.i|0,g=CH205.ING[i];if(g&&!(CQ205.c1.ing&(1<<i))){CQ205.c1.ing|=1<<i;CQ205.trkK='';
+      pickup({ic:g.ic,t:g.n,col:'#ffb0a0',sub:'Quest item · '+cq205Bits(CQ205.c1.ing)+' of 4 keys · '+(cq205Bits(CQ205.c1.ing)>=4?'bring them to Cheddar at the gate':g.d)});if(typeof co205Ing=='function')co205Ing(i)}return}return f.apply(this,arguments)}}
+{const f=kqmMatTab;kqmMatTab=function(){const h=f.apply(this,arguments);const m=CQ205.c1.ing;if(!m)return h;
+  const t=CH205.ING.filter((g,i)=>m&(1<<i)).map(g=>`<div class="kqm-slot mi" title="${g.n} · quest item for The Unsealing: ${g.d}. Cheddar needs one of each of the four keys."><span class="kqm-ic">${g.ic}</span><span class="kqm-ct">1</span><span class="kqm-hold">${g.n}</span></div>`).join('');
+  return `<div class="kqm-h">Quest items</div><div class="kqm-grid">${t}${kqmEmpty(8-cq205Bits(m))}</div>`+(/Chop trees, mine rocks/.test(h)?'':h)}}
+// ---------------- prompts and the tick ----------------
+function ch205Prompt(){if(!cq205Here(0)||!CH205.C||!CH205.g.visible)return null;if(typeof US205!='undefined'&&US205.E)return null;const P=pl.position,g=CH205.g.position;
+  if(Math.hypot(P.x-g.x,P.z-g.z)<2.8){const C=CQ205.c1;return {label:C.st===1&&cq205Bits(C.ing)>=4?'F · Give Cheddar the four keys':C.st===2?'F · Speak with Cheddar (begin the unbinding)':'F · Speak with Cheddar',fn:()=>ch205Talk()}}return null}
+{const f=worldPrompt;worldPrompt=function(){try{const r=ch205Prompt();if(r)return r}catch(e){if(!CH205.err++)console.warn('v205 cheddar prompt',e)}return f.apply(this,arguments)}}
+function ch205Tick(dt,now){const here=cq205Here(0);if(here&&!CH205.g&&GG205.S){try{ch205Build()}catch(e){if(!CH205.err++)console.error('v205 cheddar build',e)}}if(!CH205.g)return;
+  const vis=here;CH205.g.visible=vis;CH205.ring.visible=vis;CH205.floor.visible=vis;CH205.brz.forEach(b=>{b.o.visible=vis;if(!vis)b.l.intensity=0;else if(b.ing.visible)b.l.intensity=.9+.3*Math.sin(now/90+b.i)});if(!vis)return;
+  ch205Walk(dt);ch205Anim(dt,now);const t=now/1000,ev=typeof US205!='undefined'&&US205.E;
+  CH205.ring.material.opacity=ev?.55+.25*Math.sin(t*3):.22;CH205.ring.rotation.y+=dt*(ev?.4:.05);
+  CH205.brz.forEach(b=>{if(b.ing.visible){b.ing.rotation.y+=dt*.8;b.ing.position.y=1.1+.05*Math.sin(t*2+b.i);b.f.scale.setScalar(1.1+.2*Math.sin(t*9+b.i*2))}});
+  // first sight of him (the tracker's "someone waits there")
+  if(!CQ205.c1.fd&&Math.hypot(pl.position.x-CH205.g.position.x,pl.position.z-CH205.g.position.z)<16){CQ205.c1.fd=1;say('🐭 A small figure in a scarf stands before the sealed gate, peering up at it through spectacles. Cheddar? Here?')}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{ch205Tick(dt,now)}catch(e){if(!CH205.err++)console.warn('v205 cheddar tick',e)}return r}}
+CQ205L.push(()=>{if(CH205.g){CH205.to=null;ch205Sync()}});
+// ================= v205 The Citadel I · The Unsealing: defend Cheddar for two minutes while he unbinds the blood seal =================
+// The owner: "players have to defend cheddar as he casts the spell to dispel the wall. The duration to protect him is 2 minutes —
+// and during this various vampire creatures mobs will swarm the gate to try to kill you and cheddar. Let's make this event very
+// atmospheric with cinematic dark lighting and unique fight mechanics and attacks."
+//  * Start ("Begin the unbinding", 3732): black bars slide in, the light drains out of the sky, a blood moon rises over the gate
+//    and six pools of red mist open round the clearing. Cheddar walks into his circle, raises his paws and his tome, and the four
+//    keys flare; threads of gold run from him into the seal. US205.T (120 s) of casting; his health is the bar at the top (#us205H).
+//  * The court comes in four quarters (one seal ring breaks at the end of each, 3731 gg205BreakRing):
+//     I   "The court stirs"      thralls rush out of the mist; blood bats dive on Cheddar.
+//     II  "Blood Siphons"        Blood Magisters take up places at the edge and tether a beam of blood to Cheddar: while any beam
+//                                holds he bleeds and the seal stops unwinding (the beam and the HUD show it). Kill the caster.
+//     III "The Eclipse"          the moon goes black: the clearing falls dark but for Cheddar's ward and his four fires; Mist
+//                                Stalkers pour across the ground as red mist (untouchable) and re-form beside him (a ring warns).
+//     IV  "The Gate-Breaker"     Ser Morvaine, a Blood Knight champion, marches on the circle; at Cheddar he raises his greatsword
+//                                over a red ring: hurt him enough during the wind-up (US205.brkI of his health) and he reels,
+//                                otherwise the blow falls on Cheddar (and you, if you are in it). The last 20 s, "the seal
+//                                screams": Nightwing Dives, lanes of bats from the edge to Cheddar: stand in a lane to take the
+//                                swarm yourself, or it tears into him.
+//    About half of the thralls / bats / stalkers go for Cheddar (a proxy target beside him, the rf165 way); hit one and it may turn
+//    on you. Cheddar's Ward Flare (every US205.flare s) throws back and stuns whatever is at him. Inside his circle the light burns
+//    them: they take +25% damage there (US205.ward).
+//  * Fail: Cheddar falls (0 health): the rings knit back, the court melts into mist, he gets up after a while ('fell': speak with
+//    him to try again; the keys stay in the bowls). Leaving, recalling or dying (solo) stops it quietly.
+//  * Win: the last ring, the chains and the sigil burst, the doors grind open (gg205Shatter); the light comes back, the moon fades.
+//    Event creatures give half XP and drop loot 35% of the time.
+// Co-op (3760): the region host runs it (spawns, Cheddar's health, the specials) and sends its state; anyone may begin it.
+var US205={T:120,hpM:100,E:null,cap:14,capC:20,ward:1.25,flare:15,brkI:.12,err:0,sp:null,moon:null,mist:[],lb:null,dk:0,
+  lv:45,said:{},Q:['The court stirs','Blood Siphons','The Eclipse','The Gate-Breaker'],
+  // the four kinds that come: thrall / bat (I…), siphon (II…), stalker (III…), the breaker (IV, one)
+  mix:[[['vamp',6],['bloodbat',4]],[['vamp',5],['bloodbat',3],['siph',2]],[['vamp',4],['bloodbat',3],['siph',2],['mist',3]],[['vamp',4],['bloodbat',4],['siph',2],['mist',3]]]};
+function us205Host(){return typeof co151On!='function'||!co151On()||co151Host()}
+function us205C(){return CH205.g?CH205.g.position:null}
+// ---------------- the six mist pools round the clearing (where the court comes from) ----------------
+function us205Spots(){if(us205Spots.c)return us205Spots.c;const R=ch205Spots(),c=R.circ,S=gg205Spot(),F=S.F,out=[];
+  for(let i=0;i<24&&out.length<6;i++){const a=S.ry+Math.PI+(i%2?1:-1)*Math.floor((i+1)/2)*.26*2.2;for(const r of [10.5,9.5,11.5,8.5]){const x=c.x+Math.sin(a)*r,z=c.z+Math.cos(a)*r,X=Math.round(x),Z=Math.round(z);
+      const J=insAt(X,Z);if(!J||J.g!==F.I.g||solid(X,Z)||MAP.DW[Z*W+X]>-1.3)continue;const [la]=F.L2(x,z);if(la>F.reach-4.5)continue;if(out.some(o=>Math.hypot(o.x-x,o.z-z)<5))continue;out.push({x,z,y:GH(x,z),a});break}}
+  return us205Spots.c=out}
+function us205MistTex(){if(US205.mt)return US205.mt;const N=128,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),g=x.createRadialGradient(N/2,N/2,0,N/2,N/2,N/2);
+  g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.45,'rgba(255,255,255,.45)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,N,N);return US205.mt=new THREE.CanvasTexture(c)}
+function us205MistMake(){if(US205.mist.length)return;us205Spots().forEach((p,i)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(2.4,20).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:us205MistTex(),color:0x8a0a1a,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,fog:true}));
+  m.position.set(p.x,p.y+.12,p.z);m.userData.lpsSkip=1;m.renderOrder=2;scene.add(m);US205.mist.push({m,p,k:0})})}
+// ---------------- the sky: the blood moon (and its eclipse) ----------------
+function us205MoonTex(){if(US205.mnt)return US205.mnt;const N=256,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d'),C=N/2,g=x.createRadialGradient(C,C,40,C,C,C);
+  g.addColorStop(0,'rgba(255,90,70,1)');g.addColorStop(.42,'rgba(200,30,30,1)');g.addColorStop(.5,'rgba(150,10,20,.55)');g.addColorStop(1,'rgba(120,0,10,0)');x.fillStyle=g;x.fillRect(0,0,N,N);
+  const rn=svRng(2099);for(let i=0;i<14;i++){const a=rn()*6.28,r=rn()*50,cr=6+rn()*16;x.fillStyle='rgba(90,0,10,'+(.25+rn()*.3)+')';x.beginPath();x.arc(C+Math.cos(a)*r,C+Math.sin(a)*r,cr,0,Math.PI*2);x.fill()}
+  return US205.mnt=new THREE.CanvasTexture(c)}
+function us205Moon(){if(US205.moon)return US205.moon;const S=gg205Spot(),F=S.F,g=new THREE.Group();
+  const m=new THREE.Sprite(new THREE.SpriteMaterial({map:us205MoonTex(),color:0xffffff,transparent:true,opacity:0,depthWrite:false,fog:false}));m.scale.set(46,46,1);g.add(m);
+  const sh=new THREE.Sprite(new THREE.SpriteMaterial({color:0x050002,transparent:true,opacity:0,depthWrite:false,fog:false,map:us205MistTex()}));sh.scale.set(30,30,1);sh.position.set(0,0,.5);g.add(sh);
+  const [x,z]=F.W2(F.reach+150,-12);g.position.set(x,F.y0+66,z);scene.add(g);g.visible=false;return US205.moon={g,m,sh,k:0,ec:0}}
+// ---------------- the letterbox and the HUD ----------------
+function us205Css(){if(document.getElementById('us205css'))return;const st=document.createElement('style');st.id='us205css';st.textContent=`
+#us205L{position:absolute;inset:0;pointer-events:none;z-index:28}#us205L i{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.1s ease}#us205L i:first-child{top:0}#us205L i:last-child{bottom:0}
+#us205L.on i{height:11vh}#us205V{position:absolute;inset:0;pointer-events:none;z-index:27;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(40,0,6,.55) 100%);opacity:0;transition:opacity 1.5s}
+#us205H{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:min(460px,74vw);z-index:30;pointer-events:none;text-align:center;font:600 13px/1.3 inherit;color:#f6e0c8;text-shadow:0 1px 2px #000}
+#us205H .b{height:10px;margin-top:3px;background:rgba(0,0,0,.65);border:1px solid rgba(255,214,140,.5);border-radius:3px;overflow:hidden}#us205H .b i{display:block;height:100%;background:linear-gradient(90deg,#c8902a,#ffe8a8);transition:width .15s}
+#us205H .s{height:5px;margin-top:3px;display:flex;gap:3px}#us205H .s i{flex:1;background:rgba(0,0,0,.6);border:1px solid rgba(255,40,60,.35);border-radius:2px;overflow:hidden;position:relative}#us205H .s i b{position:absolute;inset:0;width:0;background:linear-gradient(90deg,#8a0a1a,#ff3a4a)}
+#us205H .w{margin-top:3px;font-size:11.5px;color:#ffb0a8;min-height:15px;letter-spacing:.02em}`;document.head.appendChild(st)}
+function us205Hud(){const E=US205.E;let h=document.getElementById('us205H');if(!E||!cq205Here(0)){if(h)h.style.display='none';return}us205Css();
+  if(!h){h=document.createElement('div');h.id='us205H';h.innerHTML='<div class="n"></div><div class="b"><i></i></div><div class="s"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div><div class="w"></div>';($('stage')||document.body).appendChild(h)}
+  h.style.display='';const k=Math.min(1,E.t/US205.T),q=Math.min(3,Math.floor(k*4));h.querySelector('.n').textContent='🐭 Cheddar · breaking the seal · '+Math.round(k*100)+'% · '+US205.Q[q];
+  h.querySelector('.b i').style.width=Math.max(0,100*E.hp/US205.hpM)+'%';h.querySelectorAll('.s b').forEach((b,i)=>{b.style.width=Math.max(0,Math.min(1,k*4-i))*100+'%'});
+  const w=E.siN?'🩸 A blood siphon drinks from Cheddar — the seal has stopped! Kill the magister!':E.brk&&E.brk.wind?'⚔️ The Gate-Breaker raises his sword over Cheddar — hurt him NOW!':E.dive?'🦇 Nightwing Dive — stand in the lane to take the swarm!':E.ecl?'🌑 The Eclipse — stay in the light':'';
+  h.querySelector('.w').textContent=w}
+function us205Letterbox(on){us205Css();let L=document.getElementById('us205L'),V=document.getElementById('us205V');const st=$('stage')||document.body;
+  if(!L){L=document.createElement('div');L.id='us205L';L.innerHTML='<i></i><i></i>';st.appendChild(L)}if(!V){V=document.createElement('div');V.id='us205V';st.appendChild(V)}
+  L.className=on?'on':'';V.style.opacity=on==null?V.style.opacity:US205.E?1:0}
+// ---------------- start / stop ----------------
+function us205Start(own){const C=CQ205.c1;if(US205.E||C.st!==2||cq205Done(1)||!cq205Here(0)||!CH205.C||hero.hp<=0)return false;
+  if(own&&typeof co151On=='function'&&co151On()&&!co151Host()){if(typeof co205Ask=='function')co205Ask();return false}
+  const R=ch205Spots();US205.E={t:0,hp:US205.hpM,go:0,sp:2.2,flare:US205.flare*.6,q:0,said:{},siN:0,brk:null,brkDone:0,dive:null,diveT:6,ecl:0,eclT:0,lt:5+Math.random()*4,fx:0,stall:0,hb:0};
+  if(riding)try{dismount()}catch(_){}
+  CH205.to={x:R.circ.x,z:R.circ.z,face:R.face+Math.PI,sp:1.8,then(){const E=US205.E;if(!E)return;E.go=1;CH205.pose='cast';svSnd('charge',.8,.55);try{dg165Snd('drone',.9,.6)}catch(_){}}};CH205.pose='idle';CH205.fell=0;
+  us205Letterbox(true);cq205After(5,()=>{if(US205.E)us205Letterbox(false)});us205MistMake();us205Moon().g.visible=true;
+  cq205Card('The Citadel · Main Quest','The Unsealing','Hold the court off Cheddar while he unbinds the seal','Two minutes. Do not let him fall.');
+  say('🐭 Cheddar: “Here we go. Whatever comes out of the dark — keep it off me!”');svSnd('bell',.9,.45);try{dg165Snd('rumble',1,.6)}catch(_){}shake(.3);
+  if(own!==false&&typeof co205Ev=='function')co205Ev('start');CQ205.trkK='';return true}
+// ends it: 'won' · 'fall' (Cheddar fell) · 'quiet' (left, recalled, died)
+function us205Stop(why){const E=US205.E;if(!E)return;US205.E=null;CQ205.trkK='';us205Hud();us205Letterbox(false);
+  const melt=s=>{if(s.dead)return;burst(gY(s.m.position,.9),0x8a0a1a,18,1.6,1.4,.7);try{removeE(s)}catch(_){}};
+  enemies.slice().forEach(s=>{if(s.us205){if(why==='fall')cq205After(.4+Math.random()*1.4,()=>melt(s));else melt(s)}});us205Tethers([]);
+  if(E.brk&&E.brk.W)try{E.brk.W.kill()}catch(_){}if(E.dive&&E.dive.W)E.dive.W.forEach(w=>{try{w.kill()}catch(_){}});
+  if(why==='won')return;
+  // the seal knits back together
+  gg205Sync();CH205.to=null;
+  if(why==='fall'){CH205.pose='down';CH205.fell=1;svSnd('roar',.6,.5);say('💀 Cheddar falls — the rings of the seal snap back into place, and the court melts laughing into the mist.');
+    cq205After(6,()=>{if(US205.E)return;CH205.pose='idle';ch205Sync();say('🐭 Cheddar drags himself up, rubbing his head. The keys still burn in their bowls. Speak with him to try again.')})}
+  else{CH205.pose='idle';ch205Sync()}}
+// ---------------- the court: spawning ----------------
+function us205Count(k){let n=0;enemies.forEach(e=>{if(e.us205===k&&!e.dead)n++});return n}
+function us205Alive(){let n=0;enemies.forEach(e=>{if(e.us205&&!e.dead)n++});return n}
+function us205Spawn(kind,at){const L=us205Spots(),p=at||L[Math.floor(Math.random()*L.length)];if(!p)return null;const lv=US205.lv-1+Math.floor(Math.random()*3);
+  const en=kind==='siph'?'vampm':kind==='mist'?'nosferatu':kind==='brk'?'vampk':kind;let e=null;const x=p.x+(Math.random()-.5)*2,z=p.z+(Math.random()-.5)*2;
+  try{e=spawnEnemy(en,x,z,kind==='brk'?lv+2:lv,{agg:1,elite:kind==='brk'?1:0})}catch(err){if(!US205.err++)console.error('v205 spawn',err)}if(!e)return null;
+  e.us205=kind==='vamp'?'thrall':kind==='bloodbat'?'bat':kind;e.agg=1;e.hunt=1;e.usP=new THREE.Object3D();e.usP.us205K=1;
+  // the swarm is many and weak; the specials are sturdier
+  const hk=e.us205==='thrall'?.55:e.us205==='bat'?.45:e.us205==='siph'?.8:e.us205==='mist'?.7:2.6;try{e.c.st.hp*=hk;e.c.h=Math.max(1,Math.round(M(e.c)))}catch(_){}
+  e.usK=e.us205==='bat'?(Math.random()<.7?1:0):e.us205==='thrall'?(Math.random()<.5?1:0):0;
+  if(e.us205==='siph'){e.usS={st:'walk',t:0,to:us205SiphSpot()};e.c.n='Blood Siphoner'}
+  if(e.us205==='mist'){e.usM={st:'mist',t:0};e.c.n='Mist Stalker';e.m.visible=false;if(e.hb)e.hb.visible=false;e.usK=1}
+  if(e.us205==='brk'){e.usB={st:'march',t:0,cd:2};e.c.n='Ser Morvaine, the Gate-Breaker';try{e.m.scale.multiplyScalar(1.3)}catch(_){}e.usK=1}
+  burst(gY(e.m.position,.7),0x8a0a1a,22,1.6,1.6,.7);return e}
+// a siphoner's place at the edge, away from the others, facing Cheddar
+function us205SiphSpot(){const c=us205C()||new THREE.Vector3(),L=us205Spots();let best=null,bd=-1;L.forEach(p=>{let d=99;enemies.forEach(e=>{if(e.us205==='siph'&&!e.dead&&e.usS&&e.usS.to)d=Math.min(d,Math.hypot(e.usS.to.x-p.x,e.usS.to.z-p.z))});if(d>bd){bd=d;best=p}});
+  if(!best)return {x:c.x+6,z:c.z};const dx=best.x-c.x,dz=best.z-c.z,l=Math.hypot(dx,dz)||1,r=Math.min(l,8.5);return {x:c.x+dx/l*r,z:c.z+dz/l*r}}
+// ---------------- the siphon tethers (drawn from a list of caster spots, so a partner sees them too) ----------------
+var US205T=[];
+function us205Tethers(list){const c=us205C();while(US205T.length>list.length){const t=US205T.pop();scene.remove(t.m);t.m.material.dispose()}
+  while(US205T.length<list.length){const m=new THREE.Mesh(US205.tg||(US205.tg=(()=>{const g=new THREE.CylinderGeometry(.07,.07,1,6,1,true);g.translate(0,.5,0);g.rotateX(Math.PI/2);return g})()),
+      new THREE.MeshBasicMaterial({color:0xff1a2a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));m.userData.lpsSkip=1;m.renderOrder=4;scene.add(m);US205T.push({m})}
+  if(!c)return;list.forEach((p,i)=>{const t=US205T[i],a=new THREE.Vector3(p.x,GH(p.x,p.z)+1.6,p.z),b=new THREE.Vector3(c.x,c.y+.6,c.z),L=a.distanceTo(b);t.m.position.copy(a);t.m.lookAt(b);t.m.scale.set(1+.4*Math.sin(performance.now()/90+i),1+.4*Math.sin(performance.now()/90+i),L);
+    t.m.visible=cq205Here(0);if(Math.random()<.5)burst(b.clone().lerp(a,Math.random()),0xff2a3a,1,.15,.2,.5)})}
+// ---------------- the tick ----------------
+function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
+  if(!E){US205.mist.forEach(o=>{o.k=Math.max(0,o.k-dt*.5);o.m.material.opacity=o.k*.7;o.m.visible=o.k>.01&&cq205Here(0)});return}
+  {const co=typeof co151On=='function'&&co151On();if(!cq205Here(0)){us205Stop('quiet');if(co&&co151Host()&&typeof co205Ev=='function')co205Ev('quiet');return}
+    if(co?(co151Host()&&!co151Standing()):hero.hp<=0){us205Stop('quiet');if(co&&typeof co205Ev=='function')co205Ev('quiet');return}}
+  const host=us205Host(),c=us205C(),k=Math.min(1,E.t/US205.T),q=Math.min(3,Math.floor(k*4));
+  // the mist pools breathe
+  US205.mist.forEach((o,i)=>{o.k=Math.min(1,o.k+dt*.6);o.m.visible=true;o.m.material.opacity=o.k*(.55+.15*Math.sin(t*1.3+i));o.m.rotation.y+=dt*.2;if(Math.random()<dt*6)burst(new THREE.Vector3(o.p.x+(Math.random()-.5)*3,o.p.y+.3,o.p.z+(Math.random()-.5)*3),0x6a0a14,1,.4,.9,1.2)});
+  if(!E.go)return us205Hud();
+  // the siphons: casters standing at their place tether him; while any holds he bleeds and the seal stalls
+  const sl=[];enemies.forEach(e=>{if(e.us205==='siph'&&!e.dead&&e.usS&&e.usS.st==='drain')sl.push({x:e.m.position.x,z:e.m.position.z})});if(host)E.sl=sl;us205Tethers(E.sl||sl);E.siN=(E.sl||sl).length;
+  if(E.siN){if(!E.said.si){E.said.si=1;say('🩸 A magister’s blood siphon locks onto Cheddar — while it holds, the seal will not unwind. Kill the caster!')}}
+  // progress (stalls under a siphon) and his health (host)
+  if(host){if(!E.siN)E.t+=dt;else{E.stall+=dt;E.hp-=dt*1.6*E.siN}}
+  // threads of gold from his paws into the seal
+  if(Math.random()<dt*20&&GG205.S&&GG205.S.seal){const a=new THREE.Vector3(c.x,c.y+1.3,c.z),b=new THREE.Vector3();GG205.S.seal.g.getWorldPosition(b);b.x+=(Math.random()-.5)*5;b.y+=(Math.random()-.5)*5;burst(a.clone().lerp(b,Math.random()),E.siN?0xff3a3a:0xffe0a0,1,.3,.3,.5)}
+  // his ward dome
+  if(CH205.dome){const d=CH205.dome;d.position.set(0,0,0);d.scale.setScalar(1+.04*Math.sin(t*3));d.material.opacity=(.07+.05*Math.sin(t*2.4))*(E.hp>30?1:.6+.4*Math.sin(t*14));d.material.color.setHex(E.hp>30?0xffe0a0:0xff7a5a);d.visible=true}
+  // the Ward Flare: throws back what is at him
+  E.flare-=dt;if(E.flare<=0){E.flare=US205.flare;ring(c,0xffe0a0,4.6,700);burst(gY(c,1),0xffe8b0,50,3.4,1.6,.7);svSnd('gong',.5,1.5);CH205.hit=0;
+    enemies.forEach(s=>{if(!s.us205||s.dead||s.us205==='brk'&&s.usB&&s.usB.st==='wind')return;const dx=s.m.position.x-c.x,dz=s.m.position.z-c.z,L=Math.hypot(dx,dz);if(L<4.6&&L>.01){s.vx=(s.vx||0)+dx/L*10;s.vz=(s.vz||0)+dz/L*10;try{eStatus(s,{stun:1.4},0,'h')}catch(_){}}})}
+  // the quarters: a ring breaks at the end of each; a title line at the start of each
+  if(q>E.q){for(let i=E.q;i<q;i++)gg205BreakRing(i);E.q=q;us205Quarter(q)}else if(!E.said['q0']){E.said.q0=1;us205Quarter(0)}
+  // the eclipse (III): dark for a while
+  E.ecl=q===2&&k<.68?1:0;
+  // the court (host): keep the mix coming, faster as it goes
+  if(host){E.sp-=dt;const cap=(typeof co151On=='function'&&co151On())?US205.capC:US205.cap;if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k);const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
+        let n=1+Math.floor(Math.random()*(1.4+k*2.2));for(let j=0;j<n&&alive+j<cap;j++){let u=Math.random()*tot,kind=mix[0][0];for(const m of mix){u-=m[1];if(u<=0){kind=m[0];break}}
+          if(kind==='siph'&&us205Count('siph')>=(q>=3?3:2))kind='vamp';if(kind==='mist'&&us205Count('mist')>=4)kind='bloodbat';us205Spawn(kind)}}}
+    // the Gate-Breaker comes once, at the start of IV
+    if(q>=3&&!E.brkDone){E.brkDone=1;const L=us205Spots();const far=L.reduce((a,p)=>!a||Math.hypot(p.x-c.x,p.z-c.z)>Math.hypot(a.x-c.x,a.z-c.z)?p:a,null);us205Spawn('brk',far)}
+    // Nightwing Dives in the last stretch
+    if(k>=.82){E.diveT-=dt;if(E.diveT<=0&&!E.dive){E.diveT=4.2-k*1.6;us205Dive()}}
+    if(E.hp<=0){E.hp=0;if(typeof co205Ev=='function')co205Ev('fall');us205Stop('fall');return}
+    if(E.t>=US205.T){us205Win();return}}
+  us205DiveTick(dt);
+  // his heart, when he is hurt
+  if(E.hp<35){E.hb-=dt;if(E.hb<=0){E.hb=E.hp<18?.55:.9;try{dg165Snd('heart',.8,1)}catch(_){}}}
+  // lightning over the gate now and then
+  E.lt-=dt;if(E.lt<=0){E.lt=5+Math.random()*7;us205Bolt()}
+  // first time someone fights inside the circle
+  if(!E.said.wd&&Math.hypot(pl.position.x-c.x,pl.position.z-c.z)<ch205Spots().r&&enemies.some(s=>s.us205&&!s.dead&&Math.hypot(s.m.position.x-c.x,s.m.position.z-c.z)<ch205Spots().r)){E.said.wd=1;say('✨ Cheddar’s circle burns the court: inside it they take more damage.')}
+  us205Hud()}
+function us205Quarter(q){const tx=[['The court stirs','Thralls and bats pour out of the mist'],['Blood Siphons','Kill the magisters before they drain him'],['The Eclipse','The moon goes black: stay in the light'],['The Gate-Breaker','Stop his blade — then hold to the end']][q];
+  try{cq205Card('The Unsealing · '+['I','II','III','IV'][q],tx[0],tx[1],'')}catch(_){}
+  if(q===2){svSnd('roar',.7,.4);try{dg165Snd('wail',1,.7)}catch(_){}shake(.3);say('🌑 Something slides across the blood moon. The clearing goes dark — only Cheddar’s circle still burns.')}
+  if(q===3)say('⚔️ Heavy footsteps on the road. A Blood Knight in black plate, taller than the rest — Ser Morvaine, the Gate-Breaker — marches on Cheddar.');
+  if(q===1)say('🩸 Robed magisters glide out of the mist, blood dripping from their fingers.')}
+function us205Win(){const E=US205.E;if(!E)return;if(typeof co205Ev=='function')co205Ev('won');const C=CQ205.c1;C.st=Math.max(C.st,3);CQ205.trkK='';us205Stop('won');
+  CH205.pose='idle';ch205Sync();gg205Shatter();if(typeof co205Credit=='function')co205Credit('c1');
+  cq205After(1.2,()=>{cq205Card('The Citadel · Main Quest','The Seal Is Broken','The doors of the Great Gate grind open','The way to '+cq205I(1).n+' lies open');try{mSfx('victory')}catch(_){}});
+  say('🐭 Cheddar: “HA! Unwound, every thread of it! The doors — go, go, before the stones remember what they were!”')}
+// ---------------- lightning ----------------
+function us205Bolt(){const S=gg205Spot(),F=S.F,[x,z]=F.W2(F.reach+4+Math.random()*10,(Math.random()-.5)*26);try{flash('rgba(255,210,220,.22)')}catch(_){}US205.bolt=.25;
+  try{dg165Snd('rumble',.9,.7+Math.random()*.3)}catch(_){}svSnd('crack',.5,.4+Math.random()*.2);const y=GH(x,z);for(let i=0;i<12;i++)burst(new THREE.Vector3(x+(Math.random()-.5)*.6,y+18-i*1.6,z+(Math.random()-.5)*.6),0xffd8e0,1,.1,.1,.18)}
+// ---------------- the specials' own minds ----------------
+function us205AI(e,dt,now){const E=US205.E,c=us205C();if(!E||!c)return false;
+  if(e.us205==='siph'){const S=e.usS;S.t+=dt;if(S.st==='walk'){const dx=S.to.x-e.m.position.x,dz=S.to.z-e.m.position.z,L=Math.hypot(dx,dz);if(L>.3&&S.t<8){const st=Math.min(L,dt*2.6);walkM(e.m,dx/L*st,dz/L*st);e.m.rotation.y=Math.atan2(dx,dz);animC(e.m,now,true,2.6);}
+      else{S.st='drain';S.t=0;e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);svSnd('hiss',.6,.7)}return true}
+    if(S.st==='drain'){e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);animC(e.m,now,false,0);if(Math.random()<dt*3)burst(gY(e.m.position,1.6),0xff2a3a,2,.4,.6,.5);return true}return false}
+  if(e.us205==='mist'){const S=e.usM;if(S.st==='mist'){S.t+=dt;e.m.visible=false;if(e.hb)e.hb.visible=false;const dx=c.x-e.m.position.x,dz=c.z-e.m.position.z,L=Math.hypot(dx,dz);
+      if(L>2.4&&S.t<5){const st=Math.min(L-2.2,dt*7.5);e.m.position.x+=dx/L*st;e.m.position.z+=dz/L*st;if(Math.random()<.9)burst(new THREE.Vector3(e.m.position.x+(Math.random()-.5),GH(e.m.position.x,e.m.position.z)+.3+Math.random()*.6,e.m.position.z+(Math.random()-.5)),0x7a0a16,2,.6,.6,.6);
+        if(Math.random()<.2)burst(gY(e.m.position,1.2),0xff2030,1,.05,.05,.3)}
+      else{S.st='form';S.t=0;S.W=svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},.9,{col:0xb01020});svSnd('hiss',.8,.5)}return true}
+    if(S.st==='form'){S.t+=dt;if(S.t>=.9){S.st='hunt';e.m.visible=true;burst(gY(e.m.position,1),0x8a0a1a,40,2,1.6,.7);const P=pl.position;if(hero.hp>0&&Math.hypot(P.x-e.m.position.x,P.z-e.m.position.z)<1.6)hitTarget(e,pl,1.1);
+        try{CH205.hit=.4;if(us205Host()&&US205.E)US205.E.hp-=4}catch(_){}}return true}return false}
+  if(e.us205==='brk'){const S=e.usB;S.cd=Math.max(0,S.cd-dt);const dx=c.x-e.m.position.x,dz=c.z-e.m.position.z,L=Math.hypot(dx,dz);
+    if(S.st==='march'){if(L>2.6){e.m.rotation.y=Math.atan2(dx,dz);const st=Math.min(L-2.4,dt*2.0);walkM(e.m,dx/L*st,dz/L*st);animC(e.m,now,true,2);if(Math.random()<dt*2)svSnd('step',.9,.6);return true}
+      if(S.cd<=0){S.st='wind';S.t=0;S.h0=e.c.h;E.brk={wind:1,W:svWarn({k:'c',r:2.4},{x:c.x,z:c.z,a:0},2.2,{col:0xd01808})};svSnd('swing',.9,.5);svSnd('roar',.5,.7);if(!E.said.brk){E.said.brk=1;say('⚔️ He raises the greatsword over Cheddar — hurt him before it falls!')}}animC(e.m,now,false,0);return true}
+    if(S.st==='wind'){S.t+=dt;e.m.rotation.y=Math.atan2(dx,dz);e.usWind=Math.min(1,S.t/2.2);
+      if(S.h0-e.c.h>=M(e.c)*US205.brkI){S.st='reel';S.t=0;E.brk=null;e.usWind=0;popT(e.m.position,'INTERRUPTED','#ffd860',true);svSnd('stag',1,.8);try{eStatus(e,{stun:2.2},0,'h')}catch(_){}return true}
+      if(S.t>=2.2){S.st='march';S.cd=5.5;E.brk=null;e.usWind=0;const p=new THREE.Vector3(c.x,0,c.z);svShock(p,0xff2a20,2.6,.5);burst(gY(p,.5),0xff3020,40,2.4,2,.7);shake(.45);svSnd('heavy',1.2,.6);
+        if(us205Host()&&US205.E){US205.E.hp-=22;CH205.hit=.6}if(hero.hp>0&&Math.hypot(pl.position.x-c.x,pl.position.z-c.z)<2.75)hitTarget(e,pl,1.8)}return true}
+    if(S.st==='reel'){S.t+=dt;animC(e.m,now,false,0);if(S.t>2.2){S.st='march';S.cd=3}return true}return false}
+  return false}
+// ---------------- Nightwing Dives: lanes of bats from the edge into Cheddar ----------------
+function us205Dive(){const E=US205.E,c=us205C();if(!E||!c)return;const L=us205Spots(),n=E.t/US205.T>.92?2:1,W=[],lanes=[];
+  for(let i=0;i<n;i++){const p=L[Math.floor(Math.random()*L.length)],a=Math.atan2(c.x-p.x,c.z-p.z),len=Math.hypot(c.x-p.x,c.z-p.z);lanes.push({x:p.x,z:p.z,a,len});W.push(svWarn({k:'l',w:2.2,l:len,b:0},{x:p.x,z:p.z,a},1.7,{col:0xb01020}))}
+  E.dive={t:0,lanes,W,fired:0};if(!E.said.dive){E.said.dive=1;say('🦇 The seal screams. Bats mass at the edge — stand in their lane to take the swarm yourself!')}svSnd('shriek',.7,.8);if(typeof co205Dive=='function')co205Dive(lanes)}
+function us205DiveTick(dt){const E=US205.E;if(!E||!E.dive)return;const D=E.dive,c=us205C();D.t+=dt;
+  if(!D.fired&&D.t>=1.7){D.fired=1;D.lanes.forEach(l=>{const P=pl.position,dx=P.x-l.x,dz=P.z-l.z,f=dx*Math.sin(l.a)+dz*Math.cos(l.a),s=Math.abs(dx*Math.cos(l.a)-dz*Math.sin(l.a)),inL=hero.hp>0&&f>-.4&&f<l.len-1.2&&s<1.3;
+      // the swarm streaks down the lane
+      for(let i=0;i<26;i++){const u=Math.random()*(inL?Math.max(1,f):l.len);burst(new THREE.Vector3(l.x+Math.sin(l.a)*u+(Math.random()-.5),GH(l.x,l.z)+.8+Math.random()*1.4,l.z+Math.cos(l.a)*u+(Math.random()-.5)),0x2a0a10,2,1.2,.6,.5)}
+      svSnd('shriek',.9,1.1);
+      if(inL){const src=enemies.find(s=>s.us205&&!s.dead)||{c:{mt:'p',l:US205.lv},m:{position:P}};try{hitTarget(src,pl,.9)}catch(_){}popT(P,'SHIELDED HIM','#ffe0a0',true);
+        if(us205Host())E.hp=Math.min(US205.hpM,E.hp+1)}
+      else if(us205Host()){E.hp-=7;CH205.hit=.5;burst(gY(c,.9),0xff2030,20,1.2,1.2,.5)}})}
+  E.diveFlag=D.t<1.7;if(D.t>2.2)E.dive=null}
+// ---------------- the darkness, the moon, lightning (atmos) ----------------
+function us205Sky(dt,t){const E=US205.E,here=cq205Here(0),M=US205.moon;const want=E&&here?(E.ecl?1:.72):0;US205.dk+=(want-US205.dk)*Math.min(1,dt*(want>US205.dk?.7:.35));
+  if(M){M.k+=((E&&here?1:0)-M.k)*Math.min(1,dt*.5);M.ec+=((E&&E.ecl?1:0)-M.ec)*Math.min(1,dt*.8);M.g.visible=M.k>.01&&here;M.m.material.opacity=M.k*.95;M.sh.material.opacity=M.ec*.97;M.sh.position.x=(1-M.ec)*30}
+  US205.bolt=Math.max(0,(US205.bolt||0)-dt)}
+{const f=atmos;atmos=function(dt,now){const r=f.apply(this,arguments);try{const d=US205.dk;if(d>.002&&cq205Here(0)){const b=US205.bolt>0?US205.bolt*4:0;
+      sun.intensity*=Math.max(.04,1-.86*d)+b*.6;hemi.intensity*=Math.max(.1,1-.72*d)+b*.8;
+      const fc=US205.fc||(US205.fc=new THREE.Color(0x1a0206));scene.fog.color.lerp(fc,.75*d);scene.background=scene.fog.color;scene.fog.density*=1+.35*d;
+      try{const su=SKY.material.uniforms;su.top.value.lerp(fc,.85*d);su.hor.value.lerp(fc,.75*d)}catch(_){}}}catch(_){}return r}}
+// ---------------- hooks ----------------
+// half of them go for Cheddar: a proxy target beside him
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.us205&&e.usK&&US205.E&&CH205.g){const K=CH205.g.position,dx=m.position.x-K.x,dz=m.position.z-K.z,L=Math.hypot(dx,dz)||1;e.usP.position.set(K.x+dx/L*.9,K.y,K.z+dz/L*.9);return e.usP}return f.apply(this,arguments)}}
+{const f=hitTarget;hitTarget=function(e,tg,mult,mt){if(tg&&tg.us205K){const E=US205.E;if(!E||!us205Host())return;const d=(e&&e.us205==='bat'?1.1:1.5)*(mult||1);E.hp-=d;CH205.hit=.3;
+    if(CH205.g)burst(gY(CH205.g.position,.6),0xff3a3a,6,.8,.8,.4);return}return f.apply(this,arguments)}}
+{const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.us205){if(e.us205==='mist'&&e.usM&&e.usM.st!=='hunt')return;
+    const c=us205C();if(c&&US205.E&&Math.hypot(e.m.position.x-c.x,e.m.position.z-c.z)<ch205Spots().r+.3)d*=US205.ward;
+    if(e.usK&&e.us205!=='brk'&&!dot&&Math.random()<.35)e.usK=0}return f.apply(this,arguments)}}
+{const f=eTick;eTick=function(e,dt,now){if(e&&e.us205&&US205.E){try{if(us205AI(e,dt,now))return true}catch(err){if(!US205.err++)console.error('v205 ai',err)}}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){if(e&&e.usM&&e.usM.W)try{e.usM.W.kill()}catch(_){}if(e&&e.us205==='brk'&&US205.E&&US205.E.brk){try{US205.E.brk.W.kill()}catch(_){}US205.E.brk=null}return f.apply(this,arguments)}}
+// half XP, loot 35% of the time
+{const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return e&&e.us205?k*.5:k}}
+{const f=lootE;lootE=function(e){if(e&&e.us205&&Math.random()>.35)return;return f.apply(this,arguments)}}
+// no mount while it lasts; recall just ends it
+{const f=toggleMount;toggleMount=function(){if(US205.E&&!riding)return say('🐭 No time for that — Cheddar needs you here!');return f.apply(this,arguments)}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{us205Tick(dt,now)}catch(e){if(!US205.err++)console.warn('v205 unsealing tick',e)}return r}}
+// a save made during it loads before it (the keys still in the bowls)
+CQ205L.unshift(()=>{if(US205.E)us205Stop('quiet')});
