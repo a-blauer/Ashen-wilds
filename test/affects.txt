@@ -108,5 +108,6 @@ v197|3680|relaxed|arms|elbow: v197_arms.py v137_npcs.py v142_folk.py v196_meadow
 v198|1680|2270|deadTree|reeds|fountain|rim|stall|exit|v198_limbs: v198_town.py v177_env.py v196_meadow.py v197_arms.py
 v199|3690|inn|tavern|portal-rooms|portalPrompt|townPortalPrompt|promptTick: v199_town.py v196_meadow.py v32t.py v108_instances.py
 v200|37[01][0-9]|station|hatch|egg|trainer|stable|cook|curio|treasur|scholar|bestiary|beast-den|0440|0490|0570|1040|1050|0530|1870|1880|2985: v200_stations.py v200_coop.py v103_kingdom.py v109_kingdom_shops.py v117_menus.py v57t.py v100_fusemenu.py v198_town.py v190_deco.py v122_support.py
-3725|v203|vaelric: v202_vaelric.py v202_coop.py v146_sovs.py v110_fight.py v141_sov.py v192_sov_range.py v179_enemy_parts.py
+3725|v204|vaelric: v202_vaelric.py v202_coop.py v146_sovs.py v110_fight.py v141_sov.py v192_sov_range.py v179_enemy_parts.py
 v202|bone-tex|skeleton: v202_bones.py v108_instances.py v113_roster.py
+v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v202_bones.py

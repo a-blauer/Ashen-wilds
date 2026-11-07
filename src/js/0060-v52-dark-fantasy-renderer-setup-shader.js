@@ -167,13 +167,14 @@ function windMat(mat,amp,off){
     vWP2=(modelMatrix*vec4(transformed,1.)).xyz;
     #endif`);
     sh.uniforms.uM157w=M157;ob176Shader(sh);
+    if(mat.transparent)sh.fragmentShader='#define OB203_KEEPA\n'+sh.fragmentShader;   // v203: mist and webs keep their own see-through alpha (v192 set it to 1: solid pale discs in dark squares)
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uCam,uPl;uniform float uM157w;varying vec3 vWP2;').replace('void main() {',`void main() {
     if(uM157w>.5){float f=1.-ob176Bx(vWP2)*ob176Fr(vWP2,uCam,uPl)*(1.-uObK)*smoothstep(-.6,-.3,vWP2.y-uPl.y);   // v176: a plant in the way is dithered whole (3361); grass stays
      ob192Fade(f);}   // v192: semi-transparent where multisampled (3570)
     else{vec3 ab=uPl-uCam;float t=clamp(dot(vWP2-uCam,ab)/dot(ab,ab),0.,1.);float d=length(vWP2-(uCam+ab*t));
      float f=smoothstep(.8,2.3,d);f*=smoothstep(.5,2.4,length(vWP2-uCam));f=mix(f,1.,smoothstep(.86,.97,t));
      float dh=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(.06711056,.00583715))));if(f<dh)discard;}`)};
-  mat.customProgramCacheKey=()=>'ifx';if(!mat.transparent)mat.alphaToCoverage=true;mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
+  mat.customProgramCacheKey=()=>mat.transparent?'ifxt':'ifx';if(!mat.transparent)mat.alphaToCoverage=true;mat.userData.ob176=1;mat.userData.ob176Fl=-.6;
 }
 function buildVI(){
   const chk={};buildTerrain(chk);
