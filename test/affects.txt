@@ -111,3 +111,6 @@ v200|37[01][0-9]|station|hatch|egg|trainer|stable|cook|curio|treasur|scholar|bes
 3725|v204|vaelric: v202_vaelric.py v202_coop.py v146_sovs.py v110_fight.py v141_sov.py v192_sov_range.py v179_enemy_parts.py
 v202|bone-tex|skeleton: v202_bones.py v108_instances.py v113_roster.py
 v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v202_bones.py
+# v205 the Citadel main quest (3730–3760)
+373[0-9]|374[0-9]|375[0-9]|citadel|vharog|unseal|cheddar|1970|3050|3345|0510|1940: v205_unsealing.py v205_vharog.py v205_mirrors.py
+3760|373[0-9]|374[0-9]|375[0-9]|3180|coop|co-op|0520: v205_coop.py

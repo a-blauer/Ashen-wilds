@@ -71313,7 +71313,7 @@ function us205DiveTick(dt){const E=US205.E;if(!E||!E.dive)return;const D=E.dive,
   if(!D.fired&&D.t>=1.7){D.fired=1;D.lanes.forEach(l=>{const P=pl.position,dx=P.x-l.x,dz=P.z-l.z,f=dx*Math.sin(l.a)+dz*Math.cos(l.a),s=Math.abs(dx*Math.cos(l.a)-dz*Math.sin(l.a)),inL=hero.hp>0&&f>-.4&&f<l.len-1.2&&s<1.3;
       // the swarm streaks down the lane
       for(let i=0;i<26;i++){const u=Math.random()*(inL?Math.max(1,f):l.len);burst(new THREE.Vector3(l.x+Math.sin(l.a)*u+(Math.random()-.5),GH(l.x,l.z)+.8+Math.random()*1.4,l.z+Math.cos(l.a)*u+(Math.random()-.5)),0x2a0a10,2,1.2,.6,.5)}
-      svSnd('shriek',.9,1.1);
+      try{sk146Swarm(new THREE.Vector3(l.x,GH(l.x,l.z)+1.2,l.z),new THREE.Vector3(l.x+Math.sin(l.a)*(inL?Math.max(1,f):l.len),GH(l.x,l.z)+1,l.z+Math.cos(l.a)*(inL?Math.max(1,f):l.len)),22,0x1a0a10,'bat',.45,{spread:1.1,arc:.6})}catch(_){}svSnd('shriek',.9,1.1);
       if(inL){const src=enemies.find(s=>s.us205&&!s.dead)||{c:{mt:'p',l:US205.lv},m:{position:P}};try{hitTarget(src,pl,.9)}catch(_){}popT(P,'SHIELDED HIM','#ffe0a0',true);
         if(us205Host())E.hp=Math.min(US205.hpM,E.hp+1)}
       else if(us205Host()){E.hp-=7;CH205.hit=.5;burst(gY(c,.9),0xff2030,20,1.2,1.2,.5)}})}
