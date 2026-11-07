@@ -47,7 +47,7 @@ def s(pg):
     t=R['turn']
     if t['lit0']!=2 or t['lit1']!=3 or t['st']!=3 or not t['door']:F('turning the mirrors did not lead the beam to the door: %s'%t)
     if t['seal'] or t['rot']<1.2 or t['dk']<.3:F('Dawnbreak did not open the door / light the court: %s'%t)
-    if 'den' not in t['prompt'] or t['ins']!=28 or t['st4']!=4:F('the door did not take the hero to the Den: %s'%t)
+    if 'Den' not in t['prompt'] or t['ins']!=28 or t['st4']!=4:F('the door did not take the hero to the Den: %s'%t)
     v=R['save']
     if not v['c3'] or v['c3']['st']!=4:F('chapter III was not saved: %s'%v)
     if v['st']!=2 or v['lit']!=3 or v['door'] or not v['seal']:F('a turning save did not restore the mirrors: %s'%v)

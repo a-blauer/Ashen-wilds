@@ -158,7 +158,7 @@ function dm205Prompt(){if(!cq205Here(2)||!DM205.S)return null;const P=pl.positio
   for(const s of S.st){const p=R.st[s.i];if(!near(p.x,p.z,2.4))continue;const on=C.mnt&(1<<s.i);
     if(!on){if(C.got)return {label:'F · Mount a Dawn Mirror on the stand',fn:()=>{const i=s.i;if(C.got&(1<<i))dm205Mount(i,true);else{for(let j=0;j<3;j++)if(C.got&(1<<j)){C.got&=~(1<<j);C.got|=1<<i;break}dm205Mount(i,true)}}};return {label:'🌞 An empty mirror stand',fn:()=>say('🌞 A bronze fork on a stone plinth, made to hold a great round mirror.')}}
     if(C.st===2)return {label:'F · Turn the Dawn Mirror (⟳ an eighth)',fn:()=>dm205Turn(s.i,true)}}
-  const D=S.door,[x,z]=cq205GW(D.spot,0,D.dims.fz+2.2);if(near(x,z,4)){if(cq205Done(3)||C.st>=3){const N=cq205I(3);return {label:'F · Descend into '+BOSSES[5].name+'’s den',fn:()=>dm205Through()}}
+  const D=S.door,[x,z]=cq205GW(D.spot,0,D.dims.fz+2.2);if(near(x,z,4)){if(cq205Done(3)||C.st>=3){const N=cq205I(3);return {label:'F · Descend into '+N.n+' ('+BOSSES[5].name+')',fn:()=>dm205Through()}}
     return {label:'🔒 The Eclipse Door · a black sun sealed in blood',fn:()=>say('🌑 A black sun burns cold across the door. Cheddar says only sunlight can touch it.')}}
   return null}
 function dm205Through(){const C=CQ205.c3;if(C.st<4){C.st=4;CQ205.trkK=''}svSnd('whoosh',1,.5);try{insGo(cq205I(3))}catch(e){console.error('v205 den go',e)}}

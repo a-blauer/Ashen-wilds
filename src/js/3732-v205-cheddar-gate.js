@@ -133,7 +133,7 @@ function ch205Prompt(){if(!cq205Here(0)||!CH205.C||!CH205.g.visible)return null;
 {const f=worldPrompt;worldPrompt=function(){try{const r=ch205Prompt();if(r)return r}catch(e){if(!CH205.err++)console.warn('v205 cheddar prompt',e)}return f.apply(this,arguments)}}
 function ch205Tick(dt,now){const here=cq205Here(0);if(here&&!CH205.g&&GG205.S){try{ch205Build()}catch(e){if(!CH205.err++)console.error('v205 cheddar build',e)}}if(!CH205.g)return;
   const vis=here;CH205.g.visible=vis;CH205.ring.visible=vis;CH205.floor.visible=vis;CH205.brz.forEach(b=>{b.o.visible=vis;if(!vis)b.l.intensity=0;else if(b.ing.visible)b.l.intensity=.9+.3*Math.sin(now/90+b.i)});if(!vis)return;
-  ch205Walk(dt);ch205Anim(dt,now);const t=now/1000,ev=typeof US205!='undefined'&&US205.E;
+  ch205Walk(dt);ch205Anim(dt,now);const t=now/1000,ev=typeof US205!='undefined'&&US205.E;if(CH205.dome&&!ev)CH205.dome.visible=false;
   CH205.ring.material.opacity=ev?.55+.25*Math.sin(t*3):.22;CH205.ring.rotation.y+=dt*(ev?.4:.05);
   CH205.brz.forEach(b=>{if(b.ing.visible){b.ing.rotation.y+=dt*.8;b.ing.position.y=1.1+.05*Math.sin(t*2+b.i);b.f.scale.setScalar(1.1+.2*Math.sin(t*9+b.i*2))}});
   // first sight of him (the tracker's "someone waits there")
