@@ -122,7 +122,8 @@ function ab192FolkTick(dt,now){const Q=AB157.S,S=AB152.S;if(!Q||!S)return;ab157R
     if(!fol)a.hy+=((a.ht||0)*.6-(a.hy||0))*Math.min(1,dt*4);   // the eyes follow the head, as 3153 does for the plan's snakes
     if(off){if(!a.r192)a.sus=0}
     else if(lead){if(!a.r192&&!a.halt){let rate=0,best=null;
-        for(const h of L){if(!h||!h.live||Math.abs(h.u-a.u)>9||Math.abs(h.v-a.v)>9)continue;const r=ab192Sees(a,h.u,h.v,h.cr,h.lit);if(r>rate){rate=r;best=h}}
+        for(const h of L){const rr=AB152V.rng.folk*1.25+1;if(!h||!h.live||Math.abs(h.u-a.u)>rr||Math.abs(h.v-a.v)>rr)continue;   // v207: reach follows the folk's sight (doubled in 3780)
+        const r=ab192Sees(a,h.u,h.v,h.cr,h.lit);if(r>rate){rate=r;best=h}}
         if(rate>0){a.sus=Math.min(100,(a.sus||0)+rate*dt);a.unseen=0;a.last=[best.u,best.v]}else{a.unseen=(a.unseen||0)+dt;if(a.unseen>AB152V.hold)a.sus=Math.max(0,(a.sus||0)-AB152V.decay*dt)}
         if(a.sus>=AB152V.catch&&best){a.cBy=best.peer||MP.me;ab152Caught(a)}}}
     else if(!fol&&!a.r192&&a.sus>0)a.sus=Math.max(0,a.sus-AB152V.decay*dt);   // a partner: the host's numbers stopped coming

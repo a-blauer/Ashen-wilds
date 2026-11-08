@@ -62,7 +62,7 @@ function cs164Stats(C){let dc=0,tri=0;if(C&&C.g)C.g.traverse(o=>{if(o.isMesh&&o.
   try{C.r=C.rc;ok=cs123Build(C,g)}catch(e){console.warn('v164 camp',C.key,e)}finally{C.r=r;CS164.cur=null}
   if(!ok){C.boxes=[];CS164.pend=null;CS123.an=CS123.an.filter(a=>a.C!==C);return f.apply(this,arguments)}
   // at most CS164.box breakable boxes (the first ones: the core's own); the rest stay as scenery merged with the camp
-  if(C.boxes.length>CS164.box){C.boxes.slice(CS164.box).forEach(b=>{b.g.userData.box=0});C.boxes.length=CS164.box}
+  if(C.boxes.length>CS164.box){C.boxes.slice(CS164.box).forEach(b=>{if(CS164.cut&&b.g.parent)b.g.parent.remove(b.g);else b.g.userData.box=0});C.boxes.length=CS164.box}   // v207: CS164.cut (Kindlelight, 3780) leaves the extra boxes out
   const st=cs164Merge(g);scene.add(g);C.g=g;C.v123=1;C.v164=1;
   (CS164.pend||[]).forEach(q=>{const l=new THREE.PointLight(q.c,q.i,q.d||15,1.6);l.position.set(C.x+q.x,q.y,C.z+q.z);l.visible=false;l.userData.v164=1;scene.add(l);CS164.lights.push({C,l,i:q.i,ph:q.x*3.1+q.z})});
   CS164.pend=null;CS164.st[C.key]={ms:Math.round(performance.now()-T0),dc:st.dc,tri:st.tri,boxes:C.boxes.length}}}

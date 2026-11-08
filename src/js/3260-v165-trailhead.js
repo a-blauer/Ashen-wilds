@@ -138,9 +138,7 @@ function th165Build(){const P=th165Plan(),S=P.S,g=new THREE.Group();g.name='Pilg
     const mx=F0.x-F0.dx*3.2-F0.nx*3.3,mz=F0.z-F0.dz*3.2-F0.nz*3.3,my=GH(mx,mz);q.p('','box','c',st[3],mx,my+.2,mz,1.0,.4,1.0,0,yawF+.3,0).p('','box','c',st[0],mx+F0.dx*.25,my+.55,mz+F0.dz*.25,.9,.3,.5,0,yawF+.3,0);
     // a pilgrims' cairn of little stones by the first step
     const cx=F0.x-F0.dx*2.2-F0.nx*2.6,cz=F0.z-F0.dz*2.2-F0.nz*2.6,cy=GH(cx,cz);for(let k=0;k<7;k++)q.p('','dod','c',pick(st),cx,cy+.12+k*.2,cz,.34-k*.035,.14,.3-k*.03,R(),R()*3,R())},0));
-  // the signpost
-  try{const sx=F0.x-F0.dx*1.6+F0.nx*2.9,sz=F0.z-F0.dz*1.6+F0.nz*2.9,sy=GH(sx,sz);g.add(dt168Group('TH165|post',q=>{dt168Up(q);q.L('','c',woodD,[sx,sy-.2,sz],[sx,sy+2.35,sz],.08,.07,6).p('','box','c',woodD,sx,sy+2.4,sz,.2,.1,.2)},0));
-    sign(g,[{t:'⛰ The Pilgrim’s Stair',f:'700 34px'},{t:'to the Hilltops',f:'italic 28px'}],1.7,.5,'#2a1e14','#efe2c0',null,sx,sy+1.9,sz,yawF+Math.PI)}catch(err){console.warn('v165 sign',err)}
+  // the signpost: removed in v207 (owner: "Remove the signpost in front of the hilltop ascent that says The Pilgrim's Stair")
   // ---- the wayshrine on the first landing ----
   const L1=th165At(P,th165Runs(P)[2].i0+3);
   g.add(dt168Group('TH165|shrine',q=>{dt168Up(q);const T=L1,up=-T.down,x=T.x+T.nx*up*(T.hw+1.0),z=T.z+T.nz*up*(T.hw+1.0),y=T.y,yw=Math.atan2(-T.nx*up,-T.nz*up),fx=Math.sin(yw),fz=Math.cos(yw),rx=Math.cos(yw),rz=-Math.sin(yw);

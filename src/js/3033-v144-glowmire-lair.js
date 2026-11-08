@@ -74,7 +74,9 @@ function mb144LairBuild(){if(MQ144.LS)return MQ144.LS;const L=MB144L,M=mb144Mats
   const lump=(k,r,det,j)=>svG('mbl'+k,()=>svLump(r,det,j||.35,90+k));
   for(let i=0;i<34;i++){const a=i/34*Math.PI*2+rn()*.12;if(Math.abs(Math.atan2(Math.sin(a),Math.cos(a))-Math.PI/2)<.12)continue;   // the ladder's gap (south, +z)
     const r=14.4+rn()*1.6,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,s=1.6+rn()*1.6,o=new THREE.Mesh(lump(i%6,1,1),i%5==0?M.wet:i%2?M.rock:M.rock2);
-    o.position.set(x,y(x,z)+s*.25,z);o.scale.set(s*1.3,s*(1.4+rn()*.8),s*1.2);o.rotation.set(rn()*.5,rn()*6.28,rn()*.5);o.castShadow=true;o.receiveShadow=true;root.add(o)}
+    o.position.set(x,y(x,z)+s*.25,z);o.scale.set(s*1.3,s*(1.4+rn()*.8),s*1.2);o.rotation.set(rn()*.5,rn()*6.28,rn()*.5);o.castShadow=true;o.receiveShadow=true;
+    if(Math.hypot(x-L.lad.x,z-L.lad.z-.8)<s*1.45+1.1)continue;   // v207 (owner: "The ladder exiting the sleeping lair is clipping into rock"): no boulder over the ladder (the draws above still happen: the rest of the lair is unchanged)
+    root.add(o)}
   for(let i=0;i<22;i++){const a=rn()*Math.PI*2,r=12.6+rn()*2.4,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;if(Math.hypot(x-L.lad.x,z-L.lad.z)<2.4)continue;
     const h=1.4+rn()*2.6,o=new THREE.Mesh(svG('mb_sg',()=>{const q=new THREE.ConeGeometry(1,1,6,2);q.translate(0,.5,0);return q.toNonIndexed()}),i%4==0?M.wet:M.rock2);
     o.position.set(x,y(x,z)-.1,z);o.scale.set(.32+h*.12,h,.32+h*.12);o.rotation.set((rn()-.5)*.2,rn()*6,(rn()-.5)*.2);o.castShadow=true;root.add(o);

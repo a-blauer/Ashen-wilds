@@ -104,7 +104,7 @@ function dm196PostK(k,lv){const o={w:5.4,d:4.2,h:2.7,zc:-.9,st:'stone',wc:0x6e6a
 function dm196Post(){const T=TOWNS[0],l=dm196Fix('post'),lv=typeof shpL109=='function'?shpL109('post'):0;if(DM196TP.g&&DM196TP.lv===lv)return;
   if(DM196TP.g){scene.remove(DM196TP.g);DM196TP.g=null}const key='DM196POST|'+lv;let k=null;if(!twHas(key)){k=twKit(19601+lv);dm196PostK(k,lv)}
   const g=twGroup(k,key),[x,z]=lotW103(l,0,0);g.position.set(x,T.ph,z);g.rotation.y=l.ry;g.name='dm196post';scene.add(g);DM196TP.g=g;DM196TP.lv=lv;
-  sign(g,[{t:'TRADING POST',f:'700 56px'}],2.9,.6,'#2e1f12','#ffd88a','#c9a24a',0,2.25,-.9+2.1+.2,0,512,130);
+  sign(g,[{t:'TRADING POST',f:'700 56px'}],2.9,.52,'#2e1f12','#ffd88a','#c9a24a',0,3.06,-.9+2.35+.23,0,512,130);   // v207: up on the jettied floor's face, clear of the awning (was 2.25 high, behind it)
   // the merchant at the counter; the prompt spot in front of the door
   if(!DM196TP.npc){const [nx,nz]=lotW103(l,.4,2.6),ng=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};try{npc(ng,nx,nz,{robe:0x2a4a7a,trim:0xc9a24a,hat:'cap',hatC:0x6a2a2a,label:'Merchant',ry:l.ry})}finally{T_cur=prev}ng.position.y=GH(nx,nz);scene.add(ng);DM196TP.npc=ng}
   T.mp=lotW103(l,0,3.7);

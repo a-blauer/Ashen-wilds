@@ -12,13 +12,18 @@
 //  * body: hip turn, chest twist, lean and knee bend are exaggerated so they show at the game camera on a phone.
 // Only swingAnim (hero melee basic attacks) changes. Spins, bows, staffs/wands/orbs, skills and co-op partners are untouched.
 var V100W={on:true,AMP:{sy:1.55,cy:1.6,py:1.6,sx:1.45,sz:1.4,dy:1.7,lk:1.35,rk:1.35,lh:1.3,rh:1.3,la:1.2,ra:1.2},
-  EXTRA:.6,EXTRA_MAX:120,REC:1.1,LUNGE:.28,LUNGE_FIN:.5};
-function V100W_pose(P,D,wind,rest){
-  const A=V100W.AMP,o={},tc=wind/D;
+  EXTRA:.6,EXTRA_MAX:120,REC:3.2,FILL:.98,MIX:.55,LUNGE:.28,LUNGE_FIN:.5};   // v207: REC 1.1 → 3.2 and FILL: the recovery fills the time to the next swing
+function V100W_pose(P,D,wind,rest,ms){
+  const A=V100W.AMP,o={},tc=wind/D,rs=ms?Math.min(1,ms*.58/Math.max(1,D-wind)):1,q=rs<.85?Math.log(.1)/Math.log(1-rs):0,MX=V100W.MIX;
   return function(u){
     let k;
     if(u<tc){const x=u/tc;k=.42*Math.pow(x,1.45)}                       // slow coil, accelerating into contact
-    else{const y=(u-tc)/(1-tc);k=.42+.58*(1-Math.pow(1-y,1.7))}           // whip through, then a long settle
+    else{const y=(u-tc)/(1-tc);
+      // v207 (owner: "it quickly does the attack then pauses … better if the attacks lead into each other"): when the swing is
+      // stretched to fill the time to the next one, the blade still whips through in its old time (a fast ease-out, q), blended
+      // with a slow, even settle across the whole recovery, so the body keeps moving into the next swing instead of freezing
+      if(q){const h=MX*(1-Math.pow(1-y,q))+(1-MX)*y*y*(3-2*y);k=.42+.58*h}
+      else k=.42+.58*(1-Math.pow(1-y,1.7))}           // whip through, then a long settle
     const p=P(Math.min(1,Math.max(0,k)));
     for(const c in p){const a=A[c];o[c]=a&&rest[c]!=null?rest[c]+(p[c]-rest[c])*a:p[c]}
     return o}}
@@ -31,9 +36,9 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   try{atkMpSig()}catch(_){}
   ms=ms||300;
   const hit0=ms*.42,wind=hit0+Math.min(V100W.EXTRA_MAX,hit0*V100W.EXTRA),
-    cd=atkCd>0?atkCd*1000:ms*2,D=Math.max(ms+wind-hit0,Math.min(cd*.9,wind+ms*V100W.REC)),
+    cd=atkCd>0?atkCd*1000:ms*2,D=Math.max(ms+wind-hit0,Math.min(cd*V100W.FILL,wind+ms*V100W.REC)),
     fin=fin1; // set by the basic-attack callers just before the swing (0130, 0580)
-  haPlay(D,V100W_pose(P,D,wind,ATK_REST),wind/D,onHit,.1);
+  haPlay(D,V100W_pose(P,D,wind,ATK_REST,ms),wind/D,onHit,.1);
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
   // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's

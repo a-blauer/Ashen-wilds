@@ -144,7 +144,7 @@ function mpvPlay(r,e){
     const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=shotMesh(e[9]|0,!!e[10])}catch(_){return}
     const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
-    tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;
+    tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */
       let hit=typeof solid=='function'&&solid(Math.round(x),Math.round(z));if(!hit)for(const en of enemies){if(!en.dead&&en.m&&Math.abs(en.m.position.x-x)<1&&Math.abs(en.m.position.z-z)<1){hit=true;break}}
       if(hit){gone=true;m.visible=false;try{burst(m.position,e[9]|0||0xffffff,8,1.6,1.2,.35)}catch(_){}}},()=>scene.remove(m))}
   else if(T==='C'){const g=r.fl&&r.fl[e[2]|0];if(!g||!g.visible)return;const to=typeof e[5]=='number'&&typeof e[6]=='number'?new THREE.Vector3(e[5],GH(e[5],e[6]),e[6]):null;

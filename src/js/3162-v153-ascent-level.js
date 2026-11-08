@@ -19,7 +19,7 @@ function ch153Run(){return ch153In()&&!!CH153.R}
 // mount the active mount whatever the usual checks say (the chase is mounted only)
 function ch153Mount(){if(riding||!mounts.length)return;const m=mOf(mActive)||mounts[0];mActive=m.id;riding=m;mModel=mountModel(m.k);mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y;scene.add(mModel);hud()}
 function ch153Place(){const R=CH153.R,P=CH153.S.P;const [x,z,h]=P.at(R.s,R.o);pl.position.set(x,h+R.y,z);pl.rotation.y=P.yaw(R.s)-(R.steer||0)*.35;
-  if(typeof mModel!='undefined'&&mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}
+  if(typeof mModel!='undefined'&&mModel){mModel.position.copy(pl.position);mModel.rotation.set(0,pl.rotation.y,0)}}   // v207: level (see 3330's stumble)
 function ch153Win(){const R=CH153.R;if(R.ph!='run')return;R.ph='win';R.win={t:0};try{zt116Show(ZT116.Z[1],'Hillside Crest · Main Quest','Through!','Skarrith slams into the rock behind you','The Galecliffs lie beyond','z1');svSnd('roar',1.2,.75)}catch(_){}}
 // (v164: ch153SnakeTick, ch153Die are 3250's)
 // when Skarrith erupts in the intro (s of R.t): a restart (t starts at 1.4) gets a quicker version
@@ -45,7 +45,7 @@ addEventListener('keydown',e=>{if(!ch153Run())return;const k=(e.key||'').toLower
 {const f=walk;walk=function(o,dx,dz){if(o===pl&&ch153Run())return;return f.apply(this,arguments)}}
 {const f=dodge;dodge=function(){if(ch153Run()){if(typeof ch157Boost=='function')ch157Boost();return}return f.apply(this,arguments)}}   // v157: the dash button boosts
 // the mount gallops whatever the keys (it runs on its own) at one pace for everyone
-{const f=mountTick;mountTick=function(dt,now,al){if(ch153Run()&&riding){const R=CH153.R,s0=riding.spd;riding.spd=45;try{return f.call(this,dt,now,R.v>.5?1:0)}finally{riding.spd=s0;if(mModel){mModel.position.copy(pl.position);mModel.rotation.y=pl.rotation.y}}}return f.apply(this,arguments)}}
+{const f=mountTick;mountTick=function(dt,now,al){if(ch153Run()&&riding){const R=CH153.R,s0=riding.spd;riding.spd=45;try{return f.call(this,dt,now,R.v>.5?1:0)}finally{riding.spd=s0;if(mModel){mModel.position.copy(pl.position);mModel.rotation.set(0,pl.rotation.y,0)}}}return f.apply(this,arguments)}}
 // the camera rides behind along the trail (a look back at the snake during the intro: CH153CAM, v157)
 var CH153CAM={yaw:.38,pitch:.26,dist:13,near:15,side:.42,sw:0};
 {const f=loop;loop=function(now){let keep=null;try{if(ch153Run()&&CH153.S){const R=CH153.R,P=CH153.S.P,yw=P.yaw(R.s);keep=[camPitch,camDist];

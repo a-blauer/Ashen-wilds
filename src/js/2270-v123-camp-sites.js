@@ -257,8 +257,13 @@ const m=ep185TentMesh(ep185Tent({hide:col}));m.position.set(x,gy(x,z),z);m.rotat
     TQ(sg,Q.sph,M,0,.3*k,0,1*k,.36*k,.56*k);TQ(sg,Q.sph,M,-.62*k,.26*k,0,.48*k,.3*k,.46*k);
     TQ(sg,Q.sph,WN,.05*k,.6*k,0,.62*k,.08*k,.3*k);
     const R=[.24,.3,.33,.32,.27,.2];R.forEach((r,i)=>TQ(sg,Q.arc,RB,(i-2.5)*.17*k+.05*k,.58*k,0,r*k*(.9+v*.2),r*k*1.05,r*k,0,P2,0));
-    [[.48,.62,-.35,.9,.5],[-.5,.58,-.3,.95,.65],[.42,.12,.4,.5,1.45],[-.55,.12,.38,.55,1.35]].forEach(([lx,ly,lz,ll,rx])=>{const p=TQ(sg,Q.cyl,M,lx*k,ly*k+ll*k*.35,lz*k,.06*k,ll*k,.06*k,rx,0,lz<0?-.25:.2);
-      TQ(sg,Q.cone,HF,lx*k,ly*k+ll*k*.75,lz*k-(lz<0?.12:0)*k,.07*k,.14*k,.07*k,rx,0,0)});
+    // v207 (owner: "a carcass model that has floating objects"): each leg grows out of the body (its root sinks into the hide) along
+    // its own tilt, and its hoof sits on the leg's end (before, both were placed as if the leg stood straight, so the tilted legs and
+    // their hooves floated beside the carcass)
+    [[.48,.62,-.35,.9,.5],[-.5,.58,-.3,.95,.65],[.42,.12,.4,.5,1.45],[-.55,.12,.38,.55,1.35]].forEach(([lx,ly,lz,ll,rx])=>{const rz=lz<0?-.25:.2,E=new THREE.Euler(rx,0,rz),u=new THREE.Vector3(0,1,0).applyEuler(E),
+        lz2=lz*.8,cap=Math.sqrt(Math.max(0,1-lx*lx-(lz2/.56)*(lz2/.56))),bx=lx*k,by=(.3+.36*.8*cap)*k,bz=lz2*k,L=ll*k;
+      TQ(sg,Q.cyl,M,bx+u.x*(L/2-.06*k),by+u.y*(L/2-.06*k),bz+u.z*(L/2-.06*k),.06*k,L,.06*k,rx,0,rz);
+      TQ(sg,Q.cone,HF,bx+u.x*(L-.08*k),by+u.y*(L-.08*k),bz+u.z*(L-.08*k),.07*k,.14*k,.07*k,rx,0,rz)});
     TQ(sg,Q.sph,M,1.12*k,.3*k,.05*k,.36*k,.24*k,.26*k,0,.2,-.25);TQ(sg,Q.sph,M,1.42*k,.22*k,.1*k,.2*k,.13*k,.15*k,0,.2,-.4);TQ(sg,Q.sph,WN,1.5*k,.2*k,.14*k,.06*k,.05*k,.06*k);
     [-1,1].forEach(s=>TQ(sg,Q.cone,RB,1.12*k,.5*k,.05*k+s*.14*k,.05*k,.38*k,.05*k,s*.5,0,-.7));
     TQ(sg,Q.cyl,M,-1.05*k,.2*k,-.05*k,.04*k,.55*k,.04*k,0,0,1.25);return sg};

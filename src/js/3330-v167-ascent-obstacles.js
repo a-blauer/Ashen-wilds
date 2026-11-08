@@ -161,5 +161,5 @@ function ch167Cue(k,ic,t,sub,R){if(CH167.cue[k]===R)return;CH167.cue[k]=R;try{pi
     // falling off a narrow ledge: down and out over the drop (3250 drifts a gap's fall toward the middle)
     const R2=CH153.R;if(R2&&R2.ph=='dead'&&R2.dead&&R2.dead.g&&R2.dead.g.nar&&R2.dead.o0!=null)R2.o=R2.dead.o0+R2.dead.t*1.6;
     // a stumble: the mount pitches and dust flies
-    if(R2&&R2.crash>0&&typeof mModel!='undefined'&&mModel){const k=R2.crash/CH167.crashT;mModel.rotateX(Math.sin(k*Math.PI)*.22);if(Math.random()<dt*25)burst(gY(pl.position,.2),0xa89878,2,1,.8,.5)}}
+    if(R2&&R2.crash>0&&typeof mModel!='undefined'&&mModel){const k=R2.crash/CH167.crashT;mModel.rotation.set(0,mModel.rotation.y,0);mModel.rotateX(Math.sin(k*Math.PI)*.22);   /* v207: from level each frame (rotateX added up frame after frame, and the tilt stayed: the mount ran on twisted sideways) */if(Math.random()<dt*25)burst(gY(pl.position,.2),0xa89878,2,1,.8,.5)}}
   catch(e){if(!CH167.err++)console.error('v167 tick',e)}return r}}
