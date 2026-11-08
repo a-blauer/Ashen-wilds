@@ -182,3 +182,16 @@ function sh207Y(x,z,yo){return GH(x,z)+yo}
       p.y+=(want-p.y)*Math.min(1,dt*30);if(p.y<g+.3)p.y=g+.3;
       if(sh.s&&sh.s.arrow&&sh.v){const vy=(p.y-y0)/dt;sh.m.lookAt(p.x+sh.v.x,p.y+vy,p.z+sh.v.z)}}}catch(_){}
   return r}}
+
+// ---------------- 11. Hillside Crest I's secrets (owner: "there are 3 secrets right next to each other. remove 1 and place the other somewhere else") ----------------
+// The cracked boulder nearest Cheddar's own one ("Under the Stone", 2350) is taken out of the world (its entry stays in SECRETS:
+// ids are saved by index), and Cheddar's is moved to a spot of the same kind at least SEC207.far tiles from the one that stays.
+var SEC207={far:70,gone:null,moved:null};
+try{const I=PMAP[1]&&PMAP[1].ins[0],inI=S=>{const J=insAt(S.x,S.z);return !!J&&J.g===I.g};const Q=SECRETS.find(S=>S.chq&&inI(S));
+  if(I&&Q){const rest=SECRETS.filter(S=>S!==Q&&S.k=='boulder'&&inI(S)).sort((a,b)=>Math.hypot(a.x-Q.x,a.z-Q.z)-Math.hypot(b.x-Q.x,b.z-Q.z));
+    const G=rest[0];if(G&&Math.hypot(G.x-Q.x,G.z-Q.z)<40){SEC207.gone=G.id;G.x=-9999;G.z=-9999;G.gone207=1}
+    const keep=SECRETS.filter(S=>S!==Q&&!S.gone207&&S.k=='boulder'&&inI(S));let s=20770;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647};
+    for(let k=0;k<1500;k++){const x=Math.round(I.x0+12+rnd()*(I.w-24)),y=Math.round(I.y0+12+rnd()*(I.h-24));const J=insAt(x,y);if(!J||J.g!==I.g)continue;
+      if(keep.some(S=>Math.hypot(S.x-x,S.z-y)<SEC207.far))continue;if(Math.hypot(x-I.en[0],y-I.en[1])<40)continue;
+      if(CAMPS.some(C=>Math.hypot(C.x-x,C.z-y)<(C.r||12)+8))continue;if(I.path&&I.path.some(p=>Math.hypot(p[0]-x,p[1]-y)<6))continue;if(!freeSpot(x,y,3))continue;
+      Q.x=x;Q.z=y;Q.T=Math.max(1,tierAt(x,y));SEC207.moved=[x,y];break}}}catch(err){console.warn('v207 secrets',err)}

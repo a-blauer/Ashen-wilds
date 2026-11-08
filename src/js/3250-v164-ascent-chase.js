@@ -139,7 +139,9 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
   const emg=R.ph=='intro',lx=-P.TZ[0]*P.sgn,lz=P.TX[0]*P.sgn;let em=0;
   if(emg){em=N.em||0;const d=N.drop||0,eo=1-Math.pow(1-em,3),dd=d*d*(3-2*d),top=-2.5+11.5*eo+.35*Math.sin(t*2.1)*em,k2=Math.max(0,Math.min(1,(R.t-ch153EmT(R)-.55)/.35));
     hs=HO;ho=.45*Math.sin(t*1.9)*em*(1-dd);hy=top+(4.2-top)*dd;
-    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.84+.1*Math.sin(t*3.2)}
+    pitch=em<1?-.62+.3*em:dd>0?.3*(1-dd)+.12*dd:-.32+.62*k2;jaw=em<1?.42+.18*em:dd>0?.6-.3*dd:.58+.07*Math.sin(t*3.2);
+    {const cl=Math.max(.03,Math.min(jaw,-pitch+.12));jaw=cl+(jaw-cl)*Math.min(1,dd/.45)}}   // v207: and while the neck still stands straight up under the head, the lower jaw never swings down into it (it vanished inside the neck as the head lowered to glare)
+    // v207 (owner: "the lower jaw is glitched when it's first shown emerging"): a hissing gape (~33°) with the head raised less, not the 55° jaw under a head thrown back 55° that read as a jaw torn loose
   M.head.visible=!(emg&&em<=0);M.hood.scale.set(1+(emg?.18*em:.16*N.rear+(D?.2:0)),1,1);
   const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);const ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);
   // v167: the jaw and the head's tilt ease toward their pose (they used to snap: wide open → ¾ in one frame at the reveal, and

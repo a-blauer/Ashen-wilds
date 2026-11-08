@@ -63,6 +63,8 @@ def s(pg):
     T('abeksi strike rings (2)',"""()=>{if(!ab152In()||!AB152.S)return 'not in';const H=AB152H,S=AB152.S;const L=ab157Res().filter(a=>!a.dead&&!a.e&&!a.hid&&!(a.o&&a.o.lift>=1)&&(!a.folk||a.on));
       if(!L.length)return 'none';const a=L[0];const I=S.I;const x=I.x0+a.u+Math.sin(a.yaw)*1.2,z=I.y0+a.v+Math.cos(a.yaw)*1.2;toPos(x,z);H.u=x-I.x0;H.v=z-I.y0;pl.rotation.y=Math.atan2(a.u-H.u,a.v-H.v);
       atkCd=0;const n0=AB192.R.length;swing();return [AB207.n,AB192.R.length-n0,!!a.r192]}""",lambda r:isinstance(r,list) and r[2])
+    T('a partner\'s strike rings too (host)',"""()=>{if(!ab152In()||!AB152.S)return 'not in';const R=ab157Res();const i=R.findIndex(a=>a&&!a.dead&&!a.e&&!a.hid&&!a.r192&&!(a.o&&a.o.lift>=1)&&!a.folk);if(i<0)return 'none';
+      ab155On(['ab','sw',i],'peerX');return !!R[i].r192}""",lambda r:r is True)
     T('shots follow the ground',"""()=>{insArrive(PMAP[1].ins[0]);const I=curIns();let best=null;for(let y=I.y0+5;y<I.y0+I.h-5;y+=2)for(let x=I.x0+5;x<I.x0+I.w-8;x+=2){if(solid(x,y)||MAP.DW[y*W+x]>=0)continue;const d=GH(x+6,y)-GH(x,y);if(!solid(x+6,y)&&d>1&&(!best||d>best[2]))best=[x,y,d]}
       if(!best)return 'no slope';toPos(best[0],best[1]);shots.length=0;tgt=null;launch(pl.position,V(1,0,0),15,{col:0xffffff,basic:1},1,1.1);const sh=shots[0];for(let i=0;i<20;i++)shotTick(1/60);const p=sh.m.position;return [+best[2].toFixed(2),+(p.y-GH(p.x,p.z)).toFixed(2)]}""",
       lambda r:isinstance(r,list) and .7<r[1]<1.3)

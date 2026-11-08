@@ -40071,6 +40071,9 @@ function mb144LairBuild(){if(MQ144.LS)return MQ144.LS;const L=MB144L,M=mb144Mats
   // the ladder up to the hatch, a faint light from the shaft, the ooze seal (shown in the fight)
   {const l=L.lad,ly=y(l.x,l.z),g=lgGroup('MB144|ladder',k=>{[-1,1].forEach(s=>k.L('','c',0x3e2c1c,[s*.32,0,0],[s*.32,5.6,1.5],.05,.05,5));for(let i=0;i<11;i++){const u=i/10;k.p('','box','c',0x56402a,0,.3+u*5.1,u*1.38,.7,.06,.07)}
       k.p('','box','m',0x34343a,0,5.5,1.45,.9,.05,.05)},.12);g.position.set(l.x,ly,l.z);root.add(g);
+    // v207: the rock face the ladder leans on (the boulders that stood here went through it): three slabs on the ladder's slope, just behind its rails
+    {const an=Math.atan2(1.5,5.6),ny=-Math.sin(an),nz=Math.cos(an);[[1.0,1.5,2.3,.6,0],[2.9,1.7,2.0,.55,2],[4.7,1.5,1.8,.5,4]].forEach(([h,sx,sy,sz,k])=>{const o=new THREE.Mesh(lump(k,1,1),k==2?M.wet:M.rock),u=h/5.6,d=sz+.22;
+      o.position.set(l.x,ly+h+ny*d,l.z+u*1.5+nz*d);o.scale.set(sx,sy,sz);o.rotation.set(an,0,0);o.castShadow=true;o.receiveShadow=true;root.add(o)})}
     const sky=kqSpr(0xd0e8c0,3.5);sky.position.set(l.x,ly+6.2,l.z+1.6);root.add(sky);
     const seal=new THREE.Mesh(svG('mb_seal',()=>new THREE.SphereGeometry(1.4,14,8,0,Math.PI*2,0,Math.PI/2)),new THREE.MeshStandardMaterial({color:0x2a6a14,emissive:0x4ac018,emissiveIntensity:.7,transparent:true,opacity:.6,roughness:.2,depthWrite:false,flatShading:true}));
     seal.material.userData.noFade135=1;seal.position.set(l.x,ly,l.z+.2);seal.scale.set(1.2,1.6,.9);seal.visible=false;root.add(seal);LS.seal=seal}
@@ -51406,7 +51409,9 @@ function ch153SnakeAnim(now){const S=CH153.S,P=S.P,R=CH153.R,N=R.sn,M=S.sn,t=now
   const emg=R.ph=='intro',lx=-P.TZ[0]*P.sgn,lz=P.TX[0]*P.sgn;let em=0;
   if(emg){em=N.em||0;const d=N.drop||0,eo=1-Math.pow(1-em,3),dd=d*d*(3-2*d),top=-2.5+11.5*eo+.35*Math.sin(t*2.1)*em,k2=Math.max(0,Math.min(1,(R.t-ch153EmT(R)-.55)/.35));
     hs=HO;ho=.45*Math.sin(t*1.9)*em*(1-dd);hy=top+(4.2-top)*dd;
-    pitch=em<1?-.95+.5*em:dd>0?.3*(1-dd)+.12*dd:-.45+.75*k2;jaw=em<1?1:dd>0?.9-.55*dd:.84+.1*Math.sin(t*3.2)}
+    pitch=em<1?-.62+.3*em:dd>0?.3*(1-dd)+.12*dd:-.32+.62*k2;jaw=em<1?.42+.18*em:dd>0?.6-.3*dd:.58+.07*Math.sin(t*3.2);
+    {const cl=Math.max(.03,Math.min(jaw,-pitch+.12));jaw=cl+(jaw-cl)*Math.min(1,dd/.45)}}   // v207: and while the neck still stands straight up under the head, the lower jaw never swings down into it (it vanished inside the neck as the head lowered to glare)
+    // v207 (owner: "the lower jaw is glitched when it's first shown emerging"): a hissing gape (~33°) with the head raised less, not the 55° jaw under a head thrown back 55° that read as a jaw torn loose
   M.head.visible=!(emg&&em<=0);M.hood.scale.set(1+(emg?.18*em:.16*N.rear+(D?.2:0)),1,1);
   const [hx,hz,hh]=slope(hs,ho);M.head.position.set(hx,hh+hy,hz);const ya=hs>=0?P.yaw(Math.max(0,hs)):P.yaw(0);
   // v167: the jaw and the head's tilt ease toward their pose (they used to snap: wide open → ¾ in one frame at the reveal, and
@@ -72564,6 +72569,19 @@ function sh207Y(x,z,yo){return GH(x,z)+yo}
       p.y+=(want-p.y)*Math.min(1,dt*30);if(p.y<g+.3)p.y=g+.3;
       if(sh.s&&sh.s.arrow&&sh.v){const vy=(p.y-y0)/dt;sh.m.lookAt(p.x+sh.v.x,p.y+vy,p.z+sh.v.z)}}}catch(_){}
   return r}}
+
+// ---------------- 11. Hillside Crest I's secrets (owner: "there are 3 secrets right next to each other. remove 1 and place the other somewhere else") ----------------
+// The cracked boulder nearest Cheddar's own one ("Under the Stone", 2350) is taken out of the world (its entry stays in SECRETS:
+// ids are saved by index), and Cheddar's is moved to a spot of the same kind at least SEC207.far tiles from the one that stays.
+var SEC207={far:70,gone:null,moved:null};
+try{const I=PMAP[1]&&PMAP[1].ins[0],inI=S=>{const J=insAt(S.x,S.z);return !!J&&J.g===I.g};const Q=SECRETS.find(S=>S.chq&&inI(S));
+  if(I&&Q){const rest=SECRETS.filter(S=>S!==Q&&S.k=='boulder'&&inI(S)).sort((a,b)=>Math.hypot(a.x-Q.x,a.z-Q.z)-Math.hypot(b.x-Q.x,b.z-Q.z));
+    const G=rest[0];if(G&&Math.hypot(G.x-Q.x,G.z-Q.z)<40){SEC207.gone=G.id;G.x=-9999;G.z=-9999;G.gone207=1}
+    const keep=SECRETS.filter(S=>S!==Q&&!S.gone207&&S.k=='boulder'&&inI(S));let s=20770;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647};
+    for(let k=0;k<1500;k++){const x=Math.round(I.x0+12+rnd()*(I.w-24)),y=Math.round(I.y0+12+rnd()*(I.h-24));const J=insAt(x,y);if(!J||J.g!==I.g)continue;
+      if(keep.some(S=>Math.hypot(S.x-x,S.z-y)<SEC207.far))continue;if(Math.hypot(x-I.en[0],y-I.en[1])<40)continue;
+      if(CAMPS.some(C=>Math.hypot(C.x-x,C.z-y)<(C.r||12)+8))continue;if(I.path&&I.path.some(p=>Math.hypot(p[0]-x,p[1]-y)<6))continue;if(!freeSpot(x,y,3))continue;
+      Q.x=x;Q.z=y;Q.T=Math.max(1,tierAt(x,y));SEC207.moved=[x,y];break}}}catch(err){console.warn('v207 secrets',err)}
 // ================= v207: the owner's list (Nov 8 2026) — places and models =================
 // Owner: "When walking up to the hilltop in hillside crest II, the camera jerks around a lot because it's colliding with terrain.
 // Think of a easy solution for this part of the map" · "The end point where you complete hilltop ascent needs to be redone

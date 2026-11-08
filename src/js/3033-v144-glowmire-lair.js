@@ -109,6 +109,9 @@ function mb144LairBuild(){if(MQ144.LS)return MQ144.LS;const L=MB144L,M=mb144Mats
   // the ladder up to the hatch, a faint light from the shaft, the ooze seal (shown in the fight)
   {const l=L.lad,ly=y(l.x,l.z),g=lgGroup('MB144|ladder',k=>{[-1,1].forEach(s=>k.L('','c',0x3e2c1c,[s*.32,0,0],[s*.32,5.6,1.5],.05,.05,5));for(let i=0;i<11;i++){const u=i/10;k.p('','box','c',0x56402a,0,.3+u*5.1,u*1.38,.7,.06,.07)}
       k.p('','box','m',0x34343a,0,5.5,1.45,.9,.05,.05)},.12);g.position.set(l.x,ly,l.z);root.add(g);
+    // v207: the rock face the ladder leans on (the boulders that stood here went through it): three slabs on the ladder's slope, just behind its rails
+    {const an=Math.atan2(1.5,5.6),ny=-Math.sin(an),nz=Math.cos(an);[[1.0,1.5,2.3,.6,0],[2.9,1.7,2.0,.55,2],[4.7,1.5,1.8,.5,4]].forEach(([h,sx,sy,sz,k])=>{const o=new THREE.Mesh(lump(k,1,1),k==2?M.wet:M.rock),u=h/5.6,d=sz+.22;
+      o.position.set(l.x,ly+h+ny*d,l.z+u*1.5+nz*d);o.scale.set(sx,sy,sz);o.rotation.set(an,0,0);o.castShadow=true;o.receiveShadow=true;root.add(o)})}
     const sky=kqSpr(0xd0e8c0,3.5);sky.position.set(l.x,ly+6.2,l.z+1.6);root.add(sky);
     const seal=new THREE.Mesh(svG('mb_seal',()=>new THREE.SphereGeometry(1.4,14,8,0,Math.PI*2,0,Math.PI/2)),new THREE.MeshStandardMaterial({color:0x2a6a14,emissive:0x4ac018,emissiveIntensity:.7,transparent:true,opacity:.6,roughness:.2,depthWrite:false,flatShading:true}));
     seal.material.userData.noFade135=1;seal.position.set(l.x,ly,l.z+.2);seal.scale.set(1.2,1.6,.9);seal.visible=false;root.add(seal);LS.seal=seal}
