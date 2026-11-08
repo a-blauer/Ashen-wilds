@@ -36,7 +36,7 @@ chk('a partner\'s ghost shot rides above the ground',ok and len(r)>0 and all(.5<
 SIG="""()=>{const v=g=>{let n=0;g.traverse(m=>{if(m.geometry&&m.geometry.attributes&&m.geometry.attributes.position)n+=m.geometry.attributes.position.count});return n};
   const C=CAMPS.find(C=>C.key=='0_0_1');if(!C.g)buildCamp(C);const K=CAMPS.filter(C=>String(C.key).split('_')[0]==='0').map(C=>{if(!C.g)buildCamp(C);return C.boxes.length});
   return [v(ch153Crack()),v(C.g),K]}"""
-a,b=A.evaluate(SIG),B.evaluate(SIG)
-chk('crack, carcass camp and Kindlelight boxes match',a==b and max(a[2])<=4,json.dumps([a,b]))
+sa,sb=A.evaluate(SIG),B.evaluate(SIG)
+chk("crack, carcass camp and Kindlelight boxes match",sa==sb and max(sa[2])<=4,json.dumps([sa,sb]))
 errs=[pg.evaluate("()=>(window.__perr||[]).length") for pg in (A,B)]
 print('done',errs)

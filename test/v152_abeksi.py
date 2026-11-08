@@ -73,7 +73,7 @@ def s(pg):
     exp(r['pos0']==[14,10],'entering at the breach (%s)'%r['pos0'])
     exp(r['folsHidden'],'companions wait outside')
     exp(r['ctrlTap']==0 and r['ctrlW']==0 and r['cKey']==1 and not r['talents'],'crouch keys: Ctrl tap toggles, Ctrl+W does not, C toggles without opening talents (%s %s %s %s)'%(r['ctrlTap'],r['ctrlW'],r['cKey'],r['talents']))
-    exp(r['noFight'] and r['noRecall'],'no fighting and no recall inside')
+    exp((not r['noFight']) and r['noRecall'],'a swing is allowed inside (v207: a struck snake rings its bell), no recall')
     exp(r['quiet']<5,'nobody notices a crouched hero at the breach (%s)'%r['quiet'])
     exp(r['losOpen'] and not r['losTall'],'sight: open ground sees, buildings block')
     exp(not r['losLowCr'] and r['losLowSt'],'sight: low cover hides a crouched hero, not a standing one')

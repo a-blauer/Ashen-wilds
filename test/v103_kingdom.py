@@ -82,7 +82,7 @@ def s(pg):
           if(!HS103.h.length){['S1W','S2E'].forEach(id=>hsBuy103(id))}openX('hold');const o={};o.secs=[...document.querySelectorAll('#xw .sec')].map(s=>s.textContent);o.tabs=document.querySelectorAll('#xw [data-sht]').length;
           o.rows=document.querySelectorAll('#xw .kmrw').length;o.sel=document.querySelectorAll('#xw [data-czk]').length;
           const b=[...document.querySelectorAll('#xw [data-kmb]')].find(x=>x.dataset.kmb=='house:1');if(b)b.click();o.pick=!!KM103.pick;o.pickTxt=($('xwB').querySelector('.kmpick')||{}).textContent||'';return o}""")
-        ok(r['tabs']==0 and len(r['secs'])>=3,'one Steward window: shops, upgrades and houses in one list (v117: citizens on the Villagers tab)',r)
+        ok(r['tabs']==0 and len(r['secs'])>=1 and not any(('Shops' in x or 'Upgrades' in x) for x in r['secs']),'one Steward window: shops, upgrades and houses in one list, no Shops / Upgrades titles since v207 (v117: citizens on the Villagers tab)',r)
         ok(r['pick'],'Build puts the window in placing mode',r['pickTxt'])
         if SH:pg.set_viewport_size({'width':1100,'height':700});pg.wait_for_timeout(300);pg.screenshot(path=OUT+'/v103_menu_pick.png')
         r=ev("""()=>{const cv=$('kmCv'),I=KM103.info,l=LOT103.find(l=>lotFree103(l.id)),R=I.R[l.id],rc=cv.getBoundingClientRect(),s=rc.width/cv.width;

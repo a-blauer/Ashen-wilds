@@ -32,7 +32,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   if(fa){window.__only=fa;still(fa);
     // cone shown near the hero, and the eyes: in front yes, behind no
     {const [x,z]=W2(fb[0],fb[1]);toPos(x,z)}ab152SetCrouch(true);tick(.2);out.coneShown=!!fa.cone.visible;
-    out.seeFront=ab192Sees(fa,fr[0],fr[1],false,1);out.seeBehind=ab192Sees(fa,fb[0],fb[1],false,1);out.seeFar=ab192Sees(fa,fa.u+Math.sin(fa.yaw)*9,fa.v+Math.cos(fa.yaw)*9,false,1);
+    out.seeFront=ab192Sees(fa,fr[0],fr[1],false,1);out.seeBehind=ab192Sees(fa,fb[0],fb[1],false,1);const fd=AB152V.rng.folk+3;out.seeFar=ab192Sees(fa,fa.u+Math.sin(fa.yaw)*fd,fa.v+Math.cos(fa.yaw)*fd,false,1);   /* v207: folk see twice as far (10) */
     out.kind=ab152Kind(fa);out.susBehind=Math.round(fa.sus);
     // ---- spotted: the ringer winds up for 3 s ----
     const g0=said.length;ab152SetCrouch(false);{const [x,z]=W2(fr[0],fr[1]);toPos(x,z)}
