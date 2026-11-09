@@ -107,10 +107,9 @@ BSTY.length=0;BSTY.push(
 function bossDefeated(e){
   const A=arenaOf(e);if(!A)return;arenaClear(A);const i=A.i,first=!bossDone.has(i);
   if(!first){banner('👑 '+A.b.name+' falls again','Its loot is yours','It returns after 5 minutes');return}
-  bossDone.add(i);const P=A.b.pw;hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
-  banner('👑 MAP CLEARED',A.b.name+' is slain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
-  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','Its gate stands open at the end of Portal Road');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
-    say('🌀 A golden portal home has opened in the arena.')},2800);
+  // v208: the map is cleared (power, next portal, kingdom growth) only once the Sovereign's essence is siphoned from its corpse and
+  // poured into Duskhold's fountain: se208Slain (3795) leaves the corpse to siphon, se208Claim does what used to happen here
+  se208Slain(i,e);
 }
 // ---- Wave Trials ----
 var WV=null,WV_N=10,waveBest={};

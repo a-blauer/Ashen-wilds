@@ -28,10 +28,10 @@ def s(pg):
     T('locked lot refused',"""()=>{gold=1e6;['wood','stone','fiber','iron','glowcap','bone'].forEach(k=>mats[k]=999);const a=lotFree103('S1W'),b=lotFree103('CE');const h0=HS103.h.length;const hb=hsBuy103('S1M');
       KM103.pick={kind:'shop',k:'cook',key:'cook'};kmPlace103('S1E');const c=shopBuilt('cook');KM103.pick={kind:'shop',k:'cook',key:'cook'};kmPlace103('CE');return [a,b,hb,HS103.h.length-h0,c,shopBuilt('cook'),SH.pos.cook]}""",
       lambda r:r[0] is False and r[1] is True and not r[2] and r[3]==0 and r[4] is False and r[5] is True and r[6]=='CE')
-    T('first Sovereign: the walls move out, 3 more plots',"""()=>{const T=TOWNS[0];toPos(T.cx+3,T.cy+16);bossDefeated({ar:0});const w=WALLS();const o=[w,lotN109(),['S1W','S1M','S1E'].map(lotOpen109),lotOpen109('S2W'),KL103.ringN.count,lotCounts109(),areaName(),kfDoors109()];toPos(T.sp[0],T.sp[1]);return o}""",
+    T('first Sovereign: the walls move out, 3 more plots',"""()=>{const T=TOWNS[0];toPos(T.cx+3,T.cy+16);bossDefeated({ar:0});se208Claim(0);const w=WALLS();const o=[w,lotN109(),['S1W','S1M','S1E'].map(lotOpen109),lotOpen109('S2W'),KL103.ringN.count,lotCounts109(),areaName(),kfDoors109()];toPos(T.sp[0],T.sp[1]);return o}""",
       lambda r:r[0]==[1,30,'open','W','W','W','open','open','open'] and r[1]==8 and all(r[2]) and not r[3] and r[4]==3 and 'Meadow' not in r[6] and r[7]==[])
-    T('the same Sovereign again: nothing changes',"""()=>{bossDefeated({ar:0});bossDefeated({ar:0});return [kf109().s,lotN109()]}""",lambda r:r==[1,8])
-    T('every Sovereign: 20 plots, walls at radius 40',"""()=>{for(let i=1;i<6;i++)bossDefeated({ar:i});return [WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).length,KF109.SZ]}""",
+    T('the same Sovereign again: nothing changes',"""()=>{bossDefeated({ar:0});se208Claim(0);bossDefeated({ar:0});se208Claim(0);return [kf109().s,lotN109()]}""",lambda r:r==[1,8])
+    T('every Sovereign: 20 plots, walls at radius 40',"""()=>{for(let i=1;i<6;i++)(bossDefeated({ar:i}),se208Claim(i));return [WALLS(),lotN109(),LOT103.filter(l=>lotOpen109(l.id)).length,KF109.SZ]}""",
       lambda r:r[0][:2]==[5,40] and r[0][2]=='open' and r[0][3]=='W' and r[1]==20 and r[2]==20)
     T('stage 5: both gates open onto the meadow paths',"""()=>{const T=TOWNS[0],t=(x,z)=>MAP[T.cy+z][T.cx+x];return [t(0,40),t(0,41),t(1,42),t(0,-40),t(0,-41),t(-1,-42)]}""",lambda r:all(c in 'Pp.' for c in r))
     T('save/load: the stage follows the Sovereigns',"""()=>{const x=x2Save();bossDone.clear();bossDone.add(0);bossDone.add(1);x.bossDone=[0,1];x2Load(JSON.parse(JSON.stringify(x)));return [kf109().s,WALLS()[1],lotN109()]}""",lambda r:r==[2,30.5,11])

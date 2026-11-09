@@ -53,9 +53,10 @@ function sv141Reach(B){const P=B.P||{},pick=['roar','howl','rear','tpRaise','vUp
     hit:[hit(.85,1),hit(1.2,1.2),hit(1.55,1.4)],ev:[[.08,c=>{try{svSnd('roar',.7,1.15);svShock(c.m.position,col,4,.4)}catch(_){}}]],rec:.35}}
 SVB.forEach((B,i)=>{if(!B||!B.M||B.M.reach141)return;try{B.M.reach141=sv141Reach(B);svRegMoves(i)}catch(e){console.warn('reach141',i,e)}});
 // ---- 4. one fight each ----
-{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&bossDone.has(i))return null;return f.apply(this,arguments)}}
-function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&bossDone.has(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
-  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(bossDone.has(i))bossT[i]=0})}catch(_){}}
+// v208: a slain Sovereign stays gone while its essence waits to be siphoned or poured (se208Gone, 3795)
+{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&se208Gone(i))return null;return f.apply(this,arguments)}}
+function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&se208Gone(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
+  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(se208Gone(i))bossT[i]=0})}catch(_){}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);setTimeout(sv141Clear,0);return r}}
 setInterval(sv141Clear,5000);
 // a hero who has kept away for SV141.sure s gets Reach as soon as it is off cooldown (not left to the weighted pick)

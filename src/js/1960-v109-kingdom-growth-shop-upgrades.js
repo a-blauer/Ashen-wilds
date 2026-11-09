@@ -138,9 +138,11 @@ lotStakes103=function(){const T=TOWNS[0];if(!T||!T.g)return;
 function kfGrowMsg109(s){const ids=LOT103.filter(l=>l.st===s).map(l=>l.id),c=lotCounts109();
   banner('🏰 THE KINGDOM EXPANDS','The walls of Duskhold move out · '+ids.length+' new building plots in Row '+s,c.open+' of '+LOT103.length+' plots are now yours');
   say('🏗️ Duskhold grows: the south wall moves out and plots '+ids.join(', ')+' can now be built on. Build at the Stronghold Steward.');try{sfx('power')}catch(_){}}
-{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);try{const s0=KF109.s;if(kfApply109()){const s=KF109.s,t=Date.now()+60000;
+// v208: also run when a Sovereign's essence is poured into the fountain (3795 se208Claim), which is when bossDone grows now
+function kfGrow109(){try{const s0=KF109.s;if(kfApply109()){const s=KF109.s,t=Date.now()+60000;
     LOT103.forEach(l=>{if(l.st>s0&&l.st<=s)KF109.fresh[l.id]=t});lotStakes103();clearTimeout(KF109.ft);KF109.ft=setTimeout(()=>{try{lotStakes103()}catch(_){}},60500);
-    setTimeout(()=>kfGrowMsg109(s),6200);try{saveGame(true)}catch(_){}}}catch(err){console.warn('v109 grow',err)}return r}}
+    setTimeout(()=>kfGrowMsg109(s),6200);try{saveGame(true)}catch(_){}}}catch(err){console.warn('v109 grow',err)}}
+{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);kfGrow109();return r}}
 // the Steward window: plots line under the plan
 function lotInfo109(P){const c=lotCounts109(),s=kf109().s;
   return `<div class="kminfo kmplots">🏗️ <b>${c.used}</b> of <b>${c.open}</b> plots used${s<5?' · 👑 defeat a new Sovereign: the walls move out and 3 more plots open':' · the kingdom has reached its full size'}`+

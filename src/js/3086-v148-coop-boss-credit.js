@@ -27,7 +27,7 @@ function bc148Apply(now){if(!BC148.pend.length)return;const keep=[];
   for(const p of BC148.pend){if(now<p.t){keep.push(p);continue}
     try{if(p.id==='v144'){if(!bc148Vorraxis(p.by))keep.push(Object.assign(p,{t:now+2000}))}else bc148Sov(+p.id,p.by)}catch(err){console.warn('v148 credit',err)}}
   BC148.pend=keep}
-function bc148Sov(i,by){if(!BOSSES[i]||bossDone.has(i))return;
+function bc148Sov(i,by){if(!BOSSES[i]||bossDone.has(i)||se208St(i)>=1)return;   // v208: already slain here (its essence waits)
   const e=typeof bossEnt=='function'?bossEnt(i):null;
   // still in that fight on my screen: the boss falls here too (loot included)
   if(e&&!e.dead&&typeof AF!='undefined'&&AF&&AF.i===i){MP.rk=1;try{e.c.h=0;e.dead=1;if(e.hb)e.hb.visible=false;kill(e)}finally{MP.rk=0}}
