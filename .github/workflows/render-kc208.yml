@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 90
     strategy:
       fail-fast: false
+      max-parallel: 4   # GitHub dropped some of 8 jobs started at once (the account's runners are shared with the test suite)
       matrix:
         seg: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
