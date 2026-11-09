@@ -72713,8 +72713,8 @@ WBEH.crossbow=function(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTime
 //   0  the hero at the entrance of Hillside Crest I, the camera rises over the plains
 //   1  an Abeksi war camp on the plains of I · 2 the serpent city's sacrificial shrine (chant, kneelers, idol) · 3 its jewellers' stalls
 //   4  the Hilltop Ascent's mountain · 5 the Gate of the Hydra (III), pushing in on the stone door
-//   6–8 "Stealth, agility and strength": a lantern patrol and its view cone in Abeksi, a ride up the Ascent's ledge toward a
-//      broken stretch, the Galecliffs' creatures stalking toward the camera — each with its chapter card (the objectives)
+//   6–8 "Stealth, agility and strength": a sentry and its view cone in Abeksi, a ride up the Ascent's ledge toward a
+//      broken stretch, the Galecliffs' creatures stalking toward the camera (no text on screen but the voice)
 //   9  the Sovereign's Den: the Hydra rises out of the mere and roars, then a hard cut to black and the game fades back in
 // The subtitles are the intro's voice (the same letters drifting out of a blur, the same glitch); the score is the intro's
 // voice drone and far choir in a darker key, a toll at each cut, the Hydra's own hiss and roar.
@@ -72731,11 +72731,7 @@ var HC208={seen:0,run:false,S:null,len:37.4,skipT:35.0,cut:35.0,
     {a:29.2,b:32.9,s:'Bring me the Hydra’s essence.'}],
   // shot start times (each runs to the next); the den shot runs to HC208.cut
   T:[0,3.4,7.4,9.9,12.3,15.9,21.0,23.4,25.8,28.4],
-  // the chapter cards over the three trials (the Sovereign's shot has no name or title: owner, Nov 9)
-  cards:[{a:21.3,b:23.2,k:'Chapter I · Stealth',n:'Abeksi, the Serpent City',r:'Slip through the city unseen'},
-    {a:23.7,b:25.6,k:'Chapter II · Agility',n:'The Hilltop Ascent',r:'Ride for the summit before Skarrith takes you'},
-    {a:26.1,b:28.2,k:'Chapter III · Strength',n:'The Gate of the Hydra',r:'Cut through the Galecliffs and wake the gate'},
-    ],
+  // no on-screen text but the voice (owner, Nov 9: "only have the visuals … focus on the dialogue"): no chapter or Sovereign cards
   rise:[29.7,31.9],roar:31.6};
 function hc208Want(I){try{if(!I||I.z!==1||HC208.seen||HC208.run)return false;if(typeof IC151!='undefined'&&IC151.run)return false;
   if(window.KQ_HC208)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;if(typeof SET!='undefined'&&SET.intro===0)return false;return true}catch(_){return false}}
@@ -72843,7 +72839,7 @@ function hc208Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt==nu
   try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(cam.position)}catch(_){}try{fxStep(dt)}catch(_){}
   if(!HC208.noDraw)POST.render()}
 
-// ---------------- the page layer: letterbox, the voice's subtitles, the chapter cards, the den's dark, fades, skip ----------------
+// ---------------- the page layer: letterbox, the voice's subtitles, the den's dark, fades, skip ----------------
 function hc208Css(){if(document.getElementById('hc208css'))return;ic151Css();ic151DCss();const s=document.createElement('style');s.id='hc208css';s.textContent=
   '#hc208{position:fixed;inset:0;z-index:2147483000;overflow:hidden;cursor:none;user-select:none;pointer-events:auto;background:transparent}'+
   '#hc208 .lb{position:absolute;left:0;right:0;height:11vh;background:#000;z-index:3;pointer-events:none}#hc208 .lb.t{top:0}#hc208 .lb.b{bottom:0}'+
@@ -72851,20 +72847,11 @@ function hc208Css(){if(document.getElementById('hc208css'))return;ic151Css();ic1
   '#hc208 .vg{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 30%,rgba(4,12,6,.55) 68%,rgba(0,4,2,.92) 100%)}'+
   '#hc208 .sub{position:absolute;left:6%;right:6%;bottom:17vh;text-align:center;z-index:5;pointer-events:none;font-family:"IM Fell English SC","Cinzel Decorative",Georgia,serif;font-size:clamp(20px,3.2vw,44px);letter-spacing:.06em;color:#fff;line-height:1.2}'+
   '#hc208 .sub span{display:inline-block;white-space:pre;text-shadow:0 0 3px rgba(10,16,50,.95),0 0 14px rgba(14,24,70,.85),-2px 0 rgba(90,200,255,.6),2px 0 rgba(255,120,220,.5)}'+
-  '#hc208 .oc{position:absolute;left:5vw;top:calc(11vh + 4.5vh);z-index:5;pointer-events:none;opacity:0;color:#f6dc8a;text-shadow:0 2px 8px #000,0 0 18px rgba(0,0,0,.85)}'+
-  '#hc208 .oc s{display:block;text-decoration:none;font:600 clamp(10px,1.05vw,13px)/1 Cinzel,Georgia,serif;letter-spacing:.3em;text-transform:uppercase;color:#e8d8a8;opacity:.85}'+
-  '#hc208 .oc b{display:block;margin-top:6px;font:700 clamp(19px,2.5vw,32px)/1.1 "Cinzel Decorative",Cinzel,Georgia,serif;letter-spacing:.05em;color:#f6dc8a;text-shadow:0 0 16px rgba(208,160,64,.55),0 2px 0 #2a1e08,0 4px 10px #000}'+
-  '#hc208 .oc i{display:block;margin-top:5px;font:italic clamp(13px,1.4vw,18px)/1.25 Georgia,serif;color:#f0e6d0}'+
-  '#hc208 .oc:before{content:"";display:block;width:56px;height:2px;margin-bottom:9px;background:linear-gradient(90deg,#d0a040,transparent)}'+
-  '#hc208 .oc.sv{left:50%;top:auto;bottom:calc(11vh + 5vh);transform:translateX(-50%);text-align:center;color:#d8ff60}'+
-  '#hc208 .oc.sv:before{margin:0 auto 9px;width:120px;background:linear-gradient(90deg,transparent,#9aff4a,transparent)}'+
-  '#hc208 .oc.sv b{font-size:clamp(26px,3.6vw,46px);color:#e4ffb0;text-shadow:0 0 18px rgba(154,255,74,.6),0 0 40px rgba(60,160,30,.45),0 3px 0 #0a1a06,0 6px 14px #000}'+
-  '#hc208 .oc.sv s{color:#c8f0a0}'+
   '#hc208 .skip{position:absolute;right:22px;bottom:calc(11vh + 14px);z-index:6;cursor:pointer;background:rgba(10,8,16,.45);color:#e8e0d0;border:1px solid rgba(232,224,208,.35);border-radius:4px;font:600 13px/1 "Cinzel Decorative",Georgia,serif;letter-spacing:.08em;padding:8px 14px;opacity:.7}'+
   '#hc208 .skip:hover{opacity:1;background:rgba(30,24,40,.7)}';document.head.appendChild(s)}
 function hc208Layer(S){hc208Css();const el=document.createElement('div');el.id='hc208';
-  el.innerHTML='<div class="vg"></div><div class="lb t"></div><div class="lb b"></div><div class="sub"></div><div class="oc"><s></s><b></b><i></i></div><div class="fk"></div><button class="skip">Skip ›</button>';
-  document.body.appendChild(el);S.dom={el,lt:el.querySelector('.lb.t'),lb:el.querySelector('.lb.b'),sub:el.querySelector('.sub'),oc:el.querySelector('.oc'),vg:el.querySelector('.vg'),fk:el.querySelector('.fk'),skip:el.querySelector('.skip'),cur:null,sp:[],cc:null}}
+  el.innerHTML='<div class="vg"></div><div class="lb t"></div><div class="lb b"></div><div class="sub"></div><div class="fk"></div><button class="skip">Skip ›</button>';
+  document.body.appendChild(el);S.dom={el,lt:el.querySelector('.lb.t'),lb:el.querySelector('.lb.b'),sub:el.querySelector('.sub'),vg:el.querySelector('.vg'),fk:el.querySelector('.fk'),skip:el.querySelector('.skip'),cur:null,sp:[]}}
 function hc208Dom(S,t){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm;
   // letterbox: in from the start, out as the game comes back
   const lb=(11*(1-Sm(K(t,HC208.cut+.5,HC208.len-.3))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
@@ -72876,10 +72863,6 @@ function hc208Dom(S,t){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm;
   const L=HC208.lines.find(x=>t>=x.a-.1&&t<x.b+.6);if(L!==D.cur){D.cur=L;D.sub.innerHTML='';if(L){D.sp=[];L.s.split(/( )/).forEach(w=>{if(!w)return;let box=D.sub;if(w!==' '){box=document.createElement('span');box.className='w';D.sub.appendChild(box)}for(const ch of w){const e=document.createElement('span');e.textContent=ch;box.appendChild(e);D.sp.push(e)}})}}
   if(L){const out=K(t,L.b,L.b+.6);D.sp.forEach((e,i)=>{const k=K(t,L.a+i*.045,L.a+i*.045+.55),fr=Math.floor(t*14),gl=ic151H(fr*1.7+i*3.1)>.93?1:0,jx=(ic151H(fr+i*.7)-.5)*2.4*(1+gl*3),jy=(ic151H(fr*1.3+i)-.5)*1.6;
     e.style.opacity=(k*(1-out)*(.85+.15*Math.sin(t*7+i))).toFixed(3);e.style.filter='blur('+((1-k)*7+out*6+gl*1.5).toFixed(2)+'px)';e.style.transform='translate('+jx.toFixed(2)+'px,'+(jy+(1-k)*8).toFixed(2)+'px) scale('+(1+(1-k)*.25).toFixed(3)+')'})}
-  // the cards
-  const C=HC208.cards.find(x=>t>=x.a&&t<x.b+.05);if(C!==D.cc){D.cc=C;if(C){const sv=C.k==='Sovereign';let n=C.n,r=C.r;if(sv){try{const B=BOSSES[1];n=B.name||'The Crest Hydra';r=B.title||''}catch(_){n='The Crest Hydra'}}
-      D.oc.className='oc'+(sv?' sv':'');D.oc.querySelector('s').textContent=C.k;D.oc.querySelector('b').textContent=n;D.oc.querySelector('i').textContent=r}}
-  if(C){const k=Sm(K(t,C.a,C.a+.45))*(1-Sm(K(t,C.b-.4,C.b)));D.oc.style.opacity=k.toFixed(3);const sv=C.k==='Sovereign',dx=(1-k)*-16;D.oc.style.transform=sv?'translateX(-50%) scale('+(1.06-.06*k).toFixed(3)+')':'translateX('+dx.toFixed(1)+'px)'}else D.oc.style.opacity='0';
   D.skip.style.visibility=t<HC208.skipT?'':'hidden'}
 
 // ---------------- sound: the voice's drone and choir (a darker key than the intro's), tolls on the cuts ----------------
@@ -72894,8 +72877,8 @@ function hc208Score(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.g
   [220,261.63,329.63,392].forEach((f,i)=>osc('sine',f,.8+i*.5,E-1.2,.011,3.5,1.4,{wet:1.3,dry:.4,det:(i%2?6:-6)}));
   // a toll at every cut, sinking
   HC208.T.slice(1).forEach((a,i)=>{osc('sine',[110,103.8,98,92.5,87.3,82.4,77.8,73.4,65.4][i]||65.4,a+.03,2.4,.2,.01,2.3,{wet:.8});osc('sine',[440,415,392,370,349,330,311,294,262][i]||262,a+.03,2,.025,.02,1.9,{wet:1})});
-  // the trials: a hard low hit under each chapter card
-  HC208.cards.slice(0,3).forEach(c=>{osc('triangle',55,c.a,1.3,.12,.005,1.2,{lp:500,wet:.4});osc('sine',41.2,c.a,1.6,.14,.01,1.5,{wet:.3})});
+  // the trials: a hard low hit on each of the three cuts
+  HC208.T.slice(6,9).map(a=>({a:a+.3})).forEach(c=>{osc('triangle',55,c.a,1.3,.12,.005,1.2,{lp:500,wet:.4});osc('sine',41.2,c.a,1.6,.14,.01,1.5,{wet:.3})});
   // the den: a dissonant swell as it rises, cut dead to black on the roar
   [58.27,61.74,87.31].forEach((f,i)=>osc('sawtooth',f,HC208.rise[0]-.6,E-HC208.rise[0]+.5,.03,2.2,.06,{lp:420+i*60,wet:.7,det:i*9}));
   osc('sine',36.7,E,2.6,.32,.01,2.5,{wet:.6});osc('sine',73.4,E+.02,2.2,.05,.01,2.1,{wet:1})}
