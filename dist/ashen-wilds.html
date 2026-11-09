@@ -73126,18 +73126,18 @@ var HC208={seen:0,run:false,S:null,len:37.4,skipT:35.0,cut:35.0,
     {a:29.2,b:32.9,s:'Bring me the Hydra’s essence.'}],
   // shot start times (each runs to the next); the den shot runs to HC208.cut
   T:[0,3.4,7.4,9.9,12.3,15.9,21.0,23.4,25.8,28.4],
-  // the chapter cards over the three trials, and the Sovereign's card
+  // the chapter cards over the three trials (the Sovereign's shot has no name or title: owner, Nov 9)
   cards:[{a:21.3,b:23.2,k:'Chapter I · Stealth',n:'Abeksi, the Serpent City',r:'Slip through the city unseen'},
     {a:23.7,b:25.6,k:'Chapter II · Agility',n:'The Hilltop Ascent',r:'Ride for the summit before Skarrith takes you'},
     {a:26.1,b:28.2,k:'Chapter III · Strength',n:'The Gate of the Hydra',r:'Cut through the Galecliffs and wake the gate'},
-    {a:33.3,b:34.95,k:'Sovereign',n:'',r:''}],
+    ],
   rise:[29.7,31.9],roar:31.6};
 function hc208Want(I){try{if(!I||I.z!==1||HC208.seen||HC208.run)return false;if(typeof IC151!='undefined'&&IC151.run)return false;
   if(window.KQ_HC208)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;if(typeof SET!='undefined'&&SET.intro===0)return false;return true}catch(_){return false}}
 
 // ---------------- set-up: everything the shots need, made once when it starts ----------------
 function hc208Build(){const V=THREE.Vector3,S={si:-1,lt:null,t:0,props:[]};
-  S.H=pl.position.clone();S.yaw=pl.rotation.y;S.fx=[];
+  S.H=pl.position.clone();S.yaw=pl.rotation.y;S.fx=[];S.near0=cam.near;
   // Abeksi (built here if the hero has not been inside yet; 3155 hides it again once the game runs)
   try{S.ab=ab152Build();S.abI=S.ab.I}catch(e){console.warn('hc208 city',e);S.ab=null}
   if(S.ab){const A=S.ab.acts;S.abSave=A.map(a=>({a,st:a.st,sus:a.sus,u:a.u,v:a.v,yaw:a.yaw}));
@@ -73147,10 +73147,15 @@ function hc208Build(){const V=THREE.Vector3,S={si:-1,lt:null,t:0,props:[]};
         if(ab152Cls(G,cu,cv)===0&&ab152LOS(G,cu,cv,h.u,h.v,false)){S.lamp=a;S.lampC=[cu,cv,h.u,h.v];break}}if(S.lamp)break}}
   // an Abeksi war camp in I, the one nearest the entrance: three warriors posed at its fire (the camp's own, wherever they wander, are hidden meanwhile)
   try{const cs=CAMPS.filter(C=>C.ig===5).sort((a,b)=>Math.hypot(a.x-S.H.x,a.z-S.H.z)-Math.hypot(b.x-S.H.x,b.z-S.H.z)),C=cs[0];
-    if(C){S.camp={x:C.x,z:C.z};const nx=S.H.x-C.x,nz=S.H.z-C.z,nl=Math.hypot(nx,nz)||1;S.camp.fx=nx/nl;S.camp.fz=nz/nl;
+    if(C){S.camp={x:C.x,z:C.z};const I5=INSL[5],nx=C.x-(I5.x0+I5.w/2),nz=C.z-(I5.y0+I5.h/2),nl=Math.hypot(nx,nz)||1;S.camp.fx=nx/nl;S.camp.fz=nz/nl;
       S.campE=(typeof enemies!='undefined'?enemies:[]).filter(e=>!e.dead&&!e.boss&&e.m&&e.m.visible&&Math.hypot(e.m.position.x-C.x,e.m.position.z-C.z)<16);
-      {const sx=-S.camp.fz,sz=S.camp.fx;[['nagaw',2.2,-2.6,.4],['nagaa',3.6,1.8,-.3],['nagaw',-.8,.4,.1]].forEach(([k,f,d,ry])=>{if(!EN[k])return;const m=cr(enemyC(k,10,{}));m.scale.setScalar(m.bs||1);
-          const x=C.x+S.camp.fx*f+sx*d,z=C.z+S.camp.fz*f+sz*d;m.position.set(x,GH(x,z),z);m.rotation.y=Math.atan2(S.camp.fx,S.camp.fz)+ry;m.visible=false;scene.add(m);S.props.push(m);S.campM=(S.campM||[]).concat(m)})}}}catch(e){console.warn('hc208 camp',e)}
+      {const sx=-S.camp.fz,sz=S.camp.fx;[['nagaw',-.6,-2.4,.4],['nagaa',.6,2.0,-.3],['nagaw',-2.6,.2,.1]].forEach(([k,f,d,ry])=>{if(!EN[k])return;const m=cr(enemyC(k,10,{}));m.scale.setScalar(m.bs||1);
+          const x=C.x+S.camp.fx*f+sx*d,z=C.z+S.camp.fz*f+sz*d;m.position.set(x,GH(x,z),z);m.rotation.y=Math.atan2(S.camp.fx,S.camp.fz)+ry;m.userData.hcP=[x,GH(x,z),z,m.rotation.y];m.visible=false;scene.add(m);S.props.push(m);S.campM=(S.campM||[]).concat(m)})}
+      // the camera's spot: on the camp's outer side, with a clear view of the fire (no tent or fence in front of the lens)
+      const V=THREE.Vector3,tg=new V(C.x-S.camp.fx*.6,GH(C.x,C.z)+1.3,C.z-S.camp.fz*.6),rc=new THREE.Raycaster();S.camp.cp=null;
+      for(const r of [11,9.5,8,6.5])for(const a of [0,.45,-.45,.9,-.9]){if(S.camp.cp)break;const ca=Math.cos(a),sa=Math.sin(a),dx=S.camp.fx*ca-S.camp.fz*sa,dz=S.camp.fz*ca+S.camp.fx*sa,x=C.x+dx*r,z=C.z+dz*r,o=new V(x,GH(x,z)+2.4,z);
+        const L=o.distanceTo(tg);let ok=true;if(C.g)for(const da of [0,.22,-.22]){const d=tg.clone().sub(o).normalize().applyAxisAngle(new V(0,1,0),da);rc.set(o,d);rc.far=L-1.2;if(rc.intersectObject(C.g,true).length){ok=false;break}}
+        if(ok)S.camp.cp=[x,z,tg.x,tg.y,tg.z]}}}catch(e){console.warn('hc208 camp',e)}
   // the Hilltop Ascent
   try{S.asc=ch153Build();S.ap=ch153Path()}catch(e){console.warn('hc208 ascent',e);S.asc=null}
   // the Gate of the Hydra
@@ -73175,11 +73180,12 @@ function hc208Build(){const V=THREE.Vector3,S={si:-1,lt:null,t:0,props:[]};
 function hc208Cam(S,i,k,t){const V=THREE.Vector3,Io=ic151Io,Sm=ic151Sm,g=(x,z,dy)=>new V(x,GH(x,z)+(dy||0),z);let p,l,fov=48,F=null;
   if(i===0){const H=S.H,fw=new V(Math.sin(S.yaw),0,Math.cos(S.yaw)),sd=new V(fw.z,0,-fw.x),q=Io(ic151K(k,.3,1)),d=.4*k;
     p=H.clone().addScaledVector(fw,-3.1-d+8*q).addScaledVector(sd,1.0-.5*q).add(new V(0,1.75+14*q,0));l=H.clone().addScaledVector(fw,6).add(new V(0,1.3,0)).lerp(H.clone().addScaledVector(fw,55).add(new V(0,2,0)),Sm(ic151K(k,.25,1)));fov=46+6*q;F=H}
-  else if(i===1&&S.camp){const C=S.camp,sx=-C.fz,sz=C.fx,q=Sm(k);p=g(C.x+C.fx*(13-4*q)+sx*(3.5-1.5*q),C.z+C.fz*(13-4*q)+sz*(3.5-1.5*q),1.5+.3*q);l=g(C.x+C.fx*1.5,C.z+C.fz*1.5,1.5);fov=46;F=g(C.x,C.z,0)}
+  else if(i===1&&S.camp){const C=S.camp,q=Sm(k),c=C.cp||[C.x+C.fx*11,C.z+C.fz*11,C.x,GH(C.x,C.z)+1.3,C.z],tx=c[2],tz=c[4],u=.28*q;
+    p=g(c[0]+(tx-c[0])*u,c[1]+(tz-c[1])*u,2.4-.4*q);l=new V(tx,c[3],tz);fov=46;F=g(C.x,C.z,0)}
   else if(i===2&&S.ab){const I=S.abI,X=I.x0,Y=I.y0,q=Sm(k);p=g(X+61-2.6*q,Y+20.4-2.2*q,2.4-.5*q);l=g(X+57.5,Y+9,2.2+.3*q);fov=44;F=l}
   else if(i===3&&S.ab){const I=S.abI,X=I.x0,Y=I.y0,q=Sm(k);p=g(X+117.4+1.6*q,Y+38.5+4.5*q,2.1);l=g(X+125,Y+46,1.4);fov=46;F=l}
   else if(i===4&&S.asc){const P=S.ap,a=-.95+.32*Sm(k),r=150-8*Sm(k),cx=P.cx+Math.cos(a)*r,cz=P.cz+Math.sin(a)*r,lx=P.cx+Math.cos(a)*20,lz=P.cz+Math.sin(a)*20;
-    p=new V(cx,GH(cx,cz)+38+5*Sm(k),cz);l=new V(lx,GH(lx,lz)*.72,lz);fov=54;F=new V((cx+lx)/2,0,(cz+lz)/2)}
+    p=new V(cx,GH(cx,cz)+38+5*Sm(k),cz);l=new V(lx,GH(lx,lz)*.72,lz);fov=54;F=new V(P.cx,0,P.cz)}
   else if(i===5){const D=S.door,sx=-D.fz,sz=D.fx,q=Io(k);p=g(D.x+D.fx*(36-12*q)+sx*(3.4-2.4*q),D.z+D.fz*(36-12*q)+sz*(3.4-2.4*q),2.4+2.2*q);l=g(D.x,D.z,7.2+.8*q);fov=46;F=g(D.x+D.fx*6,D.z+D.fz*6,0)}
   else if(i===6&&S.ab&&S.lamp){const I=S.abI,a=S.lamp,C=S.lampC,q=Sm(k),cu=C[0]+(C[2]-C[0])*.15*q,cv=C[1]+(C[3]-C[1])*.15*q,fy=a.yaw+(a.hy||0);
     p=g(I.x0+cu,I.y0+cv,1.75);l=g(I.x0+a.u+Math.sin(fy)*2.6,I.y0+a.v+Math.cos(fy)*2.6,.7);fov=52;F=g(I.x0+a.u,I.y0+a.v,0)}
@@ -73196,7 +73202,7 @@ function hc208Shot(t){const T=HC208.T;let i=0;while(i<T.length-1&&t>=T[i+1])i++;
 function hc208Focus(F,fn){const sv=pl.position.clone();try{pl.position.set(F.x,GH(F.x,F.z),F.z);fn()}finally{pl.position.copy(sv)}}
 function hc208Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt==null?0:t-S.lt));S.lt=t;const sh=hc208Shot(t),i=sh.i;
   const city=S.ab&&(i===2||i===3||i===6),asc=S.asc&&(i===4||i===7);
-  (S.campM||[]).forEach(m=>{m.visible=i<=1;if(i===1)try{animC(m,now,false,0)}catch(_){}});(S.campE||[]).forEach(e=>{e.m.visible=i>1});
+  (S.campM||[]).forEach(m=>{m.visible=i<=1;if(i===1)try{animC(m,now,false,0)}catch(_){}const q=m.userData.hcP;if(q){m.position.set(q[0],q[1],q[2]);m.rotation.set(0,q[3],0)}});(S.campE||[]).forEach(e=>{e.m.visible=i>1});
   if(S.ab){const R=S.ab;R.root.visible=!!city;R.lights.forEach(L=>{L.lt.intensity=city?L.i0:0});R.acts.forEach(a=>{if(a.lt)a.lt.intensity=city?(a.o.sweep?2.2:1.1):0})}
   if(S.asc)S.asc.root.visible=!!asc;
   if(S.gate){S.gate.g.visible=i===5||i===8;if(i===5)try{const H=HD154.S;H.heads.forEach((h,j)=>{const f=ic151Sm(ic151K(t,17.0+j*.55,17.5+j*.55));h.m.visible=f>0;h.halo.visible=f>0;const s=(2.0+.9*f+.2*Math.sin(t*3+j))*f;h.halo.scale.set(s,s,1);h.m.scale.setScalar(Math.max(.01,f))})}catch(_){}}
@@ -73222,6 +73228,7 @@ function hc208Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt==nu
   const c=c0,sk=i===9?.16*Math.max(0,1-Math.abs(t-(HC208.roar+1.75))/.9):0;
   if(sk>0){c.p.x+=(ic151H(t*40)-.5)*sk;c.p.y+=(ic151H(t*43+1)-.5)*sk;c.l.x+=(ic151H(t*37+2)-.5)*sk*1.6}
   c.p.y=Math.max(c.p.y,GH(c.p.x,c.p.z)+.45);
+  if(i===4){if(S.farr0==null)S.farr0=FARR;FARR=Math.max(S.farr0,240);cam.near=1.5}else{if(S.farr0!=null){FARR=S.farr0;S.farr0=null}cam.near=S.near0}
   cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
   // draw only the instance being shown; settle its sky and fog on the first frame of a shot
   const F=c.F;hc208Focus(F,()=>{try{chunkVis()}catch(_){}
@@ -73315,7 +73322,7 @@ function hc208Back(S){if(S.back)return;S.back=1;
   try{(S.fx||[]).forEach(o=>KQ.fx.push(o));S.fx=[]}catch(_){}
   try{const H=S.hyd;if(H&&!H.busy){const e=H.e;if(H.own){if(e.m.parent)e.m.parent.remove(e.m);try{e.sv.R.mats.forEach(m=>m.dispose());e.sv.R.glow.forEach(m=>m.dispose());e.sv.R.root.traverse(o=>{if(o.geometry&&o.geometry.userData.svOwn)o.geometry.dispose()})}catch(_){}}
       else{const v=H.save,s=e.sv;e.m.position.copy(v.p);e.m.rotation.y=v.ry;e.m.visible=v.vis;s.trk=v.trk;s.tt=v.tt;s.aw=v.aw;try{svApply(e,0,performance.now())}catch(_){}}}}catch(e){console.warn('hc208 hydra back',e)}
-  try{ren.domElement.style.filter=''}catch(_){}
+  try{ren.domElement.style.filter='';if(S.farr0!=null){FARR=S.farr0;S.farr0=null}cam.near=S.near0||.1}catch(_){}
   try{document.body.classList.remove('ic151d');cam.fov=S.fov0||58;cam.updateProjectionMatrix();snapCam();chunkVis();for(let n=0;n<40;n++)atmos(.05,performance.now())}catch(e){console.warn('hc208 back',e)}
   IC151.on=false;try{if(S.live&&S.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}
   // the zone's title card, held back while the cinematic played
