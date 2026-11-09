@@ -72973,7 +72973,7 @@ function en207Basic(n){return !!(KQMEL[n]||KQR[n])}
 
 // ---------------- 3. mouse-look comes back after a menu ----------------
 function ml207Check(){try{if(typeof orb=='undefined')return;const ui=uiOpen(),on=!!(orb&&orb.tg);
-  if(on){ML207.on=1;ML207.was=0;return}
+  if(on){ML207.on=1;ML207.was=ui?1:0;return}   // on with a window already open: that window is about to turn it off
   if(ML207.on&&ui)ML207.was=1;          // mouse-look was on and a window turned it off
   ML207.on=0;
   if(ML207.was&&!ui&&!orb&&party.length&&!(typeof KQS!='undefined'&&KQS.tg)){

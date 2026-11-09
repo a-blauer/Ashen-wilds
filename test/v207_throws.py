@@ -28,7 +28,8 @@ def s(pg):
     ok(all(not t['nan'] and not t['err'] and t['hit']>0 for t in T),'five throws play, each lands its knife (no NaN, no errors)')
     hs=[tuple(round(x,2) for x in t['hand']) for t in T]
     ok(len(set(hs))>=4,'the throwing hand is in a different place at release in at least 4 of 5 throws (%s)'%hs)
-    d=max(max(abs(a-b) for a,b in zip(t['start'],T[1]['start'])) for t in T[1:])   # (the first play starts from the session's first idle);e=max(max(abs(a-b) for a,b in zip(t['end'],T[0]['end'])) for t in T)
+    d=max(max(abs(a-b) for a,b in zip(t['start'],T[1]['start'])) for t in T[1:])   # the first play starts from the session's first idle
+    e=max(max(abs(a-b) for a,b in zip(t['end'],T[0]['end'])) for t in T)
     ok(d<.03 and e<.03,'every throw starts and ends in the same stance (start %.3f, end %.3f)'%(d,e))
     ok(all(t['fwd'] is not None and t['fwd']>0 for t in T),'the hand moves forward at release in every throw (%s)'%[t['fwd'] for t in T])
     b=r.get('bolt')

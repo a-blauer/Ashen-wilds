@@ -39,7 +39,7 @@ def s(pg):
     T('k2c old save',"()=>{x2Load({chq:{st:{k2c:{s:1,p:[6,3]}}}});return CHQ132.st.k2c&&CHQ132.st.k2c.p}",lambda r:r==[3])
     T('respawn line gone',"()=>{banner('X','Back where you left off','Fallen creatures return 50 seconds after they die');const b=$('banner')||document.querySelector('.banner');return b?b.textContent:document.body.innerText.includes('Fallen creatures return')?'still':'gone'}",lambda r:'Fallen creatures' not in str(r))
     # mouse-look: on, a window opens (it turns off), the window closes with a click: back on
-    ev("()=>{orbStart({clientX:400,clientY:260},1);openX('hold')}");pg.wait_for_timeout(700)
+    ev("()=>{orbStart({clientX:400,clientY:260},1)}");pg.wait_for_timeout(400);ev("()=>{openX('hold')}");pg.wait_for_timeout(700)
     T('mouse-look off in a window',"()=>!!orb",lambda r:r is False)
     clk();pg.wait_for_timeout(700)
     T('mouse-look back after the window',"()=>[!!orb,!!(orb&&orb.tg)]",lambda r:r==[True,True])
