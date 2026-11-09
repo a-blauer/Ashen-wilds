@@ -4,7 +4,8 @@
 if 'A' not in globals():
     import os,sys,subprocess;sys.exit(subprocess.call([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),'mpt.py'),os.path.abspath(__file__)]))
 import json,time
-for pg in (A,B):pg.evaluate("()=>{FAST();window.KQ_HC208=1;HC208.seen=0;hero.iv=1e9}")
+for pg in (A,B):pg.evaluate("()=>{FAST();window.KQ_HC208=1;HC208.seen=0;window.__hp=setInterval(()=>{hero.hp=heroMax();hero.iv=1e9},100);const P=INSL[5].path,q=P[Math.floor(P.length*.15)];toPos(q[0]+(MP.me<'m'?0:1),q[1])}")
+H,G=mp_roles(60000)
 fails=[]
 def chk(name,ok,info=''):
     print(('PASS ' if ok else 'FAIL ')+name,info)
