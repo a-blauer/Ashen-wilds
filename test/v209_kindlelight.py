@@ -1,7 +1,7 @@
-# v208 Kindlelight arrival cinematic: renders it frame by frame in capture mode (kc208Cap / kc208Seek) + checks.
-#   python3 v208_kindlelight.py                 -> checks + stills at key moments: test/out/v208_<t>.jpg
-#   TIMES=3,9.5 python3 v208_kindlelight.py     -> just those stills (the frames before them are stepped without drawing)
-#   VIDEO=1 FPS=24 W=1280 H=720 python3 v208_kindlelight.py -> every frame + the score -> test/out/v208_kindlelight.mp4 (ffmpeg)
+# v209 Kindlelight arrival cinematic: renders it frame by frame in capture mode (kc208Cap / kc208Seek) + checks.
+#   python3 v209_kindlelight.py                 -> checks + stills at key moments: test/out/v208_<t>.jpg
+#   TIMES=3,9.5 python3 v209_kindlelight.py     -> just those stills (the frames before them are stepped without drawing)
+#   VIDEO=1 FPS=24 W=1280 H=720 python3 v209_kindlelight.py -> every frame + the score -> test/out/v208_kindlelight.mp4 (ffmpeg)
 #     F0=/F1= a frame range, NOSOUND=1, NOENC=1 (GitHub draws it in pieces: tools/render_kc208.sh)
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
@@ -48,9 +48,13 @@ def s(pg):
     for T in TIMES:
         ev("([a,b])=>{KC208.noDraw=true;for(let t=a;t<b-.001;t+=1/15)kc208Seek(t);KC208.noDraw=false;kc208Seek(b)}",[t,T]);t=T
         pg.wait_for_timeout(300)
-        pg.screenshot(path=O+'/v208_%05.1f.jpg'%T,type='jpeg',quality=80)
+        pg.screenshot(path=O+'/v209_%05.1f.jpg'%T,type='jpeg',quality=80)
     print('err',ev("()=>KC208.err||null"))
-    # v208c (owner): no text on screen but the voice's lines: no quest cards, no name title
+    # v209c (owner): no drifting mote right by the lens while a frame is drawn (it showed as a big green square)
+    zp=ev("""()=>{const r0=POST.render;let mn=1e9,n=0;POST.render=function(){if(ZP.type!=='none'){const P=ZP.pos,C=cam.position;for(let j=0;j<P.length;j+=3)mn=Math.min(mn,Math.hypot(P[j]-C.x,P[j+1]-C.y,P[j+2]-C.z));n++}};
+      try{for(let t=31;t<37.5;t+=.1)kc208Seek(t);for(let t=0;t<7;t+=.25)kc208Seek(t)}finally{POST.render=r0}return {mn,n,type:ZP.type}}""")
+    chk('no mote by the lens in any frame',zp['n']==0 or zp['mn']>=3.9,zp)
+    # v209c (owner): no text on screen but the voice's lines: no quest cards, no name title
     tx=ev("()=>[5,12,19,29.8].map(t=>{kc208Seek(t);const D=KC208.S.dom;return +D.nc.style.opacity+ +D.bt.style.opacity})")
     chk('only the voice speaks: no cards or titles on screen',max(tx)==0,tx)
     tg=ev("()=>{kc208Seek(4);let n=0;scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;let v=true,q=o;while(q){if(q.visible===false)v=false;q=q.parent}if(v)n++});window.__tags=KC208.S.tags;return {n,hid:KC208.S.tags.length}}")

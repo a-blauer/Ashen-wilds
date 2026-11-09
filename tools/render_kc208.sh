@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render the v208 Kindlelight arrival cinematic as a video on GitHub Actions and download it (needs `gh`).
+# Render the v209 Kindlelight arrival cinematic as a video on GitHub Actions and download it (needs `gh`).
 #   tools/render_kc208.sh            # renders the committed HEAD -> test/out/kc208.mp4 (with sound)
 # Commit first: only committed work is rendered. 8 pieces are drawn at the same time (.github/workflows/render-kc208.yml).
 set -euo pipefail

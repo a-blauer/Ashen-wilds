@@ -73098,7 +73098,8 @@ WBEH.crossbow=function(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTime
   launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow',bolt:1},raw,.75);
   const sh=shots[shots.length-1];if(sh){bl207Swap(sh);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.3);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}
   sfx('arrow');shake(.05)},base*380)};   // as 0580's, with the bolt at its own size (was the arrow scaled 1.5×)
-// ================= v208: Kindlelight's arrival cinematic =================
+// ================= v209: Kindlelight's arrival cinematic =================
+// (built as v208 in parallel with v208's Sovereign essence, renamed v209 on merge; its names keep the kc208 / KC208 prefix)
 // Owner (Nov 9 2026): "Add a cinematic for when you first enter kindlelight. The voice from the intro will be the same voice
 // talking to you in this one … While this dialogue is going showcase the 3 different instances here - some enemies, quest
 // objectives and then a menacing preview of Argus as the line about him is said."
@@ -73106,18 +73107,18 @@ WBEH.crossbow=function(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTime
 // the real world (every instance is part of the one world map, so the camera only has to fly there):
 //   1. Kindlelight I  — the dark Lantern Road: its unlit lampposts, a pack of I's creatures crossing ahead (The Lantern Road)
 //   2. Kindlelight II — the hatch in the Glowmire Warren (its brood around it), then down into the Seeping Lair: the crystal on
-//      its dais and Vorraxis guarding it, who rears with his scythes up (The Glowmire Crystal; v208b, owner)
+//      its dais and Vorraxis guarding it, who rears with his scythes up (The Glowmire Crystal; v209b, owner)
 //   3. Kindlelight III — a rune sigil in the Rotwood, lichen shamblers drifting past (The Three Sigils)
 //   4. the Den — Argus far off in the fog, then close-ups as his eyes open (the flank, the snarling muzzle, the great brow eye),
-//      then he rears and howls (v208b, owner: no crouch before the roar, close-ups instead)
+//      then he rears and howls (v209b, owner: no crouch before the roar, close-ups instead)
 //   5. back on the hero, the camera swings in behind him and the game begins.
 // The voice is the intro's voice: the same drifting, glitching subtitle lettering (IM Fell English SC) over the same low drone
 // and far choir. Every frame is a pure function of the time t (kc208Seek), so tests render it frame by frame
-// (test/v208_kindlelight.py). The creatures are stand-ins (models only, no AI) made for the shots and removed afterwards; the
+// (test/v209_kindlelight.py). The creatures are stand-ins (models only, no AI) made for the shots and removed afterwards; the
 // real creatures, Argus and the quest scenery are only posed and put back as they were.
 // Local only: each player sees it on their own first arrival (co-op partners see the hero standing at the entrance meanwhile).
 // Skip: the Skip button, Esc, Enter or Space. Not played under test automation unless window.KQ_KC208; SET.intro 0 turns it off.
-var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4,
+var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4,zpR:4,
   lines:[{a:1.4,b:4.7,s:'Kindlelight is a cursed place.'},
     {a:8.0,b:11.8,s:'Rot and wrath manifested…'},
     {a:14.9,b:18.9,s:'…through caustic rivers and decaying flora.'},
@@ -73127,7 +73128,7 @@ var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4
   den:[23.8,25.8,27.6,28.85],   // the cuts inside the Den: wide → flank eyes → muzzle → brow eye → the howl
   // the shots (start, end)
   sh:[[0,7.4],[7.4,10.2],[10.2,14.4],[14.4,21.4],[21.4,31.0],[31.0,37.6]],   // I · the hatch · the Seeping Lair · III · the Den · the hero
-  // name cards: [from, to, small line, name, line under it]; none since v208c (owner: "remove the text describing the areas and
+  // name cards: [from, to, small line, name, line under it]; none since v209c (owner: "remove the text describing the areas and
   // only have the visuals. I want the player to focus on the dialogue"), Argus' name off too (name:true brings it back)
   cards:[],name:false};
 function kc208Want(){if(window.KQ_KC208)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;try{if(typeof SET!='undefined'&&SET.intro===0)return false}catch(_){}return true}
@@ -73272,7 +73273,13 @@ function kc208Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt0==n
     else if(c.hero){L.intensity=0;L2.intensity=0}else{L2.intensity=0;L.color.setHex(0xb8d0ff);L.intensity=c.sh===0?1.8:c.sh===1?.7:c.sh===2?.9:1.6;if(c.sh===1)L.color.setHex(0xa8d890);L.distance=30;L.position.set(F.x+(c.p.x-F.x)*.4,F.y+6,F.z+(c.p.z-F.z)*.4)}}
   WIND.t.value=now/1000;FADE.cam.value.copy(cam.position);if(c.hero)FADE.pl.value.set(pl.position.x,pl.position.y+1.1,pl.position.z);else FADE.pl.value.set(c.F.x,c.F.y+1.4,c.F.z);
   try{fxStep(dt)}catch(_){}
-  kc208Dom(S,t,c);try{if(!KC208.noDraw)POST.render()}finally{pl.position.copy(S.home)}}   // between frames the hero is home again (timers, co-op, the roster read it)
+  kc208Dom(S,t,c);const zp=kc208ZpClear();try{if(!KC208.noDraw)POST.render()}finally{kc208ZpBack(zp);pl.position.copy(S.home)}}
+// the zone's drifting motes (ZP points) are drawn the same world size at any distance: one passing right by the lens fills the
+// screen with a green square (owner, v209c). For the draw only, those within KC208.zpR of the camera step aside; put back after.
+function kc208ZpClear(){if(typeof ZP=='undefined'||!ZP.pos)return null;const P=ZP.pos,C=cam.position,R2=KC208.zpR*KC208.zpR,out=[];
+  for(let j=0;j<P.length;j+=3){const dx=P[j]-C.x,dy=P[j+1]-C.y,dz=P[j+2]-C.z;if(dx*dx+dy*dy+dz*dz<R2){out.push(j,P[j+1]);P[j+1]=-1e4}}
+  if(out.length)ZP.geo.attributes.position.needsUpdate=true;return out}
+function kc208ZpBack(o){if(!o||!o.length)return;for(let i=0;i<o.length;i+=2)ZP.pos[o[i]+1]=o[i+1];ZP.geo.attributes.position.needsUpdate=true}   // between frames the hero is home again (timers, co-op, the roster read it)
 // Argus: deep in the fog, eyes shut; they open in a wave over his body as the voice speaks of him, then he lifts his head and howls
 var KC208SN0={neck:[.1,0,0],head:[.05,0,0],jaw:[.1,0,0]},KC208SN={neck:[.2,0,0],head:[.12,0,0],jaw:[.42,0,0]};
 var KC208A=[[25.6,{},'io'],[26.6,KC208SN0,'io'],[27.5,KC208SN,'io',.006],[28.6,KC208SN,'l',.012],[29.05,'howl','o'],[30.4,'howl','l',.02],[31.0,'howl','l']];
@@ -73367,7 +73374,7 @@ function kc208Score(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.g
 function kc208Start(cap){if(KC208.run)return false;let S;try{S=kc208Build()}catch(e){console.warn('kc208 build',e);return false}
   KC208.S=S;KC208.run=true;KC208.on=true;KC208.seen=1;KC208.skipT=null;S.fresh=true;S.fov0=cam.fov;S.home=pl.position.clone();S.home.y=GH(S.home.x,S.home.z);
   try{if(MQ145.S)S.sig0=MQ145.S.sig.map(M=>M.g.visible)}catch(_){}
-  // no words in the world either (v208c): the floating name tags and markers (text sprites) are hidden, and put back after
+  // no words in the world either (v209c): the floating name tags and markers (text sprites) are hidden, and put back after
   S.tags=[];try{scene.traverse(o=>{if(o.isSprite&&o.visible&&o.material&&o.material.map&&o.material.map.isCanvasTexture){S.tags.push(o);o.visible=false}})}catch(_){}
   try{ic151DCss();document.body.classList.add('ic151d');dispatchEvent(new Event('resize'))}catch(_){}
   kc208Layer(S);if(cap)S.dom.skip.style.display='none';return true}

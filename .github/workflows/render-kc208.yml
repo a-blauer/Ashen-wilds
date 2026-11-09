@@ -1,4 +1,4 @@
-# Renders the v208 Kindlelight arrival cinematic as a video on GitHub Actions (tools/render_kc208.sh starts it and fetches
+# Renders the v209 Kindlelight arrival cinematic as a video on GitHub Actions (tools/render_kc208.sh starts it and fetches
 # the result; this workspace draws ~5 frames a minute, GitHub draws 8 pieces at once). Always draws the whole film.
 #   - push to render-kc/<anything> (tools/render_kc208.sh does it)
 #   - result: kc208.mp4 pushed to the short-lived branch render-out/kc208 (the script downloads it, then deletes the branch)
@@ -44,7 +44,7 @@ jobs:
       - name: Draw piece ${{ matrix.seg }}
         run: |
           f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); [ $f1 -gt $N ] && f1=$N
-          (cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 timeout 80m python3 v208_kindlelight.py > ../draw.log 2>&1) || true
+          (cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 timeout 80m python3 v209_kindlelight.py > ../draw.log 2>&1) || true
           got=$(ls test/out/v208_frames 2>/dev/null | wc -l); echo "frames $got of $((f1-f0))"; tail -20 draw.log
           [ "$got" -eq $((f1-f0)) ] || { echo "::error title=piece ${{ matrix.seg }}::frames $got of $((f1-f0)) | $(tail -6 draw.log | tr '\n' '|' | cut -c1-1500)"; exit 1; }
           mkdir -p piece
@@ -69,7 +69,7 @@ jobs:
       - name: Build
         run: ./build.sh
       - name: Sound
-        run: cd test && VIDEO=1 NOENC=1 F0=0 F1=0 python3 v208_kindlelight.py 2>&1 | tail -20 && test -s out/v208_sound.wav
+        run: cd test && VIDEO=1 NOENC=1 F0=0 F1=0 python3 v209_kindlelight.py 2>&1 | tail -20 && test -s out/v208_sound.wav
       - uses: actions/upload-artifact@v4
         with: {name: sound, path: test/out/v208_sound.wav, retention-days: 3}
   join:
