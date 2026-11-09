@@ -50,6 +50,9 @@ def s(pg):
         pg.wait_for_timeout(300)
         pg.screenshot(path=O+'/v208_%05.1f.jpg'%T,type='jpeg',quality=80)
     print('err',ev("()=>KC208.err||null"))
+    # v208c (owner): no text on screen but the voice's lines: no quest cards, no name title
+    tx=ev("()=>[5,12,19,29.8].map(t=>{kc208Seek(t);const D=KC208.S.dom;return +D.nc.style.opacity+ +D.bt.style.opacity})")
+    chk('only the voice speaks: no cards or titles on screen',max(tx)==0,tx)
     ev("()=>kc208Seek(KC208.len+1)")
     chk('ends: overlay gone, loop runs, seen saved',ev("()=>!KC208.run&&!KC208.on&&!document.getElementById('kc208')&&x2Save().kc208===1"))
     chk('stand-ins removed',ev("()=>{let n=0;scene.traverse(o=>{if(o.userData&&o.userData.noFarCull&&o.userData.psNo&&o.isE)n++});return n}")==0)

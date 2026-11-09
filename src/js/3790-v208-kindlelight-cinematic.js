@@ -27,10 +27,9 @@ var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4
   den:[23.8,25.8,27.6,28.85],   // the cuts inside the Den: wide → flank eyes → muzzle → brow eye → the howl
   // the shots (start, end)
   sh:[[0,7.4],[7.4,10.2],[10.2,14.4],[14.4,21.4],[21.4,31.0],[31.0,37.6]],   // I · the hatch · the Seeping Lair · III · the Den · the hero
-  // name cards: [from, to, small line, name, line under it]
-  cards:[[3.2,6.9,'Main Quest · Kindlelight I','The Lantern Road','Relight the lampposts with glowbulbs from the creatures you slay'],
-    [10.8,14.1,'Main Quest · Kindlelight II','The Glowmire Crystal','Below the Glowmire Warren, Vorraxis guards the crystal'],
-    [17.2,21.0,'Main Quest · Kindlelight III','The Three Sigils','Attune the rune sigils to unseal the way to the den']]};
+  // name cards: [from, to, small line, name, line under it]; none since v208c (owner: "remove the text describing the areas and
+  // only have the visuals. I want the player to focus on the dialogue"), Argus' name off too (name:true brings it back)
+  cards:[],name:false};
 function kc208Want(){if(window.KQ_KC208)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;try{if(typeof SET!='undefined'&&SET.intro===0)return false}catch(_){}return true}
 // heroes who already know Kindlelight never see it (saves from before v208): a reached instance past I, the Lantern Road met,
 // the outpost seen, Argus beaten
@@ -232,7 +231,7 @@ function kc208Dom(S,t,c){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm,T=
   if(cc&&D.nc.dataset.n!==cc[3]){D.nc.dataset.n=cc[3];D.nc.querySelector('s').textContent=cc[2];D.nc.querySelector('b').textContent=cc[3];D.nc.querySelector('i').textContent=cc[4]}
   D.nc.style.opacity=ck.toFixed(3);D.nc.style.transform='translateX('+((1-ck)*-14).toFixed(1)+'px)';
   // his name, as he howls
-  const bk=Sm(K(t,29.0,29.5))*(1-Sm(K(t,30.4,30.95)));D.bt.style.opacity=bk.toFixed(3);D.bt.style.transform='scale('+(1.06-.06*Sm(K(t,29,30.9))).toFixed(3)+')';
+  const bk=KC208.name?Sm(K(t,29.0,29.5))*(1-Sm(K(t,30.4,30.95))):0;D.bt.style.opacity=bk.toFixed(3);D.bt.style.transform='scale('+(1.06-.06*Sm(K(t,29,30.9))).toFixed(3)+')';
   D.bt.style.filter='blur('+((1-Sm(K(t,29.0,29.4)))*6).toFixed(2)+'px)'}
 
 // ---------------- sound: the voice's drone and choir, a toll for each reach, the den, the resolve ----------------
