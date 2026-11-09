@@ -14,7 +14,9 @@ env:
   FPS: '20'
   W: '960'
   H: '540'
-  SEG: '64'
+  # pieces split only on the cinematic's camera cuts (frames at 20 fps: HC208.T, the roar's close-up, the cut to black), so any
+  # small difference between two machines' drawing falls on a cut and never shows as a jump
+  CUTS: '0,68,148,198,246,318,420,468,516,568,639,700,748'
   LEN: '37.4'
 jobs:
   plan:
@@ -25,7 +27,7 @@ jobs:
     steps:
       - id: p
         run: |
-          python3 -c "import math,json,os;n=math.ceil(float(os.environ['LEN'])*float(os.environ['FPS']));k=math.ceil(n/int(os.environ['SEG']));print('n=%d'%n);print('segs='+json.dumps(list(range(k))))" >> "$GITHUB_OUTPUT"
+          python3 -c "import json,os;c=[int(x) for x in os.environ['CUTS'].split(',')];print('n=%d'%c[-1]);print('segs='+json.dumps(list(range(len(c)-1))))" >> "$GITHUB_OUTPUT"
   render:
     needs: plan
     runs-on: ubuntu-24.04
@@ -51,7 +53,7 @@ jobs:
         run: ./build.sh
       - name: Draw piece ${{ matrix.seg }}
         run: |
-          f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); n=${{ needs.plan.outputs.n }}; [ $f1 -gt $n ] && f1=$n
+          IFS=, read -ra C <<< "$CUTS"; f0=${C[${{ matrix.seg }}]}; f1=${C[$(( ${{ matrix.seg }} + 1 ))]}
           got=0
           for try in 1 2; do
             rm -rf test/out/v208_frames
