@@ -60,7 +60,10 @@ def s(pg):
     # live: the first arrival plays it (portal fade), the game waits, the title card waits, Esc skips, the card follows; never twice
     ev("()=>{window.KQ_KC208=1;KC208.seen=0;KC208.t=0;toPos(40,349.4);ZT116.last=null}");pg.wait_for_timeout(800)
     ev("()=>{window.__zt=0;const h=document.getElementById('ztc116');if(h)h.textContent=''}")
-    ev("()=>enterMap(0,0)");pg.wait_for_timeout(2500)
+    ev("()=>enterMap(0,0)");pg.wait_for_timeout(1500)
+    for _ in range(40):
+        if ev("()=>KC208.run&&(KC208.t||0)>0"):break
+        pg.wait_for_timeout(250)
     lv=ev("()=>({run:KC208.run,dom:!!document.getElementById('kc208'),t:KC208.t||0,q:(KC208.q||[]).length,zt:((document.getElementById('ztc116')||{}).textContent||'').indexOf('Kindlelight')>=0?1:0,x:pl.position.x})");print('live',lv)
     chk('plays on the first arrival in Kindlelight',lv['run'] and lv['dom'] and lv['t']>0,lv)
     chk('the zone title card waits for it',lv['zt']==0 and lv['q']>=1,lv)

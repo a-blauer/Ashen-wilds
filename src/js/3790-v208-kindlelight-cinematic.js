@@ -120,6 +120,8 @@ function kc208Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt0==n
   if(c.hero)try{compTick(dt,now)}catch(_){}
   // the world around the subject: chunks, instance clip, zone light (settled at once on a cut)
   const F=c.F;try{chunkVis();if(cut||S.fresh){for(let i=0;i<3;i++)atmos(1,now)}else atmos(dt,now)}catch(e){if(!S.ae){S.ae=1;console.warn('kc208 atmos',e)}}
+  // the hero's floating lantern stays with the hero: hidden elsewhere, settled beside him again on the cut back
+  try{if(typeof FLAN!='undefined'&&FLAN.root){if(!c.hero)FLAN.root.visible=false;else if((cut||S.fresh)&&FLAN.root.visible){for(let i=0;i<80;i++)flanStep(FLAN,pl,flanLift(),.05,now);torch.position.copy(FLAN.pos)}}}catch(_){}
   S.fresh=false;if(c.sh===3)try{scene.fog.density=Math.min(scene.fog.density,.03)}catch(_){}
   try{if(c.hero){torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3)}else{torch.position.set(F.x,F.y+2.4,F.z);torch.intensity*=.55}pln.constant=-pl.position.y}catch(_){}
   // the subject's light: none on the hero (his lantern), a cold glow elsewhere, a dim amber pool on Argus
