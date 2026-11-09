@@ -8,6 +8,11 @@ JS=r"""(shot)=>{const T=V100T,out={};const ks=[0,.2,.33,.42,.55,.8,1];T.size(170
     const R=r.rec,h=Math.max(0,r.hitF),q=i=>R[Math.max(0,Math.min(R.length-1,i))];const a=q(h-2),b=q(h+1),hc=q(h).hR;
     out.throws.push({ms:Math.round(r.ms),n:R.length,hit:h,hand:hc,start:q(0).hR,end:q(R.length-1).hR,fwd:a&&b?+(b.hR[2]-a.hR[2]).toFixed(3):null,nan:R.some(s=>s.nan),err:r.errs.join(' ')})}
   if(C)out.sheet=C.c.toDataURL('image/png');
+  // the turn: a foe off to the side; the hero eases round to it during the wind-up instead of snapping (largest turn in one 16 ms frame)
+  T.equip('knives');refreshGear(pl,hero.cls,eq);const P=pl.position,yaw0=0;pl.rotation.y=yaw0;const e=spawnEnemy('skeleton',P.x+5,P.z,1,{});
+  if(e){tgt=e;HA.cur=null;atkCd=0;let now=performance.now();KN207.last=now;swing();const A=HA.cur;let mx=0,prev=pl.rotation.y,rel=-1,ys=[];
+    for(let f=0;f<60;f++){now+=16;animHero(now,false,pl);const y=pl.rotation.y,dy=Math.abs(Math.atan2(Math.sin(y-prev),Math.cos(y-prev)));mx=Math.max(mx,dy);prev=y;if(A&&A.hit&&rel<0)rel=f;if(f%6==0)ys.push(+y.toFixed(2))}
+    out.turn={maxStep:+mx.toFixed(3),final:+pl.rotation.y.toFixed(2),want:+Math.atan2(e.m.position.x-P.x,e.m.position.z-P.z).toFixed(2),rel,ys};e.dead=1;e.m.visible=false;tgt=null}
   // a crossbow bolt
   T.equip('crossbow');refreshGear(pl,hero.cls,eq);shots.length=0;WBEH.crossbow(CLS[hero.cls],HS(),10,V(0,0,1),1,.1);
   return new Promise(res=>setTimeout(()=>{const sh=shots[shots.length-1];if(!sh){out.bolt=null;res(out);return}sh.m.updateMatrixWorld(true);
@@ -32,6 +37,8 @@ def s(pg):
     e=max(max(abs(a-b) for a,b in zip(t['end'],T[0]['end'])) for t in T)
     ok(d<.03 and e<.03,'every throw starts and ends in the same stance (start %.3f, end %.3f)'%(d,e))
     ok(all(t['fwd'] is not None and t['fwd']>0 for t in T),'the hand moves forward at release in every throw (%s)'%[t['fwd'] for t in T])
+    t=r.get('turn')
+    ok(bool(t and t['maxStep']<.35 and abs(t['final']-t['want'])<.15),'the hero eases round to a foe at the side (no snap: largest turn in one frame %s, ends at %s for %s)'%(t and t['maxStep'],t and t['final'],t and t['want']))
     b=r.get('bolt')
     ok(bool(b and b['bolt'] and .55<b['len']<.85 and b['wide']<.15 and b['along']>.95),'a crossbow shoots a bolt ~0.7 long, pointing along its flight (%s)'%b)
     print('FAILS',fails)
