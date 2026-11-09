@@ -130,10 +130,31 @@ try:
     # boss credit: A slays Sovereign 0 while B stands in Duskhold
     check('neither has beaten Sovereign 0',A.evaluate("()=>!bossDone.has(0)") and B.evaluate("()=>!bossDone.has(0)"))
     A.evaluate("()=>{const e=bossEnt(0);e.c.h=0;e.dead=1;kill(e)}")
-    check('A cleared the map',A.evaluate("()=>bossDone.has(0)"))
-    check('B gets the credit in Duskhold',until(B,"()=>bossDone.has(0)",20))
-    check('B gets the Sovereign power',B.evaluate("()=>hero.buffs.some(b=>b.perm&&b.n==BOSSES[0].pw.n)"))
+    # v208: a kill leaves the essence to siphon; the zone is cleared only when it is poured into Duskhold's fountain
+    check('A slew it: its essence waits, nothing cleared yet',A.evaluate("()=>se208St(0)===1&&!bossDone.has(0)"))
+    check('B gets the credit in Duskhold: the essence waits in the den for B',until(B,"()=>se208St(0)===1&&!!SE208.mk[0]",20),B.evaluate("()=>[se208St(0),!!SE208.mk[0]]"))
     check('B is told who did it',B.evaluate("()=>[...document.querySelectorAll('#glog div')].some(d=>/Aria slew/.test(d.textContent))"))
+    # in the den A siphons by its corpse while B watches: B sees the siphon stream (a relayed effect); then both pour in Duskhold
+    # (effects are not relayed in Duskhold: MP.others counts partners in the same field / den region only)
+    mk=A.evaluate("()=>{const M=SE208.mk[0];return [M.x,M.z]}")
+    for pg,d in ((A,2),(B,3.4)): pg.evaluate("([x,z,d])=>{toPos(x+d,z+.5);hero.hp=heroMax()}",[mk[0],mk[1],d])
+    SEE="()=>MP.rg>=0&&Object.values(MP.rh).some(r=>r.m&&r.m.visible&&r.pr&&r.pr.rg===MP.rg)"
+    until(A,SEE,20);until(B,SEE,20)
+    DG2="()=>JSON.stringify([MPV.cnt,MP.rg,MP.others,Object.values(MP.rh).map(r=>[r.m&&r.m.visible,r.pr&&r.pr.rg])])"
+    v0=B.evaluate("()=>(MPV.cnt&&MPV.cnt.V)|0")
+    sp=A.evaluate("()=>{const p=worldPrompt();if(p&&/Siphon/.test(p.label))p.fn();return [p&&p.label,!!SE208.ch]}")
+    check('A siphons by the corpse',sp[1],sp)
+    check('B sees A siphon (relayed stream)',until(B,"()=>((MPV.cnt&&MPV.cnt.V)|0)>"+str(v0),10),'B '+B.evaluate(DG2)+' A '+A.evaluate(DG2))
+    check('A holds the essence, the rift is open',until(A,"()=>se208St(0)===2&&!!SE208.rift[0]",15),A.evaluate("()=>[se208St(0),!!SE208.ch]"))
+    B.evaluate("()=>{se208Done(0)}")
+    for pg in (A,B): pg.evaluate("()=>{const T=TOWNS[0];toPos(T.cx,T.cy+(hero.cls=='mage'?-3.4:3.4))}")
+    A.wait_for_timeout(1500)
+    A.evaluate("()=>{promptTick();if(PR&&/Pour/.test(PR.label))PR.fn()}")
+    check('A poured: the map is cleared for A',until(A,"()=>bossDone.has(0)",10))
+    check('B still holds its own essence',B.evaluate("()=>se208St(0)===2&&!bossDone.has(0)"))
+    bp=B.evaluate("()=>{promptTick();const l=PR&&PR.label;if(PR&&/Pour/.test(l))PR.fn();return l}")
+    check('B poured: map cleared for B too',until(B,"()=>bossDone.has(0)",10),bp)
+    check('B gets the Sovereign power',B.evaluate("()=>hero.buffs.some(b=>b.perm&&b.n==BOSSES[0].pw.n)"))
     # Vorraxis credit
     B.evaluate("()=>{MQ144.st=0}")
     A.evaluate("()=>bc148Send('v144')")

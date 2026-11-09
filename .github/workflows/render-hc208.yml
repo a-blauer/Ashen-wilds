@@ -1,4 +1,4 @@
-# Renders the v208 Hillside Crest arrival cinematic as a review video (test/v208_video.py), drawn in pieces at the same time.
+# Renders the v210 Hillside Crest arrival cinematic as a review video (test/v210_video.py), drawn in pieces at the same time.
 #   start: push a commit to a branch render-hc/<anything>   (e.g. git push -f origin HEAD:refs/heads/render-hc/v208)
 #   result: hc208.mp4 pushed to the short-lived branch render-out/hc208 (this workspace can't download Actions artifacts)
 name: Render Hillside cinematic
@@ -57,7 +57,7 @@ jobs:
           got=0
           for try in 1 2; do
             rm -rf test/out/v208_frames
-            (cd test && F0=$f0 F1=$f1 timeout 100m python3 v208_video.py > ../draw.log 2>&1) || true
+            (cd test && F0=$f0 F1=$f1 timeout 100m python3 v210_video.py > ../draw.log 2>&1) || true
             got=$(ls test/out/v208_frames 2>/dev/null | wc -l); echo "try $try: frames $got of $((f1-f0))"; grep -vE '^frame ' draw.log | tail -25
             [ "$got" -eq $((f1-f0)) ] && break
             echo "::warning title=piece ${{ matrix.seg }} try $try::frames $got of $((f1-f0)) | $( (grep -iE 'error|fail|timeout|crash|closed' draw.log | tail -8; tail -3 draw.log) | tr '\n' '|' | cut -c1-1800)"
@@ -86,7 +86,7 @@ jobs:
       - name: Build
         run: ./build.sh
       - name: Sound
-        run: cd test && SOUND=1 F0=0 F1=0 python3 v208_video.py 2>&1 | tail -20 && test -s out/v208_sound.wav
+        run: cd test && SOUND=1 F0=0 F1=0 python3 v210_video.py 2>&1 | tail -20 && test -s out/v208_sound.wav
       - uses: actions/upload-artifact@v4
         with: {name: sound, path: test/out/v208_sound.wav, retention-days: 3}
   join:

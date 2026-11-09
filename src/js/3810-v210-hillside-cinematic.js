@@ -1,4 +1,4 @@
-// ================= v208: Hillside Crest's arrival cinematic =================
+// ================= v210: Hillside Crest's arrival cinematic (made as v208 next to v208's Sovereign essence; names hc208*) =================
 // Owner (Nov 9 2026): "Add a cinematic for Hillside crest when you first enter it. The same voice from the intro will be the
 // voice speaking to you now … While the dialogue is going showcase different instances within hillside crest, creatures, quest
 // objectives, and then a menacing preview of the sovereign."
@@ -33,6 +33,8 @@ function hc208Want(I){try{if(!I||I.z!==1||HC208.seen||HC208.run)return false;if(
 
 // ---------------- set-up: everything the shots need, made once when it starts ----------------
 function hc208Build(){const V=THREE.Vector3,S={si:-1,lt:null,t:0,props:[]};
+  // no words in the world either (as in the Kindlelight cinematic, v209c): floating name tags and markers are hidden until the hand-back
+  S.tags=[];try{scene.traverse(o=>{if(o.isSprite&&o.visible&&o.material&&o.material.map&&o.material.map.isCanvasTexture){S.tags.push(o);o.visible=false}})}catch(_){}
   S.H=pl.position.clone();S.yaw=pl.rotation.y;S.fx=[];S.near0=cam.near;
   // Abeksi (built here if the hero has not been inside yet; 3155 hides it again once the game runs)
   try{S.ab=ab152Build();S.abI=S.ab.I}catch(e){console.warn('hc208 city',e);S.ab=null}
@@ -203,6 +205,7 @@ function hc208Back(S){if(S.back)return;S.back=1;
   try{if(S.gate){const I=curIns();S.gate.g.visible=!!I&&I.g===S.gate.ig;const H=HD154.S;if(H)H.heads.forEach(h=>{h.f=0;h.m.scale.setScalar(1)})}}catch(_){}
   try{(S.props||[]).forEach(m=>{if(m.parent)m.parent.remove(m)});S.props=[];S.mons=null;(S.campE||[]).forEach(e=>{e.m.visible=true});S.campE=null}catch(_){}
   try{(S.fx||[]).forEach(o=>KQ.fx.push(o));S.fx=[]}catch(_){}
+  try{(S.tags||[]).forEach(o=>{o.visible=true});S.tags=[]}catch(_){}
   try{const H=S.hyd;if(H&&!H.busy){const e=H.e;if(H.own){if(e.m.parent)e.m.parent.remove(e.m);try{e.sv.R.mats.forEach(m=>m.dispose());e.sv.R.glow.forEach(m=>m.dispose());e.sv.R.root.traverse(o=>{if(o.geometry&&o.geometry.userData.svOwn)o.geometry.dispose()})}catch(_){}}
       else{const v=H.save,s=e.sv;e.m.position.copy(v.p);e.m.rotation.y=v.ry;e.m.visible=v.vis;s.trk=v.trk;s.tt=v.tt;s.aw=v.aw;try{svApply(e,0,performance.now())}catch(_){}}}}catch(e){console.warn('hc208 hydra back',e)}
   try{ren.domElement.style.filter='';if(S.farr0!=null){FARR=S.farr0;S.farr0=null}cam.near=S.near0||.1}catch(_){}

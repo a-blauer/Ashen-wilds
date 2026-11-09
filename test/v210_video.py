@@ -1,5 +1,5 @@
-# v208: Hillside Crest's arrival cinematic as video frames (capture mode: hc208Cap / hc208Seek), for review.
-#   F0=0 F1=748 FPS=20 W=960 H=540 python3 v208_video.py   -> test/out/v208_frames/f%05d.jpg (frames F0..F1-1)
+# v210: Hillside Crest's arrival cinematic as video frames (capture mode: hc208Cap / hc208Seek), for review.
+#   F0=0 F1=748 FPS=20 W=960 H=540 python3 v210_video.py   -> test/out/v208_frames/f%05d.jpg (frames F0..F1-1)
 #   SOUND=1 ...                                              -> test/out/v208_sound.wav too (the score + the Hydra's hiss and roar)
 # GitHub draws it in pieces at the same time: .github/workflows/render-hc208.yml (push a commit to render-hc/<name>).
 import os,sys,base64,json

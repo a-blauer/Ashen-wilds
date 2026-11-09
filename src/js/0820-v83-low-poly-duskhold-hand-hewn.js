@@ -168,6 +168,7 @@ function buildTown(T){
     TANIM.push({x:T.cx,z:T.cy,f:now=>{const t0=now/1000;dr.forEach(([d,s,ph,th])=>{const t=(t0*.9+ph)%1;let r,y;
       if(s==0){r=.15+.4*t;y=2.3+.55*Math.sin(Math.PI*t)}else if(s==1){r=.6+.5*t;y=2.3-.85*t*t}else{r=1.1+.95*t;y=1.5-.95*t*t}
       d.position.set(Math.cos(th)*r,y,Math.sin(th)*r)})}});
+    T.ftnG=f;T.ftnA=TANIM[TANIM.length-1];   // v208: rebuilt as the fountain of essence (3796)
   }
   // ---------- Trading Post (centre): log hall with striped awning ----------
   {const b=new THREE.Group();b.position.set(0,0,-10.5);g.add(b);const W1=4.8,D=4;

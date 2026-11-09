@@ -50,7 +50,7 @@ function heroHit(e,raw,mt,o){
   const wasWind=e.atk&&e.atk.ph==0,h0=e.c.h;
   const d=heroHit_base(e,raw,mt,o);
   // hit sound
-  if(t-lastHitSnd>40){lastHitSnd=t;const w=hero.cls=='mage'||(s&&s.mt=='m')?'zap':(s&&s.arrow)||hero.cls=='ranger'?'arrow':hero.cls=='paladin'?'blunt':hero.cls=='assassin'?'stab':'slash';sfx(w);if(o.crit||(d&&e.c.h<h0&&h0-e.c.h>M(e.c)*.2))sfx('crit')}
+  if(t-lastHitSnd>40){lastHitSnd=t;const w=hero.cls=='mage'||(s&&s.mt=='m')?'zap':(s&&s.arrow)||hero.cls=='ranger'?'ahit':hero.cls=='paladin'?'blunt':hero.cls=='assassin'?'stab':'slash';sfx(w);if(o.crit||(d&&e.c.h<h0&&h0-e.c.h>M(e.c)*.2))sfx('crit')}
   // break: a heavy hit or any skill interrupts a special attack wind-up
   if(wasWind&&!e.dead&&!e.boss&&e.atk&&cbBreakChk(e)){mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
   return d;

@@ -1,6 +1,6 @@
-# v208: Hillside Crest's arrival cinematic.
+# v210: Hillside Crest's arrival cinematic.
 #   checks: the first arrival in Hillside Crest plays it (KQ_HC208), the zone card waits, Skip ends it and hands the game back,
-#   it is saved as seen and never plays again; then frames of every shot -> <AW_TMP>/v208_<t>.png (FRAMES=0 skips them,
+#   it is saved as seen and never plays again; then frames of every shot -> <AW_TMP>/v210_<t>.png (FRAMES=0 skips them,
 #   TIMES=1.5,5 picks the times)
 import play,os,json
 TIMES=[float(x) for x in os.environ.get('TIMES','1.6,5.2,8.6,11.2,14.0,18.6,22.3,24.7,27.2,29.4,31.2,32.4,33.9,34.7,36.2').split(',') if x]
@@ -34,7 +34,7 @@ def s(pg):
         for t in TIMES:
             pg.evaluate("""async(t)=>{if(window.__fast)__fast.draw=1;let x=window.__lt||0;while(x<t-.05){x=Math.min(t,x+.1);HC208.noDraw=1;hc208Seek(x)}HC208.noDraw=0;hc208Seek(t);window.__lt=t;return 1}""",t)
             pg.wait_for_timeout(400)
-            pg.screenshot(path=play.TMP+'/v208_%04.1f.png'%t,timeout=600000);print('shot',t)
+            pg.screenshot(path=play.TMP+'/v210_%04.1f.png'%t,timeout=600000);print('shot',t)
         e=pg.evaluate("()=>HC208.err||null")
         if e:fails.append('frame error '+e)
     for f in fails:print('FAIL',f)
