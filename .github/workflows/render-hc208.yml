@@ -1,0 +1,108 @@
+# Renders the v208 Hillside Crest arrival cinematic as a review video (test/v208_video.py), drawn in pieces at the same time.
+#   start: push a commit to a branch render-hc/<anything>   (e.g. git push -f origin HEAD:refs/heads/render-hc/v208)
+#   result: hc208.mp4 pushed to the short-lived branch render-out/hc208 (this workspace can't download Actions artifacts)
+name: Render Hillside cinematic
+on:
+  push:
+    branches: ['render-hc/**']
+concurrency:
+  group: render-hc-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+env:
+  FPS: '20'
+  W: '960'
+  H: '540'
+  SEG: '64'
+  LEN: '37.4'
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      segs: ${{ steps.p.outputs.segs }}
+      n: ${{ steps.p.outputs.n }}
+    steps:
+      - id: p
+        run: |
+          python3 -c "import math,json,os;n=math.ceil(float(os.environ['LEN'])*float(os.environ['FPS']));k=math.ceil(n/int(os.environ['SEG']));print('n=%d'%n);print('segs='+json.dumps(list(range(k))))" >> "$GITHUB_OUTPUT"
+  render:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        seg: ${{ fromJSON(needs.plan.outputs.segs) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render-hc208.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium + ffmpeg
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow imageio-ffmpeg
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
+          mkdir -p ~/bin && ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" ~/bin/ffmpeg && echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Build
+        run: ./build.sh
+      - name: Draw piece ${{ matrix.seg }}
+        run: |
+          f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); n=${{ needs.plan.outputs.n }}; [ $f1 -gt $n ] && f1=$n
+          got=0
+          for try in 1 2; do
+            rm -rf test/out/v208_frames
+            (cd test && F0=$f0 F1=$f1 timeout 100m python3 v208_video.py > ../draw.log 2>&1) || true
+            got=$(ls test/out/v208_frames 2>/dev/null | wc -l); echo "try $try: frames $got of $((f1-f0))"; grep -vE '^frame ' draw.log | tail -25
+            [ "$got" -eq $((f1-f0)) ] && break
+            echo "::warning title=piece ${{ matrix.seg }} try $try::frames $got of $((f1-f0)) | $( (grep -iE 'error|fail|timeout|crash|closed' draw.log | tail -8; tail -3 draw.log) | tr '\n' '|' | cut -c1-1800)"
+          done
+          grep -E '^FAIL' draw.log && echo "::warning title=piece ${{ matrix.seg }}::$(grep -E '^FAIL' draw.log | head -3 | tr '\n' '|')" || true
+          [ "$got" -eq $((f1-f0)) ] || { echo "::error title=piece ${{ matrix.seg }}::frames $got of $((f1-f0))"; exit 1; }
+          mkdir -p piece
+          ffmpeg -y -loglevel error -framerate $FPS -start_number $f0 -i test/out/v208_frames/f%05d.jpg -frames:v $((f1-f0)) \
+            -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -r $FPS piece/s$(printf %03d ${{ matrix.seg }}).mp4
+      - uses: actions/upload-artifact@v4
+        with: {name: 'piece-${{ matrix.seg }}', path: piece/*.mp4, retention-days: 3}
+  sound:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render-hc208.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
+      - name: Build
+        run: ./build.sh
+      - name: Sound
+        run: cd test && SOUND=1 F0=0 F1=0 python3 v208_video.py 2>&1 | tail -20 && test -s out/v208_sound.wav
+      - uses: actions/upload-artifact@v4
+        with: {name: sound, path: test/out/v208_sound.wav, retention-days: 3}
+  join:
+    needs: [plan, render, sound]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'piece-*', merge-multiple: true, path: new}
+      - uses: actions/download-artifact@v4
+        with: {name: sound, path: snd}
+      - name: Join
+        run: |
+          pip install -q imageio-ffmpeg && F=$(python3 -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')
+          ls new; for f in $(ls new/s*.mp4 | sort); do echo "file '$PWD/$f'"; done > list.txt
+          mkdir -p out && "$F" -y -loglevel error -f concat -safe 0 -i list.txt -i snd/v208_sound.wav -c:v copy -c:a aac -b:a 160k -shortest out/hc208.mp4
+          ls -la out
+      - name: Send the video back (branch render-out/hc208)
+        run: |
+          cd out && git init -q && git checkout -q -b r && git add hc208.mp4
+          git -c user.name=render-bot -c user.email=actions@github.com commit -qm "hc208 render of ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" r:refs/heads/render-out/hc208

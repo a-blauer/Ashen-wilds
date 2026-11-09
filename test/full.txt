@@ -167,3 +167,5 @@ v206_coop.py
 v207_owner.py
 v207_coop.py
 v207_throws.py
+v208_hillside_cine.py
+v208_coop.py

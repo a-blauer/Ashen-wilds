@@ -119,3 +119,5 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 3774|3080|3081|3082|intro: v151_intro_live.py v151_intro.py
 # v207 owner's list (3780 gameplay/UI, 3781 places; boxes, swing pacing, shots, Abeksi, the Ascent's crack and mount, camera on the stair)
 3780|3781|3782|v207|0370|3241|1710|2270|3033|3162|3250|3330|3260|3520|3630|knife|xbow|crossbow: v207_owner.py v207_coop.py v207_throws.py v186_knife.py v153_ascent.py v167_obstacles.py v144_glowmire.py
+# v208 Hillside Crest arrival cinematic (3790); it shows Abeksi (3155), the Ascent (3250), the Hydra gate (3170), the Hydra (1972/3055), the title card (2210)
+3790|v208|2210|3155|3170|1972|3055|3080|3081: v208_hillside_cine.py v208_coop.py
