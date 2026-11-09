@@ -12,7 +12,7 @@
 //  * body: hip turn, chest twist, lean and knee bend are exaggerated so they show at the game camera on a phone.
 // Only swingAnim (hero melee basic attacks) changes. Spins, bows, staffs/wands/orbs, skills and co-op partners are untouched.
 var V100W={on:true,AMP:{sy:1.55,cy:1.6,py:1.6,sx:1.45,sz:1.4,dy:1.7,lk:1.35,rk:1.35,lh:1.3,rh:1.3,la:1.2,ra:1.2},
-  EXTRA:.6,EXTRA_MAX:120,REC:3.2,FILL:.98,KEEP:.55,LUNGE:.28,LUNGE_FIN:.5};   // v207: REC 1.1 → 3.2 and FILL: the recovery fills the time to the next swing
+  EXTRA:.6,EXTRA_MAX:120,REC:3.2,FILL:.98,KEEP:.55,BI2:.18,LUNGE:.28,LUNGE_FIN:.5};   // v207: REC 1.1 → 3.2 and FILL: the recovery fills the time to the next swing
 function V100W_pose(P,D,wind,rest,ms,D0){
   const A=V100W.AMP,o={},tc=wind/D;
   // v207 (owner: "it quickly does the attack then pauses … better if the attacks lead into each other"): the swing now lasts until the
@@ -41,7 +41,7 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   const hit0=ms*.42,wind=hit0+Math.min(V100W.EXTRA_MAX,hit0*V100W.EXTRA),
     cd=atkCd>0?atkCd*1000:ms*2,D0=Math.max(ms+wind-hit0,Math.min(cd*.9,wind+ms*1.1)),D=Math.max(D0,Math.min(cd*V100W.FILL,wind+ms*V100W.REC)),
     fin=fin1; // set by the basic-attack callers just before the swing (0130, 0580)
-  haPlay(D,V100W_pose(P,D,wind,ATK_REST,ms,D0),wind/D,onHit,.1);
+  haPlay(D,V100W_pose(P,D,wind,ATK_REST,ms,D0),wind/D,onHit,HA.cur&&HA.cur.k<1?V100W.BI2:.1);   // v207c: a swing that starts while the last one is still settling blends in over a longer share
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
   // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's

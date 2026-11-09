@@ -14,17 +14,17 @@
 //     - a longer wind-up: KN207.ms is now [300, 720] (was 170 / base×420 before v207, 220 / base×520 in v207b): at a typical
 //       assassin speed the knife leaves ~0.1 s later; throws per second are unchanged (atkCd = base)
 //     - a gentler blend from the last pose into the next throw (KN207.bi: the share of the throw spent blending, .1 → .24)
-//     - the four variations are KN207.amp × bigger (1.6)
+//     - the four variations are KN207.amp × bigger (1.35)
 //  2. Bolts (BL207): they were not sideways; they were the arrow model scaled 1.5×: a 1.3-tile arrow with wide feather fins.
 //     A crossbow now shoots a real bolt (KQ207|bolt): short (~0.7), a thick shaft, a square iron head and two small stiff vanes,
 //     at its true size. Partners' ghost shots build the same bolt (the 'L' message gains a field at the end: 1 = bolt).
-var KN207={i:0,ms:[300,720],order:[0,1,2,0,3],amp:1.6,bi:.24,turnK:7,turn:null,last:0,
+var KN207={i:0,ms:[300,720],order:[0,1,2,0,3],amp:1.35,bi:.24,turnK:7,turn:null,last:0,
   // channel offsets at full strength (radians / units of the v100 tracks: sy spine yaw, sx lean, sz roll, py hips, ax/ay/az the throwing
   // shoulder, ex elbow, rw wrist, lx/lz/le the off arm, lk/rk knees, dy crouch, hx head pitch)
   V:[{},
-     {sy:.05,sz:.08,py:.04,az:.14,ex:-.04,rw:.12,lz:.12,lk:.12,rk:.1,dy:-.035,hx:.04},          // a low side-arm whip
+     {sy:.05,sz:.08,py:.04,az:.14,ex:-.04,rw:.05,lz:.12,lk:.12,rk:.1,dy:-.035,hx:.04},          // a low side-arm whip
      {sx:.14,ax:-.32,ex:.14,sy:.08,cy:.08,lx:-.22,le:-.18,hx:-.06,rk:.1},                          // a high overhand, leaning in
-     {py:.14,sy:.1,ay:.12,rw:.2,lh:-.14,rh:.1,lk:.14,dy:-.02,lx:.12}]};                         // a quick flick off a short step
+     {py:.14,sy:.1,ay:.12,rw:.08,lh:-.14,rh:.1,lk:.14,dy:-.02,lx:.12}]};                         // a quick flick off a short step
 function kn207Wrap(T,v){if(!v||!Object.keys(v).length)return T;const o={};
   const ss=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // in during the wind-up, held through the release (so it doesn't fight the throw's own motion), out in the recovery

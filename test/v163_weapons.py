@@ -7,7 +7,7 @@
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
-MAXF=float(os.environ.get('MAXF','30'));MAXW=float(os.environ.get('MAXW','120'))
+MAXF=float(os.environ.get('MAXF','30'));MAXW=float(os.environ.get('MAXW','125'))   # v207c: 120 → 125: since v207 swings settle into the next one and the edge roll of the great axe and the knives measures 120-121° in 0.1 s (the snaps this guards against were 375°)
 CLASSES=os.environ.get('CLS','warrior,paladin,assassin,ranger,mage').split(',')
 JS=r"""async(cls)=>{const out={};window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;POST.render=()=>{};ren.render=()=>{};
  const STEP=n=>{for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();try{loop(VT)}catch(err){out.err=String(err).slice(0,200)}}};

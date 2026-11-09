@@ -21654,7 +21654,7 @@ var V100A_K={ch:["sy","sx","sz","py","pz","cy","hx","hy","lh","rh","lk","rk","lh
 //  * body: hip turn, chest twist, lean and knee bend are exaggerated so they show at the game camera on a phone.
 // Only swingAnim (hero melee basic attacks) changes. Spins, bows, staffs/wands/orbs, skills and co-op partners are untouched.
 var V100W={on:true,AMP:{sy:1.55,cy:1.6,py:1.6,sx:1.45,sz:1.4,dy:1.7,lk:1.35,rk:1.35,lh:1.3,rh:1.3,la:1.2,ra:1.2},
-  EXTRA:.6,EXTRA_MAX:120,REC:3.2,FILL:.98,KEEP:.55,LUNGE:.28,LUNGE_FIN:.5};   // v207: REC 1.1 → 3.2 and FILL: the recovery fills the time to the next swing
+  EXTRA:.6,EXTRA_MAX:120,REC:3.2,FILL:.98,KEEP:.55,BI2:.18,LUNGE:.28,LUNGE_FIN:.5};   // v207: REC 1.1 → 3.2 and FILL: the recovery fills the time to the next swing
 function V100W_pose(P,D,wind,rest,ms,D0){
   const A=V100W.AMP,o={},tc=wind/D;
   // v207 (owner: "it quickly does the attack then pauses … better if the attacks lead into each other"): the swing now lasts until the
@@ -21683,7 +21683,7 @@ swingAnim=function(st,ms,onHit){const fin1=!!SWFIN,nol=!!SWNOL;SWFIN=0;SWNOL=0;
   const hit0=ms*.42,wind=hit0+Math.min(V100W.EXTRA_MAX,hit0*V100W.EXTRA),
     cd=atkCd>0?atkCd*1000:ms*2,D0=Math.max(ms+wind-hit0,Math.min(cd*.9,wind+ms*1.1)),D=Math.max(D0,Math.min(cd*V100W.FILL,wind+ms*V100W.REC)),
     fin=fin1; // set by the basic-attack callers just before the swing (0130, 0580)
-  haPlay(D,V100W_pose(P,D,wind,ATK_REST,ms,D0),wind/D,onHit,.1);
+  haPlay(D,V100W_pose(P,D,wind,ATK_REST,ms,D0),wind/D,onHit,HA.cur&&HA.cur.k<1?V100W.BI2:.1);   // v207c: a swing that starts while the last one is still settling blends in over a longer share
   const A=HA.cur;if(!A)return;
   // lunge into the blow: from shortly before contact to shortly after
   // v121: SWLIM {e,stand} (set by 2250-v121-attack-step-to-range.js): the lunge only closes the gap to that enemy's
@@ -73144,17 +73144,17 @@ ch153Crack=function(){return lgGroup('CH207|crack',q=>{const C=CH153M,R=ch153R(2
 //     - a longer wind-up: KN207.ms is now [300, 720] (was 170 / base×420 before v207, 220 / base×520 in v207b): at a typical
 //       assassin speed the knife leaves ~0.1 s later; throws per second are unchanged (atkCd = base)
 //     - a gentler blend from the last pose into the next throw (KN207.bi: the share of the throw spent blending, .1 → .24)
-//     - the four variations are KN207.amp × bigger (1.6)
+//     - the four variations are KN207.amp × bigger (1.35)
 //  2. Bolts (BL207): they were not sideways; they were the arrow model scaled 1.5×: a 1.3-tile arrow with wide feather fins.
 //     A crossbow now shoots a real bolt (KQ207|bolt): short (~0.7), a thick shaft, a square iron head and two small stiff vanes,
 //     at its true size. Partners' ghost shots build the same bolt (the 'L' message gains a field at the end: 1 = bolt).
-var KN207={i:0,ms:[300,720],order:[0,1,2,0,3],amp:1.6,bi:.24,turnK:7,turn:null,last:0,
+var KN207={i:0,ms:[300,720],order:[0,1,2,0,3],amp:1.35,bi:.24,turnK:7,turn:null,last:0,
   // channel offsets at full strength (radians / units of the v100 tracks: sy spine yaw, sx lean, sz roll, py hips, ax/ay/az the throwing
   // shoulder, ex elbow, rw wrist, lx/lz/le the off arm, lk/rk knees, dy crouch, hx head pitch)
   V:[{},
-     {sy:.05,sz:.08,py:.04,az:.14,ex:-.04,rw:.12,lz:.12,lk:.12,rk:.1,dy:-.035,hx:.04},          // a low side-arm whip
+     {sy:.05,sz:.08,py:.04,az:.14,ex:-.04,rw:.05,lz:.12,lk:.12,rk:.1,dy:-.035,hx:.04},          // a low side-arm whip
      {sx:.14,ax:-.32,ex:.14,sy:.08,cy:.08,lx:-.22,le:-.18,hx:-.06,rk:.1},                          // a high overhand, leaning in
-     {py:.14,sy:.1,ay:.12,rw:.2,lh:-.14,rh:.1,lk:.14,dy:-.02,lx:.12}]};                         // a quick flick off a short step
+     {py:.14,sy:.1,ay:.12,rw:.08,lh:-.14,rh:.1,lk:.14,dy:-.02,lx:.12}]};                         // a quick flick off a short step
 function kn207Wrap(T,v){if(!v||!Object.keys(v).length)return T;const o={};
   const ss=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
   // in during the wind-up, held through the release (so it doesn't fight the throw's own motion), out in the recovery
