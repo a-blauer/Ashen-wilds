@@ -27,7 +27,9 @@ def s(pg):
     if os.environ.get('SOUND'):
         r=ev(WAV);open(O+'/v208_sound.wav','wb').write(base64.b64decode(r['b64']));print('sound peak',r['peak'])
     if F1<=F0:return
-    print('cap',json.dumps(ev("()=>{HC208.seen=0;return hc208Cap()}")))
+    # every piece is drawn on its own machine: the same seeded random numbers from here on, so the warriors, creatures and the
+    # Ascent's rocks are built identically in every piece (otherwise they change where two pieces meet)
+    print('cap',json.dumps(ev("()=>{let s=20811;Math.random=function(){s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296};HC208.seen=0;return hc208Cap()}")))
     d=O+'/v208_frames';os.makedirs(d,exist_ok=True)
     # replay up to the first frame without drawing (the city's folk and the Hydra step with time), then draw each frame
     ev("(t)=>{HC208.noDraw=1;let x=0;while(x<t-1e-6){x=Math.min(t,x+1/20);hc208Seek(x)}HC208.noDraw=0;return 1}",F0/FPS)
