@@ -73116,12 +73116,16 @@ var SND208={a:null,rv:null,last:{},
   // sfx() keys and mSfx() keys this file voices
   R:{slash:1,blunt:1,stab:1,arrow:1,ahit:1,zap:1,crit:1,swing:1,siphon:1,essence:1,rift:1,pour:1},
   M:{fall:1,elite:1,lvl:1,victory:1}};
+// the reverb's impulse is ~180k samples: it is made in the background once the sound is unlocked (never inside a hit, where its
+// ~30 ms would hitch the frame); until then the sounds play dry
 function snd208Bus(){const a=typeof AUD!='undefined'?AUD:null;if(!a||!a.out)return null;
-  if(SND208.a!==a){SND208.a=a;SND208.rv=null}
-  if(SND208.rv==null){try{const sr=a.sampleRate,len=Math.floor(sr*1.9),ir=a.createBuffer(2,len,sr);
-      for(let c=0;c<2;c++){const d=ir.getChannelData(c);let lp=0;for(let i=0;i<len;i++){const t=i/len,r=Math.random()*2-1;lp+=(r-lp)*(.35+.5*(1-t));d[i]=lp*Math.pow(1-t,3)*(i<sr*.012?i/(sr*.012):1)}}
-      const cv=a.createConvolver();cv.buffer=ir;const g=a.createGain();g.gain.value=.55;cv.connect(g);g.connect(a.out);SND208.rv=cv}catch(_){SND208.rv=false}}
+  if(SND208.a!==a){SND208.a=a;SND208.rv=null;SND208.rvq=0}
+  if(SND208.rv==null&&!SND208.rvq){SND208.rvq=1;setTimeout(()=>{SND208.rvq=0;snd208Rv(a)},250)}
   return a}
+function snd208Rv(a){if(SND208.a!==a||SND208.rv!=null)return;{try{const sr=a.sampleRate,len=Math.floor(sr*1.9),ir=a.createBuffer(2,len,sr);
+      for(let c=0;c<2;c++){const d=ir.getChannelData(c);let lp=0;for(let i=0;i<len;i++){const t=i/len,r=Math.random()*2-1;lp+=(r-lp)*(.35+.5*(1-t));d[i]=lp*Math.pow(1-t,3)*(i<sr*.012?i/(sr*.012):1)}}
+      const cv=a.createConvolver();cv.buffer=ir;const g=a.createGain();g.gain.value=.55;cv.connect(g);g.connect(a.out);SND208.rv=cv}catch(_){SND208.rv=false}}}
+setInterval(()=>{try{if(SND208.rv==null&&typeof AUD!='undefined'&&AUD&&AUD.out&&AUD.state=='running')snd208Bus()}catch(_){}},2000);
 // one voice: source → (filter) → gain envelope → dry out + reverb send
 function snd208V(a,src,o,t,vol){const g=a.createGain(),at=Math.max(.002,o.atk||.004),pk=Math.max(.0002,o.v*vol);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pk,t+at);g.gain.exponentialRampToValueAtTime(.0001,t+at+o.dur);
