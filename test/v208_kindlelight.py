@@ -53,7 +53,10 @@ def s(pg):
     # v208c (owner): no text on screen but the voice's lines: no quest cards, no name title
     tx=ev("()=>[5,12,19,29.8].map(t=>{kc208Seek(t);const D=KC208.S.dom;return +D.nc.style.opacity+ +D.bt.style.opacity})")
     chk('only the voice speaks: no cards or titles on screen',max(tx)==0,tx)
+    tg=ev("()=>{kc208Seek(4);let n=0;scene.traverse(o=>{if(!o.isSprite||!o.material||!o.material.map||!o.material.map.isCanvasTexture)return;let v=true,q=o;while(q){if(q.visible===false)v=false;q=q.parent}if(v)n++});window.__tags=KC208.S.tags;return {n,hid:KC208.S.tags.length}}")
+    chk('no name tags in the world while it plays',tg['n']==0 and tg['hid']>0,tg)
     ev("()=>kc208Seek(KC208.len+1)")
+    chk('name tags back afterwards',ev("()=>window.__tags.every(o=>o.visible)"))
     chk('ends: overlay gone, loop runs, seen saved',ev("()=>!KC208.run&&!KC208.on&&!document.getElementById('kc208')&&x2Save().kc208===1"))
     chk('stand-ins removed',ev("()=>{let n=0;scene.traverse(o=>{if(o.userData&&o.userData.noFarCull&&o.userData.psNo&&o.isE)n++});return n}")==0)
     # the sound renders (offline) and is neither silent nor clipping

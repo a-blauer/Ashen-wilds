@@ -73367,6 +73367,8 @@ function kc208Score(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.g
 function kc208Start(cap){if(KC208.run)return false;let S;try{S=kc208Build()}catch(e){console.warn('kc208 build',e);return false}
   KC208.S=S;KC208.run=true;KC208.on=true;KC208.seen=1;KC208.skipT=null;S.fresh=true;S.fov0=cam.fov;S.home=pl.position.clone();S.home.y=GH(S.home.x,S.home.z);
   try{if(MQ145.S)S.sig0=MQ145.S.sig.map(M=>M.g.visible)}catch(_){}
+  // no words in the world either (v208c): the floating name tags and markers (text sprites) are hidden, and put back after
+  S.tags=[];try{scene.traverse(o=>{if(o.isSprite&&o.visible&&o.material&&o.material.map&&o.material.map.isCanvasTexture){S.tags.push(o);o.visible=false}})}catch(_){}
   try{ic151DCss();document.body.classList.add('ic151d');dispatchEvent(new Event('resize'))}catch(_){}
   kc208Layer(S);if(cap)S.dom.skip.style.display='none';return true}
 function kc208Play(){if(!kc208Start(false))return;const S=KC208.S,L=KC208.live={t0:performance.now(),off:0,raf:0,ac:null};
@@ -73391,6 +73393,7 @@ function kc208End(){if(!KC208.run)return;KC208.run=false;KC208.on=false;const S=
     pl.position.copy(S.home);pl.position.y=GH(S.home.x,S.home.z);pl.visible=true;try{chunkVis()}catch(_){}
     // the camera behind the hero, as the game has it
     camYaw=pl.rotation.y+Math.PI;cam.fov=S.fov0||58;cam.updateProjectionMatrix();if(typeof camK!='undefined'&&typeof camPitch!='undefined')camK=camPitch;try{snapCam()}catch(_){}
+    (S.tags||[]).forEach(o=>{o.visible=true});
     if(S.dom)S.dom.el.remove()}}catch(e){console.warn('kc208 end',e)}
   try{document.body.classList.remove('ic151d');dispatchEvent(new Event('resize'))}catch(_){}
   try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}
