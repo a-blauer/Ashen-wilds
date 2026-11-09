@@ -1,0 +1,92 @@
+# Renders the v208 Kindlelight arrival cinematic as a video on GitHub Actions (tools/render_kc208.sh starts it and fetches
+# the result; this workspace draws ~5 frames a minute, GitHub draws 8 pieces at once). Always draws the whole film.
+#   - push to render-kc/<anything> (tools/render_kc208.sh does it)
+#   - result: kc208.mp4 pushed to the short-lived branch render-out/kc208 (the script downloads it, then deletes the branch)
+name: Render Kindlelight cinematic
+on:
+  push:
+    branches: ['render-kc/**']
+concurrency:
+  group: render-kc-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+env:
+  FPS: '24'
+  W: '1280'
+  H: '720'
+  SEG: '120'
+  N: '902'
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        seg: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render-kc208.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium + ffmpeg
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow imageio-ffmpeg
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
+          mkdir -p ~/bin && ln -sf "$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')" ~/bin/ffmpeg && echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Build
+        run: ./build.sh
+      - name: Draw piece ${{ matrix.seg }}
+        run: |
+          f0=$(( ${{ matrix.seg }} * SEG )); f1=$(( f0 + SEG )); [ $f1 -gt $N ] && f1=$N
+          (cd test && VIDEO=1 NOSOUND=1 NOENC=1 F0=$f0 F1=$f1 timeout 80m python3 v208_kindlelight.py > ../draw.log 2>&1) || true
+          got=$(ls test/out/v208_frames 2>/dev/null | wc -l); echo "frames $got of $((f1-f0))"; tail -20 draw.log
+          [ "$got" -eq $((f1-f0)) ] || { echo "::error title=piece ${{ matrix.seg }}::frames $got of $((f1-f0)) | $(tail -6 draw.log | tr '\n' '|' | cut -c1-1500)"; exit 1; }
+          mkdir -p piece
+          ffmpeg -y -loglevel error -framerate $FPS -start_number $f0 -i test/out/v208_frames/f%05d.jpg -frames:v $((f1-f0)) \
+            -c:v libx264 -pix_fmt yuv420p -crf 20 -preset medium -g 48 -r $FPS piece/s$(printf %03d ${{ matrix.seg }}).mp4
+      - uses: actions/upload-artifact@v4
+        with: {name: 'piece-${{ matrix.seg }}', path: piece/*.mp4, retention-days: 3}
+  sound:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: .github/workflows/render-kc208.yml}
+      - name: Cache Chromium
+        uses: actions/cache@v4
+        with: {path: ~/.cache/ms-playwright, key: pw-chromium-v1}
+      - name: Install Playwright + Chromium
+        timeout-minutes: 25
+        run: |
+          pip install playwright pillow
+          for i in 1 2 3; do timeout 8m python -m playwright install --with-deps chromium && break; echo "::warning::browser install try $i timed out"; sleep 5; done
+      - name: Build
+        run: ./build.sh
+      - name: Sound
+        run: cd test && VIDEO=1 NOENC=1 F0=0 F1=0 python3 v208_kindlelight.py 2>&1 | tail -20 && test -s out/v208_sound.wav
+      - uses: actions/upload-artifact@v4
+        with: {name: sound, path: test/out/v208_sound.wav, retention-days: 3}
+  join:
+    needs: [render, sound]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'piece-*', merge-multiple: true, path: new}
+      - uses: actions/download-artifact@v4
+        with: {name: sound, path: snd}
+      - name: Join
+        run: |
+          pip install -q imageio-ffmpeg && F=$(python3 -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')
+          mkdir -p out && for f in $(ls new/s*.mp4 | sort); do echo "file '$PWD/$f'"; done > list.txt && cat list.txt
+          "$F" -y -loglevel error -f concat -safe 0 -i list.txt -i snd/v208_sound.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 160k -shortest out/kc208.mp4
+          ls -la out && echo "::notice title=Render::kc208.mp4 $(stat -c %s out/kc208.mp4) bytes"
+      - name: Send the video back (branch render-out/kc208)
+        run: |
+          cd out && git init -q && git checkout -q -b r && git add kc208.mp4
+          git -c user.name=render-bot -c user.email=actions@github.com commit -qm "kc208 render of ${{ github.sha }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" r:refs/heads/render-out/kc208

@@ -167,3 +167,4 @@ v206_coop.py
 v207_owner.py
 v207_coop.py
 v207_throws.py
+v208_kindlelight.py
