@@ -30752,7 +30752,7 @@ MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
     MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
 // projectiles: the real shot stays local; partners get a ghost
 {const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
-  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1)])}catch(_){}
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1),S.bolt?1:0])}catch(_){}
   return f.apply(this,arguments)}}
 // companion moves: lunge / bolt / spell motion on fols[0|1]
 function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
@@ -30821,7 +30821,7 @@ function mpvPlay(r,e){
       ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
       ()=>{if(h._mpvP===id)h.sw=0})}
   else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
-    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=shotMesh(e[9]|0,!!e[10])}catch(_){return}
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782) */
     const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
     tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */
@@ -72896,8 +72896,8 @@ setInterval(sm206Sync,500);
 // residents on rooftops. Guards are fine.", "Remove the text that says 'Abeksi has fallen'. Just have the title to Mistmere" ·
 // "Remove the text … 'Fallen creatures respawn after 50 seconds after they die' when entering an instance."
 //  1. Kindlelight boxes (BX207): at most BX207.kl breakable boxes per Kindlelight camp (was CS164.box = 10); the extra box models
-//     are left out of the camp (3241 reads CS164.cut). A Kindlelight box drops less: gold × goldK, one material at matP, a potion
-//     at potP, an egg at eggP (were: 1–3 materials always, 8 % potion, 3 % egg). Other zones unchanged.
+//     are left out of the camp (3241 reads CS164.cut). Every box drops less (v207b: all zones; first Kindlelight only): gold × goldK, one material at matP, a potion
+//     at potP, an egg at eggP (were: 1–3 materials always, 8 % potion, 3 % egg).
 //     Ranged basic attacks break boxes: a shot is tested along the whole stretch it moved this frame (a fast arrow could skip a
 //     box), with a slightly bigger box radius (BX207.shotR); a ranged basic attack with no enemy locked aims at the box you face
 //     (within BX207.aimR tiles and BX207.aimA radians of where you aim) and does not home on a monster.
@@ -72931,7 +72931,7 @@ function bx207KL(x,z){try{const I=insAt(Math.round(x),Math.round(z));return !!I&
   if(kl){CS164.box=Math.min(o,BX207.kl);CS164.cut=1}
   try{return f.apply(this,arguments)}finally{CS164.box=o;CS164.cut=0;
     try{if(kl&&C.boxes&&C.boxes.length>BX207.kl){C.boxes.slice(BX207.kl).forEach(b=>{if(b.g&&b.g.parent)b.g.parent.remove(b.g)});C.boxes.length=BX207.kl}}catch(_){}}}}
-{const f=brkBox;brkBox=function(C,b){if(!b||b.b||!bx207KL(b.x,b.z))return f.apply(this,arguments);
+{const f=brkBox;brkBox=function(C,b){if(!b||b.b)return f.apply(this,arguments);   // v207b (owner: "Apply the box loot change to all boxes"): every zone
   b.b=nowP();const p=V(b.x,0,b.z),T=tierAt(b.x,b.z),l=zoneLv(b.x,b.z);
   burst(gY(p,.5),0x8a5a30,26,2.6,2.4,.6);burst(gY(p,.4),0xc8a070,10,1.6,1.6,.5);sfx('blunt');sfx('slash',.5);
   b.g.matrixAutoUpdate=true;tw(260,k=>{b.g.scale.set(1+k*.4,1-k,1+k*.4);b.g.rotation.z=k*.4},()=>{b.g.visible=false;b.g.scale.set(1,1,1);b.g.rotation.z=0});
@@ -73128,6 +73128,50 @@ ch153Crack=function(){return lgGroup('CH207|crack',q=>{const C=CH153M,R=ch153R(2
   [[-2.1,2.2],[2.25,1.7]].forEach(([x,z],j)=>{for(let k=0;k<5;k++)q.p('','dod','c',pk(),x+(R()-.5)*.08,.14+k*.22,z,.34-k*.05,.15,.3-k*.045,R(),R()*3,R())});
   q.p('','cyl','c',sh(rk[2],.8),-2.75,.32,.6,.42,.5,.42);q.p('','cyl','c',0x2a241e,-2.75,.58,.6,.36,.06,.36);
   for(let i=0;i<5;i++)q.p('','oct','g',i%2?0xff7a2a:0xffb040,-2.75+(R()-.5)*.4,.66+R()*.06,.6+(R()-.5)*.4,.07+R()*.05,.06,.07)},0)};
+// ================= v207b: throwing knives that vary, crossbow bolts that look like bolts (owner, Nov 8 2026) =================
+// Owner: "throwing knife attack animation is too snappy and doesn't seem fluid. Instead of the character doing the same stiff
+// throwing animation, make his stance cycle through slightly different throwing animations so it seems more natural." · "Bolts from
+// crossbow look odd coming out — check to see if they're sideways or just too big".
+//  1. Knives (KN207): every throw plays the baked knife throw with one of KN207.V variations layered on top (a low side-arm whip,
+//     a high overhand, a stepping flick, the plain throw), in a cycle that doesn't repeat for 5 throws. Each variation is an offset
+//     on the body's channels that swells in during the wind-up and fades out in the recovery (sin envelope), so every throw starts
+//     and ends in the same stance and the throws flow into each other. The throw is also given a little more time (KN207.ms: the
+//     knife leaves ~35 ms later; the swing recovery of v207 still fills the gap to the next throw). Partners see it: the hero's
+//     pose is sampled from the played pose for them (2170).
+//  2. Bolts (BL207): they were not sideways; they were the arrow model scaled 1.5×: a 1.3-tile arrow with wide feather fins.
+//     A crossbow now shoots a real bolt (KQ207|bolt): short (~0.7), a thick shaft, a square iron head and two small stiff vanes,
+//     at its true size. Partners' ghost shots build the same bolt (the 'L' message gains a field at the end: 1 = bolt).
+var KN207={i:0,ms:[220,520],order:[0,1,2,0,3],
+  // channel offsets at full strength (radians / units of the v100 tracks: sy spine yaw, sx lean, sz roll, py hips, ax/ay/az the throwing
+  // shoulder, ex elbow, rw wrist, lx/lz/le the off arm, lk/rk knees, dy crouch, hx head pitch)
+  V:[{},
+     {sy:-.14,sz:.07,py:-.08,az:.22,ex:-.12,rw:.15,lz:.12,lk:.12,rk:.1,dy:-.035,hx:.04},          // a low side-arm whip
+     {sx:.14,ax:-.32,ex:.14,sy:.08,cy:.08,lx:-.22,le:-.18,hx:-.06,rk:.1},                          // a high overhand, leaning in
+     {py:.14,sy:.1,ay:.12,rw:.2,lh:-.14,rh:.1,lk:.14,dy:-.02,lx:.12}]};                         // a quick flick off a short step
+function kn207Wrap(T,v){if(!v||!Object.keys(v).length)return T;const o={};
+  const g=function(k){const p=T(k),e=Math.pow(Math.sin(Math.PI*Math.max(0,Math.min(1,k))),.8);for(const c in p)o[c]=p[c];for(const c in v)o[c]=(o[c]||0)+v[c]*e;return o};
+  g.v100=T.v100;return g}
+{const f=atkPick;atkPick=function(st){const T=f.apply(this,arguments);
+  try{if(KN207.on!==false&&T&&atkWT()==='knives'&&KN207.cur!=null)return kn207Wrap(T,KN207.V[KN207.cur])}catch(_){}return T}}
+// the throw: the next variation, a little more time
+{const f=WBEH.knives;WBEH.knives=function(C,s,raw,d,spdK,base){KN207.cur=KN207.order[KN207.i++%KN207.order.length];
+  const sa=swingAnim;swingAnim=function(st,ms,cb){return sa.call(this,st,Math.max(KN207.ms[0],base*KN207.ms[1]),cb)};
+  try{return f.apply(this,arguments)}finally{swingAnim=sa}}}
+
+// ---------------- crossbow bolts ----------------
+var BL207={len:.68};
+function bl207Mesh(){return lgGroup('KQ207|bolt',k=>{
+  k.L('','c',0x5a4026,[0,0,-.3],[0,0,.25],.024,.022,6);                                         // the shaft
+  k.p('','cyl','m',0x4a4e56,0,0,.255,.03,.03,.03,Math.PI/2,0,0);                                  // an iron collar
+  k.p('','cone4','m',0x5c6068,0,0,.33,.046,.15,.046,Math.PI/2,0,Math.PI/4);                       // the square head
+  k.p('','box','c',0x3a2a1a,0,.032,-.25,.006,.06,.12);k.p('','box','c',0x3a2a1a,0,-.032,-.25,.006,.06,.12);   // two stiff vanes
+  k.p('','cyl','c',0x2a1e12,0,0,-.31,.026,.02,.026,Math.PI/2,0,0)},.1)}                          // the nock
+function bl207Swap(sh){if(!sh||!sh.m)return;const o=sh.m,b=bl207Mesh();b.position.copy(o.position);b.quaternion.copy(o.quaternion);b.userData.lpsSkip=1;
+  if(o.parent)o.parent.add(b);if(o.parent)o.parent.remove(o);sh.m=b;sh.bolt207=1}
+WBEH.crossbow=function(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTimeout(()=>{if(!party.length)return;const d2_=aimDir();face(d2_);
+  launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow',bolt:1},raw,.75);
+  const sh=shots[shots.length-1];if(sh){bl207Swap(sh);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.3);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}
+  sfx('arrow');shake(.05)},base*380)};   // as 0580's, with the bolt at its own size (was the arrow scaled 1.5×)
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

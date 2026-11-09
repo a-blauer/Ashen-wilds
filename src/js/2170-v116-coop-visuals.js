@@ -72,7 +72,7 @@ MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
     MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
 // projectiles: the real shot stays local; partners get a ghost
 {const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
-  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1)])}catch(_){}
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1),S.bolt?1:0])}catch(_){}
   return f.apply(this,arguments)}}
 // companion moves: lunge / bolt / spell motion on fols[0|1]
 function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
@@ -141,7 +141,7 @@ function mpvPlay(r,e){
       ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
       ()=>{if(h._mpvP===id)h.sw=0})}
   else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
-    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=shotMesh(e[9]|0,!!e[10])}catch(_){return}
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782) */
     const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
     tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */

@@ -10,8 +10,8 @@
 // residents on rooftops. Guards are fine.", "Remove the text that says 'Abeksi has fallen'. Just have the title to Mistmere" ·
 // "Remove the text … 'Fallen creatures respawn after 50 seconds after they die' when entering an instance."
 //  1. Kindlelight boxes (BX207): at most BX207.kl breakable boxes per Kindlelight camp (was CS164.box = 10); the extra box models
-//     are left out of the camp (3241 reads CS164.cut). A Kindlelight box drops less: gold × goldK, one material at matP, a potion
-//     at potP, an egg at eggP (were: 1–3 materials always, 8 % potion, 3 % egg). Other zones unchanged.
+//     are left out of the camp (3241 reads CS164.cut). Every box drops less (v207b: all zones; first Kindlelight only): gold × goldK, one material at matP, a potion
+//     at potP, an egg at eggP (were: 1–3 materials always, 8 % potion, 3 % egg).
 //     Ranged basic attacks break boxes: a shot is tested along the whole stretch it moved this frame (a fast arrow could skip a
 //     box), with a slightly bigger box radius (BX207.shotR); a ranged basic attack with no enemy locked aims at the box you face
 //     (within BX207.aimR tiles and BX207.aimA radians of where you aim) and does not home on a monster.
@@ -45,7 +45,7 @@ function bx207KL(x,z){try{const I=insAt(Math.round(x),Math.round(z));return !!I&
   if(kl){CS164.box=Math.min(o,BX207.kl);CS164.cut=1}
   try{return f.apply(this,arguments)}finally{CS164.box=o;CS164.cut=0;
     try{if(kl&&C.boxes&&C.boxes.length>BX207.kl){C.boxes.slice(BX207.kl).forEach(b=>{if(b.g&&b.g.parent)b.g.parent.remove(b.g)});C.boxes.length=BX207.kl}}catch(_){}}}}
-{const f=brkBox;brkBox=function(C,b){if(!b||b.b||!bx207KL(b.x,b.z))return f.apply(this,arguments);
+{const f=brkBox;brkBox=function(C,b){if(!b||b.b)return f.apply(this,arguments);   // v207b (owner: "Apply the box loot change to all boxes"): every zone
   b.b=nowP();const p=V(b.x,0,b.z),T=tierAt(b.x,b.z),l=zoneLv(b.x,b.z);
   burst(gY(p,.5),0x8a5a30,26,2.6,2.4,.6);burst(gY(p,.4),0xc8a070,10,1.6,1.6,.5);sfx('blunt');sfx('slash',.5);
   b.g.matrixAutoUpdate=true;tw(260,k=>{b.g.scale.set(1+k*.4,1-k,1+k*.4);b.g.rotation.z=k*.4},()=>{b.g.visible=false;b.g.scale.set(1,1,1);b.g.rotation.z=0});
