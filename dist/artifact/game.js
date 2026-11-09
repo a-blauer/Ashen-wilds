@@ -6140,7 +6140,7 @@ function heroHit(e,raw,mt,o){
   const wasWind=e.atk&&e.atk.ph==0,h0=e.c.h;
   const d=heroHit_base(e,raw,mt,o);
   // hit sound
-  if(t-lastHitSnd>40){lastHitSnd=t;const w=hero.cls=='mage'||(s&&s.mt=='m')?'zap':(s&&s.arrow)||hero.cls=='ranger'?'arrow':hero.cls=='paladin'?'blunt':hero.cls=='assassin'?'stab':'slash';sfx(w);if(o.crit||(d&&e.c.h<h0&&h0-e.c.h>M(e.c)*.2))sfx('crit')}
+  if(t-lastHitSnd>40){lastHitSnd=t;const w=hero.cls=='mage'||(s&&s.mt=='m')?'zap':(s&&s.arrow)||hero.cls=='ranger'?'ahit':hero.cls=='paladin'?'blunt':hero.cls=='assassin'?'stab':'slash';sfx(w);if(o.crit||(d&&e.c.h<h0&&h0-e.c.h>M(e.c)*.2))sfx('crit')}
   // break: a heavy hit or any skill interrupts a special attack wind-up
   if(wasWind&&!e.dead&&!e.boss&&e.atk&&cbBreakChk(e)){mCancel(e);e.stun=Math.max(e.stun||0,1.1);e.bu=0;popT(e.m.position,'BREAK!','#fde68a',true);burst(gY(e.m.position,1),0xffe08a,30,2.5,2,.5);ring(e.m.position,0xffe08a,1.8,300);hstop=.08;shake(.15);sfx('brk')}
   return d;
@@ -7317,10 +7317,9 @@ BSTY.length=0;BSTY.push(
 function bossDefeated(e){
   const A=arenaOf(e);if(!A)return;arenaClear(A);const i=A.i,first=!bossDone.has(i);
   if(!first){banner('👑 '+A.b.name+' falls again','Its loot is yours','It returns after 5 minutes');return}
-  bossDone.add(i);const P=A.b.pw;hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
-  banner('👑 MAP CLEARED',A.b.name+' is slain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
-  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits at its gate outside Duskhold','Its gate stands open at the end of Portal Road');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!');
-    say('🌀 A golden portal home has opened in the arena.')},2800);
+  // v208: the map is cleared (power, next portal, kingdom growth) only once the Sovereign's essence is siphoned from its corpse and
+  // poured into Duskhold's fountain: se208Slain (3795) leaves the corpse to siphon, se208Claim does what used to happen here
+  se208Slain(i,e);
 }
 // ---- Wave Trials ----
 var WV=null,WV_N=10,waveBest={};
@@ -10878,6 +10877,7 @@ function buildTown(T){
     TANIM.push({x:T.cx,z:T.cy,f:now=>{const t0=now/1000;dr.forEach(([d,s,ph,th])=>{const t=(t0*.9+ph)%1;let r,y;
       if(s==0){r=.15+.4*t;y=2.3+.55*Math.sin(Math.PI*t)}else if(s==1){r=.6+.5*t;y=2.3-.85*t*t}else{r=1.1+.95*t;y=1.5-.95*t*t}
       d.position.set(Math.cos(th)*r,y,Math.sin(th)*r)})}});
+    T.ftnG=f;T.ftnA=TANIM[TANIM.length-1];   // v208: rebuilt as the fountain of essence (3796)
   }
   // ---------- Trading Post (centre): log hall with striped awning ----------
   {const b=new THREE.Group();b.position.set(0,0,-10.5);g.add(b);const W1=4.8,D=4;
@@ -24800,9 +24800,11 @@ lotStakes103=function(){const T=TOWNS[0];if(!T||!T.g)return;
 function kfGrowMsg109(s){const ids=LOT103.filter(l=>l.st===s).map(l=>l.id),c=lotCounts109();
   banner('🏰 THE KINGDOM EXPANDS','The walls of Duskhold move out · '+ids.length+' new building plots in Row '+s,c.open+' of '+LOT103.length+' plots are now yours');
   say('🏗️ Duskhold grows: the south wall moves out and plots '+ids.join(', ')+' can now be built on. Build at the Stronghold Steward.');try{sfx('power')}catch(_){}}
-{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);try{const s0=KF109.s;if(kfApply109()){const s=KF109.s,t=Date.now()+60000;
+// v208: also run when a Sovereign's essence is poured into the fountain (3795 se208Claim), which is when bossDone grows now
+function kfGrow109(){try{const s0=KF109.s;if(kfApply109()){const s=KF109.s,t=Date.now()+60000;
     LOT103.forEach(l=>{if(l.st>s0&&l.st<=s)KF109.fresh[l.id]=t});lotStakes103();clearTimeout(KF109.ft);KF109.ft=setTimeout(()=>{try{lotStakes103()}catch(_){}},60500);
-    setTimeout(()=>kfGrowMsg109(s),6200);try{saveGame(true)}catch(_){}}}catch(err){console.warn('v109 grow',err)}return r}}
+    setTimeout(()=>kfGrowMsg109(s),6200);try{saveGame(true)}catch(_){}}}catch(err){console.warn('v109 grow',err)}}
+{const f=bossDefeated;bossDefeated=function(e){const r=f.apply(this,arguments);kfGrow109();return r}}
 // the Steward window: plots line under the plan
 function lotInfo109(P){const c=lotCounts109(),s=kf109().s;
   return `<div class="kminfo kmplots">🏗️ <b>${c.used}</b> of <b>${c.open}</b> plots used${s<5?' · 👑 defeat a new Sovereign: the walls move out and 3 more plots open':' · the kingdom has reached its full size'}`+
@@ -38230,9 +38232,10 @@ function sv141Reach(B){const P=B.P||{},pick=['roar','howl','rear','tpRaise','vUp
     hit:[hit(.85,1),hit(1.2,1.2),hit(1.55,1.4)],ev:[[.08,c=>{try{svSnd('roar',.7,1.15);svShock(c.m.position,col,4,.4)}catch(_){}}]],rec:.35}}
 SVB.forEach((B,i)=>{if(!B||!B.M||B.M.reach141)return;try{B.M.reach141=sv141Reach(B);svRegMoves(i)}catch(e){console.warn('reach141',i,e)}});
 // ---- 4. one fight each ----
-{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&bossDone.has(i))return null;return f.apply(this,arguments)}}
-function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&bossDone.has(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
-  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(bossDone.has(i))bossT[i]=0})}catch(_){}}
+// v208: a slain Sovereign stays gone while its essence waits to be siphoned or poured (se208Gone, 3795)
+{const f=spawnBoss;spawnBoss=function(i){if(typeof bossDone!='undefined'&&se208Gone(i))return null;return f.apply(this,arguments)}}
+function sv141Clear(){try{enemies.slice().forEach(e=>{if(e&&e.boss&&!e.dead&&e.bi!=null&&se208Gone(e.bi)&&!(typeof AF!='undefined'&&AF&&AF.i===e.bi&&AF.f))removeE(e)});
+  if(typeof bossT!='undefined')bossT.forEach((t,i)=>{if(se208Gone(i))bossT[i]=0})}catch(_){}}
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);setTimeout(sv141Clear,0);return r}}
 setInterval(sv141Clear,5000);
 // a hero who has kept away for SV141.sure s gets Reach as soon as it is off cooldown (not left to the weighted pick)
@@ -43728,7 +43731,7 @@ function bc148Apply(now){if(!BC148.pend.length)return;const keep=[];
   for(const p of BC148.pend){if(now<p.t){keep.push(p);continue}
     try{if(p.id==='v144'){if(!bc148Vorraxis(p.by))keep.push(Object.assign(p,{t:now+2000}))}else bc148Sov(+p.id,p.by)}catch(err){console.warn('v148 credit',err)}}
   BC148.pend=keep}
-function bc148Sov(i,by){if(!BOSSES[i]||bossDone.has(i))return;
+function bc148Sov(i,by){if(!BOSSES[i]||bossDone.has(i)||se208St(i)>=1)return;   // v208: already slain here (its essence waits)
   const e=typeof bossEnt=='function'?bossEnt(i):null;
   // still in that fight on my screen: the boss falls here too (loot included)
   if(e&&!e.dead&&typeof AF!='undefined'&&AF&&AF.i===i){MP.rk=1;try{e.c.h=0;e.dead=1;if(e.hb)e.hb.visible=false;kill(e)}finally{MP.rk=0}}
@@ -72703,3 +72706,410 @@ WBEH.crossbow=function(C,s,raw,d,spdK,base){atkCd=base;bowAnim(base*700);setTime
   launch(pl.position,d2_,32,{col:0xc8b080,arrow:1,mt:'p',pierce:99,basic:1,wfx:'xbow',bolt:1},raw,.75);
   const sh=shots[shots.length-1];if(sh){bl207Swap(sh);try{const q=xbowMuzzle116();if(q){sh.m.position.copy(q).addScaledVector(d2_,.3);sh.m.lookAt(sh.m.position.clone().add(d2_))}}catch(_){}}
   sfx('arrow');shake(.05)},base*380)};   // as 0580's, with the bolt at its own size (was the arrow scaled 1.5×)
+// ================= v208: heavier, traditional RPG sounds (owner, Nov 9 2026) =================
+// "The sound effects from attacking, hitting, killing and leveling seem a bit too light and mobile gamey — lets change those to more
+// serious traditional RPG sounds." The old ones were short square / triangle blips with pitch sweeps (the level-up a square-wave
+// arpeggio). These are built from weight instead: low body thumps, filtered noise for steel, flesh and air, inharmonic metal partials
+// for blade ring and gongs, brass-like filtered saw chords, and a short hall reverb behind all of them (one shared convolver).
+//  * attacking: a melee swing now has a whoosh of air (deeper for slow, heavy weapons), played as the swing starts
+//  * hitting: slash / blunt / stab / arrow thunk / arcane impact / critical crunch
+//  * killing: a body collapsing (fall), a heavy fall with a gong for elites and bosses (elite), a brass fanfare for a Sovereign (victory)
+//  * levelling: a horn call into a held brass chord over a low gong (lvl)
+// The keys stay the same (sfx / mSfx callers are unchanged); everything else still plays the old sounds. Arrow hits use 'ahit' (0320)
+// so the bow release keeps its own string sound. Co-op: sounds are local, each screen plays its own (as before).
+var SND208={a:null,rv:null,last:{},
+  // sfx() keys and mSfx() keys this file voices
+  R:{slash:1,blunt:1,stab:1,arrow:1,ahit:1,zap:1,crit:1,swing:1,siphon:1,essence:1,rift:1,pour:1},
+  M:{fall:1,elite:1,lvl:1,victory:1}};
+function snd208Bus(){const a=typeof AUD!='undefined'?AUD:null;if(!a||!a.out)return null;
+  if(SND208.a!==a){SND208.a=a;SND208.rv=null}
+  if(SND208.rv==null){try{const sr=a.sampleRate,len=Math.floor(sr*1.9),ir=a.createBuffer(2,len,sr);
+      for(let c=0;c<2;c++){const d=ir.getChannelData(c);let lp=0;for(let i=0;i<len;i++){const t=i/len,r=Math.random()*2-1;lp+=(r-lp)*(.35+.5*(1-t));d[i]=lp*Math.pow(1-t,3)*(i<sr*.012?i/(sr*.012):1)}}
+      const cv=a.createConvolver();cv.buffer=ir;const g=a.createGain();g.gain.value=.55;cv.connect(g);g.connect(a.out);SND208.rv=cv}catch(_){SND208.rv=false}}
+  return a}
+// one voice: source → (filter) → gain envelope → dry out + reverb send
+function snd208V(a,src,o,t,vol){const g=a.createGain(),at=Math.max(.002,o.atk||.004),pk=Math.max(.0002,o.v*vol);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pk,t+at);g.gain.exponentialRampToValueAtTime(.0001,t+at+o.dur);
+  let n=src;if(o.lp||o.hp||o.bp){const f=a.createBiquadFilter();f.type=o.lp?'lowpass':o.hp?'highpass':'bandpass';const f0=o.lp||o.hp||o.bp;f.frequency.setValueAtTime(f0,t);
+    if(o.f1)f.frequency.exponentialRampToValueAtTime(Math.max(40,o.f1),t+(o.fd||o.dur));f.Q.value=o.q||.8;n.connect(f);n=f}
+  n.connect(g);g.connect(a.out);
+  if(o.wet&&SND208.rv){const s=a.createGain();s.gain.value=o.wet;g.connect(s);s.connect(SND208.rv)}
+  return t+at+o.dur+.05}
+function snd208Play(k,vol){
+  try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.sfxV!=null&&!(+SET.sfxV>0)))return true;const a=snd208Bus();if(!a||a.state!='running')return true;
+    const t0=a.currentTime;if(SND208.last[k]&&t0-SND208.last[k]<.045)return true;SND208.last[k]=t0;vol=vol||1;
+    try{if(typeof fx141Quiet=='function'&&fx141Quiet(k))vol*=FX141.vol}catch(_){}
+    const T=(ty,f0,f1,at,dur,v,o)=>{o=Object.assign({},o||{},{dur,v});const t=t0+at,s=a.createOscillator();s.type=ty;s.frequency.setValueAtTime(f0,t);
+        if(f1&&f1!==f0)s.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur*(o.sw||1));if(o.det)s.detune.value=o.det;const e=snd208V(a,s,o,t,vol);s.start(t);s.stop(e)},
+      N=(f0,f1,at,dur,v,o)=>{if(typeof NOISE=='undefined'||!NOISE)return;o=Object.assign({bp:f0},o||{},{dur,v,f1});if(o.lp){o.lp=f0;delete o.bp}if(o.hp){o.hp=f0;delete o.bp}
+        const t=t0+at,s=a.createBufferSource();s.buffer=NOISE;s.loop=true;const e=snd208V(a,s,o,t,vol);s.start(t,Math.random()*.5);s.stop(e)},
+      // metal: inharmonic partials (a struck blade, a gong); f = the lowest partial
+      Mt=(f,at,dur,v,wet,P)=>{(P||[[1,1],[2.76,.55],[5.4,.3],[8.93,.16]]).forEach(([r,w],i)=>T('sine',f*r,f*r*.998,at,dur*(1-i*.16),v*w,{wet,atk:.002}))},
+      // brass: two detuned saws through a lowpass that opens with the swell
+      B=(f,at,dur,v,o)=>{o=o||{};[-6,6].forEach(d=>T('sawtooth',f,f,at,dur,v,{lp:o.lp0||500,f1:o.lp1||2200,fd:o.fd||.35,q:.9,atk:o.atk||.09,det:d,wet:o.wet==null?.45:o.wet}))};
+    const S={
+      // ---- attacking ----
+      swing:()=>{const w=Math.max(0,Math.min(1,SND208.sw==null?.5:SND208.sw)),c=1-w*.45;N(380*c,1500*c,0,.24+w*.12,.2,{q:1.1,atk:.07,wet:.12});N(220*c,600*c,.04,.2+w*.1,.08,{lp:1,atk:.05})},
+      arrow:()=>{T('triangle',196,132,0,.16,.16,{lp:1400,wet:.15,atk:.002});N(2600,900,0,.14,.12,{hp:1,atk:.004,wet:.1});T('sine',98,70,0,.1,.12)},
+      // ---- hitting ----
+      slash:()=>{N(2400,800,0,.1,.38,{q:1.3,atk:.002,wet:.15});T('sine',150,52,0,.18,.5,{atk:.003});N(900,160,0,.14,.3,{lp:1,atk:.003});Mt(1650,.004,.24,.035,.35)},
+      blunt:()=>{T('sine',96,36,0,.3,.72,{atk:.003,wet:.2});N(750,90,0,.24,.48,{lp:1,atk:.003,wet:.2});N(1700,500,0,.05,.22,{q:1.4,atk:.002})},
+      stab:()=>{N(3100,1200,0,.07,.32,{q:2,atk:.002,wet:.1});T('sine',170,66,.01,.14,.42,{atk:.003});N(650,120,.01,.12,.26,{lp:1,atk:.003})},
+      ahit:()=>{T('sine',190,68,0,.13,.48,{atk:.002});N(1500,380,0,.08,.3,{q:1.5,atk:.002,wet:.1});T('triangle',430,300,0,.05,.07)},
+      zap:()=>{T('sine',260,58,0,.32,.38,{atk:.004,wet:.45});N(2300,450,0,.26,.2,{q:2.2,atk:.004,wet:.4});T('sawtooth',116,55,0,.3,.1,{lp:700,f1:200,atk:.004,wet:.3})},
+      crit:()=>{N(2200,180,0,.22,.55,{lp:1,atk:.002,wet:.3});T('sine',72,30,0,.38,.6,{atk:.002,wet:.25});N(3600,1400,0,.05,.32,{q:1.6,atk:.001});Mt(1180,.006,.5,.06,.5)},
+      // ---- the Sovereign's essence (v208) ----
+      siphon:()=>{T('sine',62,92,0,3.1,.28,{atk:.8,wet:.5,sw:1});N(300,1800,0,3.1,.12,{q:2.5,atk:1.2,wet:.6,fd:3});[0,.9,1.8].forEach(at=>Mt(520+at*90,at+.6,1.4,.018,.8,[[1,1],[2.4,.5],[3.9,.3]]))},
+      essence:()=>{T('sine',55,55,0,2.4,.45,{atk:.05,wet:.6});N(1600,300,0,1.4,.22,{q:1.2,atk:.01,wet:.6});[[392,0],[523,.08],[784,.16],[1046,.24]].forEach(([f,at])=>T('sine',f,f,at,2,.05,{atk:.04,wet:.8}));Mt(262,0,2.6,.07,.8)},
+      pour:()=>{N(500,2400,0,1.1,.16,{q:1.4,atk:.3,wet:.6});T('sine',110,165,0,1.2,.3,{atk:.3,wet:.6});Mt(330,.9,2.4,.06,.85);B(147,1,2.2,.03,{atk:.4,lp1:1600,fd:.9,wet:.7});B(220,1,2.2,.03,{atk:.4,lp1:1600,fd:.9,wet:.7})},
+      rift:()=>{N(180,2600,0,.35,.4,{q:.9,atk:.01,wet:.5});T('sine',58,30,0,1.1,.6,{atk:.01,wet:.6});N(900,120,.1,1.2,.3,{lp:1,atk:.05,wet:.7});Mt(150,.05,1.8,.06,.8)},
+      // ---- killing ----
+      fall:()=>{T('sine',112,38,.02,.46,.55,{atk:.004,wet:.3});N(620,80,.02,.5,.42,{lp:1,atk:.02,wet:.3});T('sine',82,34,.2,.26,.3,{atk:.004});N(2600,1600,.18,.12,.05,{q:3,atk:.004})},
+      elite:()=>{T('sine',72,24,0,.95,.72,{atk:.004,wet:.5});N(520,60,0,.95,.5,{lp:1,atk:.01,wet:.5});T('sawtooth',55,40,0,1.2,.12,{lp:320,atk:.02,wet:.4});Mt(310,.03,2.2,.07,.85,[[1,1],[2.02,.5],[2.92,.45],[4.2,.25],[5.5,.15]])},
+      victory:()=>{[0,.32,.64].forEach((at,i)=>{T('sine',84-i*6,46,at,.45,.55,{atk:.003,wet:.4});N(420,70,at,.32,.35,{lp:1,atk:.004,wet:.4})});
+        [[[147,175,220],.95,.6],[[117,147,175],1.55,.55],[[131,165,196],2.1,.5],[[147,185,220,294],2.65,2.9]].forEach(([ch,at,d])=>ch.forEach(f=>B(f,at,d,.028,{atk:.06,lp1:2400,fd:.25})));
+        T('sine',73,73,2.65,3,.3,{atk:.08,wet:.6});Mt(220,2.65,3.2,.05,.9)},
+      // ---- levelling ----
+      lvl:()=>{B(220,0,.36,.04,{atk:.03,lp1:1800,fd:.12});B(294,.22,.3,.04,{atk:.03,lp1:1900,fd:.12});
+        [147,220,294,370].forEach(f=>B(f,.46,2.3,.03,{atk:.22,lp0:400,lp1:2600,fd:.7}));T('sine',73,73,.46,2.4,.32,{atk:.12,wet:.6});
+        Mt(196,.46,2.8,.09,.9,[[1,1],[2.02,.45],[2.76,.5],[5.4,.22],[8.9,.1]]);[1175,1480].forEach(f=>T('sine',f,f,.7,1.9,.018,{atk:.6,wet:.9}))}
+    };
+    const f=S[k];if(!f)return false;f();return true}catch(err){if(!SND208.err){SND208.err=1;console.warn('v208 sound',err)}return true}}
+{const f=sfx;sfx=function(k,vol){if(SND208.R[k]&&snd208Play(k,vol))return;return f.apply(this,arguments)}}
+{const f=mSfx;mSfx=function(k,vol){if(SND208.M[k]&&snd208Play(k,vol))return;return f.apply(this,arguments)}}
+// attacking: the swing's air, as a melee swing starts (not the gathering swings, which come without a hit, nor knives / slings)
+function snd208Swing(ms){try{if(!party.length)return;SND208.sw=Math.max(0,Math.min(1,((ms||300)-160)/380));sfx('swing',.9)}catch(_){}}
+{const f=swingAnim;swingAnim=function(st,ms,onHit){try{if(onHit&&!(typeof SWNOL!='undefined'&&SWNOL))snd208Swing(ms)}catch(_){}return f.apply(this,arguments)}}
+{const f=spinAnim;spinAnim=function(ms,onHit){try{if(onHit)snd208Swing((ms||400)*1.2)}catch(_){}return f.apply(this,arguments)}}
+// ================= v208: a Sovereign's essence (owner, Nov 9 2026) =================
+// "Instead of a portal opening after killing a sovereign, require the player to siphon the essence from its corpse. Once siphoned, a
+// rift should open leading back to [Duskhold]. A player must deposit sovereign essence into the duskhold fountain, and only after that
+// does duskhold upgrade and other unlocks for killing the sovereign unlock."
+// Each Sovereign i goes through SE208.st[i]:
+//   0  alive (or never met)
+//   1  slain: the corpse stays where it fell (its fade is held back, see death135Fade below) with the essence rising from it as an
+//      iridescent mist. F at it siphons the essence: ~3 s standing still (moving or F again stops it).
+//      A player who was not there (a co-op partner's kill, 3086) or who reloaded before siphoning finds the essence lingering where
+//      the Sovereign fell (SE208.p[i]) without the body.
+//   2  carried: the body fades, the essence is held, and a rift tears open where the den's golden "Return home" portal used to stand
+//      (that portal is never shown any more). F at the rift: straight to Duskhold, by the fountain.
+//   3  poured: F at Duskhold's fountain pours the essence in, and only now does what the kill used to do happen (se208Claim, the old
+//      first-kill block of bossDefeated): bossDone gets i, the Sovereign's power, "map cleared", the next portal and its entryway seal,
+//      the kingdom's growth (kfGrow109), and everything else that counts bossDone (Steward upgrades, forge mastery, villagers' zones…).
+//      se208St(i) reads 3 for every Sovereign in bossDone, so old saves and cheats are already "poured" (their dens show the rift).
+// What still happens at the kill: the arena clears, loot, XP, the fanfare, Cheddar's boss counters and the Curio restock.
+// A slain Sovereign does not come back while its essence waits (se208Gone, used by 3000's spawnBoss / sv141Clear).
+// Saved as x2.se208 {st, p}. Co-op: each player siphons and pours their own essence (the progress it unlocks is the player's own, as
+// bossDone always was); a partner's kill reaches you through 3086 as before and leaves the essence in the den for you. The siphon
+// stream, the pour and the rift tearing open are relayed effects (MPV.FX), so a partner standing by sees them on your hero.
+var SE208={v:208,st:{},p:{},mk:{},cor:{},rift:{},ch:null,T:3.0,sync:0,U:{t:{value:0},vh:{value:800}}};
+function se208St(i){if(typeof bossDone!='undefined'&&bossDone.has(i))return 3;return (typeof SE208!='undefined'&&SE208.st[i])|0}
+function se208Gone(i){return se208St(i)>=1}
+function se208Col(i){const B=BOSSES[i];return B&&B.col!=null?B.col:0xc8b0ff}
+// ---------------- the iridescent essence material (shared by the marker, the rift, the siphon and the fountain, 3796) ----------------
+// thin-film colours that turn with the view angle and drift with a slow swirl, over a milky violet mist; `flow` scrolls a streaked
+// pattern along the surface (falling sheets and streams), `op` its opacity, `glow` how much it brightens, `tint` a colour to lean to
+var SE208_IRI={
+  v:'uniform float t;varying vec3 vW;varying vec3 vN;varying vec2 vU;\n#include <fog_pars_vertex>\nvoid main(){vU=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;vN=normalize(mat3(modelMatrix)*normal);vec4 mvPosition=viewMatrix*w;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+  f:'uniform float t,op,flow,glow,ax,strk;uniform vec3 tint;varying vec3 vW;varying vec3 vN;varying vec2 vU;\n#include <fog_pars_fragment>\n'+
+    'vec3 pal(float h){return .55+.32*cos(6.2832*(h+vec3(0.,.33,.67)));}'+
+    'float wv(vec3 p){return sin(p.x*1.7+t*.55)*sin(p.z*1.9-t*.47)+.5*sin((p.x+p.z)*3.1+p.y*1.3+t*1.25)+.25*sin(p.y*4.3-t*1.9);}'+
+    'void main(){vec3 V=normalize(cameraPosition-vW);vec3 N=normalize(vN);if(!gl_FrontFacing)N=-N;float fr=1.-abs(dot(V,N));'+
+    'float L=mix(vU.y,vU.x,ax),Wd=mix(vU.x,vU.y,ax);float n=wv(vW*.9);'+
+    'float h=fr*.85+n*.16+t*.035+L*.6*strk;vec3 ir=pal(h);vec3 base=mix(vec3(.5,.47,.64),tint,.25);'+
+    'vec3 c=mix(base,ir,.36+.34*fr)*(.76+.26*n)+ir*glow*.42+vec3(.95,.92,1.)*pow(fr,3.)*.22;'+
+    'float a=op*(.62+.38*fr);'+
+    'if(strk>0.){float q=L+t*flow;float s=.5+.5*sin(Wd*113.+sin(Wd*37.)*3.+sin(q*3.)*1.5);float m=.55+.45*sin(q*11.+Wd*41.);'+
+    'a*=(.35+.65*smoothstep(.15,.95,s))*(.6+.4*m);c+=ir*.25*m;}'+
+    'gl_FragColor=vec4(c,clamp(a,0.,1.));\n#include <fog_fragment>\n}'};
+function se208Iri(o){o=o||{};const U=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{op:{value:o.op==null?.8:o.op},flow:{value:o.flow||0},glow:{value:o.glow||0},
+    ax:{value:o.ax||0},strk:{value:o.strk||0},tint:{value:new THREE.Color(o.tint==null?0xb8a8ff:o.tint)}}]);U.t=SE208.U.t;
+  const m=new THREE.ShaderMaterial({uniforms:U,vertexShader:SE208_IRI.v,fragmentShader:SE208_IRI.f,transparent:true,depthWrite:false,fog:true,side:o.side==null?THREE.DoubleSide:o.side,
+    blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending});m.userData.se208=1;m.userData.lps=1;m.userData.lpsSkip=1;return m}
+// a rising iridescent mist (a points cloud animated wholly in the shader): N motes in a column of radius r, height h
+var SE208_MIST={
+  v:'uniform float t,vh,sz,h,r,up;attribute vec4 sd;varying float vA;varying vec3 vC;\n#include <fog_pars_vertex>\n'+
+    'vec3 pal(float q){return .6+.4*cos(6.2832*(q+vec3(0.,.33,.67)));}'+
+    'void main(){float l=fract(sd.z+t*sd.w);float a=sd.x+l*1.9*(sd.y>.5?1.:-1.);float rr=r*(.25+.75*sd.y)*(1.+l*up);'+
+    'vec3 p=position+vec3(cos(a)*rr,l*h,sin(a)*rr);vec4 mvPosition=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mvPosition;'+
+    'gl_PointSize=clamp(sz*(.55+l*.9)*projectionMatrix[1][1]*vh*.5/max(.1,-mvPosition.z),1.,90.);vA=sin(l*3.1416)*(.5+.5*sd.y);vC=pal(sd.x*.16+l*.5+t*.05);\n#include <fog_vertex>\n}',
+  f:'uniform float op;varying float vA;varying vec3 vC;\n#include <fog_pars_fragment>\nvoid main(){vec2 q=gl_PointCoord-.5;float d=length(q);if(d>.5)discard;float s=smoothstep(.5,0.,d);'+
+    'gl_FragColor=vec4(mix(vec3(.9,.88,1.),vC,.6+.3*s),op*vA*s*s);\n#include <fog_fragment>\n}'};
+function se208Mist(n,o){o=o||{};const g=new THREE.BufferGeometry(),P=new Float32Array(n*3),S=new Float32Array(n*4),R=dkRng(o.seed||208);
+  for(let i=0;i<n;i++){S[i*4]=R()*6.283;S[i*4+1]=R();S[i*4+2]=R();S[i*4+3]=(o.spd||.12)*(.6+.8*R());if(o.y)P[i*3+1]=o.y}
+  g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('sd',new THREE.BufferAttribute(S,4));
+  const U=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{sz:{value:o.sz||.45},h:{value:o.h||2.5},r:{value:o.r||.8},up:{value:o.up==null?.6:o.up},op:{value:o.op||.5}}]);U.t=SE208.U.t;U.vh=SE208.U.vh;
+  const m=new THREE.ShaderMaterial({uniforms:U,vertexShader:SE208_MIST.v,fragmentShader:SE208_MIST.f,transparent:true,depthWrite:false,fog:true,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending});
+  const p=new THREE.Points(g,m);p.frustumCulled=false;p.renderOrder=4;return p}
+// a soft glowing disc on the ground
+var SE208_GLOW=null;function se208GlowTex(){if(SE208_GLOW)return SE208_GLOW;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.45)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return SE208_GLOW=new THREE.CanvasTexture(c)}
+function se208Disc(r,col,op){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:se208GlowTex(),color:col,transparent:true,opacity:op==null?.5:op,depthWrite:false,blending:THREE.AdditiveBlending}));
+  m.rotation.x=-Math.PI/2;m.renderOrder=3;return m}
+// the v83 low-poly pass (0750) swaps round shapes for coarse ones: the essence's sheets, pools and orbs keep theirs
+function se208Skip(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.userData.se208)o.userData.lpsSkip=1});return g}
+function se208Free(g){if(!g)return;if(g.parent)g.parent.remove(g);g.traverse(o=>{if(o.geometry&&!o.geometry.userData.lps)o.geometry.dispose();if(o.material&&(o.material.userData.se208||o.material.isMeshBasicMaterial||o.material.isShaderMaterial))o.material.dispose()})}
+// ---------------- 1. the kill: the corpse stays ----------------
+function se208Slain(i,e){if(!BOSSES[i]||se208St(i)>=1)return;const A=ARN[i],B=BOSSES[i],m=e&&e.m;
+  SE208.st[i]=1;SE208.p[i]=m?[m.position.x,m.position.z]:[A.cx,A.cz];if(m){m.userData.se208=i;SE208.cor[i]={e,g:m,done:null,held:0}}
+  se208Mark(i);
+  banner('👑 '+B.name.toUpperCase()+' IS SLAIN',m?'Siphon its essence from the corpse':'Its essence lingers in its den, where it fell','Then pour it into the fountain of Duskhold to claim the zone');
+  setTimeout(()=>say('✨ '+B.name+'’s essence rises from '+(m?'its corpse':'where it fell')+'. Stand by it and press F to siphon it.'),2600);
+  try{hud()}catch(_){}try{saveGame(true)}catch(_){}}
+// the corpse's fade waits for the siphon (kill_base calls death135Fade ~1.5 s after the fall)
+{const f=death135Fade;death135Fade=function(g,done){const i=g&&g.userData?g.userData.se208:null;
+  if(i!=null&&se208St(i)===1){const C=SE208.cor[i];if(C&&C.g===g&&!C.held){C.done=done;C.held=1;return}}
+  return f.apply(this,arguments)}}
+function se208Fade(i){const C=SE208.cor[i];delete SE208.cor[i];if(!C)return;try{if(C.held&&C.g&&C.g.parent)death135Fade(C.g,C.done);else if(C.held&&C.done)C.done()}catch(err){console.warn('v208 fade',err)}}
+// ---------------- the essence over the corpse ----------------
+function se208Mark(i){if(SE208.mk[i]||se208St(i)!==1)return;const p=SE208.p[i];if(!p)return;const x=p[0],z=p[1],y=GH(x,z),col=se208Col(i),g=new THREE.Group();
+  g.position.set(x,y,z);g.name='se208mark';g.userData.psNo=1;
+  const d=se208Disc(3.2,col,.32);d.position.y=.08;g.add(d);
+  const d2=se208Disc(1.6,0xe8e0ff,.4);d2.position.y=.1;g.add(d2);
+  const ms=se208Mist(70,{r:1.5,h:4.2,sz:.55,op:.55,spd:.1,seed:31+i,up:.4});g.add(ms);
+  const sp=se208Mist(26,{r:.9,h:5.2,sz:.22,op:.9,spd:.2,seed:57+i,add:1,up:.1});g.add(sp);
+  const w=new THREE.Mesh(new THREE.IcosahedronGeometry(.32,2),se208Iri({op:.9,glow:1.1,tint:col}));w.position.y=2.4;g.add(w);
+  const w2=new THREE.Mesh(new THREE.IcosahedronGeometry(.55,1),se208Iri({op:.25,glow:.6,tint:col,add:1}));w2.position.y=2.4;g.add(w2);
+  scene.add(se208Skip(g));SE208.mk[i]={g,w,w2,x,z,y}}
+function se208Unmark(i){const M=SE208.mk[i];if(!M)return;delete SE208.mk[i];se208Free(M.g)}
+// ---------------- 2. the siphon ----------------
+function se208Near(i,r){const M=SE208.mk[i];if(!M)return false;return Math.hypot(pl.position.x-M.x,pl.position.z-M.z)<(r||4.6)}
+function se208Begin(i){if(SE208.ch||se208St(i)!==1||(typeof AF!='undefined'&&AF))return;const M=SE208.mk[i];if(!M)return;
+  if(typeof riding!='undefined'&&riding)try{dismount()}catch(_){}
+  SE208.ch={i,t:0,x:pl.position.x,z:pl.position.z};try{face(new THREE.Vector3(M.x-pl.position.x,0,M.z-pl.position.z).normalize())}catch(_){}
+  try{kqsPose('raise',SE208.T*1000)}catch(_){}try{sfx('siphon')}catch(_){}
+  try{se208FxRun(se208Stream,[M.x,M.y+2.4,M.z,pl.position.x,GH(pl.position.x,pl.position.z)+1.2,pl.position.z,se208Col(i),SE208.T,0])}catch(err){console.warn('v208 stream',err)}}
+function se208Stop(why){const C=SE208.ch;if(!C)return;SE208.ch=null;if(why)say(why);try{SE208.fx&&SE208.fx.forEach(o=>o.stop=1)}catch(_){}}
+function se208Tick(dt){const C=SE208.ch;if(!C)return;
+  if(Math.hypot(pl.position.x-C.x,pl.position.z-C.z)>.55||!(hero.hp>0)||(typeof AF!='undefined'&&AF)){se208Stop('✨ The essence slips back into the corpse. Stand still to siphon it.');return}
+  C.t+=dt;if(C.t>=SE208.T){SE208.ch=null;se208Done(C.i)}}
+function se208Done(i){if(se208St(i)!==1)return;const M=SE208.mk[i],B=BOSSES[i];SE208.st[i]=2;se208Fade(i);
+  if(M)try{burst(new THREE.Vector3(M.x,M.y+2.4,M.z),se208Col(i),40,2.4,2,.8);burst(gY(pl.position,1.2),0xe8e0ff,30,1.6,1.6,.7)}catch(_){}
+  se208Unmark(i);try{sfx('essence')}catch(_){}
+  setTimeout(()=>{const R=se208RiftSpot(i);if(R)try{se208FxRun(se208RiftFx,[R.x,R.y,R.z,se208Col(i)]);sfx('rift')}catch(_){}se208Rift(i);SE208.rift[i]&&(SE208.rift[i].k=0)},900);
+  banner('✨ ESSENCE SIPHONED',B.name+'’s essence is yours','A rift tears open: it leads home to Duskhold');
+  setTimeout(()=>say('🌀 Step through the rift and pour the essence into the fountain of Duskhold to claim '+PMAP[i].n+'.'),2400);
+  try{hud()}catch(_){}try{saveGame(true)}catch(_){}}
+// ---------------- the rift (where the den's golden portal home used to stand) ----------------
+function se208RiftSpot(i){const r=typeof RPORT!='undefined'&&RPORT.find(q=>q.k=='exit'&&q.pi===i);const A=ARN[i];let x,z;if(r){x=r.x;z=r.z}else{const p=PMAP[i];x=p.ba[0];z=p.ba[1]+10}
+  return {x,z,y:GH(x,z),ry:A?Math.atan2(A.cx-x,A.cz-z):0}}
+var SE208_RIFT={
+  v:'varying vec2 vU;\n#include <fog_pars_vertex>\nvoid main(){vU=uv;vec4 mvPosition=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+  f:'uniform float t,k;uniform vec3 tint;varying vec2 vU;\n#include <fog_pars_fragment>\n'+
+    'vec3 pal(float h){return .56+.44*cos(6.2832*(h+vec3(0.,.33,.67)));}'+
+    'void main(){float y=vU.y,x=vU.x*2.-1.;if(k<.002)discard;'+
+    // the tear: widest a little below the middle, jagged edges that flicker
+    'float w=pow(max(0.,sin(3.1416*clamp((y-.5)/max(.05,k)+.5,0.,1.))),.75)*.62*k;'+
+    'w*=.78+.22*abs(fract(y*6.3+sin(y*17.+t*.7)*.25)-.5)*2.+.06*sin(y*40.+t*5.);'+
+    'float d=abs(x+.06*sin(y*9.+t*.8))/max(.001,w);if(d>1.25)discard;'+
+    'float sw=sin(y*14.-t*2.4+x*6.)*.5+.5,s2=sin(y*31.+t*1.7-x*11.)*.5+.5;vec3 ir=pal(y*.8+t*.06+x*.3+sw*.2);'+
+    'vec3 c=mix(vec3(.03,.02,.06),ir*.75,smoothstep(.2,.95,d)*.6+sw*s2*.35*(1.-d));c=mix(c,tint,.12);'+
+    'float rim=smoothstep(.72,1.,d)*smoothstep(1.25,1.,d);c+=mix(vec3(1.,.95,1.),ir,.4)*rim*1.6;'+
+    'float a=d<1.?.94:rim;gl_FragColor=vec4(c,a);\n#include <fog_fragment>\n}'};
+function se208Rift(i){if(SE208.rift[i]||se208St(i)<2)return SE208.rift[i];const R=se208RiftSpot(i),col=se208Col(i),g=new THREE.Group();g.name='se208rift';g.userData.psNo=1;
+  g.position.set(R.x,R.y,R.z);g.rotation.y=R.ry;
+  const U=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{k:{value:1},tint:{value:new THREE.Color(col)}}]);U.t=SE208.U.t;
+  const M=new THREE.ShaderMaterial({uniforms:U,vertexShader:SE208_RIFT.v,fragmentShader:SE208_RIFT.f,transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:true});M.userData.se208=M.userData.lps=M.userData.lpsSkip=1;
+  const pl0=new THREE.Mesh(new THREE.PlaneGeometry(3.2,5),M);pl0.position.y=2.65;pl0.renderOrder=4;g.add(pl0);
+  const d=se208Disc(2.6,col,.35);d.position.y=.08;g.add(d);const d2=se208Disc(1.4,0xe8e0ff,.35);d2.position.y=.1;g.add(d2);
+  const ms=se208Mist(40,{r:1.1,h:4.6,sz:.4,op:.45,spd:.09,seed:91+i,up:.8});g.add(ms);
+  // shards of the torn world drifting round the tear
+  const sg=new THREE.OctahedronGeometry(1,0),sm=new THREE.MeshStandardMaterial({color:0x2a2434,roughness:.6,metalness:.2,emissive:col,emissiveIntensity:.25,flatShading:true}),sh=[],r=dkRng(400+i);
+  for(let q=0;q<9;q++){const o=new THREE.Mesh(sg,sm);const s=.07+r()*.13;o.scale.set(s,s*(1.2+r()),s);o.userData.a=r()*6.283;o.userData.r=1.1+r()*.9;o.userData.y=.8+r()*3.6;o.userData.sp=(.25+r()*.35)*(r()<.5?-1:1);g.add(o);sh.push(o)}
+  scene.add(se208Skip(g));return SE208.rift[i]={g,M,U,sh,sm,sg,k:1,x:R.x,z:R.z,y:R.y}}
+function se208Unrift(i){const Q=SE208.rift[i];if(!Q)return;delete SE208.rift[i];try{Q.sg.dispose();Q.sm.dispose()}catch(_){}se208Free(Q.g)}
+function se208RiftAt(){for(const k in SE208.rift){const Q=SE208.rift[k];if(Q.g.visible&&Math.hypot(pl.position.x-Q.x,pl.position.z-Q.z)<2.6)return +k}return -1}
+function se208Home(){if(typeof WV!='undefined'&&WV)try{waveEnd(false,true)}catch(_){}const T=TOWNS[0],a=T.sp,face=Math.atan2(T.cx-a[0],T.cy-a[1])+Math.PI;
+  fadeTo(()=>{toPos(a[0],a[1],face);try{home=T}catch(_){}const n=Object.keys(SE208.st).filter(k=>SE208.st[k]===2).length;
+    say(n?'🌀 The rift sets you down in Duskhold. Pour the essence into the fountain (F at the fountain).':'🌀 The rift sets you down in Duskhold.')})}
+// no golden portal home in the dens any more: the rift takes its place
+rportRefresh=function(){try{RPORT.forEach(r=>{if(r.k=='exit')r.g.visible=false})}catch(_){}try{se208Sync(true)}catch(_){}};
+try{RPORT.forEach(r=>{if(r.k=='exit')r.g.visible=false})}catch(_){}
+// ---------------- 3. the fountain ----------------
+function se208Held(){const L=[];for(const k in SE208.st)if(SE208.st[k]===2&&!bossDone.has(+k))L.push(+k);return L.sort((a,b)=>a-b)}
+function se208AtFountain(){const T=TOWNS[0];return Math.hypot(pl.position.x-T.cx,pl.position.z-T.cy)<3.9}
+function se208Pour(i){if(se208St(i)!==2||SE208.pour)return;const T=TOWNS[0],B=BOSSES[i];SE208.pour=1;
+  try{face(new THREE.Vector3(T.cx-pl.position.x,0,T.cy-pl.position.z).normalize())}catch(_){}try{kqsPose('cast',900)}catch(_){}try{sfx('pour')}catch(_){}
+  try{se208FxRun(se208Stream,[pl.position.x,GH(pl.position.x,pl.position.z)+1.3,pl.position.z,T.cx,GH(T.cx,T.cy)+2.95,T.cy,se208Col(i),1.1,1])}catch(err){console.warn('v208 pour',err)}
+  setTimeout(()=>{SE208.pour=0;try{if(typeof ftn208Flare=='function')ftn208Flare(se208Col(i))}catch(_){}se208Claim(i)},1150)}
+// what the first kill used to do (0510 bossDefeated before v208)
+function se208Claim(i){if(!BOSSES[i]||bossDone.has(i))return;const B=BOSSES[i],A=ARN[i],P=B.pw;delete SE208.st[i];delete SE208.p[i];
+  bossDone.add(i);hero.buffs=hero.buffs.filter(b=>!(b.perm&&b.n==P.n));hero.buffs.push({s:P.s,t:Infinity,n:P.n,i:P.i,d:P.d,perm:1});hsDirty();
+  banner('👑 MAP CLEARED',B.name+'’s essence joins the fountain','Power gained: '+P.i+' '+P.n+' ('+P.d+')');portalRefresh();rportRefresh();
+  try{MU.hold=nowP()+7000}catch(_){}try{sfx('essence')}catch(_){}
+  setTimeout(()=>{if(i<PMAP.length-1)banner('🌀 A NEW PORTAL OPENS',PMAP[i+1].n+' awaits beyond its entryway','The seal on its portal room has broken');else banner('🏆 THE CITADEL HAS FALLEN','Every portal is cleared','Thank you for playing!')},2800);
+  try{kfGrow109()}catch(err){console.warn('v208 grow',err)}
+  try{if(typeof ftn208Sync=='function')ftn208Sync()}catch(_){}
+  try{hud();ui()}catch(_){}try{saveGame(true)}catch(_){}}
+// effects started from a prompt (not a cast) are recorded for partners only inside mpvRun (2170: MPV.cap)
+function se208FxRun(f,a){return typeof mpvRun=='function'?mpvRun(f,null,a):f.apply(null,a)}
+// ---------------- relayed effects (co-op partners replay them with the same plain arguments) ----------------
+// a stream of iridescent motes from a to b over `dur` s (rev: a quick pour that ends in a splash at b)
+var SE208_DOT=null;
+function se208Stream(ax,ay,az,bx,by,bz,col,dur,rev){dur=Math.max(.3,Math.min(4,+dur||1));const N=48,G=new THREE.BufferGeometry(),P=new Float32Array(N*3),Cc=new Float32Array(N*3);
+  G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('color',new THREE.BufferAttribute(Cc,3));
+  const M=new THREE.PointsMaterial({size:.32,map:se208GlowTex(),vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.95});
+  const pt=new THREE.Points(G,M);pt.frustumCulled=false;pt.renderOrder=6;scene.add(pt);
+  const a=new THREE.Vector3(ax,ay,az),b=new THREE.Vector3(bx,by,bz),mid=a.clone().lerp(b,.5);mid.y+=Math.min(2.4,a.distanceTo(b)*.35+.6);
+  const R=dkRng(Math.floor((ax+az)*13)&1023),sd=[];for(let q=0;q<N;q++)sd.push([R(),R()*6.283,.15+R()*.4]);const c=new THREE.Color(),c0=new THREE.Color(col);let t=0;
+  const o={stop:0,tick(dt){t+=dt||0;const k=t/dur;
+      for(let q=0;q<N;q++){const s=sd[q],u=((rev?k*1.6:k*1.3)+s[0])%1,live=rev?(s[0]<k*1.4&&s[0]>k*1.4-1):(k<1.05),w=1-u;
+        const x=w*w*a.x+2*w*u*mid.x+u*u*b.x,y=w*w*a.y+2*w*u*mid.y+u*u*b.y,z=w*w*a.z+2*w*u*mid.z+u*u*b.z,sw=Math.sin(u*Math.PI)*s[2];
+        P[q*3]=x+Math.cos(s[1]+t*4)*sw;P[q*3+1]=live&&!o.stop?y+Math.sin(s[1]+t*3)*sw*.6:-9999;P[q*3+2]=z+Math.sin(s[1]+t*4)*sw;
+        c.setHSL((s[0]*.6+u*.4+t*.15)%1,.55,.78).lerp(c0,.25);Cc[q*3]=c.r;Cc[q*3+1]=c.g;Cc[q*3+2]=c.b}
+      G.attributes.position.needsUpdate=true;G.attributes.color.needsUpdate=true;M.opacity=.95*Math.min(1,(dur+.35-t)/.35);
+      return t<dur+.35&&!(o.stop&&t>.1)},
+    end(){scene.remove(pt);G.dispose();M.dispose();if(rev)try{burst(b,col,46,2.2,2.6,.9);burst(b,0xe8e0ff,30,1.6,2,.7);ring(new THREE.Vector3(bx,by-2.3,bz),col,4,500)}catch(_){}
+      const j=(SE208.fx||[]).indexOf(o);if(j>=0)SE208.fx.splice(j,1)}};
+  (SE208.fx=SE208.fx||[]).push(o);kqFx(o)}
+function se208RiftFx(x,y,z,col){const p=new THREE.Vector3(x,y,z);try{burst(gY(p,2.4),col,70,3.2,3,1);burst(gY(p,2.4),0xe8e0ff,40,2.4,2.4,.8);ring(p,col,5,520);kqFlash(gY(p,2.4),0xe8e0ff,5,320);shake(.18)}catch(_){}
+  try{if(typeof svShock=='function')svShock(p,col,6,.6)}catch(_){}}
+(function(){if(typeof MPV=='undefined'||!MPV.FX)return;
+  ['se208Stream','se208RiftFx'].forEach(n=>{const f=window[n];if(typeof f!='function'||MPV_FX[n]!=null)return;MPV_FX[n]=MPV.FX.length;MPV.FX.push(n);
+    window[n]=function(){if(!MPV.cap||MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
+      let a=null;try{a=Array.prototype.map.call(arguments,x=>mpvSer(x,0))}catch(_){a=null}
+      if(a)mpvPush(['V',MPV_FX[n],mpvR(pl.position.x),mpvR(pl.position.y),mpvR(pl.position.z),mpvR(pl.rotation.y),a]);
+      MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}})})();
+// ---------------- prompts ----------------
+{const f=worldPrompt;worldPrompt=function(){try{if(!SE208.ch)for(const k in SE208.mk){const i=+k;if(se208St(i)===1&&se208Near(i))return {label:'F · Siphon '+BOSSES[i].name+'’s essence',fn:()=>se208Begin(i)}}
+    const r=se208RiftAt();if(r>=0)return {label:'F · Step through the rift to Duskhold',fn:()=>se208Home()}}catch(err){console.warn('v208 prompt',err)}return f.apply(this,arguments)}}
+{const f=townPortalPrompt;townPortalPrompt=function(T){try{if(T&&T===TOWNS[0]&&!SE208.pour&&se208AtFountain()){const H=se208Held();
+      if(H.length){const i=H[0];return {label:'F · Pour '+BOSSES[i].name+'’s essence into the fountain'+(H.length>1?' ('+H.length+' held)':''),fn:()=>se208Pour(i)}}}}catch(err){console.warn('v208 fountain prompt',err)}
+  return f.apply(this,arguments)}}
+// the siphon's progress takes the prompt while it runs (like gathering)
+{const f=promptTick;promptTick=function(){const r=f.apply(this,arguments);try{const C=SE208.ch;if(C){PR={label:'✨ Siphoning '+BOSSES[C.i].name+'’s essence… '+Math.min(99,Math.round(100*C.t/SE208.T))+'%',fn:()=>se208Stop()};
+      const b=$('prompt');if(b){b.classList.toggle('hide',uiOpen());b.textContent=PR.label}}}catch(_){}return r}}
+// ---------------- tracker (the main-quest box under the map) ----------------
+SP152.trk=Object.assign({se208:I=>{if(!I||!I.den)return null;const i=I.z,s=se208St(i);if(s===1)return {name:BOSSES[i].name+'’s Essence',lines:[['Siphon the essence from where it fell']]};
+    if(s===2)return {name:BOSSES[i].name+'’s Essence',lines:[['Step through the rift to Duskhold'],['Pour the essence into the fountain']]};return null}},SP152.trk);
+{const f=sp152Trk;sp152Trk=function(){let I=null;try{I=curIns()}catch(_){}const H=I?[]:se208Held();if(I||!H.length)return f.apply(this,arguments);
+  const el=$('mqt152');if(!el)return;const out=uiOpen()?null:{name:H.length>1?'Sovereign Essences':BOSSES[H[0]].name+'’s Essence',lines:[[H.length>1?'Pour '+H.length+' essences into the fountain':'Pour the essence into the fountain of Duskhold']]};
+  const key=out?JSON.stringify(out):'h';if(key===SP152.tk)return;SP152.tk=key;if(!out){el.classList.add('hide');sp152TrkPos();return}
+  el.innerHTML='<div class="k">⚜ Main quest</div><div class="h">'+out.name+'</div>'+out.lines.map(q=>'<div class="o"><span>'+q[0]+'</span></div>').join('');el.classList.remove('hide');sp152TrkPos()}}
+// the J window says where each essence is
+{const f=XR.bosses;XR.bosses=function(){const r=f.apply(this,arguments);try{const L=BOSSES.map((B,i)=>{const s=se208St(i);return s===1?'✨ '+B.name+'’s essence waits in its den: siphon it.':s===2?'✨ You carry '+B.name+'’s essence: pour it into the fountain of Duskhold.':''}).filter(Boolean);
+    if(L.length)$('xwF').insertAdjacentHTML('afterbegin','<div class="mut dtl" style="color:#d8c8ff;margin-bottom:4px">'+L.join('<br>')+'</div>')}catch(_){}return r}}
+// ---------------- per frame ----------------
+function se208Sync(force){for(const k in SE208.mk)if(se208St(+k)!==1)se208Unmark(+k);for(const k in SE208.rift)if(se208St(+k)<2)se208Unrift(+k);
+  BOSSES.forEach((B,i)=>{const s=se208St(i);if(s===1&&!SE208.mk[i]&&SE208.p[i])se208Mark(i);
+    if(s>=2&&!SE208.rift[i]){const R=se208RiftSpot(i);if(force===true&&s===2||Math.hypot(pl.position.x-R.x,pl.position.z-R.z)<80)se208Rift(i)}})}
+{const f=homeTick;homeTick=function(dt,now){const r=f.apply(this,arguments);try{const t=performance.now()/1000;SE208.U.t.value=t%1000;
+    try{SE208.U.vh.value=(typeof ren!='undefined'&&ren.domElement)?ren.domElement.height:innerHeight}catch(_){}
+    se208Tick(dt||0);if((SE208.sync-=dt||0)<=0){SE208.sync=1;se208Sync()}
+    for(const k in SE208.mk){const M=SE208.mk[k],b=Math.sin(t*1.6+(+k))*.14;M.w.position.y=M.w2.position.y=2.4+b;M.w.rotation.y=t*.7;M.w2.scale.setScalar(1+.12*Math.sin(t*2.3))}
+    for(const k in SE208.rift){const Q=SE208.rift[k];if(Q.k<1){Q.k=Math.min(1,Q.k+(dt||0)*.8);}Q.U.k.value=Q.k*(.97+.03*Math.sin(t*3.1));
+      if(Math.hypot(pl.position.x-Q.x,pl.position.z-Q.z)<60)Q.sh.forEach(o=>{const u=o.userData,a=u.a+t*u.sp;o.position.set(Math.cos(a)*u.r,u.y+Math.sin(t*.8+u.a)*.25,Math.sin(a)*u.r*.6);o.rotation.set(t*u.sp,t*.5+u.a,0)})}}
+  catch(err){if(!SE208.err){SE208.err=1;console.warn('v208 tick',err)}}return r}}
+// ---------------- save / load ----------------
+function se208Reset(){SE208.ch=null;SE208.pour=0;Object.keys(SE208.mk).forEach(k=>se208Unmark(+k));Object.keys(SE208.rift).forEach(k=>se208Unrift(+k));SE208.cor={};SE208.st={};SE208.p={}}
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{const st={},p={};for(const k in SE208.st){const v=SE208.st[k]|0;if(v>=1&&v<=2&&!bossDone.has(+k)){st[k]=v;if(SE208.p[k])p[k]=SE208.p[k].map(q=>+(+q).toFixed(2))}}
+    o.se208={v:208,st,p}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const C=SE208.cor;se208Reset();const q=s&&s.se208;
+    if(q&&q.st&&typeof q.st=='object')for(const k in q.st){const i=+k,v=q.st[k]|0;if(!BOSSES[i]||bossDone.has(i)||v<1||v>2)continue;SE208.st[i]=v;const p=q.p&&q.p[k];
+      SE208.p[i]=Array.isArray(p)&&isFinite(+p[0])&&isFinite(+p[1])?[+p[0],+p[1]]:[ARN[i].cx,ARN[i].cz]}
+    for(const k in C){const c=C[k];if(c&&c.held&&c.done)try{c.done()}catch(_){}}   // a body held from before the load goes
+    se208Sync()}catch(err){console.warn('v208 load',err)}return r}}
+// ================= v208: the fountain of essence (owner, Nov 9 2026) =================
+// "Lets revise the fountain to be an elaborate and ornate fountain of essence — an iridescent flowing mist liquid. (Make sure villager
+// sitting animation still works properly on updated fountain model)."
+// The v83 fountain (0820: octagonal stone basin, two tiers of blue water, falling drops) is replaced in place (T.ftnG, the same group
+// at the plaza's centre, so the collider tiles 'B' r < 2.5, the plaza and every decoration ring round it stay where they were):
+//  * stone (polished violet-grey, painted with the v190 decoration shading): an octagonal two-step plinth, a moulded round basin with an
+//    overhanging lip (top at y .745, outer edge r 2.52: the rim seats of 3650 stay at r 2.42, h .74, facing out), eight buttresses and
+//    eight carved panels with a violet rune each (buttresses between the seats, panels behind them), a turned pedestal with four fins,
+//    a wide middle bowl with hanging brass drops, a slender shaft with four curled supports, an upper bowl, and a brass cage of four
+//    arched ribs holding a floating orb of essence;
+//  * the essence (3795's iridescent shader: thin-film colours over a milky violet mist): three pools, overflow sheets falling from the
+//    upper bowl (4) and the middle bowl's scallops (8) with streaks that run down, low mist rolling over the pools and up from the orb;
+//  * every Sovereign whose essence has been poured circles the orb as a small mote in its colour (ftn208Sync), and a pour makes the
+//    whole fountain flare toward that colour (ftn208Flare).
+// The Gilded Fountain decoration is refitted to this shape (gold rim band, bowl bands, plinth finials, a crown over the cage).
+// Co-op: the fountain is scenery, built the same on every screen (no Math.random); the motes follow each player's own progress.
+var FTN208={g:null,ess:[],mot:[],flare:0,fc:new THREE.Color(0xb8a8ff),tint0:new THREE.Color(0xb8a8ff),
+  C:{st:0x625d6e,stL:0x7c7690,stD:0x46424f,obs:0x26232e,brass:0xa8843a,rune:0xc8b4ff}};
+function ftn208Rot(pts,a){const c=Math.cos(a),s=Math.sin(a);return pts.map(p=>[p[0]*s,p[1],p[0]*c])}   // a profile [r, y] turned to angle a (x = sin, z = cos)
+function ftn208Torus(k,t,col,r,tube,y,mt){return dc190P(k,t,col,dt168Geo('ftn208T'+r+'_'+tube,()=>new THREE.TorusGeometry(r,tube,5,72).rotateX(Math.PI/2)),dt168Mx(0,y,0),mt)}
+function ftn208Kit(k){const C=FTN208.C,P=Math.PI;
+  // plinth: two octagonal steps
+  dc190L(k,'c',C.stD,[[0,0],[2.92,0],[2.92,.07],[2.86,.09],[2.7,.09],[2.7,.16],[0,.16]],8,0,0,0,0,1,'stone');
+  // the basin: moulded foot, belly, overhanging lip (top y .745, outer r 2.52), inner wall down to the floor
+  dc190L(k,'c',C.st,[[0,.16],[2.24,.16],[2.36,.2],[2.36,.26],[2.26,.3],[2.24,.34],[2.28,.52],[2.34,.56],[2.46,.6],[2.52,.66],[2.5,.72],[2.44,.745],[2.16,.745],[2.1,.72],[2.06,.6],[2.04,.32],[0,.32]],32,0,0,0,0,1,'plain');
+  ftn208Torus(k,'c',C.obs,2.47,.022,.6);ftn208Torus(k,'c',C.stL,2.3,.03,.3);
+  for(let i=0;i<8;i++){
+    // buttresses between the rim seats (seats at (i+.5)/8 of a turn, x = sin a, z = -cos a): a scrolled block with a brass knob
+    const a=i/8*2*P,x=Math.sin(a),z=-Math.cos(a),ry=Math.atan2(x,z);
+    dc190B(k,'c',C.stL,.24,.36,.22,x*2.38,.4,z*2.38,ry,'plain',.05);
+    dc190P(k,'c',C.stL,dt168Geo('ftn208Vol',()=>new THREE.TorusGeometry(.085,.035,5,10,P*1.5)),dt168Mx(x*2.5,.52,z*2.5,0,ry+P/2,0),'plain');
+    dc190L(k,'m',C.brass,[[0,0],[.05,0],[.06,.04],[.03,.08],[0,.09]],8,x*2.47,.22,z*2.47,0,1,'brass');
+    // a carved panel behind each seat, a rune glowing in it
+    const b=(i+.5)/8*2*P,bx=Math.sin(b),bz=-Math.cos(b),br=Math.atan2(bx,bz);
+    dc190B(k,'c',C.stD,1.05,.17,.04,bx*2.275,.43,bz*2.275,br,'plain',.015);
+    dc190B(k,'c',C.stL,1.12,.025,.05,bx*2.285,.525,bz*2.285,br,'plain',.008);dc190B(k,'c',C.stL,1.12,.025,.05,bx*2.285,.335,bz*2.285,br,'plain',.008);
+    dc190P(k,'g',C.rune,dc190Oct(),dt168Mx(bx*2.3,.43,bz*2.3,0,br,0,.05,.07,.012));
+    [-1,1].forEach(s=>dc190P(k,'g',C.rune,dc190Oct(),dt168Mx(bx*2.3+Math.cos(br)*s*.22,.43,bz*2.3-Math.sin(br)*s*.22,0,br,0,.025,.035,.01)))}
+  // the pedestal and its four fins
+  dc190L(k,'c',C.stL,[[0,.3],[.86,.3],[.9,.38],[.72,.46],[.6,.5],[.52,.7],[.46,1.0],[.44,1.2],[.5,1.27],[0,1.27]],16,0,0,0,0,1,'plain');
+  for(let i=0;i<4;i++){const a=(i+.5)/4*2*P;dc190Tube(k,'c',C.st,ftn208Rot([[.82,.36],[.72,.5],[.56,.72],[.5,.95],[.56,1.18],[.74,1.36]],a),.05,7,'plain')}
+  // the middle bowl, its brass lip band and the drops under its scallops
+  dc190L(k,'c',C.stL,[[0,1.24],[.5,1.26],[.9,1.34],[1.2,1.44],[1.36,1.52],[1.38,1.58],[1.32,1.61],[1.22,1.6],[1.12,1.52],[0,1.5]],32,0,0,0,0,1,'plain');
+  ftn208Torus(k,'m',C.brass,1.375,.026,1.585,'brass');ftn208Torus(k,'c',C.obs,1.2,.025,1.44);
+  for(let i=0;i<16;i++){const a=i/16*2*P;dc190L(k,'m',C.brass,[[0,-.12],[.026,-.075],[.03,-.025],[0,0]],6,Math.sin(a)*1.31,1.5,Math.cos(a)*1.31,0,1,'brass')}
+  // the shaft, four curled supports under the upper bowl
+  dc190L(k,'c',C.st,[[0,1.5],[.3,1.5],[.26,1.62],[.2,1.7],[.17,1.95],[.21,2.0],[.15,2.06],[.14,2.22],[.18,2.27],[0,2.27]],12,0,0,0,0,1,'plain');
+  for(let i=0;i<4;i++){const a=i/4*2*P;dc190Tube(k,'c',C.stL,ftn208Rot([[.16,1.92],[.3,1.98],[.4,2.1],[.44,2.24],[.4,2.33],[.32,2.34]],a),.04,6,'plain');
+    dc190L(k,'m',C.brass,[[0,-.03],[.045,0],[0,.03]],6,Math.sin(a)*.3,1.98,Math.cos(a)*.3,0,1,'brass')}
+  // the upper bowl
+  dc190L(k,'c',C.stL,[[0,2.24],[.3,2.26],[.52,2.32],[.66,2.4],[.7,2.45],[.64,2.475],[.56,2.43],[0,2.41]],24,0,0,0,0,1,'plain');
+  ftn208Torus(k,'m',C.brass,.69,.02,2.455,'brass');
+  // the cage of four arched brass ribs over the orb, a finial under it, a knob and a gem on top
+  dc190L(k,'m',C.brass,[[0,2.41],[.09,2.41],[.07,2.58],[.11,2.64],[0,2.68]],8,0,0,0,0,1,'brass');
+  for(let i=0;i<4;i++){const a=(i+.5)/4*2*P;dc190Tube(k,'m',C.brass,ftn208Rot([[.6,2.46],[.67,2.74],[.57,3.06],[.32,3.3],[.05,3.4]],a),.026,6,'brass');
+    dc190L(k,'m',C.brass,[[0,-.03],[.04,0],[0,.03]],6,Math.sin(a)*.67,2.76,Math.cos(a)*.67,0,1,'brass')}
+  dc190L(k,'m',C.brass,[[0,3.36],[.07,3.38],[.08,3.44],[.04,3.5],[0,3.52]],8,0,0,0,0,1,'brass');
+  dc190P(k,'g',C.rune,dc190Oct(),dt168Mx(0,3.6,0,0,.4,0,.06,.1,.06))}
+// the essence: pools, falling sheets, mist, the orb
+function ftn208Ess(f){const L=FTN208.ess,add=(m,o)=>{L.push(m);m.renderOrder=o==null?4:o;f.add(m);return m},P=Math.PI;
+  const pool=(r0,r1,y,o)=>{const g=new THREE.RingGeometry(r0,r1,64,2);g.rotateX(-P/2);const m=new THREE.Mesh(g,se208Iri(Object.assign({op:.86,glow:.35,side:THREE.FrontSide},o||{})));m.position.y=y;return add(m,3)};
+  pool(.5,2.075,.62,{op:.88});pool(.25,1.172,1.555,{op:.9});pool(.08,.6,2.442,{op:.92,glow:.5});
+  // sheets: the middle bowl overflows at eight scallops, the upper bowl at four
+  const sheet=(rt,rb,h,y,n,w,a0,o)=>{for(let i=0;i<n;i++){const a=a0+i/n*2*P-w/2,g=new THREE.CylinderGeometry(rt,rb,h,8,6,true,a,w);const m=new THREE.Mesh(g,se208Iri(Object.assign({op:.62,flow:.55,strk:1,glow:.3},o||{})));m.position.y=y;add(m,5)}};
+  sheet(1.392,1.62,.94,1.1,8,.42,(.5/8)*2*P,{});
+  sheet(.705,.86,.88,2.0,4,.62,(.5/4)*2*P,{flow:.6});
+  // the orb in the cage, its halo
+  const orb=add(new THREE.Mesh(new THREE.IcosahedronGeometry(.25,3),se208Iri({op:.95,glow:1.2,side:THREE.FrontSide})),6);orb.position.y=2.98;
+  const halo=add(new THREE.Mesh(new THREE.IcosahedronGeometry(.42,2),se208Iri({op:.22,glow:.8,add:1,side:THREE.FrontSide})),6);halo.position.y=2.98;
+  FTN208.orb=orb;FTN208.halo=halo;
+  // mist: low over the basin pool, a splash veil where the sheets land, a thin column off the upper bowl, sparkles round the orb
+  const mi=(n,o,y)=>{const p=se208Mist(n,o);p.position.y=y;f.add(p);L.push(p);return p};
+  mi(150,{r:2.05,h:.55,sz:.85,op:.3,spd:.05,seed:2081,up:.05},.6);
+  mi(80,{r:1.58,h:.9,sz:.5,op:.32,spd:.11,seed:2082,up:.25},.62);
+  mi(60,{r:.55,h:1.9,sz:.42,op:.34,spd:.08,seed:2083,up:.9},2.45);
+  mi(36,{r:.4,h:1.0,sz:.16,op:.9,spd:.16,seed:2084,up:.4,add:1},2.6);
+  // an iridescent glow on the plinth round the basin
+  const d=se208Disc(3.3,0xb8a8ff,.16);d.position.y=.17;f.add(d);L.push(d)}
+function ftn208Build(){const T=TOWNS[0],f=T&&T.ftnG;if(!f||FTN208.g===f)return;FTN208.g=f;
+  f.children.slice().forEach(o=>f.remove(o));   // the v83 basin, water and drops (their shapes stay in the bake cache)
+  const key='FTN208';let k=null;if(!twHas(key)){k=twKit(2081);ftn208Kit(k)}const s=twGroup(k,key);if(k)dc190Shade(k,key);s.name='ftn208stone';f.add(s);
+  ftn208Ess(f);se208Skip(f);f.userData.psNo=1;
+  if(T.ftnA)T.ftnA.f=now=>ftn208Anim(now);else TANIM.push({x:T.cx,z:T.cy,f:now=>ftn208Anim(now)});
+  ftn208Sync()}
+// one mote per poured Sovereign, circling the orb in its colour
+function ftn208Sync(){const f=FTN208.g;if(!f)return;FTN208.mot.forEach(o=>{f.remove(o);o.material.dispose()});FTN208.mot=[];
+  const G=FTN208.mg||(FTN208.mg=new THREE.OctahedronGeometry(.065,0));
+  BOSSES.forEach((B,i)=>{if(typeof bossDone=='undefined'||!bossDone.has(i))return;const m=new THREE.Mesh(G,new THREE.MeshBasicMaterial({color:se208Col(i),transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
+    m.userData.i=i;m.renderOrder=7;f.add(m);FTN208.mot.push(m)})}
+function ftn208Flare(col){FTN208.flare=1;FTN208.fc.set(col==null?0xffffff:col)}
+function ftn208Anim(now){const t=now/1000,n=FTN208.mot.length,fl=FTN208.flare;
+  FTN208.mot.forEach((m,j)=>{const a=t*.7+j/Math.max(1,n)*6.283,r=.36+.03*Math.sin(t*2+j);m.position.set(Math.sin(a)*r,2.98+.09*Math.sin(t*1.3+j*1.7),Math.cos(a)*r);m.rotation.y=t*2})
+  if(FTN208.orb){FTN208.orb.rotation.y=t*.4;FTN208.halo.scale.setScalar(1+.08*Math.sin(t*1.9)+fl*.6)}
+  if(fl>0||FTN208.fl0){FTN208.flare=Math.max(0,fl-.006);FTN208.fl0=FTN208.flare>0;const c=FTN208.tint0.clone().lerp(FTN208.fc,Math.min(1,fl*1.2));
+    FTN208.ess.forEach(m=>{const U=m.material&&m.material.uniforms;if(!U)return;if(U.tint)U.tint.value.copy(c);if(U.glow){const d=m.material.userData;if(d.g0==null)d.g0=U.glow.value;U.glow.value=d.g0+fl*1.4}})}}
+ftn208Build();
+// the Gilded Fountain decoration, refitted: gold rim band under the lip, gold bands on both bowls, finials on the plinth's corners
+// (between the rim seats) and a crown with a gem over the cage
+dc190Def('gild',{b(k){const B=0xb08c40;ftn208Torus(k,'m',B,2.515,.035,.69,'brass');ftn208Torus(k,'m',B,2.45,.03,.6,'brass');
+    ftn208Torus(k,'m',B,1.39,.032,1.6,'brass');ftn208Torus(k,'m',B,.705,.026,2.47,'brass');
+    for(let i=0;i<8;i++){const a=i/8*2*Math.PI;dc190L(k,'m',B,[[0,0],[.07,0],[.07,.03],[.045,.06],[.06,.13],[.028,.2],[.01,.32],[0,.36]],8,Math.sin(a)*2.8,.09,Math.cos(a)*2.8,0,1,'brass')}
+    dc190L(k,'m',B,[[.1,0],[.19,0],[.19,.07],[.1,.07],[.1,0]],16,0,3.48,0,0,1,'brass');
+    for(let i=0;i<8;i++){const a=i/8*2*Math.PI;dc190L(k,'m',B,[[0,0],[.03,0],[0,.14]],4,Math.sin(a)*.165,3.55,Math.cos(a)*.165,0,1,'brass')}
+    dc190P(k,'g',0xd8c8ff,dc190Oct(),dt168Mx(0,3.8,0,0,.4,0,.08,.14,.08))}});

@@ -32,7 +32,7 @@ def s(pg):
             for fight in ('melee','kite'):
                 r=ev("""([i,SEC,mode,fight])=>{const K=K141;Object.assign(SV141,JSON.parse(JSON.stringify(K)));
                   if(mode==='old'){SV141.wind.from=99;SV141.close=-1;SV141.far=999;SV141.chase=1}
-                  try{if(AF)arenaFail()}catch(_){}enemies.slice().forEach(e=>removeE(e));bossDone.delete(i);spawnBoss(i);STEP(.2);const A=ARN[i];const P=PMAP[i].ins[3].en,a0=Math.atan2(P[1]-A.cz,P[0]-A.cx);
+                  try{if(AF)arenaFail()}catch(_){}enemies.slice().forEach(e=>removeE(e));bossDone.delete(i);se208Reset();spawnBoss(i);STEP(.2);const A=ARN[i];const P=PMAP[i].ins[3].en,a0=Math.atan2(P[1]-A.cz,P[0]-A.cx);
                   toPos(A.cx+Math.cos(a0)*8,A.cz+Math.sin(a0)*8);STEP(.5);const e=bossEnt(i),S=e.sv;const h0=SVX.st.hits;
                   let t=0,dmgT=0,dis=0,lastDc=0,ang=a0,hitsAt=null,farT=0;const seen={};let lastMv='';
                   // kiting, new AI: Reach only comes once the hero has kept 8+ tiles away for a few seconds; a boss that keeps

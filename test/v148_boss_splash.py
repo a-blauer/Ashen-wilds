@@ -23,7 +23,7 @@ def s(pg):
             if(!party.length)party.push(mkC('Foxlet',30));
             window.SLOG=[];{const f=hitTarget;hitTarget=function(e,tg,mult,mt){const k=fols.indexOf(tg);if(k>=0)SLOG.push({mult,boss:!!(e&&(e.sv||e.mb144))});return f.apply(this,arguments)}}
             return 1}""")
-        r=ev("""([i,SEC])=>{const out={};try{if(AF)arenaFail()}catch(_){}enemies.slice().forEach(e=>removeE(e));bossDone.delete(i);spawnBoss(i);STEP(.3);
+        r=ev("""([i,SEC])=>{const out={};try{if(AF)arenaFail()}catch(_){}enemies.slice().forEach(e=>removeE(e));bossDone.delete(i);se208Reset();spawnBoss(i);STEP(.3);
           const A=ARN[i],e=bossEnt(i);out.fols=fols.length;out.vis=fols[0]&&fols[0].visible;if(!e||!fols.length)return out;
           const f0=fols[0],c0=party[0],B=e.m.position;const put=(dx,dz)=>{f0.position.set(B.x+dx,f0.position.y,B.z+dz)};
           // hero far away, companion inside a 3-tile circle round the boss

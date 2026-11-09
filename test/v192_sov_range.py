@@ -51,7 +51,7 @@ def s(pg):
     tot=[0,0]
     for i in BL:
         ev("(i)=>{try{if(AF)arenaFail()}catch(_){}insArrive(PMAP[i].ins[3])}",i);pg.wait_for_timeout(800)
-        info=ev("""(i)=>{enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});bossDone.delete(i);if(!bossEnt(i))spawnBoss(i);const A=ARN[i];window.XA=A;
+        info=ev("""(i)=>{enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});bossDone.delete(i);se208Reset();if(!bossEnt(i))spawnBoss(i);const A=ARN[i];window.XA=A;
           const P=PMAP[i].ins[3].en,a=Math.atan2(P[1]-A.cz,P[0]-A.cx);window.EA=a;toPos(A.cx+Math.cos(a)*9,A.cz+Math.sin(a)*9);STEP(.3);
           const e=bossEnt(i);window.BE=e;STEP(3.4);return {f:!!(AF&&AF.f),sv:!!(e&&e.sv)}}""",i)
         if not info['f'] or not info['sv']:chk('boss %d: fight started'%i,False,info);continue
@@ -82,7 +82,7 @@ def s(pg):
     if len(BL)>1:chk('kiting heroes get hit (all bosses)',tot[1]>=3,tot)
     # ---- 5 Tab through the Blood Covenant's chalices ----
     ev("()=>{try{if(AF)arenaFail()}catch(_){}insArrive(PMAP[5].ins[3])}");pg.wait_for_timeout(800)
-    r=ev("""()=>{const i=5;enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});bossDone.delete(i);if(!bossEnt(i))spawnBoss(i);const A=ARN[i];window.XA=A;
+    r=ev("""()=>{const i=5;enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});bossDone.delete(i);se208Reset();if(!bossEnt(i))spawnBoss(i);const A=ARN[i];window.XA=A;
       const P=PMAP[i].ins[3].en,a=Math.atan2(P[1]-A.cz,P[0]-A.cx);window.EA=a;toPos(A.cx+Math.cos(a)*9,A.cz+Math.sin(a)*9);STEP(.3);const e=bossEnt(i);window.BE=e;STEP(3.4);
       if(!AF)return {err:'no fight'};const S=e.sv;svEndMove(e,true);S.ph=2;e.bs.ph=2;e.c.h=M(e.c)*.45;e.m.position.set(A.cx,0,A.cz);S.rest=99;svStart(e,'covenant',7);STEP(2.2);
       const C=(S.mv&&S.mv.an.props||[]).filter(p=>!p.dead);if(C.length!==4)return {err:'chalices '+C.length};
