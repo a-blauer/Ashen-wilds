@@ -6,11 +6,12 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 [ -z "$(git status --porcelain -- src test build.sh .github tools)" ] || echo "note: uncommitted changes are NOT rendered"
 c=$(git rev-parse HEAD)
-git push -q -f origin "$c:refs/heads/render-kc/v208"
+b=render-kc/v208-$(date +%s)   # a fresh branch per render, so a run that lost jobs can simply be started again
+git push -q origin "$c:refs/heads/$b"
 echo "rendering $(git rev-parse --short HEAD) ..."
 id=
 for i in $(seq 60); do
-  id=$(gh run list -b render-kc/v208 -L 10 --json databaseId,headSha,workflowName --jq "[.[]|select(.headSha==\"$c\" and .workflowName==\"Render Kindlelight cinematic\")][0].databaseId // empty" || true)
+  id=$(gh run list -b "$b" -L 10 --json databaseId,headSha,workflowName --jq "[.[]|select(.headSha==\"$c\" and .workflowName==\"Render Kindlelight cinematic\")][0].databaseId // empty" || true)
   [ -n "$id" ] && break; sleep 5
 done
 [ -n "$id" ] || { echo "no render run started for $c"; exit 1; }
@@ -26,5 +27,5 @@ echo "result: $concl (waited $(( ($(date +%s)-t0)/60 )) min)"
 mkdir -p test/out
 tmp=$(mktemp -d); git -C "$tmp" init -q; git -C "$tmp" fetch -q --depth=1 "$(git remote get-url origin)" render-out/kc208
 git -C "$tmp" show FETCH_HEAD:kc208.mp4 > test/out/kc208.mp4; rm -rf -- "$tmp"
-git push -q origin --delete render-out/kc208 render-kc/v208 2>/dev/null || true
+git push -q origin --delete render-out/kc208 "$b" 2>/dev/null || true
 ls -la test/out/kc208.mp4
