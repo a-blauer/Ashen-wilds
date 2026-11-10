@@ -69706,9 +69706,9 @@ try{dm196HouseSync()}catch(_){}
 // Owner (Nov 3 2026): "Lets make the Inn an actual building you can walk into with a bar, fire, tables — and make it extra cozy."
 // The inn stands on the plaza ring (DM196_FIX.inn in 0045: 11 x 8 tiles, door toward the fountain). Lot-local frame (lotW103):
 // x across the front (-5.5..5.5), z toward the plaza (front wall at z = +4, door |x| < .85).
-//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor, ceiling beams; inside a long
+//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor (v213b: no ceiling beams); inside a long
 //    bar with stools, shelves of bottles and casks behind it, a great stone hearth with a living fire on the right wall, three round
-//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, hops and herbs drying on the beams, a stag skull.
+//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, a stag skull.
 //  * Roof (its own group): a steep slate roof with two dormers, the chimney and moss. It is hidden while you are inside, so the camera
 //    looks into the room; the walls between you and the camera fade like every other building (v192).
 //  * Walls and furniture are solid (town colliders), the doorway is open; the rest prompt (T.tv) is at the bar, where the innkeeper
@@ -69727,8 +69727,7 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   twStones(k,stD,-W2,-D2,W2,-D2,0,.36,.4);twStones(k,stD,-W2,D2,-.9,D2,0,.36,.4);twStones(k,stD,.9,D2,W2,D2,0,.36,.4);twStones(k,stD,-W2,-D2,-W2,D2,0,.36,.4);twStones(k,stD,W2,-D2,W2,D2,0,.36,.4);
   k.as('ashlar',()=>k.p('c',st,'box',0,.18,D2+.45,2.0,.36,.7,0,0,0,.04)); // the doorstep
   // v213: the walls above the footing are built by dm196InnWallK (one group per side, cut away from inside)
-  // ceiling beams and a ring of posts
-  k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
+  // v213b: no ceiling beams (owner: the cross beams blocked the camera inside)
   // the bar: a long counter on the left back (v199: top at ~.85 above the floor, it stood chest high and hid the innkeeper), stools, shelves of bottles and casks behind it, a tap barrel
   const bz=-1.9,FL=-.32;k.at(DM196I.bar[0],0,DM196I.bar[1],()=>{const D2=4;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.75,bz,4.2,.7,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.13,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.75,bz-.9,.5,.7,1.8,0,0,0,.03)});
   for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
@@ -69757,9 +69756,9 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,-.14,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
       [[-.19,-.18],[.19,-.18],[-.19,.18],[.19,.18]].forEach(([u,v])=>k.L('c',woodD,[u,.36,v],[u,.8,v],.035,'box'));k.p('c',woodD,'box',0,1.18,.2,.46,.58,.06,0,0,0,.03)})},a)});
   });
-  // lanterns hanging from the beams, hops and herbs drying, a notice board
+  // lanterns hanging on chains, a notice board (v213b: the herbs went with the beams they hung from)
   DM196I.lantern.forEach(([x,z])=>{k.L('m',TWC.iron,[x,H-.15,z],[x,2.55,z],.012,'cyl6',0);TWN100_lantern(k,x,2.32,z,warm)});
-  for(let i=0;i<10;i++){const x=-W2+1.0+i*1.2;k.as('leaf',()=>k.p('c',[0x6a8a3a,0x5a7a34,0x8a8a4a][i%3],'ico',x,H-.42,-.15,.12,.3,.12,0,i,0,.1))}
+
   k.as('board',()=>k.p('c',0x5a3c24,'box',-W2+.2,1.9,-.4,.06,.8,1.2,0,0,0,.02));[0,1,2].forEach(i=>k.p('c',0xe8dcc0,'box',-W2+.25,1.85+(i%2)*.2,-.7+i*.3,.02,.3,.22,0,0,(i-1)*.1,0))}
 // v213: one wall above the footing: stone to the sill, timber framing and plaster panels above, its windows (side 'f' with the doorway)
 function dm196InnWallK(side){return (k,R)=>{const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,pl=0xd8ccb0,woodD=0x3a281a,warm=0xffc070;
@@ -74537,7 +74536,7 @@ function snd213(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.sfx
 //  * Co-op: cd213Show (the dealing, plain card keys) is relayed, so a partner sees Corvin lay the same cards on their table; the bet
 //    and the gold stay with the player.
 var CD213={bets:[10,20,50,100],bet:20,busy:false,cards:null,res:null,line:'',stat:{n:0,won:0,bet:0},tex:{},url:{},root:null,dealer:null,col:[],cam:null,arm:0,fx:null,own:false,err:0,
-  stand:[-2.3,1.8],cv:[-.9,3.6,2.2,-3.75,-1.15,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
+  stand:[-2.3,1.8],cv:[-2.15,2.1,1.8,-4.1,.25,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
   D:{lan:{n:'The Lantern',num:'I',w:20,p:5,c:['#ffcf7a','#7a3a10'],d:'A light kept burning against the dark.'},
      fang:{n:'The Fang',num:'II',w:18,p:6,c:['#f0e2c4','#5a1a14'],d:'What hunts in Kindlelight leaves its teeth behind.'},
      gob:{n:'The Goblet',num:'III',w:15,p:8,c:['#ff6a6a','#4a0810'],d:'Drink deep; the Citadel always does.'},
@@ -74689,33 +74688,95 @@ function cd213Build(){try{const l=DM196I.l;if(!l||typeof TOWNS=='undefined')retu
   kfColSet109(CD213.col,C);DM196S.col=(DM196S.col||[]).filter(c=>CD213.col.indexOf(c)<0).concat(CD213.col)}catch(err){console.warn('v213 card table',err)}}
 {const f=dm196InnBuild;dm196InnBuild=function(){const r=f.apply(this,arguments);cd213Build();return r}}
 cd213Build();
-// the dealer's dealing arm: a reach toward the table laid over the idle pose (removed again if the idle did not reset it)
-function cd213Arm(){const g=CD213.rig,b=g&&g.bones;if(!b||!b.aR0)return;const S=CD213.armS||(CD213.armS={});
-  const v=CD213.arm;[['aR0','x',-1.15],['aR0','z',.25],['aR1','x',-.55],['chest','y',.18],['chest','x',.12]].forEach(([n,ax,d],i)=>{const o=b[n];if(!o)return;const key=n+ax;
-    if(S[key]&&o.rotation[ax]===S[key].set)o.rotation[ax]-=S[key].add;const add=d*v;o.rotation[ax]+=add;S[key]={add,set:o.rotation[ax]}})}
+// the dealer's dealing arm (v213b): while Corvin poses (CD213.arm > 0) his idle is paused and his bones are set outright from where
+// they stood when the pose began; when it ends they go back exactly there and the idle carries on (the old code added the pose on top
+// of the idle's own running offsets, which piled up frame after frame and spun him round). CD213.arm 0…1 blends the pose in;
+// CD213.armK picks it: 'reach' to lay a card, 'tap' to turn one, 'sweep' to take a losing stake, 'open' for a win.
+var CD213P={reach:{aR0:[-1.0,0,-.25],aR1:[0,0,0],aR2:[.2,0,0],chest:[.16,0,0],head:[.2,0,0]},
+  tap:{aR0:[-.8,0,-.15],aR2:[.4,0,0],chest:[.14,0,0],head:[.25,0,0]},
+  sweep:{aR0:[-.85,0,.3],aR2:[.2,0,0],chest:[.12,0,0]},
+  open:{aR0:[-.6,0,-.45],aL0:[-.6,0,.45],head:[-.1,0,0]}};
+var CD213B=['aR0','aR1','aR2','aL0','chest','head'];
+{const f=idlNpc;idlNpc=function(g,now){if(!CD213.rig||g!==CD213.rig||!g.bones)return f.apply(this,arguments);
+  const b=g.bones,v=Math.max(0,Math.min(1,CD213.arm||0));
+  if(v>0){if(!CD213.S0){CD213.S0={};CD213B.forEach(n=>{if(b[n])CD213.S0[n]=b[n].rotation.clone()})}const P=CD213P[CD213.armK||'reach']||CD213P.reach;
+    CD213B.forEach(n=>{const o=b[n],B=CD213.S0[n];if(!o||!B)return;const d=P[n]||[0,0,0];o.rotation.set(B.x+d[0]*v,B.y+d[1]*v,B.z+d[2]*v)});return}
+  if(CD213.S0){CD213B.forEach(n=>{if(b[n]&&CD213.S0[n])b[n].rotation.copy(CD213.S0[n])});CD213.S0=null}
+  return f.apply(this,arguments)}}
 // ---------------- a hand on the table (relayed: the partner sees the same cards laid) ----------------
 function cd213CardMesh(){const g=new THREE.Group(),f=new THREE.Group();g.add(f);const geo=CD213.geo||(CD213.geo=new THREE.PlaneGeometry(.32,.48));
   const mk=(tex,rx,y)=>{const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex,color:0xd8d0c4,transparent:true}));m.material.userData.noFade135=1;m.rotation.x=rx;m.position.y=y;m.renderOrder=3;f.add(m);return m};
   g.userData.face=mk(null,-Math.PI/2,.003);g.userData.back=mk(cd213Can('back'),Math.PI/2,-.003);g.userData.f=f;return g}
-function cd213Clear(){if(CD213.fx){CD213.fx.dead=1;CD213.fx=null}(CD213.lay||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.userData.face.material.dispose();m.userData.back.material.dispose()});CD213.lay=[]}
-function cd213Show(cards,big){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
-  cards=cards.map(k=>CD213.D[k]?k:'hol');cd213Clear();const R=CD213.root,[cx,cz]=DM196I.card,y0=.725,T=CD213.T,L=[];
+function cd213Clear(){if(CD213.fx){CD213.fx.dead=1;CD213.fx=null}(CD213.lay||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.userData.face.material.dispose();m.userData.back.material.dispose()});CD213.lay=[];
+  cd213Plaque(null);(CD213.glow||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.material.dispose()});CD213.glow=[]}
+// ---------------- words over the table: the result plaque and Corvin's lines (canvas sprites; what the old panel used to show) ----------------
+function cd213Text(lines,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+  cd213RR(g,4,4,w-8,h-8,18);g.fillStyle='rgba(16,8,6,.82)';g.fill();g.strokeStyle='#c9a24a';g.lineWidth=3;g.stroke();g.textAlign='center';g.textBaseline='middle';
+  const n=lines.length;lines.forEach((L,i)=>{g.font=L.f;g.fillStyle=L.c;g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=6;g.fillText(L.t,w/2,h*(i+.5)/n+(n>1?(i?-4:6):0))});return c}
+function cd213Sprite(canvas,sw){const t=new THREE.CanvasTexture(canvas);t.anisotropy=4;const m=new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,depthWrite:false});m.userData.noFade135=1;
+  const sp=new THREE.Sprite(m);sp.scale.set(sw,sw*canvas.height/canvas.width,1);sp.renderOrder=40;sp.userData.lpsSkip=1;return sp}
+function cd213Drop(sp){if(!sp)return;if(sp.parent)sp.parent.remove(sp);sp.material.map.dispose();sp.material.dispose()}
+// the result: a plaque over the dealt cards ({kind,k,m,win,bet}; null takes it away)
+function cd213Plaque(r){cd213Drop(CD213.plq);CD213.plq=null;if(!r||!CD213.root)return;const D=CD213.D;
+  const L=r.kind==='three'?[{t:r.k==='wild'?'THREE WANDERERS':'THREE × '+D[r.k].n.toUpperCase(),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'},{t:'+'+r.win+' gold   (×'+r.m+')',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}]
+    :r.kind==='pair'?[{t:'A PAIR',f:'700 30px Cinzel, Georgia, serif',c:'#f0e2c0'},{t:'+'+r.win+' gold   (×1.5)',f:'700 36px Cinzel, Georgia, serif',c:'#ffd24a'}]
+    :[{t:'NO MATCH',f:'700 34px Cinzel, Georgia, serif',c:'#b8b0a4'},{t:'the house takes '+r.bet,f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'}];
+  const sp=cd213Sprite(cd213Text(L,560,150),r.kind==='three'&&r.m>=25?.98:.84),[cx,cz]=DM196I.card;sp.position.set(cx-.42,.95,cz);CD213.root.add(sp);CD213.plq=sp;
+  const t0=nowP();kqFx({tick(){if(CD213.plq!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=Math.min(1,a*4);sp.position.y=.95+Math.min(.05,a*.2)+(r.kind==='three'&&r.m>=25?Math.sin(a*6)*.012:0);return true}})}
+// Corvin speaks: a line over his head for a few seconds
+function cd213Say(t){try{cd213Drop(CD213.bub);CD213.bub=null;if(!t||!CD213.root)return;const sp=cd213Sprite(cd213Text([{t:'“'+t+'”',f:'italic 600 26px Cinzel, Georgia, serif',c:'#f0e2c0'}],Math.min(900,90+t.length*15),70),.0016*Math.min(900,90+t.length*15));
+  const [cx,cz]=DM196I.card;sp.position.set(cx-1.0,1.42,cz+.95);CD213.root.add(sp);CD213.bub=sp;const t0=nowP();
+  kqFx({tick(){if(CD213.bub!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=a<.2?a*5:a>3.6?Math.max(0,1-(a-3.6)*2.5):1;if(a>4.1){cd213Drop(sp);CD213.bub=null;return false}return true}})}catch(_){}}
+function cd213Show(cards,big,bet){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
+  cards=cards.map(k=>CD213.D[k]?k:'hol');cd213Clear();const R=CD213.root,[cx,cz]=DM196I.card,y0=.725,T=CD213.T,L=[],r=cd213Pay(cards);bet=+bet||0;
   for(let i=0;i<3;i++){const m=cd213CardMesh();m.userData.face.material.map=cd213Can(cards[i]);m.userData.face.material.needsUpdate=true;m.rotation.y=Math.PI/2;m.userData.f.rotation.z=Math.PI;
     m.position.set(CD213.deck[0],y0+.06,CD213.deck[1]);m.visible=false;R.add(m);L.push(m)}CD213.lay=L;
-  const slot=i=>[cx+.3,cz+(i-1)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
+  const slot=i=>[cx+.05,cz+(i-1)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
   const o={tick(dt){if(o.dead)return false;t+=dt;
       for(let i=0;i<3;i++){const m=L[i],t0=i*T.deal,k=Math.max(0,Math.min(1,(t-t0)/T.deal));m.visible=t>=t0;const [sx,sz]=slot(i),e=haIO(k);
         m.position.set(CD213.deck[0]+(sx-CD213.deck[0])*e,y0+.06*(1-e)+Math.sin(k*Math.PI)*.18+.002*i,CD213.deck[1]+(sz-CD213.deck[1])*e);m.rotation.y=Math.PI/2+(1-e)*(i-1)*.6;
         const f0=3*T.deal+T.gap*.5+i*T.fgap,fk=Math.max(0,Math.min(1,(t-f0)/T.flip));m.userData.f.rotation.z=Math.PI*(1-haIO(fk));m.userData.f.position.y=Math.sin(fk*Math.PI)*.1;
         if(fk>0&&!m.userData.fl){m.userData.fl=1;cd213Snd('flip',rep?.5:1)}if(t>=t0&&!m.userData.dl){m.userData.dl=1;cd213Snd('deal',rep?.5:1)}}
-      // the dealer's arm: a reach for each card dealt, a tap for each turned
-      const dPh=t<3*T.deal?Math.sin(((t%T.deal)/T.deal)*Math.PI):0,fPh=(()=>{const f0=3*T.deal+T.gap*.5,u=t-f0;if(u<0||u>2*T.fgap+T.flip)return 0;const j=Math.floor(u/T.fgap),r=(u-j*T.fgap)/T.flip;return r>=0&&r<=1?Math.sin(r*Math.PI)*.7:0})();
-      CD213.arm=Math.max(dPh,fPh);
-      if(t>=tEnd){CD213.arm=0;if(!o.done){o.done=1;try{o.end2&&o.end2()}catch(_){}if(big)cd213Win(big)}}return t<tEnd+.05},end(){CD213.arm=0}};
+      // the dealer's arm: a reach for each card dealt, a tap on each one turned
+      const dPh=t<3*T.deal?Math.sin(((t%T.deal)/T.deal)*Math.PI):0,fPh=(()=>{const f0=3*T.deal+T.gap*.5,u=t-f0;if(u<0||u>2*T.fgap+T.flip)return 0;const j=Math.floor(u/T.fgap),q=(u-j*T.fgap)/T.flip;return q>=0&&q<=1?Math.sin(q*Math.PI):0})();
+      CD213.armK=t<3*T.deal?'reach':'tap';CD213.arm=Math.max(dPh,fPh);
+      if(t>=tEnd){if(!o.done){o.done=1;CD213.arm=0;try{o.end2&&o.end2()}catch(_){}cd213Result(r,bet,cards)}}return t<tEnd+.05},end(){CD213.arm=0}};
   CD213.fx=o;kqFx(o);return o}catch(err){if(!CD213.err++)console.warn('v213 deal',err)}}
-// a win on the table: coins leap from the cards (big: the jackpot's ember burst); relayed with the deal's end
-function cd213Win(big){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.32,cz),p=new THREE.Vector3(wx,R.position.y+.85,wz);
-  burst(p,0xffd24a,big>1?40:16,big>1?2.6:1.6,big>1?2.6:1.6,.7);if(big>1){burst(p,0xff7a2a,30,3,3,.9);kqFlash(p,0xffd890,3,400);ring(new THREE.Vector3(wx,R.position.y+.75,wz),0xffd24a,2.2,500)}}catch(_){}}
+// the end of a hand, on every screen that saw it dealt: the plaque, the winning cards lit, Corvin's gesture and the win's effect
+function cd213Result(r,bet,cards){try{const win=Math.floor(bet*r.m);cd213Plaque({kind:r.kind,k:r.k,m:r.m,win,bet});
+  if(r.kind){CD213.lay.forEach((m,i)=>{const k=cards[i];if(!(r.kind==='three'||k===r.k||k==='wild'))return;const g=new THREE.Mesh(CD213.gGeo||(CD213.gGeo=new THREE.PlaneGeometry(.44,.6)),new THREE.MeshBasicMaterial({map:fx186Tex?fx186Tex('soft'):null,color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.0}));
+    g.material.userData.noFade135=1;g.rotation.x=-Math.PI/2;g.position.set(m.position.x,.718,m.position.z);g.renderOrder=2;CD213.root.add(g);CD213.glow.push(g);const t0=nowP();
+    kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000;g.material.opacity=Math.min(.9,a*3)*(.75+.25*Math.sin(a*5));return true}})})}
+  cd213Gest(r.kind?'open':'sweep');cd213Say(r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose'));
+  cd213Win(cd213Tier(r))}catch(err){if(!CD213.err++)console.warn('v213 result',err)}}
+// how big a win is: 0 nothing, 1 a pair, 2 a small three (×5–×10), 3 a fine three (×15–×25), 4 the Crown or the Wanderers (×50, ×100)
+function cd213Tier(r){return !r.kind?0:r.kind==='pair'?1:r.m>=50?4:r.m>=15?3:2}
+// a one-off gesture of Corvin's arms after the hand (an open-palmed flourish for a win, a sweep of the stake for a loss)
+function cd213Gest(k){const t0=nowP(),ms=k==='open'?1100:900;CD213.armK=k;kqFx({tick(){if(CD213.busy&&CD213.armK!==k)return false;const a=(nowP()-t0)/ms;if(a>=1){if(CD213.armK===k)CD213.arm=0;return false}CD213.armK=k;CD213.arm=Math.sin(Math.min(1,a)*Math.PI);return true}})}
+// coins: little gold discs thrown up from the cards that bounce and settle on the felt, then fade (one shared geometry and material)
+function cd213Coins(n,rain){const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,G=CD213.cGeo||(CD213.cGeo=new THREE.CylinderGeometry(.034,.034,.008,10)),
+  M=CD213.cMat||(CD213.cMat=new THREE.MeshLambertMaterial({color:0xe0b050,emissive:0x5a3a08}));M.userData.noFade135=1;
+  for(let i=0;i<n;i++){const m=new THREE.Mesh(G,M.clone());m.material.transparent=true;m.userData.lpsSkip=1;
+    const p=rain?{x:cx-.35+Math.random()*1.1,y:1.6+Math.random()*1.2,z:cz-.75+Math.random()*1.5}:{x:cx+.05+(Math.random()-.5)*.3,y:.76,z:cz+(Math.random()-.5)*1.0},
+      v=rain?{x:0,y:-Math.random(),z:0}:{x:(Math.random()-.3)*1.2,y:1.4+Math.random()*1.6,z:(Math.random()-.5)*1.4};let sp=(Math.random()-.5)*20;
+    m.position.set(p.x,p.y,p.z);R.add(m);let t=-(rain?Math.random()*.9:Math.random()*.25),rest=0;m.visible=false;
+    kqFx({tick(dt){t+=dt;if(t<0)return true;m.visible=true;if(!rest){v.y-=9.8*dt;m.position.x+=v.x*dt;m.position.y+=v.y*dt;m.position.z+=v.z*dt;m.rotation.x+=sp*dt;m.rotation.z+=sp*.7*dt;
+        const onT=Math.hypot((m.position.x-(cx))/1.0,(m.position.z-cz)/.78)<1,fl=onT?.722:.05;
+        if(m.position.y<fl){m.position.y=fl;if(Math.abs(v.y)<.9){rest=1;m.rotation.set(0,m.rotation.y,0)}else{v.y=-v.y*.35;v.x*=.6;v.z*=.6;sp*=.5}}}
+      if(t>3.2)m.material.opacity=Math.max(0,1-(t-3.2)/.6);return t<3.8},end(){R.remove(m);m.material.dispose()}})}}
+// the win's effect, growing with the win
+function cd213Win(tier){try{const R=CD213.root;if(!R||!tier)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.05,cz),Y=R.position.y,p=new THREE.Vector3(wx,Y+.8,wz);
+  if(tier>=1){burst(p,0xffd24a,8+tier*8,1.2+tier*.5,1.2+tier*.4,.6);cd213Coins([0,4,10,18,28][tier])}
+  if(tier>=2){ring(new THREE.Vector3(wx,Y+.74,wz),0xffd24a,1.2+tier*.5,450);kqFlash(p,0xffe0a0,.9+tier*.3,260)}
+  if(tier>=3){// a column of gold light over the table and sparks climbing it
+    const mat=new THREE.MeshBasicMaterial({color:0xffc84a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});mat.userData.noFade135=1;
+    const col=new THREE.Mesh(CD213.pGeo||(CD213.pGeo=new THREE.CylinderGeometry(.55,.75,3.2,20,1,true)),mat);col.position.set(cx+.05,.72+1.6,cz);col.userData.lpsSkip=1;R.add(col);const t0=nowP(),dur=tier>3?2600:1800;
+    kqFx({tick(){const a=(nowP()-t0)/dur;if(a>=1)return false;mat.opacity=(a<.15?a/.15:1-(a-.15)/.85)*(tier>3?.2:.14);col.rotation.y+=.02;col.scale.set(1+a*.3,1,1+a*.3);
+      if(Math.random()<.5)burst(new THREE.Vector3(wx+(Math.random()-.5)*.8,Y+.8+Math.random()*1.6,wz+(Math.random()-.5)*.8),0xffe08a,1,.3,1.6,.6);return true},end(){R.remove(col);mat.dispose()}})}
+  if(tier>=4){// the jackpot: an ember blast, coins raining from the rafters, the room flashes gold, the floor shakes
+    burst(p,0xff7a2a,46,3.4,3.2,1);burst(p,0xffd890,18,2.6,2.4,.5);kqFlash(p,0xffd890,2.2,450);ring(new THREE.Vector3(wx,Y+.74,wz),0xff9a3a,4,700);cd213Coins(40,true);
+    try{flash('rgba(255,190,80,.22)')}catch(_){}try{if(!(typeof MPV!='undefined'&&MPV.rep)&&SET.shake!==false)shake(.18)}catch(_){}
+    setTimeout(()=>{try{ring(new THREE.Vector3(wx,Y+.74,wz),0xffd24a,3,600);burst(p,0xffd24a,30,2.4,3,.8)}catch(_){}},450)}}catch(err){if(!CD213.err++)console.warn('v213 win',err)}}
 (function(){if(typeof MPV=='undefined'||!MPV.FX||typeof MPV_FX=='undefined')return;
   ['cd213Show'].forEach(n=>{const f=window[n];if(typeof f!='function')return;if(MPV_FX[n]==null){MPV_FX[n]=MPV.FX.length;MPV.FX.push(n)}
     window[n]=function(){if(MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
@@ -74725,67 +74786,51 @@ function cd213Win(big){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.
 // ---------------- playing ----------------
 function cd213Near(){if(CD213.open)return false;try{if(!DM196I.l)return false;const [tx,tz]=cd213L(...DM196I.card);return Math.hypot(pl.position.x-tx,pl.position.z-tz)<2.5&&townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
 function cd213Open(){const l=DM196I.l;if(!l||CD213.open)return;const [sx,sz]=cd213L(...CD213.stand);pl.position.x=sx;pl.position.z=sz;pl.rotation.y=l.ry-Math.PI/2;
-  CD213.open=true;CD213.camK=0;CD213.line=cd213Pick('deal');cd213Panel().classList.remove('hide');cd213Render();try{GD213&&gd213Up()}catch(_){}}
-function cd213Close(){CD213.open=false;const w=$('cd213w');if(w)w.classList.add('hide')}
+  CD213.open=true;CD213.camK=0;CD213.plVis=pl.visible;pl.visible=false;cd213Panel().classList.remove('hide');cd213Render();cd213Say(cd213Pick('deal'));try{GD213&&gd213Up()}catch(_){}}
+function cd213Close(){if(!CD213.open)return;CD213.open=false;pl.visible=CD213.plVis!==false;const w=$('cd213w');if(w)w.classList.add('hide')}
 function cd213Pick(k){const L=CD213.say[k];return L[Math.floor(Math.random()*L.length)]}
-function cd213Deal(){if(CD213.busy)return;const b=CD213.bet;if(gold<b){CD213.line='“Your purse is lighter than your courage.”';cd213Render();return}
-  gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m);CD213.busy=true;CD213.cards=c;CD213.res=null;CD213.line=cd213Pick('deal');
-  CD213.stat.n++;CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}
-  const big=r.kind==='three'?(r.m>=25?2:1):r.kind==='pair'?1:0;const o=cd213Show(c,big);
+function cd213Deal(){if(CD213.busy)return;const b=CD213.bet;if(gold<b){cd213Say('Your purse is lighter than your courage.');return}
+  gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m);CD213.busy=true;CD213.cards=c;CD213.res=null;
+  CD213.stat.n++;CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}if(Math.random()<.35)cd213Say(cd213Pick('deal'));
+  const o=cd213Show(c,cd213Tier(r),b);
   const fin=()=>{CD213.busy=false;gold+=win;CD213.stat.won+=win;CD213.res={c,r,win,bet:b};
-    CD213.line=r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose');
     cd213Snd(r.kind==='three'?(r.m>=25?'jack':'win'):r.kind==='pair'?'pair':'lose');
     if(win>0)try{say('🃏 Fate’s Hand: '+(r.kind==='three'?'three × '+CD213.D[r.k].n:'a pair')+' — you win '+win+' gold.')}catch(_){}
-    try{hud()}catch(_){}CD213.anim=1;cd213Render();CD213.anim=0};
-  if(o)o.end2=fin;else fin()}
+    try{hud()}catch(_){}cd213Render()};
+  if(o)o.end2=fin;else{fin();cd213Result(r,b,c)}}
 function cd213Panel(){let w=$('cd213w');if(w)return w;w=document.createElement('div');w.id='cd213w';w.className='hide';
   w.innerHTML=`<div class="win"><div class="wh"><h2 id="cd213T">🃏 Fate’s Hand</h2><span class="wsub" id="cd213S"></span><button class="x" id="cd213X" title="Leave the table (Esc)">✕</button></div><div class="wb" id="cd213B"></div><div class="wf" id="cd213F"></div></div>`;
   ($('stage')||document.body).appendChild(w);w.addEventListener('pointerdown',e=>e.stopPropagation());
   w.addEventListener('click',e=>{const b=e.target.closest('[data-cdb],[data-cdd],#cd213X');if(!b||b.disabled)return;if(b.id==='cd213X'){cd213Close();return}
     if(b.dataset.cdb){CD213.bet=+b.dataset.cdb;cd213Render()}else if(b.dataset.cdd)cd213Deal()});return w}
-function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D,R=CD213.res,c=CD213.busy?null:(CD213.cards||null);
-  $('cd213S').textContent='Corvin’s card table at the Last Lantern';
-  const card=(k,i)=>{const show=c&&k,win=R&&!CD213.busy&&R.r.kind&&(R.r.kind==='three'||(R.r.kind==='pair'&&(k===R.r.k||k==='wild')));
-    return `<div class="cd213c${win?' cd213w':''}${CD213.anim&&show?' cd213a':''}" style="animation-delay:${i*.12}s"><img src="${show?cd213Url(k):cd213Url('back')}" alt="${show?D[k].n:'face down'}" title="${show?D[k].n+' — '+D[k].d:''}"></div>`};
-  const cs=(CD213.busy||!c)?[null,null,null]:c;
-  let res='';if(R&&!CD213.busy)res=R.win>0?`<b class="cd213g">+${R.win} 🪙</b> ${R.r.kind==='three'?'Three × '+D[R.r.k].n+' pays ×'+R.r.m:'A pair pays ×1.5'}`:`<span class="mut">No match — the ${R.bet} gold stays on the table.</span>`;
-  else if(CD213.busy)res='<span class="mut">Corvin deals…</span>';else res='<span class="mut">Choose your bet and deal.</span>';
+function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D;
+  $('cd213S').textContent='Space / Enter deal · 1–4 bet · Esc leaves';
   const bets=CD213.bets.map(b=>`<button class="cd213b${b===CD213.bet?' on':''}" data-cdb="${b}" ${gold<b||CD213.busy?'disabled':''}>${b} 🪙</button>`).join('');
-  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].d}"><img src="${cd213Url(k)}"><span>${D[k].n}</span><b>${k==='hol'?'—':'×'+D[k].p}</b></div>`).join('');
-  $('cd213B').innerHTML=`<div class="cd213">
-    <div class="cd213row">${cs.map(card).join('')}</div>
-    <div class="cd213R"><div class="cd213q">“${st200Esc(CD213.line)}” <span class="mut">— Corvin</span></div>
-      <div class="cd213r">${res}</div>
-      <div class="cd213ctl"><span class="mut">Bet</span>${bets}</div>
-      <div class="cd213ctl"><button class="cd213d" data-cdd="1" ${CD213.busy||gold<CD213.bet?'disabled':''}>${CD213.busy?'Dealing…':'Deal · '+CD213.bet+' 🪙'}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div></div></div>
-    <details class="cd213pt"${CD213.ptOpen?' open':''}><summary>The deck and what it pays</summary><div class="cd213pg">${pt}</div><div class="mut" style="margin-top:4px">Any two alike (a Wanderer counts, The Hollow never does) give 1.5× your bet back.</div></details>`;
-  const d=$('cd213B').querySelector('.cd213pt');if(d)d.addEventListener('toggle',()=>{CD213.ptOpen=d.open});
-  $('cd213F').innerHTML=`<span class="mut dtl">Space / Enter deal · Esc leaves the table · hands played ${CD213.stat.n} · won ${CD213.stat.won} 🪙 of ${CD213.stat.bet} 🪙 bet this visit. The house always keeps a little.</span>`};
+  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].n} — ${D[k].d}"><img src="${cd213Url(k)}"><b>${k==='hol'?'—':'×'+D[k].p}</b></div>`).join('');
+  $('cd213B').innerHTML=`<div class="cd213ctl"><span class="mut">Bet</span>${bets}<button class="cd213d" data-cdd="1" ${CD213.busy||gold<CD213.bet?'disabled':''}>${CD213.busy?'Dealing…':'Deal · '+CD213.bet+' 🪙'}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
+    <div class="cd213pg">${pt}</div><div class="mut cd213pn">Three alike pay the card’s ×. The Wanderer stands in for any card; The Hollow for none. Any two alike give 1.5× back.</div>`;
+  $('cd213F').innerHTML=''};
 // while at the table the keys belong to the panel (no walking off mid-hand, no swings at the dealer)
 addEventListener('keydown',e=>{if(!CD213.open)return;const k=String(e.key||'').toLowerCase();if(e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
   if(k==='escape')cd213Close();else if(k===' '||k==='enter')cd213Deal();else if(k>='1'&&k<='4'&&!CD213.busy){const b=CD213.bets[+k-1];if(b&&gold>=b){CD213.bet=b;cd213Render()}}},true);
 addEventListener('keyup',e=>{if(CD213.open)e.stopImmediatePropagation()},true);
 {const f=swing;swing=function(){if(CD213.open)return;return f.apply(this,arguments)}}
-// the table camera: over the player's shoulder, the table above the panel (eased in; the follow camera takes over again on leaving)
+// the table camera (v213b): head on from the player's seat, Corvin across the table, like a blackjack table (the hero is hidden
+// while seated; eased in; the follow camera takes over again on leaving)
 function cd213Cam(dt){const l=DM196I.l,T=TOWNS[0];if(!l)return;CD213.camK=Math.min(1,(CD213.camK||0)+dt*2.2);const e=haIO(CD213.camK),C=CD213.cv,[px,pz]=cd213L(C[0],C[2]),[lx,lz]=cd213L(C[3],C[5]);
   const P=new THREE.Vector3(px,T.ph+C[1],pz),Lk=new THREE.Vector3(lx,T.ph+C[4],lz);cam.position.lerp(P,e);look.lerp(Lk,e);cam.lookAt(look);cam.updateMatrixWorld();try{FADE.cam.value.copy(cam.position)}catch(_){}}
 {const s=document.createElement('style');s.textContent=`
 #cd213w{position:absolute;left:0;right:0;bottom:6px;z-index:6;display:flex;justify-content:center;pointer-events:none}#cd213w.hide{display:none}
-#cd213w .win{pointer-events:auto;width:min(760px,98%);max-height:48vh;overflow:auto}#cd213w .wb{padding:6px 10px}
-.cd213{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}.cd213R{display:flex;flex-direction:column;gap:6px;align-items:center;min-width:250px}.cd213q{font-style:italic;color:#e8d8b0;text-align:center;max-width:300px}
-.cd213row{display:flex;gap:8px;justify-content:center}.cd213c img{width:70px;height:105px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.7);display:block}
-.cd213a{animation:cd213in .35s ease-out both}.cd213w img{box-shadow:0 0 0 2px #ffd24a,0 0 18px rgba(255,200,80,.85)}
-@keyframes cd213in{from{transform:translateY(-8px) rotateY(80deg);opacity:.2}to{transform:none;opacity:1}}
-.cd213r{min-height:1.3em;text-align:center}.cd213g{color:#ffd24a;font-size:1.05rem}
+#cd213w .win{pointer-events:auto;width:min(720px,98%);max-height:34vh;overflow:auto}#cd213w .wb{padding:6px 10px}#cd213w .wf:empty{display:none}
 .cd213ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}.cd213b.on{box-shadow:0 0 0 1px #ffd24a;color:#ffe8a8}
 .cd213d{font-weight:700;padding:6px 16px;background:linear-gradient(#7a2a18,#4a140c)!important;color:#ffe8c0!important}.cd213gold{color:#f0d48a;margin-left:6px}
-.cd213pt{width:100%}.cd213pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;margin-top:6px}
-.cd213p{display:flex;flex-direction:column;align-items:center;font-size:.66rem;text-align:center}.cd213p img{width:44px;height:66px;border-radius:3px}.cd213p b{color:#f0d48a}
-body.mob .cd213c img{width:60px;height:90px}`;document.head.appendChild(s)}
+.cd213pg{display:flex;gap:5px;justify-content:center;margin-top:7px;flex-wrap:wrap}.cd213pn{text-align:center;font-size:.68rem;margin-top:3px}
+.cd213p{display:flex;flex-direction:column;align-items:center;font-size:.7rem}.cd213p img{width:38px;height:57px;border-radius:3px}.cd213p b{color:#f0d48a}
+body.mob .cd213p img{width:28px;height:42px}`;document.head.appendChild(s)}
 // the walk-up prompt at the table
 {const f=townPortalPrompt;townPortalPrompt=function(T){try{if(T&&T===TOWNS[0]&&cd213Near())return {label:'F · Play Fate’s Hand at Corvin’s card table',fn:()=>cd213Open()}}catch(_){}return f.apply(this,arguments)}}
-// per frame: the dealer's arm; leave the table if pulled away; take the cards away a while after
-{const f=townTick;townTick=function(now,pp){const r=f.apply(this,arguments);try{cd213Arm();if(CD213.open){const n=nowP(),dt=Math.min(.05,(n-(CD213.camT||n))/1000);CD213.camT=n;cd213Cam(dt)}else CD213.camT=null;
+// per frame: the table camera; leave the table if pulled away; take the cards away a while after
+{const f=townTick;townTick=function(now,pp){const r=f.apply(this,arguments);try{if(CD213.open){const n=nowP(),dt=Math.min(.05,(n-(CD213.camT||n))/1000);CD213.camT=n;cd213Cam(dt)}else CD213.camT=null;
     if(CD213.open){dp[0]=dp[1]=0;const [sx,sz]=cd213L(...CD213.stand);if(Math.hypot(pl.position.x-sx,pl.position.z-sz)>1.2||hero.hp<=0||uiOpen())cd213Close()}
     if(CD213.lay&&CD213.lay.length&&!CD213.busy&&!CD213.open){CD213.idle=(CD213.idle||0)+1;if(CD213.idle>60*20){cd213Clear();CD213.idle=0}}else CD213.idle=0}catch(_){}return r}}
 // ---------------- sounds ----------------

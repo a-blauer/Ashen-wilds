@@ -1,6 +1,7 @@
 # v213: the bigger Inn (room size, walls and porch cut away from inside, roof hidden, colliders, rest prompt) and Fate's Hand,
 # the card table (pay rules, house edge, the prompt, a hand dealt with Space, gold, the cards laid on the table, Esc leaves).
-# Every check prints FAIL … on a wrong result. SHOTS=1 also writes out/v213_table.png.
+# v213b: the panel only has the bets and the pay list; the result plaque on the table; the head-on seat camera with the hero hidden;
+# the dealer's arms settle after hands. Every check prints FAIL … on a wrong result. SHOTS=1 also writes out/v213_table.png.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -43,11 +44,20 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   gold=1000;CD213.bet=50;const g0=gold;key(' ');out.busy=CD213.busy;if(!CD213.busy)F.push('Space did not deal');if(gold!==g0-50)F.push('the bet was not taken: '+(g0-gold));
   const p0=[pl.position.x,pl.position.z];STEP(30);const p1=[pl.position.x,pl.position.z];key('w');STEP(30);key('w',1);out.drift=+Math.hypot(p1[0]-p0[0],p1[1]-p0[1]).toFixed(2);out.walked=+Math.hypot(pl.position.x-p1[0],pl.position.z-p1[1]).toFixed(2);if(out.walked>.05)F.push('W walked away mid-hand');
   STEP(200);out.res=CD213.res&&{c:CD213.res.c,win:CD213.res.win};if(CD213.busy||!CD213.res)F.push('the hand never finished');else{const want=Math.floor(50*cd213Pay(CD213.res.c).m);if(CD213.res.win!==want)F.push('paid '+CD213.res.win+' (want '+want+')');if(gold!==g0-50+want)F.push('gold after the hand '+gold+' (want '+(g0-50+want)+')')}
+  // v213b: the panel holds only the bets and what each card pays; the hand and its result are on the table
+  out.panel={hand:document.querySelectorAll('#cd213w .cd213c').length,pay:document.querySelectorAll('#cd213w .cd213p').length,bets:document.querySelectorAll('#cd213w [data-cdb]').length};
+  if(out.panel.hand)F.push('the panel still shows the dealt cards');if(out.panel.pay!==9||out.panel.bets!==4)F.push('the panel lacks the bets or the pay list: '+JSON.stringify(out.panel));
+  out.plaque=!!(CD213.plq&&CD213.plq.parent&&CD213.plq.visible);if(!out.plaque)F.push('no result plaque over the table');
+  out.heroHidden=!pl.visible;if(pl.visible)F.push('the hero blocks the table view');
+  // the dealer's arms come back to rest after many hands (the old arm code stacked turns each frame and spun him)
+  {const b=CD213.rig.bones,snap=()=>['aR0','aR1','chest','head'].map(n=>[b[n].rotation.x,b[n].rotation.y,b[n].rotation.z]);const s0=snap();
+   for(let h=0;h<4;h++){gold=1000;CD213.busy=false;cd213Deal();STEP(240)}STEP(120);const s1=snap();let d=0;s0.forEach((r,i)=>r.forEach((v,j)=>d=Math.max(d,Math.abs(v-s1[i][j]))));out.armDrift=+d.toFixed(3);
+   if(!(d<.35))F.push('the dealer\'s pose drifted after four hands: '+out.armDrift);if(s1.flat().some(v=>!isFinite(v)))F.push('the dealer\'s bones went NaN')}
   out.lay=CD213.lay.length;const faces=CD213.lay.map(m=>Math.abs(m.userData.f.rotation.z)<.05);if(CD213.lay.length!==3||faces.some(f=>!f))F.push('the three cards are not lying face up on the table');
   // the cards lie on the table top
   const tops=CD213.lay.map(m=>{const v=new THREE.Vector3();m.getWorldPosition(v);return +(v.y-TOWNS[0].ph).toFixed(2)});out.tops=tops;if(tops.some(y=>y<.68||y>.8))F.push('cards not on the table top: '+tops.join(','));
   gold=10;CD213.bet=50;const g1=gold;key('enter');if(gold!==g1||CD213.busy)F.push('dealt a hand without the gold for it');
-  key('Escape');STEP(5);if(CD213.open)F.push('Esc did not leave the table');STEP(40);
+  key('Escape');STEP(5);if(CD213.open)F.push('Esc did not leave the table');if(!pl.visible)F.push('the hero stays hidden after leaving the table');STEP(40);
   // the dealer stands behind the table
   const D=CD213.dealer;out.dealer=!!D;if(!D)F.push('no dealer')}
  out.F=F;return out}"""
