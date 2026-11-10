@@ -125,6 +125,9 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 3800|v209|3080|3054|1971|3023|3040|2210|kindlelight|cinematic|intro: v209_kindlelight.py
 # v210 Hillside Crest arrival cinematic (3810; made as v208, names hc208*): it shows Abeksi (3155), the Ascent (3250), the Hydra gate (3170), the Hydra (1972/3055), the title card (2210)
 3810|v210|hillside|2210|3155|3170|1972|3055|3080|3081: v210_hillside_cine.py v210_coop.py
+# v214 arrival cinematics of Burningeye Summit, Searing Sands, The Dirge and The Citadel (3860): one engine on 3810's helpers; it builds and shows each zone's
+# quest set pieces (3152 3160 3170 · 3271 3280 3290 3292 · 3312 3316 3317 · 3731 3742 3750 3740), poses the Sovereigns (1973–1976, 3725) and waits on the title card (2210)
+3860|v214|3810|3152|3160|3170|3271|3280|3290|3292|3312|3316|3317|3731|3742|3750|3740|1973|1974|1975|1976|3725|2210|cinematic: v214_zone_cine.py v214_coop.py
 # v211 thrown knives are knives (spinning), and a smaller body twist in the throw (3820; the co-op shot relay 2170)
 3820|v211|3782|3455|2170|1705|knife|knives: v211_knife.py v211_coop.py v207_throws.py v186_knife.py
 # v213 owner's list: Space dash / Shift class defences, the bigger Inn, the card table (3840, 3850, 3640)
