@@ -40,8 +40,9 @@ def s(pg):
     ev("(s)=>{(0,eval)(s)}",LIB)
     r=json.loads(ev("""()=>{V100T.equip('knives');refreshGear(pl,hero.cls,eq);hero.iv=0;const pa=HS().pa;window.__hp=setInterval(()=>{if(hero.hp<30)hero.hp=heroMax()},200);
       const P=pl.position,L=((n3Ins(0)||{}).L||['skeleton']);window.__dealt=0;{const h=hurt;hurt=function(e,d){if(isFinite(d))__dealt+=d;return h.apply(this,arguments)}}
-      for(let i=0;i<5;i++){const a=i/5*6.28;spawnEnemy(L[i%L.length],P.x+Math.cos(a)*6,P.z+Math.sin(a)*6,2,{})}
-      window.__t=setInterval(()=>{let b=null,bd=1e9;for(const e of enemies){if(e.dead)continue;const d=e.m.position.distanceTo(P);if(d<bd){bd=d;b=e}}if(b&&bd<14){tgt=b;atkCd=0;swing()}},350);
+      // three targets held in place a few steps ahead (on GitHub's fast machines loose ones wandered off and the knives missed)
+      const fw=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y)),T=[];for(let i=0;i<3;i++){const x=P.x+fw.x*4+fw.z*(i-1)*1.2,z=P.z+fw.z*4-fw.x*(i-1)*1.2,e=spawnEnemy(L[i%L.length],x,z,2,{});if(e){e.c.h=e.c.st.hp=1e6;T.push({e,x,z})}}
+      window.__t=setInterval(()=>{T.forEach(o=>{o.e.m.position.set(o.x,GH(o.x,o.z),o.z);o.e.vx=o.e.vz=0;o.e.agg=0});const o=T.find(o=>!o.e.dead);if(o){tgt=o.e;atkCd=0;swing()}},350);
       return JSON.stringify({pa:String(pa),noLv:!(eq.weapon.lv>0)})}"""))
     pg.wait_for_timeout(9000)
     q=json.loads(ev("""()=>{clearInterval(__t);clearInterval(__hp);const nanE=enemies.filter(e=>e.c&&!isFinite(e.c.h)).length;let nanT=0;scene.updateMatrixWorld(true);
