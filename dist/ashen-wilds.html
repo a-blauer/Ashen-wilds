@@ -69605,9 +69605,9 @@ try{dm196HouseSync()}catch(_){}
 // Owner (Nov 3 2026): "Lets make the Inn an actual building you can walk into with a bar, fire, tables — and make it extra cozy."
 // The inn stands on the plaza ring (DM196_FIX.inn in 0045: 11 x 8 tiles, door toward the fountain). Lot-local frame (lotW103):
 // x across the front (-5.5..5.5), z toward the plaza (front wall at z = +4, door |x| < .85).
-//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor, ceiling beams; inside a long
+//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor (v213b: no ceiling beams); inside a long
 //    bar with stools, shelves of bottles and casks behind it, a great stone hearth with a living fire on the right wall, three round
-//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, hops and herbs drying on the beams, a stag skull.
+//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, a stag skull.
 //  * Roof (its own group): a steep slate roof with two dormers, the chimney and moss. It is hidden while you are inside, so the camera
 //    looks into the room; the walls between you and the camera fade like every other building (v192).
 //  * Walls and furniture are solid (town colliders), the doorway is open; the rest prompt (T.tv) is at the bar, where the innkeeper
@@ -69626,8 +69626,7 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   twStones(k,stD,-W2,-D2,W2,-D2,0,.36,.4);twStones(k,stD,-W2,D2,-.9,D2,0,.36,.4);twStones(k,stD,.9,D2,W2,D2,0,.36,.4);twStones(k,stD,-W2,-D2,-W2,D2,0,.36,.4);twStones(k,stD,W2,-D2,W2,D2,0,.36,.4);
   k.as('ashlar',()=>k.p('c',st,'box',0,.18,D2+.45,2.0,.36,.7,0,0,0,.04)); // the doorstep
   // v213: the walls above the footing are built by dm196InnWallK (one group per side, cut away from inside)
-  // ceiling beams and a ring of posts
-  k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
+  // v213b: no ceiling beams (owner: the cross beams blocked the camera inside)
   // the bar: a long counter on the left back (v199: top at ~.85 above the floor, it stood chest high and hid the innkeeper), stools, shelves of bottles and casks behind it, a tap barrel
   const bz=-1.9,FL=-.32;k.at(DM196I.bar[0],0,DM196I.bar[1],()=>{const D2=4;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.75,bz,4.2,.7,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.13,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.75,bz-.9,.5,.7,1.8,0,0,0,.03)});
   for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
@@ -69656,9 +69655,9 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,-.14,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
       [[-.19,-.18],[.19,-.18],[-.19,.18],[.19,.18]].forEach(([u,v])=>k.L('c',woodD,[u,.36,v],[u,.8,v],.035,'box'));k.p('c',woodD,'box',0,1.18,.2,.46,.58,.06,0,0,0,.03)})},a)});
   });
-  // lanterns hanging from the beams, hops and herbs drying, a notice board
+  // lanterns hanging on chains, a notice board (v213b: the herbs went with the beams they hung from)
   DM196I.lantern.forEach(([x,z])=>{k.L('m',TWC.iron,[x,H-.15,z],[x,2.55,z],.012,'cyl6',0);TWN100_lantern(k,x,2.32,z,warm)});
-  for(let i=0;i<10;i++){const x=-W2+1.0+i*1.2;k.as('leaf',()=>k.p('c',[0x6a8a3a,0x5a7a34,0x8a8a4a][i%3],'ico',x,H-.42,-.15,.12,.3,.12,0,i,0,.1))}
+
   k.as('board',()=>k.p('c',0x5a3c24,'box',-W2+.2,1.9,-.4,.06,.8,1.2,0,0,0,.02));[0,1,2].forEach(i=>k.p('c',0xe8dcc0,'box',-W2+.25,1.85+(i%2)*.2,-.7+i*.3,.02,.3,.22,0,0,(i-1)*.1,0))}
 // v213: one wall above the footing: stone to the sill, timber framing and plaster panels above, its windows (side 'f' with the doorway)
 function dm196InnWallK(side){return (k,R)=>{const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,pl=0xd8ccb0,woodD=0x3a281a,warm=0xffc070;
@@ -74436,7 +74435,7 @@ function snd213(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.sfx
 //  * Co-op: cd213Show (the dealing, plain card keys) is relayed, so a partner sees Corvin lay the same cards on their table; the bet
 //    and the gold stay with the player.
 var CD213={bets:[10,20,50,100],bet:20,busy:false,cards:null,res:null,line:'',stat:{n:0,won:0,bet:0},tex:{},url:{},root:null,dealer:null,col:[],cam:null,arm:0,fx:null,own:false,err:0,
-  stand:[-2.3,1.8],cv:[-.9,3.6,2.2,-3.75,-1.15,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
+  stand:[-2.3,1.8],cv:[-2.15,2.1,1.8,-4.1,.25,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
   D:{lan:{n:'The Lantern',num:'I',w:20,p:5,c:['#ffcf7a','#7a3a10'],d:'A light kept burning against the dark.'},
      fang:{n:'The Fang',num:'II',w:18,p:6,c:['#f0e2c4','#5a1a14'],d:'What hunts in Kindlelight leaves its teeth behind.'},
      gob:{n:'The Goblet',num:'III',w:15,p:8,c:['#ff6a6a','#4a0810'],d:'Drink deep; the Citadel always does.'},
@@ -74588,33 +74587,95 @@ function cd213Build(){try{const l=DM196I.l;if(!l||typeof TOWNS=='undefined')retu
   kfColSet109(CD213.col,C);DM196S.col=(DM196S.col||[]).filter(c=>CD213.col.indexOf(c)<0).concat(CD213.col)}catch(err){console.warn('v213 card table',err)}}
 {const f=dm196InnBuild;dm196InnBuild=function(){const r=f.apply(this,arguments);cd213Build();return r}}
 cd213Build();
-// the dealer's dealing arm: a reach toward the table laid over the idle pose (removed again if the idle did not reset it)
-function cd213Arm(){const g=CD213.rig,b=g&&g.bones;if(!b||!b.aR0)return;const S=CD213.armS||(CD213.armS={});
-  const v=CD213.arm;[['aR0','x',-1.15],['aR0','z',.25],['aR1','x',-.55],['chest','y',.18],['chest','x',.12]].forEach(([n,ax,d],i)=>{const o=b[n];if(!o)return;const key=n+ax;
-    if(S[key]&&o.rotation[ax]===S[key].set)o.rotation[ax]-=S[key].add;const add=d*v;o.rotation[ax]+=add;S[key]={add,set:o.rotation[ax]}})}
+// the dealer's dealing arm (v213b): while Corvin poses (CD213.arm > 0) his idle is paused and his bones are set outright from where
+// they stood when the pose began; when it ends they go back exactly there and the idle carries on (the old code added the pose on top
+// of the idle's own running offsets, which piled up frame after frame and spun him round). CD213.arm 0…1 blends the pose in;
+// CD213.armK picks it: 'reach' to lay a card, 'tap' to turn one, 'sweep' to take a losing stake, 'open' for a win.
+var CD213P={reach:{aR0:[-1.0,0,-.25],aR1:[0,0,0],aR2:[.2,0,0],chest:[.16,0,0],head:[.2,0,0]},
+  tap:{aR0:[-.8,0,-.15],aR2:[.4,0,0],chest:[.14,0,0],head:[.25,0,0]},
+  sweep:{aR0:[-.85,0,.3],aR2:[.2,0,0],chest:[.12,0,0]},
+  open:{aR0:[-.6,0,-.45],aL0:[-.6,0,.45],head:[-.1,0,0]}};
+var CD213B=['aR0','aR1','aR2','aL0','chest','head'];
+{const f=idlNpc;idlNpc=function(g,now){if(!CD213.rig||g!==CD213.rig||!g.bones)return f.apply(this,arguments);
+  const b=g.bones,v=Math.max(0,Math.min(1,CD213.arm||0));
+  if(v>0){if(!CD213.S0){CD213.S0={};CD213B.forEach(n=>{if(b[n])CD213.S0[n]=b[n].rotation.clone()})}const P=CD213P[CD213.armK||'reach']||CD213P.reach;
+    CD213B.forEach(n=>{const o=b[n],B=CD213.S0[n];if(!o||!B)return;const d=P[n]||[0,0,0];o.rotation.set(B.x+d[0]*v,B.y+d[1]*v,B.z+d[2]*v)});return}
+  if(CD213.S0){CD213B.forEach(n=>{if(b[n]&&CD213.S0[n])b[n].rotation.copy(CD213.S0[n])});CD213.S0=null}
+  return f.apply(this,arguments)}}
 // ---------------- a hand on the table (relayed: the partner sees the same cards laid) ----------------
 function cd213CardMesh(){const g=new THREE.Group(),f=new THREE.Group();g.add(f);const geo=CD213.geo||(CD213.geo=new THREE.PlaneGeometry(.32,.48));
   const mk=(tex,rx,y)=>{const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex,color:0xd8d0c4,transparent:true}));m.material.userData.noFade135=1;m.rotation.x=rx;m.position.y=y;m.renderOrder=3;f.add(m);return m};
   g.userData.face=mk(null,-Math.PI/2,.003);g.userData.back=mk(cd213Can('back'),Math.PI/2,-.003);g.userData.f=f;return g}
-function cd213Clear(){if(CD213.fx){CD213.fx.dead=1;CD213.fx=null}(CD213.lay||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.userData.face.material.dispose();m.userData.back.material.dispose()});CD213.lay=[]}
-function cd213Show(cards,big){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
-  cards=cards.map(k=>CD213.D[k]?k:'hol');cd213Clear();const R=CD213.root,[cx,cz]=DM196I.card,y0=.725,T=CD213.T,L=[];
+function cd213Clear(){if(CD213.fx){CD213.fx.dead=1;CD213.fx=null}(CD213.lay||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.userData.face.material.dispose();m.userData.back.material.dispose()});CD213.lay=[];
+  cd213Plaque(null);(CD213.glow||[]).forEach(m=>{if(m.parent)m.parent.remove(m);m.material.dispose()});CD213.glow=[]}
+// ---------------- words over the table: the result plaque and Corvin's lines (canvas sprites; what the old panel used to show) ----------------
+function cd213Text(lines,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
+  cd213RR(g,4,4,w-8,h-8,18);g.fillStyle='rgba(16,8,6,.82)';g.fill();g.strokeStyle='#c9a24a';g.lineWidth=3;g.stroke();g.textAlign='center';g.textBaseline='middle';
+  const n=lines.length;lines.forEach((L,i)=>{g.font=L.f;g.fillStyle=L.c;g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=6;g.fillText(L.t,w/2,h*(i+.5)/n+(n>1?(i?-4:6):0))});return c}
+function cd213Sprite(canvas,sw){const t=new THREE.CanvasTexture(canvas);t.anisotropy=4;const m=new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,depthWrite:false});m.userData.noFade135=1;
+  const sp=new THREE.Sprite(m);sp.scale.set(sw,sw*canvas.height/canvas.width,1);sp.renderOrder=40;sp.userData.lpsSkip=1;return sp}
+function cd213Drop(sp){if(!sp)return;if(sp.parent)sp.parent.remove(sp);sp.material.map.dispose();sp.material.dispose()}
+// the result: a plaque over the dealt cards ({kind,k,m,win,bet}; null takes it away)
+function cd213Plaque(r){cd213Drop(CD213.plq);CD213.plq=null;if(!r||!CD213.root)return;const D=CD213.D;
+  const L=r.kind==='three'?[{t:r.k==='wild'?'THREE WANDERERS':'THREE × '+D[r.k].n.toUpperCase(),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'},{t:'+'+r.win+' gold   (×'+r.m+')',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}]
+    :r.kind==='pair'?[{t:'A PAIR',f:'700 30px Cinzel, Georgia, serif',c:'#f0e2c0'},{t:'+'+r.win+' gold   (×1.5)',f:'700 36px Cinzel, Georgia, serif',c:'#ffd24a'}]
+    :[{t:'NO MATCH',f:'700 34px Cinzel, Georgia, serif',c:'#b8b0a4'},{t:'the house takes '+r.bet,f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'}];
+  const sp=cd213Sprite(cd213Text(L,560,150),r.kind==='three'&&r.m>=25?.98:.84),[cx,cz]=DM196I.card;sp.position.set(cx-.42,.95,cz);CD213.root.add(sp);CD213.plq=sp;
+  const t0=nowP();kqFx({tick(){if(CD213.plq!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=Math.min(1,a*4);sp.position.y=.95+Math.min(.05,a*.2)+(r.kind==='three'&&r.m>=25?Math.sin(a*6)*.012:0);return true}})}
+// Corvin speaks: a line over his head for a few seconds
+function cd213Say(t){try{cd213Drop(CD213.bub);CD213.bub=null;if(!t||!CD213.root)return;const sp=cd213Sprite(cd213Text([{t:'“'+t+'”',f:'italic 600 26px Cinzel, Georgia, serif',c:'#f0e2c0'}],Math.min(900,90+t.length*15),70),.0016*Math.min(900,90+t.length*15));
+  const [cx,cz]=DM196I.card;sp.position.set(cx-1.0,1.42,cz+.95);CD213.root.add(sp);CD213.bub=sp;const t0=nowP();
+  kqFx({tick(){if(CD213.bub!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=a<.2?a*5:a>3.6?Math.max(0,1-(a-3.6)*2.5):1;if(a>4.1){cd213Drop(sp);CD213.bub=null;return false}return true}})}catch(_){}}
+function cd213Show(cards,big,bet){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
+  cards=cards.map(k=>CD213.D[k]?k:'hol');cd213Clear();const R=CD213.root,[cx,cz]=DM196I.card,y0=.725,T=CD213.T,L=[],r=cd213Pay(cards);bet=+bet||0;
   for(let i=0;i<3;i++){const m=cd213CardMesh();m.userData.face.material.map=cd213Can(cards[i]);m.userData.face.material.needsUpdate=true;m.rotation.y=Math.PI/2;m.userData.f.rotation.z=Math.PI;
     m.position.set(CD213.deck[0],y0+.06,CD213.deck[1]);m.visible=false;R.add(m);L.push(m)}CD213.lay=L;
-  const slot=i=>[cx+.3,cz+(i-1)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
+  const slot=i=>[cx+.05,cz+(i-1)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
   const o={tick(dt){if(o.dead)return false;t+=dt;
       for(let i=0;i<3;i++){const m=L[i],t0=i*T.deal,k=Math.max(0,Math.min(1,(t-t0)/T.deal));m.visible=t>=t0;const [sx,sz]=slot(i),e=haIO(k);
         m.position.set(CD213.deck[0]+(sx-CD213.deck[0])*e,y0+.06*(1-e)+Math.sin(k*Math.PI)*.18+.002*i,CD213.deck[1]+(sz-CD213.deck[1])*e);m.rotation.y=Math.PI/2+(1-e)*(i-1)*.6;
         const f0=3*T.deal+T.gap*.5+i*T.fgap,fk=Math.max(0,Math.min(1,(t-f0)/T.flip));m.userData.f.rotation.z=Math.PI*(1-haIO(fk));m.userData.f.position.y=Math.sin(fk*Math.PI)*.1;
         if(fk>0&&!m.userData.fl){m.userData.fl=1;cd213Snd('flip',rep?.5:1)}if(t>=t0&&!m.userData.dl){m.userData.dl=1;cd213Snd('deal',rep?.5:1)}}
-      // the dealer's arm: a reach for each card dealt, a tap for each turned
-      const dPh=t<3*T.deal?Math.sin(((t%T.deal)/T.deal)*Math.PI):0,fPh=(()=>{const f0=3*T.deal+T.gap*.5,u=t-f0;if(u<0||u>2*T.fgap+T.flip)return 0;const j=Math.floor(u/T.fgap),r=(u-j*T.fgap)/T.flip;return r>=0&&r<=1?Math.sin(r*Math.PI)*.7:0})();
-      CD213.arm=Math.max(dPh,fPh);
-      if(t>=tEnd){CD213.arm=0;if(!o.done){o.done=1;try{o.end2&&o.end2()}catch(_){}if(big)cd213Win(big)}}return t<tEnd+.05},end(){CD213.arm=0}};
+      // the dealer's arm: a reach for each card dealt, a tap on each one turned
+      const dPh=t<3*T.deal?Math.sin(((t%T.deal)/T.deal)*Math.PI):0,fPh=(()=>{const f0=3*T.deal+T.gap*.5,u=t-f0;if(u<0||u>2*T.fgap+T.flip)return 0;const j=Math.floor(u/T.fgap),q=(u-j*T.fgap)/T.flip;return q>=0&&q<=1?Math.sin(q*Math.PI):0})();
+      CD213.armK=t<3*T.deal?'reach':'tap';CD213.arm=Math.max(dPh,fPh);
+      if(t>=tEnd){if(!o.done){o.done=1;CD213.arm=0;try{o.end2&&o.end2()}catch(_){}cd213Result(r,bet,cards)}}return t<tEnd+.05},end(){CD213.arm=0}};
   CD213.fx=o;kqFx(o);return o}catch(err){if(!CD213.err++)console.warn('v213 deal',err)}}
-// a win on the table: coins leap from the cards (big: the jackpot's ember burst); relayed with the deal's end
-function cd213Win(big){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.32,cz),p=new THREE.Vector3(wx,R.position.y+.85,wz);
-  burst(p,0xffd24a,big>1?40:16,big>1?2.6:1.6,big>1?2.6:1.6,.7);if(big>1){burst(p,0xff7a2a,30,3,3,.9);kqFlash(p,0xffd890,3,400);ring(new THREE.Vector3(wx,R.position.y+.75,wz),0xffd24a,2.2,500)}}catch(_){}}
+// the end of a hand, on every screen that saw it dealt: the plaque, the winning cards lit, Corvin's gesture and the win's effect
+function cd213Result(r,bet,cards){try{const win=Math.floor(bet*r.m);cd213Plaque({kind:r.kind,k:r.k,m:r.m,win,bet});
+  if(r.kind){CD213.lay.forEach((m,i)=>{const k=cards[i];if(!(r.kind==='three'||k===r.k||k==='wild'))return;const g=new THREE.Mesh(CD213.gGeo||(CD213.gGeo=new THREE.PlaneGeometry(.44,.6)),new THREE.MeshBasicMaterial({map:fx186Tex?fx186Tex('soft'):null,color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.0}));
+    g.material.userData.noFade135=1;g.rotation.x=-Math.PI/2;g.position.set(m.position.x,.718,m.position.z);g.renderOrder=2;CD213.root.add(g);CD213.glow.push(g);const t0=nowP();
+    kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000;g.material.opacity=Math.min(.9,a*3)*(.75+.25*Math.sin(a*5));return true}})})}
+  cd213Gest(r.kind?'open':'sweep');cd213Say(r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose'));
+  cd213Win(cd213Tier(r))}catch(err){if(!CD213.err++)console.warn('v213 result',err)}}
+// how big a win is: 0 nothing, 1 a pair, 2 a small three (×5–×10), 3 a fine three (×15–×25), 4 the Crown or the Wanderers (×50, ×100)
+function cd213Tier(r){return !r.kind?0:r.kind==='pair'?1:r.m>=50?4:r.m>=15?3:2}
+// a one-off gesture of Corvin's arms after the hand (an open-palmed flourish for a win, a sweep of the stake for a loss)
+function cd213Gest(k){const t0=nowP(),ms=k==='open'?1100:900;CD213.armK=k;kqFx({tick(){if(CD213.busy&&CD213.armK!==k)return false;const a=(nowP()-t0)/ms;if(a>=1){if(CD213.armK===k)CD213.arm=0;return false}CD213.armK=k;CD213.arm=Math.sin(Math.min(1,a)*Math.PI);return true}})}
+// coins: little gold discs thrown up from the cards that bounce and settle on the felt, then fade (one shared geometry and material)
+function cd213Coins(n,rain){const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,G=CD213.cGeo||(CD213.cGeo=new THREE.CylinderGeometry(.034,.034,.008,10)),
+  M=CD213.cMat||(CD213.cMat=new THREE.MeshLambertMaterial({color:0xe0b050,emissive:0x5a3a08}));M.userData.noFade135=1;
+  for(let i=0;i<n;i++){const m=new THREE.Mesh(G,M.clone());m.material.transparent=true;m.userData.lpsSkip=1;
+    const p=rain?{x:cx-.35+Math.random()*1.1,y:1.6+Math.random()*1.2,z:cz-.75+Math.random()*1.5}:{x:cx+.05+(Math.random()-.5)*.3,y:.76,z:cz+(Math.random()-.5)*1.0},
+      v=rain?{x:0,y:-Math.random(),z:0}:{x:(Math.random()-.3)*1.2,y:1.4+Math.random()*1.6,z:(Math.random()-.5)*1.4};let sp=(Math.random()-.5)*20;
+    m.position.set(p.x,p.y,p.z);R.add(m);let t=-(rain?Math.random()*.9:Math.random()*.25),rest=0;m.visible=false;
+    kqFx({tick(dt){t+=dt;if(t<0)return true;m.visible=true;if(!rest){v.y-=9.8*dt;m.position.x+=v.x*dt;m.position.y+=v.y*dt;m.position.z+=v.z*dt;m.rotation.x+=sp*dt;m.rotation.z+=sp*.7*dt;
+        const onT=Math.hypot((m.position.x-(cx))/1.0,(m.position.z-cz)/.78)<1,fl=onT?.722:.05;
+        if(m.position.y<fl){m.position.y=fl;if(Math.abs(v.y)<.9){rest=1;m.rotation.set(0,m.rotation.y,0)}else{v.y=-v.y*.35;v.x*=.6;v.z*=.6;sp*=.5}}}
+      if(t>3.2)m.material.opacity=Math.max(0,1-(t-3.2)/.6);return t<3.8},end(){R.remove(m);m.material.dispose()}})}}
+// the win's effect, growing with the win
+function cd213Win(tier){try{const R=CD213.root;if(!R||!tier)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.05,cz),Y=R.position.y,p=new THREE.Vector3(wx,Y+.8,wz);
+  if(tier>=1){burst(p,0xffd24a,8+tier*8,1.2+tier*.5,1.2+tier*.4,.6);cd213Coins([0,4,10,18,28][tier])}
+  if(tier>=2){ring(new THREE.Vector3(wx,Y+.74,wz),0xffd24a,1.2+tier*.5,450);kqFlash(p,0xffe0a0,.9+tier*.3,260)}
+  if(tier>=3){// a column of gold light over the table and sparks climbing it
+    const mat=new THREE.MeshBasicMaterial({color:0xffc84a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});mat.userData.noFade135=1;
+    const col=new THREE.Mesh(CD213.pGeo||(CD213.pGeo=new THREE.CylinderGeometry(.55,.75,3.2,20,1,true)),mat);col.position.set(cx+.05,.72+1.6,cz);col.userData.lpsSkip=1;R.add(col);const t0=nowP(),dur=tier>3?2600:1800;
+    kqFx({tick(){const a=(nowP()-t0)/dur;if(a>=1)return false;mat.opacity=(a<.15?a/.15:1-(a-.15)/.85)*(tier>3?.2:.14);col.rotation.y+=.02;col.scale.set(1+a*.3,1,1+a*.3);
+      if(Math.random()<.5)burst(new THREE.Vector3(wx+(Math.random()-.5)*.8,Y+.8+Math.random()*1.6,wz+(Math.random()-.5)*.8),0xffe08a,1,.3,1.6,.6);return true},end(){R.remove(col);mat.dispose()}})}
+  if(tier>=4){// the jackpot: an ember blast, coins raining from the rafters, the room flashes gold, the floor shakes
+    burst(p,0xff7a2a,46,3.4,3.2,1);burst(p,0xffd890,18,2.6,2.4,.5);kqFlash(p,0xffd890,2.2,450);ring(new THREE.Vector3(wx,Y+.74,wz),0xff9a3a,4,700);cd213Coins(40,true);
+    try{flash('rgba(255,190,80,.22)')}catch(_){}try{if(!(typeof MPV!='undefined'&&MPV.rep)&&SET.shake!==false)shake(.18)}catch(_){}
+    setTimeout(()=>{try{ring(new THREE.Vector3(wx,Y+.74,wz),0xffd24a,3,600);burst(p,0xffd24a,30,2.4,3,.8)}catch(_){}},450)}}catch(err){if(!CD213.err++)console.warn('v213 win',err)}}
 (function(){if(typeof MPV=='undefined'||!MPV.FX||typeof MPV_FX=='undefined')return;
   ['cd213Show'].forEach(n=>{const f=window[n];if(typeof f!='function')return;if(MPV_FX[n]==null){MPV_FX[n]=MPV.FX.length;MPV.FX.push(n)}
     window[n]=function(){if(MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
@@ -74624,67 +74685,51 @@ function cd213Win(big){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.
 // ---------------- playing ----------------
 function cd213Near(){if(CD213.open)return false;try{if(!DM196I.l)return false;const [tx,tz]=cd213L(...DM196I.card);return Math.hypot(pl.position.x-tx,pl.position.z-tz)<2.5&&townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
 function cd213Open(){const l=DM196I.l;if(!l||CD213.open)return;const [sx,sz]=cd213L(...CD213.stand);pl.position.x=sx;pl.position.z=sz;pl.rotation.y=l.ry-Math.PI/2;
-  CD213.open=true;CD213.camK=0;CD213.line=cd213Pick('deal');cd213Panel().classList.remove('hide');cd213Render();try{GD213&&gd213Up()}catch(_){}}
-function cd213Close(){CD213.open=false;const w=$('cd213w');if(w)w.classList.add('hide')}
+  CD213.open=true;CD213.camK=0;CD213.plVis=pl.visible;pl.visible=false;cd213Panel().classList.remove('hide');cd213Render();cd213Say(cd213Pick('deal'));try{GD213&&gd213Up()}catch(_){}}
+function cd213Close(){if(!CD213.open)return;CD213.open=false;pl.visible=CD213.plVis!==false;const w=$('cd213w');if(w)w.classList.add('hide')}
 function cd213Pick(k){const L=CD213.say[k];return L[Math.floor(Math.random()*L.length)]}
-function cd213Deal(){if(CD213.busy)return;const b=CD213.bet;if(gold<b){CD213.line='“Your purse is lighter than your courage.”';cd213Render();return}
-  gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m);CD213.busy=true;CD213.cards=c;CD213.res=null;CD213.line=cd213Pick('deal');
-  CD213.stat.n++;CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}
-  const big=r.kind==='three'?(r.m>=25?2:1):r.kind==='pair'?1:0;const o=cd213Show(c,big);
+function cd213Deal(){if(CD213.busy)return;const b=CD213.bet;if(gold<b){cd213Say('Your purse is lighter than your courage.');return}
+  gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m);CD213.busy=true;CD213.cards=c;CD213.res=null;
+  CD213.stat.n++;CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}if(Math.random()<.35)cd213Say(cd213Pick('deal'));
+  const o=cd213Show(c,cd213Tier(r),b);
   const fin=()=>{CD213.busy=false;gold+=win;CD213.stat.won+=win;CD213.res={c,r,win,bet:b};
-    CD213.line=r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose');
     cd213Snd(r.kind==='three'?(r.m>=25?'jack':'win'):r.kind==='pair'?'pair':'lose');
     if(win>0)try{say('🃏 Fate’s Hand: '+(r.kind==='three'?'three × '+CD213.D[r.k].n:'a pair')+' — you win '+win+' gold.')}catch(_){}
-    try{hud()}catch(_){}CD213.anim=1;cd213Render();CD213.anim=0};
-  if(o)o.end2=fin;else fin()}
+    try{hud()}catch(_){}cd213Render()};
+  if(o)o.end2=fin;else{fin();cd213Result(r,b,c)}}
 function cd213Panel(){let w=$('cd213w');if(w)return w;w=document.createElement('div');w.id='cd213w';w.className='hide';
   w.innerHTML=`<div class="win"><div class="wh"><h2 id="cd213T">🃏 Fate’s Hand</h2><span class="wsub" id="cd213S"></span><button class="x" id="cd213X" title="Leave the table (Esc)">✕</button></div><div class="wb" id="cd213B"></div><div class="wf" id="cd213F"></div></div>`;
   ($('stage')||document.body).appendChild(w);w.addEventListener('pointerdown',e=>e.stopPropagation());
   w.addEventListener('click',e=>{const b=e.target.closest('[data-cdb],[data-cdd],#cd213X');if(!b||b.disabled)return;if(b.id==='cd213X'){cd213Close();return}
     if(b.dataset.cdb){CD213.bet=+b.dataset.cdb;cd213Render()}else if(b.dataset.cdd)cd213Deal()});return w}
-function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D,R=CD213.res,c=CD213.busy?null:(CD213.cards||null);
-  $('cd213S').textContent='Corvin’s card table at the Last Lantern';
-  const card=(k,i)=>{const show=c&&k,win=R&&!CD213.busy&&R.r.kind&&(R.r.kind==='three'||(R.r.kind==='pair'&&(k===R.r.k||k==='wild')));
-    return `<div class="cd213c${win?' cd213w':''}${CD213.anim&&show?' cd213a':''}" style="animation-delay:${i*.12}s"><img src="${show?cd213Url(k):cd213Url('back')}" alt="${show?D[k].n:'face down'}" title="${show?D[k].n+' — '+D[k].d:''}"></div>`};
-  const cs=(CD213.busy||!c)?[null,null,null]:c;
-  let res='';if(R&&!CD213.busy)res=R.win>0?`<b class="cd213g">+${R.win} 🪙</b> ${R.r.kind==='three'?'Three × '+D[R.r.k].n+' pays ×'+R.r.m:'A pair pays ×1.5'}`:`<span class="mut">No match — the ${R.bet} gold stays on the table.</span>`;
-  else if(CD213.busy)res='<span class="mut">Corvin deals…</span>';else res='<span class="mut">Choose your bet and deal.</span>';
+function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D;
+  $('cd213S').textContent='Space / Enter deal · 1–4 bet · Esc leaves';
   const bets=CD213.bets.map(b=>`<button class="cd213b${b===CD213.bet?' on':''}" data-cdb="${b}" ${gold<b||CD213.busy?'disabled':''}>${b} 🪙</button>`).join('');
-  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].d}"><img src="${cd213Url(k)}"><span>${D[k].n}</span><b>${k==='hol'?'—':'×'+D[k].p}</b></div>`).join('');
-  $('cd213B').innerHTML=`<div class="cd213">
-    <div class="cd213row">${cs.map(card).join('')}</div>
-    <div class="cd213R"><div class="cd213q">“${st200Esc(CD213.line)}” <span class="mut">— Corvin</span></div>
-      <div class="cd213r">${res}</div>
-      <div class="cd213ctl"><span class="mut">Bet</span>${bets}</div>
-      <div class="cd213ctl"><button class="cd213d" data-cdd="1" ${CD213.busy||gold<CD213.bet?'disabled':''}>${CD213.busy?'Dealing…':'Deal · '+CD213.bet+' 🪙'}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div></div></div>
-    <details class="cd213pt"${CD213.ptOpen?' open':''}><summary>The deck and what it pays</summary><div class="cd213pg">${pt}</div><div class="mut" style="margin-top:4px">Any two alike (a Wanderer counts, The Hollow never does) give 1.5× your bet back.</div></details>`;
-  const d=$('cd213B').querySelector('.cd213pt');if(d)d.addEventListener('toggle',()=>{CD213.ptOpen=d.open});
-  $('cd213F').innerHTML=`<span class="mut dtl">Space / Enter deal · Esc leaves the table · hands played ${CD213.stat.n} · won ${CD213.stat.won} 🪙 of ${CD213.stat.bet} 🪙 bet this visit. The house always keeps a little.</span>`};
+  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].n} — ${D[k].d}"><img src="${cd213Url(k)}"><b>${k==='hol'?'—':'×'+D[k].p}</b></div>`).join('');
+  $('cd213B').innerHTML=`<div class="cd213ctl"><span class="mut">Bet</span>${bets}<button class="cd213d" data-cdd="1" ${CD213.busy||gold<CD213.bet?'disabled':''}>${CD213.busy?'Dealing…':'Deal · '+CD213.bet+' 🪙'}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
+    <div class="cd213pg">${pt}</div><div class="mut cd213pn">Three alike pay the card’s ×. The Wanderer stands in for any card; The Hollow for none. Any two alike give 1.5× back.</div>`;
+  $('cd213F').innerHTML=''};
 // while at the table the keys belong to the panel (no walking off mid-hand, no swings at the dealer)
 addEventListener('keydown',e=>{if(!CD213.open)return;const k=String(e.key||'').toLowerCase();if(e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
   if(k==='escape')cd213Close();else if(k===' '||k==='enter')cd213Deal();else if(k>='1'&&k<='4'&&!CD213.busy){const b=CD213.bets[+k-1];if(b&&gold>=b){CD213.bet=b;cd213Render()}}},true);
 addEventListener('keyup',e=>{if(CD213.open)e.stopImmediatePropagation()},true);
 {const f=swing;swing=function(){if(CD213.open)return;return f.apply(this,arguments)}}
-// the table camera: over the player's shoulder, the table above the panel (eased in; the follow camera takes over again on leaving)
+// the table camera (v213b): head on from the player's seat, Corvin across the table, like a blackjack table (the hero is hidden
+// while seated; eased in; the follow camera takes over again on leaving)
 function cd213Cam(dt){const l=DM196I.l,T=TOWNS[0];if(!l)return;CD213.camK=Math.min(1,(CD213.camK||0)+dt*2.2);const e=haIO(CD213.camK),C=CD213.cv,[px,pz]=cd213L(C[0],C[2]),[lx,lz]=cd213L(C[3],C[5]);
   const P=new THREE.Vector3(px,T.ph+C[1],pz),Lk=new THREE.Vector3(lx,T.ph+C[4],lz);cam.position.lerp(P,e);look.lerp(Lk,e);cam.lookAt(look);cam.updateMatrixWorld();try{FADE.cam.value.copy(cam.position)}catch(_){}}
 {const s=document.createElement('style');s.textContent=`
 #cd213w{position:absolute;left:0;right:0;bottom:6px;z-index:6;display:flex;justify-content:center;pointer-events:none}#cd213w.hide{display:none}
-#cd213w .win{pointer-events:auto;width:min(760px,98%);max-height:48vh;overflow:auto}#cd213w .wb{padding:6px 10px}
-.cd213{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}.cd213R{display:flex;flex-direction:column;gap:6px;align-items:center;min-width:250px}.cd213q{font-style:italic;color:#e8d8b0;text-align:center;max-width:300px}
-.cd213row{display:flex;gap:8px;justify-content:center}.cd213c img{width:70px;height:105px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.7);display:block}
-.cd213a{animation:cd213in .35s ease-out both}.cd213w img{box-shadow:0 0 0 2px #ffd24a,0 0 18px rgba(255,200,80,.85)}
-@keyframes cd213in{from{transform:translateY(-8px) rotateY(80deg);opacity:.2}to{transform:none;opacity:1}}
-.cd213r{min-height:1.3em;text-align:center}.cd213g{color:#ffd24a;font-size:1.05rem}
+#cd213w .win{pointer-events:auto;width:min(720px,98%);max-height:34vh;overflow:auto}#cd213w .wb{padding:6px 10px}#cd213w .wf:empty{display:none}
 .cd213ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}.cd213b.on{box-shadow:0 0 0 1px #ffd24a;color:#ffe8a8}
 .cd213d{font-weight:700;padding:6px 16px;background:linear-gradient(#7a2a18,#4a140c)!important;color:#ffe8c0!important}.cd213gold{color:#f0d48a;margin-left:6px}
-.cd213pt{width:100%}.cd213pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;margin-top:6px}
-.cd213p{display:flex;flex-direction:column;align-items:center;font-size:.66rem;text-align:center}.cd213p img{width:44px;height:66px;border-radius:3px}.cd213p b{color:#f0d48a}
-body.mob .cd213c img{width:60px;height:90px}`;document.head.appendChild(s)}
+.cd213pg{display:flex;gap:5px;justify-content:center;margin-top:7px;flex-wrap:wrap}.cd213pn{text-align:center;font-size:.68rem;margin-top:3px}
+.cd213p{display:flex;flex-direction:column;align-items:center;font-size:.7rem}.cd213p img{width:38px;height:57px;border-radius:3px}.cd213p b{color:#f0d48a}
+body.mob .cd213p img{width:28px;height:42px}`;document.head.appendChild(s)}
 // the walk-up prompt at the table
 {const f=townPortalPrompt;townPortalPrompt=function(T){try{if(T&&T===TOWNS[0]&&cd213Near())return {label:'F · Play Fate’s Hand at Corvin’s card table',fn:()=>cd213Open()}}catch(_){}return f.apply(this,arguments)}}
-// per frame: the dealer's arm; leave the table if pulled away; take the cards away a while after
-{const f=townTick;townTick=function(now,pp){const r=f.apply(this,arguments);try{cd213Arm();if(CD213.open){const n=nowP(),dt=Math.min(.05,(n-(CD213.camT||n))/1000);CD213.camT=n;cd213Cam(dt)}else CD213.camT=null;
+// per frame: the table camera; leave the table if pulled away; take the cards away a while after
+{const f=townTick;townTick=function(now,pp){const r=f.apply(this,arguments);try{if(CD213.open){const n=nowP(),dt=Math.min(.05,(n-(CD213.camT||n))/1000);CD213.camT=n;cd213Cam(dt)}else CD213.camT=null;
     if(CD213.open){dp[0]=dp[1]=0;const [sx,sz]=cd213L(...CD213.stand);if(Math.hypot(pl.position.x-sx,pl.position.z-sz)>1.2||hero.hp<=0||uiOpen())cd213Close()}
     if(CD213.lay&&CD213.lay.length&&!CD213.busy&&!CD213.open){CD213.idle=(CD213.idle||0)+1;if(CD213.idle>60*20){cd213Clear();CD213.idle=0}}else CD213.idle=0}catch(_){}return r}}
 // ---------------- sounds ----------------
@@ -74699,33 +74744,385 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
     pair:()=>{coin(0,2600);coin(.08,3100)},
     win:()=>{for(let i=0;i<6;i++)coin(i*.07,2400+((i*530)%900));T('sine',523,523,0,.5,.04,{atk:.02,wet:.6});T('sine',784,784,.1,.6,.035,{atk:.02,wet:.6})},
     jack:()=>{for(let i=0;i<16;i++)coin(i*.06,2200+((i*730)%1300));[392,523,659,784].forEach((f,i)=>T('sine',f,f,i*.09,1.2,.04,{atk:.03,wet:.7}));try{mSfx('lvl',.6)}catch(_){}}})[k]?.()}catch(_){}}
-// ================= v214 Argus, the Hundred-Eyed — one skinned, painted body and smoother motion (owner, Nov 9 2026) =================
+// ================= v214: arrival cinematics for Burningeye Summit, Searing Sands, The Dirge and The Citadel (names zc214*) =================
+// Owner (Nov 10 2026): "make intro cinematics for our other zones (ice, sand, graveyard, citadel) and make them similar to how we have
+// our kindlelight and plains intro cinematics."
+// Built like Hillside Crest's (3810): the first time a hero arrives in one of these zones the main loop waits (IC151.on) and the
+// intro's voice speaks over a tour of the zone drawn in the real world. Every frame is a pure function of t (zc214Seek), so tests
+// render it frame by frame (zc214Cap). One engine, one plan per zone (ZC214.Z[z]):
+//   0  the hero at the entrance of the zone, the camera rises over the land (all four)
+//   1–4 the zone's three field instances: their main quest set pieces (built as the game builds them, shown for the shot, put back),
+//      stand-in creatures of each instance (models only, no AI, removed after), no words on screen but the voice
+//   5  the Sovereign's Den: the den's own Sovereign (posed, then put back) wakes and roars its own intro move, a hard cut to black,
+//      the game fades back in and the zone's title card shows
+// Burningeye Summit: the Frozen Maw's mouth · the Frozen Gate · the Mountain Drill · the storm-born of III · the Rime Wraith.
+// Searing Sands: the buried temple · the Last Warden's court · the salt columns · the Sandskimmer and the desert · Ssith'ra.
+// The Dirge: the weeping angel · the graves · the quay of the Black Channel · the five prisms and the Reliquary · the Bloated One.
+// The Citadel: the Great Gate's blood seal · Vharog asleep before the rampart gate · the Sun Court and the Eclipse Door · III's court
+// creatures · Lord Vaelric.
+// Seen once per character and zone (saved as x2.zc214, a bit per zone); older saves that already went past the zone's first
+// instance or into its quest count as seen. Skip: the button, Esc, Enter or Space. Off when the intro is off (SET.intro 0) and
+// under test automation unless window.KQ_ZC214. Co-op: every player sees it on their own first arrival (local, nothing relayed,
+// like 3800 / 3810); while it plays that player's game waits and presence keeps going out.
+var ZC214={run:false,S:null,seen:0,raw:null,len:37.4,skipT:35.0,cut:35.0,
+  // shot starts (shot 5, the den, runs to the cut)
+  T:[0,4.0,9.8,15.6,21.4,27.0],rise:[27.4,30.1],roar:30.0,Z:{}};
+function zc214Bit(z){return 1<<z}
+function zc214Seen(z){return !!(ZC214.seen&zc214Bit(z))}
+function zc214Want(I){try{if(!I||!I.fld||!ZC214.Z[I.z]||zc214Seen(I.z)||ZC214.run||ZC214.raw===-1)return false;   // raw -1: an older save still loading (decided after it)
+  
+  if(typeof IC151!='undefined'&&IC151.run)return false;if(typeof HC208!='undefined'&&HC208.run)return false;if(typeof KC208!='undefined'&&KC208.run)return false;
+  if(window.KQ_ZC214)return true;if(window.AW_NOTITLE||navigator.webdriver)return false;if(typeof SET!='undefined'&&SET.intro===0)return false;return true}catch(_){return false}}
+// a hero who already knows the zone (saves from before v214): past instance I, the Sovereign beaten, or the zone's quest begun
+function zc214Known(z){try{if(insReach(z)>0||bossDone.has(z))return true}catch(_){}
+  try{if(z===2)return MQ151.st>0||!!MQ151.seen||MQ160.st>0;if(z===3)return SS165.c1.st>0||!!SS165.c1.seen;if(z===4)return DG165Q.g.st>0;if(z===5)return CQ205.c1.st>0}catch(_){}return false}
+
+// ---------------- small helpers ----------------
+function zc214V(x,z,dy){return new THREE.Vector3(x,GH(x,z)+(dy||0),z)}
+// remember how a thing was before the cinematic touched it; everything is put back in zc214Back
+function zc214Vis(S,o,on){if(!o)return;if(!S.vm.has(o))S.vm.set(o,o.visible);o.visible=!!on}
+function zc214Lit(S,l,i){if(!l)return;if(!S.lm.has(l))S.lm.set(l,l.intensity);l.intensity=i}
+// a thing the cinematic builds that the game would only have built on a visit: put back hidden (the zone's own tick shows it there)
+function zc214New(S,o){if(o&&!S.vm.has(o))S.vm.set(o,false)}
+// the road of an instance at a fraction of its length: a point and the way along it
+function zc214Road(g,fr){const I=INSL[g],P=I.path,j=Math.max(2,Math.min(P.length-14,Math.floor(P.length*fr))),a=P[j],b=P[Math.min(P.length-1,j+12)],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz)||1;
+  return {x:a[0],z:a[1],fx:dx/L,fz:dz/L,sx:-dz/L,sz:dx/L}}
+// a stand-in creature (model only): sh = its shot, from (x,z) walking along (dx,dz) at v from t0; stalk = toward the camera
+function zc214Cast(S,c){try{if(!EN[c.k])return;const m=cr(enemyC(c.k,c.lv||10,{}));if(!m)return;m.scale.setScalar(m.bs||m.scale.x||1);m.userData.psNo=1;m.userData.noFarCull=1;m.visible=false;
+    m.traverse(o=>{if(o.isMesh)o.frustumCulled=false});scene.add(m);S.cast.push(Object.assign({m},c))}catch(e){console.warn('zc214 cast',c.k,e)}}
+// a creature of our own on the Sovereign rig (no AI): built with B.build, posed per frame by zc214RigPose
+function zc214Rig(B,x,z,ry){const R=svRig();B.build(R,null);svRest(R);try{svMerge(R)}catch(_){}const g=new THREE.Group();g.add(R.root);g.position.set(x,GH(x,z),z);g.rotation.y=ry;
+  g.visible=false;g.userData.noFarCull=1;g.traverse(o=>{if(o.isMesh)o.frustumCulled=false});scene.add(g);
+  const O={};for(const k in R.J)O[k]=[0,0,0,0,0,0];const v={m:g,c:{h:1},dead:false,sv:{i:'zc',B,R,O,P:{},snap:{},ph:1,spd:0,mv:null,chg:0,hy:0,aw:1}};v.sv.e=v;v.sv.lp=g.position.clone();return v}
+function zc214RigPose(v,trk,t,dt,now){const Q=v.sv,B=Q.B,R=Q.R,O=Q.O;for(const k in O){const o=O[k];o[0]=o[1]=o[2]=o[3]=o[4]=o[5]=0}
+  try{B.loco&&B.loco(v,Q,O,dt,now)}catch(_){}
+  if(trk){const Pz=svSample(B,{snap:{}},trk,t,Q.P,now);for(const k in Pz){const p=Pz[k],o=O[k];if(!p||!o)continue;for(let q=0;q<6;q++)o[q]=p[q]}}
+  for(const k in O){const g=R.J[k],o=O[k],r0=g.userData.r0,p0=g.userData.p0;g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+o[3],p0.y+o[4],p0.z+o[5])}
+  try{B.post&&B.post(v,Q,dt,now)}catch(_){}}
+// a sp152 gateway's model (built as its first visit builds it)
+function zc214Gate(S,key){try{const G=SP152.gates[key];if(!G)return null;if(!G.spot){G.spot=G.where?G.where():sp152GateSpot(G.ig);G.g=G.build(G.spot);G.spot.built=1;zc214New(S,G.g)}return G.g?G:null}catch(e){console.warn('zc214 gate',key,e);return null}}
+
+// =====================================================================================================================
+// the stand-ins of shots 1–4 stand where that shot's camera looks at mid-shot: d ahead, o across, walking across the view
+function zc214Place(S){(S.Z.rel||[]).forEach(([sh,k,lv,d,o,dir,v,dl])=>{try{const T=ZC214.T,ta=T[sh],tb=T[sh+1]||ZC214.cut,tm=(ta+tb)/2,c=S.Z.cam(S,sh,.5,tm);if(!c)return;
+    let fx=c.l.x-c.p.x,fz=c.l.z-c.p.z;const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;const rx=-fz,rz=fx,t0=ta+dl,s0=o-dir*v*(tm-t0);
+    zc214Cast(S,{sh,k,lv,x:c.p.x+fx*d+rx*s0,z:c.p.z+fz*d+rz*s0,dx:rx*dir,dz:rz*dir,v,t0})}catch(e){console.warn('zc214 place',k,e)}})}
+// the zones' plans: lines (the voice), build(S) → S.A anchors + set pieces + cast, cam(S,i,k,t) for shots 1–4, frame(S,i,t,now,dt)
+// =====================================================================================================================
+// ---------------- Burningeye Summit (the ice zone) ----------------
+ZC214.Z[2]={den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.5,-5.5,1,.85,.3],[1,'trollsh',20,12,1.8,1,.9,.6],[2,'wendigo',23,12,3,-1,.8,0],[2,'rimecrawler',23,9.5,-3.5,1,.7,.3],[3,'troll',26,9,-3,1,.9,0],[3,'troll',26,11,1.2,1,.85,.5]],name:'Burningeye Summit',ess:'the Wraith',key:{dr:[41.2,61.74,82.41],ch:[329.63,392,493.88,587.33],toll:82.41,bed:'wind'},rise:7,riseFade:1,
+  lines:[{a:1.0,b:3.6,s:'Burningeye Summit. Here even the sky burns cold.'},
+    {a:4.4,b:9.0,s:'A troll warlord rules the frozen maw beneath the mountain.'},
+    {a:10.2,b:14.8,s:'Above it, an ancient gate lies sealed in ice older than kings.'},
+    {a:16.0,b:20.6,s:'Fire will open it… and iron will bore through the rest.'},
+    {a:21.8,b:26.2,s:'The storm-born guard every pass, Upright.'},
+    {a:27.2,b:31.2,s:'And at the peak, the Rime Wraith haunts its endless winter.'},
+    {a:31.8,b:34.6,s:'Bring me the Wraith’s essence.'}],
+  build(S){const A=S.A;
+    try{const had=!!MQ151.CM;gb151MouthBuild();if(!had)zc214New(S,MQ151.CM.g);A.maw=mq151Gate()}catch(e){console.warn('zc214 maw',e)}
+    try{const had=!!MQ160.S;mq160Build();const Q=MQ160.S;if(!had){[Q.gate.g,Q.bench,Q.sp].concat(Q.cache.map(c=>c.g)).forEach(o=>zc214New(S,o))}const R=mq160Plan();A.gate=R.gate;A.bench=R.bench}catch(e){console.warn('zc214 frozen gate',e)}
+    try{const had=!!MQ170.S;mq170Build();const Q=MQ170.S;if(!had){[Q.cliff.g,Q.drill.g,Q.con].concat(Q.box.map(b=>b.g)).forEach(o=>zc214New(S,o))}const R=mq170Plan();A.dr=R.g;A.drill=R.drill;A.con=R.con;A.box=R.box}catch(e){console.warn('zc214 drill',e)}
+    A.cr=zc214Road(insG(2,2),.45);
+    // III: the storm-born stalk down the road toward the camera
+    {const C=A.cr;[['jotun',9,-1.8,1.0,0],['galeharpy',11.5,2.4,1.1,.5],['jotun',14,.4,.9,.9]].forEach(([k,f,s,v,d])=>zc214Cast(S,{sh:4,k,lv:26,x:C.x+C.fx*f+C.sx*s,z:C.z+C.fz*f+C.sz*s,dx:-C.fx,dz:-C.fz,v,t0:21.4+d}))}},
+  cam(S,i,k,t){const A=S.A,V=THREE.Vector3,Sm=ic151Sm,Io=ic151Io,q=Sm(k),G=zc214V;
+    if(i===1&&A.maw){const M=A.maw,sx=M.fz,sz=-M.fx,r=19-7*Io(k);return {p:G(M.x+M.fx*r+sx*(4-3*q),M.z+M.fz*r+sz*(4-3*q),2.0+1.2*q),l:G(M.x+M.fx*1.5,M.z+M.fz*1.5,3.4-.6*q),fov:48,F:G(M.x+M.fx*8,M.z+M.fz*8)}}
+    if(i===2&&A.gate){const g=A.gate,r=21-6*Io(k),s=-7+6*q;return {p:G(g.x+g.fx*r+g.sx*s,g.z+g.fz*r+g.sz*s,2.4+1.6*q),l:G(g.x,g.z,3.6+.6*q),fov:48,F:G(g.x+g.fx*8,g.z+g.fz*8)}}
+    if(i===3&&A.dr){const g=A.dr,d=A.drill,a=-1.0+.6*q,r=17-3*q,ca=Math.cos(a),sa=Math.sin(a),ox=g.fx*ca+g.sx*sa,oz=g.fz*ca+g.sz*sa;return {p:G(d.x+ox*r,d.z+oz*r,3.4+1.4*q),l:G(d.x,d.z,2.4+.8*q),fov:50,F:G(d.x+g.fx*6,d.z+g.fz*6)}}
+    return null},
+  frame(S,i,t,now,dt){const tt=now/1000;
+    if(MQ151.CM){zc214Vis(S,MQ151.CM.g,i===1);if(i===1&&MQ151.CM.glow)MQ151.CM.glow.material.opacity=.38+.1*Math.sin(tt*1.3)}
+    const Q=MQ160.S;if(Q){[Q.gate.g,Q.bench].forEach(o=>zc214Vis(S,o,i===2));zc214Vis(S,Q.sp,false);Q.cache.forEach(c=>zc214Vis(S,c.g,i===2&&!MQ160.p[c.i]));zc214Lit(S,Q.blt,i===2?1.1+.25*Math.sin(tt*7):0)}
+    const D=MQ170.S;if(D){[D.cliff.g,D.drill.g,D.con].concat(D.box.map(b=>b.g)).forEach(o=>zc214Vis(S,o,i===3));if(i===3)D.box.forEach((B,j)=>{if(B.halo)B.halo.scale.setScalar(1.1*(1+.15*Math.sin(tt*3+j)))})}}};
+
+// ---------------- Searing Sands ----------------
+ZC214.Z[3]={den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'scorp',29,8.5,1.5,1,1.1,.4],[1,'selem',29,9.5,-4.5,1,.8,.2],[2,'tombpriest',31,11,3,-1,.6,0],[2,'scarab',31,8,-2,1,1,.3],[2,'scarab',31,9,-4,1,1,.6],[3,'saltgolem',34,9,4,-1,.7,0],[3,'dustwyrm',34,11,-4,1,.9,.4]],name:'Searing Sands',ess:'the Devourer',key:{dr:[46.25,69.3,92.5],ch:[369.99,440,554.37,659.25],toll:92.5,bed:'heat'},rise:-11,
+  lines:[{a:1.0,b:3.6,s:'The Searing Sands bury everything they touch.'},
+    {a:4.4,b:9.0,s:'Temples… kings… whole cities sleep beneath the dunes.'},
+    {a:10.2,b:14.8,s:'A broken warden waits in his court to be made whole.'},
+    {a:16.0,b:20.6,s:'Past the salt, no one crosses the waste on foot.'},
+    {a:21.8,b:26.2,s:'Dig, Upright. Build. Ride into the storm.'},
+    {a:27.2,b:31.2,s:'Beneath it all, Ssith’ra feeds… endless, and always hungry.'},
+    {a:31.8,b:34.6,s:'Bring me the Devourer’s essence.'}],
+  build(S){const A=S.A;
+    try{const had=!!SD165.g;sd165Build();if(!had)zc214New(S,SD165.g);const T=ss165T1();A.t1={F:T.F,a:T.aF,y:T.yP}}catch(e){console.warn('zc214 temple',e)}
+    try{const had=!!CY165.g;cy165Build();if(!had)zc214New(S,CY165.g);const T=ss165T2();A.t2={F:T.F,y:T.y0,al:T.altar}}catch(e){console.warn('zc214 court',e)}
+    try{if(!SC165.made){SC165.made=1;sc165Sync();SC165.cols.forEach(C=>{if(C&&C.g)zc214New(S,C.g)})}A.col=sc165Spots()}catch(e){console.warn('zc214 salt',e)}
+    try{const had=!!CS165.g;cs165Build();if(!had){zc214New(S,CS165.g);if(CS165.vis)zc214New(S,CS165.vis)}const T=ss165T3();A.t3={F:T.F,cr:T.cr,edge:T.edge,y:T.y0}}catch(e){console.warn('zc214 yard',e)}},
+  cam(S,i,k,t){const A=S.A,Sm=ic151Sm,Io=ic151Io,q=Sm(k),G=zc214V;
+    if(i===1&&A.t1){const F=A.t1.F,a=A.t1.a,[px,pz]=F.W2(a-28+8*Io(k),6-5*q),[lx,lz]=F.W2(a,0);return {p:G(px,pz,4.4-1.2*q),l:new THREE.Vector3(lx,A.t1.y+1.6,lz),fov:48,F:G(...F.W2(a-8,0))}}
+    if(i===2&&A.t2){const F=A.t2.F,al=A.t2.al||{a:6,b:0},[px,pz]=F.W2(-13+6*Io(k),-5+7*q),[lx,lz]=F.W2(al.a,al.b);return {p:G(px,pz,4.2-1.2*q),l:G(lx,lz,1.6),fov:50,F:G(F.x,F.z)}}
+    if(i===3&&A.col){const c=A.col[1]||A.col[0],R=zc214Road(insG(3,2),.34),a=.8-.9*q,ca=Math.cos(a),sa=Math.sin(a),ox=R.fx*ca+R.sx*sa,oz=R.fz*ca+R.sz*sa,r=13-3*q;return {p:G(c.x+ox*r,c.z+oz*r,1.6+1.2*q),l:G(c.x,c.z,2.6),fov:48,F:G(c.x,c.z)}}
+    if(i===4&&A.t3){const F=A.t3.F,cr=A.t3.cr,[px,pz]=F.W2(cr.a-14+4*Io(k),-7+4*q),[lx,lz]=F.W2(cr.a+2+20*Sm(ic151K(k,.35,1)),0);return {p:G(px,pz,3.0+1.6*q),l:new THREE.Vector3(lx,(A.t3.y||GH(lx,lz))+1.4,lz),fov:52,F:G(...F.W2(cr.a,0))}}
+    return null},
+  frame(S,i,t,now,dt){if(SD165.g)zc214Vis(S,SD165.g,i===1);if(CY165.g)zc214Vis(S,CY165.g,i===2);
+    try{SC165.cols.forEach(C=>{if(C&&C.g)zc214Vis(S,C.g,i===3)});SC165.picks.forEach(q=>zc214Vis(S,q.g,false))}catch(_){}
+    if(CS165.g){zc214Vis(S,CS165.g,i===4);if(CS165.vis)zc214Vis(S,CS165.vis,i===4);try{const R=CS165.R;if(R&&i===4){R.J.sail.rotation.y=Math.sin(t*2.3)*.35}}catch(_){}}}};
+
+// ---------------- The Dirge (the graveyard) ----------------
+ZC214.Z[4]={fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38,8,-3.5,1,.6,0],[1,'ghoul',38,10,3.5,-1,.7,.5],[2,'bonearcher',38,8,3,-1,.5,0],[2,'skeleton',38,10,-3,1,.55,.4],[3,'drowned',40,8,-3,1,.5,0],[3,'banshee',40,10,3,-1,.7,.3],[4,'bonehound',42,12,-4,1,1.1,.2],[4,'colossus',42,15,3,-1,.5,0],[4,'bonehound',42,13,-7,1,1.1,.6]],name:'The Dirge',ess:'the Rot-King',key:{dr:[43.65,65.41,87.31],ch:[349.23,415.3,523.25,622.25],toll:87.31,bed:'murmur'},rise:-5,
+  lines:[{a:1.0,b:3.6,s:'The Dirge. Its dead never rest.'},
+    {a:4.4,b:9.0,s:'A weeping angel keeps watch over a field of graves…'},
+    {a:10.2,b:14.8,s:'…and only one of them is a door.'},
+    {a:16.0,b:20.6,s:'Below, the black channel carries the drowned into the dark.'},
+    {a:21.8,b:26.2,s:'Five runes hold the last gate shut. Light them, Upright.'},
+    {a:27.2,b:31.2,s:'The Bloated One gorges on the dead of this place.'},
+    {a:31.8,b:34.6,s:'Bring me the Rot-King’s essence.'}],
+  build(S){const A=S.A;
+    {const G=zc214Gate(S,'sanctum');if(G)A.ang=G.spot}
+    try{const had=!!DG165GR.S;dg165GBuild();if(!had)zc214New(S,DG165GR.S.root);A.gr=dg165GravePlan().G}catch(e){console.warn('zc214 graves',e)}
+    {const G=zc214Gate(S,'channel');if(G)A.quay=G.spot}
+    try{const had=!!OS165.S;os165Build();const Q=OS165.S;if(!had){Q.pr.forEach(M=>zc214New(S,M.g));zc214New(S,Q.R.g)}const P=dg165PrismPlan();A.ctr=P.ctr;A.pr=P.pr}catch(e){console.warn('zc214 prisms',e)}},
+  cam(S,i,k,t){const A=S.A,Sm=ic151Sm,Io=ic151Io,q=Sm(k),G=zc214V;
+    if(i===1&&A.ang){const s=A.ang,fx=-s.ux,fz=-s.uz,sx=fz,sz=-fx,r=14-6*Io(k);return {p:G(s.x+fx*r+sx*(-3+2*q),s.z+fz*r+sz*(-3+2*q),1.4+.8*q),l:G(s.x,s.z,2.6+.4*q),fov:46,F:G(s.x+fx*6,s.z+fz*6)}}
+    if(i===2&&A.gr&&A.gr.length){const o=A.gr.find(g=>g.i===DG165G.K)||A.gr[0],a=o.ry+.95-.6*q,R=7-2.4*Io(k),hx=o.x-Math.sin(o.ry)*.8,hz=o.z-Math.cos(o.ry)*.8;
+      return {p:G(o.x+Math.sin(a)*R,o.z+Math.cos(a)*R,1.5-.3*q),l:G(hx,hz,1.0),fov:46,F:G(o.x,o.z)}}
+    if(i===3&&A.quay){const s=A.quay,fx=-s.ux,fz=-s.uz,sx=fz,sz=-fx,r=15-5*Io(k);return {p:G(s.x+fx*r+sx*(5-4*q),s.z+fz*r+sz*(5-4*q),2.4+.8*q),l:G(s.x,s.z,1.6),fov:48,F:G(s.x+fx*6,s.z+fz*6)}}
+    if(i===4&&A.ctr){const c=A.ctr,a=-2.4+.9*q,r=24-6*Io(k);return {p:G(c.x+Math.cos(a)*r,c.z+Math.sin(a)*r,6.5-2.5*q),l:G(c.x,c.z,2.2),fov:54,F:G(c.x,c.z)}}
+    return null},
+  frame(S,i,t,now,dt){const tt=now/1000;try{const Ga=SP152.gates.sanctum;if(Ga&&Ga.g)zc214Vis(S,Ga.g,i===1||i===2)}catch(_){}
+    try{const Q=DG165GR.S;if(Q){zc214Vis(S,Q.root,i===1||i===2);if(i===1||i===2)Q.gr.forEach((g,j)=>{if(g.wisp){g.wisp.position.y=2.3+.15*Math.sin(tt*1.3+j);g.wisp.material.opacity=.32+.14*Math.sin(tt*2.1+j*1.7)}})}}catch(_){}
+    try{const Gc=SP152.gates.channel;if(Gc&&Gc.g)zc214Vis(S,Gc.g,i===3)}catch(_){}
+    try{const Q=OS165.S;if(Q){Q.pr.forEach((M,j)=>{zc214Vis(S,M.g,i===4);zc214Lit(S,M.lt,i===4?1.6:0);if(i===4){M.cr.rotation.y=tt*.6+j;M.cr.position.y=3.6+.18*Math.sin(tt*1.2+j);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y}});zc214Vis(S,Q.R.g,i===4)}}catch(_){}}};
+
+// ---------------- The Citadel ----------------
+ZC214.Z[5]={fill:[0xff8a8a,.9],den:[0xffa080,6.0],dim:.12,denK:.72,rel:[[1,'vamp',46,10,-3,1,.6,0],[1,'vampk',46,12,3.5,-1,.5,.3],[1,'bloodbat',46,8,0,1,1.2,.2],[2,'bloodhound',48,12,-5,1,.9,0],[2,'gargoyle',48,14,5,-1,.6,.4]],name:'The Citadel',ess:'the Crimson King',key:{dr:[38.89,58.27,77.78],ch:[311.13,369.99,466.16,554.37],toll:77.78,bed:'pulse'},rise:0,
+  lines:[{a:1.0,b:3.6,s:'The Citadel. The last court of the Crimson King.'},
+    {a:4.4,b:9.0,s:'His gates are sealed with blood…'},
+    {a:10.2,b:14.8,s:'…and his hounds sleep in chains.'},
+    {a:16.0,b:20.6,s:'Only the dawn can break the eclipse over his keep.'},
+    {a:21.8,b:26.2,s:'Every soul here was drained to serve him, Upright.'},
+    {a:27.2,b:31.2,s:'Lord Vaelric has fed on this land for a thousand years.'},
+    {a:31.8,b:34.6,s:'End his reign. Bring me his essence.'}],
+  build(S){const A=S.A;
+    try{const had=!!GG205.S;gg205Build();const G=GG205.S;if(!had){zc214New(S,G.g);G.br.forEach(b=>zc214New(S,b))}A.gg=gg205Spot()}catch(e){console.warn('zc214 great gate',e)}
+    try{const had=!!VH205.G;vh205GateBuild();const G=VH205.G;if(!had){zc214New(S,G.g);(VH205.bal||[]).forEach(b=>zc214New(S,b.o))}A.vh=vh205Spot()}catch(e){console.warn('zc214 rampart',e)}
+    // Vharog asleep before the rampart gate: a model of our own (the fight's own only exists while a hero is in II)
+    try{if(A.vh&&!cq205Done(2)){const s=A.vh.sleep;S.vhg=zc214Rig(VH205BOSS,s.x,s.z,s.ry)}}catch(e){console.warn('zc214 vharog',e);S.vhg=null}
+    try{const had=!!DM205.S;dm205Build();const Q=DM205.S;if(!had){[Q.door.g,Q.floor,Q.lens,Q.shaft].concat(Q.st.map(s=>s.o),Q.sh.map(s=>s.o)).forEach(o=>zc214New(S,o))}A.dm=dm205Court()}catch(e){console.warn('zc214 sun court',e)}
+    // III: the court's executioner and nosferatu stalk down the road toward the camera
+    {const C=zc214Road(insG(5,2),.5);A.cr=C;[['executioner',9,-1.6,.9,0],['nosferatu',11.5,2.2,1.0,.5],['nosferatu',14,.3,.95,.9]].forEach(([k,f,s,v,d])=>zc214Cast(S,{sh:4,k,lv:50,x:C.x+C.fx*f+C.sx*s,z:C.z+C.fz*f+C.sz*s,dx:-C.fx,dz:-C.fz,v,t0:21.4+d}))}},
+  cam(S,i,k,t){const A=S.A,Sm=ic151Sm,Io=ic151Io,q=Sm(k),G=zc214V;
+    if(i===1&&A.gg){const F=A.gg.F,a=F.reach,[px,pz]=F.W2(a-30+10*Io(k),5-4*q),[lx,lz]=F.W2(a,0);return {p:G(px,pz,3.0+1.4*q),l:new THREE.Vector3(lx,A.gg.y+5.2,lz),fov:48,F:G(...F.W2(a-8,0))}}
+    if(i===2&&A.vh){const s=A.vh.sleep,F=A.vh.F,a=.9-.5*q,ca=Math.cos(a),sa=Math.sin(a),ox=-F.fx*ca+F.lx*sa,oz=-F.fz*ca+F.lz*sa,r=15-3.5*Io(k);return {p:G(s.x+ox*r,s.z+oz*r,2.6-.6*q),l:G(s.x+F.fx*2.5,s.z+F.fz*2.5,1.6),fov:46,F:G(s.x,s.z)}}
+    if(i===3&&A.dm){const R=A.dm,F=R.F,[px,pz]=F.W2(-14+6*Io(k),-6+5*q),d=R.door;return {p:G(px,pz,2.0+1.6*q),l:new THREE.Vector3(d.x,d.y+4.2,d.z),fov:50,F:G(F.x,F.z)}}
+    return null},
+  frame(S,i,t,now,dt){const tt=now/1000;
+    const Gg=GG205.S;if(Gg){zc214Vis(S,Gg.g,i===1);Gg.br.forEach(b=>{zc214Vis(S,b,i===1);zc214Lit(S,b.userData.l,i===1?1.2+.25*Math.sin(tt*9+b.position.x):0)});
+      if(Gg.seal){zc214Lit(S,Gg.seal.light,i===1?1.2+.5*Math.sin(tt*2.2):0);if(i===1&&!Gg.open)Gg.seal.rings.forEach(r=>{if(r.on)r.m.rotation.z=tt*(r.sp||.3)})}}
+    const Gv=VH205.G;if(Gv){zc214Vis(S,Gv.g,i===2);(VH205.bal||[]).forEach(b=>zc214Vis(S,b.o,i===2))}
+    if(S.vhg){S.vhg.m.visible=i===2;if(i===2){zc214RigPose(S.vhg,VH205BOSS.M.sleep.trk,9,dt,now);try{const ek=ic151Sm(ic151K(t,ZC214.T[3]-1.3,ZC214.T[3]-.9));S.vhg.sv.R.eyeM.color.setRGB(.12+.88*ek,.02+.14*ek,.02+.14*ek)}catch(_){}}}
+    const Q=DM205.S;if(Q){[Q.door.g,Q.floor,Q.lens,Q.shaft].forEach(o=>zc214Vis(S,o,i===3));Q.st.forEach(s=>zc214Vis(S,s.o,i===3));Q.sh.forEach(s=>zc214Vis(S,s.o,i===3));Q.beams.forEach(b=>zc214Vis(S,b,false));
+      zc214Lit(S,Q.ll,i===3?1.3+.2*Math.sin(tt*2):0);if(i===3)Q.shaft.material.opacity=.16+.04*Math.sin(tt*1.3)}}};
+
+// =====================================================================================================================
+// the engine
+// =====================================================================================================================
+function zc214Build(z){const Z=ZC214.Z[z],S={z,Z,A:{},cast:[],props:[],vm:new Map(),lm:new Map(),si:-1,lt:null,t:0,ev:{},fx:[]};
+  // no words in the world: floating name tags and markers are hidden until the hand-back
+  S.tags=[];try{scene.traverse(o=>{if(o.isSprite&&o.visible&&o.material&&o.material.map&&o.material.map.isCanvasTexture){S.tags.push(o);o.visible=false}})}catch(_){}
+  S.H=pl.position.clone();S.yaw=pl.rotation.y;S.near0=cam.near;
+  // the live creatures stand frozen while the game waits: hidden during the tour, back after
+  S.foes=[];try{enemies.forEach(e=>{if(!e.dead&&!e.boss&&e.m&&e.m.visible){S.foes.push(e);e.m.visible=false}})}catch(_){}
+  try{Z.build(S)}catch(e){console.warn('zc214 build',z,e)}
+  zc214Place(S);
+  // the den
+  const D=INSL[insG(z,3)],B=BOSSES[z];S.den={x:B.x,z:B.y};const nx=D.en[0]-S.den.x,nz=D.en[1]-S.den.z,nl=Math.hypot(nx,nz)||1;S.den.nx=nx/nl;S.den.nz=nz/nl;
+  try{const e=(typeof enemies!='undefined'?enemies:[]).find(e=>e.boss&&e.bi===z&&!e.dead&&e.sv&&e.sv.R);
+    if(e){const s=e.sv,busy=!!(s.mv||s.on);S.boss={e,busy,save:{p:e.m.position.clone(),ry:e.m.rotation.y,vis:e.m.visible,hb:e.hb&&e.hb.visible,trk:s.trk,tt:s.tt,aw:s.aw}};
+      if(!busy){S.den.x=e.m.position.x;S.den.z=e.m.position.z;
+        // how tall it stands (the camera keeps its distance by it)
+        try{e.m.position.y=GH(S.den.x,S.den.z);svApply(e,0,performance.now());e.m.updateMatrixWorld(true);const j=s.R.J[s.B.headJ||'head']||s.R.J.head;S.hh=Math.max(1.6,j.getWorldPosition(new THREE.Vector3()).y-GH(S.den.x,S.den.z))}catch(_){S.hh=4}}}}catch(e){console.warn('zc214 boss',e);S.boss=null}
+  if(!S.hh)S.hh=4;S.sc=Math.max(.55,Math.min(1.7,S.hh/5.5))*(Z.denK||1);
+  // a light on the subject: a soft fill in the field shots (dark zones), a key light on the Sovereign in its den
+  S.lgt=new THREE.PointLight(0xffffff,0,30,1.5);scene.add(S.lgt);
+  return S}
+function zc214Shot(t){const T=ZC214.T;let i=0;while(i<T.length-1&&t>=T[i+1])i++;const b=i<T.length-1?T[i+1]:ZC214.cut;return {i,k:Math.max(0,Math.min(1,(t-T[i])/(b-T[i])))}}
+// the cameras: the zone's own for shots 1–4; the opening on the hero and the den are the same for every zone
+function zc214Cam(S,i,k,t){const V=THREE.Vector3,Io=ic151Io,Sm=ic151Sm,K=ic151K;let c=null;
+  if(i>=1&&i<=4)try{c=S.Z.cam(S,i,k,t)}catch(e){if(!S.ce){S.ce=1;console.warn('zc214 cam',e)}}
+  if(c)return c;
+  // a shot of creatures stalking down the road toward a low camera (as 3810's Galecliffs)
+  if(i===4&&S.A.cr){const C=S.A.cr,q=Sm(k),m=S.cast.find(o=>o.sh===4),l=m&&m.cx!=null?zc214V(m.cx,m.cz,1.5*(m.hs||1)):zc214V(C.x+C.fx*10,C.z+C.fz*10,1.5);
+    return {p:zc214V(C.x+C.sx*.6-C.fx*.6*q,C.z+C.sz*.6-C.fz*.6*q,.8),l,fov:46,F:zc214V(C.x+C.fx*6,C.z+C.fz*6,0)}}
+  if(i===0||i<5){const H=S.H,fw=new V(Math.sin(S.yaw),0,Math.cos(S.yaw)),sd=new V(fw.z,0,-fw.x),kk=i===0?k:1,q=Io(K(kk,.3,1));
+    const p=H.clone().addScaledVector(fw,-3.1-.4*kk+8*q).addScaledVector(sd,1.0-.5*q).add(new V(0,1.75+14*q,0)),l=H.clone().addScaledVector(fw,6).add(new V(0,1.3,0)).lerp(H.clone().addScaledVector(fw,55).add(new V(0,2,0)),Sm(K(kk,.25,1)));
+    return {p,l,fov:46+6*q,F:H}}
+  // the den: the slow approach out of the dark as it wakes, then close and low as it roars
+  const D=S.den,c0=zc214V(D.x,D.z,0),sx=-D.nz,sz=D.nx,s=S.sc,R=ZC214.roar,hh=S.hh;
+  if(t<R+.35){const q=Sm(K(t,ZC214.T[5],R+.35));const p=c0.clone().add(new V(D.nx*(27-6*q)*s+sx*(4-5*q)*s,1.3+.6*q,D.nz*(27-6*q)*s+sz*(4-5*q)*s));
+    const l=c0.clone().add(new V(0,hh*(.45+.35*Sm(K(t,ZC214.rise[0],ZC214.rise[1]))),0));return {p,l,fov:46,F:c0}}
+  const q=Sm(K(t,R+.35,ZC214.cut)),h=S.bh||c0.clone().add(new V(0,hh,0)),p=c0.clone().add(new V(D.nx*(13.5-2*q)*s+sx*2.4*s,1.1,D.nz*(13.5-2*q)*s+sz*2.4*s));
+  const l=h.clone().lerp(c0.clone().add(new V(0,h.y-c0.y,0)),.5).add(new V(0,-.8*s,0));return {p,l,fov:54-5*q,F:c0}}
+// the Sovereign: hidden until the den, rising (or descending) into view, then its own intro move as the voice names it
+function zc214Boss(S,i,t,now,dt){const B=S.boss;if(!B||B.busy)return;const e=B.e,s=e.sv,D=S.den,K=ic151K,Sm=ic151Sm,on=i===5;e.m.visible=on;if(e.hb)e.hb.visible=false;if(!on)return;
+  const rk=ic151Oc(K(t,ZC214.rise[0],ZC214.rise[1])),dy=S.Z.rise||0,y0=GH(D.x,D.z);e.m.position.set(D.x,y0+dy*S.sc*(1-rk),D.z);e.m.rotation.y=Math.atan2(D.nx,D.nz);
+  const Q=s,Bd=s.B,O=s.O;for(const k in O){const o=O[k];o[0]=o[1]=o[2]=o[3]=o[4]=o[5]=0}
+  try{Bd.loco&&Bd.loco(e,Q,O,dt,now)}catch(_){}
+  const M=Bd.M&&Bd.M.intro,u=t-ZC214.roar;if(M&&u>-.05){const Pz=svSample(Bd,{snap:{}},M.trk,Math.max(0,u),Q.P,now),w=Sm(K(u,-.05,.35));for(const k in Pz){const p=Pz[k],o=O[k];if(!p||!o)continue;for(let q=0;q<6;q++)o[q]+=(p[q]-o[q])*w}}
+  for(const k in O){const g=s.R.J[k];if(!g)continue;const o=O[k],r0=g.userData.r0,p0=g.userData.p0;g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+o[3],p0.y+o[4],p0.z+o[5])}
+  try{Bd.post&&Bd.post(e,Q,0,now)}catch(_){}
+  // a ghost fades in as it comes down (the Wraith)
+  if(S.Z.riseFade&&s.R.mats){const a=.15+.85*rk;s.R.mats.forEach(m=>{if(m.userData.zc214o==null){m.userData.zc214o=m.opacity;m.userData.zc214t=m.transparent}m.transparent=true;m.opacity=m.userData.zc214o*a})}
+  try{e.m.updateMatrixWorld(true);const j=s.R.J[Bd.headJ||'head']||s.R.J.head;if(j)S.bh=j.getWorldPosition(S.bh||new THREE.Vector3())}catch(_){}
+  // its voice
+  const ev=(k,a,fn)=>{if(!S.ev[k]&&t>=a){S.ev[k]=1;if(t<a+.5)try{fn()}catch(_){}}},c=new THREE.Vector3(D.x,y0,D.z);
+  ev('h0',ZC214.rise[0]-.2,()=>svSnd('hiss',.5,.5));ev('sp',ZC214.rise[0]+.5,()=>{if(dy<0)burst(gY(c,.2),S.z===3?0xd8b070:0x4a5a48,60,4*S.sc,4,.8)});
+  ev('ro',ZC214.roar+1.5,()=>{svSnd('roar',1,S.z===5?.8:1.0);svSnd('shriek',.5,S.z===2?1.2:.8);if(dy<0)burst(gY(c,.2),S.z===3?0xd8b070:0x4a5a48,50,4*S.sc,4,.7)})}
+function zc214Frame(S,t){const now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt==null?0:t-S.lt));S.lt=t;const sh=zc214Shot(t),i=sh.i;
+  try{S.Z.frame(S,i,t,now,dt)}catch(e){if(!S.fe){S.fe=1;console.warn('zc214 zone frame',e)}}
+  zc214Boss(S,i,t,now,dt);
+  // the stand-ins: only in their own shot, walking (a pure function of t)
+  S.cast.forEach(C=>{const on=C.sh===i;C.m.visible=on;if(!on)return;const u=Math.max(0,t-C.t0),x=C.x+C.dx*C.v*u,z=C.z+C.dz*C.v*u;C.cx=x;C.cz=z;C.m.position.set(x,GH(x,z),z);C.m.rotation.y=Math.atan2(C.dx,C.dz);
+    try{animC(C.m,now,u>0,C.v*1.6)}catch(_){try{if(C.m.rig)C.m.rig(now,u>0,C.v)}catch(_){}}});
+  const c0=zc214Cam(S,i,sh.k,t);
+  // the camera, a shake on the roar
+  const c=c0,sk=i===5?.16*Math.max(0,1-Math.abs(t-(ZC214.roar+1.75))/.9):0;
+  if(sk>0){c.p.x+=(ic151H(t*40)-.5)*sk;c.p.y+=(ic151H(t*43+1)-.5)*sk;c.l.x+=(ic151H(t*37+2)-.5)*sk*1.6}
+  c.p.y=Math.max(c.p.y,GH(c.p.x,c.p.z)+.45);
+  cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
+  // draw only the instance being shown; settle its sky and fog on the first frame of a shot
+  const F=c.F;hc208Focus(F,()=>{try{chunkVis()}catch(_){}
+    try{if(S.si!==i){for(let n=0;n<40;n++)atmos(.05,now)}else atmos(dt,now)}catch(_){}
+    try{townLights(F)}catch(_){}});
+  if(i===5)try{scene.fog.density=Math.min(scene.fog.density,.03)}catch(_){}
+  {const L=S.lgt,Z=S.Z,f=i===5?Z.den:i>0?Z.fill:null;if(f&&L){const w=i===5?ic151Sm(ic151K(t,ZC214.T[5],ZC214.rise[1])):1;L.color.setHex(f[0]);L.intensity=f[1]*w;L.distance=i===5?30*S.sc+10:30;
+      L.position.set(F.x+(c.p.x-F.x)*.45,F.y+(i===5?S.hh*1.2:5),F.z+(c.p.z-F.z)*.45)}else if(L)L.intensity=0}
+  S.si=i;WIND.t.value=now/1000;try{torch.position.set(F.x,GH(F.x,F.z)+2.2,F.z+.3);if(i>0)torch.intensity*=.6}catch(_){}
+  try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(cam.position)}catch(_){}
+  if(i===5&&S.boss&&!S.boss.busy){const keep=KQ.fx;KQ.fx=S.fx;try{fxStep(dt);kqFxTick(dt)}catch(_){}finally{S.fx=KQ.fx;KQ.fx=keep}}else try{fxStep(dt)}catch(_){}
+  if(!ZC214.noDraw){let zp=null;if(typeof kc208ZpClear=='function'){const r0=KC208.zpR;KC208.zpR=7;try{zp=kc208ZpClear()}finally{KC208.zpR=r0}}try{POST.render()}finally{if(zp)kc208ZpBack(zp)}}}
+
+// ---------------- the page layer: letterbox, the voice's subtitles, the den's dark, fades, skip (as 3810) ----------------
+function zc214Css(){if(document.getElementById('zc214css'))return;ic151Css();ic151DCss();const s=document.createElement('style');s.id='zc214css';s.textContent=
+  '#zc214{position:fixed;inset:0;z-index:2147483000;overflow:hidden;cursor:none;user-select:none;pointer-events:auto;background:transparent}'+
+  '#zc214 .lb{position:absolute;left:0;right:0;height:11vh;background:#000;z-index:3;pointer-events:none}#zc214 .lb.t{top:0}#zc214 .lb.b{bottom:0}'+
+  '#zc214 .fk{position:absolute;inset:0;background:#000;z-index:4;pointer-events:none}'+
+  '#zc214 .vg{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 30%,rgba(6,6,12,.55) 68%,rgba(0,0,4,.92) 100%)}'+
+  '#zc214 .sub{position:absolute;left:6%;right:6%;bottom:17vh;text-align:center;z-index:5;pointer-events:none;font-family:"IM Fell English SC","Cinzel Decorative",Georgia,serif;font-size:clamp(20px,3.2vw,44px);letter-spacing:.06em;color:#fff;line-height:1.2}'+
+  '#zc214 .sub span{display:inline-block;white-space:pre;text-shadow:0 0 3px rgba(10,16,50,.95),0 0 14px rgba(14,24,70,.85),-2px 0 rgba(90,200,255,.6),2px 0 rgba(255,120,220,.5)}'+
+  '#zc214 .skip{position:absolute;right:22px;bottom:calc(11vh + 14px);z-index:6;cursor:pointer;background:rgba(10,8,16,.45);color:#e8e0d0;border:1px solid rgba(232,224,208,.35);border-radius:4px;font:600 13px/1 "Cinzel Decorative",Georgia,serif;letter-spacing:.08em;padding:8px 14px;opacity:.7}'+
+  '#zc214 .skip:hover{opacity:1;background:rgba(30,24,40,.7)}';document.head.appendChild(s)}
+function zc214Layer(S){zc214Css();const el=document.createElement('div');el.id='zc214';
+  el.innerHTML='<div class="vg"></div><div class="lb t"></div><div class="lb b"></div><div class="sub"></div><div class="fk"></div><button class="skip">Skip ›</button>';
+  document.body.appendChild(el);S.dom={el,lt:el.querySelector('.lb.t'),lb:el.querySelector('.lb.b'),sub:el.querySelector('.sub'),vg:el.querySelector('.vg'),fk:el.querySelector('.fk'),skip:el.querySelector('.skip'),cur:null,sp:[]}}
+function zc214Dom(S,t){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm,C=ZC214.cut,T5=ZC214.T[5];
+  const lb=(11*(1-Sm(K(t,C+.5,ZC214.len-.3))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
+  // black: out of black at the start, a short dip at each cut, a hard cut on the roar's end, back out of black into the game
+  let fk=t<C?1-K(t,0,1.2):1-K(t,C+.25,C+1.6);if(t<C)for(let j=1;j<ZC214.T.length;j++){const a=ZC214.T[j],w=j===5?.5:.28;fk=Math.max(fk,K(t,a-w,a)*(1-K(t,a,a+w*1.4)))}
+  D.fk.style.opacity=fk.toFixed(3);
+  const dk=t>=T5&&t<C?Sm(K(t,T5,T5+1)):0;D.vg.style.opacity=dk.toFixed(3);
+  try{const c=ren.domElement;if(dk>0){c.style.transition='none';c.style.filter='brightness('+(1-(S.Z.dim==null?.38:S.Z.dim)*dk).toFixed(3)+') saturate('+(1-.2*dk).toFixed(3)+') contrast('+(1+.18*dk).toFixed(3)+')'}else if(c.style.filter)c.style.filter=''}catch(_){}
+  // the voice (the intro's subtitles: letters drift in out of a blur, the line breathes and glitches)
+  const L=S.Z.lines.find(x=>t>=x.a-.1&&t<x.b+.6);if(L!==D.cur){D.cur=L;D.sub.innerHTML='';D.sp=[];if(L){L.s.split(/( )/).forEach(w=>{if(!w)return;let box=D.sub;if(w!==' '){box=document.createElement('span');box.className='w';D.sub.appendChild(box)}for(const ch of w){const e=document.createElement('span');e.textContent=ch;box.appendChild(e);D.sp.push(e)}})}}
+  if(L){const out=K(t,L.b,L.b+.6);D.sp.forEach((e,i)=>{const k=K(t,L.a+i*.045,L.a+i*.045+.55),fr=Math.floor(t*14),gl=ic151H(fr*1.7+i*3.1)>.93?1:0,jx=(ic151H(fr+i*.7)-.5)*2.4*(1+gl*3),jy=(ic151H(fr*1.3+i)-.5)*1.6;
+    e.style.opacity=(k*(1-out)*(.85+.15*Math.sin(t*7+i))).toFixed(3);e.style.filter='blur('+((1-k)*7+out*6+gl*1.5).toFixed(2)+'px)';e.style.transform='translate('+jx.toFixed(2)+'px,'+(jy+(1-k)*8).toFixed(2)+'px) scale('+(1+(1-k)*.25).toFixed(3)+')'})}
+  D.skip.style.visibility=t<ZC214.skipT?'':'hidden'}
+
+// ---------------- sound: the voice's drone and far choir in the zone's key, the zone's air, tolls on the cuts, the den ----------------
+function zc214Score(ac,out,T0,Z){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.gain.value=v||0;return g},E=ZC214.cut,Kz=Z.key;
+  const NB=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),nd=NB.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const rv=ac.createConvolver(),IR=ac.createBuffer(2,ac.sampleRate*3.4,ac.sampleRate);for(let c=0;c<2;c++){const d=IR.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4)}rv.buffer=IR;const wet=G(.5);rv.connect(wet);wet.connect(out);
+  const route=(n,o)=>{const d=G(o.dry==null?1:o.dry);n.connect(d);d.connect(out);if(o.wet){const w=G(o.wet);n.connect(w);w.connect(rv)}};
+  const env=(g,a,dur,pk,at,rel)=>{g.gain.setValueAtTime(0,T(a));g.gain.linearRampToValueAtTime(pk,T(a+at));g.gain.setValueAtTime(pk,T(a+Math.max(at,dur-rel)));g.gain.linearRampToValueAtTime(0,T(a+dur))};
+  const osc=(type,f,a,dur,pk,at,rel,o)=>{if(T(a+dur)<ac.currentTime-.01)return;o=o||{};const s=ac.createOscillator();s.type=type;s.frequency.setValueAtTime(f,T(a));if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,T(a+(o.ft||dur)));if(o.det)s.detune.value=o.det;
+    const g=G(0);env(g,a,dur,pk,at,rel);let n=g;s.connect(g);if(o.lp){const fl=ac.createBiquadFilter();fl.type='lowpass';fl.frequency.value=o.lp;g.connect(fl);n=fl}route(n,o);s.start(T(a));s.stop(T(a+dur+.05))};
+  const noise=(a,dur,pk,at,rel,ft,f,q,o)=>{if(T(a+dur)<ac.currentTime-.01)return;o=o||{};const s=ac.createBufferSource();s.buffer=NB;s.loop=true;const fl=ac.createBiquadFilter();fl.type=ft;fl.frequency.setValueAtTime(f,T(a));if(o.f2)fl.frequency.exponentialRampToValueAtTime(o.f2,T(a+dur));fl.Q.value=q||1;
+    const g=G(0);env(g,a,dur,pk,at,rel);s.connect(fl);fl.connect(g);route(g,o);s.start(T(a),Math.random());s.stop(T(a+dur+.05))};
+  // the zone's air under everything
+  if(Kz.bed==='wind'){noise(0,E,.05,2,2,'bandpass',900,.5,{wet:.4});noise(0,E,.03,2,2,'highpass',2400,.4,{wet:.3})}
+  else if(Kz.bed==='heat'){noise(0,E,.04,2,2,'bandpass',520,.4,{wet:.3});noise(0,E,.05,2,2,'lowpass',160,.7,{wet:.2})}
+  else if(Kz.bed==='murmur'){noise(0,E,.05,2,2,'lowpass',140,.8,{wet:.3});noise(0,E,.018,2,2,'bandpass',1400,3,{wet:1})}
+  else {noise(0,E,.04,2,2,'lowpass',220,.7,{wet:.3});for(let a=1.2;a<E-1;a+=1.6){osc('sine',48,a,.3,.22,.005,.28,{f2:34,ft:.26});osc('sine',46,a+.22,.24,.14,.005,.22,{f2:33,ft:.2})}}
+  // the voice: a low drone and a far choir under the words
+  Kz.dr.forEach((f,i)=>osc('sawtooth',f,.2,E-.1,.03-i*.006,3,1.2,{lp:300,wet:.5,det:i*5}));
+  Kz.ch.forEach((f,i)=>osc('sine',f,.8+i*.5,E-1.2,.011,3.5,1.4,{wet:1.3,dry:.4,det:(i%2?6:-6)}));
+  // a toll at every cut, sinking
+  ZC214.T.slice(1).forEach((a,i)=>{const f=Kz.toll*Math.pow(.944,i);osc('sine',f,a+.03,2.4,.2,.01,2.3,{wet:.8});osc('sine',f*4,a+.03,2,.025,.02,1.9,{wet:1})});
+  // the den: a dissonant swell as it wakes, cut dead to black on the roar
+  [Kz.dr[0]*1.42,Kz.dr[0]*1.5,Kz.dr[0]*2.12].forEach((f,i)=>osc('sawtooth',f,ZC214.rise[0]-.6,E-ZC214.rise[0]+.5,.03,2.2,.06,{lp:420+i*60,wet:.7,det:i*9}));
+  osc('sine',Kz.dr[0]*.9,E,2.6,.32,.01,2.5,{wet:.6});osc('sine',Kz.dr[0]*1.8,E+.02,2.2,.05,.01,2.1,{wet:1})}
+
+// ---------------- play / skip / finish ----------------
+function zc214Play(I){if(ZC214.run)return false;let S;try{S=zc214Build(I.z)}catch(e){console.warn('zc214 build',e);return false}
+  S.I=I;ZC214.S=S;ZC214.run=true;ZC214.seen|=zc214Bit(I.z);IC151.on=true;document.body.classList.add('ic151d');S.fov0=cam.fov;zc214Layer(S);
+  const L=S.live={t0:performance.now(),off:0,raf:0,ac:null};
+  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9*Math.max(.15,Math.min(1,typeof SET!='undefined'&&SET.sfxV!=null?+SET.sfxV*1.4:1));out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();zc214Score(ac,out,ac.currentTime+.05,S.Z)}catch(e){console.warn('zc214 sound',e)}
+  try{if(typeof MU!='undefined'&&MU.g&&MU.a){L.mu=1;MU.g.gain.setTargetAtTime(0,MU.a.currentTime,.1)}}catch(_){}
+  const onKey=e=>{if(!ZC214.run)return;e.stopImmediatePropagation();e.preventDefault();if(e.type=='keydown'&&/^(Escape|Enter| |Spacebar)$/.test(e.key))zc214Skip()};L.onKey=onKey;
+  addEventListener('keydown',onKey,true);addEventListener('keyup',onKey,true);S.dom.skip.onclick=e=>{e.stopPropagation();zc214Skip()};
+  S.dom.el.addEventListener('mousemove',()=>{S.dom.el.style.cursor='default';clearTimeout(L.cur);L.cur=setTimeout(()=>{if(S.dom)S.dom.el.style.cursor=''},1500)});
+  const tick=now=>{if(!ZC214.run)return;L.raf=requestAnimationFrame(tick);zc214Seek(Math.max(L.off,(now-L.t0)/1000+L.off));
+    try{if(MP&&MP.on&&party.length&&now-(L.pt||0)>500){L.pt=now;mpPresence(now)}}catch(_){}};
+  L.raf=requestAnimationFrame(tick);return true}
+function zc214Seek(t){const S=ZC214.S;if(!S)return;S.t=t;
+  if(t<ZC214.cut){IC151.on=true;try{zc214Frame(S,t)}catch(e){console.warn('zc214 frame',e);ZC214.err=String(e&&e.stack||e);if(S.live)S.live.off+=ZC214.cut-t;t=ZC214.cut}}
+  if(t>=ZC214.cut&&!S.back)zc214Back(S);
+  zc214Dom(S,t);if(t>=ZC214.len)zc214End()}
+function zc214Skip(){const S=ZC214.S,L=S&&S.live;if(!L)return;const t=(performance.now()-L.t0)/1000+L.off;if(t>=ZC214.skipT)return;L.off+=ZC214.skipT-t;
+  try{if(L.out){L.out.gain.cancelScheduledValues(L.ac.currentTime);L.out.gain.setTargetAtTime(0,L.ac.currentTime,.12)}}catch(_){}}
+// hand the game back (at the cut to black): everything shown is put back, the camera returns behind the hero, the loop runs again
+function zc214Back(S){if(S.back)return;S.back=1;
+  try{S.cast.forEach(C=>{if(C.m.parent)C.m.parent.remove(C.m)});S.cast=[]}catch(_){}   // models only: their kits may be shared, nothing disposed
+  // our own Vharog: its materials are its own (freed, as 3810 frees its own Hydra); kit geometry may be shared, so only svOwn is
+  try{const v=S.vhg;if(v){if(v.m.parent)v.m.parent.remove(v.m);const R=v.sv.R;R.mats.forEach(m=>m.dispose());R.glow.forEach(m=>m.dispose());R.root.traverse(o=>{if(o.geometry&&o.geometry.userData.svOwn)o.geometry.dispose()})}S.vhg=null}catch(_){}
+  try{if(S.lgt&&S.lgt.parent)S.lgt.parent.remove(S.lgt);S.lgt=null}catch(_){}
+  try{S.vm.forEach((v,o)=>{o.visible=v});S.vm.clear();S.lm.forEach((v,l)=>{l.intensity=v});S.lm.clear()}catch(e){console.warn('zc214 put back',e)}
+  try{(S.fx||[]).forEach(o=>KQ.fx.push(o));S.fx=[]}catch(_){}
+  try{(S.tags||[]).forEach(o=>{o.visible=true});S.tags=[];(S.foes||[]).forEach(e=>{if(e.m)e.m.visible=true});S.foes=[]}catch(_){}
+  try{const B=S.boss;if(B&&!B.busy){const e=B.e,v=B.save,s=e.sv;e.m.position.copy(v.p);e.m.rotation.y=v.ry;e.m.visible=v.vis;if(e.hb)e.hb.visible=!!v.hb;s.trk=v.trk;s.tt=v.tt;s.aw=v.aw;
+      if(s.R.mats)s.R.mats.forEach(m=>{if(m.userData.zc214o!=null){m.opacity=m.userData.zc214o;m.transparent=m.userData.zc214t;delete m.userData.zc214o;delete m.userData.zc214t}});try{svApply(e,0,performance.now())}catch(_){}}}catch(e){console.warn('zc214 boss back',e)}
+  try{ren.domElement.style.filter='';cam.near=S.near0||.1}catch(_){}
+  try{document.body.classList.remove('ic151d');cam.fov=S.fov0||58;cam.updateProjectionMatrix();snapCam();chunkVis();for(let n=0;n<40;n++)atmos(.05,performance.now())}catch(e){console.warn('zc214 back',e)}
+  IC151.on=false;try{if(S.live&&S.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}
+  // the zone's title card, held back while the cinematic played
+  setTimeout(()=>{try{const I=curIns();if(S.I&&I&&I.z===S.z)zt116Ins(I)}catch(_){}},500)}
+function zc214End(){if(!ZC214.run)return;const S=ZC214.S,L=S&&S.live;ZC214.run=false;
+  try{if(S&&!S.back)zc214Back(S)}catch(_){}
+  try{if(L){cancelAnimationFrame(L.raf);removeEventListener('keydown',L.onKey,true);removeEventListener('keyup',L.onKey,true);clearTimeout(L.cur);
+    if(L.ac){const ac=L.ac;try{L.out.gain.setTargetAtTime(0,ac.currentTime,.3)}catch(_){}setTimeout(()=>{try{ac.close()}catch(_){}},1500)}}}catch(_){}
+  try{if(S&&S.dom)S.dom.el.remove()}catch(_){}ZC214.S=null}
+// capture mode for tests: build, no sound, no clock; then zc214Seek(t) per frame
+function zc214Cap(z){if(ZC214.run)return null;const T0=performance.now(),S=zc214Build(z);S.I=curIns();ZC214.S=S;ZC214.run=true;IC151.on=true;document.body.classList.add('ic151d');S.fov0=cam.fov;zc214Layer(S);S.dom.skip.style.display='none';
+  return {ms:Math.round(performance.now()-T0),z,A:Object.keys(S.A).filter(k=>S.A[k]),cast:S.cast.map(C=>C.k),boss:S.boss?(S.boss.busy?'busy':'den'):null,hh:+S.hh.toFixed(2),vharog:!!S.vhg}}
+
+// ---------------- when: the first arrival in the zone; the zone card waits for the end ----------------
+{const f=insArrive;insArrive=function(I){const want=zc214Want(I);if(want)ZC214.hold=1;let r;try{r=f.apply(this,arguments)}finally{ZC214.hold=0}
+  if(want){let ok=false;try{ok=zc214Play(I)}catch(e){console.warn('zc214',e)}if(!ok)try{zt116Ins(I)}catch(_){}}return r}}
+{const f=zt116Ins;zt116Ins=function(){if(ZC214.hold||(ZC214.run&&!(ZC214.S&&ZC214.S.back)))return;return f.apply(this,arguments)}}
+// saved per character, a bit per zone; older saves that already know a zone have seen it
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.zc214=ZC214.seen|0}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{ZC214.raw=s&&s.zc214!=null?(s.zc214|0):-1;ZC214.seen=ZC214.raw>0?ZC214.raw:0}catch(_){ZC214.seen=0}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{if(ZC214.raw===-1){let m=0;for(const z of [2,3,4,5])if(zc214Known(z))m|=zc214Bit(z);
+    try{const I=curIns();if(I&&ZC214.Z[I.z])m|=zc214Bit(I.z)}catch(_){}ZC214.seen=m;ZC214.raw=m}}catch(_){}return r}}
+{const f=ccBegin;ccBegin=function(){ZC214.seen=0;ZC214.raw=0;return f.apply(this,arguments)}}
+// ================= v215 Argus, the Hundred-Eyed — one skinned, painted body and smoother motion (owner, Nov 9 2026) =================
 // Owner: "Argus looks a little too cluttered and outdated compared to our new models. Let's use what we've learned about modeling
 // to improve his visual identity and model, and smooth out all his animations to make him feel in line with our newer models."
 // The v146 Argus was ~160 rigid pieces on joints: ~340 shingled fur spikes pointing every way, 58 lidded eyes, a trophy belt,
-// three spears, a collar and chain, mushrooms, weed, roots, rib tubes (35k triangles). v214 rebuilds him to
+// three spears, a collar and chain, mushrooms, weed, roots, rib tubes (35k triangles). v215 rebuilds him to
 // docs/MODEL_DETAIL_RECIPE.md, the way Vaelric (3725) was rebuilt:
 //  * One connected identity read from the silhouette: a hunched bog-wolf — the withers and a shaggy mane rising into a crest,
 //    a gaunt waist, heavy haunches, long legs, a long skull-faced muzzle, great branching bog-elk antlers and a low heavy brush.
 //  * The body is a cage (torso + neck, head, jaw, legs, paws, tail, ears) smoothed once (cgSub) and SKINNED to his own joints with
-//    blended weights, so shoulders, elbows, knees, hocks, the neck and tail bend as one surface. Built once per page (arg214Geo).
+//    blended weights, so shoulders, elbows, knees, hocks, the neck and tail bend as one surface. Built once per page (arg215Geo).
 //  * Detail is paint (vertex colour + cgShade's baked creases, height and top light): a dark back, olive-grey flanks, a paler
 //    belly, a near-black mane, bog-moss on the back, mud on the legs, the bare bone of the skull over the muzzle, the torn hide
 //    of the flanks showing a dark membrane, sockets round every eye. Geometry only where it changes the outline: ~80 fur clumps
 //    all combed one way (crest, mane, ruffs, britches, the tail brush), the antlers, teeth, claws, the exposed ribs.
 //  * Glow (under 5%): ~32 eyes in loose rows (a lens with its slit pupil painted in, so each eye is one mesh and can still blink),
 //    the great brow eye, amber veins between the ribs (the skinned glow layer is R.vein, so it still brightens in Phase II).
-// Motion: his own gait (arg214Loco) — each paw is planted for its stance and swings with an eased lift (a walk that turns into a
+// Motion: his own gait (arg215Loco) — each paw is planted for its stance and swings with an eased lift (a walk that turns into a
 // trot, the stride matched to his speed so the paws don't skate: v146 slid ~3.9 m/s at 2.6 m/s; now ~0.1 at his 3.4 m/s walk, ~0.5 at his 5.5 m/s run), the body bobbing on the
 // footfalls, the head held steady, breathing and a slow look-around at rest; every pose change is then passed through a
-// critically damped follow (arg214Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
+// critically damped follow (arg215Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
 // Same joints and names (the v110/v112/v146 poses, moves, the den, the Hundred Eyes and the v209 cinematic keep working).
-var ARG214={on:1,geo:null,ms:0,tris:0,n:20,lead:.045,w:34,fw:60,browP:[0,-.02,.04],browR:-.6,browS:[.18,.25,.14]};
-var A214C={back:0x14110d,flank:0x24211c,belly:0x3a362e,mane:0x0b0908,grz:0x3a3832,moss:0x232c18,mud:0x18110b,bone:0x766a54,bone2:0xa09478,
+var ARG215={on:1,geo:null,ms:0,tris:0,n:20,lead:.045,w:34,fw:60,browP:[0,-.02,.04],browR:-.6,browS:[.18,.25,.14]};
+var A215C={back:0x14110d,flank:0x24211c,belly:0x3a362e,mane:0x0b0908,grz:0x3a3832,moss:0x232c18,mud:0x18110b,bone:0x766a54,bone2:0xa09478,
   mem:0x2a0a10,mem2:0x4a121a,rim:0x3a2420,gum:0x1e0a0b,tongue:0x34141a,claw:0x0b0a0c,nose:0x0c0a0c,sock:0x080605,earIn:0x1e0e10};
-function a214SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+function a215SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
 // ---------------- the joints (v146 names and rest positions; the head is no longer scaled ×1.25: its children moved instead) ----------------
-function arg214Joints(R){const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
+function arg215Joints(R){const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz);
   J('root',null,0,0,0);J('body','root',0,2.55,0);J('chest','body',0,0,.6);J('hips','body',0,0,-.9);
   J('neck','chest',0,.45,1.55,-.42);J('head','neck',0,.2,1.2,.42);J('jaw','head',0,-.225,.0625);J('brow','head',0,.4,.44);
   [-1,1].forEach(s=>{const L=s>0?'L':'R';J('ant'+L,'head',s*.33,.47,-.14);J('ear'+L,'head',s*.42,.38,-.3,-.45,0,-s*.55);
@@ -74733,10 +75130,10 @@ function arg214Joints(R){const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz)
     J('hp'+L,'hips',s*.6,-.2,-.45);J('kn'+L,'hp'+L,0,-1.05,.34);J('hk'+L,'kn'+L,0,-.85,-.42)});
   // the tail leaves the rump nearly level and curves down into a heavy brush
   J('t0','hips',0,.18,-1.42,.12);J('t1','t0',0,0,-.55,-.24);J('t2','t1',0,0,-.5,-.26);J('t3','t2',0,0,-.45,-.2)}
-var ARG214_B=['body','chest','hips','neck','head','jaw','brow','antL','antR','earL','earR','shL','elL','pwL','shR','elR','pwR','hpL','knL','hkL','hpR','knR','hkR','t0','t1','t2','t3'];
+var ARG215_B=['body','chest','hips','neck','head','jaw','brow','antL','antR','earL','earR','shL','elL','pwL','shR','elR','pwR','hpL','knL','hkL','hpR','knR','hkR','t0','t1','t2','t3'];
 // ---------------- the cage ----------------
 // rings {c:[x,y,z], N (plane normal; default the path tangent), rx (side), f (toward U: up / front), b (away), w | wf(p)}
-function a214Loft(M,R,o){const n=o.n,out=[],C=R.map(r=>r.c);
+function a215Loft(M,R,o){const n=o.n,out=[],C=R.map(r=>r.c);
   R.forEach((r,i)=>{let N=r.N;if(!N){const a=C[Math.max(0,i-1)],b=C[Math.min(C.length-1,i+1)];N=sub3(b,a)}N=nrm3(N);let X=o.X||[1,0,0];X=nrm3(sub3(X,mul3(N,X[0]*N[0]+X[1]*N[1]+X[2]*N[2])));const U=cross3(N,X);r._N=N;
     const ring=[];for(let j=0;j<n;j++){const a=j/n*Math.PI*2,s=Math.sin(a),c=Math.cos(a),e=1+(r.push?r.push(a,s,c):0);
       let ps=s,pc=c;if(r.sq){const m=Math.max(Math.abs(s),Math.abs(c));ps=s+(s/m-s)*r.sq;pc=c+(c/m-c)*r.sq}
@@ -74746,35 +75143,35 @@ function a214Loft(M,R,o){const n=o.n,out=[],C=R.map(r=>r.c);
   if(o.capB){const r=R[R.length-1],tip=add3(r.c,mul3(r._N,o.capB));cgCap(M,out[R.length-1],tip,r.wf?r.wf(tip):r.w,o.part,C[C.length-2])}
   return out}
 // the torso profile in root space: [z, centre y, half width, above, below]
-var A214T=[[-2.66,2.8,.16,.16,.18],[-2.5,2.74,.52,.46,.5],[-2.2,2.68,.8,.6,.74],[-1.78,2.64,.9,.66,.8],[-1.3,2.66,.8,.62,.7],[-.85,2.7,.64,.6,.56],[-.4,2.71,.6,.62,.56],
+var A215T=[[-2.66,2.8,.16,.16,.18],[-2.5,2.74,.52,.46,.5],[-2.2,2.68,.8,.6,.74],[-1.78,2.64,.9,.66,.8],[-1.3,2.66,.8,.62,.7],[-.85,2.7,.64,.6,.56],[-.4,2.71,.6,.62,.56],
   [.05,2.68,.68,.7,.76],[.5,2.64,.86,.84,1.0],[.95,2.64,.98,1.04,1.1],[1.4,2.74,1.0,1.18,1.02],[1.82,2.88,.92,1.12,.88]];
-function a214Tor(z){const T=A214T;if(z<=T[0][0])return T[0].slice(1);for(let i=0;i<T.length-1;i++){const a=T[i],b=T[i+1];if(z<=b[0]){const k=(z-a[0])/(b[0]-a[0]);return a.slice(1).map((v,q)=>v+(b[q+1]-v)*k)}}return T[T.length-1].slice(1)}
-function a214WTor(z){if(z<-1.4)return [['hips',1]];if(z<-.55){const t=a214SS(-1.4,-.55,z);return [['hips',1-t],['body',t]]}if(z<.3)return [['body',1]];if(z<1.05){const t=a214SS(.3,1.05,z);return [['body',1-t],['chest',t]]}return [['chest',1]]}
+function a215Tor(z){const T=A215T;if(z<=T[0][0])return T[0].slice(1);for(let i=0;i<T.length-1;i++){const a=T[i],b=T[i+1];if(z<=b[0]){const k=(z-a[0])/(b[0]-a[0]);return a.slice(1).map((v,q)=>v+(b[q+1]-v)*k)}}return T[T.length-1].slice(1)}
+function a215WTor(z){if(z<-1.4)return [['hips',1]];if(z<-.55){const t=a215SS(-1.4,-.55,z);return [['hips',1-t],['body',t]]}if(z<.3)return [['body',1]];if(z<1.05){const t=a215SS(.3,1.05,z);return [['body',1-t],['chest',t]]}return [['chest',1]]}
 // the window torn in each flank: z and the angle round the body (0 = spine, π/2 = flank, π = belly) of a torso point
-function a214Th(p){const [cy,rx,up,dn]=a214Tor(p[2]);return Math.atan2(Math.abs(p[0])/rx,(p[1]-cy)/(p[1]>cy?up:dn))}
-function a214Win(p){if(p[2]<-.6||p[2]>1.25)return 0;const th=a214Th(p),z=p[2],e=.09*(n3Sn(p[0],p[1]*3,z*3,5,7)-.5);
-  const dz=Math.abs(z-.33)/.72,dt=Math.abs(th-1.42)/.5;return 1-a214SS(.82,1.0,Math.pow(Math.pow(dz,2.6)+Math.pow(dt,2.6),1/2.6)+e)}
+function a215Th(p){const [cy,rx,up,dn]=a215Tor(p[2]);return Math.atan2(Math.abs(p[0])/rx,(p[1]-cy)/(p[1]>cy?up:dn))}
+function a215Win(p){if(p[2]<-.6||p[2]>1.25)return 0;const th=a215Th(p),z=p[2],e=.09*(n3Sn(p[0],p[1]*3,z*3,5,7)-.5);
+  const dz=Math.abs(z-.33)/.72,dt=Math.abs(th-1.42)/.5;return 1-a215SS(.82,1.0,Math.pow(Math.pow(dz,2.6)+Math.pow(dt,2.6),1/2.6)+e)}
 // the joint frames (root space) read from the rig at rest
-function a214Frames(){const R=svRig();arg214Joints(R);svRest(R);R.root.updateMatrixWorld(true);const F={};for(const k in R.J){const g=R.J[k],p=new THREE.Vector3().setFromMatrixPosition(g.matrixWorld);F[k]={p:[p.x,p.y,p.z],m:g.matrixWorld.clone()}}return F}
-function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),F=a214Frames(),P=k=>F[k].p,bones={};ARG214_B.forEach(n=>bones[n]=0);
-  const B=mdB(bones),M=cgMesh(B),C=A214C,n=ARG214.n,L=(j,v)=>{const q=new THREE.Vector3(v[0],v[1],v[2]).applyMatrix4(F[j].m);return [q.x,q.y,q.z]};
+function a215Frames(){const R=svRig();arg215Joints(R);svRest(R);R.root.updateMatrixWorld(true);const F={};for(const k in R.J){const g=R.J[k],p=new THREE.Vector3().setFromMatrixPosition(g.matrixWorld);F[k]={p:[p.x,p.y,p.z],m:g.matrixWorld.clone()}}return F}
+function arg215Geo(){if(ARG215.geo)return ARG215.geo;const t0=performance.now(),F=a215Frames(),P=k=>F[k].p,bones={};ARG215_B.forEach(n=>bones[n]=0);
+  const B=mdB(bones),M=cgMesh(B),C=A215C,n=ARG215.n,L=(j,v)=>{const q=new THREE.Vector3(v[0],v[1],v[2]).applyMatrix4(F[j].m);return [q.x,q.y,q.z]};
   // ---- torso + neck: one loft from the rump to inside the skull ----
-  {const R=A214T.map(([z,cy,rx,up,dn])=>({c:[0,cy,z],N:[0,0,1],rx,f:up,b:dn,wf:p=>a214WTor(p[2])}));
+  {const R=A215T.map(([z,cy,rx,up,dn])=>({c:[0,cy,z],N:[0,0,1],rx,f:up,b:dn,wf:p=>a215WTor(p[2])}));
     const nk=P('neck'),hd=P('head');
     R.push({c:[0,3.12,2.3],N:[0,.24,.97],rx:.76,f:.96,b:.74,wf:p=>[['chest',.4],['neck',.6]]});
     R.push({c:[0,3.36,2.66],N:[0,.38,.92],rx:.62,f:.8,b:.6,wf:p=>[['neck',.75],['head',.25]]});
     R.push({c:[0,3.58,2.94],N:[0,.42,.9],rx:.44,f:.52,b:.42,wf:p=>[['neck',.2],['head',.8]]});
     // the withers swell into the mane's crest; the belly line tucks up under the waist
-    R.forEach(r=>{r.push=(a,s,c)=>{const z=r.c[2];return c>.3?.06*a214SS(.8,1.6,z)*(1-a214SS(2.4,2.8,z))*c:0}});
-    a214Loft(M,R,{n,part:'torso',capA:.12})}
+    R.forEach(r=>{r.push=(a,s,c)=>{const z=r.c[2];return c>.3?.06*a215SS(.8,1.6,z)*(1-a215SS(2.4,2.8,z))*c:0}});
+    a215Loft(M,R,{n,part:'torso',capA:.12})}
   // ---- the head: a broad skull narrowing into a long muzzle (head space, then to root space) ----
   {const H=[[-.52,.16,.24,.24,.26],[-.38,.14,.44,.46,.42],[-.1,.1,.53,.5,.44],[.2,.07,.5,.46,.38],[.48,.01,.36,.33,.29],[.82,-.03,.28,.26,.24],[1.16,-.06,.23,.22,.2],[1.44,-.07,.18,.18,.16],[1.64,-.07,.12,.13,.12]];
     const R=H.map(([z,cy,rx,up,dn])=>({c:L('head',[0,cy,z]),N:[0,0,1],rx,f:up,b:dn,w:[['head',1]]}));
     // a flatter top over the skull and a squarer muzzle
-    R.forEach((r,i)=>{r.sq=i>=4?.25:.1});a214Loft(M,R,{n:16,part:'head',capA:.06,capB:.07})}
+    R.forEach((r,i)=>{r.sq=i>=4?.25:.1});a215Loft(M,R,{n:16,part:'head',capA:.06,capB:.07})}
   // ---- the lower jaw (jaw space): its top sits inside the upper muzzle, its back tucked into the cheek ----
   {const Q=[[-.2,.0,.24,.1,.12,[['head',.65],['jaw',.35]]],[.12,-.02,.34,.1,.16,[['jaw',1]]],[.5,-.04,.27,.08,.14,[['jaw',1]]],[.88,-.04,.21,.07,.11,[['jaw',1]]],[1.22,-.03,.16,.06,.08,[['jaw',1]]],[1.4,-.03,.1,.05,.05,[['jaw',1]]]];
-    const R=Q.map(([z,cy,rx,up,dn,w])=>({c:L('jaw',[0,cy,z]),N:[0,0,1],rx,f:up,b:dn,w,sq:.2}));a214Loft(M,R,{n:12,part:'jaw',capA:.04,capB:.05})}
+    const R=Q.map(([z,cy,rx,up,dn,w])=>({c:L('jaw',[0,cy,z]),N:[0,0,1],rx,f:up,b:dn,w,sq:.2}));a215Loft(M,R,{n:12,part:'jaw',capA:.04,capB:.05})}
   // ---- the legs: the top ring buried in the body, a muscle that is part of the outline, three rings at each bending joint ----
   const wB=(a,b,t)=>t<=0?[[a,1]]:t>=1?[[b,1]]:[[a,1-t],[b,t]];
   [-1,1].forEach(s=>{const Ls=s>0?'L':'R',sh=P('sh'+Ls),el=P('el'+Ls),pw=P('pw'+Ls),hp=P('hp'+Ls),kn=P('kn'+Ls),hk=P('hk'+Ls),X=x=>[s*x[0],x[1],x[2]];
@@ -74783,28 +75180,28 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
       {c:add3(sh,[0,-.3,.03]),rx:.31,f:.42,b:.46,w:[['chest',.12],['sh'+Ls,.88]]},{c:lerpP(sh,el,.62),rx:.28,f:.27,b:.33,w:[['sh'+Ls,1]]},
       {c:add3(el,[0,.18,0]),rx:.24,f:.22,b:.28,w:wB('sh'+Ls,'el'+Ls,.22)},{c:el,rx:.22,f:.2,b:.3,w:wB('sh'+Ls,'el'+Ls,.5)},{c:add3(el,[0,-.2,0]),rx:.2,f:.19,b:.21,w:wB('sh'+Ls,'el'+Ls,.85)},
       {c:lerpP(el,pw,.62),rx:.15,f:.15,b:.15,w:[['el'+Ls,1]]},{c:add3(pw,[0,.14,0]),rx:.15,f:.15,b:.16,w:wB('el'+Ls,'pw'+Ls,.2)},{c:add3(pw,[0,-.02,.02]),rx:.16,f:.16,b:.17,w:wB('el'+Ls,'pw'+Ls,.6)}];
-    a214Loft(M,F1,{n:12,part:'legF',capB:.06});
+    a215Loft(M,F1,{n:12,part:'legF',capB:.06});
     const H1=[{c:add3(hp,[-s*.12,.5,0]),rx:.28,f:.4,b:.42,w:[['hips',1]]},{c:add3(hp,[-s*.04,.06,.04]),rx:.36,f:.58,b:.66,w:wB('hips','hp'+Ls,.5)},
       {c:add3(hp,[0,-.42,.14]),rx:.34,f:.5,b:.54,w:[['hips',.1],['hp'+Ls,.9]]},{c:lerpP(hp,kn,.7),rx:.3,f:.32,b:.32,w:[['hp'+Ls,1]]},
       {c:lerpP(hp,kn,.88),rx:.25,f:.27,b:.25,w:wB('hp'+Ls,'kn'+Ls,.2)},{c:kn,rx:.23,f:.25,b:.23,w:wB('hp'+Ls,'kn'+Ls,.5)},{c:lerpP(kn,hk,.2),rx:.2,f:.2,b:.21,w:wB('hp'+Ls,'kn'+Ls,.85)},
       {c:lerpP(kn,hk,.6),rx:.15,f:.13,b:.17,w:[['kn'+Ls,1]]},{c:lerpP(kn,hk,.86),rx:.14,f:.12,b:.18,w:wB('kn'+Ls,'hk'+Ls,.2)},{c:hk,rx:.14,f:.12,b:.22,w:wB('kn'+Ls,'hk'+Ls,.5)},
       {c:L('hk'+Ls,[0,-.18,.01]),rx:.12,f:.12,b:.13,w:wB('kn'+Ls,'hk'+Ls,.85)},{c:L('hk'+Ls,[0,-.5,.08]),rx:.12,f:.12,b:.12,w:[['hk'+Ls,1]]}];
-    a214Loft(M,H1,{n:12,part:'legH',capB:.06});
+    a215Loft(M,H1,{n:12,part:'legH',capB:.06});
     // paws: a pad lofted forward, the toes swelling its front edge
     const paw=(j,o,sc)=>{const T=[[-.24,.02,.12,.08,.08],[-.12,.0,.22,.13,.1],[.08,-.02,.27,.13,.1],[.28,-.04,.27,.11,.09],[.42,-.06,.22,.08,.07],[.5,-.07,.14,.05,.05]];
       const R=T.map(([z,y,rx,up,dn])=>({c:L(j,add3(o,[0,y*sc,z*sc])),N:[0,0,1],rx:rx*sc,f:up*sc,b:dn*sc,w:[[j,1]],push:(a,si,co)=>z>.2&&co>-.2?.07*Math.pow(Math.abs(Math.cos(si*4.6)),3):0}));
-      a214Loft(M,R,{n:10,part:'paw',capA:.04,capB:.04})};
+      a215Loft(M,R,{n:10,part:'paw',capA:.04,capB:.04})};
     paw('pw'+Ls,[0,-.02,.08],1);paw('hk'+Ls,[0,-.47,.18],.92)});
   // ---- the tail: a heavy brush curving down ----
   {const t=['t0','t1','t2','t3'].map(P),tip=L('t3',[0,0,-.55]),root=L('t0',[0,0,.42]);
     const R=[{c:root,rx:.2,f:.2,b:.2,w:[['hips',1]]},{c:t[0],rx:.22,f:.24,b:.22,w:wB('hips','t0',.6)},{c:lerp3(t[0],t[1],.5),rx:.26,f:.28,b:.26,w:[['t0',1]]},{c:t[1],rx:.3,f:.3,b:.3,w:wB('t0','t1',.5)},
       {c:lerp3(t[1],t[2],.5),rx:.32,f:.32,b:.32,w:[['t1',1]]},{c:t[2],rx:.3,f:.3,b:.3,w:wB('t1','t2',.5)},{c:lerp3(t[2],t[3],.5),rx:.26,f:.26,b:.26,w:[['t2',1]]},{c:t[3],rx:.2,f:.2,b:.2,w:wB('t2','t3',.5)},
       {c:lerp3(t[3],tip,.55),rx:.13,f:.13,b:.13,w:[['t3',1]]},{c:tip,rx:.04,f:.04,b:.04,w:[['t3',1]]}];
-    a214Loft(M,R,{n:10,part:'tail',capB:.05})}
+    a215Loft(M,R,{n:10,part:'tail',capB:.05})}
   // ---- ears: tall cupped triangles on their own joints ----
   [-1,1].forEach(s=>{const j=s>0?'earL':'earR',T=[[-.08,.2,.07],[.12,.21,.07],[.34,.15,.055],[.54,.08,.04],[.7,.02,.02]];
     const R=T.map(([y,rx,th])=>({c:L(j,[0,y,0]),N:sub3(L(j,[0,1,0]),L(j,[0,0,0])),rx,f:th*.7,b:th,w:[[j,1]],push:(a,si,co)=>co>0?-1.4*co*co:0}));
-    a214Loft(M,R,{n:8,part:'ear',capB:.04,X:sub3(L(j,[-1,0,0]),L(j,[0,0,0]))})});
+    a215Loft(M,R,{n:8,part:'ear',capB:.04,X:sub3(L(j,[-1,0,0]),L(j,[0,0,0]))})});
   cgOrient(M);let S=cgSub(M);
   // ---- sculpt: vertebra knobs down the back, the brow ridge and the cheekbones, the jaw's hinge ----
   const hd=P('head');
@@ -74827,7 +75224,7 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   const surf=(o,d,parts)=>{const h=cgRay(S,o,nrm3(d),parts);if(!h)return null;const vi=near(h,parts);return {p:h,n:N[vi],a:S.V[vi],vi}};
   // ---- the eyes: sockets painted into the skin, a lens each on the bone under it ----
   const EY=[],eyeAt=(o,d,parts,r)=>{const h=surf(o,d,parts);if(h)EY.push({p:h.p,n:h.n,r:r*1.3,bn:wName(h.a),part:Object.keys(parts)[0]})};
-  const TP=(z,th,sd)=>{const [cy]=a214Tor(z);return [[0,cy,z],[sd*Math.sin(th),Math.cos(th),0]]};
+  const TP=(z,th,sd)=>{const [cy]=a215Tor(z);return [[0,cy,z],[sd*Math.sin(th),Math.cos(th),0]]};
   [-1,1].forEach(sd=>{const Ls=sd>0?'L':'R';
     [[-.12,.6,.085],[.36,.56,.1],[.84,.64,.085],[.1,2.2,.07],[.62,2.18,.08],[-.58,1.25,.07],[-2.28,1.0,.1],[-2.12,1.52,.08],[-1.72,.5,.07],[1.85,2.25,.075],[1.25,1.9,.07]].forEach(([z,th,r])=>{const [o,d]=TP(z,th,sd);eyeAt(o,d,{torso:1},r)});
     const sh=P('sh'+Ls),el=P('el'+Ls),hp=P('hp'+Ls);
@@ -74837,27 +75234,27 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   eyeAt(L('t1',[0,.05,-.25]),[0,1,-.2],{tail:1},.075);
   // ---- paint (vertex colour, flowing per corner) ----
   const T=new THREE.Color(),U=new THREE.Color(),hx=h=>new THREE.Color(h),K={};for(const k in C)K[k]=hx(C[k]);
-  const SK=EY.concat([{p:L('brow',ARG214.browP),r:.2}]),sock=(p,c)=>{for(const E of SK){const d=Math.hypot(p[0]-E.p[0],p[1]-E.p[1],p[2]-E.p[2]);if(d<E.r*2.2){c.lerp(K.sock,1-a214SS(E.r*1.0,E.r*1.5,d));const rr=Math.abs(d-E.r*1.65)/(E.r*.3);if(rr<1)c.lerp(K.rim,(1-rr)*.5)}}};
+  const SK=EY.concat([{p:L('brow',ARG215.browP),r:.2}]),sock=(p,c)=>{for(const E of SK){const d=Math.hypot(p[0]-E.p[0],p[1]-E.p[1],p[2]-E.p[2]);if(d<E.r*2.2){c.lerp(K.sock,1-a215SS(E.r*1.0,E.r*1.5,d));const rr=Math.abs(d-E.r*1.65)/(E.r*.3);if(rr<1)c.lerp(K.rim,(1-rr)*.5)}}};
   const fur=(c,p,m,k)=>{const v=n3Sn(p[0]*.8,p[1]*.8,p[2]*.25,6,3);c.multiplyScalar(1+(v-.5)*(k||.14))};
   const paint=m=>{const p=[m.x,m.y,m.z],c=T,ny=m.ny;
-    if(m.part==='torso'||m.part==='tail'){c.copy(K.flank).lerp(K.back,a214SS(.1,.75,ny)).lerp(K.belly,a214SS(-.25,-.8,ny));
-      const mane=m.part==='torso'?a214SS(1.0,1.6,m.z):0;if(mane)c.lerp(K.mane,mane*a214SS(-.6,.1,ny)*.85);
-      if(ny>.15&&m.part==='torso'){const v=n3Sn(m.x*1.4,m.y*1.4,m.z*1.1,3,11);c.lerp(K.moss,a214SS(.58,.72,v)*.55*a214SS(.15,.5,ny)*(1-mane))}
-      if(m.part==='torso'){const w=a214Win(p);if(w>0){const th=a214Th(p);U.copy(K.mem).lerp(K.mem2,.35+.3*Math.sin(m.z*9+th*3));c.lerp(K.rim,a214SS(0,.25,w)).lerp(U,a214SS(.2,.55,w))}
+    if(m.part==='torso'||m.part==='tail'){c.copy(K.flank).lerp(K.back,a215SS(.1,.75,ny)).lerp(K.belly,a215SS(-.25,-.8,ny));
+      const mane=m.part==='torso'?a215SS(1.0,1.6,m.z):0;if(mane)c.lerp(K.mane,mane*a215SS(-.6,.1,ny)*.85);
+      if(ny>.15&&m.part==='torso'){const v=n3Sn(m.x*1.4,m.y*1.4,m.z*1.1,3,11);c.lerp(K.moss,a215SS(.58,.72,v)*.55*a215SS(.15,.5,ny)*(1-mane))}
+      if(m.part==='torso'){const w=a215Win(p);if(w>0){const th=a215Th(p);U.copy(K.mem).lerp(K.mem2,.35+.3*Math.sin(m.z*9+th*3));c.lerp(K.rim,a215SS(0,.25,w)).lerp(U,a215SS(.2,.55,w))}
         // the bony knobs of the spine show pale through the fur
         if(ny>.8&&m.z<.9&&m.z>-2.4&&Math.abs(m.x)<.09){const k=Math.pow(Math.abs(Math.cos((m.z+2.4)/.3*Math.PI)),6);c.lerp(K.bone,k*.6)}}
-      if(m.part==='tail')c.lerp(K.mane,a214SS(-2.8,-4.2,m.z)*.6);
+      if(m.part==='tail')c.lerp(K.mane,a215SS(-2.8,-4.2,m.z)*.6);
       fur(c,p,m)}
-    else if(m.part==='head'){const q=[m.x-hd[0],m.y-hd[1],m.z-hd[2]];c.copy(K.flank).lerp(K.back,a214SS(0,.6,ny)).lerp(K.belly,a214SS(-.2,-.7,ny)*.6);
+    else if(m.part==='head'){const q=[m.x-hd[0],m.y-hd[1],m.z-hd[2]];c.copy(K.flank).lerp(K.back,a215SS(0,.6,ny)).lerp(K.belly,a215SS(-.2,-.7,ny)*.6);
       // the bare skull over the muzzle and the brow, a ragged edge into the fur
-      const e=.07*(n3Sn(q[0]*3,q[1]*3,q[2]*3,7,5)-.5),bz=a214SS(.26,.46,q[2]+e)*a214SS(.38,.72,ny+e*2);c.lerp(K.bone,bz*.88);if(bz>.2)c.lerp(K.bone2,a214SS(.8,1,ny)*a214SS(.7,1.3,q[2])*.3);
+      const e=.07*(n3Sn(q[0]*3,q[1]*3,q[2]*3,7,5)-.5),bz=a215SS(.26,.46,q[2]+e)*a215SS(.38,.72,ny+e*2);c.lerp(K.bone,bz*.88);if(bz>.2)c.lerp(K.bone2,a215SS(.8,1,ny)*a215SS(.7,1.3,q[2])*.3);
       // the nose, the lips and the palate (under the muzzle)
-      c.lerp(K.nose,a214SS(1.54,1.66,q[2]));if(q[2]>.42&&q[2]<1.5)c.lerp(K.gum,Math.max(0,1-Math.abs(ny+.24)/.12)*.75);if(q[2]>.3){c.lerp(K.gum,a214SS(-.35,-.75,ny));c.lerp(K.sock,a214SS(-.05,-.3,ny)*(1-a214SS(-.35,-.75,ny))*.7)}
+      c.lerp(K.nose,a215SS(1.54,1.66,q[2]));if(q[2]>.42&&q[2]<1.5)c.lerp(K.gum,Math.max(0,1-Math.abs(ny+.24)/.12)*.75);if(q[2]>.3){c.lerp(K.gum,a215SS(-.35,-.75,ny));c.lerp(K.sock,a215SS(-.05,-.3,ny)*(1-a215SS(-.35,-.75,ny))*.7)}
       fur(c,p,m,.08)}
-    else if(m.part==='jaw'){const ny2=ny;c.copy(K.flank).lerp(K.belly,a214SS(-.2,-.8,ny2)*.7);c.lerp(K.gum,a214SS(.1,.5,ny2));c.lerp(K.tongue,a214SS(.6,.9,ny2)*(1-a214SS(.06,.14,Math.abs(m.x)))*.8);fur(c,p,m,.08)}
-    else if(m.part==='legF'||m.part==='legH'){c.copy(K.flank).lerp(K.back,a214SS(.2,.8,ny)*.6).lerp(K.belly,a214SS(-.3,-.8,ny)*.4);c.lerp(K.mud,a214SS(1.3,.35,m.y));fur(c,p,m)}
-    else if(m.part==='paw'){c.copy(K.mud).lerp(K.claw,a214SS(-.3,-.8,ny)*.8)}
-    else if(m.part==='ear'){c.copy(K.back).lerp(K.earIn,a214SS(.2,.75,m.nz)*.8)}
+    else if(m.part==='jaw'){const ny2=ny;c.copy(K.flank).lerp(K.belly,a215SS(-.2,-.8,ny2)*.7);c.lerp(K.gum,a215SS(.1,.5,ny2));c.lerp(K.tongue,a215SS(.6,.9,ny2)*(1-a215SS(.06,.14,Math.abs(m.x)))*.8);fur(c,p,m,.08)}
+    else if(m.part==='legF'||m.part==='legH'){c.copy(K.flank).lerp(K.back,a215SS(.2,.8,ny)*.6).lerp(K.belly,a215SS(-.3,-.8,ny)*.4);c.lerp(K.mud,a215SS(1.3,.35,m.y));fur(c,p,m)}
+    else if(m.part==='paw'){c.copy(K.mud).lerp(K.claw,a215SS(-.3,-.8,ny)*.8)}
+    else if(m.part==='ear'){c.copy(K.back).lerp(K.earIn,a215SS(.2,.75,m.nz)*.8)}
     else c.copy(K.flank);
     if(m.part!=='paw')sock(p,c);return c.getHex()};
   S.shade=cgShade(S,{cav:.55,blur:2,hk:.3,dk:.2,min:.55});
@@ -74885,13 +75282,13 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
     // the blade's flat side lies against the skin: its "up" is the skin normal
     tube('c',pts,rad,5,i=>ws[i],i=>cs[i],{up:n,capA:false})};
   // the crest: long clumps along the spine from the back of the skull over the withers, shortening down the back
-  const crestAt=(z,y0)=>{const [cy,rx,up]=a214Tor(z);return surf([0,cy,z],[0,1,0],{torso:1})};
+  const crestAt=(z,y0)=>{const [cy,rx,up]=a215Tor(z);return surf([0,cy,z],[0,1,0],{torso:1})};
   for(let k=0;k<16;k++){const z=2.6-k*.2;let h;if(z>1.9){h=surf([0,3.2+(z-2.3)*.6,z],[0,1,-.2],{torso:1})}else h=crestAt(z);if(!h)continue;
     const L0=k<3?.75:k<9?.95-.04*(k-3):.7-.06*(k-9);[0,1,-1].forEach(sd=>{if(sd&&k%2)return;const hh=sd?surf([0,h.p[1]-.3,z-.08],[sd*.35,1,0],{torso:1}):h;if(!hh)return;
       clump(hh,[sd*.3,.3,-1],L0*(sd?.8:1),.17,C.mane,mdMix(C.grz,C.mane,.45),{lift:.24,arc:.04,parts:{torso:1}})})}
   // the mane: rows of clumps combed back and down over the neck and shoulders, its lower edge a ragged fringe
   const rn=svRng(2120);
-  [-1,1].forEach(sd=>{for(let row=0;row<4;row++)for(let k=0;k<5;k++){const z=2.55-k*.3-row*.08+(rn()-.5)*.14,th=.55+row*.38+(k%2)*.1+(rn()-.5)*.16,[cy]=a214Tor(Math.min(z,1.82));
+  [-1,1].forEach(sd=>{for(let row=0;row<4;row++)for(let k=0;k<5;k++){const z=2.55-k*.3-row*.08+(rn()-.5)*.14,th=.55+row*.38+(k%2)*.1+(rn()-.5)*.16,[cy]=a215Tor(Math.min(z,1.82));
       const o=z>1.85?[0,3.12+(z-2.3)*.6,z]:[0,cy,z],h=surf(o,[sd*Math.sin(th),Math.cos(th),z>1.85?.3:0],{torso:1});if(!h)continue;
       clump(h,[sd*(.15+rn()*.2),-.3-row*.15-rn()*.1,-1],(.55+.25*rn())*(1-.08*row),.15+.04*rn(),mdMix(mdMix(C.mane,C.back,.3*rn()),C.flank,[0,.2,.5,.75][row]),mdMix(mdMix(C.grz,C.mane,.25),C.flank,[0,.2,.4,.6][row]),{lift:.18+.08*rn(),parts:{torso:1}})}
     // cheek ruffs behind the jaw, combed back
@@ -74935,8 +75332,8 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
       for(let i=0;i<=S;i++){const a=i/S*Math.PI*2,q=new THREE.Vector3(...p).addScaledVector(X,Math.sin(a)*r*sx).addScaledVector(Y,Math.cos(a)*r*sy).addScaledVector(N0,r*.1);pts.push([q.x,q.y,q.z])}
       tube('c',pts,pts.map(()=>[r*.09,r*.08]),4,()=>w,()=>rgb(0x4a0a0a),{up:n,capA:false,capB:false})};
     EY.forEach(E=>{const vi=near(E.p),w=wTop(S.V[vi]);lid(E.p,E.n,E.r,w,1.0,.8);lid2(E.p,E.n,E.r,w,.88,.7)});
-    {const bq=new THREE.Quaternion().setFromEuler(new THREE.Euler(ARG214.browR,0,0)),nb=new THREE.Vector3(0,0,1).applyQuaternion(bq),fm=F.brow.m,nw=nb.clone().transformDirection(fm),bs=ARG214.browS;
-      lid(L('brow',ARG214.browP),[nw.x,nw.y,nw.z],.2,one('brow'),bs[0]/.2*1.4,bs[1]/.2*1.32)}}
+    {const bq=new THREE.Quaternion().setFromEuler(new THREE.Euler(ARG215.browR,0,0)),nb=new THREE.Vector3(0,0,1).applyQuaternion(bq),fm=F.brow.m,nw=nb.clone().transformDirection(fm),bs=ARG215.browS;
+      lid(L('brow',ARG215.browP),[nw.x,nw.y,nw.z],.2,one('brow'),bs[0]/.2*1.4,bs[1]/.2*1.32)}}
   // ---- veins spreading from the larger eyes over the skin, on the glow layer (bloodshot embers; they brighten with R.vein) ----
   {const rn=svRng(2141),V=THREE.Vector3;EY.forEach((E,i)=>{if(E.r<.09)return;const N0=new V(...E.n).normalize(),Y=new V(0,1,0).sub(N0.clone().multiplyScalar(N0.y));if(Y.lengthSq()<1e-4)Y.set(0,0,1);Y.normalize();const X=new V().crossVectors(Y,N0),pt={};pt[E.part]=1;
     for(let k=0;k<3;k++){let a=i*2.1+k*2.09+rn()*.5;const bend=(rn()-.5)*.22,pts=[],ws=[];for(let q=0;q<=5;q++){const d=E.r*(1.15+q*.36);a+=bend;const o=new V(...E.p).addScaledVector(X,Math.sin(a)*d).addScaledVector(Y,Math.cos(a)*d*.85),
@@ -74945,14 +75342,14 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   // ---- bone spurs: hooked spikes along the spine behind the mane, and one at the back of each elbow and hock ----
   {const spur=(h,d,len,r0)=>{const n=h.n,dd=nrm3(d),pts=[],ws=[];for(let q=0;q<=4;q++){const t=q/4,p=add3(add3(h.p,mul3(n,-.1+len*.75*t-len*.25*t*t)),mul3(dd,len*.85*t*t));pts.push(p);const vi=near(p);ws.push(wTop(S.V[vi>=0?vi:h.vi]))}
       tube('c',pts,pts.map((_,q)=>r0*Math.pow(1-q/4,1.3)+.004),6,q=>ws[Math.min(q,1)],q=>mixC(0x15110d,C.bone,Math.pow(q/4,2.2)))};
-    for(let k=0;k<6;k++){const z=.7-k*.48,[cy]=a214Tor(z),h=surf([0,cy,z],[0,1,0],{torso:1});if(h)spur(h,[0,0,-1],.5-.04*k,.13-.01*k)}
+    for(let k=0;k<6;k++){const z=.7-k*.48,[cy]=a215Tor(z),h=surf([0,cy,z],[0,1,0],{torso:1});if(h)spur(h,[0,0,-1],.5-.04*k,.13-.01*k)}
     [-1,1].forEach(s=>{const Ls=s>0?'L':'R';{const el=P('el'+Ls),h=surf(add3(el,[0,.05,0]),[s*.15,0,-1],{legF:1});if(h)spur(h,[s*.2,-.4,-1],.34,.085)}
       {const hk=P('hk'+Ls),h=surf(add3(hk,[0,.05,0]),[s*.1,0,-1],{legH:1});if(h)spur(h,[s*.12,.3,-1],.28,.07)}})}
   // ---- bake, measure ----
-  const G=mdBake(B);let tri=0;for(const t in G)tri+=G[t].attributes.position.count/3;ARG214.tris=Math.round(tri);ARG214.ms=Math.round(performance.now()-t0);
-  return ARG214.geo={G,O:B.O,EY}}
+  const G=mdBake(B);let tri=0;for(const t in G)tri+=G[t].attributes.position.count/3;ARG215.tris=Math.round(tri);ARG215.ms=Math.round(performance.now()-t0);
+  return ARG215.geo={G,O:B.O,EY}}
 // ---------------- an eye: one lens with its iris graded and its slit pupil painted in (vertex colours × the shared iris colour) ----------------
-function arg214Lens(){return svG('a214lens2',()=>{const pos=[],col=[],R=4,S=16,pt=(r,a)=>{const x=Math.sin(a)*r,y=Math.cos(a)*r,z=Math.sqrt(Math.max(0,1-r*r))*.9+.1;return [x,y,z,r,a]},
+function arg215Lens(){return svG('a215lens2',()=>{const pos=[],col=[],R=4,S=16,pt=(r,a)=>{const x=Math.sin(a)*r,y=Math.cos(a)*r,z=Math.sqrt(Math.max(0,1-r*r))*.9+.1;return [x,y,z,r,a]},
     G=[[0,[1.6,1.35,.8]],[.25,[1.55,1.2,.6]],[.5,[1.3,.7,.18]],[.75,[1.0,.32,.07]],[1,[.22,.03,.02]]],
     cl=(p)=>{const r=p[3],a=p[4],ax=Math.abs(Math.sin(a));if(r<.01||(ax<.01&&r<.9))return [.01,0,0];
       // the glint: one bright point up and to the left
@@ -74966,36 +75363,36 @@ function arg214Lens(){return svG('a214lens2',()=>{const pos=[],col=[],R=4,S=16,p
     for(let k=0;k<S;k++){const a0=k/S*Math.PI*2,a1=(k+1)/S*Math.PI*2;tri([0,0,-.05],[Math.sin(a1),Math.cos(a1),.1],[Math.sin(a0),Math.cos(a0),.1])}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeVertexNormals();return g})}
 // ---------------- the Sovereign build ----------------
-function arg214Build(R,e){const Q=arg214Geo();arg214Joints(R);R.root.updateMatrixWorld(true);
+function arg215Build(R,e){const Q=arg215Geo();arg215Joints(R);R.root.updateMatrixWorld(true);
   const sk=new THREE.Skeleton(Q.O.map(n=>R.J[n]));
   const mc=svMat(R,0xffffff,{vertexColors:true,skinning:true,roughness:.92,metalness:0,emissive:0x0e0b08,side:THREE.DoubleSide}),mm=svMat(R,0xffffff,{vertexColors:true,skinning:true,roughness:.42,metalness:.3,emissive:0x040404,side:THREE.DoubleSide}),
     mg=new THREE.MeshBasicMaterial({color:ARG.vein,vertexColors:true,skinning:true,fog:false,side:THREE.DoubleSide});mg.userData.c0=ARG.vein;R.glow.push(mg);R.vein=mg;
-  arg214Rim(mc);arg214Rim(mm);
-  R.v214m=[];[['c',mc],['m',mm],['g',mg]].forEach(([t,mat])=>{const G=Q.G[t];if(!G)return;const sm=new THREE.SkinnedMesh(G,mat);sm.bind(sk);sm.userData.noMerge=1;sm.userData.lpsSkip=1;sm.frustumCulled=false;sm.castShadow=t!=='g';sm.receiveShadow=false;R.root.add(sm);R.v214m.push(sm)});
-  R.v214=1;R.no179=1;arg214FeetRest(R);
+  arg215Rim(mc);arg215Rim(mm);
+  R.v215m=[];[['c',mc],['m',mm],['g',mg]].forEach(([t,mat])=>{const G=Q.G[t];if(!G)return;const sm=new THREE.SkinnedMesh(G,mat);sm.bind(sk);sm.userData.noMerge=1;sm.userData.lpsSkip=1;sm.frustumCulled=false;sm.castShadow=t!=='g';sm.receiveShadow=false;R.root.add(sm);R.v215m.push(sm)});
+  R.v215=1;R.no179=1;arg215FeetRest(R);
   // the eyes on the bones under them (rest pose → the bone's frame), one lens mesh each so each can blink
   const iris=new THREE.MeshBasicMaterial({color:ARG.dim,vertexColors:true,fog:false});iris.userData.c0=ARG.dim;R.glow.push(iris);R.iris=iris;R.eyes=[];
-  const lens=arg214Lens(),V3=THREE.Vector3,up=new V3(0,1,0),Mx=new THREE.Matrix4(),Qw=new THREE.Quaternion(),Qb=new THREE.Quaternion();
+  const lens=arg215Lens(),V3=THREE.Vector3,up=new V3(0,1,0),Mx=new THREE.Matrix4(),Qw=new THREE.Quaternion(),Qb=new THREE.Quaternion();
   Q.EY.forEach((E,i)=>{const J=R.J[E.bn]||R.J.body,n=new V3(...E.n).normalize(),y=up.clone().sub(n.clone().multiplyScalar(n.dot(up)));if(y.lengthSq()<1e-4)y.set(0,0,1);y.normalize();const x=new V3().crossVectors(y,n);
     Mx.makeBasis(x,y,n);Qw.setFromRotationMatrix(Mx);J.getWorldQuaternion(Qb);const p=J.worldToLocal(new V3(...E.p).addScaledVector(n,-E.r*.18));
     const ir=new THREE.Mesh(lens,iris);ir.position.copy(p);ir.quaternion.copy(Qb.invert().multiply(Qw));ir.scale.set(E.r*.82,E.r*.62,E.r*.5);ir.userData.noMerge=1;ir.userData.lpsSkip=1;J.add(ir);
     R.eyes.push({ir,s:E.r,b:((i*2.39)%6)})});
   // the great brow eye: a tall almond in a dark socket on the forehead, its glow sprite for the gaze
-  {const J=R.J.brow,big=new THREE.Mesh(lens,iris);big.position.set(...ARG214.browP);big.rotation.x=ARG214.browR;big.scale.set(...ARG214.browS);big.userData.noMerge=1;big.userData.lpsSkip=1;J.add(big);R.big=big;
+  {const J=R.J.brow,big=new THREE.Mesh(lens,iris);big.position.set(...ARG215.browP);big.rotation.x=ARG215.browR;big.scale.set(...ARG215.browS);big.userData.noMerge=1;big.userData.lpsSkip=1;J.add(big);R.big=big;
     R.bigSpr=svSpr(R,'brow',ARG.col,.01,0,0,.12)}
   R.root.traverse(o=>{if(o.isMesh&&!o.isSkinnedMesh&&o.material!==iris)o.castShadow=true})}
 // a dim, cool rim light (recipe 2.6) that cuts his outline out of the dark hollow; chained onto any earlier hook, own cache key
-var ARG214_RIM={value:new THREE.Color(0x3a4a42)};
-function arg214Rim(m){const ob=m.onBeforeCompile,ck=m.customProgramCacheKey,P=THREE.Material.prototype;
-  m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==P.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uRim213=ARG214_RIM;
+var ARG215_RIM={value:new THREE.Color(0x3a4a42)};
+function arg215Rim(m){const ob=m.onBeforeCompile,ck=m.customProgramCacheKey,P=THREE.Material.prototype;
+  m.onBeforeCompile=(sh,rn)=>{if(ob&&ob!==P.onBeforeCompile)ob.call(m,sh,rn);sh.uniforms.uRim213=ARG215_RIM;
     sh.fragmentShader='uniform vec3 uRim213;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=uRim213*pow(1.-abs(dot(normal,normalize(vViewPosition))),2.4);')};
-  m.customProgramCacheKey=()=>(ck&&ck!==P.customProgramCacheKey?ck.call(m):'')+'|rim214';m.needsUpdate=true}
+  m.customProgramCacheKey=()=>(ck&&ck!==P.customProgramCacheKey?ck.call(m):'')+'|rim215';m.needsUpdate=true}
 // ---------------- motion ----------------
 // the gait: each paw is planted for its stance (moving back under the body at the body's speed, so it stays put on the ground)
 // and swings forward with an eased lift; a lateral walk (LH, LF, RH, RF) turns into a trot (diagonal pairs) as he speeds up
-function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214SS(.05,.7,v),tr=a214SS(2.6,4.4,v),ph2=S.ph>1?1:0;
-  const Ls=2.7+.42*v,beta=.64-.05*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const TAU=Math.PI*2,fw=TAU*v/Ls/ARG214.w,
-    // the follow (arg214Smooth) trails the gait a little: lead its phase and lift its swing by what the follow takes off
+function arg215Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a215SS(.05,.7,v),tr=a215SS(2.6,4.4,v),ph2=S.ph>1?1:0;
+  const Ls=2.7+.42*v,beta=.64-.05*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const TAU=Math.PI*2,fw=TAU*v/Ls/ARG215.w,
+    // the follow (arg215Smooth) trails the gait a little: lead its phase and lift its swing by what the follow takes off
     g=S.gp+2*fw/TAU,gain=1+fw*fw;
   // breathing and the idle look-around (smooth sums of slow sines, never a snap); restless in Phase II
   const br=Math.sin(t*(1.25+.5*ph2)),ia=1-a;
@@ -75024,8 +75421,8 @@ function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214
 // swings the paw onto the spot above where it was — and the new joint angles are written back into the pose. The moves blend
 // between fixed poses (and the follow eases them), so nothing changes at run time and nothing can pop. Mirrored poses ('~')
 // are built from the fixed ones. Lying poses (the death fall) are left alone.
-var ARG214_FT=[['shL','elL','pwL',[0,-.12,.12],-1],['shR','elR','pwR',[0,-.12,.12],-1],['hpL','knL','hkL',[0,-.57,.2],1],['hpR','knR','hkR',[0,-.57,.2],1]];
-function arg214SolveLeg(R,F,Mi){const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion();
+var ARG215_FT=[['shL','elL','pwL',[0,-.12,.12],-1],['shR','elR','pwR',[0,-.12,.12],-1],['hpL','knL','hkL',[0,-.57,.2],1],['hpR','knR','hkR',[0,-.57,.2],1]];
+function arg215SolveLeg(R,F,Mi){const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion();
   const rotW=(J,W,th)=>{J.parent.getWorldQuaternion(pq);rq.setFromAxisAngle(W,th);const P=pq.clone();J.quaternion.premultiply(P).premultiply(rq).premultiply(P.invert());J.updateMatrixWorld(true)};
   const xAx=(J,out)=>out.setFromMatrixColumn(J.matrixWorld,0).normalize(),A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);
   e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi);if(eL.y>=F.fl+.12)return 0;const dep=Math.max(.001,F.fl-eL.y);
@@ -75041,24 +75438,24 @@ function arg214SolveLeg(R,F,Mi){const V=THREE.Vector3,a=new V(),b=new V(),e=new 
       t.set(q.x,F.fl,q.z).applyMatrix4(R.root.matrixWorld);xAx(A,ax);A.getWorldPosition(a);u.subVectors(e,a);v.subVectors(t,a);u.addScaledVector(ax,-u.dot(ax));v.addScaledVector(ax,-v.dot(ax));
       if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){let th=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)th=-th;rotW(A,ax,th)}}}}
   return dep}
-function arg214FixPoses(B){if(!B||!B.P||B.fix214)return;B.fix214={};const R=svRig();arg214Joints(R);svRest(R);R.root.updateMatrixWorld(true);
-  const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert(),FT=ARG214_FT.map(f=>{const g=f.slice();const w=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi);g.fl=w.y;return g});
+function arg215FixPoses(B){if(!B||!B.P||B.fix215)return;B.fix215={};const R=svRig();arg215Joints(R);svRest(R);R.root.updateMatrixWorld(true);
+  const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert(),FT=ARG215_FT.map(f=>{const g=f.slice();const w=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi);g.fl=w.y;return g});
   const setP=P=>{for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=P[k]||[0,0,0,0,0,0];g.rotation.set(r0.x+(o[0]||0),r0.y+(o[1]||0),r0.z+(o[2]||0));g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}R.root.updateMatrixWorld(true)};
   for(const name in B.P){const P=B.P[name];if(!P||typeof P!=='object')continue;const rl=P.root||[0,0,0],bd=P.body||[0,0,0];if(Math.abs(rl[2]||0)>.6||Math.abs(bd[2]||0)>.6||Math.abs(rl[0]||0)>.6)continue;
-    setP(P);let fx=0;for(const F of FT){const d=arg214SolveLeg(R,F,Mi);if(d>0){fx=Math.max(fx,d);[F[0],F[1],F[2]].forEach(k=>{const g=R.J[k],r0=g.userData.r0,o=(P[k]||[0,0,0]).slice();o[0]=g.rotation.x-r0.x;o[1]=g.rotation.y-r0.y;o[2]=g.rotation.z-r0.z;P[k]=o})}}
-    if(fx)B.fix214[name]=+fx.toFixed(2)}
+    setP(P);let fx=0;for(const F of FT){const d=arg215SolveLeg(R,F,Mi);if(d>0){fx=Math.max(fx,d);[F[0],F[1],F[2]].forEach(k=>{const g=R.J[k],r0=g.userData.r0,o=(P[k]||[0,0,0]).slice();o[0]=g.rotation.x-r0.x;o[1]=g.rotation.y-r0.y;o[2]=g.rotation.z-r0.z;P[k]=o})}}
+    if(fx)B.fix215[name]=+fx.toFixed(2)}
   B._pc=null}
 // during a move, what the blend between two fixed poses still lets sink is lifted the same way at run time, the correction
-// eased (critically damped, ω ARG214.fw: a nearly straight leg needs a big bend for a small dip); it fades out as he walks
+// eased (critically damped, ω ARG215.fw: a nearly straight leg needs a big bend for a small dip); it fades out as he walks
 // (unless a move is playing), so the gait (whose planted paws are already right) is never touched
-function arg214FeetRest(R){R.root.updateMatrixWorld(true);const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert();
-  R.ft214=ARG214_FT.map(f=>{const g=f.slice();g.fl=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi).y;g.qa={x:0,v:0};g.qb={x:0,v:0};return g})}
-function arg214Feet(R,S,dt){if(!R.ft214)return;
-  const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion(),w=ARG214.fw,on=S.dieM?0:Math.max(S.trk?Math.min(1,S.aw||0):0,1-a214SS(.2,.8,S.spd||0));
+function arg215FeetRest(R){R.root.updateMatrixWorld(true);const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert();
+  R.ft215=ARG215_FT.map(f=>{const g=f.slice();g.fl=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi).y;g.qa={x:0,v:0};g.qb={x:0,v:0};return g})}
+function arg215Feet(R,S,dt){if(!R.ft215)return;
+  const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion(),w=ARG215.fw,on=S.dieM?0:Math.max(S.trk?Math.min(1,S.aw||0):0,1-a215SS(.2,.8,S.spd||0));
   const rotW=(J,W,th)=>{J.parent.getWorldQuaternion(pq);rq.setFromAxisAngle(W,th);const P=pq.clone();J.quaternion.premultiply(P).premultiply(rq).premultiply(P.invert());J.updateMatrixWorld(true)};
   const xAx=(J,out)=>out.setFromMatrixColumn(J.matrixWorld,0).normalize(),ease=(q,tg)=>{if(!(dt>0)||dt>.25){q.x=tg;q.v=0;return q.x}const x=q.x-tg,tp=(q.v+w*x)*dt,ex=Math.exp(-w*dt);q.v=(q.v-w*tp)*ex;q.x=tg+(x+tp)*ex;return q.x};
   R.root.updateMatrixWorld(true);const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert();
-  for(const F of R.ft214){const A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi),dn=on>0&&eL.y<F.fl;
+  for(const F of R.ft215){const A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi),dn=on>0&&eL.y<F.fl;
     t.set(eL.x,Math.max(eL.y,F.fl),eL.z).applyMatrix4(R.root.matrixWorld);A.getWorldPosition(a);B.getWorldPosition(b);xAx(B,ax);let tb=0;
     if(dn){const l1=a.distanceTo(b),l2=b.distanceTo(e),dT=Math.min(l1+l2-.02,Math.max(Math.abs(l1-l2)+.02,a.distanceTo(t)));u.subVectors(b,a);v.subVectors(e,b);
       const be=Math.atan2(ax.dot(u.clone().cross(v)),u.dot(v)),need=Math.PI-Math.acos(Math.max(-1,Math.min(1,(l1*l1+l2*l2-dT*dT)/(2*l1*l2))));
@@ -75068,24 +75465,24 @@ function arg214Feet(R,S,dt){if(!R.ft214)return;
       if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){ta=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)ta=-ta;ta=Math.max(-.6,Math.min(.6,ta))*on}}
     const xa=ease(F.qa,ta);if(Math.abs(xa)>1e-5){xAx(A,ax);rotW(A,ax,xa)}}}
 // every pose change eased by a critically damped follow (the exact step, stable at any frame rate) (rotations and offsets of each joint); the move's track is sampled
-// ARG214.lead s ahead, which cancels the follow's lag (2/ω), so a strike still reaches its pose on the hit's beat
-function arg214Smooth(e,S,dt){const R=S.R,O=S.O,w=ARG214.w;if(!S.sm214)S.sm214={};const M=S.sm214,snap=!(dt>0)||dt>.25;
+// ARG215.lead s ahead, which cancels the follow's lag (2/ω), so a strike still reaches its pose on the hit's beat
+function arg215Smooth(e,S,dt){const R=S.R,O=S.O,w=ARG215.w;if(!S.sm215)S.sm215={};const M=S.sm215,snap=!(dt>0)||dt>.25;
   for(const k in O){const o=O[k],q=M[k]||(M[k]={x:o.slice(),v:[0,0,0,0,0,0]});if(snap){for(let i=0;i<6;i++){q.x[i]=o[i];q.v[i]=0}continue}
     const ex=Math.exp(-w*dt);for(let i=0;i<6;i++){const x=q.x[i]-o[i],tp=(q.v[i]+w*x)*dt;q.v[i]=(q.v[i]-w*tp)*ex;q.x[i]=o[i]+(x+tp)*ex}
     const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,x=q.x;g.rotation.set(r0.x+x[0],r0.y+x[1],r0.z+x[2]);g.position.set(p0.x+x[3],p0.y+x[4],p0.z+x[5])}}
-if(ARG214.on&&SVB[0]){const B=SVB[0];B.build=arg214Build;argBuild146=arg214Build;
+if(ARG215.on&&SVB[0]){const B=SVB[0];B.build=arg215Build;argBuild146=arg215Build;
   B.spr=Object.assign({},B.spr||{},{earL:[70,9,.6],earR:[70,9,.6],jaw:[90,12,.2],t0:[42,7,1.1],t1:[30,5.5,1.4],t2:[24,4.4,1.7],t3:[20,3.6,2],antL:[160,20,0],antR:[160,20,0]});
-  const l0=B.loco;B.loco=function(e,S,O,dt,now){if(!S.R||!S.R.v214)return l0&&l0.apply(this,arguments);arg214Loco(e,S,O,dt,now)};
-  const p0=B.post;B.post=function(e,S,dt,now){try{if(S.R&&S.R.v214){arg214Smooth(e,S,dt);arg214Feet(S.R,S,dt)}}catch(err){if(!ARG214.err++)console.error('v214 smooth',err)}p0&&p0.apply(this,arguments)}}
-ARG214.err=0;
+  const l0=B.loco;B.loco=function(e,S,O,dt,now){if(!S.R||!S.R.v215)return l0&&l0.apply(this,arguments);arg215Loco(e,S,O,dt,now)};
+  const p0=B.post;B.post=function(e,S,dt,now){try{if(S.R&&S.R.v215){arg215Smooth(e,S,dt);arg215Feet(S.R,S,dt)}}catch(err){if(!ARG215.err++)console.error('v215 smooth',err)}p0&&p0.apply(this,arguments)}}
+ARG215.err=0;
 // the stagger: he drops low but keeps his head (and antlers) off the floor
-if(ARG214.on&&typeof ARGP!='undefined'&&ARGP.stag){const P=ARGP.stag;P.body=[.34,0,.28,0,-.7,0];P.neck=[.28,0,.22];P.head=[.05,0,.3];
+if(ARG215.on&&typeof ARGP!='undefined'&&ARGP.stag){const P=ARGP.stag;P.body=[.34,0,.28,0,-.7,0];P.neck=[.28,0,.22];P.head=[.05,0,.3];
   // the death fall: he lies on his side ON the floor (v110's offsets were in his rolled frame and sank him ~1.3 m), the lower legs folded
   if(ARGP.dead){const D=ARGP.dead;D.root=[0,0,1.42,0,1.1,0];D.body=[.1,0,0,0,-.8,0];D.elR=[-.6,0,0];D.knR=[.8,0,0]}
   // the furrow slam: the head held a little higher so the open jaw doesn't drive half a metre into the ground
   if(ARGP.fslam){ARGP.fslam.neck=[.25,0,0];ARGP.fslam.head=[-.3,0,0]}
   if(SVB[0])SVB[0]._pc=null}
-if(ARG214.on&&SVB[0])try{arg214FixPoses(SVB[0])}catch(err){console.error('v214 feet',err)}
+if(ARG215.on&&SVB[0])try{arg215FixPoses(SVB[0])}catch(err){console.error('v215 feet',err)}
 // the track lead: Argus samples his move a little ahead of its clock while the follow eases toward it
-{const f=svApply;svApply=function(e,dt,now){const S=e&&e.sv;if(!S||S.i!==0||!S.R||!S.R.v214||!S.trk||!ARG214.on)return f.apply(this,arguments);const t0=S.tt;S.tt=t0+ARG214.lead;try{return f.apply(this,arguments)}finally{S.tt=t0}}}
+{const f=svApply;svApply=function(e,dt,now){const S=e&&e.sv;if(!S||S.i!==0||!S.R||!S.R.v215||!S.trk||!ARG215.on)return f.apply(this,arguments);const t0=S.tt;S.tt=t0+ARG215.lead;try{return f.apply(this,arguments)}finally{S.tt=t0}}}
 </script></body></html>

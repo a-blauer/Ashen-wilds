@@ -1,5 +1,5 @@
-# v214 animation viewer: the Bosses tab's Movement group (Idle, Walk, Run) for Argus — he paces at his walk / run speed with the v214 gait
-# and his body is the v214 one. FAIL lines on: Argus not ready, not the v214 body, no Movement actions, speed off, errors.
+# v215 animation viewer: the Bosses tab's Movement group (Idle, Walk, Run) for Argus — he paces at his walk / run speed with the v215 gait
+# and his body is the v215 one. FAIL lines on: Argus not ready, not the v215 body, no Movement actions, speed off, errors.
 # Build first: ./viewer/build_viewer.sh
 import sys,os,json,base64;sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 os.environ['SRC']=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','dist','kq-anim-viewer.html')
@@ -16,10 +16,10 @@ def s(pg):
     for i in range(40):
         if ev("()=>KVCLK.cbs.length>=2"):break
         pg.wait_for_timeout(250)
-    r=ev("()=>{KVselect('boss','s0');for(let i=0;i<60&&!KVbossReady();i++)ST(250);const e=KV.boss&&KV.boss.e;return {ok:KVbossReady(),v214:!!(e&&e.sv&&e.sv.R.v214),acts:KVactions().filter(k=>['bidle','bwalk','brun'].includes(k))}}")
+    r=ev("()=>{KVselect('boss','s0');for(let i=0;i<60&&!KVbossReady();i++)ST(250);const e=KV.boss&&KV.boss.e;return {ok:KVbossReady(),v215:!!(e&&e.sv&&e.sv.R.v215),acts:KVactions().filter(k=>['bidle','bwalk','brun'].includes(k))}}")
     print('argus',json.dumps(r))
     if not r['ok']:F('Argus not ready in the viewer');return
-    if not r['v214']:F('the viewer Argus is not the v214 body')
+    if not r['v215']:F('the viewer Argus is not the v215 body')
     if r['acts']!=['bidle','bwalk','brun']:F('Movement actions',r['acts'])
     ai=ev("()=>{const a=KV.boss.e.sv.B.ai||{};return [a.walk||2.2,a.run||Math.max((a.walk||2.2)*1.6,3.6)]}")
     for k,want in [('bwalk',ai[0]),('brun',ai[1])]:
@@ -33,5 +33,5 @@ def s(pg):
     print('bidle',json.dumps(o))
     if o['spd']>.3:F('idle: still moving',o['spd'])
     if o['err']:F('idle errors',o['err'])
-    print('==== v214_viewer: %d fails'%len(fails))
+    print('==== v215_viewer: %d fails'%len(fails))
 play.run(s)

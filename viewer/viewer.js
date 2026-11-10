@@ -243,14 +243,14 @@ function bossActions(){const B=KV.boss,e=B&&B.e,out=[];if(!e)return out;const S=
   out.push({k:'bwalk',g:'Movement',i:'🚶',t:'Walk',s:'Pacing back and forth at its walk ('+(+wv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(wv,9000)}});
   out.push({k:'brun',g:'Movement',i:'🏃',t:'Run',s:'Pacing back and forth at its run ('+(+rv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(rv,9000)}});
   return out}
-// Movement (v214): stop any move and stand on the mark, or pace 11 m ahead and back
+// Movement (v215): stop any move and stand on the mark, or pace 11 m ahead and back
 function bossPlay0(){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv;svEndMove(e,true);S.mv=null;S.stg=0;bossClean(e);e.m.position.set(B.c.x,e.m.position.y,B.c.z);e.m.rotation.y=B.Y0}
 function bossPace(v,ms){const e=bossGet(),B=KV.boss;if(!e)return;bossPlay0();const a=B.Y0,c=B.c,d=Math.min(11,(B.R||12)*.8);
   KV.bw={e,v,leg:false,a:V(c.x,0,c.z),b:V(c.x+Math.sin(a+Math.PI/2)*d,0,c.z+Math.cos(a+Math.PI/2)*d),end:now_()+ms-400};
   KV.home.hero=V(c.x+Math.sin(a)*(d*.5+9),0,c.z+Math.cos(a)*(d*.5+9));placeHero(KV.home.hero);hero.iv=0}
 // the AI held still: no moves of its own, no stalking, no retreats; between moves it walks back to its mark and faces the hero
 function kvBossIdle(e,dt){const S=e.sv,m=e.m,h=KV.home.boss,ai=S.B.ai||{};S.rt=null;S.plan=null;S.force=null;S.rest=Math.max(S.rest||0,.5);let sp=0;
-  // Movement (v214): pace to a point ahead and back at the boss's own walk or run speed, so its gait can be watched
+  // Movement (v215): pace to a point ahead and back at the boss's own walk or run speed, so its gait can be watched
   const W=KV.bw;if(W&&W.e===e&&now_()<W.end&&!S.mv){const tg=W.leg?W.a:W.b,dx=tg.x-m.position.x,dz=tg.z-m.position.z,L=Math.hypot(dx,dz);
     if(L<.8)W.leg=!W.leg;else{const ya=Math.atan2(dx,dz),da=svAng(ya-m.rotation.y);m.rotation.y+=Math.max(-(ai.turn||2)*dt,Math.min((ai.turn||2)*dt,da));
       sp=W.v*Math.max(.15,1-Math.abs(da)/1.4);walkM(m,Math.sin(m.rotation.y)*sp*dt,Math.cos(m.rotation.y)*sp*dt)}S.walkSp=sp;return}

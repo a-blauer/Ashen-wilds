@@ -2,9 +2,9 @@
 // Owner (Nov 3 2026): "Lets make the Inn an actual building you can walk into with a bar, fire, tables — and make it extra cozy."
 // The inn stands on the plaza ring (DM196_FIX.inn in 0045: 11 x 8 tiles, door toward the fountain). Lot-local frame (lotW103):
 // x across the front (-5.5..5.5), z toward the plaza (front wall at z = +4, door |x| < .85).
-//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor, ceiling beams; inside a long
+//  * Shell (always drawn): stone footing and walls up to the sill, timber and plaster above, a plank floor (v213b: no ceiling beams); inside a long
 //    bar with stools, shelves of bottles and casks behind it, a great stone hearth with a living fire on the right wall, three round
-//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, hops and herbs drying on the beams, a stag skull.
+//    tables with chairs and candles, a fireside bench, a rug, hanging lanterns, a stag skull.
 //  * Roof (its own group): a steep slate roof with two dormers, the chimney and moss. It is hidden while you are inside, so the camera
 //    looks into the room; the walls between you and the camera fade like every other building (v192).
 //  * Walls and furniture are solid (town colliders), the doorway is open; the rest prompt (T.tv) is at the bar, where the innkeeper
@@ -23,8 +23,7 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   twStones(k,stD,-W2,-D2,W2,-D2,0,.36,.4);twStones(k,stD,-W2,D2,-.9,D2,0,.36,.4);twStones(k,stD,.9,D2,W2,D2,0,.36,.4);twStones(k,stD,-W2,-D2,-W2,D2,0,.36,.4);twStones(k,stD,W2,-D2,W2,D2,0,.36,.4);
   k.as('ashlar',()=>k.p('c',st,'box',0,.18,D2+.45,2.0,.36,.7,0,0,0,.04)); // the doorstep
   // v213: the walls above the footing are built by dm196InnWallK (one group per side, cut away from inside)
-  // ceiling beams and a ring of posts
-  k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
+  // v213b: no ceiling beams (owner: the cross beams blocked the camera inside)
   // the bar: a long counter on the left back (v199: top at ~.85 above the floor, it stood chest high and hid the innkeeper), stools, shelves of bottles and casks behind it, a tap barrel
   const bz=-1.9,FL=-.32;k.at(DM196I.bar[0],0,DM196I.bar[1],()=>{const D2=4;k.at(0,FL,0,()=>{k.as('wood',()=>{k.p('c',wood,'box',-3.0,.75,bz,4.2,.7,.5,0,0,0,.03);k.p('c',0x6a4a2e,'box',-3.0,1.13,bz+.05,4.5,.08,.72,0,0,0,.03);k.p('c',woodD,'box',-.95,.75,bz-.9,.5,.7,1.8,0,0,0,.03)});
   for(let i=0;i<4;i++){const x=-4.6+i*1.05;k.as('wood',()=>{k.L('c',woodD,[x,.36,bz+.85],[x,.78,bz+.85],.05,'cyl6');k.p('c',0x6a4a2e,'cyl8',x,.8,bz+.85,.26,.07,.26,0,0,0,.02)})}})
@@ -53,9 +52,9 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   DM196I.seats.forEach(s=>{if(s.k!='chair')return;const a=Math.atan2(s.x-s.tx,s.z-s.tz);k.at(s.x,-.14,s.z,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'box',0,.82,0,.48,.07,.46,0,0,0,.03);
       [[-.19,-.18],[.19,-.18],[-.19,.18],[.19,.18]].forEach(([u,v])=>k.L('c',woodD,[u,.36,v],[u,.8,v],.035,'box'));k.p('c',woodD,'box',0,1.18,.2,.46,.58,.06,0,0,0,.03)})},a)});
   });
-  // lanterns hanging from the beams, hops and herbs drying, a notice board
+  // lanterns hanging on chains, a notice board (v213b: the herbs went with the beams they hung from)
   DM196I.lantern.forEach(([x,z])=>{k.L('m',TWC.iron,[x,H-.15,z],[x,2.55,z],.012,'cyl6',0);TWN100_lantern(k,x,2.32,z,warm)});
-  for(let i=0;i<10;i++){const x=-W2+1.0+i*1.2;k.as('leaf',()=>k.p('c',[0x6a8a3a,0x5a7a34,0x8a8a4a][i%3],'ico',x,H-.42,-.15,.12,.3,.12,0,i,0,.1))}
+
   k.as('board',()=>k.p('c',0x5a3c24,'box',-W2+.2,1.9,-.4,.06,.8,1.2,0,0,0,.02));[0,1,2].forEach(i=>k.p('c',0xe8dcc0,'box',-W2+.25,1.85+(i%2)*.2,-.7+i*.3,.02,.3,.22,0,0,(i-1)*.1,0))}
 // v213: one wall above the footing: stone to the sill, timber framing and plaster panels above, its windows (side 'f' with the doorway)
 function dm196InnWallK(side){return (k,R)=>{const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,pl=0xd8ccb0,woodD=0x3a281a,warm=0xffc070;
