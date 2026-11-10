@@ -1,0 +1,163 @@
+// ================= v215: a song for every instance =================
+// Owner, Nov 10 2026: "When we made the soundtrack there was only 1 instance per zone. Now we have multiple per zone. I need a
+// new song for each instance - carrying the same vibe from the overarching zone that its in."
+// Field I of every zone keeps the zone's v79 song (z0..z5). Fields II and III, the Sovereign's Den and the special levels
+// (Abeksi, the Hilltop Ascent, the Sandstorm Run, the Hidden Sanctum, the Black Channel) each get a song of their own: 23 new
+// themes in MTH. Each keeps its zone's scale (mode) so it sounds like the same land, with its own tempo, chords, instruments
+// and a written melody.
+//   keys: 'z<zone>b' = field II, 'z<zone>c' = field III, 'z<zone>d' = the Den, 'sp_<key>' = a special level (I.sp)
+//   tune: a written melody on top of the v79 parts (no random lead). {k:instrument, kb:instrument of the B part, oct, v,
+//         form:'AB-' one letter per pass of the chords (A / B = that part, - = no melody), A:'...', B:'...'}
+//         notes are 'degree,length' (degree of the theme's scale, 0 = the root, 7 = an octave up; length in sixteenths;
+//         '_' = a rest), bars split by '|'; each part must be as long as the chord list (prog.length bars of 16).
+//   fx:   {wind:v} gusts of wind · {drip:p} echoing water drops · {chime:p} high glassy bells
+// Music follows the place each player stands in, so co-op partners each hear the song of their own instance: nothing to relay.
+var MU215={names:{},K:null,err:0};
+(function(){
+const S=(key,name,th)=>{MTH[key]=th;MU215.names[key]=name};
+// ---------------- Kindlelight (B phrygian; low, sparse, cold) ----------------
+S('z0b','The Glowmire Hollows',{bpm:56,root:47,mode:'phr',prog:[0,0,5,0,0,1,6,0],pad:{v:.024,cut:480,form:1},drone:.13,bell:{p:.1,v:.035,oct:2},
+  arp:{e:4,p:[0,2,1,3],oct:1,v:.04,w:'sine'},bass:{v:.14,c:'x...............',f:'x.....x.x.......'},
+  drums:{f:{taiko:'X.......x.....x.',tek:'....g.......g..g'}},fx:{drip:.07},
+  tune:{k:'cel',oct:2,v:.1,form:'A-B-',A:'4,8 2,8|0,12 _,4|2,8 0,8|-3,16|4,8 5,4 4,4|3,8 1,8|1,8 -1,8|0,16',
+    B:'7,4 4,4 2,8|4,4 2,4 0,8|5,8 7,8|4,12 _,4|0,4 2,4 4,4 7,4|8,8 5,8|6,8 3,8|4,16'}});
+S('z0c','The Rotwood',{bpm:66,root:45,mode:'phr',prog:[0,3,0,1,0,3,6,0],pad:{v:.022,cut:600,form:1},drone:.12,bell:{p:.05,v:.03,oct:2},
+  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045},bass:{v:.14,c:'x.........x.....',f:'x.....x.x.....x.'},
+  drums:{c:{dum:'x.........g.....'},f:{taiko:'X.....x.x.......',tek:'....g.......g.g.'}},fx:{wind:.012},
+  tune:{k:'cello',oct:0,v:.1,form:'AB-',A:'0,8 2,4 4,4|5,8 3,8|4,12 2,4|1,16|0,8 2,4 4,4|7,8 5,4 3,4|3,8 1,8|0,16',
+    B:'4,4 5,4 4,8|3,4 5,4 7,8|9,8 7,4 4,4|5,12 _,4|4,4 5,4 4,8|3,8 0,8|1,8 -1,8|0,16'}});
+S('z0d',"Argus's Den",{bpm:50,root:47,mode:'phr',prog:[0,1,0,1,0,6,1,0],pad:{v:.026,cut:420,form:1},drone:.12,bell:{p:.12,v:.04,oct:1},
+  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|0,8 2,8|1,16|4,16|3,8 1,8|1,16|0,16',
+    B:'7,8 5,8|5,16|4,8 2,8|3,16|2,8 4,8|6,16|5,8 1,8|0,16'}});
+// ---------------- Hillside Crest (G dorian; open, windswept) ----------------
+S('z1b','Mistmere',{bpm:76,root:55,mode:'dor',prog:[0,2,3,0,0,2,6,4],pad:{v:.02,cut:1000},drone:.05,bell:{p:.08,v:.03},
+  arp:{e:2,p:[0,1,2,3,2,1,2,1],oct:0,v:.06},bass:{v:.12,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
+  drums:{f:{taiko:'X.....x.x...x...',hat:'..x...x...x...x.',tek:'....x.......x...'}},
+  tune:{k:'flute',oct:1,v:.06,form:'AB-',A:'4,8 2,4 0,4|4,8 6,8|7,8 5,4 3,4|4,12 _,4|4,8 2,4 0,4|2,4 4,4 6,8|8,8 6,8|4,16',
+    B:'7,8 9,4 7,4|6,8 4,8|5,4 7,4 10,8|9,12 _,4|7,4 4,4 2,4 0,4|2,8 4,8|6,4 8,4 6,8|4,8 1,8'}});
+S('z1c','The Galecliffs',{bpm:96,root:57,mode:'dor',prog:[0,3,6,0,0,3,4,4],pad:{v:.018,cut:1200},drone:.06,
+  arp:{e:2,p:[0,2,1,3,0,2,1,2],oct:0,v:.06},bass:{v:.13,c:'x.......x...x...',f:'x.x.x.x.x.x.x.x.'},
+  drums:{c:{dum:'x.......x.......'},f:{taiko:'X..x..x.X..x..x.',hat:'..x...x...x...x.',tek:'....x.......x...'}},fx:{wind:.016},
+  tune:{k:'whistle',oct:1,v:.06,form:'AB-',A:'0,4 4,4 7,8|7,4 5,4 3,8|6,4 8,4 10,8|9,4 7,12|0,4 4,4 7,8|10,8 7,8|8,8 6,4 4,4|4,12 _,4',
+    B:'9,6 7,2 4,8|5,6 7,2 3,8|6,8 8,8|7,16|9,6 7,2 4,8|5,4 7,4 10,8|11,8 8,8|8,4 6,4 4,8'}});
+S('z1d',"The Hydra's Den",{bpm:70,root:55,mode:'dor',prog:[0,0,5,0,0,6,5,4],pad:{v:.024,cut:700,form:1},drone:.11,bell:{p:.1,v:.035,oct:1},
+  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|2,12 _,4|5,8 7,8|4,16|0,16|6,8 8,8|7,8 5,8|4,16',
+    B:'7,8 9,8|7,16|9,8 7,8|4,16|7,8 4,8|6,16|5,8 9,8|8,16'}});
+S('sp_abeksi','Abeksi',{bpm:80,root:55,mode:'dor',prog:[0,5,0,3,0,5,6,4],pad:{v:.014,cut:700},drone:.07,
+  bass:{v:.13,c:'x..x......x.....'},drums:{c:{shak:'..g...g...g...g.',tek:'............g...'}},
+  tune:{k:'pluck',kb:'reed',oct:1,v:.11,vb:.03,form:'A-AB',A:'0,2 _,2 2,2 _,2 4,4 _,4|5,2 _,2 7,2 _,2 5,4 _,4|4,2 _,2 2,2 _,2 0,4 _,4|3,4 5,4 3,8|0,2 _,2 2,2 _,2 4,4 _,4|9,2 _,2 7,2 _,2 5,4 _,4|6,4 8,4 6,8|4,8 _,8',
+    B:'4,8 5,2 4,2 2,4|5,12 _,4|4,4 2,4 0,8|3,12 _,4|4,8 5,2 4,2 2,4|7,12 _,4|6,4 8,4 10,8|8,16'}});
+S('sp_ascent','The Hilltop Ascent',{bpm:132,root:55,mode:'dor',prog:[0,0,6,6,3,3,4,4],pad:{v:.015,cut:1300},drone:.05,fight:1,
+  arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:0,v:.035},bass:{v:.1,c:'x.x.x.x.x.x.x.x.'},
+  drums:{c:{taiko:'X..x..x.X..x..x.',hat:'..x...x...x...x.',tek:'....x.......x...'}},fx:{wind:.012},
+  tune:{k:'horn',oct:1,v:.04,form:'AB',A:'0,6 2,2 4,8|7,12 4,4|6,6 8,2 10,8|8,12 6,4|7,6 5,2 3,8|5,8 7,8|8,6 6,2 4,8|4,12 _,4',
+    B:'7,4 9,4 11,8|9,4 7,4 4,8|10,8 8,8|6,12 _,4|3,4 5,4 7,8|10,12 7,4|8,8 11,8|11,4 8,4 6,4 4,4'}});
+// ---------------- Burningeye Summit (E phrygian; frozen peak, burning sky) ----------------
+S('z2b','The Rimecaverns',{bpm:72,root:52,mode:'phr',prog:[0,5,1,0,0,5,6,0],pad:{v:.022,cut:700,form:1},drone:.1,
+  arp:{e:2,p:[0,2,3,2,1,2,3,2],oct:1,v:.035,w:'sine'},bass:{v:.13,c:'x...............',f:'x.xxx.xxx.xxx.x.'},
+  drums:{f:{taiko:'X..x..x.X..x..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},fx:{drip:.05,chime:.06},
+  tune:{k:'cel',oct:2,v:.09,form:'AB-',A:'7,4 4,4 2,8|5,4 7,4 9,8|8,8 5,8|4,12 _,4|7,4 4,4 2,8|9,8 7,8|8,8 6,8|7,16',
+    B:'0,4 2,4 4,4 7,4|5,8 2,8|1,4 3,4 5,4 8,4|7,12 _,4|4,4 7,4 9,8|7,8 5,8|3,8 1,8|0,16'}});
+S('z2c','Stormcrown',{bpm:100,root:52,mode:'phr',prog:[0,6,1,0,0,6,5,1],pad:{v:.024,cut:850},drone:.11,bell:{p:.08,v:.035,oct:2},
+  arp:{e:2,p:[0,2,1,2,0,2,1,3],oct:0,v:.04},bass:{v:.14,c:'x.......x.......',f:'x.xxx.xxx.xxx.x.'},
+  drums:{c:{taiko:'x.......g.......'},f:{taiko:'X..x..x.X..x..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},fx:{wind:.03},
+  tune:{k:'horn',oct:0,v:.07,form:'AB-',A:'0,8 4,8|3,8 1,4 -1,4|1,4 3,4 5,8|4,12 _,4|7,8 4,8|6,8 8,4 6,4|5,8 7,8|8,8 5,8',
+    B:'4,4 5,4 4,4 2,4|3,8 6,8|5,4 3,4 1,8|0,12 _,4|4,4 5,4 7,8|8,8 10,8|9,8 7,8|8,16'}});
+S('z2d',"The Rime Wraith's Den",{bpm:60,root:52,mode:'phr',prog:[0,1,0,1,0,5,1,0],pad:{v:.026,cut:560,form:1},drone:.11,bell:{p:.16,v:.04,oct:2},
+  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............'}},fx:{wind:.014},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'4,16|5,12 _,4|4,8 2,8|1,16|0,8 4,8|7,8 5,8|5,8 3,8|4,16',
+    B:'7,16|8,12 _,4|7,8 4,8|5,16|4,8 2,8|2,16|1,8 3,8|0,16'}});
+// ---------------- Searing Sands (D hijaz; reed and oud) ----------------
+S('z3b','The Sunken Temple',{bpm:78,root:50,mode:'hij',prog:[0,1,0,3,0,1,6,0],pad:{v:.02,cut:700,form:1},drone:.13,
+  arp:{e:2,p:[0,1,2,1,0,2,1,0],oct:0,v:.055,w:'square'},bass:{v:.12,c:'x.....x.........',f:'x..x..x.x..x..x.'},
+  drums:{c:{dum:'x.....x...x.....',tek:'....g.......g.g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},
+  tune:{k:'flute',kb:'reed',oct:1,v:.06,vb:.035,form:'AB-',A:'4,8 5,2 4,2 2,4|3,8 1,8|2,4 1,4 0,8|3,4 5,4 7,8|4,8 5,2 4,2 2,4|5,8 8,8|8,4 6,4 3,8|2,4 1,4 0,8',
+    B:'7,8 9,8|8,4 10,4 8,8|9,4 8,4 7,8|5,12 _,4|4,4 2,4 1,4 0,4|1,8 3,8|6,8 3,8|2,8 0,8'}});
+S('z3c','The Salt Wastes',{bpm:70,root:50,mode:'hij',prog:[0,0,6,0,0,3,1,0],pad:{v:.016,cut:1200},drone:.15,bell:{p:.05,v:.025,oct:2},
+  bass:{v:.11,c:'x...............',f:'x..x..x.x..x..x.'},
+  drums:{c:{shak:'......g.......g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},fx:{chime:.05,wind:.008},
+  tune:{k:'reed',oct:1,v:.04,form:'A-B-',A:'4,16|5,4 4,4 2,8|3,8 1,8|0,12 _,4|4,8 7,8|7,4 5,4 3,8|1,4 3,4 5,8|4,16',
+    B:'7,12 9,4|8,4 7,4 4,8|6,8 8,8|7,12 _,4|2,4 4,4 7,8|5,8 3,8|3,4 1,4 -2,8|0,16'}});
+S('z3d',"Ssith'ra's Den",{bpm:64,root:50,mode:'hij',prog:[0,1,0,1,0,6,1,0],pad:{v:.024,cut:560,form:1},drone:.12,
+  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............',shak:'......g.......g.'}},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|3,16|4,16|6,8 8,8|8,8 5,8|4,16',
+    B:'7,16|8,12 _,4|7,8 4,8|5,8 3,8|2,16|3,8 1,8|1,16|0,16'}});
+S('sp_sandrun','The Sandstorm Run',{bpm:126,root:50,mode:'hij',prog:[0,0,1,1,0,0,6,1],pad:{v:.018,cut:900},drone:.1,fight:1,
+  arp:{e:2,p:[0,1,2,1,0,2,1,0],oct:0,v:.05,w:'square'},bass:{v:.13,c:'x..x..x.x..x..x.'},
+  drums:{c:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},fx:{wind:.035},
+  tune:{k:'reed',oct:1,v:.04,form:'AB',A:'0,4 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,8|3,12 _,4|4,4 7,4 9,8|8,2 7,2 5,4 4,8|6,4 8,4 10,8|8,8 5,8',
+    B:'7,6 9,2 7,8|4,6 5,2 4,8|8,6 10,2 8,8|5,12 _,4|7,4 4,4 2,4 0,4|2,4 4,4 7,8|10,8 8,8|8,4 5,4 3,4 1,4'}});
+// ---------------- The Dirge (C locrian; bells, hollow choir) ----------------
+S('z4b','The Drowned Crypts',{bpm:54,root:48,mode:'loc',prog:[0,3,0,1,0,3,6,1],pad:{v:.026,cut:520,form:1},drone:.13,bell:{p:.14,v:.04,oct:1},
+  bass:{v:.14,c:'x...............',f:'x..x....x..x....'},
+  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},fx:{drip:.08},
+  tune:{k:'cel',oct:1,v:.1,form:'A-B-',A:'2,8 0,8|3,8 5,8|4,8 2,8|1,12 _,4|2,8 4,8|7,8 5,8|6,8 3,8|1,16',
+    B:'7,8 4,8|5,4 7,4 10,8|9,8 7,8|8,12 _,4|4,4 2,4 0,8|3,8 0,8|-1,8 1,8|1,8 -2,8'}});
+S('z4c','The Ossuary Fields',{bpm:72,root:48,mode:'loc',prog:[0,5,0,4,0,5,1,0],pad:{v:.024,cut:650,form:1},drone:.11,bell:{p:.12,v:.04,oct:2},
+  bass:{v:.14,c:'x.......x.......',f:'x..x....x..x....'},
+  drums:{c:{tek:'....g.......g..g',shak:'g.......g.......'},f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},fx:{wind:.01},
+  tune:{k:'cello',oct:0,v:.1,form:'AB-',A:'0,8 2,8|2,4 0,4 -2,8|0,8 4,8|4,12 _,4|7,8 4,8|5,8 7,4 5,4|3,8 1,8|0,16',
+    B:'4,4 2,4 4,8|5,8 9,8|7,8 4,4 2,4|1,12 _,4|2,4 4,4 7,8|7,8 5,8|5,4 3,4 1,8|0,16'}});
+S('z4d',"The Bloated One's Den",{bpm:52,root:48,mode:'loc',prog:[0,1,0,1,0,4,1,0],pad:{v:.024,cut:480,form:1},drone:.1,bell:{p:.2,v:.045,oct:1},
+  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|3,16|4,16|4,8 6,8|5,8 3,8|2,16',
+    B:'7,16|8,12 _,4|7,8 4,8|5,16|4,8 2,8|1,16|1,8 3,8|0,16'}});
+S('sp_sanctum','The Hidden Sanctum',{bpm:58,root:48,mode:'loc',prog:[0,5,4,1,0,5,6,1],pad:{v:.026,cut:800,form:1},drone:.1,
+  bass:{v:.12,c:'x...............'},fx:{chime:.04},
+  tune:{k:'bell',kb:'choir',oct:1,v:.06,vb:.05,form:'AB-',A:'4,16|5,8 7,8|6,8 4,8|3,12 _,4|2,8 4,8|7,16|6,8 3,8|1,16',
+    B:'7,8 4,8|9,16|8,8 6,8|5,12 _,4|4,8 2,8|2,8 0,8|-1,8 1,8|1,16'}});
+S('sp_channel','The Black Channel',{bpm:68,root:48,mode:'loc',prog:[0,3,6,1,0,3,4,1],pad:{v:.022,cut:600,form:1},drone:.12,bell:{p:.06,v:.035,oct:2},
+  arp:{e:2,p:[0,1,2,3,2,1,2,1],oct:0,v:.05},bass:{v:.14,c:'x.......x.......',f:'x..x....x..x....'},
+  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},fx:{drip:.03},
+  tune:{k:'cello',oct:0,v:.1,form:'AB-',A:'0,8 2,4 4,4|5,8 3,8|6,8 8,4 6,4|5,12 _,4|4,8 2,4 0,4|0,8 3,8|4,8 6,8|5,8 1,8',
+    B:'7,8 4,8|7,4 5,4 3,8|3,8 6,8|8,12 _,4|7,4 4,4 2,8|3,8 5,8|8,8 6,8|5,16'}});
+// ---------------- The Citadel (C harmonic minor; organ, brass, harpsichord) ----------------
+S('z5b','The Outer Ramparts',{bpm:84,root:48,mode:'hmin',prog:[0,0,5,4,0,3,4,4],pad:{v:.022,cut:1000,form:1},drone:.09,
+  bass:{v:.14,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
+  drums:{c:{taiko:'x.......x.......',snare:'....g.g.....g.gg'},f:{taiko:'X.......X.....x.',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}},
+  tune:{k:'horn',oct:1,v:.05,form:'AB-',A:'0,8 2,4 4,4|4,12 2,4|5,8 7,8|6,12 _,4|0,8 2,4 4,4|7,8 5,8|4,8 6,8|8,12 _,4',
+    B:'7,6 9,2 7,8|4,8 2,8|5,4 7,4 9,8|8,12 _,4|7,4 4,4 2,4 0,4|3,8 5,8|6,8 4,8|4,16'}});
+S('z5c','The Inner Keep',{bpm:66,root:48,mode:'hmin',prog:[0,3,4,0,5,3,1,4],pad:{v:.02,cut:1100,form:1},drone:.07,bell:{p:.06,v:.03,oct:2},
+  arp:{e:1,p:[0,1,2,3,2,1,2,1,0,1,2,3,2,1,2,1],oct:1,v:.032,w:'square'},bass:{v:.13,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
+  drums:{f:{taiko:'X.......X.....x.',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}},
+  tune:{k:'cello',oct:1,v:.075,form:'AB-',A:'4,8 2,4 0,4|3,8 5,8|6,8 4,4 8,4|7,12 _,4|9,8 7,4 5,4|3,8 7,8|5,8 3,8|4,16',
+    B:'7,4 9,4 11,8|10,8 7,8|8,4 6,4 4,8|2,12 _,4|5,4 7,4 9,8|7,8 5,8|3,4 1,4 3,8|4,8 6,8'}});
+S('z5d',"Lord Vaelric's Den",{bpm:60,root:48,mode:'hmin',prog:[0,1,0,4,0,5,1,4],pad:{v:.03,cut:1000,form:1},drone:.1,bell:{p:.1,v:.04,oct:1},
+  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
+  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|6,16|7,16|5,8 7,8|8,8 5,8|4,16',
+    B:'4,16|3,12 _,4|4,8 7,8|8,16|9,8 7,8|7,8 5,8|3,8 1,8|-1,16'}});
+})();
+
+// ---------- the melody's instruments (v79's and the title's, 3580) ----------
+MU215.K={
+  cel:(f,t,d,v)=>muCelesta(f,t,v),
+  bell:(f,t,d,v)=>muBell(f,t,v),
+  pluck:(f,t,d,v)=>muPluck(f,t,v),
+  flute:(f,t,d,v)=>muFlute(f,t,d,v),
+  cello:(f,t,d,v)=>muCello(f,t,d,v),
+  reed:(f,t,d,v)=>muLead(f,t,d,v,{w:'square',cut:1500,bp:1,vib:1.4,at:.05,slide:1}),
+  horn:(f,t,d,v)=>muLead(f,t,d,v,{w:'sawtooth',cut:1100,vib:.5,at:.09,sub:1}),
+  whistle:(f,t,d,v)=>muLead(f,t,d,v,{w:'sine',cut:3000,vib:1,at:.04,sub:1}),
+  choir:(f,t,d,v)=>{muLead(f,t,d,v,{w:'sine',cut:1800,vib:1.2,at:.3,sub:1});muLead(f*2,t,d,v*.45,{w:'triangle',cut:1400,vib:1.2,at:.35,sub:0})}};
+// 'deg,len deg,len|…' → {start step: [degree, length]}; null when the part is not exactly `bars` bars long
+function mu215Parse(str,bars){const on={};let at=0;for(const tok of str.replace(/\|/g,' ').split(/\s+/)){if(!tok)continue;const q=tok.split(','),l=+q[1];if(!(l>0))return null;
+    if(q[0]!='_'){const d=+q[0];if(!isFinite(d))return null;on[at]=[d,l]}at+=l}
+  return at===bars*16?on:null}
+function mu215Tune(th){const T=th.tune;if(T.on)return T;T.on={};for(const k of ['A','B'])if(T[k]){T.on[k]=mu215Parse(T[k],th.prog.length);if(!T.on[k])console.warn('v215 tune length',k)}return T}
+function mu215Step(th,t,bar,s){const sp=60/th.bpm/4,n=th.prog.length,T=th.tune,X=th.fx;
+  if(T){mu215Tune(th);const ch=T.form[Math.floor(bar/n)%T.form.length],on=T.on[ch],e=on&&on[(bar%n)*16+s];
+    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v)}}
+  if(X){const deg=muChord(th,bar);
+    if(X.wind&&s==0&&bar%2==0){const up=Math.random()<.5,a=300+Math.random()*250,b=700+Math.random()*700;muNz(t,sp*30,'bandpass',up?a:b,up?b:a,1.6,X.wind,2,sp*(8+Math.random()*8))}
+    if(X.drip&&s%2==0&&Math.random()<X.drip)muCelesta(muF(muNote(th,deg+[0,2,4,7][Math.random()*4|0],3)),t,.035+Math.random()*.03);
+    if(X.chime&&s%4==2&&Math.random()<X.chime)muBell(muF(muNote(th,deg+[0,4,7][Math.random()*3|0],3)),t,.014)}}
+{const f=muStep;muStep=function(t){const r=f.apply(this,arguments),th=MU.th;
+  if(th&&(th.tune||th.fx)){try{mu215Step(th,t,MU.bar,MU.s)}catch(e){if(!MU215.err){MU215.err=1;console.warn('v215 song',e)}}}return r}}
+
+// ---------- which song plays where ----------
+function mu215Key(I){if(!I)return null;if(I.sp)return 'sp_'+I.sp;if(I.den)return 'z'+I.z+'d';return I.fld&&I.k==1?'z'+I.z+'b':I.fld&&I.k==2?'z'+I.z+'c':null}
+{const f=muWant;muWant=function(){const w=f.apply(this,arguments);
+  if(typeof w=='string'&&/^z\d+$/.test(w)){try{const P=pl.position,k=mu215Key(insAt(Math.round(P.x),Math.round(P.z)));if(k&&MTH[k])return k}catch(_){}}
+  return w}}

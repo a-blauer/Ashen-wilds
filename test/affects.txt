@@ -134,3 +134,4 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 3840|3850|3640|3650|3660|3670|v213|guard|dash|dodge|hitHero|card|inn|tavern|0045-|0005-|0108-|0740-|3200-: v213_guard.py v213_cards.py v213_coop.py v190_deco.py v199_town.py v196_meadow.py v161_keys.py v164_dodge_grip.py v206_owner.py v153_ascent.py
 # v212 NaN guards: the glow / composite skip NaN pixels, health bars, damage, hero stats and the camera repair NaN (3830, 0060, 0104, 0920)
 3830|v212|0060|0104|0920|nan|white: v212_white.py v38t.py v32t.py v110_fight.py
+v215|songs|music|0600-|3580-: v215_songs.py
