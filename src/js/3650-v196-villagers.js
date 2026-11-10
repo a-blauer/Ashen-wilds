@@ -34,7 +34,7 @@ function dm196Snap(g){try{const M=dm196BodyMeshes(g);if(!M.length)return;g.updat
 function dm196Spots(){const T=TOWNS[0],sig=KL103.ver+'|'+kf109().s+'|'+(shopBuilt('bard')?1:0);if(DM196V.spots&&DM196V.ver===sig)return DM196V.spots;const S=[],keep=new Map();(DM196V.spots||[]).forEach(s=>{if(s.busy)keep.set(s.id,s.busy)});
   const add=o=>{o.id=o.k+'|'+o.x.toFixed(1)+'|'+o.z.toFixed(1);o.busy=keep.get(o.id)||null;S.push(o)};
   // the Inn: chairs and stools (eat), the fireside bench (warm), reached through the door
-  const l=DM196I.l;if(l){const door=lotW103(l,0,5.3),inD=lotW103(l,0,2.6);
+  const l=DM196I.l;if(l){const door=lotW103(l,0,DM196I.D2+1.3),inD=lotW103(l,0,DM196I.D2-1.4);
     DM196I.seats.forEach(s=>{const [x,z]=lotW103(l,s.x,s.z),[tx,tz]=lotW103(l,s.tx,s.tz),a=Math.hypot(s.x-s.tx,s.z-s.tz)||1,[ax,az]=lotW103(l,s.x+(s.x-s.tx)/a*.55,s.z+(s.z-s.tz)/a*.55);
       add({k:s.k,act:s.k=='bench'?'warm':'eat',x,z,ry:Math.atan2(tx-x,tz-z),sit:1,h:{chair:.40,stool:.50,bench:.38}[s.k],w:5,via:[door,inD,[ax,az]],inn:1})})}
   // the fountain's rim (eight places, facing out)

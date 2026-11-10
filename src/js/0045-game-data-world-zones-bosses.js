@@ -120,10 +120,10 @@ var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0]
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
   ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
-var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-43,5.5,4],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
+var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-48,6.1,5.1,13.8],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
 function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));
-  for(const k in DM196_FIX){const [ring,deg,w,d]=DM196_FIX[k];L.push(Object.assign(dm196At(ring,deg),{id:k,fix:1,w,d}))}return L}
+  for(const k in DM196_FIX){const [ring,deg,w,d,rr]=DM196_FIX[k];const A=dm196At(ring,deg);if(rr){A.x=+(rr*Math.sin(A.ang)).toFixed(3);A.z=+(-rr*Math.cos(A.ang)).toFixed(3);A.r=rr}L.push(Object.assign(A,{id:k,fix:1,w,d}))}return L}   // v213: an optional radius (the bigger Inn sits nearer the fountain)
 function dm196R(x,z){const T=TOWNS[0];return Math.hypot(x-T.cx,z-T.cy)}
 // a portal room's entry on the meadow's edge, and the room's own walkable disc (world coords)
 function dm196Ent(i,r){const T=TOWNS[0],c=DM196.rooms[i],L=Math.hypot(c[0],c[1]);r=r==null?DM196.RM:r;return [T.cx+c[0]/L*r,T.cy+c[1]/L*r]}

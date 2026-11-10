@@ -11,7 +11,7 @@
 //  * Skipped: typing in text boxes, Ctrl/Alt/Cmd shortcuts, the title screen and the intro film.
 var KB161={A:[
   ['up','Move forward','w','Movement'],['down','Move back','s','Movement'],['left','Move left','a','Movement'],['right','Move right','d','Movement'],
-  ['dash','Dash','shift','Combat'],['cmd','Engage: companions attack your target','e','Combat'],['ret','Retreat: companions run back to you','r','Combat'],['tgt','Target nearest enemy','tab','Combat'],
+  ['dash','Dash',' ','Combat'],['guard','Class defence (block / parry / ward / taunt)','shift','Combat'],['cmd','Engage: companions attack your target','e','Combat'],['ret','Retreat: companions run back to you','r','Combat'],['tgt','Target nearest enemy','tab','Combat'],
   ['a1','Ability 1','1','Combat'],['a2','Ability 2','2','Combat'],['a3','Ability 3','3','Combat'],['a4','Ability 4','4','Combat'],['a5','Ability 5','5','Combat'],['a6','Ability 6','6','Combat'],
   ['hp','Health potion','z','Combat'],['mp','Mana potion','x','Combat'],['feed','Feed the most hurt companion','q','Combat'],
   ['act','Interact (talk, gather, fish)','f','World'],['mount','Ride / dismount','v','World'],['recall','Recall to Duskhold','t','World'],

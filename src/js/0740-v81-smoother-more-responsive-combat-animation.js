@@ -31,7 +31,7 @@ function heroFlinch(){HA.flT=nowP()}
 
 // ---------- input: remember an attack pressed just before the weapon is ready ----------
 // only fresh presses are remembered (not the repeat calls made every frame while the button is held)
-HA.press=-1e9;{const mark=e=>{if(e.type!='keydown'||e.key==' ')HA.press=performance.now()};['pointerdown','mousedown','keydown'].forEach(t=>addEventListener(t,mark,true))}
+HA.press=-1e9;{const mark=e=>{if(e.type!='keydown')HA.press=performance.now()};['pointerdown','mousedown','keydown'].forEach(t=>addEventListener(t,mark,true))}
 {const f=swing;swing=function(){const a0=atkCd,r=f.apply(this,arguments);if(atkCd>a0+1e-4)HA.buf=0;else if(a0>0&&a0<.35&&party.length&&!hero.chan&&performance.now()-HA.press<40)HA.buf=nowP();return r}}
 // ---------- dodge cancels the current attack and plays its own quick tuck ----------
 {const f=dodge;dodge=function(){const d0=hero.dash,n0=tws.length;const r=f.apply(this,arguments);

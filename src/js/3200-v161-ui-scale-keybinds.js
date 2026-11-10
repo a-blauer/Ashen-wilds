@@ -240,7 +240,7 @@ function kb161Lbl(def){const a=KB161.A.find(x=>x[2]===def&&!x[4]);return a?kb161
 function kb161Fix(el,attr){if(!el)return;const o=el.dataset.kb0||(el.dataset.kb0=el.textContent.trim());const d=o.toLowerCase()=='space'?' ':o.toLowerCase();const n=kb161Lbl(d);const t=n||o;if(el.textContent!==t)el.textContent=t}
 function kb161Labels(){
   document.querySelectorAll('#acts .hs .kb').forEach(s=>{const b=s.closest('.hs'),x=b&&b.dataset.x||'';let d=null;
-    if(/^E?\d$/.test(x))d=String(+x.replace('E','')+1);else d={d:'shift',p:'z',z:'x',v:'v'}[x];
+    if(/^E?\d$/.test(x))d=String(+x.replace('E','')+1);else d={d:' ',g:'shift',p:'z',z:'x',v:'v'}[x];
     const t=d?kb161Lbl(d):null;const want=t||s.dataset.kb0||s.textContent;if(!s.dataset.kb0)s.dataset.kb0=s.textContent;if(s.textContent!==want)s.textContent=want;
     if(b&&t&&b.title){const nt=b.title.replace(/\((?:[^()]{1,9})\)\s*$/,'('+t+')');if(nt!==b.title)b.title=nt}});
   document.querySelectorAll('#sysmenu kbd').forEach(k=>kb161Fix(k));
@@ -248,7 +248,7 @@ function kb161Labels(){
   const sub=document.querySelector('.wrap>.sub');if(sub){if(!sub.dataset.kb0)sub.dataset.kb0=sub.innerHTML;
     if(!KB161.on){if(sub.innerHTML!==sub.dataset.kb0)sub.innerHTML=sub.dataset.kb0}
     else{const L=id=>kb161Label(kb161Get(id));
-      sub.textContent=`${L('up')}${L('left')}${L('down')}${L('right')} move · Right click turns mouse-look on / off · Left click attack · ${['a1','a2','a3','a4','a5','a6'].map(L).join(' ')} abilities · ${L('dash')} dash · ${L('cmd')} engage · ${L('ret')} retreat · ${L('tgt')} target · ${L('char')} character · ${L('abil')} abilities · ${L('king')} kingdom · ${L('feed')} feed companion · ${L('hp')} / ${L('mp')} potions · ${L('act')} interact · ${L('inv')} inventory · ${L('comp')} companions · ${L('eggs')} eggs · ${L('menu')} menu · ${L('recall')} recall · ${L('set')} settings · ${L('coop')} co-op · ${L('mount')} mount · Mouse wheel zoom · keys can be changed in Settings`}}}
+      sub.textContent=`${L('up')}${L('left')}${L('down')}${L('right')} move · Right click turns mouse-look on / off · Left click attack · ${['a1','a2','a3','a4','a5','a6'].map(L).join(' ')} abilities · ${L('dash')} dash · ${L('guard')} class defence · ${L('cmd')} engage · ${L('ret')} retreat · ${L('tgt')} target · ${L('char')} character · ${L('abil')} abilities · ${L('king')} kingdom · ${L('feed')} feed companion · ${L('hp')} / ${L('mp')} potions · ${L('act')} interact · ${L('inv')} inventory · ${L('comp')} companions · ${L('eggs')} eggs · ${L('menu')} menu · ${L('recall')} recall · ${L('set')} settings · ${L('coop')} co-op · ${L('mount')} mount · Mouse wheel zoom · keys can be changed in Settings`}}}
 {const a=$('acts');if(a)new MutationObserver(()=>{if(KB161.on)try{kb161Labels()}catch(_){}}).observe(a,{childList:true})}
 setTimeout(()=>{try{kb161Labels()}catch(_){}},0);
 try{ui161Lay(true)}catch(_){}

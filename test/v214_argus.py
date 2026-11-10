@@ -1,12 +1,12 @@
-# v213: Argus, the Hundred-Eyed, rebuilt on one skinned, painted body (MODEL_DETAIL_RECIPE) with a smoother gait and strikes.
+# v214: Argus, the Hundred-Eyed, rebuilt on one skinned, painted body (MODEL_DETAIL_RECIPE) with a smoother gait and strikes.
 # FAIL lines on:
-#  * model: not the v213 skinned body, triangles over 30k (every layer and rigid piece), a joint his poses / springs use missing,
+#  * model: not the v214 skinned body, triangles over 30k (every layer and rigid piece), a joint his poses / springs use missing,
 #    NaN vertices, fewer than 20 eyes, an eye without its iris, height outside 4.2-6.2 m, page errors
 #  * gait: the lowest paw's mean ground speed while walking at 2.6 m/s and trotting at 4.2 m/s over 1.0 m/s (planted paws stay put)
 #  * smooth motion: in idle, walk and every move, no joint turns faster than 22 rad/s between two 16 ms frames (a pop)
 #  * every move runs to its end without errors
-# PICS=1 writes out/v213_argus.png (front, side, 3/4, back) and out/v213_poses.png (poses); POSES= the pose list;
-# CLOSE=1 out/v213_close.png (head, flank, legs). SRC=<old build> renders the old model for comparison (checks skipped).
+# PICS=1 writes out/v214_argus.png (front, side, 3/4, back) and out/v214_poses.png (poses); POSES= the pose list;
+# CLOSE=1 out/v214_close.png (head, flank, legs). SRC=<old build> renders the old model for comparison (checks skipped).
 import os,sys,json,base64
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -14,18 +14,18 @@ from playwright.sync_api import Page as _Pg
 _go=_Pg.goto;_Pg.goto=lambda self,url,**k:_go(self,url,**dict(k,timeout=max(k.get('timeout',0),900000)))
 fails=[]
 def F(m):fails.append(m);print('FAIL',m)
-TAG=os.environ.get('TAG','v213')
+TAG=os.environ.get('TAG','v214')
 SETUP=r"""()=>{window.VT=performance.now();performance.now=()=>VT;window.requestAnimationFrame=()=>0;
   window.STEP=(sec)=>{const n=Math.max(1,Math.round(sec/.016)),pr=POST.render;POST.render=()=>{};for(let i=0;i<n;i++){VT+=16;hero.hp=heroMax();try{loop(VT)}catch(err){window.LERR=String(err&&err.stack||err).slice(0,400)}}POST.render=pr};
   window.__down=down;down=function(){hero.hp=heroMax()};return 1}"""
-MODEL=r"""()=>{const R=svRig();SVB[0].build(R,null);svRest(R);svMerge(R);R.root.updateMatrixWorld(true);const V=new THREE.Vector3(),out={v213:!!R.v213,tris:0,ms:(window.ARG213&&ARG213.ms)||0,body:(window.ARG213&&ARG213.tris)||0};
+MODEL=r"""()=>{const R=svRig();SVB[0].build(R,null);svRest(R);svMerge(R);R.root.updateMatrixWorld(true);const V=new THREE.Vector3(),out={v214:!!R.v214,tris:0,ms:(window.ARG214&&ARG214.ms)||0,body:(window.ARG214&&ARG214.tris)||0};
   const need=new Set();for(const n in ARGP)for(const k in ARGP[n])need.add(k);for(const k in (SVB[0].spr||{}))need.add(k);need.delete('root');out.missing=[...need].filter(k=>!R.J[k]);
   let nan=0,top=-9,lo=9,meshes=0;R.root.traverse(o=>{if(!o.isMesh||!o.visible)return;meshes++;const P=o.geometry.attributes.position;out.tris+=P.count/3;if(o.material.transparent)return;
     for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);if(o.isSkinnedMesh)V.applyMatrix4(R.root.matrixWorld);else V.applyMatrix4(o.matrixWorld);if(!isFinite(V.x+V.y+V.z))nan++;else{top=Math.max(top,V.y);lo=Math.min(lo,V.y)}}});
   out.tris=Math.round(out.tris);out.nan=nan;out.top=top;out.lo=lo;out.meshes=meshes;out.eyes=R.eyes.length;out.badEye=R.eyes.filter(E=>!E.ir||!E.ir.isMesh).length;return out}"""
 DEN=r"""()=>{try{if(AF)arenaFail()}catch(_){}insArrive(PMAP[0].ins[3]);return 1}"""
 DEN2=r"""()=>{STEP(.5);enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});const A=ARN[0];window.XA=A;toPos(A.cx,A.cz+12);STEP(.3);const e=bossEnt(0);window.BE=e;STEP(.4);
-  window.__pick=svPick;svPick=()=>null;return {ok:!!(e&&e.sv),v213:!!(e&&e.sv&&e.sv.R.v213)}}"""
+  window.__pick=svPick;svPick=()=>null;return {ok:!!(e&&e.sv),v214:!!(e&&e.sv&&e.sv.R.v214)}}"""
 # the lowest paw's ground speed while walking in place (the body moves forward at v; a planted paw should stay still)
 WALK=r"""(v)=>{const e=BE,S=e.sv;try{svEndMove(e,true)}catch(_){}S.mv=null;S.trk=null;S.aw=0;S.spd=v;let now=2e5;const rec=[];e.m.rotation.y=0;const z0=e.m.position.z;
   const P=['pwL','pwR','hkL','hkR'];
@@ -49,7 +49,7 @@ PIC=r"""([mode,poses,W,H])=>{const rd=new THREE.WebGLRenderer({antialias:true,pr
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0x2a2e26,roughness:1}));fl.rotation.x=-Math.PI/2;sc.add(fl);
   const R=svRig();SVB[0].build(R,null);svRest(R);svMerge(R);sc.add(R.root);const B=SVB[0];
   const setP=(p)=>{const P=p?svPose(B,p):{};for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=P[k]||[0,0,0,0,0,0];g.rotation.set(r0.x+(o[0]||0),r0.y+(o[1]||0),r0.z+(o[2]||0));g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}
-    try{if(R.v213post)R.v213post(R,1,performance.now())}catch(_){}R.root.updateMatrixWorld(true)};
+    try{if(R.v214post)R.v214post(R,1,performance.now())}catch(_){}R.root.updateMatrixWorld(true)};
   const pc=new THREE.PerspectiveCamera(24,1,.1,200);rd.setScissorTest(true);const V=THREE.Vector3;
   if(mode==='views'){rd.setSize(W*4,H);pc.aspect=W/H;pc.updateProjectionMatrix();setP(null);
     [[0,.12,1],[1,.1,0],[.75,.22,.75],[-.5,.2,-1]].forEach((d,i)=>{rd.setViewport(i*W,0,W,H);rd.setScissor(i*W,0,W,H);pc.position.set(...d).normalize().multiplyScalar(19).add(new V(0,2.6,0));pc.lookAt(0,2.6,0);rd.render(sc,pc)})}
@@ -59,7 +59,7 @@ PIC=r"""([mode,poses,W,H])=>{const rd=new THREE.WebGLRenderer({antialias:true,pr
     ids.forEach((id,i)=>{const o=id==='big'?R.big:R.eyes[+id].ir,p=o.getWorldPosition(new V()),q=o.getWorldQuaternion(new THREE.Quaternion()),n=new V(0,0,1).applyQuaternion(q),s=o.getWorldScale(new V());
       rd.setViewport(i*W,0,W,H);rd.setScissor(i*W,0,W,H);pc.position.copy(p).addScaledVector(n,s.x*9).add(new V(0,s.x*2,0));pc.lookAt(p);rd.render(sc,pc)})}
   else if(mode==='walk'){const v=+poses[0],n=8;rd.setSize(W*4,H*2);pc.aspect=W/H;pc.updateProjectionMatrix();const S={spd:v,ph:1,R},O={};for(const k in R.J)O[k]=[0,0,0,0,0,0];let now=1e5;
-    const per=(2.7+.42*v)/Math.max(.01,v);for(let f=0;f<n;f++){for(const k in O)O[k].fill(0);arg213Loco(null,S,O,f===0?0:per/n,now);now+=per/n*1000;
+    const per=(2.7+.42*v)/Math.max(.01,v);for(let f=0;f<n;f++){for(const k in O)O[k].fill(0);arg214Loco(null,S,O,f===0?0:per/n,now);now+=per/n*1000;
       for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=O[k];g.rotation.set(r0.x+o[0],r0.y+o[1],r0.z+o[2]);g.position.set(p0.x+o[3],p0.y+o[4],p0.z+o[5])}R.root.updateMatrixWorld(true);
       const c=f%4,r=1-Math.floor(f/4);rd.setViewport(c*W,r*H,W,H);rd.setScissor(c*W,r*H,W,H);pc.position.set(15,3,2);pc.lookAt(0,2.2,0);rd.render(sc,pc)}}
   else if(mode==='close'){setP(window.CLOSEPOSE||null);const shots=[['head',[3.2,1.2,4.2],[0,.1,.5]],['head',[-.2,.4,4.8],[0,.1,.6]],['body',[5.2,1,1.2],[0,.1,.6]],['body',[-2.5,3.5,-5],[0,.3,-.5]],['shL',[3,-.6,3.4],[0,-.9,0]],['hpL',[3.2,-.6,-2.6],[0,-1,0]],['jaw',[2.6,-1.2,3.2],[0,0,.6]],['t2',[2.6,1.4,-2.2],[0,0,-.4]]];
@@ -97,11 +97,11 @@ def s(pg):
             ev("([side,dist,h,look])=>{const e=BE,p=e.m.position,a=e.m.rotation.y+side;e.m.flT=-1e9;svApply(e,.016,performance.now());cam.position.set(p.x+Math.sin(a)*dist,GH(p.x,p.z)+h,p.z+Math.cos(a)*dist);cam.lookAt(p.x,GH(p.x,p.z)+look,p.z);POST.render();return 1}",[side,dist,h,look])
             pg.locator('#gl canvas').screenshot(path=play.TMP+'/%s_game%d.png'%(TAG,i),timeout=300000,animations='disabled')
         print('wrote game shots')
-        print('MATS',ev("()=>{const R=BE.sv.R;return R.v213m.map(m=>({vc:m.material.vertexColors,col:m.material.color.getHexString(),em:m.material.emissive&&m.material.emissive.getHexString(),type:m.material.type,attrs:Object.keys(m.geometry.attributes),vis:m.visible,ob:!!m.material.onBeforeCompile&&String(m.material.onBeforeCompile).slice(0,120),ud:JSON.stringify(m.material.userData)}))}"))
+        print('MATS',ev("()=>{const R=BE.sv.R;return R.v214m.map(m=>({vc:m.material.vertexColors,col:m.material.color.getHexString(),em:m.material.emissive&&m.material.emissive.getHexString(),type:m.material.type,attrs:Object.keys(m.geometry.attributes),vis:m.visible,ob:!!m.material.onBeforeCompile&&String(m.material.onBeforeCompile).slice(0,120),ud:JSON.stringify(m.material.userData)}))}"))
     if os.environ.get('PICONLY'):
         for e in errs[:5]:print('page error: '+e)
         return
-    if not old and not m['v213']:F('Argus is not the v213 skinned body')
+    if not old and not m['v214']:F('Argus is not the v214 skinned body')
     if m['tris']>30000:F('%d triangles (budget 30k)'%m['tris'])
     if m['missing']:F('joints his poses / springs use are missing: %s'%m['missing'])
     if m['nan']:F('NaN vertices: %d'%m['nan'])
@@ -109,7 +109,7 @@ def s(pg):
     if m['badEye']:F('%d eyes without an iris mesh'%m['badEye'])
     if not 4.2<=m['top']<=6.2:F('height %.2f m (4.2-6.2)'%m['top'])
     ev(DEN);pg.wait_for_timeout(1500);q=ev(DEN2)
-    if not old and not q.get('v213'):F('the den boss is not the v213 body');print('==== v213_argus: %d fails'%len(fails));return
+    if not old and not q.get('v214'):F('the den boss is not the v214 body');print('==== v214_argus: %d fails'%len(fails));return
     for v in [2.6,4.2]:
         sl=ev(WALK,v);print('gait %.1f m/s: lowest paw mean ground speed %.2f m/s'%(v,sl))
         if sl>1.0:F('paws slide at %.1f m/s: %.2f m/s'%(v,sl))
@@ -120,5 +120,5 @@ def s(pg):
     r=ev(ALL)
     for k,v in r.items():F('move %s: %s'%(k,v))
     for e in errs[:5]:F('page error: '+e)
-    print('==== v213_argus: %d fails'%len(fails))
+    print('==== v214_argus: %d fails'%len(fails))
 play.run(s)
