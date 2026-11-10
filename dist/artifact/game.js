@@ -74321,7 +74321,7 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
 //  * Glow (under 5%): ~32 eyes in loose rows (a lens with its slit pupil painted in, so each eye is one mesh and can still blink),
 //    the great brow eye, amber veins between the ribs (the skinned glow layer is R.vein, so it still brightens in Phase II).
 // Motion: his own gait (arg214Loco) — each paw is planted for its stance and swings with an eased lift (a walk that turns into a
-// trot, the stride matched to his speed so the paws don't skate: v146 slid ~3.9 m/s at a 2.6 m/s walk), the body bobbing on the
+// trot, the stride matched to his speed so the paws don't skate: v146 slid ~3.9 m/s at 2.6 m/s; now ~0.1 at his 3.4 m/s walk, ~0.5 at his 5.5 m/s run), the body bobbing on the
 // footfalls, the head held steady, breathing and a slow look-around at rest; every pose change is then passed through a
 // critically damped follow (arg214Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
 // Same joints and names (the v110/v112/v146 poses, moves, the den, the Hundred Eyes and the v209 cinematic keep working).
@@ -74579,7 +74579,9 @@ function arg214Rim(m){const ob=m.onBeforeCompile,ck=m.customProgramCacheKey,P=TH
 // the gait: each paw is planted for its stance (moving back under the body at the body's speed, so it stays put on the ground)
 // and swings forward with an eased lift; a lateral walk (LH, LF, RH, RF) turns into a trot (diagonal pairs) as he speeds up
 function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214SS(.05,.7,v),tr=a214SS(2.6,4.4,v),ph2=S.ph>1?1:0;
-  const Ls=2.7+.42*v,beta=.64-.1*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const g=S.gp,TAU=Math.PI*2;
+  const Ls=2.7+.42*v,beta=.64-.05*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const TAU=Math.PI*2,fw=TAU*v/Ls/ARG214.w,
+    // the follow (arg214Smooth) trails the gait a little: lead its phase and lift its swing by what the follow takes off
+    g=S.gp+2*fw/TAU,gain=1+fw*fw;
   // breathing and the idle look-around (smooth sums of slow sines, never a snap); restless in Phase II
   const br=Math.sin(t*(1.25+.5*ph2)),ia=1-a;
   O.body[4]+=.035*br*ia;O.chest[0]+=-.025*br*ia;O.neck[0]+=.03*br*ia;
@@ -74589,12 +74591,12 @@ function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214
   const tw=q=>{const u=(t+q)%5.3;return u<.5?Math.sin(u/.5*Math.PI):0};O.earL[0]+=.06*Math.sin(t*.8)-.3*tw(0);O.earR[0]+=.06*Math.sin(t*.8+1)-.3*tw(2.7);O.earL[2]+=.1*tw(0);O.earR[2]-=.1*tw(2.7);
   // the legs
   const legs=[['L','F',.25+.25*tr],['R','F',.75+.25*tr],['L','H',0],['R','H',.5]],swing=[];
-  legs.forEach(([s,fh,off])=>{const u=((g+off)%1+1)%1,L=fh==='F'?2.45:2.55,tm=Math.atan(beta*Ls*.5/L)*a;let th,lf=0;
+  legs.forEach(([s,fh,off])=>{const u=((g+off)%1+1)%1,L=fh==='F'?2.45:2.55,tm=Math.atan(beta*Ls*.5/L*gain)*a;let th,lf=0;
     if(u<beta){th=Math.atan((-1+2*u/beta)*Math.tan(tm))}else{const q=(u-beta)/(1-beta),e=q*q*(3-2*q);th=tm-2*tm*e;lf=Math.sin(Math.PI*q)*a;swing.push(q)}
     if(fh==='F'){O['sh'+s][0]+=th-.12*lf;O['el'+s][0]+=.55*lf;O['pw'+s][0]+=.95*lf}
     else{O['hp'+s][0]+=th-.22*lf;O['kn'+s][0]+=.55*lf;O['hk'+s][0]+=-.75*lf}});
   // the body rides the footfalls: a dip as weight lands (twice a stride), a slight roll and pitch, the shoulders and hips counter-turning
-  const st=Math.cos(g*TAU*2);O.body[4]+=(-.05+.05*st)*a*(1+.6*tr);O.body[2]+=.025*Math.sin(g*TAU)*a;
+  const st=Math.cos(g*TAU*2);O.body[4]+=(-.05+.05*st)*a*(1+.2*tr);O.body[2]+=.025*Math.sin(g*TAU)*a;
   O.chest[1]+=.05*Math.sin(g*TAU)*a;O.hips[1]+=-.06*Math.sin(g*TAU+.4)*a;O.body[0]+=.04*tr;
   // the head held steady against the bob (and carried low and forward at a trot)
   O.neck[0]+=(-.03*st*a)+.1*tr;O.head[0]+=.03*st*a-.06*tr;O.head[1]+=-.04*Math.sin(g*TAU)*a;

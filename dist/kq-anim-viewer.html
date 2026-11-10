@@ -74817,7 +74817,7 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
 //  * Glow (under 5%): ~32 eyes in loose rows (a lens with its slit pupil painted in, so each eye is one mesh and can still blink),
 //    the great brow eye, amber veins between the ribs (the skinned glow layer is R.vein, so it still brightens in Phase II).
 // Motion: his own gait (arg214Loco) — each paw is planted for its stance and swings with an eased lift (a walk that turns into a
-// trot, the stride matched to his speed so the paws don't skate: v146 slid ~3.9 m/s at a 2.6 m/s walk), the body bobbing on the
+// trot, the stride matched to his speed so the paws don't skate: v146 slid ~3.9 m/s at 2.6 m/s; now ~0.1 at his 3.4 m/s walk, ~0.5 at his 5.5 m/s run), the body bobbing on the
 // footfalls, the head held steady, breathing and a slow look-around at rest; every pose change is then passed through a
 // critically damped follow (arg214Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
 // Same joints and names (the v110/v112/v146 poses, moves, the den, the Hundred Eyes and the v209 cinematic keep working).
@@ -75075,7 +75075,9 @@ function arg214Rim(m){const ob=m.onBeforeCompile,ck=m.customProgramCacheKey,P=TH
 // the gait: each paw is planted for its stance (moving back under the body at the body's speed, so it stays put on the ground)
 // and swings forward with an eased lift; a lateral walk (LH, LF, RH, RF) turns into a trot (diagonal pairs) as he speeds up
 function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214SS(.05,.7,v),tr=a214SS(2.6,4.4,v),ph2=S.ph>1?1:0;
-  const Ls=2.7+.42*v,beta=.64-.1*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const g=S.gp,TAU=Math.PI*2;
+  const Ls=2.7+.42*v,beta=.64-.05*tr;S.gp=((S.gp||0)+dt*v/Ls)%1000;const TAU=Math.PI*2,fw=TAU*v/Ls/ARG214.w,
+    // the follow (arg214Smooth) trails the gait a little: lead its phase and lift its swing by what the follow takes off
+    g=S.gp+2*fw/TAU,gain=1+fw*fw;
   // breathing and the idle look-around (smooth sums of slow sines, never a snap); restless in Phase II
   const br=Math.sin(t*(1.25+.5*ph2)),ia=1-a;
   O.body[4]+=.035*br*ia;O.chest[0]+=-.025*br*ia;O.neck[0]+=.03*br*ia;
@@ -75085,12 +75087,12 @@ function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214
   const tw=q=>{const u=(t+q)%5.3;return u<.5?Math.sin(u/.5*Math.PI):0};O.earL[0]+=.06*Math.sin(t*.8)-.3*tw(0);O.earR[0]+=.06*Math.sin(t*.8+1)-.3*tw(2.7);O.earL[2]+=.1*tw(0);O.earR[2]-=.1*tw(2.7);
   // the legs
   const legs=[['L','F',.25+.25*tr],['R','F',.75+.25*tr],['L','H',0],['R','H',.5]],swing=[];
-  legs.forEach(([s,fh,off])=>{const u=((g+off)%1+1)%1,L=fh==='F'?2.45:2.55,tm=Math.atan(beta*Ls*.5/L)*a;let th,lf=0;
+  legs.forEach(([s,fh,off])=>{const u=((g+off)%1+1)%1,L=fh==='F'?2.45:2.55,tm=Math.atan(beta*Ls*.5/L*gain)*a;let th,lf=0;
     if(u<beta){th=Math.atan((-1+2*u/beta)*Math.tan(tm))}else{const q=(u-beta)/(1-beta),e=q*q*(3-2*q);th=tm-2*tm*e;lf=Math.sin(Math.PI*q)*a;swing.push(q)}
     if(fh==='F'){O['sh'+s][0]+=th-.12*lf;O['el'+s][0]+=.55*lf;O['pw'+s][0]+=.95*lf}
     else{O['hp'+s][0]+=th-.22*lf;O['kn'+s][0]+=.55*lf;O['hk'+s][0]+=-.75*lf}});
   // the body rides the footfalls: a dip as weight lands (twice a stride), a slight roll and pitch, the shoulders and hips counter-turning
-  const st=Math.cos(g*TAU*2);O.body[4]+=(-.05+.05*st)*a*(1+.6*tr);O.body[2]+=.025*Math.sin(g*TAU)*a;
+  const st=Math.cos(g*TAU*2);O.body[4]+=(-.05+.05*st)*a*(1+.2*tr);O.body[2]+=.025*Math.sin(g*TAU)*a;
   O.chest[1]+=.05*Math.sin(g*TAU)*a;O.hips[1]+=-.06*Math.sin(g*TAU+.4)*a;O.body[0]+=.04*tr;
   // the head held steady against the bob (and carried low and forward at a trot)
   O.neck[0]+=(-.03*st*a)+.1*tr;O.head[0]+=.03*st*a-.06*tr;O.head[1]+=-.04*Math.sin(g*TAU)*a;
@@ -75330,7 +75332,7 @@ function bossPhase(e,ph){const S=e.sv;if(S.ph===ph)return;S.ph=ph;e.bs.ph=ph;if(
 function bossClean(e){const S=e.sv;
   if(e.gb151)try{if(S.rlk)gb151RlkClose(e);S.rp=null;S.rpN=0;S.shell=0;S.crk=0;S.chg=0;S.chgT=0;S.dr=0;gb151HandRock(e,false);gb151ShelterClear()}catch(err){console.warn('viewer gb clean',err)}
   if(e.qs165)try{qs165HeartClear();qs165SlabClear();S.melt=0;S.chg=0;S.chgT=0}catch(err){console.warn('viewer qs clean',err)}}
-function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv,D=S.B.M[id];if(!D)return;
+function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;KV.bw=null;const S=e.sv,D=S.B.M[id];if(!D)return;
   svEndMove(e,true);S.mv=null;S.stg=0;S.inv=0;S.cd={};S.rt=null;S.plan=null;S.force=null;S.dieM=0;KV.die=null;bossClean(e);
   enemies.slice().forEach(q=>{if(q.minion&&!q.dead)try{removeE(q)}catch(_){}});
   if((D.ph||1)>1&&S.ph<2)bossPhase(e,2);
@@ -75351,9 +75353,22 @@ function bossActions(){const B=KV.boss,e=B&&B.e,out=[];if(!e)return out;const S=
   sig.forEach(id=>add(id,'Signature','✴️'));sub.forEach(id=>{if(S.B.M[id])add(id,'Signature','↪️')});
   ['intro','stagger','broken','reach141'].forEach(id=>{if(S.B.M[id])add(id,'Other',{intro:'🎬',stagger:'💫',broken:'💔',reach141:'🎯'}[id])});
   if(S.B.die)out.push({k:'bdie',g:'Other',i:'💀',t:'Defeat',s:'Its fall (the body stays: this is a preview)',ms:3400,run(){bossDie()}});
+  const ai=S.B.ai||{},wv=ai.walk||2.2,rv=ai.run||Math.max(wv*1.6,3.6);
+  out.push({k:'bidle',g:'Movement',i:'🫁',t:'Idle',s:'Standing at rest: breathing, looking round',ms:6000,run(){bossPlay0();KV.bw=null}});
+  out.push({k:'bwalk',g:'Movement',i:'🚶',t:'Walk',s:'Pacing back and forth at his walk ('+wv+' m/s)',ms:9000,run(){bossPace(wv,9000)}});
+  out.push({k:'brun',g:'Movement',i:'🏃',t:'Run',s:'Pacing back and forth at his run ('+rv+' m/s)',ms:9000,run(){bossPace(rv,9000)}});
   return out}
+// Movement (v214): stop any move and stand on the mark, or pace 11 m ahead and back
+function bossPlay0(){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv;svEndMove(e,true);S.mv=null;S.stg=0;bossClean(e);e.m.position.set(B.c.x,e.m.position.y,B.c.z);e.m.rotation.y=B.Y0}
+function bossPace(v,ms){const e=bossGet(),B=KV.boss;if(!e)return;bossPlay0();const a=B.Y0,c=B.c,d=Math.min(11,(B.R||12)*.8);
+  KV.bw={e,v,leg:false,a:V(c.x,0,c.z),b:V(c.x+Math.sin(a+Math.PI/2)*d,0,c.z+Math.cos(a+Math.PI/2)*d),end:now_()+ms-400};
+  KV.home.hero=V(c.x+Math.sin(a)*(d*.5+9),0,c.z+Math.cos(a)*(d*.5+9));placeHero(KV.home.hero);hero.iv=0}
 // the AI held still: no moves of its own, no stalking, no retreats; between moves it walks back to its mark and faces the hero
 function kvBossIdle(e,dt){const S=e.sv,m=e.m,h=KV.home.boss,ai=S.B.ai||{};S.rt=null;S.plan=null;S.force=null;S.rest=Math.max(S.rest||0,.5);let sp=0;
+  // Movement (v214): pace to a point ahead and back at the boss's own walk or run speed, so its gait can be watched
+  const W=KV.bw;if(W&&W.e===e&&now_()<W.end&&!S.mv){const tg=W.leg?W.a:W.b,dx=tg.x-m.position.x,dz=tg.z-m.position.z,L=Math.hypot(dx,dz);
+    if(L<.8)W.leg=!W.leg;else{const ya=Math.atan2(dx,dz),da=svAng(ya-m.rotation.y);m.rotation.y+=Math.max(-(ai.turn||2)*dt,Math.min((ai.turn||2)*dt,da));
+      sp=W.v*Math.max(.15,1-Math.abs(da)/1.4);walkM(m,Math.sin(m.rotation.y)*sp*dt,Math.cos(m.rotation.y)*sp*dt)}S.walkSp=sp;return}
   if(h){const dx=h.x-m.position.x,dz=h.z-m.position.z,L=Math.hypot(dx,dz);
     if(L>.7){const ya=Math.atan2(dx,dz),da=svAng(ya-m.rotation.y);m.rotation.y+=Math.max(-3*dt,Math.min(3*dt,da));if(Math.abs(da)<1.2){sp=Math.min(ai.walk||2.2,L*2.5);walkM(m,dx/L*sp*dt,dz/L*sp*dt)}}
     else{const da=svAng(svYawTo(m,pl.position)-m.rotation.y);m.rotation.y+=Math.max(-2*dt,Math.min(2*dt,da))}}

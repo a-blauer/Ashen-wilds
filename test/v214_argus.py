@@ -2,7 +2,8 @@
 # FAIL lines on:
 #  * model: not the v214 skinned body, triangles over 30k (every layer and rigid piece), a joint his poses / springs use missing,
 #    NaN vertices, fewer than 20 eyes, an eye without its iris, height outside 4.2-6.2 m, page errors
-#  * gait: the lowest paw's mean ground speed while walking at 2.6 m/s and trotting at 4.2 m/s over 1.0 m/s (planted paws stay put)
+#  * gait: the lowest paw's mean ground speed while walking and running at his own speeds (ai.walk / ai.run): median over 0.6 m/s or mean over 1.2 m/s
+#    (planted paws stay put; the mean also counts the instants the lowest paw switches)
 #  * smooth motion: in idle, walk and every move, no joint turns faster than 22 rad/s between two 16 ms frames (a pop)
 #  * every move runs to its end without errors
 # PICS=1 writes out/v214_argus.png (front, side, 3/4, back) and out/v214_poses.png (poses); POSES= the pose list;
@@ -30,8 +31,8 @@ DEN2=r"""()=>{STEP(.5);enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});const
 WALK=r"""(v)=>{const e=BE,S=e.sv;try{svEndMove(e,true)}catch(_){}S.mv=null;S.trk=null;S.aw=0;S.spd=v;let now=2e5;const rec=[];e.m.rotation.y=0;const z0=e.m.position.z;
   const P=['pwL','pwR','hkL','hkR'];
   for(let i=0;i<300;i++){now+=16;e.m.position.z+=v*.016;svApply(e,.016,now);e.m.updateMatrixWorld(true);rec.push(P.map(n=>{const q=n[0]==='p'?svWP(e,n,0,-.1,.1):svWP(e,n,0,-.55,.15);return [q.y,q.z]}))}
-  let sl=0,n=0;for(let i=80;i<rec.length;i++){const p=rec[i],q=rec[i-1];let lo=0;for(let k=1;k<4;k++)if(p[k][0]<p[lo][0])lo=k;
-    sl+=Math.abs(p[lo][1]-q[lo][1])/.016;n++}e.m.position.z=z0;S.spd=0;return sl/n}"""
+  let sl=0,n=0;const med=[];for(let i=80;i<rec.length;i++){const p=rec[i],q=rec[i-1];let lo=0;for(let k=1;k<4;k++)if(p[k][0]<p[lo][0])lo=k;
+    sl+=Math.abs(p[lo][1]-q[lo][1])/.016;n++;med.push(Math.abs(p[lo][1]-q[lo][1])/.016)}e.m.position.z=z0;S.spd=0;med.sort((a,b)=>a-b);return [sl/n,med[med.length>>1],med[Math.floor(med.length*.9)]]}"""
 # the fastest joint turn between frames (rad/s) in idle, walk and each move
 POP=r"""()=>{const e=BE,S=e.sv,A=XA,R=S.R,res={},Q=new THREE.Quaternion(),Q0={};const names=Object.keys(R.J).filter(k=>k!=='root');
   const snap=()=>{const o={};names.forEach(k=>o[k]=R.J[k].quaternion.clone());return o},mx=(a,b)=>{let m=0,w='';names.forEach(k=>{const d=2*Math.acos(Math.min(1,Math.abs(a[k].dot(b[k]))));if(d>m){m=d;w=k}});return [m/.016,w]};
@@ -110,9 +111,9 @@ def s(pg):
     if not 4.2<=m['top']<=6.2:F('height %.2f m (4.2-6.2)'%m['top'])
     ev(DEN);pg.wait_for_timeout(1500);q=ev(DEN2)
     if not old and not q.get('v214'):F('the den boss is not the v214 body');print('==== v214_argus: %d fails'%len(fails));return
-    for v in [2.6,4.2]:
-        sl=ev(WALK,v);print('gait %.1f m/s: lowest paw mean ground speed %.2f m/s'%(v,sl))
-        if sl>1.0:F('paws slide at %.1f m/s: %.2f m/s'%(v,sl))
+    for v in ev("()=>{const a=SVB[0].ai||{};return [a.walk||2.6,a.run||4.2]}"):
+        sl,md,p90=ev(WALK,v);print('gait %.1f m/s: lowest paw ground speed mean %.2f, median %.2f, 90%% %.2f m/s'%(v,sl,md,p90))
+        if md>.6 or sl>1.2:F('paws slide at %.1f m/s: median %.2f (max .6), mean %.2f m/s (max 1.2)'%(v,md,sl))
     r=ev(POP)
     for k,v in r.items():
         print('pop %-8s fastest joint %5.1f rad/s (%s at %ss)'%(k,v[0],v[1] if len(v)>1 else '',v[2] if len(v)>2 else ''))

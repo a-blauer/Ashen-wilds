@@ -132,4 +132,4 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 # v212 NaN guards: the glow / composite skip NaN pixels, health bars, damage, hero stats and the camera repair NaN (3830, 0060, 0104, 0920)
 3830|v212|0060|0104|0920|nan|white: v212_white.py v38t.py v32t.py v110_fight.py
 # v214 Argus rebuilt: one skinned painted body, his own gait and the smoothing follow (3860; his moves 1971/3054, the cinematic 3800)
-3860|v214|argus|1971-|3054-: v214_argus.py v214_coop.py v146_sovs.py v112_argus.py v209_kindlelight.py v163_fixes.py v192_sov_range.py
+3860|v214|argus|1971-|3054-|viewer/: v214_argus.py v214_coop.py v214_viewer.py v146_sovs.py v112_argus.py v209_kindlelight.py v163_fixes.py v192_sov_range.py
