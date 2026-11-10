@@ -51,7 +51,7 @@ S('sp_abeksi','Abeksi',{bpm:80,root:55,mode:'dor',prog:[0,5,0,3,0,5,6,4],pad:{v:
     B:'4,8 5,2 4,2 2,4|5,12 _,4|4,4 2,4 0,8|3,12 _,4|4,8 5,2 4,2 2,4|7,12 _,4|6,4 8,4 10,8|8,16'}});
 S('sp_ascent','The Hilltop Ascent',{bpm:152,root:55,mode:'dor',prog:[0,0,6,6,3,3,4,4],pad:{v:.014,cut:1500},drone:.05,fight:1,boom:.8,
   arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:0,v:.034,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x.....x...x.....',v:.022},
-  drums:{c:{taiko:'X.x.X.x.X.x.X.xx',snare:'....X.......X.xx',hat:'xgxgxgxgxgxgxgxg'}},fx:{wind:.012},
+  drums:{c:{taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'xgxgxgxgxgxgxgxg'}},fx:{wind:.012},
   tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A:'0,6 2,2 4,8|7,12 4,4|6,6 8,2 10,8|8,12 6,4|7,6 5,2 3,8|5,8 7,8|8,6 6,2 4,8|4,12 _,4',
     B:'7,4 9,4 11,8|9,4 7,4 4,8|10,8 8,8|6,12 _,4|3,4 5,4 7,8|10,12 7,4|8,8 11,8|11,4 8,4 6,4 4,4'}});
 // ---------------- Burningeye Summit (E phrygian; frozen peak, burning sky) ----------------
@@ -86,7 +86,7 @@ S('z3d',"Ssith'ra's Den",{bpm:64,root:50,mode:'hij',prog:[0,1,0,1,0,6,1,0],pad:{
     B:'7,16|8,12 _,4|7,8 4,8|5,8 3,8|2,16|3,8 1,8|1,16|0,16'}});
 S('sp_sandrun','The Sandstorm Run',{bpm:140,root:50,mode:'hij',prog:[0,0,1,1,0,0,6,1],pad:{v:.016,cut:900},drone:.08,fight:1,boom:.7,
   arp:{e:1,p:[0,1,2,1,0,2,1,0,0,1,2,1,0,2,1,3],oct:0,v:.036,w:'square'},bass:{v:.11,c:'x.xx..x.x.xx..x.'},stab:{c:'x.....x.....x...',v:.018},
-  drums:{c:{taiko:'X.....x.X.....x.',dum:'X..x..x.x..x..x.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},fx:{wind:.035},
+  drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},fx:{wind:.03},
   tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AB',A:'0,4 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,8|3,12 _,4|4,4 7,4 9,8|8,2 7,2 5,4 4,8|6,4 8,4 10,8|8,8 5,8',
     B:'7,6 9,2 7,8|4,6 5,2 4,8|8,6 10,2 8,8|5,12 _,4|7,4 4,4 2,4 0,4|2,4 4,4 7,8|10,8 8,8|8,4 5,4 3,4 1,4'}});
 // ---------------- The Dirge (C locrian; bells, hollow choir) ----------------
@@ -132,13 +132,13 @@ S('z5d',"Lord Vaelric's Den",{bpm:60,root:48,mode:'hmin',prog:[0,1,0,4,0,5,1,4],
 // the hilltop ascent should have more intense music due to the stressful scenario") ----------------
 // 'z<zone>x' = the zone's Sovereign fight, 'z<zone>m' = a mini boss fight in that zone. Fast, in the zone's scale, drums and a
 // driving bass all the time (fight:1), brass melody doubled an octave down (tune.dbl), chord stabs (stab) and a boom every 4 bars.
-const DX={taiko:'X.x.X.x.X.x.X.xx',snare:'....X.......X.xx',hat:'xgxgxgxgxgxgxgxg'},DM={taiko:'X..x..x.X..x..x.',snare:'....X.......X..x',hat:'x.x.x.x.x.x.x.x.'};
+const DX={taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'xgxgxgxgxgxgxgxg'},DM={taiko:'x..g..g.x..g..g.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'};
 const AX=[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0];
 const X=(z,name,root,mode,bpm,prog,A,B,o)=>S('z'+z+'x',name,Object.assign({bpm,root,mode,prog,fight:1,boom:1,pad:{v:.022,cut:1300,form:1},drone:.08,
-  arp:{e:1,p:AX,oct:0,v:.036,w:'sawtooth'},bass:{v:.12,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x..x..x...x.x...',v:.022},bell:{p:.08,v:.035,oct:2},drums:{c:DX},
+  arp:{e:1,p:AX,oct:0,v:.036,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x..x..x...x.x...',v:.018},bell:{p:.08,v:.035,oct:2},drums:{c:DX},
   tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A,B}},o||{}));
 const Mi=(z,name,root,mode,bpm,prog,A,o)=>S('z'+z+'m',name,Object.assign({bpm,root,mode,prog,fight:1,boom:.7,pad:{v:.022,cut:1000,form:1},drone:.09,
-  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045,w:'sawtooth'},bass:{v:.12,c:'x.x.x.xxx.x.x.xx'},stab:{c:'x.....x...x.....',v:.02},drums:{c:DM},
+  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045,w:'sawtooth'},bass:{v:.1,c:'x.x.x.xxx.x.x.xx'},stab:{c:'x.....x...x.....',v:.02},drums:{c:DM},
   tune:{k:'horn',oct:0,v:.06,form:'AA-',A}},o||{}));
 X(0,'Argus, the Hundred-Eyed',47,'phr',140,[0,0,1,0,0,6,1,1],'0,6 0,2 2,4 4,4|4,6 5,2 4,8|5,6 3,2 1,8|0,12 _,4|7,6 7,2 5,4 4,4|6,6 8,2 6,8|5,4 3,4 1,4 3,4|1,12 _,4',
   '7,4 9,4 11,8|9,4 7,4 4,8|8,8 10,8|9,12 _,4|7,2 _,2 7,2 _,2 4,8|8,8 6,8|5,8 8,8|8,4 5,4 3,4 1,4');
@@ -148,16 +148,16 @@ X(2,'The Rime Wraith',52,'phr',148,[0,1,0,6,0,1,5,1],'4,6 4,2 2,4 0,4|1,6 3,2 5,
   '7,8 9,8|8,8 10,8|11,8 9,4 7,4|8,12 _,4|7,4 4,4 2,4 0,4|1,4 3,4 5,8|5,8 9,8|8,16',{fx:{wind:.02}});
 X(3,"Ssith'ra the Endless",50,'hij',142,[0,0,1,0,0,6,1,0],'0,2 1,2 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,6 3,2|2,12 _,4|4,2 5,2 7,4 9,8|8,6 6,2 3,8|5,4 3,4 1,8|2,4 1,4 0,8',
   '7,6 8,2 7,8|9,6 8,2 7,8|10,8 8,8|7,12 _,4|4,4 2,4 1,4 0,4|6,8 8,8|8,4 5,4 3,4 1,4|0,16',
-  {arp:{e:1,p:AX,oct:0,v:.034,w:'square'},drums:{c:{taiko:'X.....x.X.....x.',dum:'X..x..x.x..x..x.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg',snare:'....X.......X...'}}});
+  {arp:{e:1,p:AX,oct:0,v:.034,w:'square'},drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg',snare:'....x.......x...'}}});
 X(4,'The Bloated One',48,'loc',132,[0,1,0,4,0,1,3,1],'0,8 2,4 4,4|5,8 3,8|4,6 2,2 0,8|4,12 _,4|7,8 4,8|8,6 5,2 3,8|3,4 5,4 7,8|5,8 1,8',
-  '4,4 4,4 7,8|8,4 8,4 5,8|9,8 7,8|8,12 _,4|4,4 2,4 0,8|1,4 3,4 5,8|7,8 5,8|5,4 3,4 1,8',{bell:{p:.3,v:.045,oct:2},drums:{c:{taiko:'X.x.X..xX.x.X.xx',snare:'....X.......X.xx',hat:'x.x.x.x.x.x.x.x.'}}});
+  '4,4 4,4 7,8|8,4 8,4 5,8|9,8 7,8|8,12 _,4|4,4 2,4 0,8|1,4 3,4 5,8|7,8 5,8|5,4 3,4 1,8',{bell:{p:.3,v:.045,oct:2},drums:{c:{taiko:'x.g.x..gx.g.x.gg',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}}});
 X(5,'Lord Vaelric',48,'hmin',150,[0,5,3,4,0,5,1,4],'7,6 4,2 2,4 0,4|5,6 7,2 9,8|7,6 5,2 3,8|6,12 _,4|7,6 4,2 2,4 0,4|9,8 7,8|5,4 3,4 1,8|4,4 6,4 8,8',
   '9,4 11,4 14,8|12,8 9,8|10,6 12,2 10,8|8,12 _,4|7,4 9,4 11,8|9,4 7,4 5,8|8,8 5,8|6,8 4,8',{arp:{e:1,p:AX,oct:1,v:.03,w:'square'}});
 Mi(0,'Mini boss: Vorraxis',47,'phr',126,[0,1,0,1,0,6,1,0],'0,8 4,8|5,8 3,8|4,6 2,2 0,8|1,12 _,4|7,8 4,8|6,8 3,8|5,4 3,4 1,8|0,16');
 Mi(1,'Mini boss: Hillside Crest',55,'dor',128,[0,6,0,4,0,6,5,4],'0,4 4,4 7,8|6,8 8,8|7,6 4,2 2,8|4,12 _,4|9,8 7,8|8,8 6,8|5,4 7,4 9,8|8,16');
 Mi(2,'Mini boss: Gorthrak',52,'phr',130,[0,0,1,0,0,5,6,1],'0,8 2,8|4,6 5,2 4,8|3,8 1,8|0,12 _,4|4,8 7,8|7,4 5,4 2,8|3,8 6,8|5,8 1,8',{fx:{wind:.014}});
 Mi(3,'Mini boss: Qarsul',50,'hij',126,[0,1,0,1,0,3,1,0],'4,6 5,2 4,8|3,4 1,4 3,8|2,4 1,4 0,8|1,12 _,4|4,4 7,4 9,8|7,8 5,8|5,4 3,4 1,8|0,16',
-  {arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.05,w:'square'},drums:{c:{dum:'X..x..x.x..x..x.',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.',snare:'............X...'}}});
+  {arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.05,w:'square'},drums:{c:{dum:'x..x..x.x..x..x.',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.',snare:'............x...'}}});
 Mi(4,'Mini boss: The Dirge',48,'loc',118,[0,1,0,3,0,1,4,1],'0,8 2,8|3,8 1,8|4,8 2,8|3,12 _,4|7,8 4,8|5,8 8,8|6,8 4,8|1,16',{bell:{p:.25,v:.04,oct:2}});
 Mi(5,'Mini boss: Vharog',48,'hmin',132,[0,3,0,4,0,3,1,4],'0,6 2,2 4,8|7,8 5,8|4,6 2,2 0,8|-1,12 _,4|7,8 9,8|10,8 7,8|5,4 3,4 1,8|4,16');
 })();
@@ -183,7 +183,7 @@ function mu215Step(th,t,bar,s){const sp=60/th.bpm/4,n=th.prog.length,T=th.tune,X
   if(T){mu215Tune(th);const ch=T.form[Math.floor(bar/n)%T.form.length],on=T.on[ch],e=on&&on[(bar%n)*16+s];
     if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v);if(T.dbl)MU215.K.horn(muF(muNote(th,e[0],T.oct-1)),t,sp*e[1]*.95,T.v*.8)}}
   const St=th.stab;if(St){const c=St.c[s];if(c&&c!='.'){const dg=muChord(th,bar);[0,2,4].forEach(k=>muLead(muF(muNote(th,dg+k,St.oct||0)),t,sp*1.4,St.v*(c=='X'?1.3:1),{w:'sawtooth',cut:2400,at:.008}))}}
-  if(th.boom&&s==0&&bar%4==0){MUDR.taiko(t,1.3*th.boom);muNz(t,1.4,'lowpass',1400,120,.7,.09*th.boom,2)}
+  if(th.boom&&s==0&&bar%4==0){MUDR.taiko(t,.45*th.boom);muNz(t,1.4,'lowpass',1400,120,.7,.06*th.boom,2)}
   if(X){const deg=muChord(th,bar);
     if(X.wind&&s==0&&bar%2==0){const up=Math.random()<.5,a=300+Math.random()*250,b=700+Math.random()*700;muNz(t,sp*30,'bandpass',up?a:b,up?b:a,1.6,X.wind,2,sp*(8+Math.random()*8))}
     if(X.drip&&s%2==0&&Math.random()<X.drip)muCelesta(muF(muNote(th,deg+[0,2,4,7][Math.random()*4|0],3)),t,.035+Math.random()*.03);

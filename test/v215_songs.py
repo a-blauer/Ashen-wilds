@@ -52,15 +52,15 @@ def game(pg):
         got=ev("()=>muWant()");print('fight',want,got)
         if got!=want:F('fight song %s, wanted %s'%(got,want))
     ev("()=>{const e=window.__f;e.boss=0;e.sv=null;removeE(e)}")
-    bb=ev(ren,['boss',1,40])['rms'];print('boss rms %.4f'%bb)
+    bo=ev(ren,['boss',1,24]);bb=bo['rms'];print('boss rms %.4f peak %.3f'%(bb,bo['pk']))
     base={}
     for z in range(6):
-        b=ev(ren,['z%d'%z,0,40]);base[z]=b['rms'];print('z%d'%z,'rms %.4f peak %.3f'%(b['rms'],b['pk']))
+        b=ev(ren,['z%d'%z,0,24]);base[z]=b['rms'];print('z%d'%z,'rms %.4f peak %.3f'%(b['rms'],b['pk']))
     for k in keys:
         z=int(k[1]) if k[0]=='z' else ev("k=>{const I=INSL.find(I=>I&&mu215Key(I)==k);return I?I.z:-1}",k)
         fight=ev("k=>!!MTH[k].fight",k)
         for f in (0,1):
-            o=ev(ren,[k,f,40])
+            o=ev(ren,[k,f,24])
             if o.get('err'):F('song %s: %s'%(k,o['err']));continue
             ratio=o['rms']/(bb if fight else base[z])
             print(k,'fight' if f else 'calm ','rms %.4f peak %.3f  x%.2f of %s'%(o['rms'],o['pk'],ratio,'boss' if fight else 'z%d'%z))
