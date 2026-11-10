@@ -74813,11 +74813,14 @@ S('sp_sanctum','The Hidden Sanctum',{bpm:58,root:48,mode:'loc',prog:[0,5,4,1,0,5
   bass:{v:.12,c:'x...............'},fx:{chime:.04},
   tune:{k:'bell',kb:'choir',oct:1,v:.06,vb:.05,form:'AB-',A:'4,16|5,8 7,8|6,8 4,8|3,12 _,4|2,8 4,8|7,16|6,8 3,8|1,16',
     B:'7,8 4,8|9,16|8,8 6,8|5,12 _,4|4,8 2,8|2,8 0,8|-1,8 1,8|1,16'}});
-S('sp_channel','The Black Channel',{bpm:68,root:48,mode:'loc',prog:[0,3,6,1,0,3,4,1],pad:{v:.022,cut:600,form:1},drone:.12,bell:{p:.06,v:.035,oct:2},
+// v215f (owner: "I dont like the black channel at all - the notes seems randomly plucked and there's no resolution"): rewritten in
+// C minor (harmonic), where the home chord is stable (the Dirge's own scale has none); nothing random (no bell, no drops); the harp
+// rolls the same wave every bar; each 4-bar phrase ends V -> i with the cello on the home note.
+S('sp_channel','The Black Channel',{bpm:68,root:48,mode:'hmin',prog:[0,3,4,0,5,3,4,0],pad:{v:.022,cut:650,form:1},
   arp:{e:2,p:[0,1,2,3,2,1,2,1],oct:0,v:.05},bass:{v:.14,c:'x.......x.......',f:'x..x....x..x....'},
-  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},fx:{drip:.03},
-  tune:{k:'cello',oct:0,v:.1,form:'AB-',A:'0,8 2,4 4,4|5,8 3,8|6,8 8,4 6,4|5,12 _,4|4,8 2,4 0,4|0,8 3,8|4,8 6,8|5,8 1,8',
-    B:'7,8 4,8|7,4 5,4 3,8|3,8 6,8|8,12 _,4|7,4 4,4 2,8|3,8 5,8|8,8 6,8|5,16'}});
+  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},
+  tune:{k:'cello',oct:0,v:.1,form:'AB-',A:'0,8 2,4 4,4|5,8 3,8|4,8 6,8|7,12 _,4|9,8 7,4 5,4|7,8 5,4 3,4|4,8 1,4 -1,4|0,16',
+    B:'4,8 7,8|10,8 7,4 5,4|8,8 6,8|7,12 _,4|5,8 7,4 9,4|7,8 5,8|4,4 6,4 8,8|7,16'}});
 // ---------------- The Citadel (C harmonic minor; organ, brass, harpsichord) ----------------
 S('z5b','The Outer Ramparts',{bpm:84,root:48,mode:'hmin',prog:[0,0,5,4,0,3,4,4],pad:{v:.022,cut:1000,form:1},drone:.09,
   bass:{v:.14,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},

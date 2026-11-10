@@ -43,7 +43,7 @@ const ZONES=[
   ['z4c','Field III · The Ossuary Fields','Plains of bones. A cello lament over a dry, rattling march.'],
   ['z4d','The Den · The Bloated One','The slowest song in the game. A heavy hum, tolling bells and a choir.'],
   ['sp_sanctum','The Hidden Sanctum','A sacred, hidden place. Single bell notes, then a choir, with nothing underneath but a soft glow.'],
-  ['sp_channel','The Black Channel','Dark water. Harp notes roll like waves under a low cello.'],
+  ['sp_channel','The Black Channel','Rewritten in C minor. A harp rolls the same steady wave every bar under a low cello, and every phrase ends by coming home. Nothing random in it now.'],
   ['z4x','Sovereign fight \u00b7 The Bloated One','C minor. Sheer weight: a huge stomping drum, tolling bells and a low horn; then a choir above it.'],
   ['z4m','Mini boss fight \u00b7 The Dirge','C minor, like its Sovereign: a cello march with bells.']]],
  ['The Citadel','The vampire court: organ, brass and harpsichord.',[['z5','Field I','The zone’s first song, unchanged.',1],
