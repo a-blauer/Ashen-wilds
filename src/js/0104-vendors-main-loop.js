@@ -64,7 +64,7 @@ function loop(now){
     const m=e.m;m.position.y=GH(m.position.x,m.position.z);if(!e.boss&&!e.dead&&tDist(m.position.x,m.position.z)<TS+1.5){removeE(e);return}const dpl=m.position.distanceTo(pl.position);m.visible=dpl<30;e.hb.visible=m.visible&&!e.dead;
     if(!m.visible&&!mpAct(e)){aiSleep(e,1);return}aiSleep(e,0);if(e.dead)return;
     e.hb.position.set(m.position.x,m.position.y+(e.boss?5.5:e.c.al?2.4:m.isHum?Math.max(1.6,(m.bs||1)*1.62):1.6),m.position.z);e.hb.quaternion.copy(cam.quaternion);
-    const r=Math.max(.001,e.c.h/M(e.c));e.hb.fill.scale.x=r;e.hb.fill.position.x=-(1-r)/2;
+    if(!isFinite(e.c.h))e.c.h=M(e.c);let r=e.c.h/M(e.c);r=r>.001?Math.min(1,r):.001;e.hb.fill.scale.x=r;   /* v212: a NaN health never makes a NaN bar (it whited out the screen through the glow) */e.hb.fill.position.x=-(1-r)/2;
     const dt=aiLod(e,dpl,dtAI);if(dt<0)return;
     if(eTick(e,dt,now))return;
     let tg=eTarget(e,m,dpl);

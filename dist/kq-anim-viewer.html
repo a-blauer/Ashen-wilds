@@ -3102,19 +3102,24 @@ if(PSXON){
     L.vertexShader='varying vec3 vPsxW;\n'+L.vertexShader.replace('#include <project_vertex>','#include <project_vertex>'+VW);
     L.fragmentShader='varying vec3 vPsxW;\n'+NZ+L.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>'+GR)});
 }
+// v212: the bright pass and the composite drop NaN / infinite pixels (3830): one such pixel, blurred by the glow, whited out the screen
 const POST=(()=>{
   let hf=false;try{hf=!!(ren.extensions.get('EXT_color_buffer_float')||ren.extensions.get('EXT_color_buffer_half_float'))}catch(e){}
   const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true};
   const T=(w,h,ms)=>{if(ms&&w2){try{const t=new THREE.WebGLMultisampleRenderTarget(w,h,opt);t.samples=4;return t}catch(e){}}return new THREE.WebGLRenderTarget(w,h,opt)};
   const vs='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',oc=new THREE.OrthographicCamera(-1,1,1,-1,0,1),ps=new THREE.Scene(),fq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),null);fq.frustumCulled=false;ps.add(fq);
   const M=(fs,u)=>new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:fs,uniforms:u,depthTest:false,depthWrite:false});
-  const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
+  const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);bool bad=!(l>=0.&&l<1e4);\n#if __VERSION__>=300\nbad=bad||any(isnan(c))||any(isinf(c));\n#endif\nif(bad){c=vec3(0.);l=0.;}gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
    mBlur=M('uniform sampler2D t;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;c+=(texture2D(t,vUv+dir*1.385).rgb+texture2D(t,vUv-dir*1.385).rgb)*.3162;c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.0703;gl_FragColor=vec4(c,1.);}',{t:{value:null},dir:{value:new THREE.Vector2()}}),
    mRay=M('uniform sampler2D t;uniform vec2 sun;varying vec2 vUv;void main(){vec2 d=(sun-vUv)*.034;vec2 uv=vUv;float w=1.;vec3 a=vec3(0.);for(int i=0;i<28;i++){uv+=d;a+=texture2D(t,uv).rgb*w;w*=.935;}gl_FragColor=vec4(a/18.,1.);}',{t:{value:null},sun:{value:new THREE.Vector2(.5,.5)}}),
    mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx;uniform vec2 res;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
    vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
    float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
-   void main(){vec3 c=texture2D(t,vUv).rgb+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
+   void main(){vec3 c0=texture2D(t,vUv).rgb;bool bad=!(dot(c0,vec3(1.))>=0.&&dot(c0,vec3(1.))<3e4);
+   #if __VERSION__>=300
+   bad=bad||any(isnan(c0))||any(isinf(c0));
+   #endif
+   if(bad)c0=vec3(0.);vec3 c=c0+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
     float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c*=mix(shT,vec3(1.),smoothstep(0.,.45,l));c=mix(c,c*hiT,smoothstep(.45,1.,l)*.6);
     vec2 q=vUv-.5;c*=1.-dot(q,q)*vig;c+=(hs(vUv*vec2(1731.,977.)+time)-.5)*grain;
     if(psx>.5){vec2 px=floor(vUv*res);vec2 a=px*.5;float b2a=fract(dot(floor(a),vec2(.5,floor(a.y)*.75)));float b2b=fract(dot(px,vec2(.5,px.y*.75)));float bay=b2a*.25+b2b;c=floor(clamp(c,0.,1.)*31.+bay)/31.;}
@@ -4199,7 +4204,7 @@ function loop(now){
     const m=e.m;m.position.y=GH(m.position.x,m.position.z);if(!e.boss&&!e.dead&&tDist(m.position.x,m.position.z)<TS+1.5){removeE(e);return}const dpl=m.position.distanceTo(pl.position);m.visible=dpl<30;e.hb.visible=m.visible&&!e.dead;
     if(!m.visible&&!mpAct(e)){aiSleep(e,1);return}aiSleep(e,0);if(e.dead)return;
     e.hb.position.set(m.position.x,m.position.y+(e.boss?5.5:e.c.al?2.4:m.isHum?Math.max(1.6,(m.bs||1)*1.62):1.6),m.position.z);e.hb.quaternion.copy(cam.quaternion);
-    const r=Math.max(.001,e.c.h/M(e.c));e.hb.fill.scale.x=r;e.hb.fill.position.x=-(1-r)/2;
+    if(!isFinite(e.c.h))e.c.h=M(e.c);let r=e.c.h/M(e.c);r=r>.001?Math.min(1,r):.001;e.hb.fill.scale.x=r;   /* v212: a NaN health never makes a NaN bar (it whited out the screen through the glow) */e.hb.fill.position.x=-(1-r)/2;
     const dt=aiLod(e,dpl,dtAI);if(dt<0)return;
     if(eTick(e,dt,now))return;
     let tg=eTarget(e,m,dpl);
@@ -12837,7 +12842,7 @@ function d01Mat(k){if(D01.m[k])return D01.m[k];let m;
   m.userData.lps=1;return D01.m[k]=m}
 // small health bar (the game's own bar), hidden until the thing is hurt
 function d01Bar(col){const b=bar(false);b.fill.material.color.setHex(col);b.visible=false;b.scale.setScalar(1.7);return b}
-function d01BarSet(b,x,y,z,r){b.visible=true;b.position.set(x,y,z);b.quaternion.copy(cam.quaternion);r=Math.max(.001,r);b.fill.scale.x=r;b.fill.position.x=-(1-r)/2}
+function d01BarSet(b,x,y,z,r){b.visible=true;b.position.set(x,y,z);b.quaternion.copy(cam.quaternion);r=r>.001?Math.min(1,r):.001;b.fill.scale.x=r;b.fill.position.x=-(1-r)/2}
 function d01Buff(n,i,ms,d,s){const t=nowP()+ms;let b=hero.buffs.find(q=>q.n==n);if(b){b.t=t;b.d=d;return b}b={n,i,s:s||{},t,d};hero.buffs.push(b);hsDirty();return b}
 function d01Unbuff(n){const k=hero.buffs.length;hero.buffs=hero.buffs.filter(b=>b.n!=n);if(hero.buffs.length!=k)hsDirty()}
 // a ray from (ox,oz) along unit (dx,dz): length until it meets a pillar circle [x,z,r] or leaves the den circle
@@ -74197,6 +74202,54 @@ WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;KN207.cur=KN2
     launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7,knife:1},raw*WB127.knife1,.5);
     const sh=shots[shots.length-1];if(sh)kn211Swap(sh);sfx('stab')})}
   finally{haPlay=hp}};
+// ================= v212: no more white-outs from a broken number (owner, Nov 9 2026) =================
+// Owner: "I just got a glitch where my screen filled with light. Find the cause and fix" (Kindlelight I, in a fight, throwing knives).
+// The cause: one NaN ("not a number") anywhere in what is drawn. The glow pass (POST, 0060) takes the bright parts of the frame and
+// blurs them four times over the screen, so a single NaN pixel spread to every pixel and the whole view went white (the vignette
+// and the HUD still on top). The way it was reproduced: the hero's physical attack (HS().pa) became NaN (a weapon with no item
+// level: itStats multiplies by it.lv), every knife then did NaN damage, the struck enemy's health became NaN and its health bar's
+// width (fill.scale.x = health / max) became NaN.
+// The fixes, from the screen back to the cause:
+//  1. the glow and the final picture skip NaN / infinite pixels (0060's bright pass and composite): whatever goes wrong, the screen
+//     no longer whites out
+//  2. health bars: a NaN health is put back to full and the bar's width is clamped (0104's bar update, 0920's Argus bars)
+//  3. damage: a NaN or infinite hit does nothing (hurt), so an enemy's health can't become NaN
+//  4. the hero's stats: any NaN / infinite stat counts as 0 (HS), and an item without a level uses its required level (itStats)
+//  5. the camera: a NaN camera (every pixel NaN: the whole screen white on the owner's GPU) is put back before the frame is drawn
+// (A single NaN pixel only blurs into a small square; the full white-out needs NaN nearly everywhere, which is what a NaN camera
+// gives. Headless test browsers show NaN as black or skip it, so the tests check the numbers and the guards, not white pixels.)
+// Each guard notes the first time it catches something in the console ("v212 guard: …") so a future case can be traced.
+var NG212={seen:{}};
+function ng212Note(k,info){if(NG212.seen[k])return;NG212.seen[k]=1;try{console.warn('v212 guard: '+k,info||'')}catch(_){}}
+// 3. damage
+{const f=hurt;hurt=function(e,d){if(typeof d=='number'&&!isFinite(d)){ng212Note('hurt',e&&e.c&&e.c.n);const a=[].slice.call(arguments);a[1]=0;return f.apply(this,a)}return f.apply(this,arguments)}}
+// 4. the hero's stats
+{const f=itStats;itStats=function(it){if(it&&typeof it=='object'&&!(it.lv>0)){ng212Note('item level',it.tp);return f.call(this,Object.assign({},it,{lv:Math.max(1,it.req|0)}))}return f.apply(this,arguments)}}
+{const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&typeof s=='object'&&!s._ng212){s._ng212=1;for(const k in s){const v=s[k];if(typeof v=='number'&&!isFinite(v)){ng212Note('stat '+k);s[k]=0}}}return s}}
+// 5. the camera: a NaN anywhere in its position or turn makes every pixel NaN (only the sky's shader still runs, and it draws NaN),
+//    which a GPU shows as a white screen. Before each frame a broken camera is put back to its last good place and the game camera
+//    snaps behind the hero again.
+var NG212C={p:new THREE.Vector3(),q:new THREE.Quaternion(),ok:false,n:0};
+function ng212Fin(v){return isFinite(v.x)&&isFinite(v.y)&&isFinite(v.z)&&(v.w==null||isFinite(v.w))}
+{const f=POST.render;POST.render=function(){try{
+  if(!ng212Fin(cam.position)||!ng212Fin(cam.quaternion)||!isFinite(cam.fov)){NG212C.n++;ng212Note('camera',[cam.position.x,cam.position.y,cam.position.z].join(','));
+    ng212CamState();
+    if(NG212C.ok){cam.position.copy(NG212C.p);cam.quaternion.copy(NG212C.q)}else{cam.position.set(pl.position.x,pl.position.y+6,pl.position.z+8);cam.lookAt(pl.position)}
+    if(!isFinite(cam.fov))cam.fov=58;try{if(ng212Fin(pl.position)&&!IC151.on&&typeof snapCam=='function')snapCam()}catch(_){}
+    if(!ng212Fin(cam.position)){cam.position.set(pl.position.x,pl.position.y+6,pl.position.z+8);cam.lookAt(pl.position)}cam.updateProjectionMatrix();cam.updateMatrixWorld(true)}
+  else{NG212C.p.copy(cam.position);NG212C.q.copy(cam.quaternion);NG212C.ok=true}}catch(_){}
+  return f.apply(this,arguments)}}
+// the camera's own blended settings: one NaN in any of them stays NaN for good (each frame blends from the last), so they are
+// repaired too, before every frame (cheap: a few number checks)
+function ng212CamState(){let n=0;
+  try{if(!isFinite(camYaw)){camYaw=pl.rotation.y+Math.PI;n++}if(!isFinite(camPitch)){camPitch=.3;n++}if(!isFinite(camDist)||camDist<=0){camDist=9.5;n++}if(!isFinite(camK)){camK=camPitch;n++}}catch(_){}
+  try{if(camDD!=null&&!isFinite(camDD)){camDD=null;n++}}catch(_){}
+  try{if(typeof look!='undefined'&&look&&!ng212Fin(look)){look.set(pl.position.x,pl.position.y+1,pl.position.z);n++}}catch(_){}
+  try{if(!isFinite(shk)){shk=0;n++}}catch(_){}
+  if(n)ng212Note('camera settings',n);return n}
+{const f=POST.render;POST.render=function(){try{ng212CamState()}catch(_){}return f.apply(this,arguments)}}
+// the frame clock: a frame called without a time (or after one) would make every blend NaN
+{const f=loop;loop=function(now){if(typeof now!='number'||!isFinite(now))now=performance.now();try{if(typeof last=='number'&&!isFinite(last))last=now}catch(_){}return f.call(this,now)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:
