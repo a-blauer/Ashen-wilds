@@ -392,6 +392,26 @@ The animal heroes / folk keep the humanoid skeleton (every animation, grip and w
 - **Motion:** springs only (no lerps that stop dead), offsets through `brAddR` after everything else; gestures fade in / out with
   `idlEnv` and never overlap the v93 fidgets.
 
+## 4f. A quadruped boss on its own joints (v212 Argus, `3830`)
+
+- **Own cage on the boss's joints:** read the joints' rest frames (`a212Frames`), loft rings in root space (`a212Loft`: explicit ring
+  planes for the torso so rings never cross where the spine bends into the neck), legs as lofts whose top ring is buried in the body,
+  head, jaw, paws and tail as their own lofts; one `cgSub`, `cgSculpt`, `cgShade`, paint per corner, then `mdBake` and a SkinnedMesh
+  bound to the joints (like Vaelric). An over-scaled joint (Argus' head ×1.25) is set back to 1 and its children's positions scaled.
+- **Fur that doesn't read as clutter:** few big clumps, all combed one way along the body (flattened blades lying on the skin,
+  per-ring weights from the skin under them), a seeded jitter in place / length so rows don't read as scales, tips only a little
+  lighter than the roots, and the lowest rows of a mane blended toward the body colour (a dark fringe on a pale chest reads as teeth).
+- **Many glowing eyes:** each eye is one lens mesh (dome, iris graded in vertex colour × the shared iris colour, slit painted on the
+  vertical axis) so it can still blink by its scale, sitting in a dark lid rim that is part of the skin (it stays when the lens
+  squashes). Painted sockets alone vanish when the eye is smaller than two faces. Wind the lens outward (check, it was culled).
+- **Value in the zone:** check in the real den lighting (`test/v212_argus.py GAME=1`; the test's hit-flash must be cleared). A body
+  that reads in the neutral sheet can vanish on Kindlelight's ground; lift the palette and use a dim cool rim (`arg212Rim`).
+- **Gait without skating:** plant each paw for its stance with the angle `atan(lerp(-1,1,u)·tan θm)` (straight-line paw travel,
+  `θm = atan(duty·stride/2 / leg length)`), stride length growing with speed, no body pitch oscillation (it moves every planted paw).
+  Measure: lowest paw ground speed (`v212_argus.py`).
+- **Smooth poses:** a critically damped follow on every joint offset (ω ≈ 34) with the move track sampled 2/ω ahead, so snaps ease
+  and strikes keep their beat; pops measured as the fastest joint turn between frames.
+
 ## 5. Checklist for every new or reworked model
 
 1. **Silhouette:** front and side pictures. Every triangle-heavy feature changes the outline; everything else is paint.
