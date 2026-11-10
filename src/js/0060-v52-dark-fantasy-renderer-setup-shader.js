@@ -12,19 +12,24 @@ if(PSXON){
     L.vertexShader='varying vec3 vPsxW;\n'+L.vertexShader.replace('#include <project_vertex>','#include <project_vertex>'+VW);
     L.fragmentShader='varying vec3 vPsxW;\n'+NZ+L.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>'+GR)});
 }
+// v212: the bright pass and the composite drop NaN / infinite pixels (3830): one such pixel, blurred by the glow, whited out the screen
 const POST=(()=>{
   let hf=false;try{hf=!!(ren.extensions.get('EXT_color_buffer_float')||ren.extensions.get('EXT_color_buffer_half_float'))}catch(e){}
   const w2=ren.capabilities.isWebGL2,opt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:true};
   const T=(w,h,ms)=>{if(ms&&w2){try{const t=new THREE.WebGLMultisampleRenderTarget(w,h,opt);t.samples=4;return t}catch(e){}}return new THREE.WebGLRenderTarget(w,h,opt)};
   const vs='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',oc=new THREE.OrthographicCamera(-1,1,1,-1,0,1),ps=new THREE.Scene(),fq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),null);fq.frustumCulled=false;ps.add(fq);
   const M=(fs,u)=>new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:fs,uniforms:u,depthTest:false,depthWrite:false});
-  const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
+  const mBright=M('uniform sampler2D t;uniform float thr;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=max(max(c.r,c.g),c.b);bool bad=!(l>=0.&&l<1e4);\n#if __VERSION__>=300\nbad=bad||any(isnan(c))||any(isinf(c));\n#endif\nif(bad){c=vec3(0.);l=0.;}gl_FragColor=vec4(c*smoothstep(thr,thr+.9,l),1.);}',{t:{value:null},thr:{value:.95}}),
    mBlur=M('uniform sampler2D t;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;c+=(texture2D(t,vUv+dir*1.385).rgb+texture2D(t,vUv-dir*1.385).rgb)*.3162;c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.0703;gl_FragColor=vec4(c,1.);}',{t:{value:null},dir:{value:new THREE.Vector2()}}),
    mRay=M('uniform sampler2D t;uniform vec2 sun;varying vec2 vUv;void main(){vec2 d=(sun-vUv)*.034;vec2 uv=vUv;float w=1.;vec3 a=vec3(0.);for(int i=0;i<28;i++){uv+=d;a+=texture2D(t,uv).rgb*w;w*=.935;}gl_FragColor=vec4(a/18.,1.);}',{t:{value:null},sun:{value:new THREE.Vector2(.5,.5)}}),
    mComp=M(`uniform sampler2D t,bl,ry;uniform float ex,bk,rk,sat,vig,time,grain,psx;uniform vec2 res;uniform vec3 rayC,shT,hiT;varying vec2 vUv;
    vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
    float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
-   void main(){vec3 c=texture2D(t,vUv).rgb+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
+   void main(){vec3 c0=texture2D(t,vUv).rgb;bool bad=!(dot(c0,vec3(1.))>=0.&&dot(c0,vec3(1.))<3e4);
+   #if __VERSION__>=300
+   bad=bad||any(isnan(c0))||any(isinf(c0));
+   #endif
+   if(bad)c0=vec3(0.);vec3 c=c0+texture2D(bl,vUv).rgb*bk+texture2D(ry,vUv).rgb*rk*rayC;c*=ex;c=aces(c);
     float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,sat);c*=mix(shT,vec3(1.),smoothstep(0.,.45,l));c=mix(c,c*hiT,smoothstep(.45,1.,l)*.6);
     vec2 q=vUv-.5;c*=1.-dot(q,q)*vig;c+=(hs(vUv*vec2(1731.,977.)+time)-.5)*grain;
     if(psx>.5){vec2 px=floor(vUv*res);vec2 a=px*.5;float b2a=fract(dot(floor(a),vec2(.5,floor(a.y)*.75)));float b2b=fract(dot(px,vec2(.5,px.y*.75)));float bay=b2a*.25+b2b;c=floor(clamp(c,0.,1.)*31.+bay)/31.;}

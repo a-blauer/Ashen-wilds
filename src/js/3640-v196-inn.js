@@ -10,19 +10,19 @@
 //  * Walls and furniture are solid (town colliders), the doorway is open; the rest prompt (T.tv) is at the bar, where the innkeeper
 //    stands. The seats are listed for the townsfolk (DM196I.seats: chairs, stools and the bench, with the table they face) — 3650
 //    walks villagers in to sit and eat. Warm point lights come from the hearth and the lanterns (TLAMP).
-// v212 (owner, Nov 9 2026: "make the Inn 40% larger and make the roof completely transparent when inside"): the room is 12.2 x 10.2
+// v213 (owner, Nov 9 2026: "make the Inn 40% larger and make the roof completely transparent when inside"): the room is 12.2 x 10.2
 // (was 11 x 8: 41% more floor, as large as fits between the avenue, the west house lot, the town wall and the fountain; the lot sits at
 // r 13.8, -48°),
 // 3.6 high. The four walls above the footing are their own groups (DM196I.w: f b l r) and so is the porch (DM196I.outF): inside,
 // the roof is hidden and every wall the camera stands outside of is cut away with the porch, so nothing hides the room (dm196InnCut).
-// The card table of v212 (3840) stands at DM196I.card, its dealer on the left wall's side.
+// The card table of v213 (3850) stands at DM196I.card, its dealer on the left wall's side.
 var DM196I={W2:6.1,D2:5.1,H:3.6,rise:3.0,hz:-1.6,card:[-3.6,1.8],w:{},outF:null,barTop:.85,g:null,roof:null,col:[],lamps:[],seats:[],an:null,inside:false,keeper:null,l:null};
 function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,stD=0x55525a,pl=0xd8ccb0,wood=0x5a3c24,woodD=0x3a281a,warm=0xffc070;
   // floor and footing
   k.as('board',()=>{for(let x=-W2+.35;x<W2;x+=.5)k.p('c',R()<.3?0x6a4a2e:0x7a5636,'box',x,.05,0,.48,.06,2*D2-.3,0,0,0,.02)});
   twStones(k,stD,-W2,-D2,W2,-D2,0,.36,.4);twStones(k,stD,-W2,D2,-.9,D2,0,.36,.4);twStones(k,stD,.9,D2,W2,D2,0,.36,.4);twStones(k,stD,-W2,-D2,-W2,D2,0,.36,.4);twStones(k,stD,W2,-D2,W2,D2,0,.36,.4);
   k.as('ashlar',()=>k.p('c',st,'box',0,.18,D2+.45,2.0,.36,.7,0,0,0,.04)); // the doorstep
-  // v212: the walls above the footing are built by dm196InnWallK (one group per side, cut away from inside)
+  // v213: the walls above the footing are built by dm196InnWallK (one group per side, cut away from inside)
   // ceiling beams and a ring of posts
   k.as('wood',()=>{for(let x=-W2+1.1;x<W2;x+=2.2)k.L('c',woodD,[x,H-.12,-D2],[x,H-.12,D2],.11,'box');k.L('c',woodD,[-W2,H-.2,0],[W2,H-.2,0],.12,'box')});
   // the bar: a long counter on the left back (v199: top at ~.85 above the floor, it stood chest high and hid the innkeeper), stools, shelves of bottles and casks behind it, a tap barrel
@@ -57,7 +57,7 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   DM196I.lantern.forEach(([x,z])=>{k.L('m',TWC.iron,[x,H-.15,z],[x,2.55,z],.012,'cyl6',0);TWN100_lantern(k,x,2.32,z,warm)});
   for(let i=0;i<10;i++){const x=-W2+1.0+i*1.2;k.as('leaf',()=>k.p('c',[0x6a8a3a,0x5a7a34,0x8a8a4a][i%3],'ico',x,H-.42,-.15,.12,.3,.12,0,i,0,.1))}
   k.as('board',()=>k.p('c',0x5a3c24,'box',-W2+.2,1.9,-.4,.06,.8,1.2,0,0,0,.02));[0,1,2].forEach(i=>k.p('c',0xe8dcc0,'box',-W2+.25,1.85+(i%2)*.2,-.7+i*.3,.02,.3,.22,0,0,(i-1)*.1,0))}
-// v212: one wall above the footing: stone to the sill, timber framing and plaster panels above, its windows (side 'f' with the doorway)
+// v213: one wall above the footing: stone to the sill, timber framing and plaster panels above, its windows (side 'f' with the doorway)
 function dm196InnWallK(side){return (k,R)=>{const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,pl=0xd8ccb0,woodD=0x3a281a,warm=0xffc070;
   const wall=(x0,z0,x1,z1)=>{twStones(k,st,x0,z0,x1,z1,.36,1.4,.36);const L=Math.hypot(x1-x0,z1-z0),ux=(x1-x0)/L,uz=(z1-z0)/L,ry=Math.atan2(-uz,ux);
     k.as('plaster',()=>k.p('c',pl,'box',(x0+x1)/2,(1.4+H)/2,(z0+z1)/2,L,H-1.4,.2,0,ry,0,.02));
@@ -121,7 +121,7 @@ function dm196InnBuild(){const T=TOWNS[0],l=dm196Fix('inn');if(!l)return;DM196I.
   T.tv=lotW103(l,-3.0+DM196I.bar[0],-1.05+DM196I.bar[1])}
 // inside: the roof goes, so the camera sees the room
 function dm196InnInside(x,z){const l=DM196I.l;if(!l)return false;const T=TOWNS[0],fx=Math.sin(l.ry),fz=Math.cos(l.ry),dx=x-T.cx-l.x,dz=z-T.cy-l.z,u=dx*fz-dz*fx,v=dx*fx+dz*fz;return Math.abs(u)<DM196I.W2+.1&&v>-DM196I.D2-.1&&v<DM196I.D2+.15}
-// v212: and every wall the camera stands outside of goes too (with the porch for the front), so the room is open to the view
+// v213: and every wall the camera stands outside of goes too (with the porch for the front), so the room is open to the view
 function dm196InnLocal(x,z){const l=DM196I.l,T=TOWNS[0],fx=Math.sin(l.ry),fz=Math.cos(l.ry),dx=x-T.cx-l.x,dz=z-T.cy-l.z;return [dx*fz-dz*fx,dx*fx+dz*fz]}
 function dm196InnCut(In){const W=DM196I.w;let c=null;if(In&&typeof cam!='undefined'&&cam)c=dm196InnLocal(cam.position.x,cam.position.z);const m=.35,W2=DM196I.W2,D2=DM196I.D2;
   const cut={f:!!c&&c[1]>D2-m,b:!!c&&c[1]<-D2+m,l:!!c&&c[0]<-W2+m,r:!!c&&c[0]>W2-m};

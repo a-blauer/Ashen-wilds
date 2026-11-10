@@ -1,6 +1,6 @@
-# v212: the bigger Inn (room size, walls and porch cut away from inside, roof hidden, colliders, rest prompt) and Fate's Hand,
+# v213: the bigger Inn (room size, walls and porch cut away from inside, roof hidden, colliders, rest prompt) and Fate's Hand,
 # the card table (pay rules, house edge, the prompt, a hand dealt with Space, gold, the cards laid on the table, Esc leaves).
-# Every check prints FAIL … on a wrong result. SHOTS=1 also writes out/v212_table.png.
+# Every check prints FAIL … on a wrong result. SHOTS=1 also writes out/v213_table.png.
 import os,sys,json
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import play
@@ -27,31 +27,31 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   const [dx,dz]=lotW103(l,0,DM196I.D2);out.inn.doorCol=DM196S.col.some(c=>Math.hypot(c.x-dx,c.z-dz)<.5);if(out.inn.doorCol)F.push('the doorway is blocked');
   const [tx,tz]=T.tv;toPos(tx,tz);STEP(5);promptTick();out.inn.rest=PR&&PR.label;if(!/Rest at/.test(out.inn.rest||''))F.push('the rest prompt at the bar is gone: '+out.inn.rest)}
  // ---- the rules ----
- {const P=c=>cd212Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],0],[['lan','lan','hol'],1.5],
+ {const P=c=>cd213Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],0],[['lan','lan','hol'],1.5],
     [['lan','wild','hol'],1.5],[['lan','fang','gob'],0],[['hol','wild','wild'],1.5],[['lan','fang','wild'],1.5],[['eye','wild','wild'],25]];
   out.rules=C.map(([c,m])=>{const g=P(c);if(g!==m)F.push(c.join('+')+' pays ×'+g+' (want ×'+m+')');return g});
-  let ret=0,win=0;const N=60000;for(let i=0;i<N;i++){const m=P([cd212Roll(),cd212Roll(),cd212Roll()]);ret+=m;if(m>0)win++}out.rtp=+(ret/N).toFixed(3);out.winRate=+(win/N).toFixed(3);
+  let ret=0,win=0;const N=60000;for(let i=0;i<N;i++){const m=P([cd213Roll(),cd213Roll(),cd213Roll()]);ret+=m;if(m>0)win++}out.rtp=+(ret/N).toFixed(3);out.winRate=+(win/N).toFixed(3);
   if(!(out.rtp>.8&&out.rtp<.96))F.push('house edge off: returns '+out.rtp+' of every gold bet');if(!(out.winRate>.33&&out.winRate<.5))F.push('win rate off: '+out.winRate)}
  // ---- the deck paints ----
- {const bad=[];CD212.order.concat(['back']).forEach(k=>{const t=cd212Can(k),c=t.image,d=c.getContext('2d').getImageData(c.width/2-20,c.height/2-20,40,40).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>200)n++;if(n<1000)bad.push(k)});
+ {const bad=[];CD213.order.concat(['back']).forEach(k=>{const t=cd213Can(k),c=t.image,d=c.getContext('2d').getImageData(c.width/2-20,c.height/2-20,40,40).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>200)n++;if(n<1000)bad.push(k)});
   out.paintBad=bad;if(bad.length)F.push('cards painted blank: '+bad.join(','))}
  // ---- a hand at the table ----
- {const l=DM196I.l,[sx,sz]=cd212L(-1.7,1.8);toPos(sx,sz,l.ry+Math.PI/2);STEP(10);promptTick();out.prompt=PR&&PR.label;if(!/Fate/.test(out.prompt||''))F.push('no card table prompt next to the table: '+out.prompt);
-  PR.fn();STEP(5);out.open=CD212.open;if(!CD212.open)F.push('F did not sit you at the table');if($('cd212w').classList.contains('hide'))F.push('the card panel is hidden');
+ {const l=DM196I.l,[sx,sz]=cd213L(-1.7,1.8);toPos(sx,sz,l.ry+Math.PI/2);STEP(10);promptTick();out.prompt=PR&&PR.label;if(!/Fate/.test(out.prompt||''))F.push('no card table prompt next to the table: '+out.prompt);
+  PR.fn();STEP(5);out.open=CD213.open;if(!CD213.open)F.push('F did not sit you at the table');if($('cd213w').classList.contains('hide'))F.push('the card panel is hidden');
   if(uiOpen())F.push('the card panel pauses the game');
-  STEP(60);const [cx,cz]=cd212L(CD212.cv[0],CD212.cv[2]);out.camD=+Math.hypot(cam.position.x-cx,cam.position.z-cz).toFixed(2);if(out.camD>.5)F.push('the table camera is not in place ('+out.camD+')');
-  gold=1000;CD212.bet=50;const g0=gold;key(' ');out.busy=CD212.busy;if(!CD212.busy)F.push('Space did not deal');if(gold!==g0-50)F.push('the bet was not taken: '+(g0-gold));
+  STEP(60);const [cx,cz]=cd213L(CD213.cv[0],CD213.cv[2]);out.camD=+Math.hypot(cam.position.x-cx,cam.position.z-cz).toFixed(2);if(out.camD>.5)F.push('the table camera is not in place ('+out.camD+')');
+  gold=1000;CD213.bet=50;const g0=gold;key(' ');out.busy=CD213.busy;if(!CD213.busy)F.push('Space did not deal');if(gold!==g0-50)F.push('the bet was not taken: '+(g0-gold));
   const p0=[pl.position.x,pl.position.z];STEP(30);const p1=[pl.position.x,pl.position.z];key('w');STEP(30);key('w',1);out.drift=+Math.hypot(p1[0]-p0[0],p1[1]-p0[1]).toFixed(2);out.walked=+Math.hypot(pl.position.x-p1[0],pl.position.z-p1[1]).toFixed(2);if(out.walked>.05)F.push('W walked away mid-hand');
-  STEP(200);out.res=CD212.res&&{c:CD212.res.c,win:CD212.res.win};if(CD212.busy||!CD212.res)F.push('the hand never finished');else{const want=Math.floor(50*cd212Pay(CD212.res.c).m);if(CD212.res.win!==want)F.push('paid '+CD212.res.win+' (want '+want+')');if(gold!==g0-50+want)F.push('gold after the hand '+gold+' (want '+(g0-50+want)+')')}
-  out.lay=CD212.lay.length;const faces=CD212.lay.map(m=>Math.abs(m.userData.f.rotation.z)<.05);if(CD212.lay.length!==3||faces.some(f=>!f))F.push('the three cards are not lying face up on the table');
+  STEP(200);out.res=CD213.res&&{c:CD213.res.c,win:CD213.res.win};if(CD213.busy||!CD213.res)F.push('the hand never finished');else{const want=Math.floor(50*cd213Pay(CD213.res.c).m);if(CD213.res.win!==want)F.push('paid '+CD213.res.win+' (want '+want+')');if(gold!==g0-50+want)F.push('gold after the hand '+gold+' (want '+(g0-50+want)+')')}
+  out.lay=CD213.lay.length;const faces=CD213.lay.map(m=>Math.abs(m.userData.f.rotation.z)<.05);if(CD213.lay.length!==3||faces.some(f=>!f))F.push('the three cards are not lying face up on the table');
   // the cards lie on the table top
-  const tops=CD212.lay.map(m=>{const v=new THREE.Vector3();m.getWorldPosition(v);return +(v.y-TOWNS[0].ph).toFixed(2)});out.tops=tops;if(tops.some(y=>y<.68||y>.8))F.push('cards not on the table top: '+tops.join(','));
-  gold=10;CD212.bet=50;const g1=gold;key('enter');if(gold!==g1||CD212.busy)F.push('dealt a hand without the gold for it');
-  key('Escape');STEP(5);if(CD212.open)F.push('Esc did not leave the table');STEP(40);
+  const tops=CD213.lay.map(m=>{const v=new THREE.Vector3();m.getWorldPosition(v);return +(v.y-TOWNS[0].ph).toFixed(2)});out.tops=tops;if(tops.some(y=>y<.68||y>.8))F.push('cards not on the table top: '+tops.join(','));
+  gold=10;CD213.bet=50;const g1=gold;key('enter');if(gold!==g1||CD213.busy)F.push('dealt a hand without the gold for it');
+  key('Escape');STEP(5);if(CD213.open)F.push('Esc did not leave the table');STEP(40);
   // the dealer stands behind the table
-  const D=CD212.dealer;out.dealer=!!D;if(!D)F.push('no dealer')}
+  const D=CD213.dealer;out.dealer=!!D;if(!D)F.push('no dealer')}
  out.F=F;return out}"""
-SHOT=r"""()=>{const l=DM196I.l,T=TOWNS[0];const [sx,sz]=cd212L(-1.7,1.8);toPos(sx,sz,l.ry+Math.PI/2);for(let i=0;i<10;i++){VT+=16;loop(VT)}cd212Open();gold=500;cd212Deal();for(let i=0;i<240;i++){VT+=16;loop(VT)}ren.render=window.__rr;POST.render=window.__pr;POST.render();return 1}"""
+SHOT=r"""()=>{const l=DM196I.l,T=TOWNS[0];const [sx,sz]=cd213L(-1.7,1.8);toPos(sx,sz,l.ry+Math.PI/2);for(let i=0;i<10;i++){VT+=16;loop(VT)}cd213Open();gold=500;cd213Deal();for(let i=0;i<240;i++){VT+=16;loop(VT)}ren.render=window.__rr;POST.render=window.__pr;POST.render();return 1}"""
 fails=[]
 def F(m):fails.append(m);print('FAIL',m)
 def s(pg):
@@ -62,10 +62,10 @@ def s(pg):
     if r.get('err'):F('error '+r['err'])
     for m in r['F']:F(m)
     if os.environ.get('SHOTS'):
-        pg.evaluate(SHOT);pg.screenshot(path=play.TMP+'/v212_table.png',timeout=600000)
+        pg.evaluate(SHOT);pg.screenshot(path=play.TMP+'/v213_table.png',timeout=600000)
     logs=open(play.TMP+'/lastlogs.txt').read() if os.path.exists(play.TMP+'/lastlogs.txt') else ''
 play.run(s)
 L=open(play.TMP+'/lastlogs.txt').read()
 for l in L.split('\n'):
-    if 'PAGEERROR' in l or 'v212' in l:F('page: '+l[:200])
-print('v212 cards: checked' if not fails else 'CHECKS FAILED')
+    if 'PAGEERROR' in l or 'v213' in l:F('page: '+l[:200])
+print('v213 cards: checked' if not fails else 'CHECKS FAILED')

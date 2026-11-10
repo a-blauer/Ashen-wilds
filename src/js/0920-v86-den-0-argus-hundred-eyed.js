@@ -36,7 +36,7 @@ function d01Mat(k){if(D01.m[k])return D01.m[k];let m;
   m.userData.lps=1;return D01.m[k]=m}
 // small health bar (the game's own bar), hidden until the thing is hurt
 function d01Bar(col){const b=bar(false);b.fill.material.color.setHex(col);b.visible=false;b.scale.setScalar(1.7);return b}
-function d01BarSet(b,x,y,z,r){b.visible=true;b.position.set(x,y,z);b.quaternion.copy(cam.quaternion);r=Math.max(.001,r);b.fill.scale.x=r;b.fill.position.x=-(1-r)/2}
+function d01BarSet(b,x,y,z,r){b.visible=true;b.position.set(x,y,z);b.quaternion.copy(cam.quaternion);r=r>.001?Math.min(1,r):.001;b.fill.scale.x=r;b.fill.position.x=-(1-r)/2}
 function d01Buff(n,i,ms,d,s){const t=nowP()+ms;let b=hero.buffs.find(q=>q.n==n);if(b){b.t=t;b.d=d;return b}b={n,i,s:s||{},t,d};hero.buffs.push(b);hsDirty();return b}
 function d01Unbuff(n){const k=hero.buffs.length;hero.buffs=hero.buffs.filter(b=>b.n!=n);if(hero.buffs.length!=k)hsDirty()}
 // a ray from (ox,oz) along unit (dx,dz): length until it meets a pillar circle [x,z,r] or leaves the den circle

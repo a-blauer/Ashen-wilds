@@ -1,7 +1,7 @@
 // ================= v196: the Steward's decorations in the round town =================
 // v190's decorations keep their models; their places move to the round layout (town-local, angles clockwise from north):
 //  * ring A gaps (r ~17.5, between the first lots, the Trading Post and the Inn): obelisk 127°, Hero's Statue -153°, candle shrine
-//    89.5°, well -108.5°, two planters 52.5° / -71.5° (v212: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
+//    89.5°, well -108.5°, two planters 52.5° / -71.5° (v213: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
 //  * ring B gaps (r ~27.5, between the outer lots): carts and harvest piles ±61.5°, trophies 90° (one per Sovereign), groves ±147.5°,
 //    firewood -118.5°, the Elder Oak 118.5°, the Lantern Pavilion -90°, the Moonflower Gardens -32.5°, the Great Beacon 32.5°;
 //    stone benches face the first ring street at ±32.5° / 180°±40°. Until the walls reach them they stand in the meadow outside.

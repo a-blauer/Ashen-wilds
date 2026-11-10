@@ -173,6 +173,7 @@ v210_hillside_cine.py
 v210_coop.py
 v211_knife.py
 v211_coop.py
-v212_guard.py
-v212_cards.py
-v212_coop.py
+v213_guard.py
+v213_cards.py
+v213_coop.py
+v212_white.py
