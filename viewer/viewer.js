@@ -240,8 +240,8 @@ function bossActions(){const B=KV.boss,e=B&&B.e,out=[];if(!e)return out;const S=
   if(S.B.die)out.push({k:'bdie',g:'Other',i:'💀',t:'Defeat',s:'Its fall (the body stays: this is a preview)',ms:3400,run(){bossDie()}});
   const ai=S.B.ai||{},wv=ai.walk||2.2,rv=ai.run||Math.max(wv*1.6,3.6);
   out.push({k:'bidle',g:'Movement',i:'🫁',t:'Idle',s:'Standing at rest: breathing, looking round',ms:6000,run(){bossPlay0();KV.bw=null}});
-  out.push({k:'bwalk',g:'Movement',i:'🚶',t:'Walk',s:'Pacing back and forth at his walk ('+wv+' m/s)',ms:9000,run(){bossPace(wv,9000)}});
-  out.push({k:'brun',g:'Movement',i:'🏃',t:'Run',s:'Pacing back and forth at his run ('+rv+' m/s)',ms:9000,run(){bossPace(rv,9000)}});
+  out.push({k:'bwalk',g:'Movement',i:'🚶',t:'Walk',s:'Pacing back and forth at its walk ('+(+wv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(wv,9000)}});
+  out.push({k:'brun',g:'Movement',i:'🏃',t:'Run',s:'Pacing back and forth at its run ('+(+rv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(rv,9000)}});
   return out}
 // Movement (v214): stop any move and stand on the mark, or pace 11 m ahead and back
 function bossPlay0(){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv;svEndMove(e,true);S.mv=null;S.stg=0;bossClean(e);e.m.position.set(B.c.x,e.m.position.y,B.c.z);e.m.rotation.y=B.Y0}
