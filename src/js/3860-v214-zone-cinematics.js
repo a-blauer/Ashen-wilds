@@ -42,7 +42,7 @@ function zc214New(S,o){if(o&&!S.vm.has(o))S.vm.set(o,false)}
 function zc214Road(g,fr){const I=INSL[g],P=I.path,j=Math.max(2,Math.min(P.length-14,Math.floor(P.length*fr))),a=P[j],b=P[Math.min(P.length-1,j+12)],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz)||1;
   return {x:a[0],z:a[1],fx:dx/L,fz:dz/L,sx:-dz/L,sz:dx/L}}
 // a stand-in creature (model only): sh = its shot, from (x,z) walking along (dx,dz) at v from t0; stalk = toward the camera
-function zc214Cast(S,c){try{if(!EN[c.k])return;const m=cr(enemyC(c.k,c.lv||10,{}));if(!m)return;m.scale.setScalar(m.bs||m.scale.x||1);m.userData.psNo=1;m.userData.noFarCull=1;m.visible=false;
+function zc214Cast(S,c){try{if(!EN[c.k])return;if(!c.free){const T=ZC214.T,ta=T[c.sh],tb=T[c.sh+1]||ZC214.cut;if(!zc214Clear(S,c,ta,tb,zc214G({x:c.x,z:c.z})))return}const m=cr(enemyC(c.k,c.lv||10,{}));if(!m)return;m.scale.setScalar(m.bs||m.scale.x||1);m.userData.psNo=1;m.userData.noFarCull=1;m.visible=false;
     m.traverse(o=>{if(o.isMesh)o.frustumCulled=false});scene.add(m);S.cast.push(Object.assign({m},c))}catch(e){console.warn('zc214 cast',c.k,e)}}
 // a creature of our own on the Sovereign rig (no AI): built with B.build, posed per frame by zc214RigPose
 function zc214Rig(B,x,z,ry){const R=svRig();B.build(R,null);svRest(R);try{svMerge(R)}catch(_){}const g=new THREE.Group();g.add(R.root);g.position.set(x,GH(x,z),z);g.rotation.y=ry;
@@ -59,12 +59,28 @@ function zc214Gate(S,key){try{const G=SP152.gates[key];if(!G)return null;if(!G.s
 // =====================================================================================================================
 // the stand-ins of shots 1–4 stand where that shot's camera looks at mid-shot: d ahead, o across, walking across the view
 function zc214Place(S){(S.Z.rel||[]).forEach(([sh,k,lv,d,o,dir,v,dl])=>{try{const T=ZC214.T,ta=T[sh],tb=T[sh+1]||ZC214.cut,tm=(ta+tb)/2,c=S.Z.cam(S,sh,.5,tm);if(!c)return;
-    let fx=c.l.x-c.p.x,fz=c.l.z-c.p.z;const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;const rx=-fz,rz=fx,t0=ta+dl,s0=o-dir*v*(tm-t0);
-    zc214Cast(S,{sh,k,lv,x:c.p.x+fx*d+rx*s0,z:c.p.z+fz*d+rz*s0,dx:rx*dir,dz:rz*dir,v,t0})}catch(e){console.warn('zc214 place',k,e)}})}
+    let fx=c.l.x-c.p.x,fz=c.l.z-c.p.z;const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;const rx=-fz,rz=fx,t0=ta+dl,g=zc214G(c.F);
+    // the first spot (then nearby ones, then the other way) whose whole walk stays on open ground: never through a wall, a tomb,
+    // a column or the sand of the buried temple (owner, Nov 10 2026: creatures walked through the tomb in the sand cinematic)
+    const tries=[];for(const dd of [0,-2,2,-4,4])for(const oo of [0,2,-2,4,-4,6,-6])for(const sg of [1,-1])tries.push([d+dd,o+oo,dir*sg]);
+    for(const [d2,o2,dr] of tries){if(d2<5)continue;const s0=o2-dr*v*(tm-t0),C={sh,k,lv,x:c.p.x+fx*d2+rx*s0,z:c.p.z+fz*d2+rz*s0,dx:rx*dr,dz:rz*dr,v,t0};
+      if(zc214Clear(S,C,ta,tb,g)){zc214Cast(S,C);return}}}catch(e){console.warn('zc214 place',k,e)}})}
+function zc214G(F){try{const J=insAt(Math.round(F.x),Math.round(F.z));return J?J.g:null}catch(_){return null}}
+// can a creature stand at x,z: inside the shot's own instance, on open ground (no wall, rock, water, prop, set-piece block), not in
+// the buried temple's sand, and not where another stand-in of the same shot already walks
+function zc214Blk(x,z,g){const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='R'||t=='~')return true;
+  try{if(solid(X,Z)||props.has(Z*W+X))return true}catch(_){}
+  try{if(g!=null){const J=insAt(X,Z);if(!J||J.g!==g)return true}}catch(_){}
+  try{if(typeof sd165At=='function'&&SD165.D&&sd165At(x,z)!=null)return true}catch(_){}return false}
+// the whole walk of one stand-in in its shot, with a body's width either side
+function zc214Clear(S,C,ta,tb,g){for(let t=ta;t<=tb+.01;t+=.2){const u=Math.max(0,t-C.t0),x=C.x+C.dx*C.v*u,z=C.z+C.dz*C.v*u;
+    for(const [ox,oz] of [[0,0],[.9,0],[-.9,0],[0,.9],[0,-.9]])if(zc214Blk(x+ox,z+oz,g))return false;
+    for(const K of S.keep||[])if(Math.hypot(x-K[0],z-K[1])<K[2]+.9)return false;   // the set pieces themselves (not all of them block walking)
+    for(const o of S.cast)if(o.sh===C.sh){const uo=Math.max(0,t-o.t0),px=o.x+o.dx*o.v*uo,pz=o.z+o.dz*o.v*uo;if(Math.hypot(px-x,pz-z)<1.8)return false}}return true}
 // the zones' plans: lines (the voice), build(S) → S.A anchors + set pieces + cast, cam(S,i,k,t) for shots 1–4, frame(S,i,t,now,dt)
 // =====================================================================================================================
 // ---------------- Burningeye Summit (the ice zone) ----------------
-ZC214.Z[2]={den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.5,-5.5,1,.85,.3],[1,'trollsh',20,12,1.8,1,.9,.6],[2,'wendigo',23,12,3,-1,.8,0],[2,'rimecrawler',23,9.5,-3.5,1,.7,.3],[3,'troll',26,9,-3,1,.9,0],[3,'troll',26,11,1.2,1,.85,.5]],name:'Burningeye Summit',ess:'the Wraith',key:{dr:[41.2,61.74,82.41],ch:[329.63,392,493.88,587.33],toll:82.41,bed:'wind'},rise:7,riseFade:1,
+ZC214.Z[2]={keep(S){const A=S.A,K=[];if(A.maw)K.push([A.maw.x,A.maw.z,5]);if(A.gate)K.push([A.gate.x,A.gate.z,6]);if(A.bench)K.push([A.bench.x,A.bench.z,2.2]);if(A.drill)K.push([A.drill.x,A.drill.z,4.5]);if(A.con)K.push([A.con.x,A.con.z,2]);(A.box||[]).forEach(b=>K.push([b.x,b.z,1.8]));return K},den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.5,-5.5,1,.85,.3],[1,'trollsh',20,12,1.8,1,.9,.6],[2,'wendigo',23,12,3,-1,.8,0],[2,'rimecrawler',23,9.5,-3.5,1,.7,.3],[3,'troll',26,9,-3,1,.9,0],[3,'troll',26,11,1.2,1,.85,.5]],name:'Burningeye Summit',ess:'the Wraith',key:{dr:[41.2,61.74,82.41],ch:[329.63,392,493.88,587.33],toll:82.41,bed:'wind'},rise:7,riseFade:1,
   lines:[{a:1.0,b:3.6,s:'Burningeye Summit. Here even the sky burns cold.'},
     {a:4.4,b:9.0,s:'A troll warlord rules the frozen maw beneath the mountain.'},
     {a:10.2,b:14.8,s:'Above it, an ancient gate lies sealed in ice older than kings.'},
@@ -90,7 +106,7 @@ ZC214.Z[2]={den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.
     const D=MQ170.S;if(D){[D.cliff.g,D.drill.g,D.con].concat(D.box.map(b=>b.g)).forEach(o=>zc214Vis(S,o,i===3));if(i===3)D.box.forEach((B,j)=>{if(B.halo)B.halo.scale.setScalar(1.1*(1+.15*Math.sin(tt*3+j)))})}}};
 
 // ---------------- Searing Sands ----------------
-ZC214.Z[3]={den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'scorp',29,8.5,1.5,1,1.1,.4],[1,'selem',29,9.5,-4.5,1,.8,.2],[2,'tombpriest',31,11,3,-1,.6,0],[2,'scarab',31,8,-2,1,1,.3],[2,'scarab',31,9,-4,1,1,.6],[3,'saltgolem',34,9,4,-1,.7,0],[3,'dustwyrm',34,11,-4,1,.9,.4]],name:'Searing Sands',ess:'the Devourer',key:{dr:[46.25,69.3,92.5],ch:[369.99,440,554.37,659.25],toll:92.5,bed:'heat'},rise:-11,
+ZC214.Z[3]={keep(S){const A=S.A,K=[];if(A.t2){const F=A.t2.F,T=ss165T2();[[T.altar,5],[T.kh,2.4],[T.rift,2.4]].forEach(([o,r])=>{if(o){const [x,z]=F.W2(o.a,o.b);K.push([x,z,r])}})}(A.col||[]).forEach(c=>K.push([c.x,c.z,3]));if(A.t3){const F=A.t3.F,cr=A.t3.cr;for(let a=-7;a<=7;a+=3.5){const [x,z]=F.W2(cr.a+a,cr.b);K.push([x,z,4])}}return K},den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'scorp',29,8.5,1.5,1,1.1,.4],[1,'selem',29,9.5,-4.5,1,.8,.2],[2,'tombpriest',31,11,3,-1,.6,0],[2,'scarab',31,8,-2,1,1,.3],[2,'scarab',31,9,-4,1,1,.6],[3,'saltgolem',34,9,4,-1,.7,0],[3,'dustwyrm',34,11,-4,1,.9,.4]],name:'Searing Sands',ess:'the Devourer',key:{dr:[46.25,69.3,92.5],ch:[369.99,440,554.37,659.25],toll:92.5,bed:'heat'},rise:-11,
   lines:[{a:1.0,b:3.6,s:'The Searing Sands bury everything they touch.'},
     {a:4.4,b:9.0,s:'Temples… kings… whole cities sleep beneath the dunes.'},
     {a:10.2,b:14.8,s:'A broken warden waits in his court to be made whole.'},
@@ -107,14 +123,15 @@ ZC214.Z[3]={den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'sco
     if(i===1&&A.t1){const F=A.t1.F,a=A.t1.a,[px,pz]=F.W2(a-28+8*Io(k),6-5*q),[lx,lz]=F.W2(a,0);return {p:G(px,pz,4.4-1.2*q),l:new THREE.Vector3(lx,A.t1.y+1.6,lz),fov:48,F:G(...F.W2(a-8,0))}}
     if(i===2&&A.t2){const F=A.t2.F,al=A.t2.al||{a:6,b:0},[px,pz]=F.W2(-13+6*Io(k),-5+7*q),[lx,lz]=F.W2(al.a,al.b);return {p:G(px,pz,4.2-1.2*q),l:G(lx,lz,1.6),fov:50,F:G(F.x,F.z)}}
     if(i===3&&A.col){const c=A.col[1]||A.col[0],R=zc214Road(insG(3,2),.34),a=.8-.9*q,ca=Math.cos(a),sa=Math.sin(a),ox=R.fx*ca+R.sx*sa,oz=R.fz*ca+R.sz*sa,r=13-3*q;return {p:G(c.x+ox*r,c.z+oz*r,1.6+1.2*q),l:G(c.x,c.z,2.6),fov:48,F:G(c.x,c.z)}}
-    if(i===4&&A.t3){const F=A.t3.F,cr=A.t3.cr,[px,pz]=F.W2(cr.a-14+4*Io(k),-7+4*q),[lx,lz]=F.W2(cr.a+2+20*Sm(ic151K(k,.35,1)),0);return {p:G(px,pz,3.0+1.6*q),l:new THREE.Vector3(lx,(A.t3.y||GH(lx,lz))+1.4,lz),fov:52,F:G(...F.W2(cr.a,0))}}
+    // the yard sits on the map's very edge: the camera stands at the edge side and looks back into the land, never out past the edge
+    if(i===4&&A.t3){const F=A.t3.F,cr=A.t3.cr,[px,pz]=F.W2(cr.a+4.2-2.4*Io(k),7.5-3*q),[lx,lz]=F.W2(cr.a-9,-1.5+1.5*q),y=A.t3.y!=null?A.t3.y:GH(px,pz);return {p:new THREE.Vector3(px,y+2.4+1.0*q,pz),l:new THREE.Vector3(lx,y+1.3,lz),fov:52,F:G(...F.W2(cr.a,0))}}
     return null},
   frame(S,i,t,now,dt){if(SD165.g)zc214Vis(S,SD165.g,i===1);if(CY165.g)zc214Vis(S,CY165.g,i===2);
     try{SC165.cols.forEach(C=>{if(C&&C.g)zc214Vis(S,C.g,i===3)});SC165.picks.forEach(q=>zc214Vis(S,q.g,false))}catch(_){}
     if(CS165.g){zc214Vis(S,CS165.g,i===4);if(CS165.vis)zc214Vis(S,CS165.vis,i===4);try{const R=CS165.R;if(R&&i===4){R.J.sail.rotation.y=Math.sin(t*2.3)*.35}}catch(_){}}}};
 
 // ---------------- The Dirge (the graveyard) ----------------
-ZC214.Z[4]={fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38,8,-3.5,1,.6,0],[1,'ghoul',38,10,3.5,-1,.7,.5],[2,'bonearcher',38,8,3,-1,.5,0],[2,'skeleton',38,10,-3,1,.55,.4],[3,'drowned',40,8,-3,1,.5,0],[3,'banshee',40,10,3,-1,.7,.3],[4,'bonehound',42,12,-4,1,1.1,.2],[4,'colossus',42,15,3,-1,.5,0],[4,'bonehound',42,13,-7,1,1.1,.6]],name:'The Dirge',ess:'the Rot-King',key:{dr:[43.65,65.41,87.31],ch:[349.23,415.3,523.25,622.25],toll:87.31,bed:'murmur'},rise:-5,
+ZC214.Z[4]={keep(S){const A=S.A,K=[];if(A.ang)K.push([A.ang.x,A.ang.z,4]);(A.gr||[]).forEach(g=>K.push([g.x,g.z,1.8]));if(A.quay)K.push([A.quay.x,A.quay.z,5]);(A.pr||[]).forEach(p=>K.push([p.x,p.z,2.4]));if(A.ctr)K.push([A.ctr.x,A.ctr.z,8]);return K},fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38,8,-3.5,1,.6,0],[1,'ghoul',38,10,3.5,-1,.7,.5],[2,'bonearcher',38,8,3,-1,.5,0],[2,'skeleton',38,10,-3,1,.55,.4],[3,'drowned',40,8,-3,1,.5,0],[3,'banshee',40,10,3,-1,.7,.3],[4,'bonehound',42,12,-4,1,1.1,.2],[4,'colossus',42,15,3,-1,.5,0],[4,'bonehound',42,13,-7,1,1.1,.6]],name:'The Dirge',ess:'the Rot-King',key:{dr:[43.65,65.41,87.31],ch:[349.23,415.3,523.25,622.25],toll:87.31,bed:'murmur'},rise:-5,
   lines:[{a:1.0,b:3.6,s:'The Dirge. Its dead never rest.'},
     {a:4.4,b:9.0,s:'A weeping angel keeps watch over a field of graves…'},
     {a:10.2,b:14.8,s:'…and only one of them is a door.'},
@@ -140,7 +157,7 @@ ZC214.Z[4]={fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38
     try{const Q=OS165.S;if(Q){Q.pr.forEach((M,j)=>{zc214Vis(S,M.g,i===4);zc214Lit(S,M.lt,i===4?1.6:0);if(i===4){M.cr.rotation.y=tt*.6+j;M.cr.position.y=3.6+.18*Math.sin(tt*1.2+j);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y}});zc214Vis(S,Q.R.g,i===4)}}catch(_){}}};
 
 // ---------------- The Citadel ----------------
-ZC214.Z[5]={fill:[0xff8a8a,.9],den:[0xffa080,6.0],dim:.12,denK:.72,rel:[[1,'vamp',46,10,-3,1,.6,0],[1,'vampk',46,12,3.5,-1,.5,.3],[1,'bloodbat',46,8,0,1,1.2,.2],[2,'bloodhound',48,12,-5,1,.9,0],[2,'gargoyle',48,14,5,-1,.6,.4]],name:'The Citadel',ess:'the Crimson King',key:{dr:[38.89,58.27,77.78],ch:[311.13,369.99,466.16,554.37],toll:77.78,bed:'pulse'},rise:0,
+ZC214.Z[5]={keep(S){const A=S.A,K=[];if(A.gg)K.push([A.gg.x,A.gg.z,7]);if(A.vh){K.push([A.vh.sleep.x,A.vh.sleep.z,5.5]);K.push([A.vh.x,A.vh.z,6])}if(A.dm){const R=A.dm;[[R.door,5],[R.lens,2.2]].concat((R.st||[]).map(o=>[o,1.6])).forEach(([o,r])=>{if(o&&o.x!=null)K.push([o.x,o.z,r])})}return K},fill:[0xff8a8a,.9],den:[0xffa080,6.0],dim:.12,denK:.72,rel:[[1,'vamp',46,10,-3,1,.6,0],[1,'vampk',46,12,3.5,-1,.5,.3],[1,'bloodbat',46,8,0,1,1.2,.2],[2,'bloodhound',48,12,-5,1,.9,0],[2,'gargoyle',48,14,5,-1,.6,.4]],name:'The Citadel',ess:'the Crimson King',key:{dr:[38.89,58.27,77.78],ch:[311.13,369.99,466.16,554.37],toll:77.78,bed:'pulse'},rise:0,
   lines:[{a:1.0,b:3.6,s:'The Citadel. The last court of the Crimson King.'},
     {a:4.4,b:9.0,s:'His gates are sealed with blood…'},
     {a:10.2,b:14.8,s:'…and his hounds sleep in chains.'},
@@ -179,6 +196,7 @@ function zc214Build(z){const Z=ZC214.Z[z],S={z,Z,A:{},cast:[],props:[],vm:new Ma
   // the live creatures stand frozen while the game waits: hidden during the tour, back after
   S.foes=[];try{enemies.forEach(e=>{if(!e.dead&&!e.boss&&e.m&&e.m.visible){S.foes.push(e);e.m.visible=false}})}catch(_){}
   try{Z.build(S)}catch(e){console.warn('zc214 build',z,e)}
+  try{S.keep=S.Z.keep?S.Z.keep(S):[]}catch(e){S.keep=[];console.warn('zc214 keep',e)}
   zc214Place(S);
   // the den
   const D=INSL[insG(z,3)],B=BOSSES[z];S.den={x:B.x,z:B.y};const nx=D.en[0]-S.den.x,nz=D.en[1]-S.den.z,nl=Math.hypot(nx,nz)||1;S.den.nx=nx/nl;S.den.nz=nz/nl;
