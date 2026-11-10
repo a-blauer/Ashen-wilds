@@ -1,12 +1,14 @@
 # v214: Argus, the Hundred-Eyed, rebuilt on one skinned, painted body (MODEL_DETAIL_RECIPE) with a smoother gait and strikes.
 # FAIL lines on:
-#  * model: not the v214 skinned body, triangles over 30k (every layer and rigid piece), a joint his poses / springs use missing,
+#  * model: not the v214 skinned body, triangles over 36k (every layer and rigid piece; v146 was 35k), a joint his poses / springs use missing,
 #    NaN vertices, fewer than 20 eyes, an eye without its iris, height outside 4.2-6.2 m, page errors
 #  * gait: the lowest paw's mean ground speed while walking and running at his own speeds (ai.walk / ai.run): median over 0.6 m/s or mean over 1.2 m/s
 #    (planted paws stay put; the mean also counts the instants the lowest paw switches)
 #  * smooth motion: in idle and every move, no joint turns faster than 24 rad/s between two 16 ms frames (a pop)
 #  * paws stay on the ground: in idle and every move no paw's sole goes below -0.32 m in his own space (rest -0.12; v146 sank
 #    to -1.26); both checks skip each run's first 0.25 s (the test sets him on his mark)
+#  * every pose on its own: no part of the body below -0.45 m (rest: the claws at -0.27; the death fall lies on the floor, the
+#    slam's jaw stays out of it; 'sink' is his dive into the mire, on purpose)
 #  * every move runs to its end without errors
 # PICS=1 writes out/v214_argus.png (front, side, 3/4, back) and out/v214_poses.png (poses); POSES= the pose list;
 # CLOSE=1 out/v214_close.png (head, flank, legs). SRC=<old build> renders the old model for comparison (checks skipped).
@@ -26,6 +28,11 @@ MODEL=r"""()=>{const R=svRig();SVB[0].build(R,null);svRest(R);svMerge(R);R.root.
   let nan=0,top=-9,lo=9,meshes=0;R.root.traverse(o=>{if(!o.isMesh||!o.visible)return;meshes++;const P=o.geometry.attributes.position;out.tris+=P.count/3;if(o.material.transparent)return;
     for(let i=0;i<P.count;i++){V.fromBufferAttribute(P,i);if(o.isSkinnedMesh)V.applyMatrix4(R.root.matrixWorld);else V.applyMatrix4(o.matrixWorld);if(!isFinite(V.x+V.y+V.z))nan++;else{top=Math.max(top,V.y);lo=Math.min(lo,V.y)}}});
   out.tris=Math.round(out.tris);out.nan=nan;out.top=top;out.lo=lo;out.meshes=meshes;out.eyes=R.eyes.length;out.badEye=R.eyes.filter(E=>!E.ir||!E.ir.isMesh).length;return out}"""
+# every pose on its own: the lowest point of the whole skinned body (every 3rd vertex) in his own space (y 0 = the ground)
+PFLOOR=r"""()=>{const R=svRig();SVB[0].build(R,null);svRest(R);svMerge(R);const B=SVB[0],out={},V=new THREE.Vector3(),Mi=new THREE.Matrix4();
+  for(const p in B.P){const P=svPose(B,p);for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=P[k]||[0,0,0,0,0,0];g.rotation.set(r0.x+(o[0]||0),r0.y+(o[1]||0),r0.z+(o[2]||0));g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}
+    R.root.updateMatrixWorld(true);Mi.copy(R.root.matrixWorld).invert();let lo=9,w='';for(const sm of R.v214m){const G=sm.geometry,Pp=G.attributes.position,sk=G.attributes.skinIndex;
+      for(let i=0;i<Pp.count;i+=3){V.fromBufferAttribute(Pp,i);sm.boneTransform(i,V);V.applyMatrix4(sm.matrixWorld).applyMatrix4(Mi);if(V.y<lo){lo=V.y;w=sm.skeleton.bones[sk.getX(i)].name}}}out[p]=[+lo.toFixed(2),w]}return out}"""
 DEN=r"""()=>{try{if(AF)arenaFail()}catch(_){}insArrive(PMAP[0].ins[3]);return 1}"""
 DEN2=r"""()=>{STEP(.5);enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});const A=ARN[0];window.XA=A;toPos(A.cx,A.cz+12);STEP(.3);const e=bossEnt(0);window.BE=e;STEP(.4);
   window.__pick=svPick;svPick=()=>null;return {ok:!!(e&&e.sv),v214:!!(e&&e.sv&&e.sv.R.v214)}}"""
@@ -109,12 +116,15 @@ def s(pg):
         for e in errs[:5]:print('page error: '+e)
         return
     if not old and not m['v214']:F('Argus is not the v214 skinned body')
-    if m['tris']>30000:F('%d triangles (budget 30k)'%m['tris'])
+    if m['tris']>36000:F('%d triangles (budget 36k; v146 was 35k)'%m['tris'])
     if m['missing']:F('joints his poses / springs use are missing: %s'%m['missing'])
     if m['nan']:F('NaN vertices: %d'%m['nan'])
     if m['eyes']<20:F('only %d eyes'%m['eyes'])
     if m['badEye']:F('%d eyes without an iris mesh'%m['badEye'])
     if not 4.2<=m['top']<=6.2:F('height %.2f m (4.2-6.2)'%m['top'])
+    pf=ev(PFLOOR);bad={k:v for k,v in pf.items() if v[0]<-.45 and k!='sink'}
+    print('poses: lowest point %.2f m (%s); below -0.45 m: %s'%(min(v[0] for k,v in pf.items() if k!='sink'),min([kv for kv in pf.items() if kv[0]!='sink'],key=lambda kv:kv[1][0])[0],bad or 'none'))
+    for k,v in bad.items():F('pose %s goes into the ground: its %s at %.2f m'%(k,v[1],v[0]))
     ev(DEN);pg.wait_for_timeout(1500);q=ev(DEN2)
     if not old and not q.get('v214'):F('the den boss is not the v214 body');print('==== v214_argus: %d fails'%len(fails));return
     for v in ev("()=>{const a=SVB[0].ai||{};return [a.walk||2.6,a.run||4.2]}"):

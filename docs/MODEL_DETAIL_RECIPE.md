@@ -409,6 +409,13 @@ The animal heroes / folk keep the humanoid skeleton (every animation, grip and w
 - **Gait without skating:** plant each paw for its stance with the angle `atan(lerp(-1,1,u)·tan θm)` (straight-line paw travel,
   `θm = atan(duty·stride/2 / leg length)`), stride length growing with speed, no body pitch oscillation (it moves every planted paw).
   Measure: lowest paw ground speed (`v214_argus.py`).
+- **Feet on the ground with old poses:** poses written for a rigid model often lower the body without folding the legs. Fix every
+  pose once at load with a two-bone fix per leg (bend the middle joint its natural way to the needed reach, swing the top joint;
+  level a planted paw), then an eased runtime correction only during moves (ease it: a near-straight leg needs a big bend for a
+  tiny dip). An offset under a rolled joint moves sideways, not up: raise a lying pose at the root. Test the lowest skinned point
+  of every pose (`boneTransform`) and of the paws during every move.
+- **Followers must be stable:** use the exact critically damped step (`x=(x+(v+ωx)dt)e^(−ωdt)`), not Euler steps, which blow up
+  when ω·dt nears 1 (a fast follow, or a slow frame).
 - **Smooth poses:** a critically damped follow on every joint offset (ω ≈ 34) with the move track sampled 2/ω ahead, so snaps ease
   and strikes keep their beat; pops measured as the fastest joint turn between frames.
 

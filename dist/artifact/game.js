@@ -74326,7 +74326,7 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
 // critically damped follow (arg214Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
 // Same joints and names (the v110/v112/v146 poses, moves, the den, the Hundred Eyes and the v209 cinematic keep working).
 var ARG214={on:1,geo:null,ms:0,tris:0,n:20,lead:.045,w:34,fw:60,browP:[0,-.02,.04],browR:-.6,browS:[.18,.25,.14]};
-var A214C={back:0x241f18,flank:0x403c32,belly:0x6a6456,mane:0x1c1814,grz:0x4e4c42,moss:0x3a4c24,mud:0x2a1e14,bone:0x766a54,bone2:0xa09478,
+var A214C={back:0x14110d,flank:0x24211c,belly:0x3a362e,mane:0x0b0908,grz:0x3a3832,moss:0x232c18,mud:0x18110b,bone:0x766a54,bone2:0xa09478,
   mem:0x2a0a10,mem2:0x4a121a,rim:0x3a2420,gum:0x1e0a0b,tongue:0x34141a,claw:0x0b0a0c,nose:0x0c0a0c,sock:0x080605,earIn:0x1e0e10};
 function a214SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
 // ---------------- the joints (v146 names and rest positions; the head is no longer scaled ×1.25: its children moved instead) ----------------
@@ -74415,7 +74415,8 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   const hd=P('head');
   cgSculpt(S,{torso:1},(x,y,z,nn)=>{if(nn[1]<.55||z>.9||z<-2.4)return 0;const k=Math.pow(Math.abs(Math.cos((z+2.4)/.3*Math.PI)),6);return .045*k*Math.max(0,nn[1]-.55)/.45*Math.exp(-x*x/.012)});
   cgSculpt(S,{head:1},(x,y,z,nn)=>{const q=[x-hd[0],y-hd[1],z-hd[2]];let d=0;
-    [-1,1].forEach(s=>{d+=.05*Math.exp(-(Math.pow((q[0]-s*.3)/.12,2)+Math.pow((q[1]-.34)/.08,2)+Math.pow((q[2]-.3)/.16,2)));   // brow ridges over the eyes
+    [-1,1].forEach(s=>{d+=.075*Math.exp(-(Math.pow((q[0]-s*.29)/.13,2)+Math.pow((q[1]-.31)/.08,2)+Math.pow((q[2]-.3)/.16,2)));   // brow ridges over the eyes
+      d+=.05*Math.exp(-(Math.pow((q[0]-s*.13)/.08,2)+Math.pow((q[1]-.3)/.06,2)+Math.pow((q[2]-.4)/.1,2)));   // drawn down toward the middle: a scowl
       d+=.04*Math.exp(-(Math.pow((q[0]-s*.44)/.1,2)+Math.pow((q[1]-.02)/.1,2)+Math.pow((q[2]+.02)/.2,2)));   // cheekbones
       d-=.035*Math.exp(-(Math.pow((q[0]-s*.36)/.08,2)+Math.pow((q[1]-.2)/.07,2)+Math.pow((q[2]-.36)/.09,2)))});   // the socket under the ridge
     d+=.03*Math.exp(-(q[0]*q[0]/.02+Math.pow((q[1]-.36)/.06,2)+Math.pow((q[2]-.62)/.2,2)));return d});   // the bony bridge of the muzzle
@@ -74430,7 +74431,7 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   // a point on the skin: the ray from o along d against the chosen parts; normal and weights from the nearest vertex
   const surf=(o,d,parts)=>{const h=cgRay(S,o,nrm3(d),parts);if(!h)return null;const vi=near(h,parts);return {p:h,n:N[vi],a:S.V[vi],vi}};
   // ---- the eyes: sockets painted into the skin, a lens each on the bone under it ----
-  const EY=[],eyeAt=(o,d,parts,r)=>{const h=surf(o,d,parts);if(h)EY.push({p:h.p,n:h.n,r:r*1.3,bn:wName(h.a)})};
+  const EY=[],eyeAt=(o,d,parts,r)=>{const h=surf(o,d,parts);if(h)EY.push({p:h.p,n:h.n,r:r*1.3,bn:wName(h.a),part:Object.keys(parts)[0]})};
   const TP=(z,th,sd)=>{const [cy]=a214Tor(z);return [[0,cy,z],[sd*Math.sin(th),Math.cos(th),0]]};
   [-1,1].forEach(sd=>{const Ls=sd>0?'L':'R';
     [[-.12,.6,.085],[.36,.56,.1],[.84,.64,.085],[.1,2.2,.07],[.62,2.18,.08],[-.58,1.25,.07],[-2.28,1.0,.1],[-2.12,1.52,.08],[-1.72,.5,.07],[1.85,2.25,.075],[1.25,1.9,.07]].forEach(([z,th,r])=>{const [o,d]=TP(z,th,sd);eyeAt(o,d,{torso:1},r)});
@@ -74456,7 +74457,7 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
       // the bare skull over the muzzle and the brow, a ragged edge into the fur
       const e=.07*(n3Sn(q[0]*3,q[1]*3,q[2]*3,7,5)-.5),bz=a214SS(.26,.46,q[2]+e)*a214SS(.38,.72,ny+e*2);c.lerp(K.bone,bz*.88);if(bz>.2)c.lerp(K.bone2,a214SS(.8,1,ny)*a214SS(.7,1.3,q[2])*.3);
       // the nose, the lips and the palate (under the muzzle)
-      c.lerp(K.nose,a214SS(1.54,1.66,q[2]));if(q[2]>.3){c.lerp(K.gum,a214SS(-.35,-.75,ny));c.lerp(K.sock,a214SS(-.05,-.3,ny)*(1-a214SS(-.35,-.75,ny))*.7)}
+      c.lerp(K.nose,a214SS(1.54,1.66,q[2]));if(q[2]>.42&&q[2]<1.5)c.lerp(K.gum,Math.max(0,1-Math.abs(ny+.24)/.12)*.75);if(q[2]>.3){c.lerp(K.gum,a214SS(-.35,-.75,ny));c.lerp(K.sock,a214SS(-.05,-.3,ny)*(1-a214SS(-.35,-.75,ny))*.7)}
       fur(c,p,m,.08)}
     else if(m.part==='jaw'){const ny2=ny;c.copy(K.flank).lerp(K.belly,a214SS(-.2,-.8,ny2)*.7);c.lerp(K.gum,a214SS(.1,.5,ny2));c.lerp(K.tongue,a214SS(.6,.9,ny2)*(1-a214SS(.06,.14,Math.abs(m.x)))*.8);fur(c,p,m,.08)}
     else if(m.part==='legF'||m.part==='legH'){c.copy(K.flank).lerp(K.back,a214SS(.2,.8,ny)*.6).lerp(K.belly,a214SS(-.3,-.8,ny)*.4);c.lerp(K.mud,a214SS(1.3,.35,m.y));fur(c,p,m)}
@@ -74516,14 +74517,14 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
       if(pts.length>3)tube('g',pts,pts.map((_,i)=>.017*(1-.5*Math.abs(i-4.5)/4.5)),4,i=>ws[i],()=>[1,.78,.42])})});
   // ---- antlers: one bent beam each and three tines, dark at the root to pale at the tips ----
   [-1,1].forEach(s=>{const j=s>0?'antL':'antR',w=one(j),beam=[[0,-.05,0],[s*.22,.35,-.18],[s*.5,.78,-.3],[s*.78,1.22,-.26],[s*.94,1.62,-.06],[s*1.0,1.92,.22]].map(v=>L(j,v));
-    const col=t=>mixC(0x3a3226,C.bone2,Math.pow(t,.8));tube('c',beam,[.11,.1,.085,.068,.05,.012],6,()=>w,i=>col(i/5));
+    const col=t=>mixC(0x1c1712,C.bone2,Math.pow(t,1.6));tube('c',beam,[.11,.1,.085,.068,.05,.012],6,()=>w,i=>col(i/5));
     [[1,[s*.05,.25,1],.55],[2,[s*.3,.55,.85],.62],[3,[-s*.35,.9,.35],.5],[4,[s*.5,.6,.25],.36]].forEach(([i,d,len])=>{const a=beam[i],dd=nrm3(sub3(L(j,d),L(j,[0,0,0]))),pts=[];
       for(let q=0;q<=4;q++){const t=q/4;pts.push(add3(add3(a,mul3(dd,len*t)),[0,.12*len*t*t,0]))}tube('c',pts,pts.map((_,q)=>.055*Math.pow(1-q/4,1.15)+.002),5,()=>w,q=>col(.35+.6*q/4))})});
   // ---- teeth and claws ----
   {const cone=(t,a,d,len,r,w,c0,c1,curl)=>{const pts=[];for(let q=0;q<=3;q++){const u=q/3;pts.push(add3(add3(a,mul3(d,len*u)),mul3(curl||[0,0,0],len*u*u)))}tube(t,pts,pts.map((_,q)=>r*Math.pow(1-q/3,1.1)+.002),5,()=>w,q=>mixC(c0,c1,q/3))};
     const wH=one('head'),wJ=one('jaw');
     [-1,1].forEach(s=>{for(let k=0;k<5;k++){const z=.62+k*.2,h=surf(L('head',[0,-.02,z]),[s*.9,-.6,0],{head:1});if(h)cone('c',add3(h.p,[0,.02,0]),[-s*.08,-1,0],.09+.01*k,.026,wH,0x8a7c60,C.bone2)}
-      {const h=surf(L('head',[0,-.02,1.32]),[s*.85,-.6,0],{head:1});if(h)cone('c',add3(h.p,[0,.04,0]),nrm3([-s*.05,-1,.12]),.3,.045,wH,0x8a7c60,C.bone2,[0,0,.08])}
+      {const h=surf(L('head',[0,-.02,1.32]),[s*.85,-.6,0],{head:1});if(h)cone('c',add3(h.p,[0,.04,0]),nrm3([-s*.05,-1,.12]),.42,.055,wH,0x8a7c60,C.bone2,[0,0,.1])}
       [[.45,.21],[.65,.19],[.85,.17],[1.0,.15]].forEach(([z,x])=>{const h=surf(L('jaw',[s*x,.4,z]),[0,-1,0],{jaw:1});if(h)cone('c',h.p,[-s*.08,1,0],.08,.022,wJ,0x8a7c60,C.bone2)});
       {const h=surf(L('jaw',[s*.12,.4,1.16]),[0,-1,0],{jaw:1});if(h)cone('c',h.p,nrm3([s*.12,1,.15]),.24,.04,wJ,0x8a7c60,C.bone2,[0,0,-.05])}});
     // claws: long, black, curving down from the front of each pad
@@ -74535,15 +74536,34 @@ function arg214Geo(){if(ARG214.geo)return ARG214.geo;const t0=performance.now(),
   {const lid=(p,n,r,w,sx,sy)=>{const N0=new THREE.Vector3(...n).normalize(),Y=new THREE.Vector3(0,1,0).sub(N0.clone().multiplyScalar(N0.y));if(Y.lengthSq()<1e-4)Y.set(0,0,1);Y.normalize();const X=new THREE.Vector3().crossVectors(Y,N0),pts=[],S=10;
       for(let i=0;i<=S;i++){const a=i/S*Math.PI*2,q=new THREE.Vector3(...p).addScaledVector(X,Math.sin(a)*r*sx).addScaledVector(Y,Math.cos(a)*r*sy).addScaledVector(N0,r*.06);pts.push([q.x,q.y,q.z])}
       tube('c',pts,pts.map(()=>[r*.22,r*.14]),4,()=>w,(i)=>rgb(0x1a1410),{up:n,capA:false,capB:false})};
-    EY.forEach(E=>{const vi=near(E.p);lid(E.p,E.n,E.r,wTop(S.V[vi]),1.0,.8)});
+    const lid2=(p,n,r,w,sx,sy)=>{const N0=new THREE.Vector3(...n).normalize(),Y=new THREE.Vector3(0,1,0).sub(N0.clone().multiplyScalar(N0.y));if(Y.lengthSq()<1e-4)Y.set(0,0,1);Y.normalize();const X=new THREE.Vector3().crossVectors(Y,N0),pts=[],S=10;
+      for(let i=0;i<=S;i++){const a=i/S*Math.PI*2,q=new THREE.Vector3(...p).addScaledVector(X,Math.sin(a)*r*sx).addScaledVector(Y,Math.cos(a)*r*sy).addScaledVector(N0,r*.1);pts.push([q.x,q.y,q.z])}
+      tube('c',pts,pts.map(()=>[r*.09,r*.08]),4,()=>w,()=>rgb(0x4a0a0a),{up:n,capA:false,capB:false})};
+    EY.forEach(E=>{const vi=near(E.p),w=wTop(S.V[vi]);lid(E.p,E.n,E.r,w,1.0,.8);lid2(E.p,E.n,E.r,w,.88,.7)});
     {const bq=new THREE.Quaternion().setFromEuler(new THREE.Euler(ARG214.browR,0,0)),nb=new THREE.Vector3(0,0,1).applyQuaternion(bq),fm=F.brow.m,nw=nb.clone().transformDirection(fm),bs=ARG214.browS;
       lid(L('brow',ARG214.browP),[nw.x,nw.y,nw.z],.2,one('brow'),bs[0]/.2*1.4,bs[1]/.2*1.32)}}
+  // ---- veins spreading from the larger eyes over the skin, on the glow layer (bloodshot embers; they brighten with R.vein) ----
+  {const rn=svRng(2141),V=THREE.Vector3;EY.forEach((E,i)=>{if(E.r<.09)return;const N0=new V(...E.n).normalize(),Y=new V(0,1,0).sub(N0.clone().multiplyScalar(N0.y));if(Y.lengthSq()<1e-4)Y.set(0,0,1);Y.normalize();const X=new V().crossVectors(Y,N0),pt={};pt[E.part]=1;
+    for(let k=0;k<3;k++){let a=i*2.1+k*2.09+rn()*.5;const bend=(rn()-.5)*.22,pts=[],ws=[];for(let q=0;q<=5;q++){const d=E.r*(1.15+q*.36);a+=bend;const o=new V(...E.p).addScaledVector(X,Math.sin(a)*d).addScaledVector(Y,Math.cos(a)*d*.85),
+        h=surf([o.x-N0.x*.4,o.y-N0.y*.4,o.z-N0.z*.4],[N0.x,N0.y,N0.z],pt);if(!h)break;pts.push(add3(h.p,mul3(h.n,.006)));ws.push(wTop(h.a))}
+      if(pts.length>2)tube('g',pts,pts.map((_,q)=>E.r*.11*(1-q/(pts.length-1))+.003),4,q=>ws[q],q=>[1,.42-.05*q,.18])}})}
+  // ---- bone spurs: hooked spikes along the spine behind the mane, and one at the back of each elbow and hock ----
+  {const spur=(h,d,len,r0)=>{const n=h.n,dd=nrm3(d),pts=[],ws=[];for(let q=0;q<=4;q++){const t=q/4,p=add3(add3(h.p,mul3(n,-.1+len*.75*t-len*.25*t*t)),mul3(dd,len*.85*t*t));pts.push(p);const vi=near(p);ws.push(wTop(S.V[vi>=0?vi:h.vi]))}
+      tube('c',pts,pts.map((_,q)=>r0*Math.pow(1-q/4,1.3)+.004),6,q=>ws[Math.min(q,1)],q=>mixC(0x15110d,C.bone,Math.pow(q/4,2.2)))};
+    for(let k=0;k<6;k++){const z=.7-k*.48,[cy]=a214Tor(z),h=surf([0,cy,z],[0,1,0],{torso:1});if(h)spur(h,[0,0,-1],.5-.04*k,.13-.01*k)}
+    [-1,1].forEach(s=>{const Ls=s>0?'L':'R';{const el=P('el'+Ls),h=surf(add3(el,[0,.05,0]),[s*.15,0,-1],{legF:1});if(h)spur(h,[s*.2,-.4,-1],.34,.085)}
+      {const hk=P('hk'+Ls),h=surf(add3(hk,[0,.05,0]),[s*.1,0,-1],{legH:1});if(h)spur(h,[s*.12,.3,-1],.28,.07)}})}
   // ---- bake, measure ----
   const G=mdBake(B);let tri=0;for(const t in G)tri+=G[t].attributes.position.count/3;ARG214.tris=Math.round(tri);ARG214.ms=Math.round(performance.now()-t0);
   return ARG214.geo={G,O:B.O,EY}}
 // ---------------- an eye: one lens with its iris graded and its slit pupil painted in (vertex colours × the shared iris colour) ----------------
-function arg214Lens(){return svG('a214lens',()=>{const pos=[],col=[],R=3,S=16,pt=(r,a)=>{const x=Math.sin(a)*r,y=Math.cos(a)*r,z=Math.sqrt(Math.max(0,1-r*r))*.9+.1;return [x,y,z,r,a]},
-    cl=(p)=>{const r=p[3],ax=Math.abs(Math.sin(p[4]));if(r<.01||(ax<.01&&r<.9))return [.03,.015,.01];const k=1.3-.55*r;return [k,k*(.9-.2*r),k*(.62-.3*r)]};
+function arg214Lens(){return svG('a214lens2',()=>{const pos=[],col=[],R=4,S=16,pt=(r,a)=>{const x=Math.sin(a)*r,y=Math.cos(a)*r,z=Math.sqrt(Math.max(0,1-r*r))*.9+.1;return [x,y,z,r,a]},
+    G=[[0,[1.6,1.35,.8]],[.25,[1.55,1.2,.6]],[.5,[1.3,.7,.18]],[.75,[1.0,.32,.07]],[1,[.22,.03,.02]]],
+    cl=(p)=>{const r=p[3],a=p[4],ax=Math.abs(Math.sin(a));if(r<.01||(ax<.01&&r<.9))return [.01,0,0];
+      // the glint: one bright point up and to the left
+      if(Math.abs(r-.5)<.01&&Math.abs(a-Math.PI*1.75)<.05)return [2.2,2.1,1.9];
+      let c=G[G.length-1][1];for(let i=0;i<G.length-1;i++)if(r<=G[i+1][0]){const k=(r-G[i][0])/(G[i+1][0]-G[i][0]);c=G[i][1].map((v,q)=>v+(G[i+1][1][q]-v)*k);break}
+      const st=r>.2&&r<.95?1+.16*Math.cos(a*S/2):1;return c.map(v=>v*st)};
     const tri=(a,b,c)=>{const n=cross3(sub3(b,a),sub3(c,a)),m=sub3([(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3],[0,0,.3]);if(n[0]*m[0]+n[1]*m[1]+n[2]*m[2]<0){const t=b;b=c;c=t}
       [a,b,c].forEach(p=>{pos.push(p[0],p[1],p[2]);const q=cl(p.length>3?p:[p[0],p[1],p[2],1,1]);col.push(q[0],q[1],q[2])})};
     for(let i=0;i<R;i++)for(let k=0;k<S;k++){const r0=i/R,r1=(i+1)/R,a0=k/S*Math.PI*2,a1=(k+1)/S*Math.PI*2;if(i==0)tri(pt(0,0),pt(r1,a0),pt(r1,a1));else{tri(pt(r0,a0),pt(r1,a0),pt(r1,a1));tri(pt(r0,a0),pt(r1,a1),pt(r0,a1))}}
@@ -74605,7 +74625,7 @@ function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214
 // feet on the ground (owner, Nov 10: "his paws phase into the ground during several attacks"): many v110 / v112 poses lower his
 // body (crouch, coil, pounce, furrow, stagger …) without folding the legs to match, so a paw sank up to 1.3 m. Each pose is fixed
 // once at load: on a scratch rig in that pose, any paw whose sole is below its rest height gets a two-bone fix in the leg's own
-// plane — the elbow / knee bends to the reach it needs (its natural way: elbows forward, knees back), then the shoulder / hip
+// plane (and any paw on or near the ground is turned level, so its claws don't dig in) — the elbow / knee bends to the reach it needs (its natural way: elbows forward, knees back), then the shoulder / hip
 // swings the paw onto the spot above where it was — and the new joint angles are written back into the pose. The moves blend
 // between fixed poses (and the follow eases them), so nothing changes at run time and nothing can pop. Mirrored poses ('~')
 // are built from the fixed ones. Lying poses (the death fall) are left alone.
@@ -74613,19 +74633,24 @@ var ARG214_FT=[['shL','elL','pwL',[0,-.12,.12],-1],['shR','elR','pwR',[0,-.12,.1
 function arg214SolveLeg(R,F,Mi){const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion();
   const rotW=(J,W,th)=>{J.parent.getWorldQuaternion(pq);rq.setFromAxisAngle(W,th);const P=pq.clone();J.quaternion.premultiply(P).premultiply(rq).premultiply(P.invert());J.updateMatrixWorld(true)};
   const xAx=(J,out)=>out.setFromMatrixColumn(J.matrixWorld,0).normalize(),A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);
-  e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi);if(eL.y>=F.fl-.005)return 0;const dep=F.fl-eL.y;
-  for(let it=0;it<3;it++){e.copy(o);C.localToWorld(e);const q=e.clone().applyMatrix4(Mi);t.set(q.x,F.fl,q.z).applyMatrix4(R.root.matrixWorld);
+  e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi);if(eL.y>=F.fl+.12)return 0;const dep=Math.max(.001,F.fl-eL.y);
+  for(let it=0;it<3&&eL.y<F.fl-.005;it++){e.copy(o);C.localToWorld(e);const q=e.clone().applyMatrix4(Mi);t.set(q.x,F.fl,q.z).applyMatrix4(R.root.matrixWorld);
     A.getWorldPosition(a);B.getWorldPosition(b);xAx(B,ax);const l1=a.distanceTo(b),l2=b.distanceTo(e),dT=Math.min(l1+l2-.02,Math.max(Math.abs(l1-l2)+.02,a.distanceTo(t)));
     u.subVectors(b,a);v.subVectors(e,b);const be=Math.atan2(ax.dot(u.clone().cross(v)),u.dot(v)),need=Math.PI-Math.acos(Math.max(-1,Math.min(1,(l1*l1+l2*l2-dT*dT)/(2*l1*l2))));
     if(need>Math.abs(be)||Math.sign(be)!==F[4]){rotW(B,ax,F[4]*need-be);e.copy(o);C.localToWorld(e)}
     xAx(A,ax);u.subVectors(e,a);v.subVectors(t,a);u.addScaledVector(ax,-u.dot(ax));v.addScaledVector(ax,-v.dot(ax));
     if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){let th=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)th=-th;rotW(A,ax,th)}}
+  // a planted paw lies flat (its claws don't dig in): turn the wrist / hock so the paw points level, then settle the reach again
+  {C.updateMatrixWorld(true);const f=new V().setFromMatrixColumn(C.matrixWorld,2).normalize(),ang=Math.asin(Math.max(-1,Math.min(1,f.y)));
+    if(Math.abs(ang)>.02){xAx(C,ax);rotW(C,ax,ang);if(Math.abs(new V().setFromMatrixColumn(C.matrixWorld,2).normalize().y)>Math.abs(f.y))rotW(C,ax,-2*ang);for(let it=0;it<2;it++){e.copy(o);C.localToWorld(e);const q=e.clone().applyMatrix4(Mi);if(q.y>=F.fl-.005)break;
+      t.set(q.x,F.fl,q.z).applyMatrix4(R.root.matrixWorld);xAx(A,ax);A.getWorldPosition(a);u.subVectors(e,a);v.subVectors(t,a);u.addScaledVector(ax,-u.dot(ax));v.addScaledVector(ax,-v.dot(ax));
+      if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){let th=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)th=-th;rotW(A,ax,th)}}}}
   return dep}
 function arg214FixPoses(B){if(!B||!B.P||B.fix214)return;B.fix214={};const R=svRig();arg214Joints(R);svRest(R);R.root.updateMatrixWorld(true);
   const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert(),FT=ARG214_FT.map(f=>{const g=f.slice();const w=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi);g.fl=w.y;return g});
   const setP=P=>{for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=P[k]||[0,0,0,0,0,0];g.rotation.set(r0.x+(o[0]||0),r0.y+(o[1]||0),r0.z+(o[2]||0));g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}R.root.updateMatrixWorld(true)};
   for(const name in B.P){const P=B.P[name];if(!P||typeof P!=='object')continue;const rl=P.root||[0,0,0],bd=P.body||[0,0,0];if(Math.abs(rl[2]||0)>.6||Math.abs(bd[2]||0)>.6||Math.abs(rl[0]||0)>.6)continue;
-    setP(P);let fx=0;for(const F of FT){const d=arg214SolveLeg(R,F,Mi);if(d>0){fx=Math.max(fx,d);[F[0],F[1]].forEach(k=>{const g=R.J[k],r0=g.userData.r0,o=(P[k]||[0,0,0]).slice();o[0]=g.rotation.x-r0.x;o[1]=g.rotation.y-r0.y;o[2]=g.rotation.z-r0.z;P[k]=o})}}
+    setP(P);let fx=0;for(const F of FT){const d=arg214SolveLeg(R,F,Mi);if(d>0){fx=Math.max(fx,d);[F[0],F[1],F[2]].forEach(k=>{const g=R.J[k],r0=g.userData.r0,o=(P[k]||[0,0,0]).slice();o[0]=g.rotation.x-r0.x;o[1]=g.rotation.y-r0.y;o[2]=g.rotation.z-r0.z;P[k]=o})}}
     if(fx)B.fix214[name]=+fx.toFixed(2)}
   B._pc=null}
 // during a move, what the blend between two fixed poses still lets sink is lifted the same way at run time, the correction
@@ -74659,7 +74684,12 @@ if(ARG214.on&&SVB[0]){const B=SVB[0];B.build=arg214Build;argBuild146=arg214Build
   const p0=B.post;B.post=function(e,S,dt,now){try{if(S.R&&S.R.v214){arg214Smooth(e,S,dt);arg214Feet(S.R,S,dt)}}catch(err){if(!ARG214.err++)console.error('v214 smooth',err)}p0&&p0.apply(this,arguments)}}
 ARG214.err=0;
 // the stagger: he drops low but keeps his head (and antlers) off the floor
-if(ARG214.on&&typeof ARGP!='undefined'&&ARGP.stag){const P=ARGP.stag;P.body=[.34,0,.28,0,-.85,0];P.neck=[.28,0,.22];P.head=[.05,0,.3];if(SVB[0])SVB[0]._pc=null}
+if(ARG214.on&&typeof ARGP!='undefined'&&ARGP.stag){const P=ARGP.stag;P.body=[.34,0,.28,0,-.7,0];P.neck=[.28,0,.22];P.head=[.05,0,.3];
+  // the death fall: he lies on his side ON the floor (v110's offsets were in his rolled frame and sank him ~1.3 m), the lower legs folded
+  if(ARGP.dead){const D=ARGP.dead;D.root=[0,0,1.42,0,1.1,0];D.body=[.1,0,0,0,-.8,0];D.elR=[-.6,0,0];D.knR=[.8,0,0]}
+  // the furrow slam: the head held a little higher so the open jaw doesn't drive half a metre into the ground
+  if(ARGP.fslam){ARGP.fslam.neck=[.25,0,0];ARGP.fslam.head=[-.3,0,0]}
+  if(SVB[0])SVB[0]._pc=null}
 if(ARG214.on&&SVB[0])try{arg214FixPoses(SVB[0])}catch(err){console.error('v214 feet',err)}
 // the track lead: Argus samples his move a little ahead of its clock while the follow eases toward it
 {const f=svApply;svApply=function(e,dt,now){const S=e&&e.sv;if(!S||S.i!==0||!S.R||!S.R.v214||!S.trk||!ARG214.on)return f.apply(this,arguments);const t0=S.tt;S.tt=t0+ARG214.lead;try{return f.apply(this,arguments)}finally{S.tt=t0}}}
