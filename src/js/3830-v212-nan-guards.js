@@ -24,17 +24,17 @@ function ng212Note(k,info){if(NG212.seen[k])return;NG212.seen[k]=1;try{console.w
 {const f=HS;HS=function(){const s=f.apply(this,arguments);if(s&&typeof s=='object'&&!s._ng212){s._ng212=1;for(const k in s){const v=s[k];if(typeof v=='number'&&!isFinite(v)){ng212Note('stat '+k);s[k]=0}}}return s}}
 // 5. the camera: a NaN anywhere in its position or turn makes every pixel NaN (only the sky's shader still runs, and it draws NaN),
 //    which a GPU shows as a white screen. Before each frame a broken camera is put back to its last good place and the game camera
-//    snaps behind the hero again.
+//    snaps behind the hero again (checked at the start of every frame and again before drawing).
 var NG212C={p:new THREE.Vector3(),q:new THREE.Quaternion(),ok:false,n:0};
 function ng212Fin(v){return isFinite(v.x)&&isFinite(v.y)&&isFinite(v.z)&&(v.w==null||isFinite(v.w))}
-{const f=POST.render;POST.render=function(){try{
+function ng212Cam(){try{
   if(!ng212Fin(cam.position)||!ng212Fin(cam.quaternion)||!isFinite(cam.fov)){NG212C.n++;ng212Note('camera',[cam.position.x,cam.position.y,cam.position.z].join(','));
     ng212CamState();
     if(NG212C.ok){cam.position.copy(NG212C.p);cam.quaternion.copy(NG212C.q)}else{cam.position.set(pl.position.x,pl.position.y+6,pl.position.z+8);cam.lookAt(pl.position)}
     if(!isFinite(cam.fov))cam.fov=58;try{if(ng212Fin(pl.position)&&!IC151.on&&typeof snapCam=='function')snapCam()}catch(_){}
     if(!ng212Fin(cam.position)){cam.position.set(pl.position.x,pl.position.y+6,pl.position.z+8);cam.lookAt(pl.position)}cam.updateProjectionMatrix();cam.updateMatrixWorld(true)}
-  else{NG212C.p.copy(cam.position);NG212C.q.copy(cam.quaternion);NG212C.ok=true}}catch(_){}
-  return f.apply(this,arguments)}}
+  else{NG212C.p.copy(cam.position);NG212C.q.copy(cam.quaternion);NG212C.ok=true}}catch(_){}}
+{const f=POST.render;POST.render=function(){ng212Cam();return f.apply(this,arguments)}}
 // the camera's own blended settings: one NaN in any of them stays NaN for good (each frame blends from the last), so they are
 // repaired too, before every frame (cheap: a few number checks)
 function ng212CamState(){let n=0;
@@ -45,4 +45,6 @@ function ng212CamState(){let n=0;
   if(n)ng212Note('camera settings',n);return n}
 {const f=POST.render;POST.render=function(){try{ng212CamState()}catch(_){}return f.apply(this,arguments)}}
 // the frame clock: a frame called without a time (or after one) would make every blend NaN
-{const f=loop;loop=function(now){if(typeof now!='number'||!isFinite(now))now=performance.now();try{if(typeof last=='number'&&!isFinite(last))last=now}catch(_){}return f.call(this,now)}}
+// … and at the start of every frame, so the frame's camera blend starts from good numbers (also when nothing is drawn)
+{const f=loop;loop=function(now){if(typeof now!='number'||!isFinite(now))now=performance.now();try{if(typeof last=='number'&&!isFinite(last))last=now}catch(_){}
+  try{ng212CamState();ng212Cam()}catch(_){}return f.call(this,now)}}
