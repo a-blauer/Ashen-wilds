@@ -36,7 +36,7 @@ def s(pg):
     d=max(max(abs(a-b) for a,b in zip(t['start'],T[1]['start'])) for t in T[1:])   # the first play starts from the session's first idle
     e=max(max(abs(a-b) for a,b in zip(t['end'],T[0]['end'])) for t in T)
     ok(d<.03 and e<.03,'every throw starts and ends in the same stance (start %.3f, end %.3f)'%(d,e))
-    ok(all(t['fwd'] is not None and t['fwd']>0 for t in T),'the hand moves forward at release in every throw (%s)'%[t['fwd'] for t in T])
+    ok(all(t['fwd'] is not None and t['fwd']>0 for t in T),'the hand moves forward at release in every throw (%s) dbg %s'%([t['fwd'] for t in T],[(t['ms'],t['n'],t['hit'],t['hand'],t['start']) for t in T[:2]]))
     t=r.get('turn')
     ok(bool(t and t['maxStep']<.35 and abs(t['final']-t['want'])<.15),'the hero eases round to a foe at the side (no snap: largest turn in one frame %s, ends at %s for %s)'%(t and t['maxStep'],t and t['final'],t and t['want']))
     b=r.get('bolt')
