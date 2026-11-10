@@ -173,6 +173,7 @@ v210_hillside_cine.py
 v210_coop.py
 v214_zone_cine.py
 v214_coop.py
+v215_cinema.py
 v211_knife.py
 v211_coop.py
 v213_guard.py
