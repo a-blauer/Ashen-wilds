@@ -74710,6 +74710,7 @@ function zc214Cap(z){if(ZC214.run)return null;const T0=performance.now(),S=zc214
 // and a written melody.
 //   keys: 'z<zone>b' = field II, 'z<zone>c' = field III, 'z<zone>d' = the Den, 'sp_<key>' = a special level (I.sp)
 //   tune: a written melody on top of the v79 parts (no random lead). {k:instrument, kb:instrument of the B part, oct, v,
+//         ob = the B part's octave when it differs, dbl:1 = doubled an octave down by a horn,
 //         form:'AB-' one letter per pass of the chords (A / B = that part, - = no melody), A:'...', B:'...'}
 //         notes are 'degree,length' (degree of the theme's scale, 0 = the root, 7 = an octave up; length in sixteenths;
 //         '_' = a rest), bars split by '|'; each part must be as long as the chord list (prog.length bars of 16).
@@ -74833,36 +74834,60 @@ S('z5d',"Lord Vaelric's Den",{bpm:60,root:48,mode:'hmin',prog:[0,1,0,4,0,5,1,4],
     B:'4,16|3,12 _,4|4,8 7,8|8,16|9,8 7,8|7,8 5,8|3,8 1,8|-1,16'}});
 // ---------------- v215b: fight songs (owner, Nov 10 2026: "high intensity moments like fighting the sovereigns, minibosses or
 // the hilltop ascent should have more intense music due to the stressful scenario") ----------------
-// 'z<zone>x' = the zone's Sovereign fight, 'z<zone>m' = a mini boss fight in that zone. Fast, in the zone's scale, drums and a
-// driving bass all the time (fight:1), brass melody doubled an octave down (tune.dbl), chord stabs (stab) and a boom every 4 bars.
-const DX={taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'xgxgxgxgxgxgxgxg'},DM={taiko:'x..g..g.x..g..g.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'};
-const AX=[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0];
-const X=(z,name,root,mode,bpm,prog,A,B,o)=>S('z'+z+'x',name,Object.assign({bpm,root,mode,prog,fight:1,boom:1,pad:{v:.022,cut:1300,form:1},drone:.08,
-  arp:{e:1,p:AX,oct:0,v:.036,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x..x..x...x.x...',v:.018},bell:{p:.08,v:.035,oct:2},drums:{c:DX},
-  tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A,B}},o||{}));
-const Mi=(z,name,root,mode,bpm,prog,A,o)=>S('z'+z+'m',name,Object.assign({bpm,root,mode,prog,fight:1,boom:.7,pad:{v:.022,cut:1000,form:1},drone:.09,
+// 'z<zone>x' = the zone's Sovereign fight, 'z<zone>m' = a mini boss fight in that zone. In the zone's scale, drums and bass all
+// the time (fight:1); parts they may use: a melody doubled an octave down (tune.dbl), chord stabs (stab), a boom every 4 bars (boom).
+const DM={taiko:'x..g..g.x..g..g.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'};
+const Mi=(z,name,root,mode,bpm,prog,A,o)=>{S('z'+z+'m',name,Object.assign({bpm,root,mode,prog,fight:1,boom:.7,pad:{v:.022,cut:1000,form:1},drone:.09,
   arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045,w:'sawtooth'},bass:{v:.1,c:'x.x.x.xxx.x.x.xx'},stab:{c:'x.....x...x.....',v:.02},drums:{c:DM},
-  tune:{k:'horn',oct:0,v:.06,form:'AA-',A}},o||{}));
-X(0,'Argus, the Hundred-Eyed',47,'phr',140,[0,0,1,0,0,6,1,1],'0,6 0,2 2,4 4,4|4,6 5,2 4,8|5,6 3,2 1,8|0,12 _,4|7,6 7,2 5,4 4,4|6,6 8,2 6,8|5,4 3,4 1,4 3,4|1,12 _,4',
-  '7,4 9,4 11,8|9,4 7,4 4,8|8,8 10,8|9,12 _,4|7,2 _,2 7,2 _,2 4,8|8,8 6,8|5,8 8,8|8,4 5,4 3,4 1,4');
-X(1,'The Crest Hydra',55,'dor',144,[0,0,5,5,0,0,6,4],'0,4 2,4 4,6 2,2|4,4 7,12|5,4 7,4 9,6 7,2|5,12 _,4|7,4 9,4 11,8|9,6 7,2 4,8|6,4 8,4 10,8|8,8 4,8',
-  '11,6 9,2 7,8|4,6 2,2 0,8|9,6 7,2 5,8|2,12 _,4|0,4 4,4 7,4 9,4|11,12 9,4|10,8 8,8|8,4 6,4 4,8');
-X(2,'The Rime Wraith',52,'phr',148,[0,1,0,6,0,1,5,1],'4,6 4,2 2,4 0,4|1,6 3,2 5,8|4,6 4,2 7,8|6,12 _,4|4,6 4,2 2,4 0,4|5,6 8,2 5,8|7,4 9,4 7,8|8,8 5,8',
-  '7,8 9,8|8,8 10,8|11,8 9,4 7,4|8,12 _,4|7,4 4,4 2,4 0,4|1,4 3,4 5,8|5,8 9,8|8,16',{fx:{wind:.02}});
-X(3,"Ssith'ra the Endless",50,'hij',142,[0,0,1,0,0,6,1,0],'0,2 1,2 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,6 3,2|2,12 _,4|4,2 5,2 7,4 9,8|8,6 6,2 3,8|5,4 3,4 1,8|2,4 1,4 0,8',
-  '7,6 8,2 7,8|9,6 8,2 7,8|10,8 8,8|7,12 _,4|4,4 2,4 1,4 0,4|6,8 8,8|8,4 5,4 3,4 1,4|0,16',
-  {arp:{e:1,p:AX,oct:0,v:.034,w:'square'},drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg',snare:'....x.......x...'}}});
-X(4,'The Bloated One',48,'loc',132,[0,1,0,4,0,1,3,1],'0,8 2,4 4,4|5,8 3,8|4,6 2,2 0,8|4,12 _,4|7,8 4,8|8,6 5,2 3,8|3,4 5,4 7,8|5,8 1,8',
-  '4,4 4,4 7,8|8,4 8,4 5,8|9,8 7,8|8,12 _,4|4,4 2,4 0,8|1,4 3,4 5,8|7,8 5,8|5,4 3,4 1,8',{bell:{p:.3,v:.045,oct:2},drums:{c:{taiko:'x.g.x..gx.g.x.gg',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}}});
-X(5,'Lord Vaelric',48,'hmin',150,[0,5,3,4,0,5,1,4],'7,6 4,2 2,4 0,4|5,6 7,2 9,8|7,6 5,2 3,8|6,12 _,4|7,6 4,2 2,4 0,4|9,8 7,8|5,4 3,4 1,8|4,4 6,4 8,8',
-  '9,4 11,4 14,8|12,8 9,8|10,6 12,2 10,8|8,12 _,4|7,4 9,4 11,8|9,4 7,4 5,8|8,8 5,8|6,8 4,8',{arp:{e:1,p:AX,oct:1,v:.03,w:'square'}});
-Mi(0,'Mini boss: Vorraxis',47,'phr',126,[0,1,0,1,0,6,1,0],'0,8 4,8|5,8 3,8|4,6 2,2 0,8|1,12 _,4|7,8 4,8|6,8 3,8|5,4 3,4 1,8|0,16');
-Mi(1,'Mini boss: Hillside Crest',55,'dor',128,[0,6,0,4,0,6,5,4],'0,4 4,4 7,8|6,8 8,8|7,6 4,2 2,8|4,12 _,4|9,8 7,8|8,8 6,8|5,4 7,4 9,8|8,16');
-Mi(2,'Mini boss: Gorthrak',52,'phr',130,[0,0,1,0,0,5,6,1],'0,8 2,8|4,6 5,2 4,8|3,8 1,8|0,12 _,4|4,8 7,8|7,4 5,4 2,8|3,8 6,8|5,8 1,8',{fx:{wind:.014}});
+  tune:{k:'horn',oct:0,v:.06,form:'AA-'}},o||{}));MTH['z'+z+'m'].tune.A=A};
+// v215c (owner: "for the boss songs it seems like its using the same melody as the others"): every Sovereign song is built on its own,
+// not from one template: its own rhythm, drums, bass, lead instrument and shape of melody.
+// Argus: stalking. Short stabbing notes with gaps (the eyes blinking open), a 3+3+2 bass, then one long scream of brass.
+S('z0x','Argus, the Hundred-Eyed',{bpm:140,root:47,mode:'phr',prog:[0,0,1,0,0,6,1,1],fight:1,boom:1,pad:{v:.022,cut:900,form:1},drone:.1,bell:{p:.2,v:.04,oct:2},
+  bass:{v:.11,c:'x..x..x.x..x..x.'},stab:{c:'..x...x...x...x.',v:.016},drums:{c:{taiko:'X..x..x.X..x..x.',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}},
+  tune:{k:'brass',oct:1,v:.045,dbl:1,form:'AAB',A:'0,2 _,2 0,2 _,2 4,2 _,2 2,4|0,2 _,2 0,2 _,2 5,4 4,4|1,2 _,2 1,2 _,2 5,2 _,2 3,4|4,8 _,8|7,2 _,2 7,2 _,2 9,2 _,2 7,4|6,2 _,2 6,2 _,2 8,4 10,4|8,2 _,2 5,2 _,2 3,2 _,2 1,4|1,8 _,8',
+    B:'11,12 9,4|7,12 4,4|8,12 10,4|9,16|11,12 9,4|10,8 8,8|8,8 5,8|3,4 1,12'}});
+// The Crest Hydra: many heads. Fast rising calls that leave a gap for the next head to answer, over a gallop; then a high whistle answers.
+S('z1x','The Crest Hydra',{bpm:144,root:55,mode:'dor',prog:[0,0,5,5,0,0,6,4],fight:1,boom:.8,pad:{v:.02,cut:1300},drone:.07,
+  arp:{e:1,p:[0,1,2,3,2,1,0,1,2,3,2,1,0,1,2,3],oct:0,v:.032,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},
+  drums:{c:{taiko:'X..xx..xX..xx..x',snare:'....X.......X...',hat:'..x...x...x...x.'}},
+  tune:{k:'brass',kb:'whistle',oct:0,v:.05,vb:.07,dbl:1,form:'AB',A:'0,2 2,2 4,2 7,2 9,8|_,8 7,4 4,4|5,2 7,2 9,2 12,2 14,8|_,8 12,4 9,4|0,2 2,2 4,2 7,2 11,8|_,8 9,4 7,4|6,2 8,2 10,2 13,2 15,8|11,8 8,8',
+    B:'11,4 9,4 7,8|9,4 7,4 4,8|12,4 9,4 7,8|9,12 _,4|14,8 11,8|9,8 7,8|10,4 8,4 6,8|8,4 6,4 4,8'}});
+// The Rime Wraith: a ghost in a storm. A slow, cold choir held over frantic drums and a shivering bass; then shards of ice fall.
+S('z2x','The Rime Wraith',{bpm:148,root:52,mode:'phr',prog:[0,1,0,6,0,1,5,1],fight:1,boom:.8,pad:{v:.024,cut:900,form:1},drone:.09,fx:{wind:.03,chime:.1},
+  arp:{e:1,p:[0,2,0,2,1,2,1,2,0,2,0,2,1,3,1,3],oct:2,v:.016,w:'sine'},bass:{v:.075,c:'xgxgxgxgxgxgxgxg'},
+  drums:{c:{taiko:'X.g.g.g.x.g.g.g.',snare:'g.g.X.g.g.g.X.gg',hat:'xgxgxgxgxgxgxgxg'}},
+  tune:{k:'choir',kb:'cel',oct:1,ob:2,v:.06,vb:.08,form:'AB',A:'4,16|5,16|7,12 4,4|6,16|4,16|8,16|9,8 7,8|8,16',
+    B:'7,2 4,2 2,2 0,2 7,2 4,2 2,2 0,2|8,2 5,2 3,2 1,2 8,2 5,2 3,2 1,2|9,2 7,2 4,2 2,2 9,2 7,2 4,2 2,2|8,2 6,2 3,2 1,2 6,8|7,2 4,2 2,2 0,2 7,2 4,2 2,2 0,2|8,2 5,2 3,2 1,2 8,2 5,2 3,2 1,2|9,2 7,2 5,2 2,2 9,2 7,2 5,2 2,2|8,4 5,4 1,8'}});
+// Ssith'ra: an endless coiling body. A reed pipe winding in fast runs that never stop, hand drums, then a lurching 3+3+2 answer.
+S('z3x',"Ssith'ra the Endless",{bpm:142,root:50,mode:'hij',prog:[0,0,1,0,0,6,1,0],fight:1,boom:.7,pad:{v:.018,cut:900},drone:.12,
+  bass:{v:.1,c:'x..x..x.x..x..x.'},stab:{c:'x..x..x.........',v:.014},
+  drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},
+  tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AB',A:'0,2 1,2 2,2 1,2 0,2 1,2 2,2 4,2|5,2 4,2 2,2 1,2 0,8|1,2 3,2 5,2 3,2 1,2 3,2 5,2 8,2|7,8 _,8|7,2 8,2 9,2 8,2 7,2 5,2 4,2 2,2|3,2 6,2 8,2 6,2 3,8|5,2 3,2 1,2 3,2 5,2 8,2 5,2 3,2|2,4 1,4 0,8',
+    B:'4,6 5,6 4,4|2,6 1,6 0,4|5,6 8,6 5,4|4,12 _,4|7,6 8,6 9,4|10,6 8,6 6,4|8,6 5,6 3,4|2,6 1,6 0,4'}});
+// The Bloated One: sheer weight. The slowest fight: a huge stomping drum, tolling bells and a low horn; then a choir wails above.
+S('z4x','The Bloated One',{bpm:104,root:48,mode:'loc',prog:[0,1,0,4,0,1,3,1],fight:1,boom:1.2,pad:{v:.03,cut:700,form:1},drone:.12,bell:{p:.35,v:.045,oct:2},
+  bass:{v:.12,c:'x.....x.x...x...'},stab:{c:'X.......x.......',v:.02},drums:{c:{taiko:'X.....x.X...x...',snare:'........X.......',tek:'..g...g...g...gg'}},
+  tune:{k:'horn',kb:'choir',oct:0,ob:1,v:.07,vb:.06,dbl:1,form:'AB',A:'0,12 2,4|3,8 1,8|4,12 2,4|4,16|7,12 4,4|5,8 3,8|3,8 5,4 7,4|5,16',
+    B:'4,8 7,8|8,16|9,8 7,8|8,16|4,8 2,8|3,8 5,8|7,16|5,8 1,8'}});
+// Lord Vaelric: the court. A furious harpsichord and a violin running in quick patterns that step down the chords; then the brass, grand.
+S('z5x','Lord Vaelric',{bpm:150,root:48,mode:'hmin',prog:[0,5,3,4,0,5,1,4],fight:1,boom:.8,pad:{v:.024,cut:1400,form:1},drone:.07,
+  arp:{e:1,p:[0,1,2,3,2,1,0,1,2,3,2,1,0,1,2,1],oct:1,v:.03,w:'square'},bass:{v:.1,c:'x.x.x.x.x.x.x.x.'},stab:{c:'x.......x.......',v:.018},
+  drums:{c:{taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'xgxgxgxgxgxgxgxg'}},
+  tune:{k:'cello',kb:'brass',oct:1,v:.09,vb:.045,dbl:1,form:'AB',A:'7,2 9,2 11,2 9,2 7,2 4,2 2,2 4,2|5,2 7,2 9,2 7,2 5,2 2,2 0,2 2,2|3,2 5,2 7,2 5,2 3,2 0,2 -2,2 0,2|4,4 6,4 8,8|7,2 9,2 11,2 9,2 7,2 4,2 2,2 4,2|9,2 12,2 14,2 12,2 9,2 7,2 5,2 7,2|8,2 5,2 3,2 1,2 3,2 5,2 8,2 5,2|6,8 4,8',
+    B:'7,8 9,4 11,4|12,12 9,4|10,8 7,8|8,12 _,4|11,8 9,4 7,4|9,12 7,4|8,8 5,8|6,4 8,4 11,8'}});
+// the mini bosses: one shape of song, but each with its own lead instrument, bass and drums
+Mi(0,'Mini boss: Vorraxis',47,'phr',126,[0,1,0,1,0,6,1,0],'0,8 4,8|5,8 3,8|4,6 2,2 0,8|1,12 _,4|7,8 4,8|6,8 3,8|5,4 3,4 1,8|0,16',{bass:{v:.11,c:'x..x..x.x..x..x.'},fx:{drip:.08}});
+Mi(1,'Mini boss: Hillside Crest',55,'dor',128,[0,6,0,4,0,6,5,4],'0,4 4,4 7,8|6,8 8,8|7,6 4,2 2,8|4,12 _,4|9,8 7,8|8,8 6,8|5,4 7,4 9,8|8,16',
+  {tune:{k:'whistle',oct:1,v:.07,dbl:1,form:'AA-'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},drums:{c:{taiko:'x..xx..xx..xx..x',hat:'..x...x...x...x.',tek:'....x.......x...'}}});
+Mi(2,'Mini boss: Gorthrak',52,'phr',130,[0,0,1,0,0,5,6,1],'0,8 2,8|4,6 5,2 4,8|3,8 1,8|0,12 _,4|4,8 7,8|7,4 5,4 2,8|3,8 6,8|5,8 1,8',
+  {fx:{wind:.014},tune:{k:'brass',oct:0,v:.05,dbl:1,form:'AA-'},bass:{v:.12,c:'x.......x.x.....'},drums:{c:{taiko:'X.......x.x.....',snare:'....x.......x...',hat:'x.x.x.x.x.x.x.x.'}}});
 Mi(3,'Mini boss: Qarsul',50,'hij',126,[0,1,0,1,0,3,1,0],'4,6 5,2 4,8|3,4 1,4 3,8|2,4 1,4 0,8|1,12 _,4|4,4 7,4 9,8|7,8 5,8|5,4 3,4 1,8|0,16',
-  {arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.05,w:'square'},drums:{c:{dum:'x..x..x.x..x..x.',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.',snare:'............x...'}}});
-Mi(4,'Mini boss: The Dirge',48,'loc',118,[0,1,0,3,0,1,4,1],'0,8 2,8|3,8 1,8|4,8 2,8|3,12 _,4|7,8 4,8|5,8 8,8|6,8 4,8|1,16',{bell:{p:.25,v:.04,oct:2}});
-Mi(5,'Mini boss: Vharog',48,'hmin',132,[0,3,0,4,0,3,1,4],'0,6 2,2 4,8|7,8 5,8|4,6 2,2 0,8|-1,12 _,4|7,8 9,8|10,8 7,8|5,4 3,4 1,8|4,16');
+  {tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AA-'},arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.05,w:'square'},drums:{c:{dum:'x..x..x.x..x..x.',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.',snare:'............x...'}}});
+Mi(4,'Mini boss: The Dirge',48,'loc',118,[0,1,0,3,0,1,4,1],'0,8 2,8|3,8 1,8|4,8 2,8|3,12 _,4|7,8 4,8|5,8 8,8|6,8 4,8|1,16',
+  {bell:{p:.25,v:.04,oct:2},tune:{k:'cello',oct:0,v:.11,dbl:1,form:'AA-'},bass:{v:.11,c:'x.....x.x...x...'},drums:{c:{taiko:'x.....x.x...x...',snare:'............x...',tek:'..g...g...g...gg'}}});
+Mi(5,'Mini boss: Vharog',48,'hmin',132,[0,3,0,4,0,3,1,4],'0,6 2,2 4,8|7,8 5,8|4,6 2,2 0,8|-1,12 _,4|7,8 9,8|10,8 7,8|5,4 3,4 1,8|4,16',
+  {tune:{k:'brass',oct:0,v:.05,dbl:1,form:'AA-'},bass:{v:.1,c:'x.xx.xx.x.xx.xx.'},arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:1,v:.022,w:'square'}});
 })();
 
 // ---------- the melody's instruments (v79's and the title's, 3580) ----------
@@ -74884,7 +74909,7 @@ function mu215Parse(str,bars){const on={};let at=0;for(const tok of str.replace(
 function mu215Tune(th){const T=th.tune;if(T.on)return T;T.on={};for(const k of ['A','B'])if(T[k]){T.on[k]=mu215Parse(T[k],th.prog.length);if(!T.on[k])console.warn('v215 tune length',k)}return T}
 function mu215Step(th,t,bar,s){const sp=60/th.bpm/4,n=th.prog.length,T=th.tune,X=th.fx;
   if(T){mu215Tune(th);const ch=T.form[Math.floor(bar/n)%T.form.length],on=T.on[ch],e=on&&on[(bar%n)*16+s];
-    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v);if(T.dbl)MU215.K.horn(muF(muNote(th,e[0],T.oct-1)),t,sp*e[1]*.95,T.v*.8)}}
+    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],B&&T.ob!=null?T.ob:T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v);if(T.dbl&&!(B&&T.ob!=null))MU215.K.horn(muF(muNote(th,e[0],T.oct-1)),t,sp*e[1]*.95,T.v*.8)}}
   const St=th.stab;if(St){const c=St.c[s];if(c&&c!='.'){const dg=muChord(th,bar);[0,2,4].forEach(k=>muLead(muF(muNote(th,dg+k,St.oct||0)),t,sp*1.4,St.v*(c=='X'?1.3:1),{w:'sawtooth',cut:2400,at:.008}))}}
   if(th.boom&&s==0&&bar%4==0){MUDR.taiko(t,.45*th.boom);muNz(t,1.4,'lowpass',1400,120,.7,.06*th.boom,2)}
   if(X){const deg=muChord(th,bar);
