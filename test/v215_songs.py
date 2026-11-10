@@ -11,7 +11,7 @@ def game(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     keys=ev("()=>Object.keys(MU215.names)")
     print('songs',len(keys))
-    if len(keys)!=23:F('expected 23 new songs, got %d'%len(keys))
+    if len(keys)!=35:F('expected 35 new songs, got %d'%len(keys))
     r=ev("""()=>Object.keys(MU215.names).map(k=>{const th=MTH[k],T=th.tune,e=[];if(!MODES[th.mode])e.push('mode');if(!T)e.push('no tune');else{mu215Tune(th);
         for(const c of T.form){if(c!='-'&&!T.on[c])e.push('part '+c)}if(!MU215.K[T.k])e.push('instrument '+T.k);if(T.kb&&!MU215.K[T.kb])e.push('instrument '+T.kb)}
         for(const s in th.drums||{})for(const n in th.drums[s]){if(!MUDR[n])e.push('drum '+n);if(th.drums[s][n].length!=16)e.push('drum pattern '+n)}
@@ -28,7 +28,7 @@ def game(pg):
             seen.add(key)
             if not ev("k=>!!MTH[k]",key):F('instance %d: no theme %s'%(g,key))
     for k in keys:
-        if k not in seen:F('song %s belongs to no instance'%k)
+        if k not in seen and k[-1] not in 'xm':F('song %s belongs to no instance'%k)
     # in the game: arrive in a field II, a Den and field I
     ev("()=>{audio()}");pg.wait_for_timeout(800)
     for z,k,want in [(1,1,'z1b'),(0,0,'z0'),(3,2,'z3c'),(4,3,'z4d')]:
@@ -45,21 +45,29 @@ def game(pg):
       const e215=MU215.err;Object.assign(MU,keep);MU215.err=0;if(err||e215)return {err:err||'v215 step error'};
       const b=await off.startRendering(),L=b.getChannelData(0);let pk=0,s=0,n=0;for(let i=SR*2;i<SR*dur;i++){const x=L[i];if(!(Math.abs(x)<=pk))pk=Math.abs(x);s+=x*x;n++}
       return {pk,rms:Math.sqrt(s/n),nan:L.some(x=>x!==x)}}"""
+    # fights: a Sovereign near → the zone's Sovereign song, a mini boss (e.sv, no e.boss) → the mini boss song
+    ev("()=>{const I=INSL[insG(2,1)];insArrive(I)}");pg.wait_for_timeout(2500)
+    for flags,want in [("{e.sv=e.sv||{i:'t'}}",'z2m'),("{e.boss=1}",'z2x')]:
+        ev("()=>{enemies.forEach(e=>{e.agg=0});const e=window.__f=window.__f||spawnEnemy('goo',pl.position.x+6,pl.position.z,30,{});e.agg=1;"+flags[1:-1]+"}")
+        got=ev("()=>muWant()");print('fight',want,got)
+        if got!=want:F('fight song %s, wanted %s'%(got,want))
+    ev("()=>{const e=window.__f;e.boss=0;e.sv=null;removeE(e)}")
+    bb=ev(ren,['boss',1,40])['rms'];print('boss rms %.4f'%bb)
     base={}
     for z in range(6):
         b=ev(ren,['z%d'%z,0,40]);base[z]=b['rms'];print('z%d'%z,'rms %.4f peak %.3f'%(b['rms'],b['pk']))
     for k in keys:
-        z=ev("k=>{const I=INSL.find(I=>I&&mu215Key(I)==k);return I?I.z:-1}",k)
+        z=int(k[1]) if k[0]=='z' else ev("k=>{const I=INSL.find(I=>I&&mu215Key(I)==k);return I?I.z:-1}",k)
         fight=ev("k=>!!MTH[k].fight",k)
         for f in (0,1):
             o=ev(ren,[k,f,40])
             if o.get('err'):F('song %s: %s'%(k,o['err']));continue
-            ratio=o['rms']/base[z]
-            print(k,'fight' if f else 'calm ','rms %.4f peak %.3f  x%.2f of z%d'%(o['rms'],o['pk'],ratio,z))
+            ratio=o['rms']/(bb if fight else base[z])
+            print(k,'fight' if f else 'calm ','rms %.4f peak %.3f  x%.2f of %s'%(o['rms'],o['pk'],ratio,'boss' if fight else 'z%d'%z))
             if o['nan']:F('song %s: broken sound (NaN)'%k)
             if o['rms']<.004:F('song %s is silent (rms %.4f)'%(k,o['rms']))
             if o['pk']>.98:F('song %s clips (peak %.3f)'%(k,o['pk']))
-            if not f and not (.45<ratio<(2.3 if fight else 1.6)):F('song %s loudness x%.2f of its zone song'%(k,ratio))
+            if not f and not (.45<ratio<(1.45 if fight else 1.6)):F('song %s loudness x%.2f of its zone song'%(k,ratio))
     print('RESULT','FAILED %d'%len(bad) if bad else 'ALL OK')
 play.run(game,w=1000,hh=620)
 sys.exit(1 if bad else 0)

@@ -74752,10 +74752,10 @@ S('sp_abeksi','Abeksi',{bpm:80,root:55,mode:'dor',prog:[0,5,0,3,0,5,6,4],pad:{v:
   bass:{v:.13,c:'x..x......x.....'},drums:{c:{shak:'..g...g...g...g.',tek:'............g...'}},
   tune:{k:'pluck',kb:'reed',oct:1,v:.11,vb:.03,form:'A-AB',A:'0,2 _,2 2,2 _,2 4,4 _,4|5,2 _,2 7,2 _,2 5,4 _,4|4,2 _,2 2,2 _,2 0,4 _,4|3,4 5,4 3,8|0,2 _,2 2,2 _,2 4,4 _,4|9,2 _,2 7,2 _,2 5,4 _,4|6,4 8,4 6,8|4,8 _,8',
     B:'4,8 5,2 4,2 2,4|5,12 _,4|4,4 2,4 0,8|3,12 _,4|4,8 5,2 4,2 2,4|7,12 _,4|6,4 8,4 10,8|8,16'}});
-S('sp_ascent','The Hilltop Ascent',{bpm:132,root:55,mode:'dor',prog:[0,0,6,6,3,3,4,4],pad:{v:.015,cut:1300},drone:.05,fight:1,
-  arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:0,v:.035},bass:{v:.1,c:'x.x.x.x.x.x.x.x.'},
-  drums:{c:{taiko:'X..x..x.X..x..x.',hat:'..x...x...x...x.',tek:'....x.......x...'}},fx:{wind:.012},
-  tune:{k:'horn',oct:1,v:.04,form:'AB',A:'0,6 2,2 4,8|7,12 4,4|6,6 8,2 10,8|8,12 6,4|7,6 5,2 3,8|5,8 7,8|8,6 6,2 4,8|4,12 _,4',
+S('sp_ascent','The Hilltop Ascent',{bpm:152,root:55,mode:'dor',prog:[0,0,6,6,3,3,4,4],pad:{v:.014,cut:1500},drone:.05,fight:1,boom:.8,
+  arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:0,v:.034,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x.....x...x.....',v:.022},
+  drums:{c:{taiko:'X.x.X.x.X.x.X.xx',snare:'....X.......X.xx',hat:'xgxgxgxgxgxgxgxg'}},fx:{wind:.012},
+  tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A:'0,6 2,2 4,8|7,12 4,4|6,6 8,2 10,8|8,12 6,4|7,6 5,2 3,8|5,8 7,8|8,6 6,2 4,8|4,12 _,4',
     B:'7,4 9,4 11,8|9,4 7,4 4,8|10,8 8,8|6,12 _,4|3,4 5,4 7,8|10,12 7,4|8,8 11,8|11,4 8,4 6,4 4,4'}});
 // ---------------- Burningeye Summit (E phrygian; frozen peak, burning sky) ----------------
 S('z2b','The Rimecaverns',{bpm:72,root:52,mode:'phr',prog:[0,5,1,0,0,5,6,0],pad:{v:.022,cut:700,form:1},drone:.1,
@@ -74787,10 +74787,10 @@ S('z3d',"Ssith'ra's Den",{bpm:64,root:50,mode:'hij',prog:[0,1,0,1,0,6,1,0],pad:{
   bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............',shak:'......g.......g.'}},
   tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|3,16|4,16|6,8 8,8|8,8 5,8|4,16',
     B:'7,16|8,12 _,4|7,8 4,8|5,8 3,8|2,16|3,8 1,8|1,16|0,16'}});
-S('sp_sandrun','The Sandstorm Run',{bpm:126,root:50,mode:'hij',prog:[0,0,1,1,0,0,6,1],pad:{v:.018,cut:900},drone:.1,fight:1,
-  arp:{e:2,p:[0,1,2,1,0,2,1,0],oct:0,v:.05,w:'square'},bass:{v:.13,c:'x..x..x.x..x..x.'},
-  drums:{c:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},fx:{wind:.035},
-  tune:{k:'reed',oct:1,v:.04,form:'AB',A:'0,4 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,8|3,12 _,4|4,4 7,4 9,8|8,2 7,2 5,4 4,8|6,4 8,4 10,8|8,8 5,8',
+S('sp_sandrun','The Sandstorm Run',{bpm:140,root:50,mode:'hij',prog:[0,0,1,1,0,0,6,1],pad:{v:.016,cut:900},drone:.08,fight:1,boom:.7,
+  arp:{e:1,p:[0,1,2,1,0,2,1,0,0,1,2,1,0,2,1,3],oct:0,v:.036,w:'square'},bass:{v:.11,c:'x.xx..x.x.xx..x.'},stab:{c:'x.....x.....x...',v:.018},
+  drums:{c:{taiko:'X.....x.X.....x.',dum:'X..x..x.x..x..x.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},fx:{wind:.035},
+  tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AB',A:'0,4 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,8|3,12 _,4|4,4 7,4 9,8|8,2 7,2 5,4 4,8|6,4 8,4 10,8|8,8 5,8',
     B:'7,6 9,2 7,8|4,6 5,2 4,8|8,6 10,2 8,8|5,12 _,4|7,4 4,4 2,4 0,4|2,4 4,4 7,8|10,8 8,8|8,4 5,4 3,4 1,4'}});
 // ---------------- The Dirge (C locrian; bells, hollow choir) ----------------
 S('z4b','The Drowned Crypts',{bpm:54,root:48,mode:'loc',prog:[0,3,0,1,0,3,6,1],pad:{v:.026,cut:520,form:1},drone:.13,bell:{p:.14,v:.04,oct:1},
@@ -74831,6 +74831,38 @@ S('z5d',"Lord Vaelric's Den",{bpm:60,root:48,mode:'hmin',prog:[0,1,0,4,0,5,1,4],
   bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
   tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|6,16|7,16|5,8 7,8|8,8 5,8|4,16',
     B:'4,16|3,12 _,4|4,8 7,8|8,16|9,8 7,8|7,8 5,8|3,8 1,8|-1,16'}});
+// ---------------- v215b: fight songs (owner, Nov 10 2026: "high intensity moments like fighting the sovereigns, minibosses or
+// the hilltop ascent should have more intense music due to the stressful scenario") ----------------
+// 'z<zone>x' = the zone's Sovereign fight, 'z<zone>m' = a mini boss fight in that zone. Fast, in the zone's scale, drums and a
+// driving bass all the time (fight:1), brass melody doubled an octave down (tune.dbl), chord stabs (stab) and a boom every 4 bars.
+const DX={taiko:'X.x.X.x.X.x.X.xx',snare:'....X.......X.xx',hat:'xgxgxgxgxgxgxgxg'},DM={taiko:'X..x..x.X..x..x.',snare:'....X.......X..x',hat:'x.x.x.x.x.x.x.x.'};
+const AX=[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0];
+const X=(z,name,root,mode,bpm,prog,A,B,o)=>S('z'+z+'x',name,Object.assign({bpm,root,mode,prog,fight:1,boom:1,pad:{v:.022,cut:1300,form:1},drone:.08,
+  arp:{e:1,p:AX,oct:0,v:.036,w:'sawtooth'},bass:{v:.12,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x..x..x...x.x...',v:.022},bell:{p:.08,v:.035,oct:2},drums:{c:DX},
+  tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A,B}},o||{}));
+const Mi=(z,name,root,mode,bpm,prog,A,o)=>S('z'+z+'m',name,Object.assign({bpm,root,mode,prog,fight:1,boom:.7,pad:{v:.022,cut:1000,form:1},drone:.09,
+  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045,w:'sawtooth'},bass:{v:.12,c:'x.x.x.xxx.x.x.xx'},stab:{c:'x.....x...x.....',v:.02},drums:{c:DM},
+  tune:{k:'horn',oct:0,v:.06,form:'AA-',A}},o||{}));
+X(0,'Argus, the Hundred-Eyed',47,'phr',140,[0,0,1,0,0,6,1,1],'0,6 0,2 2,4 4,4|4,6 5,2 4,8|5,6 3,2 1,8|0,12 _,4|7,6 7,2 5,4 4,4|6,6 8,2 6,8|5,4 3,4 1,4 3,4|1,12 _,4',
+  '7,4 9,4 11,8|9,4 7,4 4,8|8,8 10,8|9,12 _,4|7,2 _,2 7,2 _,2 4,8|8,8 6,8|5,8 8,8|8,4 5,4 3,4 1,4');
+X(1,'The Crest Hydra',55,'dor',144,[0,0,5,5,0,0,6,4],'0,4 2,4 4,6 2,2|4,4 7,12|5,4 7,4 9,6 7,2|5,12 _,4|7,4 9,4 11,8|9,6 7,2 4,8|6,4 8,4 10,8|8,8 4,8',
+  '11,6 9,2 7,8|4,6 2,2 0,8|9,6 7,2 5,8|2,12 _,4|0,4 4,4 7,4 9,4|11,12 9,4|10,8 8,8|8,4 6,4 4,8');
+X(2,'The Rime Wraith',52,'phr',148,[0,1,0,6,0,1,5,1],'4,6 4,2 2,4 0,4|1,6 3,2 5,8|4,6 4,2 7,8|6,12 _,4|4,6 4,2 2,4 0,4|5,6 8,2 5,8|7,4 9,4 7,8|8,8 5,8',
+  '7,8 9,8|8,8 10,8|11,8 9,4 7,4|8,12 _,4|7,4 4,4 2,4 0,4|1,4 3,4 5,8|5,8 9,8|8,16',{fx:{wind:.02}});
+X(3,"Ssith'ra the Endless",50,'hij',142,[0,0,1,0,0,6,1,0],'0,2 1,2 2,4 4,8|5,2 4,2 2,4 4,8|5,4 3,4 1,6 3,2|2,12 _,4|4,2 5,2 7,4 9,8|8,6 6,2 3,8|5,4 3,4 1,8|2,4 1,4 0,8',
+  '7,6 8,2 7,8|9,6 8,2 7,8|10,8 8,8|7,12 _,4|4,4 2,4 1,4 0,4|6,8 8,8|8,4 5,4 3,4 1,4|0,16',
+  {arp:{e:1,p:AX,oct:0,v:.034,w:'square'},drums:{c:{taiko:'X.....x.X.....x.',dum:'X..x..x.x..x..x.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg',snare:'....X.......X...'}}});
+X(4,'The Bloated One',48,'loc',132,[0,1,0,4,0,1,3,1],'0,8 2,4 4,4|5,8 3,8|4,6 2,2 0,8|4,12 _,4|7,8 4,8|8,6 5,2 3,8|3,4 5,4 7,8|5,8 1,8',
+  '4,4 4,4 7,8|8,4 8,4 5,8|9,8 7,8|8,12 _,4|4,4 2,4 0,8|1,4 3,4 5,8|7,8 5,8|5,4 3,4 1,8',{bell:{p:.3,v:.045,oct:2},drums:{c:{taiko:'X.x.X..xX.x.X.xx',snare:'....X.......X.xx',hat:'x.x.x.x.x.x.x.x.'}}});
+X(5,'Lord Vaelric',48,'hmin',150,[0,5,3,4,0,5,1,4],'7,6 4,2 2,4 0,4|5,6 7,2 9,8|7,6 5,2 3,8|6,12 _,4|7,6 4,2 2,4 0,4|9,8 7,8|5,4 3,4 1,8|4,4 6,4 8,8',
+  '9,4 11,4 14,8|12,8 9,8|10,6 12,2 10,8|8,12 _,4|7,4 9,4 11,8|9,4 7,4 5,8|8,8 5,8|6,8 4,8',{arp:{e:1,p:AX,oct:1,v:.03,w:'square'}});
+Mi(0,'Mini boss: Vorraxis',47,'phr',126,[0,1,0,1,0,6,1,0],'0,8 4,8|5,8 3,8|4,6 2,2 0,8|1,12 _,4|7,8 4,8|6,8 3,8|5,4 3,4 1,8|0,16');
+Mi(1,'Mini boss: Hillside Crest',55,'dor',128,[0,6,0,4,0,6,5,4],'0,4 4,4 7,8|6,8 8,8|7,6 4,2 2,8|4,12 _,4|9,8 7,8|8,8 6,8|5,4 7,4 9,8|8,16');
+Mi(2,'Mini boss: Gorthrak',52,'phr',130,[0,0,1,0,0,5,6,1],'0,8 2,8|4,6 5,2 4,8|3,8 1,8|0,12 _,4|4,8 7,8|7,4 5,4 2,8|3,8 6,8|5,8 1,8',{fx:{wind:.014}});
+Mi(3,'Mini boss: Qarsul',50,'hij',126,[0,1,0,1,0,3,1,0],'4,6 5,2 4,8|3,4 1,4 3,8|2,4 1,4 0,8|1,12 _,4|4,4 7,4 9,8|7,8 5,8|5,4 3,4 1,8|0,16',
+  {arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.05,w:'square'},drums:{c:{dum:'X..x..x.x..x..x.',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.',snare:'............X...'}}});
+Mi(4,'Mini boss: The Dirge',48,'loc',118,[0,1,0,3,0,1,4,1],'0,8 2,8|3,8 1,8|4,8 2,8|3,12 _,4|7,8 4,8|5,8 8,8|6,8 4,8|1,16',{bell:{p:.25,v:.04,oct:2}});
+Mi(5,'Mini boss: Vharog',48,'hmin',132,[0,3,0,4,0,3,1,4],'0,6 2,2 4,8|7,8 5,8|4,6 2,2 0,8|-1,12 _,4|7,8 9,8|10,8 7,8|5,4 3,4 1,8|4,16');
 })();
 
 // ---------- the melody's instruments (v79's and the title's, 3580) ----------
@@ -74842,6 +74874,7 @@ MU215.K={
   cello:(f,t,d,v)=>muCello(f,t,d,v),
   reed:(f,t,d,v)=>muLead(f,t,d,v,{w:'square',cut:1500,bp:1,vib:1.4,at:.05,slide:1}),
   horn:(f,t,d,v)=>muLead(f,t,d,v,{w:'sawtooth',cut:1100,vib:.5,at:.09,sub:1}),
+  brass:(f,t,d,v)=>{muLead(f,t,d,v,{w:'sawtooth',cut:2100,vib:.4,at:.03,sub:0});muLead(f,t,d,v*.6,{w:'square',cut:1300,vib:.4,at:.03,sub:0})},
   whistle:(f,t,d,v)=>muLead(f,t,d,v,{w:'sine',cut:3000,vib:1,at:.04,sub:1}),
   choir:(f,t,d,v)=>{muLead(f,t,d,v,{w:'sine',cut:1800,vib:1.2,at:.3,sub:1});muLead(f*2,t,d,v*.45,{w:'triangle',cut:1400,vib:1.2,at:.35,sub:0})}};
 // 'deg,len deg,len|…' → {start step: [degree, length]}; null when the part is not exactly `bars` bars long
@@ -74851,16 +74884,24 @@ function mu215Parse(str,bars){const on={};let at=0;for(const tok of str.replace(
 function mu215Tune(th){const T=th.tune;if(T.on)return T;T.on={};for(const k of ['A','B'])if(T[k]){T.on[k]=mu215Parse(T[k],th.prog.length);if(!T.on[k])console.warn('v215 tune length',k)}return T}
 function mu215Step(th,t,bar,s){const sp=60/th.bpm/4,n=th.prog.length,T=th.tune,X=th.fx;
   if(T){mu215Tune(th);const ch=T.form[Math.floor(bar/n)%T.form.length],on=T.on[ch],e=on&&on[(bar%n)*16+s];
-    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v)}}
+    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v);if(T.dbl)MU215.K.horn(muF(muNote(th,e[0],T.oct-1)),t,sp*e[1]*.95,T.v*.8)}}
+  const St=th.stab;if(St){const c=St.c[s];if(c&&c!='.'){const dg=muChord(th,bar);[0,2,4].forEach(k=>muLead(muF(muNote(th,dg+k,St.oct||0)),t,sp*1.4,St.v*(c=='X'?1.3:1),{w:'sawtooth',cut:2400,at:.008}))}}
+  if(th.boom&&s==0&&bar%4==0){MUDR.taiko(t,1.3*th.boom);muNz(t,1.4,'lowpass',1400,120,.7,.09*th.boom,2)}
   if(X){const deg=muChord(th,bar);
     if(X.wind&&s==0&&bar%2==0){const up=Math.random()<.5,a=300+Math.random()*250,b=700+Math.random()*700;muNz(t,sp*30,'bandpass',up?a:b,up?b:a,1.6,X.wind,2,sp*(8+Math.random()*8))}
     if(X.drip&&s%2==0&&Math.random()<X.drip)muCelesta(muF(muNote(th,deg+[0,2,4,7][Math.random()*4|0],3)),t,.035+Math.random()*.03);
     if(X.chime&&s%4==2&&Math.random()<X.chime)muBell(muF(muNote(th,deg+[0,4,7][Math.random()*3|0],3)),t,.014)}}
 {const f=muStep;muStep=function(t){const r=f.apply(this,arguments),th=MU.th;
-  if(th&&(th.tune||th.fx)){try{mu215Step(th,t,MU.bar,MU.s)}catch(e){if(!MU215.err){MU215.err=1;console.warn('v215 song',e)}}}return r}}
+  if(th&&(th.tune||th.fx||th.stab)){try{mu215Step(th,t,MU.bar,MU.s)}catch(e){if(!MU215.err){MU215.err=1;console.warn('v215 song',e)}}}return r}}
 
 // ---------- which song plays where ----------
 function mu215Key(I){if(!I)return null;if(I.sp)return 'sp_'+I.sp;if(I.den)return 'z'+I.z+'d';return I.fld&&I.k==1?'z'+I.z+'b':I.fld&&I.k==2?'z'+I.z+'c':null}
+// a Sovereign (e.boss) or a mini boss (a Sovereign-style fighter e.sv that is no Sovereign) fighting near the hero → the zone's fight song
+function mu215Foe(){const P=pl.position;let r=0;for(const e of enemies){if(!e||e.dead||!e.agg||!e.m||!(e.boss||e.sv))continue;if(e.m.position.distanceTo(P)<45){if(e.boss)return 2;r=1}}return r}
 {const f=muWant;muWant=function(){const w=f.apply(this,arguments);
-  if(typeof w=='string'&&/^z\d+$/.test(w)){try{const P=pl.position,k=mu215Key(insAt(Math.round(P.x),Math.round(P.z)));if(k&&MTH[k])return k}catch(_){}}
+  if(typeof w=='string'&&(w=='boss'||/^z\d+$/.test(w))){try{const P=pl.position,I=insAt(Math.round(P.x),Math.round(P.z)),fo=mu215Foe();
+      if(fo&&I){const k='z'+I.z+(fo==2?'x':'m');if(MTH[k])return k}
+      if(w!='boss'){const k=mu215Key(I);if(k&&MTH[k])return k}}catch(_){}}
   return w}}
+// fight songs come in fast, like v79's 'boss'
+{const f=muSwitch;muSwitch=function(now){const r=f.apply(this,arguments);try{if(MU.th&&MU.th.fight&&MU.cur!='boss'){MU.xg.gain.cancelScheduledValues(now);MU.xg.gain.setValueAtTime(0,now);MU.xg.gain.setTargetAtTime(1,now+.05,.3)}}catch(_){}return r}}

@@ -14,32 +14,44 @@ const ZONES=[
  ['Kindlelight','A drowned bog: low, sparse and cold.',[['z0','Field I','The zone’s first song, unchanged.',1],
   ['z0b','Field II · The Glowmire Hollows','Glowing caves. Slow glassy notes over a deep hum, with water drops echoing off the walls.'],
   ['z0c','Field III · The Rotwood','A rotting forest. A low cello sings over a plucked lute while the wind moves through dead trees.'],
-  ['z0d','The Den · Argus','Very slow and close. A heartbeat drum, a tolling bell and a low choir that never quite settles.']]],
+  ['z0d','The Den · Argus','Very slow and close. A heartbeat drum, a tolling bell and a low choir that never quite settles.'],
+  ['z0x','Sovereign fight \u00b7 Argus','Fast and relentless: pounding war drums, a racing bass and a brass theme that keeps stabbing at the same note.'],
+  ['z0m','Mini boss fight \u00b7 Vorraxis','A heavy, grinding march with a low horn. Tense, but a step below the Sovereign.']]],
  ['Hillside Crest','Windswept plains: open and bright.',[['z1','Field I','The zone’s first song, unchanged.',1],
   ['z1b','Field II · Mistmere','Misty lakes. A gentle flute over rolling harp notes.'],
   ['z1c','Field III · The Galecliffs','High cliffs. Faster, with a soaring whistle that leaps upward and gusts of wind behind it.'],
   ['z1d','The Den · The Crest Hydra','The same bright scale turned dark: a slow choir, a heartbeat drum and one uneasy chord that keeps returning.'],
   ['sp_abeksi','Abeksi (the stealth city)','Sneaking music. Short plucked notes with gaps between them, a soft shaker, then a quiet snake-charmer reed.'],
-  ['sp_ascent','The Hilltop Ascent (the chase)','A gallop. Driving drums and bass under a bold horn call.']]],
+  ['sp_ascent','The Hilltop Ascent (the chase)','A flat-out gallop. Very fast, pounding drums, a racing bass and a bold brass call.'],
+  ['z1x','Sovereign fight \u00b7 The Crest Hydra','The plains scale at full gallop: climbing brass calls over drums that never let up.'],
+  ['z1m','Mini boss fight \u00b7 Hillside Crest','A driving horn tune over galloping drums, for any mini boss in this zone.']]],
  ['Burningeye Summit','A frozen peak under a burning sky.',[['z2','Field I','The zone’s first song, unchanged.',1],
   ['z2b','Field II · The Rimecaverns','Ice caverns. Slower and crystalline: falling glassy notes, tiny chimes and meltwater drops.'],
   ['z2c','Field III · Stormcrown','The peak in a blizzard. A stern low horn pushing through howling wind.'],
-  ['z2d','The Den · The Rime Wraith','Cold and still. Choir, bells, a heartbeat drum and a thin wind.']]],
+  ['z2d','The Den · The Rime Wraith','Cold and still. Choir, bells, a heartbeat drum and a thin wind.'],
+  ['z2x','Sovereign fight \u00b7 The Rime Wraith','The fastest of the cold songs: hammering brass, snare and a howling wind.'],
+  ['z2m','Mini boss fight \u00b7 Gorthrak','A stern low horn over pounding drums and wind.']]],
  ['Searing Sands','Desert: reed pipe and oud.',[['z3','Field I','The zone’s first song, unchanged.',1],
   ['z3b','Field II · The Sunken Temple','A buried temple. A solemn, ceremonial flute over a slow hand drum; the reed answers it.'],
   ['z3c','Field III · The Salt Wastes','Empty salt flats. Long, lonely reed notes over a wide hum, with a faint shimmer.'],
   ['z3d','The Den · Ssith’ra','A slow desert choir over a heartbeat drum and a dry rattle.'],
-  ['sp_sandrun','The Sandstorm Run','A race through the storm. Fast hand drums, a racing reed and roaring wind.']]],
+  ['sp_sandrun','The Sandstorm Run','A race through the storm. Faster and harder now: hand drums, war drum, a racing reed and roaring wind.'],
+  ['z3x','Sovereign fight \u00b7 Ssith\u2019ra','Desert war music: fast hand drums and shakers under a twisting brass theme.'],
+  ['z3m','Mini boss fight \u00b7 Qarsul','Hand drums and a snaking low horn.']]],
  ['The Dirge','A haunted graveyard: bells and a hollow choir.',[['z4','Field I','The zone’s first song, unchanged.',1],
   ['z4b','Field II · The Drowned Crypts','Flooded vaults. Very slow glassy notes, low bells and dripping water.'],
   ['z4c','Field III · The Ossuary Fields','Plains of bones. A cello lament over a dry, rattling march.'],
   ['z4d','The Den · The Bloated One','The slowest song in the game. A heavy hum, tolling bells and a choir.'],
   ['sp_sanctum','The Hidden Sanctum','A sacred, hidden place. Single bell notes, then a choir, with nothing underneath but a soft glow.'],
-  ['sp_channel','The Black Channel','Dark water. Harp notes roll like waves under a low cello.']]],
+  ['sp_channel','The Black Channel','Dark water. Harp notes roll like waves under a low cello.'],
+  ['z4x','Sovereign fight \u00b7 The Bloated One','Slower but heavier than the others: lurching drums, tolling bells and a grim brass theme.'],
+  ['z4m','Mini boss fight \u00b7 The Dirge','A dark, lurching march with bells, for any mini boss in this zone.']]],
  ['The Citadel','The vampire court: organ, brass and harpsichord.',[['z5','Field I','The zone’s first song, unchanged.',1],
   ['z5b','Field II · The Outer Ramparts','The siege camp. A march: snare and war drum under a brass call.'],
   ['z5c','Field III · The Inner Keep','Moonlit halls. A quick harpsichord under an elegant, sinister violin line.'],
-  ['z5d','The Den · Lord Vaelric','The court’s organ, slow and grand, with a choir and a heartbeat drum.']]]];
+  ['z5d','The Den · Lord Vaelric','The court’s organ, slow and grand, with a choir and a heartbeat drum.'],
+  ['z5x','Sovereign fight \u00b7 Lord Vaelric','The fastest song in the game: a furious harpsichord under a grand, soaring brass theme.'],
+  ['z5m','Mini boss fight \u00b7 Vharog','A snarling low horn over hard, steady drums.']]]];
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 let rows='';ZONES.forEach(([zn,zd,L])=>{rows+=`<section class="zone"><header><h2>${esc(zn)}</h2><p>${esc(zd)}</p></header><ul>`+
   L.map(([k,n,d,old])=>`<li class="song${old?' old':''}" data-k="${k}"><button class="play" id="play-${k}" aria-pressed="false" aria-label="Play ${esc(n)}"><span class="ico"></span></button><div class="txt"><h3>${esc(n)}${old?'':' <span class="new">new</span>'}</h3><p>${esc(d)}</p><span class="meta"></span></div></li>`).join('')+'</ul></section>'});
@@ -79,7 +91,7 @@ h3{font-family:var(--body);font-weight:600;font-size:1.0625rem;margin:0;display:
 <main>
 <div>
 <h1>Kill Quest: a song for every instance</h1>
-<p class="lede">23 new songs, one for each place that had none of its own. Each keeps the musical scale of its zone, so it still sounds like the same land. Press a button to listen. The rows marked "Field I" are the songs you already have, here so you can compare.</p>
+<p class="lede">35 new songs: one for each place that had none of its own, plus a fight song for every Sovereign and for the mini bosses of every zone. Each keeps the musical scale of its zone, so it still sounds like the same land. Press a button to listen. The rows marked "Field I" are the songs you already have, here so you can compare.</p>
 <div class="opts"><label><input type="checkbox" id="opt-fight"> Play as if a fight is going on (adds drums)</label><label>Volume <input type="range" id="opt-vol" min="0" max="1" step="0.01" value="0.6"></label></div>
 </div>
 ${rows}
@@ -90,7 +102,7 @@ ${engine}
 <script>
 (function(){
 var cur=null,ctx=null,timer=null;
-var kName={cel:'celesta',bell:'bell',pluck:'plucked strings',flute:'flute',cello:'cello',reed:'reed pipe',horn:'horn',whistle:'whistle',choir:'choir'};
+var kName={cel:'celesta',bell:'bell',pluck:'plucked strings',flute:'flute',cello:'cello',reed:'reed pipe',brass:'brass',horn:'horn',whistle:'whistle',choir:'choir'};
 document.querySelectorAll('.song').forEach(function(li){var th=MTH[li.dataset.k],T=th.tune;li.dataset.base=th.bpm+' bpm'+(T?' \\u00b7 melody: '+kName[T.k]+(T.kb?', then '+kName[T.kb]:''):' \\u00b7 melody improvised');li.querySelector('.meta').textContent=li.dataset.base});
 function vol(){if(MU.g)MU.g.gain.setTargetAtTime(Math.pow(+document.getElementById('opt-vol').value,1.5)*.9,ctx.currentTime,.05)}
 function mark(){document.querySelectorAll('.song').forEach(function(li){var on=li.dataset.k===cur;li.classList.toggle('on',on);li.querySelector('.play').setAttribute('aria-pressed',on);if(!on)li.querySelector('.meta').textContent=li.dataset.base})}
