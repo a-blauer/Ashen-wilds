@@ -30754,7 +30754,7 @@ MPV.FX.forEach(n=>{const f=window[n];if(typeof f!='function')return;
     MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}});
 // projectiles: the real shot stays local; partners get a ghost
 {const f=launch;launch=function(pos,d,spd,s,dm,life){if(MPV.rep)return;if(mpvLive()&&!MPV.rep&&pos&&d)try{const S=s||{};
-  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1),S.bolt?1:0])}catch(_){}
+  mpvPush(['L',mpvR(pos.x),mpvR(pos.y),mpvR(pos.z),mpvR(d.x),mpvR(d.y||0),mpvR(d.z),mpvR(+spd||20),S.col|0,S.arrow?1:0,mpvR(+S.sc||+S.scale||+S.mpSc||1),mpvR(+life||1.1),S.bolt?1:S.knife?2:0])}catch(_){}
   return f.apply(this,arguments)}}
 // companion moves: lunge / bolt / spell motion on fols[0|1]
 function mpvSlot(a){return typeof fols!='undefined'&&a?fols.indexOf(a):-1}
@@ -30823,8 +30823,8 @@ function mpvPlay(r,e){
       ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
       ()=>{if(h._mpvP===id)h.sw=0})}
   else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
-    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782) */
-    const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():e[13]===2&&typeof kn211Mesh=='function'?kn211Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782); v211: 2 = a thrown knife (3820) */
+    const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1&&e[13]!==2)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
     tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */
       let hit=typeof solid=='function'&&solid(Math.round(x),Math.round(z));if(!hit)for(const en of enemies){if(!en.dead&&en.m&&Math.abs(en.m.position.x-x)<1&&Math.abs(en.m.position.z-z)<1){hit=true;break}}
@@ -74167,6 +74167,36 @@ function hc208Cap(){if(HC208.run)return null;const T0=performance.now(),S=hc208B
 {const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{if(HC208.seen===-1){let been=false;try{been=(INSR[1]|0)>0||bossDone.has(1)||(typeof AB152Q!='undefined'&&AB152Q.st>0)}catch(_){}
     try{const I=curIns();if(I&&I.z===1)been=true}catch(_){}HC208.seen=been?1:0}}catch(_){}return r}}
 {const f=ccBegin;ccBegin=function(){HC208.seen=0;return f.apply(this,arguments)}}
+// ================= v211: a real knife when you throw, and a smaller turn of the body (owner, Nov 9 2026) =================
+// Owner: "Does throwing knife actually throw a knife? or is it an arrow? I also still dont like how far to the side our character
+// turns when throwing the knife"
+//  1. The knife: throwing knives launched the arrow model shrunk (0.7 × 0.7 × 0.55: a short arrow with feathers). Now the thrown
+//     thing is the knife the hero holds (the dagger kit at the hand's 0.78 size), flipping end over end as it flies (KN211.spin
+//     rad/s, overhand: the point goes over the top). Partners see the knife too: the 'L' message's last field (e[13], 1 = a crossbow
+//     bolt since v207) is 2 for a knife (2170); older partners still draw their small arrow.
+//  2. The turn: the baked knife throw twists the spine and hips ~0.85 rad one way in the wind-up and ~0.75 rad back after the
+//     release (the v207 variations add a little more): nearly a right angle of turn every throw. The throw's yaw channels (spine sy,
+//     hips py, chest cy and the head's counter-turn hy) now play at KN211.yawK of that; the arm's own swing, the lean and the steps
+//     are unchanged, so the throws still differ and still flow. Partners see the played pose (2170 samples the hero's bones).
+var KN211={yawK:.4,spin:22,sc:.78,on:true,ch:['sy','py','cy','hy']};
+{const f=atkPick;atkPick=function(st){const T=f.apply(this,arguments);
+  try{if(KN211.on&&T&&atkWT()==='knives'){const o={},g=function(k){const p=T(k);for(const c in p)o[c]=p[c];for(const c of KN211.ch)if(typeof o[c]=='number')o[c]*=KN211.yawK;return o};g.v100=T.v100;return g}}catch(_){}return T}}
+// the thrown knife: +z is its flight (the shot code points it), a pivot spins it about x; the kit is shared (nothing to free)
+function kn211Mesh(){const out=new THREE.Group(),pv=new THREE.Group(),k=lgGroup('KQ211|tknife',k=>lgWpnKit(k,'dagger',0x9aa2ae,0),.1);
+  k.rotation.x=-Math.PI/2;k.position.z=-.12;pv.scale.setScalar(KN211.sc);pv.add(k);out.add(pv);out.userData.lpsSkip=1;out.userData.kn211=1;out.userData.kn211pv=pv;
+  const t0=performance.now();let m=null;k.traverse(o=>{if(!m&&o.isMesh)m=o});
+  if(m)m.onBeforeRender=function(){pv.rotation.x=(performance.now()-t0)/1000*KN211.spin};
+  return out}
+function kn211Swap(sh){if(!sh||!sh.m)return;const o=sh.m,b=kn211Mesh();b.position.copy(o.position);b.quaternion.copy(o.quaternion);
+  if(o.parent)o.parent.add(b);if(o.parent)o.parent.remove(o);sh.m=b;sh.kn211=1}
+// as 3782's throw, with the knife (knife:1 tells partners to draw a knife; mpSc stays .7 for older partners' arrow)
+WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;KN207.cur=KN207.order[KN207.i++%KN207.order.length];
+  try{kn207Aim(aimDir())}catch(_){}
+  const hp=haPlay;haPlay=function(ms,pose,hitAt,onHit,bi){return hp.call(this,ms,pose,hitAt,onHit,Math.max(bi==null?.22:bi,KN207.bi))};
+  try{swingAnim(0,Math.max(KN207.ms[0],base*KN207.ms[1]),()=>{const d2_=aimDir();kn207Aim(d2_);
+    launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7,knife:1},raw*WB127.knife1,.5);
+    const sh=shots[shots.length-1];if(sh)kn211Swap(sh);sfx('stab')})}
+  finally{haPlay=hp}};
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:
