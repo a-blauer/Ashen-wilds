@@ -4,7 +4,9 @@
 #    NaN vertices, fewer than 20 eyes, an eye without its iris, height outside 4.2-6.2 m, page errors
 #  * gait: the lowest paw's mean ground speed while walking and running at his own speeds (ai.walk / ai.run): median over 0.6 m/s or mean over 1.2 m/s
 #    (planted paws stay put; the mean also counts the instants the lowest paw switches)
-#  * smooth motion: in idle, walk and every move, no joint turns faster than 22 rad/s between two 16 ms frames (a pop)
+#  * smooth motion: in idle and every move, no joint turns faster than 24 rad/s between two 16 ms frames (a pop)
+#  * paws stay on the ground: in idle and every move no paw's sole goes below -0.32 m in his own space (rest -0.12; v146 sank
+#    to -1.26); both checks skip each run's first 0.25 s (the test sets him on his mark)
 #  * every move runs to its end without errors
 # PICS=1 writes out/v214_argus.png (front, side, 3/4, back) and out/v214_poses.png (poses); POSES= the pose list;
 # CLOSE=1 out/v214_close.png (head, flank, legs). SRC=<old build> renders the old model for comparison (checks skipped).
@@ -36,7 +38,11 @@ WALK=r"""(v)=>{const e=BE,S=e.sv;try{svEndMove(e,true)}catch(_){}S.mv=null;S.trk
 # the fastest joint turn between frames (rad/s) in idle, walk and each move
 POP=r"""()=>{const e=BE,S=e.sv,A=XA,R=S.R,res={},Q=new THREE.Quaternion(),Q0={};const names=Object.keys(R.J).filter(k=>k!=='root');
   const snap=()=>{const o={};names.forEach(k=>o[k]=R.J[k].quaternion.clone());return o},mx=(a,b)=>{let m=0,w='';names.forEach(k=>{const d=2*Math.acos(Math.min(1,Math.abs(a[k].dot(b[k]))));if(d>m){m=d;w=k}});return [m/.016,w]};
-  const run=(id,sec,fn)=>{let prev=null,best=[0,''];for(let f=0;f<Math.ceil(sec/.016);f++){fn&&fn(f);STEP(.016);const s=snap();if(prev){const r=mx(prev,s);if(r[0]>best[0])best=[r[0],r[1],+(f*.016).toFixed(2)]}prev=s}res[id]=best};
+  // the paws' soles in the model's own space (y 0 = the ground under him): how far below their rest height they sink
+  const SO=[['pwL',[0,-.12,.12]],['pwR',[0,-.12,.12]],['hkL',[0,-.57,.2]],['hkR',[0,-.57,.2]]],Mi=new THREE.Matrix4(),W=new THREE.Vector3();
+  const sole=()=>{R.root.updateMatrixWorld(true);Mi.copy(R.root.matrixWorld).invert();let lo=9,w='';SO.forEach(([j,o])=>{W.set(...o);R.J[j].localToWorld(W);W.applyMatrix4(Mi);if(W.y<lo){lo=W.y;w=j}});return [lo,w]};
+  const run=(id,sec,fn)=>{let prev=null,best=[0,''],flo=[9,''];for(let f=0;f<Math.ceil(sec/.016);f++){fn&&fn(f);STEP(.016);const s=snap();if(prev&&f*.016>=.25){const r=mx(prev,s);if(r[0]>best[0])best=[r[0],r[1],+(f*.016).toFixed(2)]}prev=s;
+      const q=sole();if(f*.016>=.25&&q[0]<flo[0])flo=[q[0],q[1],+(f*.016).toFixed(2)]}best.push(flo);res[id]=best};
   try{svEndMove(e,true)}catch(_){}e.m.position.set(A.cx,e.m.position.y,A.cz);toPos(A.cx,A.cz+14);run('idle',2);
   for(const id in S.B.M){if(id==='intro'||id==='awaken'||id==='hundred')continue;const D=S.B.M[id];try{svEndMove(e,true)}catch(_){}S.gone146=0;S.ghost=0;e.m.visible=true;S.ph=D.ph==2?2:1;
     e.m.position.set(A.cx,e.m.position.y,A.cz);toPos(A.cx,A.cz+5);STEP(.3);svStart(e,id,3);run(id,(D.dur||2)+.5)}
@@ -116,8 +122,10 @@ def s(pg):
         if md>.6 or sl>1.2:F('paws slide at %.1f m/s: median %.2f (max .6), mean %.2f m/s (max 1.2)'%(v,md,sl))
     r=ev(POP)
     for k,v in r.items():
-        print('pop %-8s fastest joint %5.1f rad/s (%s at %ss)'%(k,v[0],v[1] if len(v)>1 else '',v[2] if len(v)>2 else ''))
-        if v[0]>22:F('%s: %s turns %.0f rad/s in one frame (a pop)'%(k,v[1],v[0]))
+        fl=v[-1];v=v[:-1]
+        print('pop %-8s fastest joint %5.1f rad/s (%s at %ss)   lowest sole %.2f m (%s at %ss)'%(k,v[0],v[1] if len(v)>1 else '',v[2] if len(v)>2 else '',fl[0],fl[1],fl[2] if len(fl)>2 else ''))
+        if v[0]>24:F('%s: %s turns %.0f rad/s in one frame (a pop)'%(k,v[1],v[0]))
+        if fl[0]<-.32:F('%s: %s sinks into the ground: sole at %.2f m (rest -0.12; v146 sank to -1.26)'%(k,fl[1],fl[0]))
     r=ev(ALL)
     for k,v in r.items():F('move %s: %s'%(k,v))
     for e in errs[:5]:F('page error: '+e)

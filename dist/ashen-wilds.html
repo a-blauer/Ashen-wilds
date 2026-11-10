@@ -74720,7 +74720,7 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
 // footfalls, the head held steady, breathing and a slow look-around at rest; every pose change is then passed through a
 // critically damped follow (arg214Smooth, sampled a little ahead so strikes still land on their beat), so snaps and pops ease.
 // Same joints and names (the v110/v112/v146 poses, moves, the den, the Hundred Eyes and the v209 cinematic keep working).
-var ARG214={on:1,geo:null,ms:0,tris:0,n:20,lead:.045,w:34,browP:[0,-.02,.04],browR:-.6,browS:[.18,.25,.14]};
+var ARG214={on:1,geo:null,ms:0,tris:0,n:20,lead:.045,w:34,fw:60,browP:[0,-.02,.04],browR:-.6,browS:[.18,.25,.14]};
 var A214C={back:0x241f18,flank:0x403c32,belly:0x6a6456,mane:0x1c1814,grz:0x4e4c42,moss:0x3a4c24,mud:0x2a1e14,bone:0x766a54,bone2:0xa09478,
   mem:0x2a0a10,mem2:0x4a121a,rim:0x3a2420,gum:0x1e0a0b,tongue:0x34141a,claw:0x0b0a0c,nose:0x0c0a0c,sock:0x080605,earIn:0x1e0e10};
 function a214SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
@@ -74952,7 +74952,7 @@ function arg214Build(R,e){const Q=arg214Geo();arg214Joints(R);R.root.updateMatri
     mg=new THREE.MeshBasicMaterial({color:ARG.vein,vertexColors:true,skinning:true,fog:false,side:THREE.DoubleSide});mg.userData.c0=ARG.vein;R.glow.push(mg);R.vein=mg;
   arg214Rim(mc);arg214Rim(mm);
   R.v214m=[];[['c',mc],['m',mm],['g',mg]].forEach(([t,mat])=>{const G=Q.G[t];if(!G)return;const sm=new THREE.SkinnedMesh(G,mat);sm.bind(sk);sm.userData.noMerge=1;sm.userData.lpsSkip=1;sm.frustumCulled=false;sm.castShadow=t!=='g';sm.receiveShadow=false;R.root.add(sm);R.v214m.push(sm)});
-  R.v214=1;R.no179=1;
+  R.v214=1;R.no179=1;arg214FeetRest(R);
   // the eyes on the bones under them (rest pose → the bone's frame), one lens mesh each so each can blink
   const iris=new THREE.MeshBasicMaterial({color:ARG.dim,vertexColors:true,fog:false});iris.userData.c0=ARG.dim;R.glow.push(iris);R.iris=iris;R.eyes=[];
   const lens=arg214Lens(),V3=THREE.Vector3,up=new V3(0,1,0),Mx=new THREE.Matrix4(),Qw=new THREE.Quaternion(),Qb=new THREE.Quaternion();
@@ -74997,19 +74997,65 @@ function arg214Loco(e,S,O,dt,now){const t=now/1000,v=Math.max(0,S.spd||0),a=a214
   O.neck[0]+=(-.03*st*a)+.1*tr;O.head[0]+=.03*st*a-.06*tr;O.head[1]+=-.04*Math.sin(g*TAU)*a;
   // the tail: a slow sway at rest, swinging with the stride when moving
   ['t0','t1','t2','t3'].forEach((n,k)=>{O[n][1]+=(Math.sin(t*1.1-k*.6)*.1*ia+Math.sin(g*TAU-k*.8)*.12*a)*(1+.3*k);O[n][0]+=-.03*k*a+.02*Math.sin(t*.9-k)*ia})}
-// every pose change eased by a critically damped follow (rotations and offsets of each joint); the move's track is sampled
+// feet on the ground (owner, Nov 10: "his paws phase into the ground during several attacks"): many v110 / v112 poses lower his
+// body (crouch, coil, pounce, furrow, stagger …) without folding the legs to match, so a paw sank up to 1.3 m. Each pose is fixed
+// once at load: on a scratch rig in that pose, any paw whose sole is below its rest height gets a two-bone fix in the leg's own
+// plane — the elbow / knee bends to the reach it needs (its natural way: elbows forward, knees back), then the shoulder / hip
+// swings the paw onto the spot above where it was — and the new joint angles are written back into the pose. The moves blend
+// between fixed poses (and the follow eases them), so nothing changes at run time and nothing can pop. Mirrored poses ('~')
+// are built from the fixed ones. Lying poses (the death fall) are left alone.
+var ARG214_FT=[['shL','elL','pwL',[0,-.12,.12],-1],['shR','elR','pwR',[0,-.12,.12],-1],['hpL','knL','hkL',[0,-.57,.2],1],['hpR','knR','hkR',[0,-.57,.2],1]];
+function arg214SolveLeg(R,F,Mi){const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion();
+  const rotW=(J,W,th)=>{J.parent.getWorldQuaternion(pq);rq.setFromAxisAngle(W,th);const P=pq.clone();J.quaternion.premultiply(P).premultiply(rq).premultiply(P.invert());J.updateMatrixWorld(true)};
+  const xAx=(J,out)=>out.setFromMatrixColumn(J.matrixWorld,0).normalize(),A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);
+  e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi);if(eL.y>=F.fl-.005)return 0;const dep=F.fl-eL.y;
+  for(let it=0;it<3;it++){e.copy(o);C.localToWorld(e);const q=e.clone().applyMatrix4(Mi);t.set(q.x,F.fl,q.z).applyMatrix4(R.root.matrixWorld);
+    A.getWorldPosition(a);B.getWorldPosition(b);xAx(B,ax);const l1=a.distanceTo(b),l2=b.distanceTo(e),dT=Math.min(l1+l2-.02,Math.max(Math.abs(l1-l2)+.02,a.distanceTo(t)));
+    u.subVectors(b,a);v.subVectors(e,b);const be=Math.atan2(ax.dot(u.clone().cross(v)),u.dot(v)),need=Math.PI-Math.acos(Math.max(-1,Math.min(1,(l1*l1+l2*l2-dT*dT)/(2*l1*l2))));
+    if(need>Math.abs(be)||Math.sign(be)!==F[4]){rotW(B,ax,F[4]*need-be);e.copy(o);C.localToWorld(e)}
+    xAx(A,ax);u.subVectors(e,a);v.subVectors(t,a);u.addScaledVector(ax,-u.dot(ax));v.addScaledVector(ax,-v.dot(ax));
+    if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){let th=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)th=-th;rotW(A,ax,th)}}
+  return dep}
+function arg214FixPoses(B){if(!B||!B.P||B.fix214)return;B.fix214={};const R=svRig();arg214Joints(R);svRest(R);R.root.updateMatrixWorld(true);
+  const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert(),FT=ARG214_FT.map(f=>{const g=f.slice();const w=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi);g.fl=w.y;return g});
+  const setP=P=>{for(const k in R.J){const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,o=P[k]||[0,0,0,0,0,0];g.rotation.set(r0.x+(o[0]||0),r0.y+(o[1]||0),r0.z+(o[2]||0));g.position.set(p0.x+(o[3]||0),p0.y+(o[4]||0),p0.z+(o[5]||0))}R.root.updateMatrixWorld(true)};
+  for(const name in B.P){const P=B.P[name];if(!P||typeof P!=='object')continue;const rl=P.root||[0,0,0],bd=P.body||[0,0,0];if(Math.abs(rl[2]||0)>.6||Math.abs(bd[2]||0)>.6||Math.abs(rl[0]||0)>.6)continue;
+    setP(P);let fx=0;for(const F of FT){const d=arg214SolveLeg(R,F,Mi);if(d>0){fx=Math.max(fx,d);[F[0],F[1]].forEach(k=>{const g=R.J[k],r0=g.userData.r0,o=(P[k]||[0,0,0]).slice();o[0]=g.rotation.x-r0.x;o[1]=g.rotation.y-r0.y;o[2]=g.rotation.z-r0.z;P[k]=o})}}
+    if(fx)B.fix214[name]=+fx.toFixed(2)}
+  B._pc=null}
+// during a move, what the blend between two fixed poses still lets sink is lifted the same way at run time, the correction
+// eased (critically damped, ω ARG214.fw: a nearly straight leg needs a big bend for a small dip); it fades out as he walks
+// (unless a move is playing), so the gait (whose planted paws are already right) is never touched
+function arg214FeetRest(R){R.root.updateMatrixWorld(true);const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert();
+  R.ft214=ARG214_FT.map(f=>{const g=f.slice();g.fl=R.J[f[2]].localToWorld(new THREE.Vector3(...f[3])).applyMatrix4(Mi).y;g.qa={x:0,v:0};g.qb={x:0,v:0};return g})}
+function arg214Feet(R,S,dt){if(!R.ft214)return;
+  const V=THREE.Vector3,a=new V(),b=new V(),e=new V(),t=new V(),u=new V(),v=new V(),ax=new V(),pq=new THREE.Quaternion(),rq=new THREE.Quaternion(),w=ARG214.fw,on=S.dieM?0:Math.max(S.trk?Math.min(1,S.aw||0):0,1-a214SS(.2,.8,S.spd||0));
+  const rotW=(J,W,th)=>{J.parent.getWorldQuaternion(pq);rq.setFromAxisAngle(W,th);const P=pq.clone();J.quaternion.premultiply(P).premultiply(rq).premultiply(P.invert());J.updateMatrixWorld(true)};
+  const xAx=(J,out)=>out.setFromMatrixColumn(J.matrixWorld,0).normalize(),ease=(q,tg)=>{if(!(dt>0)||dt>.25){q.x=tg;q.v=0;return q.x}const x=q.x-tg,tp=(q.v+w*x)*dt,ex=Math.exp(-w*dt);q.v=(q.v-w*tp)*ex;q.x=tg+(x+tp)*ex;return q.x};
+  R.root.updateMatrixWorld(true);const Mi=new THREE.Matrix4().copy(R.root.matrixWorld).invert();
+  for(const F of R.ft214){const A=R.J[F[0]],B=R.J[F[1]],C=R.J[F[2]],o=new V(...F[3]);e.copy(o);C.localToWorld(e);const eL=e.clone().applyMatrix4(Mi),dn=on>0&&eL.y<F.fl;
+    t.set(eL.x,Math.max(eL.y,F.fl),eL.z).applyMatrix4(R.root.matrixWorld);A.getWorldPosition(a);B.getWorldPosition(b);xAx(B,ax);let tb=0;
+    if(dn){const l1=a.distanceTo(b),l2=b.distanceTo(e),dT=Math.min(l1+l2-.02,Math.max(Math.abs(l1-l2)+.02,a.distanceTo(t)));u.subVectors(b,a);v.subVectors(e,b);
+      const be=Math.atan2(ax.dot(u.clone().cross(v)),u.dot(v)),need=Math.PI-Math.acos(Math.max(-1,Math.min(1,(l1*l1+l2*l2-dT*dT)/(2*l1*l2))));
+      if(need>Math.abs(be)||Math.sign(be)!==F[4])tb=(F[4]*need-be)*on}
+    const xb=ease(F.qb,tb);if(Math.abs(xb)>1e-5){rotW(B,ax,xb);e.copy(o);C.localToWorld(e)}
+    let ta=0;if(dn){xAx(A,ax);u.subVectors(e,a);v.subVectors(t,a);u.addScaledVector(ax,-u.dot(ax));v.addScaledVector(ax,-v.dot(ax));
+      if(u.lengthSq()>1e-6&&v.lengthSq()>1e-6){ta=u.angleTo(v);if(ax.dot(u.clone().cross(v))<0)ta=-ta;ta=Math.max(-.6,Math.min(.6,ta))*on}}
+    const xa=ease(F.qa,ta);if(Math.abs(xa)>1e-5){xAx(A,ax);rotW(A,ax,xa)}}}
+// every pose change eased by a critically damped follow (the exact step, stable at any frame rate) (rotations and offsets of each joint); the move's track is sampled
 // ARG214.lead s ahead, which cancels the follow's lag (2/ω), so a strike still reaches its pose on the hit's beat
 function arg214Smooth(e,S,dt){const R=S.R,O=S.O,w=ARG214.w;if(!S.sm214)S.sm214={};const M=S.sm214,snap=!(dt>0)||dt>.25;
   for(const k in O){const o=O[k],q=M[k]||(M[k]={x:o.slice(),v:[0,0,0,0,0,0]});if(snap){for(let i=0;i<6;i++){q.x[i]=o[i];q.v[i]=0}continue}
-    for(let i=0;i<6;i++){const a=w*w*(o[i]-q.x[i])-2*w*q.v[i];q.v[i]+=a*dt;q.x[i]+=q.v[i]*dt}
+    const ex=Math.exp(-w*dt);for(let i=0;i<6;i++){const x=q.x[i]-o[i],tp=(q.v[i]+w*x)*dt;q.v[i]=(q.v[i]-w*tp)*ex;q.x[i]=o[i]+(x+tp)*ex}
     const g=R.J[k],r0=g.userData.r0,p0=g.userData.p0,x=q.x;g.rotation.set(r0.x+x[0],r0.y+x[1],r0.z+x[2]);g.position.set(p0.x+x[3],p0.y+x[4],p0.z+x[5])}}
 if(ARG214.on&&SVB[0]){const B=SVB[0];B.build=arg214Build;argBuild146=arg214Build;
   B.spr=Object.assign({},B.spr||{},{earL:[70,9,.6],earR:[70,9,.6],jaw:[90,12,.2],t0:[42,7,1.1],t1:[30,5.5,1.4],t2:[24,4.4,1.7],t3:[20,3.6,2],antL:[160,20,0],antR:[160,20,0]});
   const l0=B.loco;B.loco=function(e,S,O,dt,now){if(!S.R||!S.R.v214)return l0&&l0.apply(this,arguments);arg214Loco(e,S,O,dt,now)};
-  const p0=B.post;B.post=function(e,S,dt,now){try{if(S.R&&S.R.v214)arg214Smooth(e,S,dt)}catch(err){if(!ARG214.err++)console.error('v214 smooth',err)}p0&&p0.apply(this,arguments)}}
+  const p0=B.post;B.post=function(e,S,dt,now){try{if(S.R&&S.R.v214){arg214Smooth(e,S,dt);arg214Feet(S.R,S,dt)}}catch(err){if(!ARG214.err++)console.error('v214 smooth',err)}p0&&p0.apply(this,arguments)}}
 ARG214.err=0;
 // the stagger: he drops low but keeps his head (and antlers) off the floor
 if(ARG214.on&&typeof ARGP!='undefined'&&ARGP.stag){const P=ARGP.stag;P.body=[.34,0,.28,0,-.85,0];P.neck=[.28,0,.22];P.head=[.05,0,.3];if(SVB[0])SVB[0]._pc=null}
+if(ARG214.on&&SVB[0])try{arg214FixPoses(SVB[0])}catch(err){console.error('v214 feet',err)}
 // the track lead: Argus samples his move a little ahead of its clock while the follow eases toward it
 {const f=svApply;svApply=function(e,dt,now){const S=e&&e.sv;if(!S||S.i!==0||!S.R||!S.R.v214||!S.trk||!ARG214.on)return f.apply(this,arguments);const t0=S.tt;S.tt=t0+ARG214.lead;try{return f.apply(this,arguments)}finally{S.tt=t0}}}
 </script></body></html>
