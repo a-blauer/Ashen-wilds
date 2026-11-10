@@ -36,20 +36,22 @@ def s(pg):
     ok(all(c['p']) and c['q'] and c['k'] and c['y'] and c['dd'] and c['look'] and c['d']<30,'a NaN camera is put back behind the hero (%s)'%c)
     d=pg.screenshot();open(play.TMP+'/v212_white_cam.png','wb').write(d)
     ok(abs(lum(d)-lum(a))<6,'and the view looks normal again (brightness %.1f, normally %.1f)'%(lum(d),lum(a)))
-    # 2. the cause, and a fight
+    # 2. the cause: knives thrown at a held target, the shots stepped by hand (no clock, so the same on every machine)
     ev("(s)=>{(0,eval)(s)}",LIB)
-    r=json.loads(ev("""()=>{V100T.equip('knives');refreshGear(pl,hero.cls,eq);hero.iv=0;const pa=HS().pa;window.__hp=setInterval(()=>{if(hero.hp<30)hero.hp=heroMax()},200);
-      const P=pl.position,L=((n3Ins(0)||{}).L||['skeleton']);window.__dealt=0;{const h=hurt;hurt=function(e,d){if(isFinite(d))__dealt+=d;return h.apply(this,arguments)}}
-      // three targets held in place a few steps ahead (on GitHub's fast machines loose ones wandered off and the knives missed)
-      const fw=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y)),T=[];for(let i=0;i<3;i++){const x=P.x+fw.x*4+fw.z*(i-1)*1.2,z=P.z+fw.z*4-fw.x*(i-1)*1.2,e=spawnEnemy(L[i%L.length],x,z,2,{});if(e){e.c.h=e.c.st.hp=1e6;T.push({e,x,z})}}
-      window.__t=setInterval(()=>{T.forEach(o=>{o.e.m.position.set(o.x,GH(o.x,o.z),o.z);o.e.vx=o.e.vz=0;o.e.agg=0});const o=T.find(o=>!o.e.dead);if(o){tgt=o.e;atkCd=0;swing()}},350);
-      return JSON.stringify({pa:String(pa),noLv:!(eq.weapon.lv>0)})}"""))
-    pg.wait_for_timeout(9000)
-    q=json.loads(ev("""()=>{clearInterval(__t);clearInterval(__hp);const nanE=enemies.filter(e=>e.c&&!isFinite(e.c.h)).length;let nanT=0;scene.updateMatrixWorld(true);
-      scene.traverse(o=>{const e=o.matrixWorld.elements;for(let i=0;i<16;i++)if(!isFinite(e[i])){nanT++;break}});return JSON.stringify({nanE,nanT,dealt:Math.round(__dealt),throws:knN})}"""))
+    r=json.loads(ev("""()=>{V100T.equip('knives');refreshGear(pl,hero.cls,eq);const C=CLS[hero.cls],S=HS(),pa=S.pa,raw=atkOf(C.mt)*(1+S.basicP);
+      // a target held two steps ahead; knives thrown the way the knife throw launches them; the shots stepped by hand (no clock)
+      const P=pl.position,fw=new THREE.Vector3(Math.sin(pl.rotation.y),0,Math.cos(pl.rotation.y)),x=P.x+fw.x*3,z=P.z+fw.z*3,L=((n3Ins(0)||{}).L||['skeleton']);
+      const e=spawnEnemy(L[0],x,z,2,{});e.c.h=e.c.st.hp=1e6;let dealt=0;{const h=hurt;hurt=function(q,d){if(q===e&&isFinite(d))dealt+=d;return h.apply(this,arguments)}}
+      const hold=()=>{e.m.position.set(x,GH(x,z),z);e.vx=e.vz=0;e.agg=0;e.dead=false};let n=0;
+      for(let k=0;k<5;k++){hold();const d=e.m.position.clone().sub(P);d.y=0;d.normalize();shots.length=0;launch(pl.position,d,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7,knife:1},raw*WB127.knife1,.5);n++;
+        for(let i=0;i<40&&shots.length;i++){hold();shotTick(.016)}}
+      const nanE=enemies.filter(q=>q.c&&!isFinite(q.c.h)).length;let nanT=0;scene.updateMatrixWorld(true);scene.traverse(o=>{const m=o.matrixWorld.elements;for(let i=0;i<16;i++)if(!isFinite(m[i])){nanT++;break}});
+      e.dead=1;e.m.visible=false;
+      return JSON.stringify({pa:String(pa),raw:String(raw),noLv:!(eq.weapon.lv>0),dealt:Math.round(dealt),throws:n,nanE,nanT})}"""))
+    q=r
     print(json.dumps(r),json.dumps(q))
     ok(r['noLv'] and r['pa']!='NaN' and float(r['pa'])>0,'a weapon with no item level still gives a real attack (pa %s)'%r['pa'])
-    ok(q['dealt']>0 and q['throws']>=1,'the knives hurt (%s damage from %s throws)'%(q['dealt'],q['throws']))
+    ok(q['dealt']>0 and q['throws']==5,'the knives hurt (%s damage from %s throws)'%(q['dealt'],q['throws']))
     ok(q['nanE']==0 and q['nanT']==0,'no enemy has NaN health and nothing has a NaN transform after the fight (%s)'%q)
     print('FAILS',fails)
 play.run(s,w=900,hh=560)
