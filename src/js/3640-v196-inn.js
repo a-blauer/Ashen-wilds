@@ -88,8 +88,9 @@ function dm196InnOutK(k,R){const W2=DM196I.W2,D2=DM196I.D2;
   [-1,1].forEach((s,j)=>dm196Ivy(k,s*(W2+.03),D2+.03,2.9,0,1,j*4+2));dm196Ivy(k,-W2-.03,0,2.8,-1,0,7);dm196Ivy(k,W2+.03,1.4,2.8,1,0,9);
   for(let i=0;i<12;i++)dm196Moss(k,-W2+.3+i*1.15,.42,D2+.3,.9,i+40);dm196Pot(k,-1.6,D2+.7,3,1);dm196Pot(k,2.0,D2+.6,5,.9)}
 // the layout the builders and the villagers share (lot-local)
-DM196I.tables=[[-.5,-1.5],[.9,1.7],[3.4,3.0]];DM196I.bar=[-.9,-1.1];DM196I.rug=[.9,-.7];
-DM196I.lantern=[[-.5,-1.5],[.9,1.7],[-3.6,1.8],[3.4,3.0]];
+// v218: the third dining table (3.4, 3.0) made room for the Four Roads' card table (3900); its lantern hangs over that table now
+DM196I.tables=[[-.5,-1.5],[.9,1.7]];DM196I.bar=[-.9,-1.1];DM196I.rug=[.9,-.7];
+DM196I.lantern=[[-.5,-1.5],[.9,1.7],[-3.6,1.8],[3.6,2.95]];
 (function(){const S=[];DM196I.tables.forEach(([x,z],ti)=>{const n=ti==2?3:4;for(let j=0;j<n;j++){const a=(j/n)*6.283+(ti==2?.5:.785);const sx=x+Math.sin(a)*1.0,sz=z+Math.cos(a)*1.0;
     if(sz>DM196I.D2-.45||Math.abs(sx)>DM196I.W2-.5)continue;S.push({k:'chair',x:+sx.toFixed(2),z:+sz.toFixed(2),tx:x,tz:z,t:ti})}});
   const B=DM196I.bar,G=DM196I.rug;for(let i=0;i<4;i++)S.push({k:'stool',x:-4.6+i*1.05+B[0],z:-1.9+.85+B[1],tx:-4.6+i*1.05+B[0],tz:-1.9+B[1],t:-1});

@@ -28,8 +28,8 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   const [dx,dz]=lotW103(l,0,DM196I.D2);out.inn.doorCol=DM196S.col.some(c=>Math.hypot(c.x-dx,c.z-dz)<.5);if(out.inn.doorCol)F.push('the doorway is blocked');
   const [tx,tz]=T.tv;toPos(tx,tz);STEP(5);promptTick();out.inn.rest=PR&&PR.label;if(!/Rest at/.test(out.inn.rest||''))F.push('the rest prompt at the bar is gone: '+out.inn.rest)}
  // ---- the rules ----
- {const P=c=>cd213Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],0],[['lan','lan','hol'],1.5],
-    [['lan','wild','hol'],1.5],[['lan','fang','gob'],0],[['hol','wild','wild'],1.5],[['lan','fang','wild'],1.5],[['eye','wild','wild'],25]];
+ {const P=c=>cd213Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],13],[['lan','lan','hol'],1],
+    [['lan','wild','hol'],1],[['lan','gob','fang'],0],[['hol','wild','wild'],2.5],[['lan','fang','wild'],1],[['eye','wild','wild'],25]]; // v218: pairs pay by card, three Hollows wake the dead
   out.rules=C.map(([c,m])=>{const g=P(c);if(g!==m)F.push(c.join('+')+' pays ×'+g+' (want ×'+m+')');return g});
   let ret=0,win=0;const N=60000;for(let i=0;i<N;i++){const m=P([cd213Roll(),cd213Roll(),cd213Roll()]);ret+=m;if(m>0)win++}out.rtp=+(ret/N).toFixed(3);out.winRate=+(win/N).toFixed(3);
   if(!(out.rtp>.8&&out.rtp<.96))F.push('house edge off: returns '+out.rtp+' of every gold bet');if(!(out.winRate>.33&&out.winRate<.5))F.push('win rate off: '+out.winRate)}

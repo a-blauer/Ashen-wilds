@@ -116,10 +116,12 @@ function dm196Ang(x,z){return Math.atan2(x,-z)}
 // v196: the building lots in rings round the fountain, every one facing the plaza (ry = -angle). Ring A (r 15): the five first lots,
 // the Trading Post and the Inn; ring B (r 25.5): rows 1-4 (3 lots each); ring C (r 35.5): row 5 and the four kingdom buildings
 // (granary, chapel, barracks, keep: 1850). Angles in degrees; w/d = footprint half sizes for the fixed buildings.
-var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0],['NW','A',-127,0],
+var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-102,0],['NW','A',-136,0],
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
   ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
+// v218 (owner, Nov 10 2026: "scootch or rotate the blacksmith building a little so he's more accessible. The expanded tavern is kind of
+// blocking him"): lot CW (the Blacksmith's default) moved from -90 to -102 and NW from -127 to -136 to make room, clear of the v213 Inn's corner.
 var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-48,6.1,5.1,13.8],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
 function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));

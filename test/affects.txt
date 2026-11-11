@@ -133,9 +133,11 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 # v211 thrown knives are knives (spinning), and a smaller body twist in the throw (3820; the co-op shot relay 2170)
 3820|v211|3782|3455|2170|1705|knife|knives: v211_knife.py v211_coop.py v207_throws.py v186_knife.py
 # v213 owner's list: Space dash / Shift class defences, the bigger Inn, the card table (3840, 3850, 3640)
-3840|3850|3640|3650|3660|3670|v213|guard|dash|dodge|hitHero|card|inn|tavern|0045-|0005-|0108-|0740-|3200-: v213_guard.py v213_cards.py v213_coop.py v190_deco.py v199_town.py v196_meadow.py v161_keys.py v164_dodge_grip.py v206_owner.py v153_ascent.py
+3840|3850|3640|3650|3660|3670|v213|guard|dash|dodge|hitHero|card|inn|tavern|0045-|0005-|0108-|0740-|3200-: v213_guard.py v213_cards.py v213_coop.py v218_games.py v190_deco.py v199_town.py v196_meadow.py v161_keys.py v164_dodge_grip.py v206_owner.py v153_ascent.py
 # v212 NaN guards: the glow / composite skip NaN pixels, health bars, damage, hero stats and the camera repair NaN (3830, 0060, 0104, 0920)
 3830|v212|0060|0104|0920|nan|white: v212_white.py v38t.py v32t.py v110_fight.py
 v217|songs|music|0600-|3580-: v217_songs.py
 # v216 Argus rebuilt (made as v215): one skinned painted body, his own gait and the smoothing follow (3880; his moves 1971/3054, the cinematic 3800)
 3880|v216|argus|1971-|3054-|viewer/: v216_argus.py v216_coop.py v216_viewer.py v146_sovs.py v112_argus.py v209_kindlelight.py v163_fixes.py v192_sov_range.py
+# v218 games of chance at the Inn (the Ember Wheel, the Four Roads, Fate's Hand's new pays) and the Blacksmith's lot
+3900|3850|3640|0045-|v218|wheel|race|gamble: v218_games.py v213_cards.py v213_coop.py v199_town.py v196_meadow.py v190_deco.py v151_intro.py
