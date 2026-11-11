@@ -138,7 +138,7 @@ function wh218Show(i,n,th0,dur,jit){try{if(!WH218.wheel)return;const rep=typeof 
 function wh218Result(i,pay){try{const k=WH218.S[i],D=CD213.D,m=WH218.M[k],[x,y,z]=WH218.c,p=gm218W(x,y+WH218.R,z+.2);
   const L=[{t:D[k].n.toUpperCase()+'  ·  '+m+' : 1',f:'700 32px Cinzel, Georgia, serif',c:k==='crown'?'#ffb070':'#ffe2a0'}];
   if(pay!=null)L.push(pay>0?{t:'+'+pay+' gold',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}:{t:'the wheel keeps your stakes',f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'});
-  gm218Plaque('wh',L,[x+2.05,y-.1,z+.6],1.5);burst(p,0xffd24a,6,.6,.8,.4);
+  gm218Plaque('wh',L,[x+1.8,y-.35,z+.6],1.4);burst(p,0xffd24a,6,.6,.8,.4);
   if(pay>0||k==='crown'&&pay==null)gm218Win(gm218W(x,y,z+.3),k==='crown'?3:m>=5?2:1,k==='crown'?0xff8a3a:0xffd24a);if(k==='crown')wh218Snd('crown',typeof MPV!='undefined'&&MPV.rep>0?.5:1)}catch(err){if(!GM218.err++)console.warn('v218 wheel result',err)}}
 function wh218Stake(){return WH218.keys.reduce((s,k)=>s+WH218.st[k],0)}
 function wh218Add(k){if(WH218.busy||!WH218.st.hasOwnProperty(k))return;const c=WH218.chip;if(wh218Stake()+c>gold){gm218Say('wh','Your purse can’t cover that chip.',[WH218.c[0]-1.95,2.9,WH218.c[2]+.6],.0024);return}if(WH218.st[k]+c>1000)return;WH218.st[k]+=c;wh218Snd('chip');gm218Render()}
@@ -181,7 +181,7 @@ function rc218Result(seq,pick,bet){try{const r=rc218Count(seq),D=CD213.D,nm=D[RC
   rc218Lane(r.w,0xffc040,.0);const g=RC218.glow[RC218.glow.length-1],t0=nowP();kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000;g.material.opacity=Math.min(.45,a*1.5)*(.75+.25*Math.sin(a*5));return true}});
   const L=[{t:nm.toUpperCase()+(r.rout?' — A ROUT!':' TAKES THE GATE'),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'}];
   if(pick>=0)L.push(m>0?{t:'+'+win+' gold   (×'+m+')',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}:{t:'your '+D[RC218.suits[pick]].n.replace('The ','')+' falls short',f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'});
-  gm218Plaque('rc',L,[RC218.c[0]+.15,1.45,RC218.c[1]-.55],.95);RC218.armK='open';rc218Gest(m>0?'open':'sweep');
+  gm218Plaque('rc',L,[RC218.c[0]+.15,1.0,RC218.c[1]-.8],.95);RC218.armK='open';rc218Gest(m>0?'open':'sweep');
   rc218Say(gm218Pick(pick<0?RC218.say.win:m>0?(r.rout?RC218.say.rout:RC218.say.win):RC218.say.lose,nm));
   if(m>0)gm218Win(gm218W(RC218.x0+RC218.dx*RC218.goal,.85,RC218.lz[r.w]),r.rout?3:2)}catch(err){if(!GM218.err++)console.warn('v218 race result',err)}}
 function rc218Gest(k){const t0=nowP(),ms=k==='open'?1100:900;RC218.armK=k;kqFx({tick(){if(RC218.busy&&RC218.armK!==k)return false;const a=(nowP()-t0)/ms;if(a>=1){if(RC218.armK===k)RC218.arm=0;return false}RC218.armK=k;RC218.arm=Math.sin(Math.min(1,a)*Math.PI);return true}})}

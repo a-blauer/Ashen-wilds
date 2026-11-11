@@ -1,7 +1,7 @@
 // ================= v196: the Steward's decorations in the round town =================
 // v190's decorations keep their models; their places move to the round layout (town-local, angles clockwise from north):
 //  * ring A gaps (r ~17.5, between the first lots, the Trading Post and the Inn): obelisk 127°, Hero's Statue -153°, candle shrine
-//    89.5°, well -108.5°, two planters 52.5° / -71.5° (v213: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
+//    89.5°, well -119° (v218; was -108.5°), two planters 52.5° / -71.5° (v213: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
 //  * ring B gaps (r ~27.5, between the outer lots): carts and harvest piles ±61.5°, trophies 90° (one per Sovereign), groves ±147.5°,
 //    firewood -118.5°, the Elder Oak 118.5°, the Lantern Pavilion -90°, the Moonflower Gardens -32.5°, the Great Beacon 32.5°;
 //    stone benches face the first ring street at ±32.5° / 180°±40°. Until the walls reach them they stand in the meadow outside.
@@ -38,7 +38,7 @@ dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
 dc190Def('oak',{spf:F=>[dm196A(118.5,27.6)]});
 dc190Def('garden',{spf:F=>[dm196A(-32.5,27.6)]});
 dc190Def('beacon',{spf:F=>[dm196A(32.5,27.6)]});
-{const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-108.5,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
+{const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-119,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
 // stone benches along the first ring street, each facing it
 {const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(-147.5,23.2),dm196Face(-147.5)]];
   D.b=function(k,D){D.sp.forEach(([x,z,ry])=>k.at(x,0,z,()=>{dc190B(k,'c',0x77737c,1.55,.1,.46,0,.47,0,0,'ashlar',.02);
@@ -49,7 +49,7 @@ function dm196Move(key,from,to,rot){const D=DECO103.find(q=>q.k==key);if(!D||!D.
   D.b=function(k){const at=k.at;let dep=0;k.at=function(x,y,z,fn,ry){if(dep==0&&Math.abs(x-from[0])<.05&&Math.abs(z-from[1])<.05){dep++;try{return at.call(k,to[0],y,to[1],fn,rot)}finally{dep--}}dep++;try{return at.call(k,x,y,z,fn,ry)}finally{dep--}};
     try{return b0.apply(this,arguments)}finally{k.at=at}};D.b.v196=1;D.col=function(){return [[to[0],to[1],1.0]]}}
 dm196Move('shrine',[14.6,6.4],dm196A(89.5,17.4),dm196Face(89.5));
-dm196Move('well',[-17.4,2.0],dm196A(-108.5,17.3),dm196Face(-108.5));
+dm196Move('well',[-17.4,2.0],dm196A(-119,17.3),dm196Face(-119)); // v218: the gap between lots CW and NW moved with them (was -108.5)
 // ---------------- along the round walls ----------------
 dc190Def('banner',{b(k,D,W){dm196WallsNow();const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
     const [x,z]=dm196A(d,r-.06);dc190Banner(k,x,y,z,dm196Face(d),i%2?ban:C.blk,.62,h,i%2?C.brass:C.bone,1)})}});
@@ -58,10 +58,10 @@ dc190Def('ivy',{b(k,D,W){dm196WallsNow();const L=[0x24402a,0x2e4a30,0x35602e,0x1
     if(P.length<2)return;dc190Tube(k,'c',0x3a2e20,P,P.map((_,j)=>.028-j*.003),5,'bark');const a=d*Math.PI/180,ox=-Math.sin(a),oz=Math.cos(a);
     P.forEach((p,j)=>{dc190Clump(k,L[(i+j)%4],p[0]+ox*.05,p[1]+.05,p[2]+oz*.05,.22,.24,.22,i+j,'leaf',0);if(j%2==0)dc190Clump(k,L[(i+j+1)%4],p[0]+ox*.04,p[1]-.15,p[2]+oz*.04,.18,.17,.18,i+j+3,'leaf',0)})})}});
 // pennant strings between poles at the plaza's edge, in the gaps between the first lots' doors
-dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-108.5,-150]].forEach(([d0,d1],j)=>{const a=dm196A(d0,10.6),b=dm196A(d1,10.6),y=3.7;[a,b].forEach(([x,z])=>{dc190Rod(k,'c',C.woodD,[x,0,z],[x,3.85,z],.06,'wood',8,.8);dc190L(k,'m',C.iron,[[0,0],[.06,0],[.05,.06],[0,.12]],8,x,3.82,z,0,1,'iron')});
+dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-119,-150]].forEach(([d0,d1],j)=>{const a=dm196A(d0,10.6),b=dm196A(d1,10.6),y=3.7;[a,b].forEach(([x,z])=>{dc190Rod(k,'c',C.woodD,[x,0,z],[x,3.85,z],.06,'wood',8,.8);dc190L(k,'m',C.iron,[[0,0],[.06,0],[.05,.06],[0,.12]],8,x,3.82,z,0,1,'iron')});
     const Y=t=>y-.22*Math.sin(t*PI2),P=[];for(let i=0;i<=8;i++)P.push([a[0]+(b[0]-a[0])*i/8,Y(i/8),a[1]+(b[1]-a[1])*i/8]);dc190Tube(k,'c',0x2a2420,P,.011,4,'plain');
     const ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);for(let i=0;i<9;i++){const t=(i+.5)/9;dc190Ext(k,'c',[C.crim,C.blk,0xb8ac90,0x5a1820][(i+j)%4],'pen',[[-.15,0],[.15,0],[0,-.36]],.02,dt168Mx(a[0]+(b[0]-a[0])*t,Y(t)-.01,a[1]+(b[1]-a[1])*t,.08*Math.sin(i*2.1),ry,0),'cloth')}})},
-  col(){const o=[];[52.5,90,127,-108.5,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
+  col(){const o=[];[52.5,90,127,-119,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
 // flower baskets on the lantern posts along the walls (the arm points toward the plaza)
 dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-1.8).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
     dc190Rod(k,'m',C.iron,[x+ux*.05,1.86,z+uz*.05],[bx,1.86,bz],.012,'iron',4);for(let j=0;j<3;j++){const q=j/3*6.283;dc190Rod(k,'m',C.iron,[bx,1.86,bz],[bx+Math.cos(q)*.15,1.5,bz+Math.sin(q)*.15],.004,'iron',3)}

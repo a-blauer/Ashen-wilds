@@ -46,7 +46,7 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
     if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=sp2&&sp2.ry!=null?sp2.ry:C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
-  const route=dm196IntroRoute(sp,npcSt,CS); // v196: legs found on the round town's walking grid (3670)
+  const route=dm196IntroRoute(sp,npcSt,CS,D.npc.map(n=>[n.w.x,n.w.z])); // v218: the town folk's own spots, for the walk to step round // v196: legs found on the round town's walking grid (3670)
   for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=route[route.length-1][route[route.length-1].length-1].slice();
   {const R=route[route.length-1],a=R[R.length-2],b=R[R.length-1];D.endYaw=Math.atan2(b[0]-a[0],b[1]-a[1])}
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not

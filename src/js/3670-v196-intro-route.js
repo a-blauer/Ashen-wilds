@@ -5,7 +5,7 @@
 // two legs lead to the north gate and out toward Portal I's entryway, where the game begins (D.ref ahead, D.endYaw facing it).
 function dm196IntroInn(){const l=DM196I.l;return l?lotW103(l,-3.5+DM196I.bar[0]+.9,.2+DM196I.bar[1]):TOWNS[0].tv}
 function dm196IntroRef(){return dm196Ent(0,DM196.RM-1)}
-function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!P||P.length<3)return P;const o=[P[0]];for(let i=1;i<P.length-1;i++){const a=o[o.length-1],b=P[i],c=P[i+1];
+function dm196IntroRoute(sp,npcSt,CS,folk){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!P||P.length<3)return P;const o=[P[0]];for(let i=1;i<P.length-1;i++){const a=o[o.length-1],b=P[i],c=P[i+1];
       const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);if(Math.abs(cr)>.05||Math.hypot(b[0]-a[0],b[1]-a[1])>4)o.push(b)}o.push(P[P.length-1]);return o};
   const go=(a,b)=>{const P=czPath103(a[0],a[1],b[0],b[1]);return simp(P&&P.length>1?P:[a,b])};
   const l=DM196I.l,door=l?lotW103(l,0,DM196I.D2+1.4):null,inD=l?lotW103(l,0,DM196I.D2-1.6):null;
@@ -20,6 +20,12 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   // v198: the cut lands outside Portal I's own exit (v196: the north gate)
   // the cut: outside Portal I's exit in the walls, a few steps on toward its entry (on the exit's cleared way)
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
+  // v218: the walking grid has no room for the town folk themselves (folk: where the Steward, Innkeeper, Blacksmith and Merchant
+  // stand); since the Blacksmith's lot moved (0045) the forge's leg passed through the Steward: any leg that comes within 1 m of
+  // one of them steps round
+  (folk||[]).forEach(c=>legs.forEach(L=>{for(let pass=0;pass<3;pass++){let hit=-1,q=null;for(let i=0;i+1<L.length;i++){const a=L[i],b=L[i+1],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz||1e-9,u=Math.max(0,Math.min(1,((c[0]-a[0])*dx+(c[1]-a[1])*dz)/l2)),p=[a[0]+dx*u,a[1]+dz*u];
+      if(Math.hypot(p[0]-c[0],p[1]-c[1])<1.0&&u>0&&u<1){hit=i;q=p;break}}if(hit<0)break;
+    let nx=q[0]-c[0],nz=q[1]-c[1],nl=Math.hypot(nx,nz);if(nl<1e-3){const a=L[hit],b=L[hit+1];nx=-(b[1]-a[1]);nz=b[0]-a[0];nl=Math.hypot(nx,nz)||1}L.splice(hit+1,0,[c[0]+nx/nl*1.35,c[1]+nz/nl*1.35])}}));
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}
 // the town part is replayed exactly by the intro preview (v159): its random choices (a companion sniffing about while the hero
 // talks, the town folk's errands) come from a generator seeded by the intro's clock, and the preview's reset puts back the
