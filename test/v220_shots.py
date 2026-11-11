@@ -10,7 +10,7 @@ def s(pg):
     def want(n):return not ONLY or n in ONLY
     ev("()=>{TOD=.3;gold=1e6;window.__r=[]}")
     if want('plates'):
-        ev("()=>{const s=SHM.st;pl.position.set(s.x+1.5,pl.position.y,s.z+3.2);camYaw=0.4;camDist=6;snapCam()}");shot('plates')
+        ev("()=>{const s=SHM.st;pl.position.set(s.x+1.2,pl.position.y,s.z+2.6);camYaw=0.5;camDist=4.6;camPitch=.12;snapCam()}");shot('plates')
     if want('hold'):
         ev("()=>{const s=SHM.st;pl.position.set(s.x+.6,pl.position.y,s.z+2);snapCam();openX('hold')}");shot('hold',2200);ev("()=>closeX()")
     if want('post'):
@@ -39,6 +39,6 @@ def s(pg):
         pg.keyboard.press('1');shot('talk3',1500);pg.keyboard.press('Escape');pg.wait_for_timeout(1500)
         print('closed',json.dumps(ev("()=>({mode:xwMode,st:MQ143.st,vis:pl.visible,im:!!IM220.on,cls:document.body.className})")))
     if want('card'):
-        ev("()=>{zt116Ins(INSL[insG(0,0)]);banner('LEVEL 2','Warrior · +3 attribute points (C)','Half of your health and mana restored')}");shot('card',1200);shot('card2',1800)
-        print('q',json.dumps(ev("()=>({cur:TQ220.cur&&TQ220.cur.k,q:TQ220.q.length,card:$('ztc116').className,ban:$('banner').children.length,txt:$('ztc116').textContent})")))
+        ev("()=>{const st=setTimeout;window.setTimeout=()=>0;try{zt116Ins(INSL[insG(0,1)])}finally{window.setTimeout=st}const c=$('ztc116');c.querySelectorAll('*').forEach(e=>e.style.animation='none');c.style.animation='none';c.style.opacity=1}");shot('card',400)
+        ev("()=>{const c=$('ztc116');c.style.cssText='';c.className='';TQ220.q.length=0;TQ220.cur=null;const st=setTimeout;window.setTimeout=()=>0;try{banner('LEVEL 2','Warrior · +3 attribute points (C)','Half of your health and mana restored')}finally{window.setTimeout=st}$('banner').querySelectorAll('*').forEach(e=>e.style.animation='none')}");shot('banner',300)
 play.run(s,w=W,hh=H)
