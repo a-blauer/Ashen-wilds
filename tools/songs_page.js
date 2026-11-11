@@ -2,7 +2,7 @@
 // v215: builds the soundtrack listening page (dist/songs/index.html) from the game's own music code, so what the
 // owner hears on the page is exactly what the game plays. Run: node tools/songs_page.js
 const fs=require('fs'),path=require('path'),R=path.join(__dirname,'..'),J=f=>fs.readFileSync(path.join(R,'src/js',f),'utf8');
-const m79=J('0600-v79-music-more-sound-effects-all.js'),t193=J('3580-v193-blade-title.js'),s215=J('3870-v215-place-songs.js');
+const m79=J('0600-v79-music-more-sound-effects-all.js'),t193=J('3580-v193-blade-title.js'),s215=J('3890-v217-place-songs.js');
 const cut=(s,a,b)=>{const i=s.indexOf(a),j=s.indexOf(b,i);if(i<0||j<0)throw new Error('marker not found: '+a+' … '+b);return s.slice(i,j)};
 const engine=[
  'var SET={mus:.55,sfxV:1},AUD=null,pl=null;function muWant(){return null}function muSwitch(){}',

@@ -217,7 +217,7 @@ function bossPhase(e,ph){const S=e.sv;if(S.ph===ph)return;S.ph=ph;e.bs.ph=ph;if(
 function bossClean(e){const S=e.sv;
   if(e.gb151)try{if(S.rlk)gb151RlkClose(e);S.rp=null;S.rpN=0;S.shell=0;S.crk=0;S.chg=0;S.chgT=0;S.dr=0;gb151HandRock(e,false);gb151ShelterClear()}catch(err){console.warn('viewer gb clean',err)}
   if(e.qs165)try{qs165HeartClear();qs165SlabClear();S.melt=0;S.chg=0;S.chgT=0}catch(err){console.warn('viewer qs clean',err)}}
-function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv,D=S.B.M[id];if(!D)return;
+function bossPlay(id){const e=bossGet(),B=KV.boss;if(!e)return;KV.bw=null;const S=e.sv,D=S.B.M[id];if(!D)return;
   svEndMove(e,true);S.mv=null;S.stg=0;S.inv=0;S.cd={};S.rt=null;S.plan=null;S.force=null;S.dieM=0;KV.die=null;bossClean(e);
   enemies.slice().forEach(q=>{if(q.minion&&!q.dead)try{removeE(q)}catch(_){}});
   if((D.ph||1)>1&&S.ph<2)bossPhase(e,2);
@@ -238,9 +238,22 @@ function bossActions(){const B=KV.boss,e=B&&B.e,out=[];if(!e)return out;const S=
   sig.forEach(id=>add(id,'Signature','✴️'));sub.forEach(id=>{if(S.B.M[id])add(id,'Signature','↪️')});
   ['intro','stagger','broken','reach141'].forEach(id=>{if(S.B.M[id])add(id,'Other',{intro:'🎬',stagger:'💫',broken:'💔',reach141:'🎯'}[id])});
   if(S.B.die)out.push({k:'bdie',g:'Other',i:'💀',t:'Defeat',s:'Its fall (the body stays: this is a preview)',ms:3400,run(){bossDie()}});
+  const ai=S.B.ai||{},wv=ai.walk||2.2,rv=ai.run||Math.max(wv*1.6,3.6);
+  out.push({k:'bidle',g:'Movement',i:'🫁',t:'Idle',s:'Standing at rest: breathing, looking round',ms:6000,run(){bossPlay0();KV.bw=null}});
+  out.push({k:'bwalk',g:'Movement',i:'🚶',t:'Walk',s:'Pacing back and forth at its walk ('+(+wv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(wv,9000)}});
+  out.push({k:'brun',g:'Movement',i:'🏃',t:'Run',s:'Pacing back and forth at its run ('+(+rv.toFixed(1))+' m/s)',ms:9000,run(){bossPace(rv,9000)}});
   return out}
+// Movement (v215): stop any move and stand on the mark, or pace 11 m ahead and back
+function bossPlay0(){const e=bossGet(),B=KV.boss;if(!e)return;const S=e.sv;svEndMove(e,true);S.mv=null;S.stg=0;bossClean(e);e.m.position.set(B.c.x,e.m.position.y,B.c.z);e.m.rotation.y=B.Y0}
+function bossPace(v,ms){const e=bossGet(),B=KV.boss;if(!e)return;bossPlay0();const a=B.Y0,c=B.c,d=Math.min(11,(B.R||12)*.8);
+  KV.bw={e,v,leg:false,a:V(c.x,0,c.z),b:V(c.x+Math.sin(a+Math.PI/2)*d,0,c.z+Math.cos(a+Math.PI/2)*d),end:now_()+ms-400};
+  KV.home.hero=V(c.x+Math.sin(a)*(d*.5+9),0,c.z+Math.cos(a)*(d*.5+9));placeHero(KV.home.hero);hero.iv=0}
 // the AI held still: no moves of its own, no stalking, no retreats; between moves it walks back to its mark and faces the hero
 function kvBossIdle(e,dt){const S=e.sv,m=e.m,h=KV.home.boss,ai=S.B.ai||{};S.rt=null;S.plan=null;S.force=null;S.rest=Math.max(S.rest||0,.5);let sp=0;
+  // Movement (v215): pace to a point ahead and back at the boss's own walk or run speed, so its gait can be watched
+  const W=KV.bw;if(W&&W.e===e&&now_()<W.end&&!S.mv){const tg=W.leg?W.a:W.b,dx=tg.x-m.position.x,dz=tg.z-m.position.z,L=Math.hypot(dx,dz);
+    if(L<.8)W.leg=!W.leg;else{const ya=Math.atan2(dx,dz),da=svAng(ya-m.rotation.y);m.rotation.y+=Math.max(-(ai.turn||2)*dt,Math.min((ai.turn||2)*dt,da));
+      sp=W.v*Math.max(.15,1-Math.abs(da)/1.4);walkM(m,Math.sin(m.rotation.y)*sp*dt,Math.cos(m.rotation.y)*sp*dt)}S.walkSp=sp;return}
   if(h){const dx=h.x-m.position.x,dz=h.z-m.position.z,L=Math.hypot(dx,dz);
     if(L>.7){const ya=Math.atan2(dx,dz),da=svAng(ya-m.rotation.y);m.rotation.y+=Math.max(-3*dt,Math.min(3*dt,da));if(Math.abs(da)<1.2){sp=Math.min(ai.walk||2.2,L*2.5);walkM(m,dx/L*sp*dt,dz/L*sp*dt)}}
     else{const da=svAng(svYawTo(m,pl.position)-m.rotation.y);m.rotation.y+=Math.max(-2*dt,Math.min(2*dt,da))}}

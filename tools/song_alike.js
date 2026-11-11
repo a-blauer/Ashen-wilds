@@ -3,7 +3,7 @@
 // same figure (same rhythm and the same steps relative to the bar's chord). Also lists chord sequences and endings used by
 // more than one song. Run: node tools/song_alike.js [--fail]   (--fail: exit 1 when the limits below are broken)
 const fs=require('fs'),path=require('path'),R=path.join(__dirname,'..'),J=f=>fs.readFileSync(path.join(R,'src/js',f),'utf8');
-const m79=J('0600-v79-music-more-sound-effects-all.js'),t193=J('3580-v193-blade-title.js'),s=J('3870-v215-place-songs.js');
+const m79=J('0600-v79-music-more-sound-effects-all.js'),t193=J('3580-v193-blade-title.js'),s=J('3890-v217-place-songs.js');
 const cut=(x,a,b)=>x.slice(x.indexOf(a),x.indexOf(b,x.indexOf(a)));
 const code='var SET={mus:.55,sfxV:1},AUD=null,pl=null;function muWant(){return null}function muSwitch(){}function setInterval(){}var document={addEventListener(){}};'+
   cut(m79,'var MU=','// ---------- what should be playing now').replace(/^const /gm,'var ')+cut(t193,'function muCello(','var BT193M=')+cut(t193,'function muCelesta(','var BT193C=')+s+';return {MTH,mu215Tune}';
