@@ -9,17 +9,13 @@ const engine=[
  cut(m79,'var MU=','// ---------- what should be playing now'),
  cut(t193,'function muCello(','var BT193M='),
  cut(t193,'function muCelesta(','var BT193C='),
- s215,
- fs.readFileSync(path.join(R,'tools/trial/argus215.js'),'utf8'),
- 'SM215.D='+JSON.stringify((()=>{const D={},S=path.join(R,'tools/samples/fluidr3');for(const k of fs.readdirSync(S)){if(!fs.statSync(path.join(S,k)).isDirectory())continue;D[k]={};
-   for(const f of fs.readdirSync(path.join(S,k)))D[k][parseInt(f)]=fs.readFileSync(path.join(S,k,f)).toString('base64')}return D})())+';'].join('\n');
+ s215].join('\n');
 const ZONES=[
- ['Kindlelight','A drowned bog: low, sparse and cold.',[['z0','Field I','The zone’s first song, unchanged.',1],
+ ['Kindlelight','A drowned bog: low, sparse and cold.',[['z0','Field I','Rewritten melody. The same bog sound as before, but the tune is now written, not improvised: a slow falling three-note figure, repeated on each chord and brought home.',1],
   ['z0b','Field II · The Glowmire Hollows','Glowing caves. Slow glassy notes over a deep hum, with water drops echoing off the walls.'],
-  ['z0c','Field III · The Rotwood','A rotting forest. A low cello sings over a plucked lute while the wind moves through dead trees.'],
+  ['z0c','Field III · The Rotwood','Rewritten melody. A cello climbs three steps, climbs again, then walks back down to the home note, over the plucked lute and wind.'],
   ['z0d','The Den · Argus','Very slow and close. A heartbeat drum, a tolling bell and a low choir that never quite settles.'],
-  ['z0x','Sovereign fight \u00b7 Argus','B minor. Stalking: short stabbing brass notes with gaps between them, like eyes blinking open. Each phrase lands hard on the home note, then long brass takes over.'],
-  ['z0x2','Sovereign fight \u00b7 Argus \u00b7 TRIAL with real instruments','The same stabbing theme as the row above, grown into a full 75-second piece and played on recorded instruments: low strings driving underneath, horns and trombones on the theme, then trumpets and a choir joining, a quieter middle where the strings take the tune, a build with rolling kettledrums, and the theme at full strength with bells. Takes a moment to load the first time.'],
+  ['z0x','Sovereign fight \u00b7 Argus','Rewritten to be menacing. B minor in the bog\u2019s dark scale: low brass holds one note and crawls a half-step up and back, over a steady pounding bass, heavy slow drums and a tolling bell.'],
   ['z0m','Mini boss fight \u00b7 Vorraxis','B minor. A grinding march with a low horn, a lurching bass and dripping ooze. Each phrase comes home.']]],
  ['Hillside Crest','Windswept plains: open and bright.',[['z1','Field I','The zone’s first song, unchanged.',1],
   ['z1b','Field II · Mistmere','Misty lakes. A gentle flute over rolling harp notes.'],
@@ -31,31 +27,31 @@ const ZONES=[
   ['z1m','Mini boss fight \u00b7 Hillside Crest','G minor. A whistle tune over galloping drums, for any mini boss in this zone.']]],
  ['Burningeye Summit','A frozen peak under a burning sky.',[['z2','Field I','The zone’s first song, unchanged.',1],
   ['z2b','Field II · The Rimecaverns','Ice caverns. Slower and crystalline: falling glassy notes, tiny chimes and meltwater drops.'],
-  ['z2c','Field III · Stormcrown','The peak in a blizzard. A stern low horn pushing through howling wind.'],
+  ['z2c','Field III · Stormcrown','Rewritten melody. A horn call climbs the chord, is answered falling, and each phrase ends on the home note, through howling wind.'],
   ['z2d','The Den · The Rime Wraith','Cold and still. Choir, bells, a heartbeat drum and a thin wind.'],
   ['z2x','Sovereign fight \u00b7 The Rime Wraith','E minor, the one cold fight. A slow choir held over frantic drums, each phrase pulled firmly home; then shards of ice fall in glassy notes.'],
   ['z2m','Mini boss fight \u00b7 Gorthrak','E minor. Heavy and slow-footed: low brass over big, spaced drum hits and wind.']]],
- ['Searing Sands','Desert: reed pipe and oud.',[['z3','Field I','The zone’s first song, unchanged.',1],
-  ['z3b','Field II · The Sunken Temple','A buried temple. A solemn, ceremonial flute over a slow hand drum; the reed answers it.'],
-  ['z3c','Field III · The Salt Wastes','Empty salt flats. Long, lonely reed notes over a wide hum, with a faint shimmer.'],
+ ['Searing Sands','Desert: reed pipe and oud.',[['z3','Field I','Rewritten melody. The same desert sound, but with a written caravan tune: a long-short-long marching figure that repeats on each chord.',1],
+  ['z3b','Field II · The Sunken Temple','Rewritten melody. Now a chant: the flute repeats one note, steps up and falls back, lower each time until it is home; the reed answers.'],
+  ['z3c','Field III · The Salt Wastes','Rewritten melody. One long, slow line that sinks step by step down the scale to the home note, over the wide hum and wind.'],
   ['z3d','The Den · Ssith’ra','A slow desert choir over a heartbeat drum and a dry rattle.'],
-  ['sp_sandrun','The Sandstorm Run','A race through the storm. Faster and harder now: hand drums, war drum, a racing reed and roaring wind.'],
+  ['sp_sandrun','The Sandstorm Run','Rewritten melody. A driving figure of three quick repeated notes and a leap, hammered out again and again as the chords change.'],
   ['z3x','Sovereign fight \u00b7 Ssith\u2019ra','The desert scale, whose home chord is major. A reed pipe winding in fast runs over hand drums, each run ending on the home note.'],
-  ['z3m','Mini boss fight \u00b7 Qarsul','The desert scale. Hand drums and a snaking reed pipe.']]],
- ['The Dirge','A haunted graveyard: bells and a hollow choir.',[['z4','Field I','The zone’s first song, unchanged.',1],
-  ['z4b','Field II · The Drowned Crypts','Flooded vaults. Very slow glassy notes, low bells and dripping water.'],
-  ['z4c','Field III · The Ossuary Fields','Plains of bones. A cello lament over a dry, rattling march.'],
-  ['z4d','The Den · The Bloated One','The slowest song in the game. A heavy hum, tolling bells and a choir.'],
-  ['sp_sanctum','The Hidden Sanctum','A sacred, hidden place. Single bell notes, then a choir, with nothing underneath but a soft glow.'],
-  ['sp_channel','The Black Channel','Rewritten in C minor. A harp rolls the same steady wave every bar under a low cello, and every phrase ends by coming home. Nothing random in it now.'],
+  ['z3m','Mini boss fight \u00b7 Qarsul','Rewritten. Low brass instead of the reed: a lurching two-note riff that pushes up a half-step and falls back, over a heavy drum.']]],
+ ['The Dirge','A haunted graveyard: bells and a hollow choir.',[['z4','Field I','Redone. Now in C minor: a slow funeral march sung by a choir, the same two-note step repeated, with a bell tolling every other bar.',1],
+  ['z4b','Field II · The Drowned Crypts','Redone. Glassy notes fall three at a time like drops, the same shape on each chord, over a soft rippling figure and a slow bell.'],
+  ['z4c','Field III · The Ossuary Fields','Redone in C minor. A cello lament that leans and sinks, the same sighing rhythm each bar, over the dry rattle.'],
+  ['z4d','The Den · The Bloated One','Redone. A low choir on long single notes, a heartbeat drum and a bell tolling every two bars.'],
+  ['sp_sanctum','The Hidden Sanctum','Redone in C minor. A plain hymn: the flute moves in slow even steps, then a choir sings it higher. A soft bell every four bars.'],
+  ['sp_channel','The Black Channel','Redone again. A rocking, boat-like cello tune in even steps, up and back down, over a slow harp figure.'],
   ['z4x','Sovereign fight \u00b7 The Bloated One','C minor. Sheer weight: a huge stomping drum, tolling bells and a low horn; then a choir above it.'],
   ['z4m','Mini boss fight \u00b7 The Dirge','C minor, like its Sovereign: a cello march with bells.']]],
  ['The Citadel','The vampire court: organ, brass and harpsichord.',[['z5','Field I','The zone’s first song, unchanged.',1],
   ['z5b','Field II · The Outer Ramparts','The siege camp. A march: snare and war drum under a brass call.'],
-  ['z5c','Field III · The Inner Keep','Moonlit halls. A quick harpsichord under an elegant, sinister violin line.'],
+  ['z5c','Field III · The Inner Keep','New melody. One elegant figure with a quick turn in it, repeated on each chord of the harpsichord, then sinking to the home note.'],
   ['z5d','The Den · Lord Vaelric','The court’s organ, slow and grand, with a choir and a heartbeat drum.'],
-  ['z5x','Sovereign fight \u00b7 Lord Vaelric','C minor. The court at war: a furious harpsichord and a violin running in quick patterns down the chords, then grand, grim brass.'],
-  ['z5m','Mini boss fight \u00b7 Vharog','C minor. Snarling low brass over a stuttering bass and a quick harpsichord.']]]];
+  ['z5x','Sovereign fight \u00b7 Lord Vaelric','Rewritten to be dark. Slower and heavier: the harpsichord is gone, low brass descends through a grim falling line over an organ, a pounding bass and a tolling bell; then a choir.'],
+  ['z5m','Mini boss fight \u00b7 Vharog','Rewritten to be dark. Low brass snarls a tight riff around one note and its half-step neighbour, over hard drums.']]]];
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 let rows='';ZONES.forEach(([zn,zd,L])=>{rows+=`<section class="zone"><header><h2>${esc(zn)}</h2><p>${esc(zd)}</p></header><ul>`+
   L.map(([k,n,d,old])=>`<li class="song${old?' old':''}" data-k="${k}"><button class="play" id="play-${k}" aria-pressed="false" aria-label="Play ${esc(n)}"><span class="ico"></span></button><div class="txt"><h3>${esc(n)}${old?'':' <span class="new">new</span>'}</h3><p>${esc(d)}</p><span class="meta"></span></div></li>`).join('')+'</ul></section>'});
@@ -95,8 +91,7 @@ h3{font-family:var(--body);font-weight:600;font-size:1.0625rem;margin:0;display:
 <main>
 <div>
 <h1>Kill Quest: a song for every instance</h1>
-<p class="lede">35 new songs: one for each place that had none of its own, plus a fight song for every Sovereign and for the mini bosses of every zone. Each keeps the musical scale of its zone, so it still sounds like the same land. Press a button to listen. The rows marked "Field I" are the songs you already have, here so you can compare.</p>
-<p class="lede">Recorded instrument samples in the trial row: Fluid (R3) SoundFont by Frank Wen, Creative Commons Attribution 3.0.</p>
+<p class="lede">35 new songs: one for each place that had none of its own, plus a fight song for every Sovereign and for the mini bosses of every zone. Each keeps the musical scale of its zone, so it still sounds like the same land. Press a button to listen. The rows marked "Field I" are the first song of each zone.</p>
 <div class="opts"><label><input type="checkbox" id="opt-fight"> Play as if a fight is going on (adds drums)</label><label>Volume <input type="range" id="opt-vol" min="0" max="1" step="0.01" value="0.6"></label></div>
 </div>
 ${rows}
@@ -107,17 +102,17 @@ ${engine}
 <script>
 (function(){
 var cur=null,ctx=null,timer=null;
-var kName={cel:'celesta',bell:'bell',pluck:'plucked strings',flute:'flute',cello:'cello',reed:'reed pipe',brass:'brass',horn:'horn',whistle:'whistle',choir:'choir'};
-document.querySelectorAll('.song').forEach(function(li){var th=MTH[li.dataset.k],T=th.tune;li.dataset.base=th.bpm+' bpm'+(th.samples?' \\u00b7 recorded instruments \\u00b7 44 bars':T?' \\u00b7 melody: '+kName[T.k]+(T.kb?', then '+kName[T.kb]:''):' \\u00b7 melody improvised');li.querySelector('.meta').textContent=li.dataset.base});
+var kName={cel:'celesta',bell:'bell',pluck:'plucked strings',flute:'flute',cello:'cello',reed:'reed pipe',hollow:'hollow pipe',brass:'brass',horn:'horn',whistle:'whistle',choir:'choir'};
+document.querySelectorAll('.song').forEach(function(li){var th=MTH[li.dataset.k],T=th.tune;li.dataset.base=th.bpm+' bpm'+(T?' \\u00b7 melody: '+kName[T.k]+(T.kb?', then '+kName[T.kb]:''):' \\u00b7 melody improvised');li.querySelector('.meta').textContent=li.dataset.base});
 function vol(){if(MU.g)MU.g.gain.setTargetAtTime(Math.pow(+document.getElementById('opt-vol').value,1.5)*.9,ctx.currentTime,.05)}
 function mark(){document.querySelectorAll('.song').forEach(function(li){var on=li.dataset.k===cur;li.classList.toggle('on',on);li.querySelector('.play').setAttribute('aria-pressed',on);if(!on)li.querySelector('.meta').textContent=li.dataset.base})}
 function tick(){if(!MU.th)return;var now=ctx.currentTime;MU.int=document.getElementById('opt-fight').checked?1:0;
   if(MU.t<now-.1)MU.t=now+.05;
   while(MU.t<now+.3){muStep(MU.t);MU.t+=60/MU.th.bpm/4;if(++MU.s>=16){MU.s=0;MU.bar++}}
-  var li=document.querySelector('.song.on');if(li){if(MU.th.samples){var B=AR215.bars[MU.bar%AR215.n],nm={intro:'intro',A:'theme',A2:'theme with trumpets and choir',B:'quiet middle',build:'build',C:'theme at full strength',out:'close'};li.querySelector('.meta').textContent=li.dataset.base+' \\u00b7 bar '+(MU.bar%AR215.n+1)+' \\u00b7 '+nm[B.sec];return}var th=MU.th,T=th.tune,n=th.prog.length,part=T?T.form[Math.floor(MU.bar/n)%T.form.length]:'';
+  var li=document.querySelector('.song.on');if(li){var th=MU.th,T=th.tune,n=th.prog.length,part=T?T.form[Math.floor(MU.bar/n)%T.form.length]:'';
     li.querySelector('.meta').textContent=li.dataset.base+' \\u00b7 bar '+(MU.bar+1)+(T?' \\u00b7 '+(part=='-'?'no melody (resting)':'melody part '+part):'')}}
 function start(k){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();muInit(ctx,ctx.destination)}
-  if(ctx.state!='running')ctx.resume();vol();if(MTH[k].samples&&!SM215.ok){cur=k;mark();var li0=document.querySelector('.song.on .meta');if(li0)li0.textContent='Loading the instruments\u2026';SM215.load(ctx).then(function(){if(cur===k){cur=null;start(k)}});return}var now=ctx.currentTime;
+  if(ctx.state!='running')ctx.resume();vol();var now=ctx.currentTime;
   MU.xg.gain.cancelScheduledValues(now);MU.xg.gain.setTargetAtTime(0,now,.08);
   cur=k;mark();MU.th=null;clearTimeout(start.to);
   start.to=setTimeout(function(){var n=ctx.currentTime;MU.th=MTH[k];MU.s=0;MU.bar=0;MU.phr=null;MU.t=n+.05;MU.xg.gain.cancelScheduledValues(n);MU.xg.gain.setValueAtTime(0,n);MU.xg.gain.setTargetAtTime(1,n+.05,.3)},450);
