@@ -1,4 +1,4 @@
-// ================= v220 talking to people: conversations and shopkeepers in the world =================
+// ================= v221 (made as v220, names *220) talking to people: conversations and shopkeepers in the world =================
 // Owner (Nov 11 2026): "we use ui popup menus to handle most shops, main quest dialogue and interactions. Doing this kind of
 // kills immersion - id rather have a more interactive interaction where we actually talk to the npc for the quest and it shows
 // pop up dialogue that we navigate through, and a camera focused on them like we're talking to them. In shops, I want it to

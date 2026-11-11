@@ -1,6 +1,6 @@
 # v220 pictures: nameplates, a shop with its keeper, a conversation, a title card.  ONLY=a,b picks scenes.  W/H = window size.
 import os,json,play
-W=int(os.environ.get('W','1280'));H=int(os.environ.get('H','720'));ONLY=[s for s in os.environ.get('ONLY','').split(',') if s];TAG=os.environ.get('TAG','v220')
+W=int(os.environ.get('W','1280'));H=int(os.environ.get('H','720'));ONLY=[s for s in os.environ.get('ONLY','').split(',') if s];TAG=os.environ.get('TAG','v221')
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=%s]'%os.environ.get('DEV','desktop'),timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)

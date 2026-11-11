@@ -1,5 +1,5 @@
 # v220 co-op: a partner's nameplate is the new fitted plate, and your shop / talk view is yours only (the partner keeps
-# seeing your hero at the counter).   Run: python3 v220_coop.py   (opens the two co-op windows through mpt.py)
+# seeing your hero at the counter).   Run: python3 v221_coop.py   (opens the two co-op windows through mpt.py)
 if 'A' not in globals():
     import os,sys,subprocess;sys.exit(subprocess.call([sys.executable,os.path.join(os.path.dirname(os.path.abspath(__file__)),'mpt.py'),os.path.abspath(__file__)]))
 import json,time

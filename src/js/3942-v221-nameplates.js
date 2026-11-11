@@ -1,4 +1,4 @@
-// ================= v220 nameplates: carved plaques that always fit the name =================
+// ================= v221 (made as v220, names *220) nameplates: carved plaques that always fit the name =================
 // Owner (Nov 11 2026): "rework the nameplates for our npcs - right now they sometimes get cut off (like the stronghold upgrade
 // npc). Give cleaner looking nameplates that are stylized."
 // Why they were cut: the old plates (txTex, 0070) drew a fixed 30 px font on a fixed 256 px canvas and never measured the text,

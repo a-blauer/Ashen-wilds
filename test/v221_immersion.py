@@ -1,5 +1,5 @@
 # v220: talking to people (dialogue box + camera), shopkeepers beside the shop window, fitted nameplates, simple title pop-ups
-# that never overlap.  Run: python3 v220_immersion.py
+# that never overlap.  Run: python3 v221_immersion.py
 import os,json,play
 bad=[]
 def chk(name,ok,info=''):
@@ -79,5 +79,5 @@ def s(pg):
 play.run(s,w=1280,hh=760)
 logs=open(play.TMP+'/lastlogs.txt').read()
 chk('no page errors','PAGEERROR' not in logs,[l for l in logs.split('\n') if 'PAGEERROR' in l][:3])
-print('v220_immersion:', 'ALL PASS' if not bad else 'FAILED %d'%len(bad))
+print('v221_immersion:', 'ALL PASS' if not bad else 'FAILED %d'%len(bad))
 import sys;sys.exit(1 if bad else 0)
