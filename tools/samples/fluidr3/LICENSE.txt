@@ -1,0 +1,4 @@
+Instrument samples from the Fluid (R3) General MIDI SoundFont by Frank Wen, as pre-rendered by
+https://github.com/gleitz/midi-js-soundfonts (FluidR3_GM). Released under the Creative Commons
+Attribution 3.0 license (https://creativecommons.org/licenses/by/3.0/us/). Files here are re-encoded
+(mono, 32 kHz, 48 kbit/s, cut to 3 s with a fade) and named by MIDI note number.
