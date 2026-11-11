@@ -16,6 +16,15 @@ hl=H.evaluate("()=>[SH.pos['u:hatch']||null,kdLv('hatch')]")
 mp_until("(l)=>SH.pos['u:hatch']===l",40000,[G],hl[0])
 gl=G.evaluate("()=>{const s=kdState().up.hatch;return [SH.pos['u:hatch']||null,s?s.l:null,DK150.on,DK150.host===MP.me]}")
 chk('guest sees the host\'s Hatchery on the same lot, standing at level 0',bool(hl[0] and gl[0]==hl[0] and gl[1]==1),json.dumps({'host':hl,'guest':gl}))
+# 1b. v220: the rebuilt Hatchery follows the host's level on the guest's screen (model level 4 = Hatchery level 3, its crystal egg),
+# and the host's villagers are the same models for both (species, shoulders, outfit: fkKey)
+H.evaluate("()=>{gold=500000;['wood','stone','fiber','iron','crystal'].forEach(k=>mats[k]=999);SH.lv.hatch=3;shApply();try{const lot=LOT103.find(l=>lotFree103(l.id));if(lot)hsBuy103(lot.id)}catch(e){}}")
+HT="()=>{const s=kdState().up.hatch;let c=0;if(s&&s.g)s.g.traverse(q=>{if(q.userData.ht220=='crystal')c++});return [s?s.l:null,c]}"
+seen=mp_until("()=>{const s=kdState().up.hatch;let c=0;if(s&&s.g)s.g.traverse(q=>{if(q.userData.ht220=='crystal')c++});return !!(s&&s.l===4&&c===1)}",60000,[G])
+chk('guest sees the host\'s Hatchery at level 3 (crystal egg on the roof)',seen,json.dumps({'host':H.evaluate(HT),'guest':G.evaluate(HT)}))
+VK="()=>CZ103.live.map(o=>{const m=o.g.children.find(q=>q.isSkinnedMesh);return o.c.n+':'+(m&&m.userData.fkKey)}).sort()"
+hv=H.evaluate(VK);mp_until("(n)=>CZ103.live.length===n",40000,[G],len(hv));gv=G.evaluate(VK)
+chk('guest sees the host\'s villagers as the same models (v220 shoulders and outfits)',len(hv)>0 and hv==gv and all('|v220' in k and '|w220|' in k for k in hv),json.dumps({'host':hv,'guest':gv})[:600])
 # the rest happens out in the field (effects relay inside a zone instance; Duskhold has none)
 p=A.evaluate("()=>{const p=PMAP[0].ins[0].path[60];return p}")
 A.evaluate("(p)=>toPos(p[0],p[1])",p);B.evaluate("(p)=>toPos(p[0]+2.2,p[1]+1)",p)

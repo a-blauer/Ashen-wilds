@@ -76894,6 +76894,290 @@ function rf218Cling(t,ph){const s=Math.sin,w=t*.8+ph,look=Math.max(0,s(w*.37));
   return {pitch:.5+.06*s(w),roll:.04*s(w*.7),sp:.14+.06*s(w),ch:.2+.08*s(w*1.1),nk:-.1-.15*look,hx:-.35-.2*look+.08*s(w*.9),hy:.45*s(w*.31),hz:.08*s(w*.5),
     arms:[{x:-1.35+.12*s(w),z:.62+.06*s(w*1.3),e:-.75+.12*s(w*1.1),w:.4},{x:-1.35+.12*s(w+1.9),z:.62+.06*s(w*1.3+1),e:-.75+.12*s(w*1.1+1),w:.4}],legs:{k:w,a:.18,b:.3,kb:.6}}}
 {const f=dg165WPose;dg165WPose=function(st,t,ph,k){if(RF218.on&&RF218.hulk){try{if(st==='rake')return rf218Slam(k&&k.k!=null?k.k:0,t,ph);if(st==='cling')return rf218Cling(t,ph)}catch(_){}}return f.apply(this,arguments)}}
+// ================= v220: town folk shoulders — the body is built with its arms hanging =================
+// Owner (Nov 11 2026): "Our villager npcs are using a bad skeleton model which makes their shoulders rest in a weird spot."
+// Why they looked wrong: the folk skeleton (idlNB) is bound with the forearms folded across the belly, and the body mesh was
+// built in that pose. Since v197 the folk stand with relaxed arms, so the whole upper arm was turned ~30 degrees away from
+// the pose it was modelled in: the shoulder's top ring (which sat 3 cm ABOVE the joint, at neck height, with a dome on it)
+// swung up and back into a hump beside the neck, and the torso's top ring was as wide as the shoulders (a flat shelf).
+// Now, for every folk species (v142 anatomy):
+//  * the body, clothes, paws and sleeves are built with the arm bones in the relaxed pose (the same directions v197 uses,
+//    RLX197.U / .F), so the mesh is modelled the way the folk actually stand;
+//  * the shoulder is a sloped deltoid: the arm's first ring starts inside the chest (toward the neck) and the second sits
+//    just under the joint, so the top of the arm runs down and out from the neck instead of standing up beside it;
+//  * the torso's top ring is narrower (a trapezius slope from the neck to the shoulder, no shelf);
+//  * then every vertex is carried back to the bind pose with its bones (fk220Unrelax, the inverse of the relaxed rotations),
+//    so the skeleton, the rest pose, the work poses, held tools and every animation are exactly what they were. Folded arms
+//    (a keeper at work, a warden on guard) are now the bent pose of a straight arm, which is what an elbow is for.
+// Co-op: models only, built the same on every client (no random numbers).
+var FK220={on:true,cur:null,sh:{r0:[-.062,-.014,-.004,.86],r1:[.012,-.046,0,1.0],top:.8,top2:.97,nk:1.14}};
+// the arm bones of the build skeleton in the relaxed pose + the rotations that bring a relaxed vertex back to the bind pose
+function fk220Rlx(D,N){if(D._rlx220)return D._rlx220;const V=THREE.Vector3,Q=THREE.Quaternion,M={},X={};for(const k in N)M[k]=N[k].slice();
+  const UF=typeof RLX197!='undefined'?RLX197:{U:[-.17,-1,-.05],F:[.05,-1,.24]};
+  ['L','R'].forEach(s=>{const m=s=='L'?1:-1,n0='a'+s+'0',n1='a'+s+'1',n2='a'+s+'2',A0=mdV(N[n0]),A1=mdV(N[n1]),A2=mdV(N[n2]);
+    const d01=A1.clone().sub(A0),d12=A2.clone().sub(A1),U=new V(UF.U[0]*m,UF.U[1],UF.U[2]).normalize(),F=new V(UF.F[0]*m,UF.F[1],UF.F[2]).normalize();
+    const q0=new Q().setFromUnitVectors(d01.clone().normalize(),U),q1=new Q().setFromUnitVectors(d12.clone().normalize(),F.clone().applyQuaternion(q0.clone().invert())),Qw=q0.clone().multiply(q1);
+    const A1r=A0.clone().addScaledVector(U,d01.length()),A2r=A1r.clone().addScaledVector(F,d12.length());
+    M[n1]=[N[n1][0],A1r.x,A1r.y,A1r.z];M[n2]=[N[n2][0],A2r.x,A2r.y,A2r.z];
+    X[n0]={c:A0,to:A0,q:q0.clone().invert()};X[n1]={c:A1r,to:A1,q:Qw.clone().invert()};X[n2]={c:A2r,to:A2,q:Qw.clone().invert()}});
+  return D._rlx220={N:M,X}}
+{const f=fkNB;fkNB=function(D){const N=f.apply(this,arguments);if(FK220.cur!==D||!FK142.pre)return N;return fk220Rlx(D,N).N}}
+// shoulder rings (only while a folk body is being built)
+{const f=mdArm;mdArm=function(P,s){const R=f.apply(this,arguments);if(!FK220.cur||!BR.on)return R;const S=FK220.sh,bn=s<0?'aL':'aR',J=mdV(P.bones[bn+'0']),xo=R[1].p[0]-J.x;
+  const set=(i,q,w)=>{const r=R[i]=Object.assign({},R[i]);r.p=[J.x+xo+s*q[0],J.y+q[1],J.z+q[2]];r.rx*=q[3];r.f*=q[3];r.b*=q[3];r.w=w};
+  set(0,S.r0,[['chest',.72],[bn+'0',.28]]);set(1,S.r1,[['chest',.16],[bn+'0',.84]]);return R}}
+// the torso's top: no shelf at shoulder width under the neck
+{const f=mdTorso;mdTorso=function(P){const R=f.apply(this,arguments);if(!FK220.cur||!BR.on)return R;
+  return R.map(r=>Math.abs(r.y-.972)<.004?Object.assign({},r,{rx:r.rx*FK220.sh.top}):Math.abs(r.y-.93)<.004?Object.assign({},r,{rx:r.rx*FK220.sh.top2}):Math.abs(r.y-1)<.004?Object.assign({},r,{rx:r.rx*FK220.sh.nk}):r)}}
+// carry the built (relaxed) body back to the bind pose: every vertex with its arm bones
+function fk220Unrelax(B,D){const R=D._rlx220;if(!R)return;const X=B.O.map(n=>R.X[n]||null),V=new THREE.Vector3();
+  for(const t in B.L){const L=B.L[t],p=L.p,si=L.si,sw=L.sw,nv=p.length/3;
+    for(let v=0;v<nv;v++){let any=false;for(let j=0;j<4;j++)if(sw[4*v+j]&&X[si[4*v+j]]){any=true;break}if(!any)continue;
+      const px=p[3*v],py=p[3*v+1],pz=p[3*v+2];let x=0,y=0,z=0,ws=0;
+      for(let j=0;j<4;j++){const w=sw[4*v+j];if(!w)continue;const T=X[si[4*v+j]];ws+=w;
+        if(T){V.set(px-T.c.x,py-T.c.y,pz-T.c.z).applyQuaternion(T.q);x+=w*(V.x+T.to.x);y+=w*(V.y+T.to.y);z+=w*(V.z+T.to.z)}else{x+=w*px;y+=w*py;z+=w*pz}}
+      if(ws>0){p[3*v]=x/ws;p[3*v+1]=y/ws;p[3*v+2]=z/ws}}}}
+{const f=fk142Deform;fk142Deform=function(B,D,A){if(FK220.cur===D)fk220Unrelax(B,D);return f.apply(this,arguments)}}
+{const f=fkBuild;fkBuild=function(D,pk,o){if(!FK220.on||!fk142A(D))return f.apply(this,arguments);const c0=FK220.cur;FK220.cur=D;try{return f.apply(this,arguments)}finally{FK220.cur=c0}}}
+{const f=fkKey;fkKey=function(o,pk){return f.apply(this,arguments)+(FK220.on&&fk142A(FK137.sp[pk.sp])?'|v220':'')}}
+// ================= v220: the villagers' wardrobe =================
+// Owner (Nov 11 2026): "Touch up our villager npc models and give them more varied clothing that's a little more detailed
+// (not just a plain robe)". Until now every citizen wore FKO.cit: one colour of tunic and trousers, and for half of them one
+// long plain skirt over it, which read as a robe.
+// Now a citizen gets one of nine outfits (VC220.fit), picked from their trade and their look number (so the same villager
+// always wears the same clothes, and a co-op partner builds the same): farmhand (linen shirt, open vest, patched trousers,
+// neckerchief, straw hat), burgher (buttoned doublet with a plastron, two-tone sleeves, peplum, breeches and hose, beret),
+// dress (blouse, laced bodice, skirt with a hem band, shawl, coif), traveller (belted tunic with a trimmed hem, dagged
+// capelet, satchel strap, bracers, leg wraps), craftsman (rolled sleeves, long apron with a pocket, kerchief), tabard
+// (two-colour tabard over a long tunic), coat (long open coat over a waistcoat, two rows of buttons, scarf), fisher's
+// smock (striped shirt, braces, oilskin skirt, tall boots) and hunter's jerkin (stitched leather, bracers, leg wraps).
+// Per the detail recipe: the outline changes with real cloth (vests, skirts, capelets, hats); everything inside it is paint
+// (yokes, plastrons, stripes, patches, wraps, hose, cuffs) plus a few small pieces (buttons, laces, buckles, pockets).
+// A second dye (VC220.dye) and a linen come from the same hash, so the town is no longer one brown.
+var VC220={on:true,
+  dye:[0x6e2f2a,0x2e4a62,0x3f5a38,0x86642a,0x4c3660,0x2f524c,0x7a452a,0x5c2440,0x44506a,0x596030],
+  lin:[0xcfc4a8,0xbdb196,0xd8ccb0,0xa99d86],lea:[0x5a3a22,0x3a2616,0x6a4a2e,0x4a3020],
+  byRole:{gather:['farm','burgher','dress','hood','apron','tabard','coat','farm','dress'],egg:['dress','apron','farm','dress'],fish:['smock','smock','farm','coat'],hunt:['jerkin','jerkin','hood','tabard']},
+  fit:{}};
+function vc220Ctx(o,D,C){const h=fkHash('v220|'+(o.robe|0)+'|'+(o.trim|0)+'|'+(o.fkV|0)+'|'+(o.fkRole||'')),b=(n,m)=>(h>>>n)%m,rb=mdC(o.robe||0x6a5a4a),tr=mdC(o.trim||mdSh(rb,.6));
+  let dy=VC220.dye[b(3,VC220.dye.length)];const far=(a,c)=>{const A=new THREE.Color(a),B2=new THREE.Color(c);return Math.abs(A.r-B2.r)+Math.abs(A.g-B2.g)+Math.abs(A.b-B2.b)};
+  if(far(dy,rb)<.22)dy=VC220.dye[(b(3,VC220.dye.length)+3)%VC220.dye.length];
+  const A=typeof fk142A=='function'?fk142A(D):null,plant=!A||!A.leg||A.leg=='plant',ear=D.ear&&D.ear.t;
+  return {h,b,rb,tr,dy,lin:VC220.lin[b(7,4)],lea:VC220.lea[b(9,4)],dark:mdSh(mdMix(rb,0x2a2420,.55),.85),plant,tallEar:ear=='tri'||ear=='long',o,D,C}}
+// ---- small shared pieces ----
+// leg paint on top of FKG.paint: f(m, s) → colour or null (null = what was there)
+function vc220Leg(P,f){const g=P.paint.leg;P.paint.leg=(m,s)=>{const c=f(m,s);return c==null?(g?g(m,s):P.col.pants):c}}
+// cross-wrapped shins (cloth strips): bands by height, only on the shin
+function vc220Wraps(P,c1,c2){vc220Leg(P,m=>m.r.part=='shin'||(m.r.part=='knee'&&m.i>3.4)?(Math.round(m.y*46)%2?c1:c2):null)}
+// one patched knee and a seat patch
+function vc220Patch(P,col,side){vc220Leg(P,(m,s)=>(s==side&&m.r.part=='knee'&&m.s>.2)||(s==-side&&m.r.part=='thigh'&&m.i<1.6&&m.s<-.5)?col:null)}
+// hose below knee breeches
+function vc220Hose(P,col){vc220Leg(P,m=>m.r.part=='shin'||(m.r.part=='knee'&&m.i>3.4)?col:null)}
+// a pocket / patch lying on the torso at height y, angle a
+function vc220Pocket(k,B,P,y,a,col,w,hh){const p=fk142Hug(B,P,y,a,.004);k.p(n3TB(y),'box','c',col,p[0],p[1],p[2],w||.07,hh||.06,.008,0,a,0);k.p(n3TB(y),'box','c',mdSh(col,.75),p[0],p[1]+(hh||.06)*.42,p[2]+.002*Math.cos(a),(w||.07)*1.04,.01,.01,0,a,0)}
+// front lacing between y0 and y1 (criss-cross cords over what is built)
+function vc220Laces(k,B,P,y0,y1,n,col,da){da=da||.13;for(let i=0;i<n;i++){const ya=y0+(y1-y0)*i/n,yb=y0+(y1-y0)*(i+1)/n,s=i%2?1:-1,a=fk142Hug(B,P,ya,s*da,.005),b=fk142Hug(B,P,yb,-s*da,.005);k.L(n3TB((ya+yb)/2),'c',col,a,b,.0045,.0045,4)}}
+// hats: what fits between the ears
+function vc220Hat(X,B,k,kind,col){const D=X.D,o=X.o;if(o.fkRole=='fish')return; // the fisher's straw hat is trade gear (czProps104)
+  if(kind=='straw'&&!X.tallEar)fkBrimHat(k,D,0xc8ab62,{brim:.15,cr:.07,ch:.055,band:X.dy});
+  else if(kind=='beret'||kind=='straw')fkBeret(k,D,col,{h:.034,btn:1,tz:.18});
+  else if(kind=='cap')fkBeret(k,D,col,{peak:X.tallEar?0:.05,btn:1});
+  else if(kind=='coif')fkCoif(B,D,col,{z1:D.EYEP[2]-.035,yMin:D.EYEP[1]+.03})}
+function vc220Boots(X,col,i0){return X.plant?function(B,P){FKG.boots(B,P,col,{i0:i0||4,top:mdSh(col,1.25)})}:null}
+// ---- the outfits ----
+// farmhand: linen shirt with rolled sleeves, an open vest, patched trousers, a neckerchief, a straw hat
+VC220.fit.farm=function(X){const {rb,tr,dy,lin,lea,b}=X,pt=mdSh(mdMix(rb,0x3a3028,.5),.85);
+  return {boots:b(11,2)?vc220Boots(X,lea):null,
+    paint(P,C){FKG.paint(P,C,{shirt:lin,sleeve:'short',pants:pt,legs:'long',tunic:.5,patt:m=>m.y>.9?mdSh(lin,.9):null});
+      P.paint.sleeve=m=>m.i>4?mdSh(lin,.82):lin;vc220Patch(P,mdMix(dy,pt,.35),b(13,2)?1:-1)},
+    build(B,P){FKG.shell(B,P,.6,.955,m=>m.y<.64||m.y>.93?mdSh(rb,.75):rb,{open:.55,off:.011,lipT:.003});
+      FKG.belt(B,P,.595,lea,{h:.017,off:.014});FKG.scarf(B,P,dy);
+      const k=dkKit();FKG.pouch(k,P,.58,-.95,lea,.85);vc220Pocket(k,B,P,.7,.75,mdSh(rb,.8),.055,.05);vc220Hat(X,B,k,b(15,3)?'straw':'cap',mdSh(rb,.8));mdKit(B,k)}}};
+// burgher: a buttoned doublet with a plastron, two-tone sleeves, a short peplum, breeches and hose, a beret
+VC220.fit.burgher=function(X){const {rb,tr,dy,lin,lea,b}=X,hose=b(11,2)?mdSh(lin,.92):mdSh(dy,.9);
+  return {boots:vc220Boots(X,mdSh(lea,.8),5),
+    paint(P,C){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:X.dark,legs:'knee',cuffs:tr,tunic:.5,patt:m=>m.s>.95&&m.y>.6?dy:m.y>.93?mdSh(rb,.8):null});
+      P.paint.sleeve=m=>m.i>4?dy:m.i<3?mdSh(rb,1.12):rb;vc220Hose(P,hose)},
+    build(B,P){FKG.buttons(B,P,.64,.9,5,0xb89a4a);FKG.belt(B,P,.6,lea,{h:.018,buckle:0xb89a4a});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.5+.012*Math.cos(th*2),col:fkTrim(rb,tr,{hem:.8}),flare:.035,lin:mdSh(rb,.6),rows:4});
+      FKG.collar(B,P,mdSh(rb,.85),{h:th=>1.01+.025*Math.max(0,-Math.cos(th)),flare:.018,open:.45,lin:tr});
+      const k=dkKit();FKG.pouch(k,P,.57,.95,mdSh(lea,.9),.8);vc220Hat(X,B,k,'beret',dy);mdKit(B,k)}}};
+// dress: blouse, laced bodice, a full skirt with a hem band, a shawl or an apron, a coif
+VC220.fit.dress=function(X){const {rb,tr,dy,lin,lea,b,o}=X,sk=b(11,2)?rb:dy,bod=sk==rb?dy:rb,hemY=b(13,2)?.17:.3;
+  return {paint(P,C){FKG.paint(P,C,{shirt:lin,sleeve:'long',pants:mdSh(lin,.8),legs:'knee',cuffs:mdSh(lin,.8),tunic:.5,patt:m=>m.y>.93?mdSh(lin,.88):null});P.paint.sleeve=m=>m.i<3.2?mdSh(lin,1.06):lin},
+    build(B,P){FKG.shell(B,P,.6,.9,m=>m.y>.87?mdSh(bod,.72):bod,{off:.011,vneck:[.72,.55],lipT:.003});
+      FKG.skirt(B,P,{y0:.6,hem:th=>hemY+.02*Math.max(0,-Math.cos(th)),col:m=>m.v>.9?tr:m.v>.84?mdSh(sk,.7):sk,flare:.06,lin:mdSh(sk,.55)});
+      if(o.apron)FKG.apron(B,P,mdSh(lin,1.04),{hem:hemY+.1,bib:false,w:.95});else FKG.belt(B,P,.6,mdSh(bod,.6),{h:.014,buckle:false});
+      const k=dkKit();vc220Laces(k,B,P,.63,.86,5,mdSh(lin,.95));
+      if(b(15,2)&&!o.apron){mdKit(B,k);{const sw=mdMix(VC220.dye[(b(3,VC220.dye.length)+5)%VC220.dye.length],0x8a8070,.45);FKG.mantle(B,P,{y0:.995,hem:th=>.86-.07*Math.max(0,-Math.cos(th))**3-.03*Math.max(0,Math.cos(th))**2,col:m=>m.v!=null&&m.v>.8?mdSh(sw,.7):sw,clear:.012,flare:.006,open:.16,rows:5,folds:[8,.004]})};const k2=dkKit();vc220Hat(X,B,k2,'coif',mdSh(lin,.96));mdKit(B,k2);return}
+      FKG.collar(B,P,mdSh(lin,.95),{h:th=>.995+.02*Math.max(0,-Math.cos(th)),flare:.014});vc220Hat(X,B,k,o.hat=='cap'||b(17,2)?'coif':'',b(19,2)?mdSh(lin,.96):mdSh(dy,.9));mdKit(B,k)}}};
+// traveller: a belted tunic with a trimmed hem, a dagged capelet with a rolled collar, a satchel strap, bracers, wrapped shins
+VC220.fit.hood=function(X){const {rb,tr,dy,lin,lea,b,o}=X,cape=mdSh(mdMix(dy,0x2a2824,.4),.9),hunt=o.fkRole=='hunt';
+  return {boots:vc220Boots(X,lea),
+    paint(P,C){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:X.dark,legs:'long',tunic:.5});vc220Wraps(P,mdSh(lin,.8),mdSh(lin,.62))},
+    build(B,P){FKG.cuff(B,P,4,5,lea,.012);
+      FKG.skirt(B,P,{y0:.6,hem:th=>.45+.015*Math.cos(th*2),col:m=>m.v>.78?tr:rb,flare:.03,lin:mdSh(rb,.6),rows:5});
+      FKG.belt(B,P,.6,lea,{h:.02,buckle:0x8a8a92});mdTStrap(B,P,.93,-.5,.6,.9,(P.tOff||0)+.004,.028,mdSh(lea,.85),{n:9});
+      const k=dkKit();FKG.pouch(k,P,.56,1.0,lea,1.15);vc220Hat(X,B,k,b(15,2)?'cap':'',mdSh(cape,.9));mdKit(B,k);
+      if(!hunt)FKG.mantle(B,P,{y0:1.0,hem:th=>.86-.02*Math.max(0,-Math.cos(th)),col:m=>m.v!=null&&m.v>.8?mdSh(cape,.72):cape,dag:.016,roll:.016,rollCol:mdSh(cape,.8),clear:.016,flare:.012,rows:5})}}};
+// craftsman: shirt with rolled sleeves, a long apron with a pocket, a kerchief
+VC220.fit.apron=function(X){const {rb,tr,dy,lin,lea,b,o}=X,ap=b(11,2)||o.apron?mdSh(lin,.98):mdSh(lea,1.15);
+  return {boots:vc220Boots(X,mdSh(lea,.85)),
+    paint(P,C){FKG.paint(P,C,{shirt:rb,sleeve:'short',pants:X.dark,legs:'long',tunic:.5,patt:m=>m.y>.93?mdSh(rb,.8):null});P.paint.sleeve=m=>m.i>4?tr:rb;vc220Patch(P,mdSh(X.dark,1.5),1)},
+    build(B,P){FKG.apron(B,P,ap,{hem:.27,w:1.15,bibTop:.92});
+      const k=dkKit();vc220Pocket(k,B,P,.72,0,mdSh(ap,.84),.1,.06);FKG.pouch(k,P,.57,-1.2,lea,.8);
+      if(b(13,2))FKG.scarf(B,P,dy);vc220Hat(X,B,k,b(15,3)?'coif':'cap',b(17,2)?dy:mdSh(rb,.8));mdKit(B,k)}}};
+// tabard: a long tunic under a two-colour tabard (front and back panels, a border), belted, hose
+VC220.fit.tabard=function(X){const {rb,tr,dy,lin,lea,b}=X,tb=dy,t2=b(11,2)?tr:mdSh(lin,.9);
+  return {boots:vc220Boots(X,lea),
+    paint(P,C){FKG.paint(P,C,{shirt:rb,sleeve:'long',pants:X.dark,legs:'knee',cuffs:mdSh(rb,.7),tunic:.5});P.paint.sleeve=m=>m.i<3?mdSh(rb,.85):rb;vc220Hose(P,mdSh(rb,.7))},
+    build(B,P){const fb=m=>Math.abs(m.s)>.8;
+      FKG.shell(B,P,.6,.965,m=>m.y>.9?t2:(m.x>0)==(m.s>0)?tb:mdSh(tb,.72),{off:.012,keep:fb,lipT:.003});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.4-.04*Math.abs(Math.cos(th)),col:m=>m.v>.84?t2:(Math.sin(m.u*Math.PI*2)>0)==(Math.cos(m.u*Math.PI*2)>0)?tb:mdSh(tb,.72),flare:.03,lin:mdSh(tb,.55),keep:m=>Math.abs(Math.cos(m.u*Math.PI*2))>.55,rows:6});
+      FKG.skirt(B,P,{y0:.59,hem:()=>.47,col:rb,flare:.012,lin:mdSh(rb,.6),rows:4,clear:.002});
+      FKG.belt(B,P,.6,lea,{h:.02,buckle:0xb89a4a,off:.02});
+      const k=dkKit();FKG.pouch(k,P,.56,-1.0,lea,.9);vc220Hat(X,B,k,b(15,2)?'cap':'beret',mdSh(tb,.8));mdKit(B,k)}}};
+// coat: a long open coat over a waistcoat, two rows of buttons, a turned-up collar, a scarf
+VC220.fit.coat=function(X){const {rb,tr,dy,lin,lea,b}=X,ct=X.dark,wc=dy;
+  return {boots:vc220Boots(X,mdSh(lea,.7)),
+    paint(P,C){FKG.paint(P,C,{shirt:lin,sleeve:'long',pants:mdSh(mdMix(rb,0x3a3028,.4),.8),legs:'long',cuffs:tr,tunic:.5,patt:m=>m.y<.9?wc:null});P.paint.sleeve=()=>ct;P.paint.fore=m=>m.r.part=='wrist'?tr:ct},
+    build(B,P){FKG.buttons(B,P,.64,.86,4,0xb89a4a);FKG.shell(B,P,.57,.965,m=>m.y>.92?mdSh(ct,.8):ct,{open:.5,off:.012,lipT:.004});
+      FKG.skirt(B,P,{y0:.6,hem:th=>.27+.1*Math.max(0,Math.cos(th))**2,col:fkTrim(ct,mdSh(ct,.7),{hem:.9}),lin:mdSh(wc,.6),open:.42,flare:.045,backF:.4});
+      FKG.belt(B,P,.595,lea,{h:.014,off:.004,buckle:0x8a8a92});
+      FKG.collar(B,P,ct,{h:th=>1.015+.035*Math.max(0,-Math.cos(th)),flare:.028,open:.6,lin:mdSh(wc,.8)});
+      if(b(13,2))FKG.scarf(B,P,b(17,2)?tr:mdSh(lin,.9));
+      const k=dkKit();vc220Pocket(k,B,P,.52,1.0,mdSh(ct,.8),.06,.05);vc220Hat(X,B,k,b(15,3)?'cap':'beret',mdSh(ct,.9));mdKit(B,k)}}};
+// fisher's smock: a striped shirt, braces, an oilskin skirt, tall boots
+VC220.fit.smock=function(X){const {rb,tr,dy,lin,lea,b}=X,oil=mdMix(rb,0x6a6a3a,.35),st=mdSh(lin,.95),s2=mdMix(rb,lin,.25);
+  return {boots:vc220Boots(X,0x2a2a26,3),
+    paint(P,C){FKG.paint(P,C,{shirt:st,sleeve:'short',pants:mdSh(rb,.7),legs:'long',tunic:.5,patt:m=>Math.round(m.y*32)%2?s2:st});P.paint.sleeve=m=>m.i>4?mdSh(st,.8):Math.round(m.i)%2?s2:st},
+    build(B,P){[-1,1].forEach(s=>{mdTStrap(B,P,.6,s*.42,.985,s*.5,(P.tOff||0)+.005,.03,oil,{n:7});mdTStrap(B,P,.985,s*2.55,.6,s*2.9,(P.tOff||0)+.005,.03,oil,{n:7})});
+      FKG.shell(B,P,.56,.7,m=>m.y>.67?mdSh(oil,.75):oil,{off:.012,lipT:.003});
+      FKG.skirt(B,P,{y0:.58,hem:th=>.4+.01*Math.cos(th*3),col:m=>m.v>.86?mdSh(oil,.7):oil,flare:.04,lin:mdSh(oil,.55),rows:5});
+      const k=dkKit();[-1,1].forEach(s=>{const p=fk142Hug(B,P,.69,s*.42,.006);k.p('spine','sph','m',0xb89a4a,p[0],p[1],p[2],.011,.011,.007)});
+      vc220Pocket(k,B,P,.63,0,mdSh(oil,.82),.1,.05);if(b(13,2))FKG.scarf(B,P,dy);mdKit(B,k)}}};
+// hunter's jerkin: stitched leather over a wool shirt, bracers, wrapped shins
+VC220.fit.jerkin=function(X){const {rb,tr,dy,lin,lea,b}=X,jk=mdMix(lea,rb,.3),wool=mdMix(rb,0x4a5a3a,.4);
+  return {boots:vc220Boots(X,mdSh(lea,.8)),
+    paint(P,C){FKG.paint(P,C,{shirt:wool,sleeve:'long',pants:mdSh(rb,.75),legs:'long',cuffs:mdSh(wool,.7),tunic:.5});P.paint.sleeve=m=>m.i<3?mdSh(wool,.85):wool;vc220Wraps(P,mdSh(lea,1.1),mdSh(lea,.8))},
+    build(B,P){FKG.shell(B,P,.56,.95,m=>m.y>.91||m.y<.6?mdSh(jk,.7):m.s>.95?mdSh(jk,1.12):jk,{off:.012,vneck:[.8,.5],lip:.006,lipT:.003});
+      FKG.skirt(B,P,{y0:.59,hem:th=>.49+.012*Math.cos(th*4),col:m=>m.v>.7?mdSh(jk,.7):jk,flare:.03,lin:mdSh(jk,.55),rows:3});
+      FKG.cuff(B,P,4,5,mdSh(lea,.8),.013);FKG.belt(B,P,.6,mdSh(lea,.7),{h:.02,buckle:0x8a8a92,off:.016});
+      const k=dkKit();vc220Laces(k,B,P,.8,.93,3,mdSh(lin,.8),.07);FKG.pouch(k,P,.56,.95,lea,.9);vc220Hat(X,B,k,X.o.hat=='cap'?'cap':'',mdSh(wool,.7));mdKit(B,k)}}};
+// ---- the switch: FKO.cit picks an outfit; the old plain one stays as FKO.cit137 (VC220.on=false brings it back) ----
+FKO.cit137=FKO.cit;
+FKO.cit=function(o,D,C){if(!VC220.on)return FKO.cit137(o,D,C);const X=vc220Ctx(o,D,C),L=VC220.byRole[o.fkRole]||VC220.byRole.gather,kind=o.fkFit&&VC220.fit[o.fkFit]?o.fkFit:L[X.h%L.length];
+  const F=VC220.fit[kind](X);F.kind=kind;if(!F.boots)delete F.boots;return F};
+// the trade reaches the outfit (and the geometry cache key)
+{const f=czLook103;czLook103=function(c){const o=f.apply(this,arguments);try{o.fkRole=czRole104(c)}catch(e){}return o}}
+{const f=fkKey;fkKey=function(o,pk){return f.apply(this,arguments)+(VC220.on&&pk.out=='cit'?'|w220|'+(o.fkRole||'')+'|'+(o.fkFit||''):'')}}
+// ================= v220: the Hatchery, rebuilt to stand out =================
+// Owner (Nov 11 2026): "refresh the hatchery station to make it more appealing and stand out (still have it look more
+// elaborate with each upgrade)". It was a small straw nest with a brazier (a thatched shelter from level 2, a few crystals at 3):
+// the lowest thing in town, and levels 0 and 1 looked the same.
+// Now it is a round brood house built around a big nest, one look per level (0-3), each adding to the last:
+//  * 0 Brood Nest: flagstones, a great woven nest with three big speckled eggs, a wattle windbreak behind it, a carved brood
+//    pole with a wooden egg on top, two lanterns and the Hatchery's banner, a warming brazier, a basket of straw.
+//  * 1 Brood House: six timber posts carry a tall conical thatched roof with a carved egg finial; lanterns hang in the front
+//    spans, a second brazier, egg crates.
+//  * 2 Hatchery Rotunda: turned stone columns, a stone ring beam, a blue slate bell roof with a brass band and a brass egg,
+//    glowing heat stones round the nest, two caged incubators on pedestals, banners on the front columns.
+//  * 3 Grand Hatchery: a great glowing crystal egg in brass claws on top of the roof (it pulses, motes circle it), crystal
+//    shards round the nest, rune stones and the rune ring on the floor.
+// The nest holds one egg per hatching slot (3 + level); the middle egg rocks now and then. You can walk in under the roof.
+// The model is built with the v190 decoration kit (turned profiles, beams, tubes) into the town kit, so it keeps Duskhold's
+// textures and gets the same smooth ground shading. Co-op: built from the kingdom's Hatchery level like every station
+// (the level a partner sees is the host's), only deterministic numbers; the animation runs from the clock.
+var HT220={on:true,k:null,egg:[[0,0],[.3,.03],[.44,.14],[.5,.3],[.47,.5],[.36,.72],[.2,.9],[0,.98]],
+  eggC:[0xe8dcc0,0xd8a84a,0x8fcdb6,0xc87a5a,0xb49ad8,0x8aa0c8],N:6,R:1.8,wood:0x4e3a2a,woodD:0x35281d,slate:0x3a4a66,geo:null};
+function ht220At(a,r){return [Math.sin(a)*r,Math.cos(a)*r]}     // a = 0 is the front (+z)
+function ht220Egg(k,x,y,z,s,col,rx,rz,ry,t,mt){dc190P(k,t||'c',col,dt168Lathe(HT220.egg,9),dt168Mx(x,y,z,rx||0,ry||0,rz||0,s,s,s),mt||'plain');
+  if(!t||t=='c')dc190P(k,'c',dt168Mix(col,0x3a2a20,.38),dt168Lathe([[.468,.2],[.512,.3],[.486,.44],[.46,.3]],9),dt168Mx(x,y,z,rx||0,ry||0,rz||0,s,s,s),'plain')}
+function ht220Nest(k,R,n){dc190L(k,'c',0xb0924c,[[0,.12],[.45,.12],[.62,.17],[.8,.34],[.98,.42],[1.1,.32],[1.13,.12],[1.02,0],[0,0]],11,0,.1,0,.2,R,'straw');
+  for(let i=0;i<16;i++){const a=i/16*6.283+k.R()*.3,r=R*(.86+k.R()*.2),[x,z]=ht220At(a,r),[x2,z2]=ht220At(a+.5+k.R()*.5,r+.08);dc190Rod(k,'c',i%3?0x9a7c40:0x7a5e34,[x,.3+k.R()*.18,z],[x2,.36+k.R()*.2,z2],.018,'straw',5)}
+  const E=[[0,0],[.42,.18],[-.4,.24],[.06,-.44],[-.3,-.3],[.4,-.28]];
+  for(let i=1;i<n&&i<E.length;i++){const [x,z]=E[i];ht220Egg(k,x*R,.2,z*R,.5*R,HT220.eggC[i%6],(k.R()-.5)*.5,(k.R()-.5)*.5,i)}}
+// a wattle windbreak round the back
+function ht220Wattle(k,r,a0,a1,h){const n=9,W=0x6a5236;for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,[x,z]=ht220At(a,r);dc190Rod(k,'c',HT220.woodD,[x,0,z],[x,h+.08,z],.04,'bark',6,.7)}
+  [.22,.44,.66,.86].forEach((y,j)=>{const P=[],Rr=[];for(let i=0;i<=n*2;i++){const a=a0+(a1-a0)*i/(n*2),[x,z]=ht220At(a,r+((i+j)%2?.045:-.045));P.push([x,y*h,z]);Rr.push(.026)}dc190Tube(k,'c',j%2?W:0x7a6040,P,Rr,5,'wood')})}
+function ht220Brazier(k,x,z,c,s){kdBrazier(k,x,z,0,s||.85);c.push([x,z,.3])}
+function ht220Basket(k,x,z,s){dc190L(k,'c',0x9a7a44,[[0,0],[.2,0],[.27,.2],[.29,.24],[.25,.24],[.2,.06],[0,.06]],9,x,0,z,0,s,'straw');for(let i=0;i<3;i++)ht220Egg(k,x+(i-1)*.09*s,.07*s,z+(i%2?.06:-.04)*s,.2*s,HT220.eggC[(i+2)%6],.2*i,.3-.3*i,i)}
+// one caged incubator: pedestal, egg, four iron ribs and a ring
+function ht220Cage(k,x,z,col,c){const I=0x2c2c32,B=0xa8843a;dc190L(k,'c',0x6c6872,[[0,0],[.3,0],[.3,.1],[.2,.16],[.17,.6],[.26,.68],[.28,.76],[0,.76]],8,x,0,z,.3,1,'ashlar');
+  dc190L(k,'c',0xb0924c,[[0,.76],[.22,.76],[.25,.84],[.16,.82],[0,.8]],8,x,0,z,0,1,'straw');ht220Egg(k,x,.8,z,.42,col,0,0,.6);
+  for(let i=0;i<4;i++){const a=i/4*6.283+.4,cx=Math.cos(a),cz=Math.sin(a);dc190Tube(k,'m',I,[[x+cx*.27,.76,z+cz*.27],[x+cx*.31,1.0,z+cz*.31],[x+cx*.24,1.26,z+cz*.24],[x+cx*.06,1.4,z+cz*.06]],[.014,.014,.013,.012],5,'iron')}
+  dc190L(k,'m',B,[[0,1.38],[.08,1.38],[.07,1.44],[.02,1.5],[0,1.56]],6,x,0,z,0,1,'brass');c.push([x,z,.34])}
+// corner dressing of the lot (as the other stations get in 3630): boulders, moss, flower pots, glow stones
+function ht220Corners(k,lv){const R=dkRng(7220+lv*13);[[-2.9,-2.9],[2.9,-2.9],[-2.9,2.6],[2.9,2.6]].forEach(([x,z],i)=>{dc190Stone(k,[0x5a5662,0x4e4a54,0x66626c][i%3],x,.2,z,.42+R()*.2,.3,.4,i+3);dm196Moss(k,x,.42,z,.8,i);
+    if(lv>=1)dm196Pot(k,x+(x<0?.6:-.6),z,i+5,.8)})}
+// the model for Hatchery level lv (0-3)
+function ht220Build(k,lv){const c=[],C=DC190C,H=HT220,col=SHU.find(u=>u.k=='hatch').col,N=H.N,R=H.R,P=[];for(let i=0;i<N;i++)P.push(ht220At((i+.5)/N*6.283,R));
+  // the floor: flagstones (a low round plinth you walk onto)
+  dc190L(k,'c',lv>=2?0x77737c:0x66626a,[[0,0],[lv>=1?2.3:1.9,0],[lv>=1?2.26:1.86,.07],[0,.08]],12,0,0,0,.26,1,'flag');
+  if(lv>=2)dc190L(k,'c',0x55525c,[[1.02,.08],[1.34,.08],[1.3,.13],[1.06,.13],[1.02,.08]],12,0,0,0,0,1,'ashlar');
+  ht220Nest(k,lv>=2?.92:1,3+lv);c.push([0,0,1.08]);
+  ht220Wattle(k,lv>=1?2.08:1.7,Math.PI-1.2,Math.PI+1.2,lv>=2?.6:.95);
+  ht220Brazier(k,1.45,1.55,c);if(lv>=1)ht220Brazier(k,-1.45,1.55,c);
+  ht220Basket(k,-1.35,.95-(lv>=1?2.3:0),1);
+  if(lv==0){// the brood pole: a carved post, a wooden egg, a cross arm with two lanterns and the banner
+    const z=-1.25;dc190L(k,'c',0x55525c,[[0,0],[.26,0],[.26,.16],[.16,.24],[0,.24]],6,0,0,z,0,1,'ashlar');dc190Beam(k,'c',H.wood,[0,.2,z],[0,3.0,z],.17,.17,'wood');
+    dc190Beam(k,'c',H.woodD,[-.85,2.55,z],[.85,2.55,z],.11,.12,'wood');[-1,1].forEach(s=>{dc190Tube(k,'c',H.woodD,[[s*.08,2.1,z],[s*.3,2.36,z],[s*.5,2.5,z]],[.045,.04,.035],5,'wood');
+      dc190Rod(k,'m',C.iron,[s*.78,2.5,z],[s*.78,2.3,z],.01,'iron',4);dc190Lantern(k,s*.78,2.0,z,1.1,0xffc870)});
+    dc190L(k,'c',H.woodD,[[0,2.98],[.2,2.98],[.22,3.06],[.12,3.1],[0,3.1]],8,0,0,z,0,1,'wood');ht220Egg(k,0,3.08,z,.56,0xa88a5a,0,0,0,'c','wood');
+    dc190Banner(k,0,2.5,z+.09,0,col,.5,.95,0xcfc4a8);c.push([0,z,.22])}
+  if(lv==1){// timber posts with stone feet and braces, a ring of beams
+    P.forEach(([x,z],i)=>{dc190L(k,'c',0x55525c,[[0,0],[.22,0],[.22,.16],[.15,.22],[0,.22]],4,x,0,z,(i+.5)/N*6.283,1,'ashlar');dc190Beam(k,'c',H.wood,[x,.2,z],[x,2.5,z],.16,.16,'wood');c.push([x,z,.2]);
+      const [nx,nz]=P[(i+1)%N],dx=nx-x,dz=nz-z;dc190Beam(k,'c',H.woodD,[x,2.52,z],[nx,2.52,nz],.14,.16,'wood');
+      dc190Tube(k,'c',H.woodD,[[x,2.0,z],[x+dx*.14,2.3,z+dz*.14],[x+dx*.27,2.46,z+dz*.27]],[.05,.045,.04],5,'wood');dc190Tube(k,'c',H.woodD,[[nx,2.0,nz],[nx-dx*.14,2.3,nz-dz*.14],[nx-dx*.27,2.46,nz-dz*.27]],[.05,.045,.04],5,'wood')});
+    // the thatched roof in three shaggy tiers, a carved egg on top
+    dc190L(k,'c',0x8a7440,[[0,2.6],[2.42,2.5],[2.5,2.6],[1.9,3.02],[0,3.05]],12,0,0,0,.26,1,'thatch');
+    dc190L(k,'c',0x9a8248,[[0,2.95],[1.82,2.9],[1.9,3.0],[1.2,3.55],[0,3.6]],12,0,0,0,0,1,'thatch');
+    dc190L(k,'c',0xa88e50,[[0,3.45],[1.14,3.42],[1.2,3.52],[.5,4.1],[.16,4.3],[0,4.32]],12,0,0,0,.26,1,'thatch');
+    dc190L(k,'c',H.woodD,[[0,4.24],[.2,4.24],[.22,4.34],[.12,4.38],[0,4.38]],8,0,0,0,0,1,'wood');ht220Egg(k,0,4.36,0,.6,0xa88a5a,0,0,0,'c','wood')}
+  if(lv>=2){// turned stone columns, a stone ring beam, the slate bell roof
+    P.forEach(([x,z],i)=>{dc190L(k,'c',C.st,[[0,0],[.3,0],[.3,.16],[.22,.22],[.19,.3],[.17,2.2],[.2,2.3],[.28,2.38],[.28,2.5],[0,2.5]],8,x,0,z,0,1,'ashlar');c.push([x,z,.24])});
+    dc190L(k,'c',C.stL,[[1.52,2.5],[2.1,2.5],[2.14,2.62],[2.1,2.78],[1.52,2.78],[1.52,2.5]],12,0,0,0,.26,1,'ashlar');
+    dc190L(k,'c',H.slate,[[0,2.84],[2.34,2.78],[2.42,2.9],[2.1,3.3],[1.58,3.85],[.95,4.35],[.42,4.7],[.2,4.84],[0,4.86]],12,0,0,0,.26,1,'slate');
+    dc190L(k,'m',C.brass,[[2.28,2.76],[2.46,2.82],[2.46,2.92],[2.3,2.9]],12,0,0,0,.26,1,'brass');dc190L(k,'m',C.brass,[[.9,4.32],[1.02,4.3],[1.02,4.4],[.9,4.42]],12,0,0,0,.26,1,'brass');
+    dc190L(k,'m',C.brass,[[0,4.8],[.26,4.8],[.3,4.9],[.2,4.98],[.12,5.06],[0,5.06]],8,0,0,0,0,1,'brass');
+    if(lv==2)ht220Egg(k,0,5.04,0,.62,C.brass,0,0,0,'m','brass');
+    // heat stones glowing round the nest
+    for(let i=0;i<10;i++){const [x,z]=ht220At(i/10*6.283+.2,1.18);dc190P(k,'g',i%2?0xff8a3a:0xffb050,dt168Rock(150+i,1,.4,1),dt168Mx(x,.15,z,0,i,0,.085,.06,.085))}
+    ht220Cage(k,-2.55,1.1,H.eggC[4],c);ht220Cage(k,2.55,.3,H.eggC[2],c);
+    [0,N-1].forEach(i=>{const a=(i+.5)/N*6.283,[x,z]=ht220At(a,R+.2);dc190Banner(k,x,2.36,z,a,col,.42,1.25,0xcfc4a8)})}
+  // lanterns in the front spans (levels 1-3)
+  if(lv>=1)[N-1,0,1,N-2].forEach((i,j)=>{if(j>1&&lv<2)return;const a=(i+1)/N*6.283,[x,z]=ht220At(a,R*.866-.02);dc190Rod(k,'m',C.iron,[x,2.46,z],[x,2.24,z],.01,'iron',4);dc190Lantern(k,x,1.94,z,1.15,lv>=3?0xc8b0ff:0xffc870)});
+  if(lv>=3){// brass claws for the crystal egg (the egg itself is alive: ht220Anim), crystal shards, rune stones
+    for(let i=0;i<4;i++){const a=i/4*6.283+.78,cx=Math.cos(a),cz=Math.sin(a);dc190Tube(k,'m',C.brass,[[cx*.2,5.0,cz*.2],[cx*.36,5.16,cz*.36],[cx*.4,5.42,cz*.4],[cx*.3,5.6,cz*.3]],[.035,.032,.026,.012],5,'brass',1)}
+    [[.9,1.3],[-.9,1.25],[2.3,1.2],[-2.3,1.3],[3.5,1.15]].forEach(([a,r],i)=>{const [x,z]=ht220At(a,r);[[0,0,.3,0],[.1,.05,.2,.4],[-.08,.06,.17,-.35]].forEach(([dx,dz,h,rz],j)=>dc190P(k,'g',[0xaee6ff,0xc8b0ff,0x9affd8][(i+j)%3],dt168Lathe([[0,0],[.3,.12],[.26,.7],[0,1]],5),dt168Mx(x+dx,.1,z+dz,rz*.5,i+j,rz,h*.9,h*1.7,h*.9)))});
+    [[-2.4,2.2],[2.4,2.2],[-2.75,-.9],[2.75,-.9]].forEach(([x,z],i)=>{dc190L(k,'c',C.obs,[[0,0],[.24,0],[.2,.12],[.15,1.0],[.06,1.22],[0,1.25]],4,x,0,z,.4+i,1,'ashlar');dc190P(k,'g',C.vio,dt168Lathe([[0,0],[.5,.5],[0,1]],4),dt168Mx(x,.56,z,0,.4+i+.785,0,.2,.3,.2));c.push([x,z,.26])})}
+  ht220Corners(k,lv);return c}
+// ---------------- the living parts (not baked): the rocking egg, the crystal egg and its motes ----------------
+function ht220Geo(){if(HT220.geo)return HT220.geo;const eg=new THREE.LatheGeometry(HT220.egg.map(p=>new THREE.Vector2(p[0],p[1])),10),oc=new THREE.OctahedronGeometry(1,0);
+  return HT220.geo={eg,oc,m0:new THREE.MeshLambertMaterial({color:0xe8dcc0,flatShading:true}),m1:new THREE.MeshLambertMaterial({color:0x5a4634,flatShading:true}),
+    cry:new THREE.MeshLambertMaterial({color:0xb9a2ff,emissive:0x6a48e0,flatShading:true}),halo:new THREE.MeshBasicMaterial({color:0x9a7aff,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false}),
+    mote:new THREE.MeshBasicMaterial({color:0xd8c8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false})}}
+function ht220Anim(g,l){const lv=l-1,G=ht220Geo(),R=lv>=2?.92:1,mk=(geo,mat)=>{const m=new THREE.Mesh(geo,mat);m.userData.lpsSkip=1;return m};
+  // the middle egg of the nest: rocks for a moment every few seconds
+  const e=new THREE.Group(),sh=mk(G.eg,G.m0),band=mk(G.eg,G.m1);sh.scale.setScalar(.5*R);band.scale.set(.515*R,.09*R,.515*R);band.position.y=.14*R;sh.castShadow=true;e.add(sh);e.add(band);e.position.set(0,.2,0);e.userData.lpsSkip=1;e.userData.ht220='egg';g.add(e);
+  let cr=null,halo=null,M=[];
+  if(lv>=3){cr=mk(G.eg,G.cry);cr.scale.setScalar(.95);cr.position.y=5.12;cr.userData.ht220='crystal';g.add(cr);halo=mk(G.eg,G.halo);halo.position.y=5.02;g.add(halo);
+    for(let i=0;i<5;i++){const m=mk(G.oc,G.mote);m.scale.setScalar(.045);g.add(m);M.push(m)}}
+  g.userData.psNo=1;
+  return now=>{const t=now/1000,u=(t%7.3)/1.3,k=u<1?Math.sin(u*Math.PI)*Math.sin(u*Math.PI*5):0;e.rotation.z=.16*k;e.rotation.x=.07*k;
+    if(cr){const p=.5+.5*Math.sin(t*1.7);cr.rotation.y=t*.35;cr.material.emissiveIntensity=.75+.5*p;halo.scale.setScalar(1.12+.1*p);halo.rotation.y=-t*.2;
+      M.forEach((m,i)=>{const a=t*(.6+i*.07)+i*1.257,r=.72+.1*Math.sin(t*1.3+i);m.position.set(Math.cos(a)*r,5.6+.32*Math.sin(t*.9+i*1.9),Math.sin(a)*r);m.rotation.y=t*2+i})}}}
+// ---------------- the switch ----------------
+if(typeof KDU!='undefined'&&KDU.hatch&&HT220.on){
+  KDU.hatch.b=function(k,l){const cl=ht220Build(k,Math.max(0,Math.min(3,(l|0)-1)));HT220.k=k;return cl};KDU.hatch.b.v196=1;
+  // after the kit is baked: the decoration shading (only when it was just built), then the rune ring on the floor
+  KDU.hatch.ring=function(g,l){try{if(HT220.k){dc190Shade(HT220.k,'KDU|hatch220|'+l);HT220.k=null}}catch(e){console.warn('v220 hatchery shade',e)}
+    if(l<4)return;const m=new THREE.Mesh(new THREE.RingGeometry(1.42,1.6,24),new THREE.MeshBasicMaterial({color:0x9a7aff,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.y=.1;m.userData.lpsSkip=1;g.add(m);return m};
+  KDU.hatch.anim=function(g,l){try{return ht220Anim(g,l)}catch(e){console.warn('v220 hatchery',e);return null}};
+  // the model has one look per Hatchery level 0-3 (kdUp gets 1-4), under its own cache key (the old model was cached as KDU|hatch|n)
+  {const f=kdUp;kdUp=function(T,key,l){if(key!=='hatch')return f.apply(this,arguments);const hk=twHas,gk=twGroup,mp=x=>typeof x=='string'&&x.indexOf('KDU|hatch|')==0?'KDU|hatch220|'+x.slice(10):x;
+    twHas=function(x){return hk(mp(x))};twGroup=function(k,x,ao){return gk(k,mp(x),ao)};try{return f.call(this,T,key,(l|0)+1)}finally{twHas=hk;twGroup=gk}}}
+  try{const K=kdState();if(K.up&&K.up.hatch)K.up.hatch.l=-9;kdSync()}catch(e){console.warn('v220 hatchery',e)}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:
