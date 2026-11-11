@@ -31,9 +31,9 @@ const ZONES=[
   ['z2d','The Den · The Rime Wraith','Cold and still. Choir, bells, a heartbeat drum and a thin wind.'],
   ['z2x','Sovereign fight \u00b7 The Rime Wraith','E minor, the one cold fight. A slow choir held over frantic drums, each phrase pulled firmly home; then shards of ice fall in glassy notes.'],
   ['z2m','Mini boss fight \u00b7 Gorthrak','New melody. Two hard stamps and a held note from low brass, again and again, over big drum hits and wind.']]],
- ['Searing Sands','Desert: reed pipe and oud.',[['z3','Field I','New melody again. A winding caravan tune full of quick turns around each note.',1],
+ ['Searing Sands','Desert: reed pipe and oud.',[['z3','Field I','Written tune-first this time, and twice as long (16 bars). A hook that falls through the desert scale\u2019s wide step and rests on the home note; it comes twice, then the tune climbs to its high point and the hook returns to finish.',1],
   ['z3b','Field II · The Sunken Temple','New melody again. A chant: the flute repeats one note in an even pulse, lifts a step, and rests; the reed answers higher.'],
-  ['z3c','Field III · The Salt Wastes','New melody again. Sparse and lonely: one long note, a wide leap, then silence, each call answered from further away.'],
+  ['z3c','Field III · The Salt Wastes','Written tune-first, and now in a bleaker scale than the other desert songs. A bare leap that hangs in the air, a silence, then an answering phrase that walks back down.'],
   ['z3d','The Den · Ssith’ra','A slow desert choir over a heartbeat drum and a dry rattle.'],
   ['sp_sandrun','The Sandstorm Run','Rewritten melody. A driving figure of three quick repeated notes and a leap, hammered out again and again as the chords change.'],
   ['z3x','Sovereign fight \u00b7 Ssith\u2019ra','The desert scale, whose home chord is major. A reed pipe winding in fast runs over hand drums, each run ending on the home note.'],
@@ -50,8 +50,8 @@ const ZONES=[
   ['z5b','Field II · The Outer Ramparts','The siege camp. A march: snare and war drum under a brass call.'],
   ['z5c','Field III · The Inner Keep','New melody again. A sinister court dance: two stately notes, then a quick run down the scale, repeated on each chord.'],
   ['z5d','The Den · Lord Vaelric','The court’s organ, slow and grand, with a choir and a heartbeat drum.'],
-  ['z5x','Sovereign fight \u00b7 Lord Vaelric','New melody again. A grim, stately brass theme in a sharp long-short rhythm, descending over organ and a pounding bass; then a choir.'],
-  ['z5m','Mini boss fight \u00b7 Vharog','Rewritten to be dark. Low brass snarls a tight riff around one note and its half-step neighbour, over hard drums.']]]];
+  ['z5x','Sovereign fight \u00b7 Lord Vaelric','Written tune-first, 16 bars. A hook that leaps up and leans on the note that wants to fall home; a middle section hammering repeated notes up the chords; then the hook turned upside down from the top, coming home. C minor, driving drums, a low churning figure underneath.'],
+  ['z5m','Mini boss fight \u00b7 Vharog','Written tune-first. A beast prowling: a low figure that paces and stops, pounces down from above, then paces again a fifth higher.']]]];
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 let rows='';ZONES.forEach(([zn,zd,L])=>{rows+=`<section class="zone"><header><h2>${esc(zn)}</h2><p>${esc(zd)}</p></header><ul>`+
   L.map(([k,n,d,old])=>`<li class="song${old?' old':''}" data-k="${k}"><button class="play" id="play-${k}" aria-pressed="false" aria-label="Play ${esc(n)}"><span class="ico"></span></button><div class="txt"><h3>${esc(n)}${old?'':' <span class="new">new</span>'}</h3><p>${esc(d)}</p><span class="meta"></span></div></li>`).join('')+'</ul></section>'});

@@ -75277,11 +75277,12 @@ S('z3b','The Sunken Temple',{bpm:78,root:50,mode:'hij',prog:[0,0,3,3,0,0,1,0],pa
   drums:{c:{dum:'x.....x...x.....',tek:'....g.......g.g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},
   tune:{k:'flute',kb:'reed',oct:1,v:.06,vb:.035,form:'AB-',A:'4,4 4,2 4,2 4,4 5,4|4,12 _,4|5,4 5,2 5,2 5,4 7,4|5,12 _,4|4,4 4,2 4,2 4,4 2,4|4,4 2,4 1,4 2,4|3,4 5,4 3,4 1,4|0,16',
     B:'7,4 7,2 7,2 7,4 8,4|7,8 4,8|7,4 7,2 7,2 7,4 5,4|3,12 _,4|2,4 2,2 2,2 2,4 4,4|2,8 0,8|1,4 3,4 5,4 3,4|2,6 0,10'}});
-S('z3c','The Salt Wastes',{bpm:70,root:50,mode:'hij',prog:[0,0,6,0,3,3,1,0],pad:{v:.016,cut:1200},drone:.12,
+// The Salt Wastes: D phrygian (bleaker than the other desert songs: no bright third). A bare leap D-A that hangs, a rest, then an answer.
+S('z3c','The Salt Wastes',{bpm:70,root:50,mode:'phr',prog:[0,3,5,0,0,6,5,0],pad:{v:.016,cut:1200},drone:.12,
   bass:{v:.11,c:'x...............',f:'x..x..x.x..x..x.'},
   drums:{c:{shak:'......g.......g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},fx:{wind:.008},
-  tune:{k:'reed',oct:1,v:.04,form:'A-B-',A:'0,10 4,6|7,14 _,2|6,10 3,6|4,14 _,2|5,10 7,6|3,14 _,2|5,10 1,6|0,14 _,2',
-    B:'4,10 7,6|9,14 _,2|8,10 6,6|7,14 _,2|7,10 5,6|3,10 5,6|3,10 1,6|0,16'}});
+  tune:{k:'reed',oct:1,v:.04,form:'A-B-',A:'0,4 4,12|_,4 3,4 4,4 6,4|5,12 4,4|3,4 2,4 0,8|0,4 4,12|_,4 6,4 7,4 8,4|7,8 5,4 4,4|2,4 1,4 0,8',
+    B:'4,4 7,12|_,4 6,4 5,4 4,4|5,12 3,4|4,16|4,4 7,12|_,4 8,4 7,4 6,4|5,8 4,4 2,4|1,4 0,12'}});
 S('z3d',"Ssith'ra's Den",{bpm:64,root:50,mode:'hij',prog:[0,1,0,1,0,6,1,0],pad:{v:.024,cut:560,form:1},drone:.12,
   bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............',shak:'......g.......g.'}},
   tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|3,16|4,16|6,8 8,8|8,8 5,8|4,16',
@@ -75375,10 +75376,12 @@ S('z4x','The Bloated One',{bpm:104,root:48,mode:'aeo',prog:[0,6,3,0,5,3,6,0],fig
   tune:{k:'horn',kb:'choir',oct:0,ob:1,v:.07,vb:.06,dbl:1,form:'AB',A:'0,12 2,4|1,8 -1,8|3,8 5,4 3,4|4,4 2,4 0,8|5,12 7,4|7,8 5,8|6,8 8,4 6,4|7,16',
     B:'4,8 7,8|8,16|7,8 5,8|4,16|9,8 7,8|7,8 10,8|8,8 10,8|9,4 7,12'}});
 // Lord Vaelric (C minor): the court. A furious harpsichord and a violin running in quick patterns down the chords; then the brass, grand.
-S('z5x','Lord Vaelric',{bpm:132,root:48,mode:'hmin',prog:[0,5,4,0,3,5,4,0],fight:1,boom:1,pad:{v:.03,cut:1000,form:1},toll:{n:2,v:.04,oct:1},
-  bass:{v:.11,c:'x.x.x.x.x.x.x.x.'},stab:{c:'X.......x.......',v:.02},drums:{c:{taiko:'X...x...X...x.x.',snare:'........X.....gg',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'brass',kb:'choir',oct:1,v:.045,vb:.06,dbl:1,form:'AB',A:'7,7 6,1 4,8|5,7 7,1 9,8|8,7 6,1 4,8|2,7 1,1 0,8|5,7 3,1 5,8|9,7 7,1 5,8|4,7 6,1 8,4 6,4|7,16',
-    B:'9,12 7,4|9,12 12,4|11,12 8,4|7,16|10,12 7,4|9,12 7,4|8,8 6,4 4,4|7,16'}});
+// Lord Vaelric: C minor, 16 bars, a a' b a''. The hook leaps G C' and leans on Eb' D' C' B (the leading note that wants to go home);
+// the middle hammers repeated notes up the chords; the last phrase turns the hook upside down from the top G and comes home.
+S('z5x','Lord Vaelric',{bpm:138,root:48,mode:'hmin',prog:[0,0,5,4,0,4,0,0,5,4,0,1,0,5,4,0],fight:1,boom:1,pad:{v:.026,cut:1000,form:1},
+  arp:{e:1,p:[0,2,1,2,0,2,1,2,0,2,1,2,0,2,1,3],oct:0,v:.026,w:'sawtooth'},bass:{v:.11,c:'x.x.x.x.x.x.x.x.'},stab:{c:'X...............',v:.018},
+  drums:{c:{taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'x.x.x.x.x.x.x.x.'}},
+  tune:{k:'brass',oct:1,v:.045,dbl:1,form:'A',A:'4,4 7,4 9,6 8,2|7,4 6,4 7,8|5,4 7,4 9,6 8,2|7,4 6,4 4,8|4,4 7,4 9,6 8,2|10,4 9,4 8,8|9,4 8,4 7,4 6,4|7,12 _,4|5,6 5,2 7,4 9,4|8,6 8,2 6,4 4,4|7,6 7,2 9,4 11,4|10,8 8,8|11,4 9,4 7,6 8,2|9,4 8,4 7,4 5,4|4,4 6,4 8,4 6,4|7,16'}});
 // the mini bosses: one shape of song, but each with its own key, lead instrument, bass and drums; the same cadences
 Mi(0,'Mini boss: Vorraxis',47,'hmin',126,[0,5,4,0,3,0,4,0],'0,3 2,3 4,10|5,3 7,3 9,10|8,3 6,3 4,10|4,3 2,3 0,10|3,3 5,3 7,10|7,3 4,3 2,10|1,3 4,3 6,10|7,16',{bass:{v:.11,c:'x..x..x.x..x..x.'},fx:{drip:.08}});
 Mi(1,'Mini boss: Hillside Crest',55,'hmin',128,[0,3,4,0,5,3,4,0],'0,4 4,4 7,8|7,8 5,8|6,6 4,2 8,8|7,12 _,4|9,8 7,8|10,8 7,8|8,4 6,4 4,8|7,16',
@@ -75390,9 +75393,10 @@ S('z3m','Mini boss: Qarsul',{bpm:126,root:50,mode:'hij',prog:[0,0,1,0,0,3,1,0],f
   tune:{k:'brass',oct:0,v:.06,dbl:1,form:'AA-',A:'0,6 0,6 1,4|0,12 _,4|1,6 1,6 3,4|2,4 1,4 0,8|0,6 0,6 1,4|3,6 3,6 5,4|5,6 3,6 1,4|0,16'}});
 Mi(4,'Mini boss: The Dirge',48,'aeo',118,[0,6,3,0,0,6,3,0],'0,8 2,8|1,8 -1,8|0,8 3,8|2,4 0,12|4,8 7,8|8,8 6,8|5,8 3,8|4,4 2,4 0,8',
   {bell:{p:.25,v:.04,oct:2},tune:{k:'cello',oct:0,v:.11,dbl:1,form:'AA-'},bass:{v:.11,c:'x.....x.x...x...'},drums:{c:{taiko:'x.....x.x...x...',snare:'............x...',tek:'..g...g...g...gg'}}});
-S('z5m','Mini boss: Vharog',{bpm:128,root:48,mode:'phr',prog:[0,0,1,0,0,3,1,0],fight:1,boom:.9,pad:{v:.024,cut:900,form:1},
-  bass:{v:.1,c:'x.xx.xx.x.xx.xx.'},stab:{c:'X.......x.......',v:.018},drums:{c:{taiko:'X..g..x.X..g..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'brass',oct:0,v:.06,dbl:1,form:'AA-',A:'0,6 1,2 0,8|0,6 1,2 2,8|1,6 3,2 1,8|2,4 1,4 0,8|4,6 5,2 4,8|5,6 3,2 5,8|5,4 3,4 1,8|0,16'}});
+// Vharog: a beast prowling. C with the dark half-step above it: a low figure that paces and stops, pounces down from G, then paces a fifth higher.
+S('z5m','Mini boss: Vharog',{bpm:128,root:48,mode:'phr',prog:[0,0,0,0,0,0,1,0],fight:1,boom:.9,pad:{v:.024,cut:900,form:1},
+  bass:{v:.1,c:'x..x..x.x..x..x.'},stab:{c:'X.......x.......',v:.018},drums:{c:{taiko:'X..g..x.X..g..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},
+  tune:{k:'brass',oct:0,v:.06,dbl:1,form:'AA-',A:'0,4 0,2 1,2 0,4 _,4|0,4 0,2 1,2 3,4 2,4|0,4 0,2 1,2 0,4 _,4|4,4 3,4 2,2 1,2 0,4|4,4 4,2 5,2 4,4 _,4|4,4 4,2 5,2 7,4 6,4|5,4 4,4 3,4 2,4|1,4 0,12'}});
 // v215g (owner, Nov 11 2026: several melodies "seem too random", "lack cohesion"; bass "overpowering" on some songs; the desert songs
 // "too similar melodically"; the Dirge songs except its two fights disliked; Vaelric, the Citadel mini boss and Argus not dark
 // enough): every tune named is rewritten around one short idea that is stated, repeated on the next chord and answered, with the
@@ -75402,9 +75406,13 @@ S('z5m','Mini boss: Vharog',{bpm:128,root:48,mode:'phr',prog:[0,0,1,0,0,3,1,0],f
 MTH.z0=Object.assign({},MTH.z0,{lead:null,bell:null,toll:{n:4,v:.035,oct:2},
   tune:{k:'hollow',oct:1,v:.05,form:'A-B-',A:'_,4 0,2 2,2 4,8|_,4 4,2 2,2 0,8|_,4 1,2 3,2 5,8|4,10 2,2 0,4|_,4 0,2 2,2 4,8|_,4 3,2 1,2 -1,8|1,6 3,6 5,4|4,4 0,12',
     B:'7,10 4,2 2,4|4,10 2,2 0,4|8,10 5,2 3,4|4,14 _,2|7,10 4,2 2,4|6,10 3,2 1,4|5,6 3,6 1,4|0,14 _,2'}});
-MTH.z3=Object.assign({},MTH.z3,{lead:null,
-  tune:{k:'reed',oct:1,v:.045,form:'AB-',A:'4,4 5,2 4,2 2,4 4,4|2,4 1,2 2,2 0,8|5,4 6,2 5,2 3,4 5,4|4,2 2,2 1,2 2,2 0,8|3,4 4,2 3,2 1,4 3,4|1,4 0,2 1,2 -1,8|1,2 3,2 5,2 3,2 1,4 3,4|2,2 1,2 0,12',
-    B:'7,4 8,2 7,2 5,4 4,4|5,2 4,2 2,4 4,8|8,4 10,2 8,2 5,4 3,4|4,10 _,6|6,4 8,2 6,2 3,4 1,4|3,2 1,2 -1,4 1,8|5,2 3,2 1,2 3,2 5,4 1,4|0,12 _,4'}});
+// v215i (owner: "Field 1 searing sands and salt wastes seem like ai wrote them. there's no substance or intelligence to the melody";
+// Vaelric's and Vharog's fights "need work"): these four are written tune first — a line with a hook, a rise to a high point and a
+// return — and the chords are then fitted under it (before, the notes were picked to fit the chords).
+// Searing Sands I: 16 bars, a a' b a''. The hook falls A G F# Eb D (the desert scale's wide step) and rests on D; the middle climbs to the high D.
+// Almost all of it sits over the home chord, as this kind of tune does over a drone; one bar of C minor under the high point.
+MTH.z3=Object.assign({},MTH.z3,{lead:null,prog:[0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0],
+  tune:{k:'reed',oct:1,v:.045,form:'A-',A:'4,6 3,2 2,4 1,4|0,12 _,4|2,2 3,2 4,4 4,2 5,2 4,4|3,4 2,8 _,4|4,6 3,2 2,4 1,4|0,12 _,4|2,2 3,2 4,4 4,2 3,2 2,4|1,4 0,12|4,4 5,2 6,2 7,8|8,4 7,4 6,4 5,4|4,4 5,2 6,2 7,8|6,4 5,4 4,8|4,6 3,2 2,4 1,4|0,8 2,4 3,4|4,4 3,2 2,2 2,4 1,4|0,16'}});
 MTH.z4=Object.assign({},MTH.z4,{mode:'aeo',prog:[0,5,6,0,0,3,6,0],lead:null,bell:null,toll:{n:2,v:.045,oct:2},
   tune:{k:'choir',oct:1,v:.05,form:'AB-',A:'0,6 0,2 2,8|2,6 2,2 0,8|1,6 1,2 3,8|2,6 1,2 0,8|4,6 4,2 2,8|3,6 3,2 5,8|3,6 1,2 -1,8|0,16',
     B:'4,6 4,2 7,8|7,6 5,2 2,8|8,6 6,2 3,8|4,12 2,4|4,6 2,2 0,8|5,6 3,2 0,8|1,6 -1,2 1,8|0,16'}});
