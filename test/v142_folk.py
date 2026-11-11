@@ -52,6 +52,9 @@ def keepers_js():
   K.forEach(q=>{if(!q.wk&&WKL[q.lab])q.wk=WKL[q.lab]});
   const C=[];const roles=Object.keys(CZR104);for(let i=0;i<6;i++){const r=roles[i%roles.length];const c={n:HS103_CN[i%HS103_CN.length],h:0,r,rk:1,task:'',t0:0,lk:(i*7919+i*i*104729+12345)%1000000};C.push({lab:'cit '+c.n+' '+r,o:czLook103(c),wk:null})}
   return K.concat(C)}"""
+FITS_JS=r"""(only)=>{const L=[],F=Object.keys(VC220.fit).filter(k=>!only.length||only.includes(k)),RO={smock:'fish',jerkin:'hunt'};
+  F.forEach((k,j)=>{for(let q=0;q<2;q++){const i=j*2+q,r=RO[k]||(k=='dress'&&q?'egg':'gather'),c={n:HS103_CN[(i*5+3)%HS103_CN.length],h:0,r,rk:1,task:'',t0:0,lk:(i*104729+i*i*7919+4321)%1000000};
+    const o=czLook103(c);o.fkFit=k;L.push({lab:'fit '+k+' '+c.n,o,wk:null})}});return L}"""
 # ---------------- geometry checks ----------------
 def pt_tri_dist(P,A,B,C):
     # distance from points P (n,3) to triangles (n,3) A,B,C (Ericson, closest point on triangle)
@@ -157,6 +160,11 @@ def s(pg):
     L=[{'lab':k,'o':{'robe':[0x6a4a3a,0x3a5a6a,0x5a3a5a,0x4a5a3a][i%4],'trim':0xc9a24a,'hat':'','fkSp':k,'fkFur':0,'label':''},'wk':'smith'} for i,k in enumerate(sp)]
     sets=[('sp',L)]
     if os.environ.get('KEEP','1')!='0':sets.append(('keep',ev(keepers_js())))
+    # v220: the villagers' wardrobe — every outfit on two citizens (FIT=0 skips; FIT=farm,coat picks; FITONLY=1 only this set)
+    if os.environ.get('FIT','1')!='0':
+        fl=ev(FITS_JS,[f for f in os.environ.get('FIT','').split(',') if f and f!='1'])
+        if os.environ.get('FITONLY'):sets=[]
+        sets.append(('fit',fl))
     poses=os.environ.get('POSES','rest,idle,walk,work').split(',');nos=bool(os.environ.get('NOSHEET'))
     fails=[];thr=FLOAT_MM/1000
     from PIL import Image,ImageDraw
