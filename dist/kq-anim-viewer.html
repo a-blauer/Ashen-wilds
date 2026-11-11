@@ -74889,7 +74889,7 @@ function zc214New(S,o){if(o&&!S.vm.has(o))S.vm.set(o,false)}
 function zc214Road(g,fr){const I=INSL[g],P=I.path,j=Math.max(2,Math.min(P.length-14,Math.floor(P.length*fr))),a=P[j],b=P[Math.min(P.length-1,j+12)],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz)||1;
   return {x:a[0],z:a[1],fx:dx/L,fz:dz/L,sx:-dz/L,sz:dx/L}}
 // a stand-in creature (model only): sh = its shot, from (x,z) walking along (dx,dz) at v from t0; stalk = toward the camera
-function zc214Cast(S,c){try{if(!EN[c.k])return;const m=cr(enemyC(c.k,c.lv||10,{}));if(!m)return;m.scale.setScalar(m.bs||m.scale.x||1);m.userData.psNo=1;m.userData.noFarCull=1;m.visible=false;
+function zc214Cast(S,c){try{if(!EN[c.k])return;if(!c.free){const T=ZC214.T,ta=T[c.sh],tb=T[c.sh+1]||ZC214.cut;if(!zc214Clear(S,c,ta,tb,zc214G({x:c.x,z:c.z})))return}const m=cr(enemyC(c.k,c.lv||10,{}));if(!m)return;m.scale.setScalar(m.bs||m.scale.x||1);m.userData.psNo=1;m.userData.noFarCull=1;m.visible=false;
     m.traverse(o=>{if(o.isMesh)o.frustumCulled=false});scene.add(m);S.cast.push(Object.assign({m},c))}catch(e){console.warn('zc214 cast',c.k,e)}}
 // a creature of our own on the Sovereign rig (no AI): built with B.build, posed per frame by zc214RigPose
 function zc214Rig(B,x,z,ry){const R=svRig();B.build(R,null);svRest(R);try{svMerge(R)}catch(_){}const g=new THREE.Group();g.add(R.root);g.position.set(x,GH(x,z),z);g.rotation.y=ry;
@@ -74906,12 +74906,28 @@ function zc214Gate(S,key){try{const G=SP152.gates[key];if(!G)return null;if(!G.s
 // =====================================================================================================================
 // the stand-ins of shots 1–4 stand where that shot's camera looks at mid-shot: d ahead, o across, walking across the view
 function zc214Place(S){(S.Z.rel||[]).forEach(([sh,k,lv,d,o,dir,v,dl])=>{try{const T=ZC214.T,ta=T[sh],tb=T[sh+1]||ZC214.cut,tm=(ta+tb)/2,c=S.Z.cam(S,sh,.5,tm);if(!c)return;
-    let fx=c.l.x-c.p.x,fz=c.l.z-c.p.z;const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;const rx=-fz,rz=fx,t0=ta+dl,s0=o-dir*v*(tm-t0);
-    zc214Cast(S,{sh,k,lv,x:c.p.x+fx*d+rx*s0,z:c.p.z+fz*d+rz*s0,dx:rx*dir,dz:rz*dir,v,t0})}catch(e){console.warn('zc214 place',k,e)}})}
+    let fx=c.l.x-c.p.x,fz=c.l.z-c.p.z;const L=Math.hypot(fx,fz)||1;fx/=L;fz/=L;const rx=-fz,rz=fx,t0=ta+dl,g=zc214G(c.F);
+    // the first spot (then nearby ones, then the other way) whose whole walk stays on open ground: never through a wall, a tomb,
+    // a column or the sand of the buried temple (owner, Nov 10 2026: creatures walked through the tomb in the sand cinematic)
+    const tries=[];for(const dd of [0,-2,2,-4,4])for(const oo of [0,2,-2,4,-4,6,-6])for(const sg of [1,-1])tries.push([d+dd,o+oo,dir*sg]);
+    for(const [d2,o2,dr] of tries){if(d2<5)continue;const s0=o2-dr*v*(tm-t0),C={sh,k,lv,x:c.p.x+fx*d2+rx*s0,z:c.p.z+fz*d2+rz*s0,dx:rx*dr,dz:rz*dr,v,t0};
+      if(zc214Clear(S,C,ta,tb,g)){zc214Cast(S,C);return}}}catch(e){console.warn('zc214 place',k,e)}})}
+function zc214G(F){try{const J=insAt(Math.round(F.x),Math.round(F.z));return J?J.g:null}catch(_){return null}}
+// can a creature stand at x,z: inside the shot's own instance, on open ground (no wall, rock, water, prop, set-piece block), not in
+// the buried temple's sand, and not where another stand-in of the same shot already walks
+function zc214Blk(x,z,g){const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='R'||t=='~')return true;
+  try{if(solid(X,Z)||props.has(Z*W+X))return true}catch(_){}
+  try{if(g!=null){const J=insAt(X,Z);if(!J||J.g!==g)return true}}catch(_){}
+  try{if(typeof sd165At=='function'&&SD165.D&&sd165At(x,z)!=null)return true}catch(_){}return false}
+// the whole walk of one stand-in in its shot, with a body's width either side
+function zc214Clear(S,C,ta,tb,g){for(let t=ta;t<=tb+.01;t+=.2){const u=Math.max(0,t-C.t0),x=C.x+C.dx*C.v*u,z=C.z+C.dz*C.v*u;
+    for(const [ox,oz] of [[0,0],[.9,0],[-.9,0],[0,.9],[0,-.9]])if(zc214Blk(x+ox,z+oz,g))return false;
+    for(const K of S.keep||[])if(Math.hypot(x-K[0],z-K[1])<K[2]+.9)return false;   // the set pieces themselves (not all of them block walking)
+    for(const o of S.cast)if(o.sh===C.sh){const uo=Math.max(0,t-o.t0),px=o.x+o.dx*o.v*uo,pz=o.z+o.dz*o.v*uo;if(Math.hypot(px-x,pz-z)<1.8)return false}}return true}
 // the zones' plans: lines (the voice), build(S) → S.A anchors + set pieces + cast, cam(S,i,k,t) for shots 1–4, frame(S,i,t,now,dt)
 // =====================================================================================================================
 // ---------------- Burningeye Summit (the ice zone) ----------------
-ZC214.Z[2]={den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.5,-5.5,1,.85,.3],[1,'trollsh',20,12,1.8,1,.9,.6],[2,'wendigo',23,12,3,-1,.8,0],[2,'rimecrawler',23,9.5,-3.5,1,.7,.3],[3,'troll',26,9,-3,1,.9,0],[3,'troll',26,11,1.2,1,.85,.5]],name:'Burningeye Summit',ess:'the Wraith',key:{dr:[41.2,61.74,82.41],ch:[329.63,392,493.88,587.33],toll:82.41,bed:'wind'},rise:7,riseFade:1,
+ZC214.Z[2]={keep(S){const A=S.A,K=[];if(A.maw)K.push([A.maw.x,A.maw.z,5]);if(A.gate)K.push([A.gate.x,A.gate.z,6]);if(A.bench)K.push([A.bench.x,A.bench.z,2.2]);if(A.drill)K.push([A.drill.x,A.drill.z,4.5]);if(A.con)K.push([A.con.x,A.con.z,2]);(A.box||[]).forEach(b=>K.push([b.x,b.z,1.8]));return K},den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.5,-5.5,1,.85,.3],[1,'trollsh',20,12,1.8,1,.9,.6],[2,'wendigo',23,12,3,-1,.8,0],[2,'rimecrawler',23,9.5,-3.5,1,.7,.3],[3,'troll',26,9,-3,1,.9,0],[3,'troll',26,11,1.2,1,.85,.5]],name:'Burningeye Summit',ess:'the Wraith',key:{dr:[41.2,61.74,82.41],ch:[329.63,392,493.88,587.33],toll:82.41,bed:'wind'},rise:7,riseFade:1,
   lines:[{a:1.0,b:3.6,s:'Burningeye Summit. Here even the sky burns cold.'},
     {a:4.4,b:9.0,s:'A troll warlord rules the frozen maw beneath the mountain.'},
     {a:10.2,b:14.8,s:'Above it, an ancient gate lies sealed in ice older than kings.'},
@@ -74937,7 +74953,7 @@ ZC214.Z[2]={den:[0xb8e0ff,2.0],rel:[[1,'troll',20,11,-2,1,.9,0],[1,'yeti',20,13.
     const D=MQ170.S;if(D){[D.cliff.g,D.drill.g,D.con].concat(D.box.map(b=>b.g)).forEach(o=>zc214Vis(S,o,i===3));if(i===3)D.box.forEach((B,j)=>{if(B.halo)B.halo.scale.setScalar(1.1*(1+.15*Math.sin(tt*3+j)))})}}};
 
 // ---------------- Searing Sands ----------------
-ZC214.Z[3]={den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'scorp',29,8.5,1.5,1,1.1,.4],[1,'selem',29,9.5,-4.5,1,.8,.2],[2,'tombpriest',31,11,3,-1,.6,0],[2,'scarab',31,8,-2,1,1,.3],[2,'scarab',31,9,-4,1,1,.6],[3,'saltgolem',34,9,4,-1,.7,0],[3,'dustwyrm',34,11,-4,1,.9,.4]],name:'Searing Sands',ess:'the Devourer',key:{dr:[46.25,69.3,92.5],ch:[369.99,440,554.37,659.25],toll:92.5,bed:'heat'},rise:-11,
+ZC214.Z[3]={keep(S){const A=S.A,K=[];if(A.t2){const F=A.t2.F,T=ss165T2();[[T.altar,5],[T.kh,2.4],[T.rift,2.4]].forEach(([o,r])=>{if(o){const [x,z]=F.W2(o.a,o.b);K.push([x,z,r])}})}(A.col||[]).forEach(c=>K.push([c.x,c.z,3]));if(A.t3){const F=A.t3.F,cr=A.t3.cr;for(let a=-7;a<=7;a+=3.5){const [x,z]=F.W2(cr.a+a,cr.b);K.push([x,z,4])}}return K},den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'scorp',29,8.5,1.5,1,1.1,.4],[1,'selem',29,9.5,-4.5,1,.8,.2],[2,'tombpriest',31,11,3,-1,.6,0],[2,'scarab',31,8,-2,1,1,.3],[2,'scarab',31,9,-4,1,1,.6],[3,'saltgolem',34,9,4,-1,.7,0],[3,'dustwyrm',34,11,-4,1,.9,.4]],name:'Searing Sands',ess:'the Devourer',key:{dr:[46.25,69.3,92.5],ch:[369.99,440,554.37,659.25],toll:92.5,bed:'heat'},rise:-11,
   lines:[{a:1.0,b:3.6,s:'The Searing Sands bury everything they touch.'},
     {a:4.4,b:9.0,s:'Temples… kings… whole cities sleep beneath the dunes.'},
     {a:10.2,b:14.8,s:'A broken warden waits in his court to be made whole.'},
@@ -74954,14 +74970,15 @@ ZC214.Z[3]={den:[0xffc070,1.6],denK:1.5,rel:[[1,'scorp',29,7,-2,1,1.2,0],[1,'sco
     if(i===1&&A.t1){const F=A.t1.F,a=A.t1.a,[px,pz]=F.W2(a-28+8*Io(k),6-5*q),[lx,lz]=F.W2(a,0);return {p:G(px,pz,4.4-1.2*q),l:new THREE.Vector3(lx,A.t1.y+1.6,lz),fov:48,F:G(...F.W2(a-8,0))}}
     if(i===2&&A.t2){const F=A.t2.F,al=A.t2.al||{a:6,b:0},[px,pz]=F.W2(-13+6*Io(k),-5+7*q),[lx,lz]=F.W2(al.a,al.b);return {p:G(px,pz,4.2-1.2*q),l:G(lx,lz,1.6),fov:50,F:G(F.x,F.z)}}
     if(i===3&&A.col){const c=A.col[1]||A.col[0],R=zc214Road(insG(3,2),.34),a=.8-.9*q,ca=Math.cos(a),sa=Math.sin(a),ox=R.fx*ca+R.sx*sa,oz=R.fz*ca+R.sz*sa,r=13-3*q;return {p:G(c.x+ox*r,c.z+oz*r,1.6+1.2*q),l:G(c.x,c.z,2.6),fov:48,F:G(c.x,c.z)}}
-    if(i===4&&A.t3){const F=A.t3.F,cr=A.t3.cr,[px,pz]=F.W2(cr.a-14+4*Io(k),-7+4*q),[lx,lz]=F.W2(cr.a+2+20*Sm(ic151K(k,.35,1)),0);return {p:G(px,pz,3.0+1.6*q),l:new THREE.Vector3(lx,(A.t3.y||GH(lx,lz))+1.4,lz),fov:52,F:G(...F.W2(cr.a,0))}}
+    // the yard sits on the map's very edge: the camera stands at the edge side and looks back into the land, never out past the edge
+    if(i===4&&A.t3){const F=A.t3.F,cr=A.t3.cr,[px,pz]=F.W2(cr.a+4.2-2.4*Io(k),7.5-3*q),[lx,lz]=F.W2(cr.a-9,-1.5+1.5*q),y=A.t3.y!=null?A.t3.y:GH(px,pz);return {p:new THREE.Vector3(px,y+2.4+1.0*q,pz),l:new THREE.Vector3(lx,y+1.3,lz),fov:52,F:G(...F.W2(cr.a,0))}}
     return null},
   frame(S,i,t,now,dt){if(SD165.g)zc214Vis(S,SD165.g,i===1);if(CY165.g)zc214Vis(S,CY165.g,i===2);
     try{SC165.cols.forEach(C=>{if(C&&C.g)zc214Vis(S,C.g,i===3)});SC165.picks.forEach(q=>zc214Vis(S,q.g,false))}catch(_){}
     if(CS165.g){zc214Vis(S,CS165.g,i===4);if(CS165.vis)zc214Vis(S,CS165.vis,i===4);try{const R=CS165.R;if(R&&i===4){R.J.sail.rotation.y=Math.sin(t*2.3)*.35}}catch(_){}}}};
 
 // ---------------- The Dirge (the graveyard) ----------------
-ZC214.Z[4]={fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38,8,-3.5,1,.6,0],[1,'ghoul',38,10,3.5,-1,.7,.5],[2,'bonearcher',38,8,3,-1,.5,0],[2,'skeleton',38,10,-3,1,.55,.4],[3,'drowned',40,8,-3,1,.5,0],[3,'banshee',40,10,3,-1,.7,.3],[4,'bonehound',42,12,-4,1,1.1,.2],[4,'colossus',42,15,3,-1,.5,0],[4,'bonehound',42,13,-7,1,1.1,.6]],name:'The Dirge',ess:'the Rot-King',key:{dr:[43.65,65.41,87.31],ch:[349.23,415.3,523.25,622.25],toll:87.31,bed:'murmur'},rise:-5,
+ZC214.Z[4]={keep(S){const A=S.A,K=[];if(A.ang)K.push([A.ang.x,A.ang.z,4]);(A.gr||[]).forEach(g=>K.push([g.x,g.z,1.8]));if(A.quay)K.push([A.quay.x,A.quay.z,5]);(A.pr||[]).forEach(p=>K.push([p.x,p.z,2.4]));if(A.ctr)K.push([A.ctr.x,A.ctr.z,8]);return K},fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38,8,-3.5,1,.6,0],[1,'ghoul',38,10,3.5,-1,.7,.5],[2,'bonearcher',38,8,3,-1,.5,0],[2,'skeleton',38,10,-3,1,.55,.4],[3,'drowned',40,8,-3,1,.5,0],[3,'banshee',40,10,3,-1,.7,.3],[4,'bonehound',42,12,-4,1,1.1,.2],[4,'colossus',42,15,3,-1,.5,0],[4,'bonehound',42,13,-7,1,1.1,.6]],name:'The Dirge',ess:'the Rot-King',key:{dr:[43.65,65.41,87.31],ch:[349.23,415.3,523.25,622.25],toll:87.31,bed:'murmur'},rise:-5,
   lines:[{a:1.0,b:3.6,s:'The Dirge. Its dead never rest.'},
     {a:4.4,b:9.0,s:'A weeping angel keeps watch over a field of graves…'},
     {a:10.2,b:14.8,s:'…and only one of them is a door.'},
@@ -74987,7 +75004,7 @@ ZC214.Z[4]={fill:[0x9adcc8,1.6],den:[0x9affd0,4.2],dim:.14,rel:[[1,'skeleton',38
     try{const Q=OS165.S;if(Q){Q.pr.forEach((M,j)=>{zc214Vis(S,M.g,i===4);zc214Lit(S,M.lt,i===4?1.6:0);if(i===4){M.cr.rotation.y=tt*.6+j;M.cr.position.y=3.6+.18*Math.sin(tt*1.2+j);M.core.position.y=M.cr.position.y;M.halo.position.y=M.cr.position.y}});zc214Vis(S,Q.R.g,i===4)}}catch(_){}}};
 
 // ---------------- The Citadel ----------------
-ZC214.Z[5]={fill:[0xff8a8a,.9],den:[0xffa080,6.0],dim:.12,denK:.72,rel:[[1,'vamp',46,10,-3,1,.6,0],[1,'vampk',46,12,3.5,-1,.5,.3],[1,'bloodbat',46,8,0,1,1.2,.2],[2,'bloodhound',48,12,-5,1,.9,0],[2,'gargoyle',48,14,5,-1,.6,.4]],name:'The Citadel',ess:'the Crimson King',key:{dr:[38.89,58.27,77.78],ch:[311.13,369.99,466.16,554.37],toll:77.78,bed:'pulse'},rise:0,
+ZC214.Z[5]={keep(S){const A=S.A,K=[];if(A.gg)K.push([A.gg.x,A.gg.z,7]);if(A.vh){K.push([A.vh.sleep.x,A.vh.sleep.z,5.5]);K.push([A.vh.x,A.vh.z,6])}if(A.dm){const R=A.dm;[[R.door,5],[R.lens,2.2]].concat((R.st||[]).map(o=>[o,1.6])).forEach(([o,r])=>{if(o&&o.x!=null)K.push([o.x,o.z,r])})}return K},fill:[0xff8a8a,.9],den:[0xffa080,6.0],dim:.12,denK:.72,rel:[[1,'vamp',46,10,-3,1,.6,0],[1,'vampk',46,12,3.5,-1,.5,.3],[1,'bloodbat',46,8,0,1,1.2,.2],[2,'bloodhound',48,12,-5,1,.9,0],[2,'gargoyle',48,14,5,-1,.6,.4]],name:'The Citadel',ess:'the Crimson King',key:{dr:[38.89,58.27,77.78],ch:[311.13,369.99,466.16,554.37],toll:77.78,bed:'pulse'},rise:0,
   lines:[{a:1.0,b:3.6,s:'The Citadel. The last court of the Crimson King.'},
     {a:4.4,b:9.0,s:'His gates are sealed with blood…'},
     {a:10.2,b:14.8,s:'…and his hounds sleep in chains.'},
@@ -75026,6 +75043,7 @@ function zc214Build(z){const Z=ZC214.Z[z],S={z,Z,A:{},cast:[],props:[],vm:new Ma
   // the live creatures stand frozen while the game waits: hidden during the tour, back after
   S.foes=[];try{enemies.forEach(e=>{if(!e.dead&&!e.boss&&e.m&&e.m.visible){S.foes.push(e);e.m.visible=false}})}catch(_){}
   try{Z.build(S)}catch(e){console.warn('zc214 build',z,e)}
+  try{S.keep=S.Z.keep?S.Z.keep(S):[]}catch(e){S.keep=[];console.warn('zc214 keep',e)}
   zc214Place(S);
   // the den
   const D=INSL[insG(z,3)],B=BOSSES[z];S.den={x:B.x,z:B.y};const nx=D.en[0]-S.den.x,nz=D.en[1]-S.den.z,nl=Math.hypot(nx,nz)||1;S.den.nx=nx/nl;S.den.nz=nz/nl;
@@ -75197,270 +75215,64 @@ function zc214Cap(z){if(ZC214.run)return null;const T0=performance.now(),S=zc214
 {const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{if(ZC214.raw===-1){let m=0;for(const z of [2,3,4,5])if(zc214Known(z))m|=zc214Bit(z);
     try{const I=curIns();if(I&&ZC214.Z[I.z])m|=zc214Bit(I.z)}catch(_){}ZC214.seen=m;ZC214.raw=m}}catch(_){}return r}}
 {const f=ccBegin;ccBegin=function(){ZC214.seen=0;ZC214.raw=0;return f.apply(this,arguments)}}
-// ================= v215: a song for every instance =================
-// Owner, Nov 10 2026: "When we made the soundtrack there was only 1 instance per zone. Now we have multiple per zone. I need a
-// new song for each instance - carrying the same vibe from the overarching zone that its in."
-// Field I of every zone keeps the zone's v79 song (z0..z5). Fields II and III, the Sovereign's Den and the special levels
-// (Abeksi, the Hilltop Ascent, the Sandstorm Run, the Hidden Sanctum, the Black Channel) each get a song of their own: 23 new
-// themes in MTH. Each keeps its zone's scale (mode) so it sounds like the same land, with its own tempo, chords, instruments
-// and a written melody.
-//   keys: 'z<zone>b' = field II, 'z<zone>c' = field III, 'z<zone>d' = the Den, 'sp_<key>' = a special level (I.sp)
-//   tune: a written melody on top of the v79 parts (no random lead). {k:instrument, kb:instrument of the B part, oct, v,
-//         ob = the B part's octave when it differs, dbl:1 = doubled an octave down by a horn,
-//         form:'AB-' one letter per pass of the chords (A / B = that part, - = no melody), A:'...', B:'...'}
-//         notes are 'degree,length' (degree of the theme's scale, 0 = the root, 7 = an octave up; length in sixteenths;
-//         '_' = a rest), bars split by '|'; each part must be as long as the chord list (prog.length bars of 16).
-//   toll: {n,v,oct} a bell on the home note every n bars · stab / boom: see the fight songs
-//   fx:   {wind:v} gusts of wind · {drip:p} echoing water drops · {chime:p} high glassy bells
-// Music follows the place each player stands in, so co-op partners each hear the song of their own instance: nothing to relay.
-var MU215={names:{},K:null,err:0};
-MODES.maj=[0,2,4,5,7,9,11];MODES.mix=[0,2,4,5,7,9,10];   // v215d: major, and major with a flat seventh
-(function(){
-const S=(key,name,th)=>{MTH[key]=th;MU215.names[key]=name};
-// ---------------- Kindlelight (B phrygian; low, sparse, cold) ----------------
-S('z0b','The Glowmire Hollows',{bpm:56,root:47,mode:'phr',prog:[0,0,5,0,0,1,6,0],pad:{v:.024,cut:480,form:1},drone:.13,bell:{p:.1,v:.035,oct:2},
-  arp:{e:4,p:[0,2,1,3],oct:1,v:.04,w:'sine'},bass:{v:.14,c:'x...............',f:'x.....x.x.......'},
-  drums:{f:{taiko:'X.......x.....x.',tek:'....g.......g..g'}},fx:{drip:.07},
-  tune:{k:'cel',oct:2,v:.1,form:'A-B-',A:'4,8 2,8|0,12 _,4|2,8 0,8|-3,16|4,8 5,4 4,4|3,8 1,8|1,8 -1,8|0,16',
-    B:'7,4 4,4 2,8|4,4 2,4 0,8|5,8 7,8|4,12 _,4|0,4 2,4 4,4 7,4|8,8 5,8|6,8 3,8|4,16'}});
-S('z0c','The Rotwood',{bpm:66,root:45,mode:'phr',prog:[0,6,3,0,0,6,1,0],pad:{v:.022,cut:600,form:1},drone:.1,
-  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.04},bass:{v:.14,c:'x.........x.....',f:'x.....x.x.....x.'},
-  drums:{c:{dum:'x.........g.....'},f:{taiko:'X.....x.x.......',tek:'....g.......g.g.'}},fx:{wind:.012},
-  tune:{k:'cello',oct:1,v:.09,form:'AB-',A:'0,4 2,8 1,4|-1,4 1,8 0,4|3,4 5,8 4,4|2,4 0,12|4,4 2,8 4,4|3,4 1,8 3,4|5,4 3,8 1,4|0,10 _,6',
-    B:'4,4 5,8 4,4|6,4 8,8 6,4|7,4 5,8 3,4|4,4 2,12|7,4 5,8 4,4|3,4 1,8 -1,4|1,4 3,8 1,4|0,10 _,6'}});
-S('z0d',"Argus's Den",{bpm:50,root:47,mode:'phr',prog:[0,1,0,1,0,6,1,0],pad:{v:.026,cut:420,form:1},drone:.12,bell:{p:.12,v:.04,oct:1},
-  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
-  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|0,8 2,8|1,16|4,16|3,8 1,8|1,16|0,16',
-    B:'7,8 5,8|5,16|4,8 2,8|3,16|2,8 4,8|6,16|5,8 1,8|0,16'}});
-// ---------------- Hillside Crest (G dorian; open, windswept) ----------------
-S('z1b','Mistmere',{bpm:76,root:55,mode:'dor',prog:[0,2,3,0,0,2,6,4],pad:{v:.02,cut:1000},drone:.05,bell:{p:.08,v:.03},
-  arp:{e:2,p:[0,1,2,3,2,1,2,1],oct:0,v:.06},bass:{v:.12,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
-  drums:{f:{taiko:'X.....x.x...x...',hat:'..x...x...x...x.',tek:'....x.......x...'}},
-  tune:{k:'flute',oct:1,v:.06,form:'AB-',A:'4,8 2,4 0,4|4,8 6,8|7,8 5,4 3,4|4,12 _,4|4,8 2,4 0,4|2,4 4,4 6,8|8,8 6,8|4,16',
-    B:'7,8 9,4 7,4|6,8 4,8|5,4 7,4 10,8|9,12 _,4|7,4 4,4 2,4 0,4|2,8 4,8|6,4 8,4 6,8|4,8 1,8'}});
-S('z1c','The Galecliffs',{bpm:96,root:57,mode:'dor',prog:[0,3,6,0,0,3,4,4],pad:{v:.018,cut:1200},drone:.06,
-  arp:{e:2,p:[0,2,1,3,0,2,1,2],oct:0,v:.06},bass:{v:.13,c:'x.......x...x...',f:'x.x.x.x.x.x.x.x.'},
-  drums:{c:{dum:'x.......x.......'},f:{taiko:'X..x..x.X..x..x.',hat:'..x...x...x...x.',tek:'....x.......x...'}},fx:{wind:.016},
-  tune:{k:'whistle',oct:1,v:.06,form:'AB-',A:'0,4 4,4 7,8|7,4 5,4 3,8|6,4 8,4 10,8|9,4 7,12|0,4 4,4 7,8|10,8 7,8|8,8 6,4 4,4|4,12 _,4',
-    B:'9,6 7,2 4,8|5,6 7,2 3,8|6,8 8,8|7,16|9,6 7,2 4,8|5,4 7,4 10,8|11,8 8,8|8,4 6,4 4,8'}});
-S('z1d',"The Hydra's Den",{bpm:70,root:55,mode:'dor',prog:[0,0,5,0,0,6,5,4],pad:{v:.024,cut:700,form:1},drone:.11,bell:{p:.1,v:.035,oct:1},
-  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
-  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|2,12 _,4|5,8 7,8|4,16|0,16|6,8 8,8|7,8 5,8|4,16',
-    B:'7,8 9,8|7,16|9,8 7,8|4,16|7,8 4,8|6,16|5,8 9,8|8,16'}});
-S('sp_abeksi','Abeksi',{bpm:80,root:55,mode:'dor',prog:[0,5,0,3,0,5,6,4],pad:{v:.014,cut:700},drone:.07,
-  bass:{v:.13,c:'x..x......x.....'},drums:{c:{shak:'..g...g...g...g.',tek:'............g...'}},
-  tune:{k:'pluck',kb:'reed',oct:1,v:.11,vb:.03,form:'A-AB',A:'0,2 _,2 2,2 _,2 4,4 _,4|5,2 _,2 7,2 _,2 5,4 _,4|4,2 _,2 2,2 _,2 0,4 _,4|3,4 5,4 3,8|0,2 _,2 2,2 _,2 4,4 _,4|9,2 _,2 7,2 _,2 5,4 _,4|6,4 8,4 6,8|4,8 _,8',
-    B:'4,8 5,2 4,2 2,4|5,12 _,4|4,4 2,4 0,8|3,12 _,4|4,8 5,2 4,2 2,4|7,12 _,4|6,4 8,4 10,8|8,16'}});
-S('sp_ascent','The Hilltop Ascent',{bpm:152,root:55,mode:'dor',prog:[0,0,6,6,3,3,4,0],pad:{v:.014,cut:1500},fight:1,boom:.8,
-  arp:{e:1,p:[0,1,2,1,0,1,2,3,0,1,2,1,0,2,1,0],oct:0,v:.034,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},stab:{c:'x.....x...x.....',v:.022},
-  drums:{c:{taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'xgxgxgxgxgxgxgxg'}},fx:{wind:.012},
-  tune:{k:'brass',oct:1,v:.04,dbl:1,form:'AB',A:'0,6 2,2 4,8|7,12 4,4|6,6 8,2 10,8|8,12 6,4|7,6 5,2 3,8|5,8 7,8|8,6 6,2 4,8|4,12 _,4',
-    B:'7,4 9,4 11,8|9,4 7,4 4,8|10,8 8,8|6,12 _,4|3,4 5,4 7,8|10,12 7,4|8,8 11,8|11,4 9,4 7,8'}});
-// ---------------- Burningeye Summit (E phrygian; frozen peak, burning sky) ----------------
-S('z2b','The Rimecaverns',{bpm:72,root:52,mode:'phr',prog:[0,5,1,0,0,5,6,0],pad:{v:.022,cut:700,form:1},drone:.1,
-  arp:{e:2,p:[0,2,3,2,1,2,3,2],oct:1,v:.035,w:'sine'},bass:{v:.13,c:'x...............',f:'x.xxx.xxx.xxx.x.'},
-  drums:{f:{taiko:'X..x..x.X..x..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},fx:{drip:.05,chime:.06},
-  tune:{k:'cel',oct:2,v:.09,form:'AB-',A:'7,4 4,4 2,8|5,4 7,4 9,8|8,8 5,8|4,12 _,4|7,4 4,4 2,8|9,8 7,8|8,8 6,8|7,16',
-    B:'0,4 2,4 4,4 7,4|5,8 2,8|1,4 3,4 5,4 8,4|7,12 _,4|4,4 7,4 9,8|7,8 5,8|3,8 1,8|0,16'}});
-S('z2c','Stormcrown',{bpm:100,root:52,mode:'phr',prog:[0,5,6,0,0,5,1,0],pad:{v:.024,cut:850},drone:.09,
-  arp:{e:2,p:[0,2,1,2,0,2,1,3],oct:0,v:.04},bass:{v:.14,c:'x.......x.......',f:'x.xxx.xxx.xxx.x.'},
-  drums:{c:{taiko:'x.......g.......'},f:{taiko:'X..x..x.X..x..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},fx:{wind:.03},
-  tune:{k:'horn',oct:0,v:.07,form:'AB-',A:'0,3 0,1 4,12|5,3 5,1 7,8 5,4|6,3 6,1 8,12|7,8 4,8|0,3 0,1 4,8 7,4|9,3 9,1 7,12|8,6 5,6 3,4|4,3 2,1 0,12',
-    B:'7,12 4,3 4,1|5,12 7,3 7,1|8,12 6,3 6,1|7,16|4,12 7,3 7,1|9,12 7,4|5,8 8,8|7,3 4,1 0,12'}});
-S('z2d',"The Rime Wraith's Den",{bpm:60,root:52,mode:'phr',prog:[0,1,0,1,0,5,1,0],pad:{v:.026,cut:560,form:1},drone:.11,bell:{p:.16,v:.04,oct:2},
-  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............'}},fx:{wind:.014},
-  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'4,16|5,12 _,4|4,8 2,8|1,16|0,8 4,8|7,8 5,8|5,8 3,8|4,16',
-    B:'7,16|8,12 _,4|7,8 4,8|5,16|4,8 2,8|2,16|1,8 3,8|0,16'}});
-// ---------------- Searing Sands (D hijaz; reed and oud) ----------------
-S('z3b','The Sunken Temple',{bpm:78,root:50,mode:'hij',prog:[0,0,3,3,0,0,1,0],pad:{v:.02,cut:700,form:1},drone:.11,
-  arp:{e:2,p:[0,1,2,1,0,2,1,0],oct:0,v:.05,w:'square'},bass:{v:.12,c:'x.....x.........',f:'x..x..x.x..x..x.'},
-  drums:{c:{dum:'x.....x...x.....',tek:'....g.......g.g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},
-  tune:{k:'flute',kb:'reed',oct:1,v:.06,vb:.035,form:'AB-',A:'4,4 4,2 4,2 4,4 5,4|4,12 _,4|5,4 5,2 5,2 5,4 7,4|5,12 _,4|4,4 4,2 4,2 4,4 2,4|4,4 2,4 1,4 2,4|3,4 5,4 3,4 1,4|0,16',
-    B:'7,4 7,2 7,2 7,4 8,4|7,8 4,8|7,4 7,2 7,2 7,4 5,4|3,12 _,4|2,4 2,2 2,2 2,4 4,4|2,8 0,8|1,4 3,4 5,4 3,4|2,6 0,10'}});
-// The Salt Wastes: D phrygian (bleaker than the other desert songs: no bright third). A bare leap D-A that hangs, a rest, then an answer.
-S('z3c','The Salt Wastes',{bpm:70,root:50,mode:'phr',prog:[0,3,5,0,0,6,5,0],pad:{v:.016,cut:1200},drone:.12,
-  bass:{v:.11,c:'x...............',f:'x..x..x.x..x..x.'},
-  drums:{c:{shak:'......g.......g.'},f:{dum:'X..x..x.x..x....',tek:'..x...x...x.x.xx',shak:'g.g.g.g.g.g.g.g.'}},fx:{wind:.008},
-  tune:{k:'reed',oct:1,v:.04,form:'A-B-',A:'0,4 4,12|_,4 3,4 4,4 6,4|5,12 4,4|3,4 2,4 0,8|0,4 4,12|_,4 6,4 7,4 8,4|7,8 5,4 4,4|2,4 1,4 0,8',
-    B:'4,4 7,12|_,4 6,4 5,4 4,4|5,12 3,4|4,16|4,4 7,12|_,4 8,4 7,4 6,4|5,8 4,4 2,4|1,4 0,12'}});
-S('z3d',"Ssith'ra's Den",{bpm:64,root:50,mode:'hij',prog:[0,1,0,1,0,6,1,0],pad:{v:.024,cut:560,form:1},drone:.12,
-  bass:{v:.14,c:'x...............'},drums:{c:{taiko:'x.g.............',shak:'......g.......g.'}},
-  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|3,16|4,16|6,8 8,8|8,8 5,8|4,16',
-    B:'7,16|8,12 _,4|7,8 4,8|5,8 3,8|2,16|3,8 1,8|1,16|0,16'}});
-S('sp_sandrun','The Sandstorm Run',{bpm:140,root:50,mode:'hij',prog:[0,0,1,1,0,0,1,0],pad:{v:.016,cut:900},fight:1,boom:.7,
-  arp:{e:1,p:[0,1,2,1,0,2,1,0,0,1,2,1,0,2,1,3],oct:0,v:.03,w:'square'},bass:{v:.11,c:'x.xx..x.x.xx..x.'},stab:{c:'x.....x.....x...',v:.018},
-  drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},fx:{wind:.03},
-  tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AB',A:'0,2 0,2 0,2 2,2 4,4 2,4|0,2 0,2 0,2 2,2 4,8|1,2 1,2 1,2 3,2 5,4 3,4|1,2 1,2 1,2 3,2 5,8|4,2 4,2 4,2 5,2 7,4 5,4|4,2 4,2 4,2 2,2 0,8|5,4 3,4 1,4 3,4|2,4 1,4 0,8',
-    B:'7,2 7,2 7,2 5,2 4,4 5,4|7,2 7,2 7,2 5,2 4,8|8,2 8,2 8,2 5,2 3,4 5,4|8,2 8,2 8,2 5,2 3,8|4,2 4,2 4,2 5,2 7,4 9,4|7,2 7,2 7,2 5,2 4,8|5,4 3,4 1,4 3,4|2,4 1,4 0,8'}});
-// ---------------- The Dirge (C locrian; bells, hollow choir) ----------------
-S('z4b','The Drowned Crypts',{bpm:54,root:48,mode:'phr',prog:[0,5,3,0,0,5,1,0],pad:{v:.026,cut:520,form:1},drone:.1,toll:{n:4,v:.04,oct:1},
-  arp:{e:4,p:[0,2,1,2],oct:1,v:.03,w:'sine'},bass:{v:.14,c:'x...............',f:'x..x....x..x....'},
-  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},
-  tune:{k:'cel',oct:1,v:.1,form:'A-B-',A:'7,2 _,6 4,2 _,6|9,2 _,6 7,2 _,2 5,4|7,2 _,6 5,2 _,6|4,2 _,2 2,2 _,2 0,8|7,2 _,6 4,2 _,6|5,2 _,6 7,2 _,2 9,4|8,2 _,6 5,2 _,2 3,4|2,2 _,2 1,2 _,2 0,8',
-    B:'0,2 _,2 2,2 _,2 4,8|5,2 _,2 7,2 _,2 9,8|10,2 _,2 7,2 _,2 5,8|4,12 _,4|7,2 _,2 4,2 _,2 2,8|5,2 _,2 2,2 _,2 0,8|1,2 _,2 3,2 _,2 5,8|4,4 0,12'}});
-S('z4c','The Ossuary Fields',{bpm:72,root:48,mode:'aeo',prog:[0,2,6,0,3,5,6,0],pad:{v:.024,cut:650,form:1},drone:.08,toll:{n:4,v:.035,oct:2},
-  bass:{v:.14,c:'x.......x.......',f:'x..x....x..x....'},
-  drums:{c:{tek:'....g.......g..g',shak:'g.......g.......'},f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},fx:{wind:.01},
-  tune:{k:'cello',oct:1,v:.09,form:'AB-',A:'4,12 2,4|4,4 2,12|3,12 1,4|2,4 0,12|5,12 3,4|7,4 5,12|3,12 1,4|0,16',
-    B:'7,12 4,4|6,4 4,12|8,12 6,4|7,4 4,12|7,12 5,4|5,4 2,12|1,12 -1,4|0,16'}});
-S('z4d',"The Bloated One's Den",{bpm:52,root:48,mode:'phr',prog:[0,0,1,0,0,3,1,0],pad:{v:.024,cut:480,form:1},drone:.1,toll:{n:2,v:.045,oct:1},
-  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
-  tune:{k:'choir',oct:1,v:.045,form:'A-B-',A:'0,24 2,8|1,16|0,12 _,4|4,24 3,8|1,16|0,16',
-    B:'7,24 4,8|5,16|4,12 _,4|7,16|5,16|3,8 1,8|0,16'}});
-S('sp_sanctum','The Hidden Sanctum',{bpm:58,root:48,mode:'aeo',prog:[0,5,6,0,3,0,6,0],pad:{v:.026,cut:800,form:1},drone:.07,toll:{n:4,v:.03,oct:2},
-  bass:{v:.12,c:'x...............'},
-  tune:{k:'flute',kb:'choir',oct:1,v:.06,vb:.05,form:'AB-',A:'0,4 1,4 2,4 0,4|2,4 0,4 2,8|3,4 2,4 1,4 3,4|2,8 0,8|3,4 4,4 5,4 3,4|4,4 2,4 4,8|3,4 2,4 1,4 -1,4|0,16',
-    B:'4,4 5,4 4,4 2,4|5,4 7,4 5,8|6,4 5,4 3,4 1,4|2,8 4,8|7,4 6,4 5,4 3,4|4,4 5,4 4,8|3,4 1,4 -1,4 1,4|0,16'}});
-// The Black Channel: v215f rewrote it (random notes out, C minor); v215g gives it a rocking, boat-like tune in even steps.
-S('sp_channel','The Black Channel',{bpm:68,root:48,mode:'aeo',prog:[0,4,5,0,3,6,4,0],pad:{v:.022,cut:650,form:1},
-  arp:{e:4,p:[0,2,1,2],oct:0,v:.04},bass:{v:.14,c:'x.......x.......',f:'x..x....x..x....'},
-  drums:{f:{taiko:'X...x...X...x...',tek:'..g...g...g...gg',snare:'............x...'}},
-  tune:{k:'cello',oct:1,v:.09,form:'AB-',A:'0,6 2,2 4,6 2,2|4,6 6,2 8,6 6,2|9,6 7,2 5,6 7,2|7,6 4,2 0,8|3,6 5,2 7,6 5,2|6,6 8,2 10,6 8,2|8,6 6,2 4,6 1,2|0,16',
-    B:'4,6 7,2 9,6 7,2|8,6 6,2 4,8|5,6 7,2 9,6 7,2|7,16|10,6 7,2 5,8|8,6 6,2 3,8|4,6 6,2 1,6 -1,2|0,16'}});
-// ---------------- The Citadel (C harmonic minor; organ, brass, harpsichord) ----------------
-S('z5b','The Outer Ramparts',{bpm:84,root:48,mode:'hmin',prog:[0,0,5,4,0,3,4,4],pad:{v:.022,cut:1000,form:1},drone:.09,
-  bass:{v:.14,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
-  drums:{c:{taiko:'x.......x.......',snare:'....g.g.....g.gg'},f:{taiko:'X.......X.....x.',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'horn',oct:1,v:.05,form:'AB-',A:'0,8 2,4 4,4|4,12 2,4|5,8 7,8|6,12 _,4|0,8 2,4 4,4|7,8 5,8|4,8 6,8|8,12 _,4',
-    B:'7,6 9,2 7,8|4,8 2,8|5,4 7,4 9,8|8,12 _,4|7,4 4,4 2,4 0,4|3,8 5,8|6,8 4,8|4,16'}});
-S('z5c','The Inner Keep',{bpm:66,root:48,mode:'hmin',prog:[0,3,4,0,5,1,4,0],pad:{v:.02,cut:1100,form:1},drone:.06,
-  arp:{e:1,p:[0,1,2,3,2,1,2,1,0,1,2,3,2,1,2,1],oct:1,v:.028,w:'square'},bass:{v:.13,c:'x.......x.......',f:'x.x.x.x.x.x.x.x.'},
-  drums:{f:{taiko:'X.......X.....x.',snare:'....x.......x.gg',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'cello',oct:1,v:.075,form:'AB-',A:'4,4 7,4 6,2 5,2 4,2 2,2|5,4 7,4 5,2 4,2 3,2 2,2|4,4 8,4 6,2 5,2 4,2 1,2|2,6 1,2 0,8|9,4 7,4 5,2 4,2 2,2 0,2|1,4 5,4 3,2 2,2 1,2 0,2|-1,4 1,4 4,4 6,4|7,16',
-    B:'7,8 9,4 7,4|10,8 7,4 5,4|8,8 6,4 4,4|7,12 _,4|9,2 7,2 5,2 7,2 9,8|8,2 5,2 3,2 5,2 8,8|6,2 4,2 1,2 4,2 6,8|7,16'}});
-S('z5d',"Lord Vaelric's Den",{bpm:60,root:48,mode:'hmin',prog:[0,1,0,4,0,5,1,4],pad:{v:.03,cut:1000,form:1},drone:.1,bell:{p:.1,v:.04,oct:1},
-  bass:{v:.15,c:'x...............'},drums:{c:{taiko:'x.g.............'}},
-  tune:{k:'choir',oct:0,v:.05,form:'A-B-',A:'0,16|1,12 _,4|2,8 4,8|6,16|7,16|5,8 7,8|8,8 5,8|4,16',
-    B:'4,16|3,12 _,4|4,8 7,8|8,16|9,8 7,8|7,8 5,8|3,8 1,8|-1,16'}});
-// ---------------- v215b: fight songs (owner, Nov 10 2026: "high intensity moments like fighting the sovereigns, minibosses or
-// the hilltop ascent should have more intense music due to the stressful scenario") ----------------
-// 'z<zone>x' = the zone's Sovereign fight, 'z<zone>m' = a mini boss fight in that zone. In the zone's scale, drums and bass all
-// the time (fight:1); parts they may use: a melody doubled an octave down (tune.dbl), chord stabs (stab), a boom every 4 bars (boom).
-const DM={taiko:'x..g..g.x..g..g.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'};
-const Mi=(z,name,root,mode,bpm,prog,A,o)=>{S('z'+z+'m',name,Object.assign({bpm,root,mode,prog,fight:1,boom:.7,pad:{v:.022,cut:1000,form:1},
-  arp:{e:2,p:[0,2,1,2,0,3,1,2],oct:0,v:.045,w:'sawtooth'},bass:{v:.1,c:'x.x.x.xxx.x.x.xx'},stab:{c:'x.....x...x.....',v:.02},drums:{c:DM},
-  tune:{k:'horn',oct:0,v:.06,form:'AA-'}},o||{}));MTH['z'+z+'m'].tune.A=A};
-// v215c (owner: "for the boss songs it seems like its using the same melody as the others"): every Sovereign song is built on its own,
-// not from one template: its own rhythm, drums, bass, lead instrument and shape of melody.
-// v215d (owner: "I also dont like how the boss songs kind of droned on and didn't have a resolution at the end of each bar. Write more
-// in major keys"): no drone under a fight song; every 4-bar phrase ends with a cadence onto the home chord (… V → I) and the melody
-// lands on the home note there.
-// v215e (owner: "The boss songs seem too happy. Disregard my note about just using major chords and try again"): minor keys again
-// (harmonic minor, so the phrase ends still pull home; natural minor for the Bloated One); the cadences and the missing drone stay.
-// Argus (B minor): stalking. Short stabbing notes with gaps (the eyes blinking open), a 3+3+2 bass, then long brass.
-S('z0x','Argus, the Hundred-Eyed',{bpm:138,root:47,mode:'phr',prog:[0,0,1,0,0,5,1,0],fight:1,boom:1.1,pad:{v:.024,cut:800,form:1},toll:{n:2,v:.04,oct:1},
-  bass:{v:.11,c:'x.x.x.x.x.x.x.x.'},stab:{c:'X...............',v:.02},drums:{c:{taiko:'X...x...X...x.x.',snare:'........X.......',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'brass',kb:'brass',oct:1,v:.045,dbl:1,form:'AB',A:'0,12 1,4|0,8 -1,4 0,4|1,12 3,4|2,4 1,4 0,8|4,12 5,4|5,8 7,8|8,4 5,4 3,4 1,4|0,16',
-    B:'7,12 8,4|7,8 4,8|8,12 10,4|9,4 8,4 7,8|11,12 12,4|12,8 9,8|8,4 5,4 3,4 1,4|0,16'}});
-// The Crest Hydra (G minor): many heads. Fast rising calls that leave a gap for the next head to answer, over a gallop; then a whistle.
-S('z1x','The Crest Hydra',{bpm:144,root:55,mode:'hmin',prog:[0,5,4,0,3,0,4,0],fight:1,boom:.8,pad:{v:.02,cut:1300},
-  arp:{e:1,p:[0,1,2,3,2,1,0,1,2,3,2,1,0,1,2,3],oct:0,v:.032,w:'sawtooth'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},
-  drums:{c:{taiko:'X..xx..xX..xx..x',snare:'....X.......X...',hat:'..x...x...x...x.'}},
-  tune:{k:'brass',kb:'whistle',oct:0,v:.05,vb:.07,dbl:1,form:'AB',A:'0,2 2,2 4,2 7,2 9,8|_,8 9,4 7,4|4,2 6,2 8,2 11,2 13,8|11,4 9,4 7,8|3,2 5,2 7,2 10,2 12,8|_,8 11,4 9,4|8,2 11,2 13,2 15,2 13,8|14,12 _,4',
-    B:'11,4 9,4 7,8|12,4 9,4 7,8|11,4 8,4 6,8|7,12 _,4|10,8 12,8|11,8 9,8|8,4 11,4 13,8|14,16'}});
-// The Rime Wraith (E minor): a ghost in a storm. A slow, cold choir held over frantic drums; then shards of ice fall.
-S('z2x','The Rime Wraith',{bpm:148,root:52,mode:'hmin',prog:[0,5,4,0,3,0,4,0],fight:1,boom:.8,pad:{v:.024,cut:900,form:1},fx:{wind:.03,chime:.1},
-  arp:{e:1,p:[0,2,0,2,1,2,1,2,0,2,0,2,1,3,1,3],oct:2,v:.016,w:'sine'},bass:{v:.075,c:'xgxgxgxgxgxgxgxg'},
-  drums:{c:{taiko:'X.g.g.g.x.g.g.g.',snare:'g.g.X.g.g.g.X.gg',hat:'xgxgxgxgxgxgxgxg'}},
-  tune:{k:'choir',kb:'cel',oct:1,ob:2,v:.06,vb:.08,form:'AB',A:'4,16|5,16|6,8 8,8|7,16|10,16|9,16|8,8 6,8|7,16',
-    B:'7,2 4,2 2,2 0,2 7,2 4,2 2,2 0,2|9,2 7,2 5,2 2,2 9,2 7,2 5,2 2,2|8,2 6,2 4,2 1,2 8,2 6,2 4,2 1,2|7,4 4,4 0,8|10,2 7,2 5,2 3,2 10,2 7,2 5,2 3,2|9,2 7,2 4,2 2,2 9,2 7,2 4,2 2,2|8,2 6,2 4,2 1,2 6,8|7,16'}});
-// Ssith'ra (D, the desert scale: its home chord is major): a reed pipe winding in fast runs, hand drums, then a lurching 3+3+2 answer.
-S('z3x',"Ssith'ra the Endless",{bpm:142,root:50,mode:'hij',prog:[0,3,1,0,6,3,1,0],fight:1,boom:.7,pad:{v:.018,cut:900},
-  bass:{v:.1,c:'x..x..x.x..x..x.'},stab:{c:'x..x..x.........',v:.014},
-  drums:{c:{taiko:'x.......g.......',dum:'X..g..x.x..x..g.',tek:'..x.x.x...x.x.xx',shak:'xgxgxgxgxgxgxgxg'}},
-  tune:{k:'reed',oct:1,v:.04,dbl:1,form:'AB',A:'0,2 1,2 2,2 1,2 0,2 1,2 2,2 4,2|5,2 4,2 3,2 4,2 5,2 7,2 5,2 3,2|1,2 3,2 5,2 3,2 1,2 3,2 2,2 1,2|0,12 _,4|6,2 8,2 10,2 8,2 6,2 8,2 10,2 8,2|7,2 5,2 3,2 5,2 7,2 10,2 7,2 5,2|8,2 5,2 3,2 1,2 3,2 2,2 1,4|0,12 _,4',
-    B:'4,6 5,6 4,4|3,6 5,6 7,4|8,6 5,6 1,4|0,12 _,4|10,6 8,6 6,4|7,6 5,6 3,4|5,6 3,6 1,4|0,16'}});
-// The Bloated One (C natural minor): sheer weight. The slowest fight: a huge stomping drum, bells and a low horn; then a choir.
-S('z4x','The Bloated One',{bpm:104,root:48,mode:'aeo',prog:[0,6,3,0,5,3,6,0],fight:1,boom:1.2,pad:{v:.028,cut:800,form:1},bell:{p:.35,v:.045,oct:2},
-  bass:{v:.12,c:'x.....x.x...x...'},stab:{c:'X.......x.......',v:.02},drums:{c:{taiko:'X.....x.X...x...',snare:'........X.......',tek:'..g...g...g...gg'}},
-  tune:{k:'horn',kb:'choir',oct:0,ob:1,v:.07,vb:.06,dbl:1,form:'AB',A:'0,12 2,4|1,8 -1,8|3,8 5,4 3,4|4,4 2,4 0,8|5,12 7,4|7,8 5,8|6,8 8,4 6,4|7,16',
-    B:'4,8 7,8|8,16|7,8 5,8|4,16|9,8 7,8|7,8 10,8|8,8 10,8|9,4 7,12'}});
-// Lord Vaelric (C minor): the court. A furious harpsichord and a violin running in quick patterns down the chords; then the brass, grand.
-// Lord Vaelric: C minor, 16 bars, a a' b a''. The hook leaps G C' and leans on Eb' D' C' B (the leading note that wants to go home);
-// the middle hammers repeated notes up the chords; the last phrase turns the hook upside down from the top G and comes home.
-S('z5x','Lord Vaelric',{bpm:138,root:48,mode:'hmin',prog:[0,0,5,4,0,4,0,0,5,4,0,1,0,5,4,0],fight:1,boom:1,pad:{v:.026,cut:1000,form:1},
-  arp:{e:1,p:[0,2,1,2,0,2,1,2,0,2,1,2,0,2,1,3],oct:0,v:.026,w:'sawtooth'},bass:{v:.11,c:'x.x.x.x.x.x.x.x.'},stab:{c:'X...............',v:.018},
-  drums:{c:{taiko:'X.g.x.g.X.g.x.gg',snare:'....X.......X.gg',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'brass',oct:1,v:.045,dbl:1,form:'A',A:'4,4 7,4 9,6 8,2|7,4 6,4 7,8|5,4 7,4 9,6 8,2|7,4 6,4 4,8|4,4 7,4 9,6 8,2|10,4 9,4 8,8|9,4 8,4 7,4 6,4|7,12 _,4|5,6 5,2 7,4 9,4|8,6 8,2 6,4 4,4|7,6 7,2 9,4 11,4|10,8 8,8|11,4 9,4 7,6 8,2|9,4 8,4 7,4 5,4|4,4 6,4 8,4 6,4|7,16'}});
-// the mini bosses: one shape of song, but each with its own key, lead instrument, bass and drums; the same cadences
-Mi(0,'Mini boss: Vorraxis',47,'hmin',126,[0,5,4,0,3,0,4,0],'0,3 2,3 4,10|5,3 7,3 9,10|8,3 6,3 4,10|4,3 2,3 0,10|3,3 5,3 7,10|7,3 4,3 2,10|1,3 4,3 6,10|7,16',{bass:{v:.11,c:'x..x..x.x..x..x.'},fx:{drip:.08}});
-Mi(1,'Mini boss: Hillside Crest',55,'hmin',128,[0,3,4,0,5,3,4,0],'0,4 4,4 7,8|7,8 5,8|6,6 4,2 8,8|7,12 _,4|9,8 7,8|10,8 7,8|8,4 6,4 4,8|7,16',
-  {tune:{k:'whistle',oct:1,v:.07,dbl:1,form:'AA-'},bass:{v:.1,c:'x.xxx.xxx.xxx.xx'},drums:{c:{taiko:'x..xx..xx..xx..x',hat:'..x...x...x...x.',tek:'....x.......x...'}}});
-Mi(2,'Mini boss: Gorthrak',52,'hmin',130,[0,3,4,0,5,3,4,0],'0,2 _,2 0,2 _,2 2,8|3,2 _,2 3,2 _,2 5,8|4,2 _,2 4,2 _,2 6,8|7,4 4,4 0,8|5,2 _,2 5,2 _,2 7,8|7,2 _,2 5,2 _,2 3,8|4,2 _,2 6,2 _,2 8,8|7,16',
-  {fx:{wind:.014},tune:{k:'brass',oct:0,v:.05,dbl:1,form:'AA-'},bass:{v:.12,c:'x.......x.x.....'},drums:{c:{taiko:'X.......x.x.....',snare:'....x.......x...',hat:'x.x.x.x.x.x.x.x.'}}});
-S('z3m','Mini boss: Qarsul',{bpm:126,root:50,mode:'hij',prog:[0,0,1,0,0,3,1,0],fight:1,boom:.6,pad:{v:.022,cut:900,form:1},
-  bass:{v:.12,c:'x..x..x.x..x..x.'},stab:{c:'x...............',v:.016},drums:{c:{taiko:'x.....g.g...g...',dum:'x..g..x.g..x..g.',shak:'g.g.g.g.g.g.g.g.',snare:'............x...'}},
-  tune:{k:'brass',oct:0,v:.06,dbl:1,form:'AA-',A:'0,6 0,6 1,4|0,12 _,4|1,6 1,6 3,4|2,4 1,4 0,8|0,6 0,6 1,4|3,6 3,6 5,4|5,6 3,6 1,4|0,16'}});
-Mi(4,'Mini boss: The Dirge',48,'aeo',118,[0,6,3,0,0,6,3,0],'0,8 2,8|1,8 -1,8|0,8 3,8|2,4 0,12|4,8 7,8|8,8 6,8|5,8 3,8|4,4 2,4 0,8',
-  {bell:{p:.25,v:.04,oct:2},tune:{k:'cello',oct:0,v:.11,dbl:1,form:'AA-'},bass:{v:.11,c:'x.....x.x...x...'},drums:{c:{taiko:'x.....x.x...x...',snare:'............x...',tek:'..g...g...g...gg'}}});
-// Vharog: a beast prowling. C with the dark half-step above it: a low figure that paces and stops, pounces down from G, then paces a fifth higher.
-S('z5m','Mini boss: Vharog',{bpm:128,root:48,mode:'phr',prog:[0,0,0,0,0,0,1,0],fight:1,boom:.9,pad:{v:.024,cut:900,form:1},
-  bass:{v:.1,c:'x..x..x.x..x..x.'},stab:{c:'X.......x.......',v:.018},drums:{c:{taiko:'X..g..x.X..g..x.',snare:'....x.......x..g',hat:'x.x.x.x.x.x.x.x.'}},
-  tune:{k:'brass',oct:0,v:.06,dbl:1,form:'AA-',A:'0,4 0,2 1,2 0,4 _,4|0,4 0,2 1,2 3,4 2,4|0,4 0,2 1,2 0,4 _,4|4,4 3,4 2,2 1,2 0,4|4,4 4,2 5,2 4,4 _,4|4,4 4,2 5,2 7,4 6,4|5,4 4,4 3,4 2,4|1,4 0,12'}});
-// v215g (owner, Nov 11 2026: several melodies "seem too random", "lack cohesion"; bass "overpowering" on some songs; the desert songs
-// "too similar melodically"; the Dirge songs except its two fights disliked; Vaelric, the Citadel mini boss and Argus not dark
-// enough): every tune named is rewritten around one short idea that is stated, repeated on the next chord and answered, with the
-// phrase ending on the home note; the first songs of Kindlelight, Searing Sands and The Dirge get a written tune in place of v79's
-// improvised one (MTH.z0 / z3 / z4, their other parts kept; z4 leaves the locrian scale); bells toll on a fixed bar (toll)
-// instead of at random; every bass is turned down (BASS215).
-MTH.z0=Object.assign({},MTH.z0,{lead:null,bell:null,toll:{n:4,v:.035,oct:2},
-  tune:{k:'hollow',oct:1,v:.05,form:'A-B-',A:'_,4 0,2 2,2 4,8|_,4 4,2 2,2 0,8|_,4 1,2 3,2 5,8|4,10 2,2 0,4|_,4 0,2 2,2 4,8|_,4 3,2 1,2 -1,8|1,6 3,6 5,4|4,4 0,12',
-    B:'7,10 4,2 2,4|4,10 2,2 0,4|8,10 5,2 3,4|4,14 _,2|7,10 4,2 2,4|6,10 3,2 1,4|5,6 3,6 1,4|0,14 _,2'}});
-// v215i (owner: "Field 1 searing sands and salt wastes seem like ai wrote them. there's no substance or intelligence to the melody";
-// Vaelric's and Vharog's fights "need work"): these four are written tune first — a line with a hook, a rise to a high point and a
-// return — and the chords are then fitted under it (before, the notes were picked to fit the chords).
-// Searing Sands I: 16 bars, a a' b a''. The hook falls A G F# Eb D (the desert scale's wide step) and rests on D; the middle climbs to the high D.
-// Almost all of it sits over the home chord, as this kind of tune does over a drone; one bar of C minor under the high point.
-MTH.z3=Object.assign({},MTH.z3,{lead:null,prog:[0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0],
-  tune:{k:'reed',oct:1,v:.045,form:'A-',A:'4,6 3,2 2,4 1,4|0,12 _,4|2,2 3,2 4,4 4,2 5,2 4,4|3,4 2,8 _,4|4,6 3,2 2,4 1,4|0,12 _,4|2,2 3,2 4,4 4,2 3,2 2,4|1,4 0,12|4,4 5,2 6,2 7,8|8,4 7,4 6,4 5,4|4,4 5,2 6,2 7,8|6,4 5,4 4,8|4,6 3,2 2,4 1,4|0,8 2,4 3,4|4,4 3,2 2,2 2,4 1,4|0,16'}});
-MTH.z4=Object.assign({},MTH.z4,{mode:'aeo',prog:[0,5,6,0,0,3,6,0],lead:null,bell:null,toll:{n:2,v:.045,oct:2},
-  tune:{k:'choir',oct:1,v:.05,form:'AB-',A:'0,6 0,2 2,8|2,6 2,2 0,8|1,6 1,2 3,8|2,6 1,2 0,8|4,6 4,2 2,8|3,6 3,2 5,8|3,6 1,2 -1,8|0,16',
-    B:'4,6 4,2 7,8|7,6 5,2 2,8|8,6 6,2 3,8|4,12 2,4|4,6 2,2 0,8|5,6 3,2 0,8|1,6 -1,2 1,8|0,16'}});
-var BASS215=.62;for(const k in MTH){const th=MTH[k];if(th&&th.bass&&(MU215.names[k]||/^z\d$/.test(k)))th.bass=Object.assign({},th.bass,{v:th.bass.v*(MU215.names[k]?BASS215:.8)})}
-})();
+// ================= v215: the Cinematics viewer (Settings → Cinematics → Watch) =================
+// Owner (Nov 10 2026): "Can you make something where i can view these cinematics?"
+// A list of the six zone arrival cinematics (Kindlelight 3800, Hillside Crest 3810, Burningeye Summit · Searing Sands · The Dirge ·
+// The Citadel 3860); Watch plays one again from wherever the hero stands. A replay changes nothing that is saved: the "seen" marks
+// are put back as they were when it ends, no zone title card follows, and the opening shot starts at the zone's own entrance when
+// the hero is elsewhere (3810 and 3860 open on the hero's spot). Not during a Sovereign fight, a Wave Trial, inside a quest level
+// (the Sanctum, the Channel, the Ascent…), while dead, or while another cinematic plays. Local only: a co-op partner sees the hero
+// standing still meanwhile (as on a first arrival); presence keeps going out.
+var CV215={rp:null,save:null,
+  L:[{z:0,n:'Kindlelight',s:'The cursed bog · Argus, the Hundred-Eyed'},{z:1,n:'Hillside Crest',s:'The serpent folk · the Crest Hydra'},
+    {z:2,n:'Burningeye Summit',s:'The frozen peak · the Rime Wraith'},{z:3,n:'Searing Sands',s:'The buried desert · Ssith’ra the Endless'},
+    {z:4,n:'The Dirge',s:'The restless graveyard · the Bloated One'},{z:5,n:'The Citadel',s:'The vampire court · Lord Vaelric'}]};
+function cv215Busy(){try{return (typeof IC151!='undefined'&&(IC151.run||IC151.on))||(typeof KC208!='undefined'&&KC208.run)||(typeof HC208!='undefined'&&HC208.run)||(typeof ZC214!='undefined'&&ZC214.run)}catch(_){return true}}
+// why it can't play now (null = it can)
+function cv215Why(){if(cv215Busy())return 'A cinematic is already playing.';try{if(!party.length)return 'Start or load a game first.';if(hero.hp<=0)return 'Not while you are down.'}catch(_){}
+  try{if(typeof AF!='undefined'&&AF)return 'Not during a Sovereign fight.'}catch(_){}try{if(typeof WV!='undefined'&&WV)return 'Not during a Wave Trial.'}catch(_){}
+  try{if(typeof sp152Cur=='function'&&sp152Cur())return 'Leave this place first, then watch it.'}catch(_){}return null}
+// the entrance of a zone's first instance and the way down its road (the opening shot's spot when the hero is elsewhere)
+function cv215Entrance(z){const I=INSL[insG(z,0)],n=I.path[Math.min(I.path.length-1,30)];return {p:new THREE.Vector3(I.en[0],GH(I.en[0],I.en[1]),I.en[1]),yaw:Math.atan2(n[0]-I.en[0],n[1]-I.en[1])}}
+function cv215Away(z){try{const I=curIns();return !I||I.z!==z}catch(_){return true}}
+function cv215Play(z){const why=cv215Why();if(why){try{say('🎬 '+why)}catch(_){}return false}
+  CV215.rp=z;CV215.save={kc:KC208.seen,hc:HC208.seen,zc:ZC214.seen};let ok=false;
+  try{if(z===0){kc208Play();ok=!!KC208.run}else if(z===1){ok=hc208Play(null)}else{ok=zc214Play({z,rp:1})}}catch(e){console.warn('cv215 play',z,e)}
+  if(!ok)cv215Done();return ok}
+// a replay ends: the seen marks as they were
+function cv215Done(){const s=CV215.save;CV215.rp=null;CV215.save=null;if(!s)return;try{KC208.seen=s.kc;HC208.seen=s.hc;ZC214.seen=s.zc}catch(_){}}
+{const f=kc208End;kc208End=function(){const r=f.apply(this,arguments);if(CV215.rp===0)cv215Done();return r}}
+{const f=hc208End;hc208End=function(){const r=f.apply(this,arguments);if(CV215.rp===1)cv215Done();return r}}
+{const f=zc214End;zc214End=function(){const z=CV215.rp,r=f.apply(this,arguments);if(z!=null&&z>=2&&!ZC214.run)cv215Done();return r}}
+// the opening shot from the zone's own entrance when the hero stands somewhere else
+{const f=hc208Build;hc208Build=function(){const S=f.apply(this,arguments);try{if(CV215.rp===1&&cv215Away(1)){const E=cv215Entrance(1);S.H=E.p;S.yaw=E.yaw}}catch(_){}return S}}
+{const f=zc214Build;zc214Build=function(z){const S=f.apply(this,arguments);try{if(CV215.rp===z&&cv215Away(z)){const E=cv215Entrance(z);S.H=E.p;S.yaw=E.yaw}}catch(_){}return S}}
+// no zone title card after a replay (3860 shows it when the hero stands in the zone)
+{const f=zt116Ins;zt116Ins=function(){if(CV215.rp!=null||(typeof ZC214!='undefined'&&ZC214.S&&ZC214.S.I&&ZC214.S.I.rp))return;return f.apply(this,arguments)}}
 
-// ---------- the melody's instruments (v79's and the title's, 3580) ----------
-MU215.K={
-  cel:(f,t,d,v)=>muCelesta(f,t,v),
-  bell:(f,t,d,v)=>muBell(f,t,v),
-  pluck:(f,t,d,v)=>muPluck(f,t,v),
-  flute:(f,t,d,v)=>muFlute(f,t,d,v),
-  cello:(f,t,d,v)=>muCello(f,t,d,v),
-  hollow:(f,t,d,v)=>muLead(f,t,d,v,{w:'square',cut:900,bp:1,vib:1,at:.1}),
-  reed:(f,t,d,v)=>muLead(f,t,d,v,{w:'square',cut:1500,bp:1,vib:1.4,at:.05,slide:1}),
-  horn:(f,t,d,v)=>muLead(f,t,d,v,{w:'sawtooth',cut:1100,vib:.5,at:.09,sub:1}),
-  brass:(f,t,d,v)=>{muLead(f,t,d,v,{w:'sawtooth',cut:2100,vib:.4,at:.03,sub:0});muLead(f,t,d,v*.6,{w:'square',cut:1300,vib:.4,at:.03,sub:0})},
-  whistle:(f,t,d,v)=>muLead(f,t,d,v,{w:'sine',cut:3000,vib:1,at:.04,sub:1}),
-  choir:(f,t,d,v)=>{muLead(f,t,d,v,{w:'sine',cut:1800,vib:1.2,at:.3,sub:1});muLead(f*2,t,d,v*.45,{w:'triangle',cut:1400,vib:1.2,at:.35,sub:0})}};
-// 'deg,len deg,len|…' → {start step: [degree, length]}; null when the part is not exactly `bars` bars long
-function mu215Parse(str,bars){const on={};let at=0;for(const tok of str.replace(/\|/g,' ').split(/\s+/)){if(!tok)continue;const q=tok.split(','),l=+q[1];if(!(l>0))return null;
-    if(q[0]!='_'){const d=+q[0];if(!isFinite(d))return null;on[at]=[d,l]}at+=l}
-  return at===bars*16?on:null}
-function mu215Tune(th){const T=th.tune;if(T.on)return T;T.on={};for(const k of ['A','B'])if(T[k]){T.on[k]=mu215Parse(T[k],th.prog.length);if(!T.on[k])console.warn('v215 tune length',k)}return T}
-function mu215Step(th,t,bar,s){const sp=60/th.bpm/4,n=th.prog.length,T=th.tune,X=th.fx;
-  if(T){mu215Tune(th);const ch=T.form[Math.floor(bar/n)%T.form.length],on=T.on[ch],e=on&&on[(bar%n)*16+s];
-    if(e){const B=ch=='B'&&T.kb;(MU215.K[B?T.kb:T.k]||MU215.K.whistle)(muF(muNote(th,e[0],B&&T.ob!=null?T.ob:T.oct)),t,sp*e[1]*.95,B?T.vb||T.v:T.v);if(T.dbl&&!(B&&T.ob!=null))MU215.K.horn(muF(muNote(th,e[0],T.oct-1)),t,sp*e[1]*.95,T.v*.6)}}
-  const St=th.stab;if(St){const c=St.c[s];if(c&&c!='.'){const dg=muChord(th,bar);[0,2,4].forEach(k=>muLead(muF(muNote(th,dg+k,St.oct||0)),t,sp*1.4,St.v*(c=='X'?1.3:1),{w:'sawtooth',cut:2400,at:.008}))}}
-  if(th.toll&&s==0&&bar%th.toll.n==0)muBell(muF(muNote(th,0,th.toll.oct||1)),t,th.toll.v);
-  if(th.boom&&s==0&&bar%4==0){MUDR.taiko(t,.45*th.boom);muNz(t,1.4,'lowpass',1400,120,.7,.06*th.boom,2)}
-  if(X){const deg=muChord(th,bar);
-    if(X.wind&&s==0&&bar%2==0){const up=Math.random()<.5,a=300+Math.random()*250,b=700+Math.random()*700;muNz(t,sp*30,'bandpass',up?a:b,up?b:a,1.6,X.wind,2,sp*(8+Math.random()*8))}
-    if(X.drip&&s%2==0&&Math.random()<X.drip)muCelesta(muF(muNote(th,deg+[0,2,4,7][Math.random()*4|0],3)),t,.035+Math.random()*.03);
-    if(X.chime&&s%4==2&&Math.random()<X.chime)muBell(muF(muNote(th,deg+[0,4,7][Math.random()*3|0],3)),t,.014)}}
-{const f=muStep;muStep=function(t){const r=f.apply(this,arguments),th=MU.th;
-  if(th&&(th.tune||th.fx||th.stab||th.toll)){try{mu215Step(th,t,MU.bar,MU.s)}catch(e){if(!MU215.err){MU215.err=1;console.warn('v215 song',e)}}}return r}}
-
-// ---------- which song plays where ----------
-function mu215Key(I){if(!I)return null;if(I.sp)return 'sp_'+I.sp;if(I.den)return 'z'+I.z+'d';return I.fld&&I.k==1?'z'+I.z+'b':I.fld&&I.k==2?'z'+I.z+'c':null}
-// a Sovereign (e.boss) or a mini boss (a Sovereign-style fighter e.sv that is no Sovereign) fighting near the hero → the zone's fight song
-function mu215Foe(){const P=pl.position;let r=0;for(const e of enemies){if(!e||e.dead||!e.agg||!e.m||!(e.boss||e.sv))continue;if(e.m.position.distanceTo(P)<45){if(e.boss)return 2;r=1}}return r}
-{const f=muWant;muWant=function(){const w=f.apply(this,arguments);
-  if(typeof w=='string'&&(w=='boss'||/^z\d+$/.test(w))){try{const P=pl.position,I=insAt(Math.round(P.x),Math.round(P.z)),fo=mu215Foe();
-      if(fo&&I){const k='z'+I.z+(fo==2?'x':'m');if(MTH[k])return k}
-      if(w!='boss'){const k=mu215Key(I);if(k&&MTH[k])return k}}catch(_){}}
-  return w}}
-// fight songs come in fast, like v79's 'boss'
-{const f=muSwitch;muSwitch=function(now){const r=f.apply(this,arguments);try{if(MU.th&&MU.th.fight&&MU.cur!='boss'){MU.xg.gain.cancelScheduledValues(now);MU.xg.gain.setValueAtTime(0,now);MU.xg.gain.setTargetAtTime(1,now+.05,.3)}}catch(_){}return r}}
+// ---------------- the window: Settings → Cinematics ----------------
+document.head.insertAdjacentHTML('beforeend',`<style>
+#cv215{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(6,4,3,.86)}#cv215.hide{display:none}
+#cv215 .win{width:min(520px,96vw)}#cv215 .li{display:grid;gap:8px}
+#cv215 .it{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(201,162,74,.35);border-radius:6px;background:rgba(0,0,0,.28)}
+#cv215 .it .tx{flex:1;min-width:0}#cv215 .it b{display:block;font-family:Cinzel,Georgia,serif;letter-spacing:.04em;color:#f0dfb8}
+#cv215 .it i{display:block;font-style:normal;font-size:.74rem;opacity:.75;margin-top:2px}#cv215 .it .ic{font-size:1.5rem;width:1.8em;text-align:center}
+#cv215 .it .sn{font-size:.68rem;opacity:.6;margin-top:2px}#cv215 .mut{font-size:.74rem}#cv215 .bad{color:#e07a6a}
+</style>`);
+document.body.insertAdjacentHTML('beforeend',`<div id="cv215" class="hide"><div class="win nar">
+  <div class="wh"><h2>Cinematics</h2><span class="wsub">Watch a zone’s arrival again</span><button class="x" id="cv215Close" title="Close">✕</button></div>
+  <div class="wb" style="padding:14px 16px;display:grid;gap:10px"><div class="li" id="cv215L"></div><div class="mut" id="cv215M"></div></div></div></div>`);
+$('cv215Close').onclick=()=>$('cv215').classList.add('hide');
+function cv215Seen(z){try{if(z===0)return !!KC208.seen;if(z===1)return HC208.seen===1;return zc214Seen(z)}catch(_){return false}}
+function cv215Open(){const L=$('cv215L'),M=$('cv215M');M.textContent='';M.className='mut';L.innerHTML='';
+  CV215.L.forEach(c=>{const d=document.createElement('div');d.className='it';const ic=(PMAP[c.z]&&PMAP[c.z].ic)||'🎬';
+    d.innerHTML=`<span class="ic">${ic}</span><span class="tx"><b>${c.n}</b><i>${c.s}</i><span class="sn">${cv215Seen(c.z)?'Seen on arrival':'Not seen on arrival yet'}</span></span><button>▶ Watch</button>`;
+    d.querySelector('button').onclick=()=>{const why=cv215Why();if(why){M.textContent=why;M.className='mut bad';return}
+      $('cv215').classList.add('hide');try{$('setw').classList.add('hide')}catch(_){}setTimeout(()=>cv215Play(c.z),60)};L.appendChild(d)});
+  $('cv215').classList.remove('hide')}
+{const d=$('delSave');if(d){const g=[...document.querySelectorAll('#setw .setg')].find(e=>e.textContent.trim()=='Saved game');const html='<div class="setg">Cinematics</div><button id="cv215B" style="justify-self:start">🎬 Watch cinematics</button>';
+  if(g&&g.classList&&g.classList.contains('setg'))g.insertAdjacentHTML('beforebegin',html);else d.insertAdjacentHTML('beforebegin',html);
+  $('cv215B').onclick=cv215Open}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

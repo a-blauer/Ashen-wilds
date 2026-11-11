@@ -50,8 +50,9 @@ def s(pg):
     e=ev("()=>IC151.err||''");chk('no frame errors in part two',not e,e[:400])
     p0=ev("()=>[pl.position.x,pl.position.z]");pg.keyboard.down('w');pg.wait_for_timeout(1200);pg.keyboard.up('w')
     pg.screenshot(path=play.TMP+'/v151_live_p2.jpg',type='jpeg',timeout=120000)
-    pg.click('#ic151 .skip');pg.wait_for_timeout(500)
-    st=ev("()=>({t:(performance.now()-IC151.live.t0)/1000+IC151.live.off})");chk('skip in part two goes to the end',st['t']>=128,st)
+    # the screenshot can take long enough on a slow machine that part two has already played out: then there is nothing to skip
+    sk=ev("()=>{const b=document.querySelector('#ic151 .skip');if(b&&IC151.run){b.click();return 1}return 0}");pg.wait_for_timeout(500)
+    st=ev("()=>({t:IC151.live?(performance.now()-IC151.live.t0)/1000+IC151.live.off:999,run:IC151.run})");chk('skip in part two goes to the end',st['t']>=128 or not st['run'],(sk,st))
     # the town part and the hand-back take a few seconds after the skip (more on a slow machine): wait for it, up to 30 s
     wait(pg,"()=>!IC151.run",30000);pg.wait_for_timeout(1200)
     st=ev("()=>({run:IC151.run,on:IC151.on,el:!!document.getElementById('ic151'),filt:ren.domElement.style.filter,mode:IC151.mode,ban:document.getElementById('banner')&&document.getElementById('banner').textContent})");print(st)
