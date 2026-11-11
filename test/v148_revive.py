@@ -147,7 +147,9 @@ try:
     check('B sees A siphon (relayed stream)',until(B,"()=>((MPV.cnt&&MPV.cnt.V)|0)>"+str(v0),10),'B '+B.evaluate(DG2)+' A '+A.evaluate(DG2))
     check('A holds the essence, the rift is open',until(A,"()=>se208St(0)===2&&!!SE208.rift[0]",15),A.evaluate("()=>[se208St(0),!!SE208.ch]"))
     B.evaluate("()=>{se208Done(0)}")
-    for pg in (A,B): pg.evaluate("()=>{const T=TOWNS[0];toPos(T.cx,T.cy+(hero.cls=='mage'?-3.4:3.4))}")
+    # the test jumps straight home; a real player leaves through the rift. If standing by the corpse sealed this window's arena
+    # (its own copy of the Sovereign can still be there), open it first, or arenaTick pulls the hero back into the den
+    for pg in (A,B): pg.evaluate("()=>{try{if(AF)arenaClear(AF)}catch(_){}const T=TOWNS[0];toPos(T.cx,T.cy+(hero.cls=='mage'?-3.4:3.4))}")
     A.wait_for_timeout(1500)
     A.evaluate("()=>{promptTick();if(PR&&/Pour/.test(PR.label))PR.fn()}")
     check('A poured: the map is cleared for A',until(A,"()=>bossDone.has(0)",10))
