@@ -126,7 +126,7 @@ def s(pg):
     exp(r['reached']>=.85,'v192: spiders reach the hero instead of getting stuck (%s within 6 tiles after %s s, %s moved by the watchdog)'%(r['reached'],r['reachS'],r['unstuck']))
     exp(r['stuckD']<=8.5 and r['stuckLine'],'v192: a stuck spider rises again near its hero with a clear walk (%s tiles)'%r['stuckD'])
     exp(r['movedD']>9,'v192: a spider on the move is left where it is (%s tiles)'%r['movedD'])
-    exp(r['xpK']==[.5,.5,1] and r['xpUse'],'v192: gate spiders give half the XP (%s)'%r['xpK'])
+    exp(r['xpK']==[0,0,1] and r['xpUse'],'v192/v219: gate spiders give no XP share, so 1 XP each (gainXP never gives less than 1) (%s)'%r['xpK'])
     exp(.3<=r['lootS']<=.4 and r['lootC']==1,'v192: gate spiders drop loot 35%% of the time (65%% fewer drops: %s, others %s)'%(r['lootS'],r['lootC']))
     exp(r['sp1Alive'] and .3<r['sp1Frac']<.6,'v166: one charged burn is a heavy hit, not a kill (alive %s, %s hp left)'%(r['sp1Alive'],r['sp1Frac']))
     exp(r['spDead'] and r['chargeCost']==8,'the charged flame kills a spider in 2 burns for 8 charge (%s, cost %s)'%(r['spDead'],r['chargeCost']))
