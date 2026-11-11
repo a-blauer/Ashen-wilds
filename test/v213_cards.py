@@ -50,8 +50,9 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   out.plaque=!!(CD213.plq&&CD213.plq.parent&&CD213.plq.visible);if(!out.plaque)F.push('no result plaque over the table');
   out.heroHidden=!pl.visible;if(pl.visible)F.push('the hero blocks the table view');
   // the dealer's arms come back to rest after many hands (the old arm code stacked turns each frame and spun him)
-  {const b=CD213.rig.bones,snap=()=>['aR0','aR1','chest'].map(n=>[b[n].rotation.x,b[n].rotation.y,b[n].rotation.z]);const s0=snap();
-   for(let h=0;h<4;h++){gold=1000;CD213.busy=false;cd213Deal();STEP(240)}STEP(120);const s1=snap();let d=0;s0.forEach((r,i)=>r.forEach((v,j)=>d=Math.max(d,Math.abs(v-s1[i][j]))));out.armDrift=+d.toFixed(3);
+  {STEP(90); // v218: let the last hand's gesture end first (the hand + Corvin's gesture take ~3.6 s; a win's gesture was still on at the old snapshot)
+   const b=CD213.rig.bones,snap=()=>['aR0','aR1','chest'].map(n=>[b[n].rotation.x,b[n].rotation.y,b[n].rotation.z]);const s0=snap();
+   for(let h=0;h<4;h++){gold=1000;CD213.busy=false;cd213Deal();STEP(240)}STEP(120);const s1=snap();let d=0;s0.forEach((r,i)=>r.forEach((v,j)=>{const q=Math.abs(v-s1[i][j]);if(q>d){d=q;out.armWhich=['aR0','aR1','chest'][i]+'.'+'xyz'[j]}}));out.armDrift=+d.toFixed(3);out.armS=[s0,s1].map(S=>S.map(r=>r.map(v=>+v.toFixed(2))));
    if(!(d<.35))F.push('the dealer\'s pose drifted after four hands: '+out.armDrift);if(s1.flat().some(v=>!isFinite(v)))F.push('the dealer\'s bones went NaN')}
   out.lay=CD213.lay.length;const faces=CD213.lay.map(m=>Math.abs(m.userData.f.rotation.z)<.05);if(CD213.lay.length!==3||faces.some(f=>!f))F.push('the three cards are not lying face up on the table');
   // the cards lie on the table top
