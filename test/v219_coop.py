@@ -17,8 +17,14 @@ B.evaluate("""()=>{window.__kn={knife:0,spin:0};const a=scene.add;scene.add=func
   if(o.userData.kn211){__kn.knife++;if(o.userData.kn218==='star')__kn.star=(__kn.star||0)+1;const pv=o.userData.kn211pv;setTimeout(()=>{let m=null;o.traverse(x=>{if(!m&&x.isMesh&&x.onBeforeRender)m=x});try{m.onBeforeRender()}catch(_){}__kn.spin=Math.max(__kn.spin,Math.abs(pv.rotation.y))},150)}
   }return a.apply(this,arguments)}}""")
 A.evaluate("(s)=>{(0,eval)(s)}",LIB)
-A.evaluate("""()=>{const idx=ITPL.findIndex(t=>t.sl=='weapon'&&t.n=='Blackstar Shuriken');hero.cls='assassin';hero.lvl=Math.max(hero.lvl,60);eq.weapon={id:918300,tp:idx,r:2,req:1,up:0,n:'Blackstar Shuriken'};refreshGear(pl,hero.cls,eq);try{mpPresence(performance.now())}catch(_){}let i=0;const go=()=>{if(i++>=3)return;HA.cur=null;atkCd=0;tgt=null;swing();setTimeout(go,700)};go()}""")
-A.wait_for_timeout(3500)
+A.evaluate("""()=>{const idx=ITPL.findIndex(t=>t.sl=='weapon'&&t.n=='Blackstar Shuriken');hero.cls='assassin';hero.lvl=Math.max(hero.lvl,60);eq.weapon={id:918300,tp:idx,r:2,req:1,up:0,n:'Blackstar Shuriken'};refreshGear(pl,hero.cls,eq);try{mpPresence(performance.now())}catch(_){}let i=0;const go=()=>{if(i++>=24||window.__stop219)return;HA.cur=null;atkCd=0;tgt=null;swing();setTimeout(go,700)};go()}""")
+# v220: wait for the partner to have seen a spinning star (was a fixed 3.5 s, too tight when the second window is slow)
+import time
+_t0=time.time()
+while time.time()-_t0<25:
+    A.wait_for_timeout(500);_g=B.evaluate("()=>__kn")
+    if _g['knife']>=1 and _g.get('star',0)>=1 and _g['spin']>.3:break
+A.evaluate("()=>{window.__stop219=1}")
 own=A.evaluate("()=>shots.filter(s=>s.kn211).length+'/'+shots.length")
 got=B.evaluate("()=>__kn")
 chk('the partner draws the thrown shuriken as stars',got['knife']>=1 and got.get('star',0)>=1,json.dumps(got))
