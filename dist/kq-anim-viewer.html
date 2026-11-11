@@ -471,7 +471,6 @@ body.kv-on #kvBoot{display:none}
     </div>
   </div></div>
   <div id="tal" class="modal w hide"><div class="win" style="width:min(860px,100%)"><div class="wh"><h2>Character</h2><span class="wsub" id="talSub"></span><button class="x" id="talClose" title="Close (Esc)">✕</button></div><div class="wb"><div id="talT" class="talg"></div></div><div class="wf"><span id="talInfo" class="mut dtl"></span><button id="talReset">Reset</button></div></div></div>
-  </div></div>
   <div id="devp" class="modal"><h2>How are you playing?</h2><p class="sub">The screen and controls adjust to fit. You can switch later in Settings (O).</p><div class="devb"><button data-dev="desktop"><span>🖥️</span>Desktop<small>Keyboard and mouse<br>WASD, mouse camera</small></button><button data-dev="mobile"><span>📱</span>Mobile<small>Full-screen touch controls<br>Turn your phone sideways for the best view</small></button></div></div>
   <div id="mctl"><div id="joy"><i></i></div><div id="mbtn"><button data-m="f" title="Interact">F</button><button data-m="tgt" title="Target nearest">🎯</button><button data-m="dash" title="Dash">💨</button><button data-m="atk" title="Attack (hold)">⚔️</button></div></div>
   <div id="svp" class="modal hide"><div class="svpw"><h2>Welcome back</h2><div id="svpI" class="svpi"></div><div class="devb"><button class="pri" id="svpC">▶ Continue</button><button id="svpN">New game</button></div></div></div>
@@ -76894,6 +76893,303 @@ function rf218Cling(t,ph){const s=Math.sin,w=t*.8+ph,look=Math.max(0,s(w*.37));
   return {pitch:.5+.06*s(w),roll:.04*s(w*.7),sp:.14+.06*s(w),ch:.2+.08*s(w*1.1),nk:-.1-.15*look,hx:-.35-.2*look+.08*s(w*.9),hy:.45*s(w*.31),hz:.08*s(w*.5),
     arms:[{x:-1.35+.12*s(w),z:.62+.06*s(w*1.3),e:-.75+.12*s(w*1.1),w:.4},{x:-1.35+.12*s(w+1.9),z:.62+.06*s(w*1.3+1),e:-.75+.12*s(w*1.1+1),w:.4}],legs:{k:w,a:.18,b:.3,kb:.6}}}
 {const f=dg165WPose;dg165WPose=function(st,t,ph,k){if(RF218.on&&RF218.hulk){try{if(st==='rake')return rf218Slam(k&&k.k!=null?k.k:0,t,ph);if(st==='cling')return rf218Cling(t,ph)}catch(_){}}return f.apply(this,arguments)}}
+// ================= v220 talking to people: conversations and shopkeepers in the world =================
+// Owner (Nov 11 2026): "we use ui popup menus to handle most shops, main quest dialogue and interactions. Doing this kind of
+// kills immersion - id rather have a more interactive interaction where we actually talk to the npc for the quest and it shows
+// pop up dialogue that we navigate through, and a camera focused on them like we're talking to them. In shops, I want it to
+// show the shopkeeper to the right side while we shop."
+//
+// Two views, both driven by the windows the game already opens (nothing about quests or shops themselves changes):
+//  TALK (quest people: the Warden-Captain 'mq143', Kheprit 'kh165', Cheddar at the Great Gate 'ch205' and in the Sun Court
+//    'dm205'): the camera moves in on the speaker's face, the HUD steps aside behind two black bars, and the window becomes a
+//    dialogue box at the bottom. What they say comes one passage at a time, typed out (DL220): click / Space / Enter / F for
+//    the next, and after the last passage your answers appear as a list (click, or press 1-9). Esc leaves.
+//  SHOP (alchemist, cook, stable, magic shop, the four visitors, the Steward, Cheddar's board in #xw; the Trading Post in
+//    #shop; the Blacksmith's forge in #bag): the window slides to the left and the camera frames the keeper on the right, turned
+//    to face you, with a line of greeting. On tall / narrow screens the keeper stands above the window instead.
+// How: im220Find() says each frame who you are dealing with (from the open window and its mode); im220Tick() runs in front of
+// POST.render, after the follow camera, and places the camera (eased in; the follow camera eases back by itself on leaving).
+// FADE.pl is pointed at the speaker so walls between the camera and them are cut away; the hero is hidden while the view is on.
+// Co-op: these are your own views, like any menu: a partner keeps seeing your hero standing at the counter, and their world
+// keeps running. Nothing here is sent, and nothing a partner needs to see changes (the keeper turning to you is yours only).
+var IM220={on:null,ft:0,p0:new THREE.Vector3(),l0:new THREE.Vector3(),hid:false,
+  talk:{mq143:1,kh165:1,ch205:1,dm205:1},
+  hi:{alch:'Mind the fumes. What do you need brewed?',cook:'Sit, eat. You look half starved.',stable:'Easy now. Looking for a mount?',magic:'Power has a price. Browse.',
+    merchant:'Rare things from far roads. Have a look.',trainer:'Bring me a beast worth training.',bard:'A song for a coin, friend?',sage:'The runes have been waiting for you.',
+    steward:'The stronghold is yours to shape, my liege.',cheddar:'Work for the brave! Take your pick.',post:'Buying or selling, friend?',smith:'Steel and fire. What will it be?'}};
+var DL220={sig:'',i:0,pages:[],name:'',typed:true,tm:0};
+function im220Vis(id){const e=$(id);return e&&!e.classList.contains('hide')?e:null}
+function im220Rig(g){if(!g)return null;if(g.bones)return g;let r=null;try{g.traverse(c=>{if(!r&&c.bones)r=c})}catch(_){}return r||g}
+// who the open window belongs to: {mode:'talk'|'shop', key, o:Object3D, el:modal}
+function im220Find(){let el,o=null,mode='shop',key='';
+  try{if(el=im220Vis('xw')){const m=xwMode;key=m;
+      if(IM220.talk[m]){mode='talk';o=m=='mq143'?MQ143.S.war.captain.g:m=='kh165'?KH165W.e.m:m=='ch205'?CH205.g:DM205.C.root}
+      else if(m=='alch'||m=='cook'||m=='stable'||m=='magic')o=TWN100_S.npc[m];
+      else if(m=='visitor'){key=String(xwArg);const v=VIS.find(v=>v.k==xwArg);o=v&&v.g}
+      else if(m=='hold'){key='steward';o=SHM.st&&SHM.st.g}
+      else if(m=='chq132'){key='cheddar';o=CHQ148.P&&CHQ148.P.ch.root}}
+    else if(el=im220Vis('shop')){key='post';o=DM196TP.npc}
+    else if((el=im220Vis('bag'))&&KQM_SMITH){key='smith';o=TWN100_S.npc.smith}}catch(_){o=null}
+  if(!o||!el)return null;o=im220Rig(o);if(!o||!o.parent)return null;
+  const p=o.getWorldPosition(IM220._v||(IM220._v=new THREE.Vector3()));if(Math.hypot(p.x-pl.position.x,p.z-pl.position.z)>(mode=='talk'?14:9))return null;
+  return {mode,key,o,el}}
+// the size of a figure from its meshes only (name plates and markers are sprites: left out)
+function im220Box(o){const B=new THREE.Box3(),b=new THREE.Box3();o.updateMatrixWorld(true);
+  o.traverse(c=>{if(!(c.isMesh||c.isSkinnedMesh)||!c.geometry||c.visible===false)return;if(!c.geometry.boundingBox)c.geometry.computeBoundingBox();b.copy(c.geometry.boundingBox).applyMatrix4(c.matrixWorld);
+    if(isFinite(b.min.y)&&isFinite(b.max.y)&&b.max.y-b.min.y<12)B.union(b)});
+  if(B.isEmpty()){const p=o.getWorldPosition(new THREE.Vector3());B.set(new THREE.Vector3(p.x-.4,p.y,p.z-.4),new THREE.Vector3(p.x+.4,p.y+1.7,p.z+.4))}return B}
+function im220WorldYaw(o){if(!o)return 0;const q=o.getWorldQuaternion(new THREE.Quaternion()),e=new THREE.Euler().setFromQuaternion(q,'YXZ');return e.y}
+function im220Narrow(){const s=$('stage');return !!s&&(s.clientWidth<720||s.clientWidth<s.clientHeight*1.05)}
+function im220Begin(w){const A=IM220;A.on=w;w.t0=nowP();A.p0.copy(cam.position);A.l0.copy(look);
+  const p=w.o.getWorldPosition(new THREE.Vector3());let h=1.7,y0=p.y;
+  try{const B=im220Box(w.o);h=Math.max(.5,Math.min(6,B.max.y-p.y));y0=p.y}catch(_){}
+  w.h=h;w.y0=y0;w.x=p.x;w.z=p.z;w.ry0=w.o.rotation.y;w.py=im220WorldYaw(w.o.parent);w.narrow=im220Narrow();
+  let dx=pl.position.x-p.x,dz=pl.position.z-p.z;const d=Math.hypot(dx,dz);if(d<.3){dx=Math.sin(camYaw);dz=Math.cos(camYaw)}else{dx/=d;dz/=d}w.dx=dx;w.dz=dz;
+  if(w.mode=='talk'){document.body.classList.add('im220t');try{if(d>=.3)pl.rotation.y=Math.atan2(-dx,-dz)}catch(_){}}
+  else{document.body.classList.add('im220s');w.el.classList.add(w.narrow?'sk220v':'sk220');im220Hi(w)}
+  w.spr=[];try{w.o.children.forEach(c=>{if(c.isSprite&&c.visible){c.visible=false;w.spr.push(c)}})}catch(_){}}   // their name plate and markers step out of the close-up
+function im220End(){const A=IM220,w=A.on;if(!w)return;A.on=null;
+  try{w.o.rotation.y=w.ry0}catch(_){}try{(w.spr||[]).forEach(c=>{c.visible=true})}catch(_){}if(A.hid){A.hid=false;try{pl.visible=true}catch(_){}}
+  document.body.classList.remove('im220t','im220s');['xw','shop','bag'].forEach(id=>{const e=$(id);if(e)e.classList.remove('sk220','sk220v')});
+  const s=$('sk220say');if(s)s.className='hide'}
+// the keeper's greeting, beside them
+function im220Hi(w){let s=$('sk220say');if(!s){s=document.createElement('div');s.id='sk220say';s.className='hide';($('stage')||document.body).appendChild(s)}
+  let nm='';try{nm=(w.o.userData.npcO&&w.o.userData.npcO.label)||''}catch(_){}if(w.key=='cheddar')nm='Cheddar';nm=String(nm).split(' · ')[0];
+  const t=IM220.hi[w.key];if(!t||w.narrow){s.className='hide';return}
+  s.innerHTML=(nm?'<b>'+nm+'</b>':'')+'<i>“'+t+'”</i>';s.className='';void s.offsetWidth;s.className='on'}
+function im220Tick(){const A=IM220;
+  if((typeof IC151!='undefined'&&IC151.on)||(typeof KC208!='undefined'&&KC208.on)||!party.length){if(A.on)im220End();return false}
+  const f=im220Find(),w0=A.on;
+  if(!f){if(w0)im220End();return false}
+  if(!w0||w0.o!==f.o||w0.el!==f.el||w0.key!==f.key){if(w0)im220End();im220Begin(f)}
+  const w=A.on,n=nowP(),k=Math.min(1,(n-w.t0)/620),e=k*k*(3-2*k),talk=w.mode=='talk',h=w.h;w.k=k;
+  const asp=cam.aspect||1.6,tf=Math.tan((cam.fov||58)*Math.PI/360);
+  // where the camera stands: out from the speaker toward you, swung a little to one side
+  const D=talk?Math.max(1.7,Math.min(5.2,h*1.55+.5)):Math.max(2.6,Math.min(6.5,h*(w.narrow?2.4:1.9)+.9)),sw=talk?.5:-.3,cs=Math.cos(sw),sn=Math.sin(sw);
+  const ox=w.dx*cs+w.dz*sn,oz=-w.dx*sn+w.dz*cs,fy=w.y0+h*(talk?.84:.62);
+  const P=IM220._p||(IM220._p=new THREE.Vector3()),L=IM220._l||(IM220._l=new THREE.Vector3()),C=IM220._c||(IM220._c=new THREE.Vector3());
+  C.set(w.x,fy,w.z);P.set(w.x+ox*D,fy+(talk?h*.06:h*.12+.15),w.z+oz*D);
+  if(talk)L.set(w.x,fy-D*tf*.34,w.z);                       // the face sits above the middle: the dialogue box is below
+  else if(w.narrow)L.set(w.x,fy-D*tf*.55,w.z);              // tall screens: the keeper above the window
+  else{const th=Math.atan(.5*tf*asp),vx=w.x-P.x,vz=w.z-P.z,c2=Math.cos(th),s2=Math.sin(th);L.set(P.x+vx*c2+vz*s2,fy-D*tf*.1,P.z-vx*s2+vz*c2)}   // wide screens: the keeper on the right
+  cam.position.lerpVectors(A.p0,P,e);look.lerpVectors(A.l0,L,e);cam.lookAt(look);cam.updateMatrixWorld();
+  try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(C)}catch(_){}
+  // the speaker looks at you (the camera, in a shop); your hero steps out of the picture
+  try{const tx=talk?pl.position.x:P.x,tz=talk?pl.position.z:P.z;w.o.rotation.y=Math.atan2(tx-w.x,tz-w.z)-w.py}catch(_){}
+  if(!A.hid&&k>.25&&pl.visible){A.hid=true;pl.visible=false}
+  if(A.hid)try{fols.forEach(f=>{if(f)f.visible=false})}catch(_){}   // companions too (compTick shows them again next frame once the view ends)
+  return true}
+{const f=POST.render;POST.render=function(){let on=false;try{on=im220Tick()}catch(e){if(!IM220.err){IM220.err=1;console.warn('v220 view',e)}}
+  if(on&&typeof CAM172!='undefined'&&CAM172.on){CAM172.on=false;try{return f.apply(this,arguments)}finally{CAM172.on=true}}
+  return f.apply(this,arguments)}}
+
+// ---------------- the dialogue box ----------------
+function dl220On(){const x=$('xw');return !!x&&!x.classList.contains('hide')&&x.classList.contains('dlg220')}
+function dl220Last(){return DL220.i>=DL220.pages.length-1}
+function dl220Build(){const x=$('xw'),B=$('xwB');if(!x||!B)return;const S=B.querySelector('.cq132say');
+  if(!IM220.talk[xwMode]||!S){x.classList.remove('dlg220','dl220more');return}
+  const who=S.querySelector('.cq132who'),tmp=S.cloneNode(true),w2=tmp.querySelector('.cq132who');if(w2)w2.remove();
+  const pages=tmp.innerHTML.split(/<br\s*\/?>\s*<br\s*\/?>/).map(s=>s.trim()).filter(Boolean);if(!pages.length)pages.push('…');
+  const sig=xwMode+'|'+pages.join('|');if(DL220.sig!==sig){DL220.sig=sig;DL220.i=0;DL220.typed=false}
+  DL220.pages=pages;DL220.name=who?who.textContent:'';DL220.i=Math.min(DL220.i,pages.length-1);x.classList.add('dlg220');dl220Show()}
+function dl220Show(){const x=$('xw'),S=$('xwB').querySelector('.cq132say');if(!S)return;clearInterval(DL220.tm);
+  const pg=DL220.pages[DL220.i]||'',n=DL220.pages.length,tmp=document.createElement('span');tmp.innerHTML=pg;const txt=tmp.textContent;
+  S.innerHTML='<span class="cq132who">'+zt116Esc(DL220.name)+'</span><span class="dl220t"></span><span class="dl220n"></span>';
+  const T=S.querySelector('.dl220t'),N=S.querySelector('.dl220n');
+  const done=()=>{clearInterval(DL220.tm);DL220.typed=true;T.innerHTML=pg;const more=!dl220Last();x.classList.toggle('dl220more',more);
+    N.innerHTML=more?'<em>'+(DL220.i+1)+' / '+n+'</em> Continue ▸':'';N.className='dl220n'+(more?' on':'')};
+  if(DL220.typed){done();return}
+  x.classList.add('dl220more');let c=0;const step=Math.max(1,Math.ceil(txt.length/90));T.textContent='';
+  DL220.tm=setInterval(()=>{c+=step;if(c>=txt.length||!dl220On()){done();return}T.textContent=txt.slice(0,c)},22)}
+// next passage (or finish typing this one); returns true when it did something
+function dl220Next(){if(!dl220On())return false;if(!DL220.typed){DL220.typed=true;dl220Show();return true}
+  if(!dl220Last()){DL220.i++;DL220.typed=false;dl220Show();return true}return false}
+{const f=openX;openX=function(m){if(IM220.talk[m])DL220.sig='';return f.apply(this,arguments)}}
+{const f=rX;rX=function(){const r=f.apply(this,arguments);try{dl220Build()}catch(e){console.warn('v220 dialogue',e)}return r}}
+$('xw').addEventListener('click',e=>{if(!dl220On())return;const x=$('xw');if(e.target.closest('button,a,input,select'))return;
+  if(x.classList.contains('dl220more')||e.target.closest('.cq132say')){if(dl220Next()){e.stopPropagation();e.preventDefault()}}},true);
+addEventListener('keydown',e=>{if(!dl220On()||e.ctrlKey||e.metaKey||e.altKey)return;const k=String(e.key||'').toLowerCase();
+  if(k==='escape'){e.preventDefault();e.stopImmediatePropagation();closeX();return}
+  if(k===' '||k==='enter'||k==='f'||k==='e'){e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
+    if(!dl220Next()){const b=$('xwF').querySelectorAll('button');if(b.length==1)b[0].click()}return}
+  if(k>='1'&&k<='9'&&!$('xw').classList.contains('dl220more')){const b=$('xwF').querySelectorAll('button')[+k-1];if(b){e.preventDefault();e.stopImmediatePropagation();b.click()}}},true);
+
+document.head.insertAdjacentHTML('beforeend',`<style>
+/* ---- talk: the HUD steps aside, two bars, a dialogue box ---- */
+body.im220t #stage>*:not(#gl):not(#xw):not(#fade):not(#ztc116):not(#banner){visibility:hidden!important}
+body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116):not(#banner):not(#kqmTip){visibility:hidden!important}
+#xw.dlg220{background:none!important;align-items:flex-end;padding:0 12px max(18px,5%);pointer-events:none}
+#xw.dlg220::before,#xw.dlg220::after{content:'';position:absolute;left:0;right:0;height:9%;background:#000;pointer-events:none;animation:dl220bar .5s ease both}
+#xw.dlg220::before{top:0;transform-origin:top}#xw.dlg220::after{bottom:0;transform-origin:bottom;height:5%}
+@keyframes dl220bar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes dl220in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#xw.dlg220 .win{pointer-events:auto;position:relative;z-index:1;width:min(780px,100%)!important;max-height:58%;overflow:visible;animation:dl220in .45s .12s ease both;
+  background:linear-gradient(180deg,rgba(26,19,13,.94),rgba(10,8,6,.96))!important;border:1px solid #8a6a2c!important;border-radius:4px!important;
+  box-shadow:0 0 0 1px #000,inset 0 0 0 1px rgba(232,195,106,.18),inset 0 0 38px rgba(0,0,0,.7),0 16px 44px rgba(0,0,0,.75)!important}
+#xw.dlg220 .wh{position:absolute;left:18px;right:8px;top:-17px;height:auto;padding:0;border:0!important;background:none!important;gap:8px;z-index:2}
+#xw.dlg220 .wh h2{font-size:.86rem;padding:5px 18px;color:#f4e6c0;background:linear-gradient(180deg,#3a2a16,#1a120a);border:1px solid #c9a24a;box-shadow:0 0 0 1px #000,0 3px 10px rgba(0,0,0,.7);
+  clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%);letter-spacing:.14em}
+#xw.dlg220 .wh::before,#xw.dlg220 .wh::after{display:none!important}
+#xw.dlg220 .wsub{margin:0;font-family:'IM Fell English SC',Georgia,serif;font-size:.74rem;color:#c9b48a;text-shadow:0 1px 3px #000,0 0 8px #000;align-self:flex-end;padding-bottom:2px}
+#xw.dlg220 .wh .x{margin-left:auto!important;width:26px;height:26px;border-radius:50%;background:#1a120a!important;border:1px solid #8a6a2c!important;color:#c9b48a;font-size:.8rem}
+#xw.dlg220 .wb{padding:26px 26px 10px;overflow:auto}
+#xw.dlg220 .cq132say{margin:0 0 8px;padding:0;border:0;background:none;font-size:1.14rem;line-height:1.5;color:#f0e4c4;min-height:4.6em;cursor:pointer;text-shadow:0 1px 2px #000}
+#xw.dlg220 .cq132who{display:none}
+#xw.dlg220 .dl220n{display:none;float:right;margin-top:8px;font-family:Cinzel,Georgia,serif;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#e8c36a;animation:dl220pulse 1.3s ease-in-out infinite}
+#xw.dlg220 .dl220n.on{display:block}#xw.dlg220 .dl220n em{font-style:normal;color:#8a7a5a;margin-right:10px}
+@keyframes dl220pulse{0%,100%{opacity:.55}50%{opacity:1}}
+#xw.dlg220.dl220more .wb>:not(.cq132say),#xw.dlg220.dl220more .wf{display:none!important}
+#xw.dlg220 .wf{flex-direction:column;align-items:stretch;gap:5px;padding:4px 22px 16px;border:0!important;background:none!important;min-height:0;counter-reset:dl220}
+#xw.dlg220 .wf::before,#xw.dlg220 .wf::after{display:none!important}
+#xw.dlg220 .wf button{counter-increment:dl220;text-align:left;padding:8px 14px 8px 12px;font-family:'IM Fell English SC',Georgia,serif;font-size:1rem;letter-spacing:.02em;text-transform:none;color:#eadcb8!important;
+  background:linear-gradient(90deg,rgba(201,162,74,.16),rgba(201,162,74,.03))!important;border:1px solid rgba(201,162,74,.35)!important;border-left:3px solid #c9a24a!important;border-radius:2px!important;box-shadow:none!important;transition:background .12s,transform .12s}
+#xw.dlg220 .wf button::before{content:counter(dl220) '  ❖  ';color:#c9a24a;font-family:Cinzel,Georgia,serif;font-size:.7rem}
+#xw.dlg220 .wf button:hover,#xw.dlg220 .wf button:focus-visible{background:linear-gradient(90deg,rgba(232,195,106,.34),rgba(201,162,74,.08))!important;transform:translateX(4px);color:#fff6dc!important}
+#xw.dlg220 .wf button.pri{border-left-color:#f0d48a!important;color:#fff3d2!important}
+#xw.dlg220 .wf .mut{font-style:italic;text-align:center;padding-top:2px}
+body.mob #xw.dlg220 .cq132say{font-size:.98rem;min-height:3.6em}body.mob #xw.dlg220 .wb{padding:32px 16px 8px}body.mob #xw.dlg220 .wsub{display:none}body.mob #xw.dlg220 .wf{padding:4px 14px 12px}
+/* ---- shop: the window to the left, the keeper on the right ---- */
+.modal.w.sk220{justify-content:flex-start;background:linear-gradient(90deg,rgba(4,6,9,.86) 0%,rgba(4,6,9,.7) 52%,rgba(4,6,9,.18) 70%,rgba(4,6,9,0) 82%)!important}
+.modal.w.sk220>.win{width:min(63%,980px)!important;animation:sk220in .4s ease both}
+@keyframes sk220in{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.modal.w.sk220v{align-items:flex-end;background:linear-gradient(0deg,rgba(4,6,9,.88) 0%,rgba(4,6,9,.7) 56%,rgba(4,6,9,0) 74%)!important}
+.modal.w.sk220v>.win{max-height:62%}
+#sk220say{position:absolute;z-index:6;right:3%;bottom:9%;width:min(27%,300px);pointer-events:none;text-align:center;opacity:0;font-family:'IM Fell English SC',Georgia,serif;color:#f0e4c4;
+  padding:10px 14px 12px;background:linear-gradient(180deg,rgba(26,19,13,.88),rgba(10,8,6,.92));border:1px solid #8a6a2c;box-shadow:0 0 0 1px #000,inset 0 0 0 1px rgba(232,195,106,.16),0 8px 24px rgba(0,0,0,.6);border-radius:3px}
+#sk220say.hide{display:none}#sk220say.on{animation:dl220in .5s .45s ease forwards}
+#sk220say b{display:block;font-family:Cinzel,Georgia,serif;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#e8c36a;margin-bottom:4px}
+#sk220say i{font-size:.95rem;line-height:1.35}
+</style>`);
+// ================= v220 menus: a second pass, leaning into the fantasy =================
+// Owner (Nov 11 2026): "improve our ui menus and do a second pass on them to make sure their UX is cleanly and optimally
+// displayed and easy to navigate. Our ui menus are also a little barbones so I want you to lean into the fantasy elements."
+// Styling only (no window's contents or behaviour change), on top of the v88 theme (1080):
+//  - every window: a gold gem set into the top of the frame, a faint arcane seal worked into the leather, a soft candle glow
+//    under the title, and the title's rule drawn longer;
+//  - lists in the shared window (#xw: shops, the Steward, portals, stations): each entry is its own inset plate with a gold
+//    edge that lights when pointed at, so it is clear what one click covers; section headings carry a ❖ mark;
+//  - easier to use: the close button is larger (and larger still on touch screens); the footer hint
+//    text reads as a scribe's note; the keyboard focus ring is a clear gold line; scroll areas keep a little space at the end.
+// Each player styles their own windows: nothing here is shared in co-op.
+document.head.insertAdjacentHTML('beforeend',`<style>
+:root{--im220-seal:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%23e8c36a' stroke-width='1.1'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Ccircle cx='100' cy='100' r='84' stroke-dasharray='2 5'/%3E%3Ccircle cx='100' cy='100' r='58'/%3E%3Cpath d='M100 4 L156 180 L10 70 L190 70 L44 180 Z'/%3E%3Cpath d='M100 42 L158 100 L100 158 L42 100 Z'/%3E%3Ccircle cx='100' cy='100' r='14'/%3E%3Cpath d='M100 4v24M100 172v24M4 100h24M172 100h24'/%3E%3C/svg%3E")}
+body.kq .win{background:var(--im220-seal) right -70px bottom -70px/300px 300px no-repeat,radial-gradient(ellipse 60% 90px at 50% 0,rgba(255,196,110,.13),transparent 70%),var(--kq-grain),var(--kq-leath),radial-gradient(ellipse 120% 70% at 50% 0%,rgba(150,100,50,.16),transparent 60%),linear-gradient(180deg,#271a10 0%,#1b120b 55%,#130c07 100%);
+  background-size:300px 300px,auto,160px 160px,260px 260px,auto,auto;background-blend-mode:soft-light,normal,normal,normal,normal,normal}
+body.kq .modal.w>.win::before{content:'';position:absolute;top:-13px;left:50%;width:18px;height:18px;transform:translateX(-50%) rotate(45deg);z-index:4;pointer-events:none;
+  background:radial-gradient(circle at 35% 35%,#fff3c8,#e0b050 45%,#7a4e18 100%);border:1px solid #120b05;box-shadow:0 0 0 2px #8a6230,0 0 0 3px #120b05,0 0 14px rgba(240,190,90,.55)}
+#xw.dlg220>.win::before{display:none}
+body.kq .win .wh .x{width:32px;height:32px}
+body.kq.mob .win .wh .x{width:38px;height:38px;font-size:.95rem}
+body.kq .win .wf .mut,body.kq .win .wf .dtl{font-style:italic}
+body.kq .win .wb{padding-bottom:16px}
+body.kq .win button:focus-visible,body.kq .win .rw:focus-visible{outline:2px solid #f0d48a;outline-offset:1px}
+body.kq .win .sec::before,body.kq .win .setg::before{content:'❖';margin-right:7px;font-size:.62em;color:#e0b660;vertical-align:1px}
+/* list entries in the shared window: inset plates */
+body.kq #xw:not(.dlg220) .wb .rw{margin:0 0 5px;padding:7px 10px;border:1px solid rgba(138,98,48,.38);border-radius:3px;
+  background:linear-gradient(180deg,rgba(255,220,150,.05),rgba(0,0,0,.16));box-shadow:inset 0 1px 0 rgba(255,225,160,.06),0 1px 2px rgba(0,0,0,.35);transition:border-color .12s,background .12s,box-shadow .12s}
+body.kq #xw:not(.dlg220) .wb .rw:hover:not(:disabled){border-color:#c99a4a;background:linear-gradient(180deg,rgba(240,180,90,.14),rgba(0,0,0,.14));box-shadow:inset 0 1px 0 rgba(255,225,160,.12),0 0 10px rgba(230,170,80,.18)}
+body.kq #xw:not(.dlg220) .wb .rw.on{border-color:#f0d48a;background:linear-gradient(180deg,rgba(240,190,100,.22),rgba(60,36,10,.2));box-shadow:inset 0 0 0 1px rgba(240,212,138,.3),0 0 12px rgba(230,170,80,.22)}
+</style>`);
+// ================= v220 nameplates: carved plaques that always fit the name =================
+// Owner (Nov 11 2026): "rework the nameplates for our npcs - right now they sometimes get cut off (like the stronghold upgrade
+// npc). Give cleaner looking nameplates that are stylized."
+// Why they were cut: the old plates (txTex, 0070) drew a fixed 30 px font on a fixed 256 px canvas and never measured the text,
+// so "Stronghold Steward", "Wandering Merchant", "Odile · Race Dealer" and long co-op names ran off both ends.
+// Now every plate is painted by np220Paint: the text is measured first and the canvas (and the sprite) grow to fit it.
+// Look: a dark plaque with pointed ends, a thin gold rim with an inner line, a gem at each tip, the name in Cinzel. A label
+// written "Name · Role" becomes two lines (name, then the role small and spaced). Plates repaint once the web font has loaded.
+// Used by: town folk / keepers / the Steward (npc), citizens (czModel103), the Warden-Captain (mq143Label) and co-op partners
+// (mpTagDraw: name, level and the health bar). Co-op: plates are built on each screen from data both already have.
+var NP220={all:[],S:2,pal:{
+  gold:{b0:'rgba(34,26,18,.9)',b1:'rgba(10,8,7,.9)',ln:'#c9a24a',in:'rgba(232,195,106,.32)',fg0:'#fff3d2',fg1:'#e2c88c',sub:'#c9a86a',gem:'#f0d48a'},
+  folk:{b0:'rgba(28,24,20,.82)',b1:'rgba(10,9,8,.82)',ln:'#9a8458',in:'rgba(200,180,130,.22)',fg0:'#f4ead0',fg1:'#d8c8a0',sub:'#b09a6c',gem:'#c9b078'},
+  green:{b0:'rgba(18,30,20,.9)',b1:'rgba(6,12,8,.9)',ln:'#a8c860',in:'rgba(200,230,130,.3)',fg0:'#f2ffc8',fg1:'#cfe890',sub:'#a8c860',gem:'#d8f08a'},
+  blue:{b0:'rgba(16,26,38,.9)',b1:'rgba(6,10,16,.9)',ln:'#6ab8e0',in:'rgba(140,210,255,.3)',fg0:'#eaf8ff',fg1:'#a8dcf8',sub:'#8ac8e8',gem:'#b8e8ff'}}};
+function np220Wide(g,t,gap){let w=0;for(const ch of t)w+=g.measureText(ch).width+gap;return Math.max(0,w-gap)}
+function np220Spaced(g,t,cx,y,gap){let x=cx-np220Wide(g,t,gap)/2;g.textAlign='left';for(const ch of t){g.fillText(ch,x,y);x+=g.measureText(ch).width+gap}g.textAlign='center'}
+function np220Split(t){t=String(t==null?'':t);const i=t.indexOf(' · ');return i>0?[t.slice(0,i),t.slice(i+3)]:[t,'']}
+// paint a plate onto canvas c; returns [width,height] in plate units (canvas px / S)
+function np220Paint(c,name,sub,P,hp){const S=NP220.S,F1='700 '+30*S+'px Cinzel,"Trajan Pro",Georgia,"Times New Roman",serif',F2='600 '+15*S+'px Cinzel,Georgia,"Times New Roman",serif';
+  let g=c.getContext('2d');name=String(name||'');sub=String(sub||'').toUpperCase();const gap=2.2*S;
+  g.font=F1;const w1=g.measureText(name).width;g.font=F2;const w2=sub?np220Wide(g,sub,gap):0;
+  const tip=20*S,m=3*S,pad=30*S,hasHp=hp!=null,H=(sub?68:46)*S+(hasHp?12*S:0),W=Math.ceil(Math.max(w1,w2,hasHp?150*S:0)+pad*2);
+  c.width=W;c.height=H;g=c.getContext('2d');
+  const poly=d=>{g.beginPath();g.moveTo(tip+d*.4,m+d);g.lineTo(W-tip-d*.4,m+d);g.lineTo(W-m-d*1.5,H/2);g.lineTo(W-tip-d*.4,H-m-d);g.lineTo(tip+d*.4,H-m-d);g.lineTo(m+d*1.5,H/2);g.closePath()};
+  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,P.b0);bg.addColorStop(1,P.b1);poly(0);g.fillStyle=bg;g.fill();
+  g.lineJoin='miter';g.strokeStyle=P.ln;g.lineWidth=2*S;g.stroke();poly(4.5*S);g.strokeStyle=P.in;g.lineWidth=1*S;g.stroke();
+  // a gem at each tip
+  [m+11*S,W-m-11*S].forEach(x=>{g.save();g.translate(x,H/2);g.rotate(Math.PI/4);g.fillStyle=P.gem;g.fillRect(-3*S,-3*S,6*S,6*S);g.strokeStyle='rgba(0,0,0,.6)';g.lineWidth=S;g.strokeRect(-3*S,-3*S,6*S,6*S);g.restore()});
+  g.textAlign='center';g.textBaseline='middle';const y1=(sub?26:24)*S;
+  g.font=F1;g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=4*S;g.shadowOffsetY=1.5*S;
+  const fg=g.createLinearGradient(0,y1-16*S,0,y1+16*S);fg.addColorStop(0,P.fg0);fg.addColorStop(1,P.fg1);g.fillStyle=fg;g.fillText(name,W/2,y1);
+  if(sub){g.shadowBlur=2*S;g.font=F2;g.fillStyle=P.sub;np220Spaced(g,sub,W/2,53*S,gap);
+    g.shadowColor='transparent';const lw=Math.min(W/2-tip-8*S,Math.max(w1,w2)/2),ln=g.createLinearGradient(W/2-lw,0,W/2+lw,0);ln.addColorStop(0,'rgba(0,0,0,0)');ln.addColorStop(.5,P.ln);ln.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=ln;g.globalAlpha=.7;g.fillRect(W/2-lw,43*S,lw*2,S);g.globalAlpha=1}
+  g.shadowColor='transparent';g.shadowBlur=0;g.shadowOffsetY=0;
+  if(hasHp){const bw=Math.min(W-tip*2-16*S,190*S),bx=(W-bw)/2,by=H-m-15*S,k=Math.max(0,Math.min(100,hp|0))/100;
+    g.fillStyle='rgba(0,0,0,.75)';g.fillRect(bx,by,bw,7*S);g.fillStyle=hp>35?'#4ade80':'#f87171';g.fillRect(bx+S,by+S,(bw-2*S)*k,5*S)}
+  return [W/S,H/S]}
+// put a plate on a sprite (makes or reuses its canvas texture) and size the sprite to it; k = world units per plate unit
+function np220Set(sp,text,pal,k,hp){const P=NP220.pal[pal]||NP220.pal.gold,[name,sub]=Array.isArray(text)?text:np220Split(text);
+  let c=sp.userData.np220c;if(!c){c=sp.userData.np220c=document.createElement('canvas');const old=sp.material.map,t=new THREE.CanvasTexture(c);t.anisotropy=4;sp.material.map=t;try{if(old)old.dispose()}catch(_){}
+    sp.material.transparent=true;sp.material.depthWrite=false;NP220.all.push(sp);if(NP220.all.length>240)NP220.all=NP220.all.filter(s=>s.parent)}
+  const [w,h]=np220Paint(c,name,sub,P,hp);sp.material.map.needsUpdate=true;sp.material.needsUpdate=true;sp.scale.set(w*k,h*k,1);sp.userData.np220={text:[name,sub],pal,k,hp};return sp}
+function np220Sprite(text,pal,k){const sp=new THREE.Sprite(new THREE.SpriteMaterial({transparent:true,depthWrite:false}));return np220Set(sp,text,pal,k)}
+function np220Repaint(){NP220.all=NP220.all.filter(s=>s.parent);NP220.all.forEach(sp=>{const d=sp.userData.np220;if(d)try{np220Set(sp,d.text,d.pal,d.k,d.hp)}catch(_){}})}
+try{document.fonts.load('700 60px Cinzel').then(()=>document.fonts.load('600 30px Cinzel')).then(np220Repaint).catch(()=>{})}catch(_){}
+// town folk, shopkeepers, the Steward, dealers
+{const f=npc;npc=function(p,x,z,o){const g=f.apply(this,arguments);try{const sp=g.children.find(c=>c.isSprite);if(sp&&o&&o.label){np220Set(sp,o.label,'gold',.0066);sp.position.y=1.9+sp.scale.y/2}}catch(e){console.warn('v220 plate',e)}return g};npc.all=f.all}
+// citizens: a smaller, quieter plate
+{const f=czModel103;czModel103=function(c){const g=f.apply(this,arguments);try{const sp=g.userData.lab;if(sp){const ro=czRole104(c);np220Set(sp,[c.n,ro!='gather'?CZR104[ro].n:''],'folk',.0052);sp.position.y=1.9+sp.scale.y/2}}catch(e){console.warn('v220 plate',e)}return g}}
+// the Warden-Captain
+mq143Label=function(t){return np220Sprite(t,'green',.0066)};
+// co-op partners: name, level, health
+mpTagDraw=function(r){const pr=r.pr,key=(pr.n||'')+'|'+pr.lv+'|'+pr.hp;if(key===r.tk)return;r.tk=key;if(!r.tag)return;
+  np220Set(r.tag,[String(pr.n||'Adventurer').slice(0,20),'Lv '+(pr.lv|0)],'blue',.0068,pr.hp|0)};
+// plates made before this file loaded (the town is built while the script loads)
+function np220Sweep(){try{scene.traverse(g=>{const o=g.userData&&g.userData.npcO;if(!o||!o.label)return;const sp=g.children.find(c=>c.isSprite&&!c.userData.np220);if(sp){np220Set(sp,o.label,'gold',.0066);sp.position.y=1.9+sp.scale.y/2}})}catch(e){console.warn('v220 plates',e)}}
+np220Sweep();
+// ================= v220 title pop-ups: the name only, and one at a time =================
+// Owner (Nov 11 2026): "when titles popup for different areas or events there is a lot of over explaining. Adjust the popups to be
+// more simplistic only providing the name and any crucially important info - no text like 'mobs respawn x minutes'" and
+// "make sure title popups dont overlap eachother."
+//  - Title cards (zt116Show) show the small place line and the name. The flavour line is gone; the last line stays only when it is
+//    something you must know right now: a key to press, a count, a checkpoint, or the red "you are under the recommended power".
+//  - Banners (banner) show the title and one short line; the third (explaining) line is never shown.
+//  - Cards and banners share one queue (TQ220): one is on screen at a time. When another is waiting, the one on screen leaves
+//    early (after ~1.5-1.9 s), so warnings in a fight are never held back for long. Camp cards never queue: they are skipped
+//    when something else is up. Nothing is shown while a cinematic runs; it comes after.
+// Each player sees their own pop-ups (no co-op message: the calls that raise them already run on every screen).
+var TQ220={q:[],cur:null,tm:0,end:0,cardMs:4600,campMs:(typeof CC130_MS!="undefined"?CC130_MS:3800),banMs:3550,max:4};
+var TQ220_KEEP=/ztlow|\b(F|C|Ctrl|Space|Shift|W\/S|A\/D|Tab)\b\s*(·|or|at|to|picks|beside)|left click|\b\d+ of \d+\b|Checkpoint/;
+function tq220Busy(){try{if(typeof IC151!='undefined'&&IC151.on)return true}catch(_){}try{if(typeof KC208!='undefined'&&KC208.on)return true}catch(_){}return false}
+function tq220Hide(){try{if(ZT116.el){clearTimeout(ZT116.tm);ZT116.el.className=''}}catch(_){}try{const b=$('banner');if(b)b.innerHTML=''}catch(_){}}
+function tq220Run(){const Q=TQ220,n=nowP();
+  if(Q.cur){if(!Q.q.length)return;const w=Q.cur.t0+Q.cur.min-n;if(w>0){clearTimeout(Q.tm);Q.tm=setTimeout(tq220Run,w+10);return}
+    tq220Hide();clearTimeout(Q.end);Q.cur=null}
+  if(!Q.q.length)return;
+  if(tq220Busy()){clearTimeout(Q.tm);Q.tm=setTimeout(tq220Run,400);return}
+  const it=Q.q.shift();Q.cur={t0:n,min:it.k==='c'?1900:1500,k:it.k};
+  try{if(typeof TC163!='undefined'){TC163.zT=0;TC163.wT=0}}catch(_){}
+  try{it.fn()}catch(e){console.warn('v220 title',e)}
+  clearTimeout(Q.end);Q.end=setTimeout(()=>{Q.cur=null;tq220Run()},it.ms)}
+function tq220Push(it){const Q=TQ220;Q.q.push(it);while(Q.q.length>Q.max)Q.q.shift();tq220Run()}
+// what stays of a card's last line
+function tq220Foot(foot){if(!foot)return '';const s=String(foot);return TQ220_KEEP.test(s)?s:''}
+{const f=zt116Show;zt116Show=function(T,kick,title,sub,foot,cls){const s=this,camp=/camp123/.test(cls||''),Q=TQ220;
+    if(camp&&(Q.cur||Q.q.length||tq220Busy()))return;
+    const ft=camp?'':tq220Foot(foot);
+    tq220Push({k:'c',ms:camp?Q.campMs:Q.cardMs,fn:()=>{f.call(s,T,kick,title,'',ft,cls);
+      if(!camp){clearTimeout(ZT116.tm);ZT116.tm=setTimeout(()=>{if(ZT116.el)ZT116.el.className=''},Q.cardMs)}}})}}
+{const f=banner;banner=function(t,sub,det){const s=this;
+    if(typeof ZT116!='undefined'&&(ZT116.mute||t==='🏰 DUSKHOLD'))return f.apply(this,arguments);   // muted arrival banners / the town card (it comes back in as a card)
+    let b=sub==null?'':String(sub);if(b.replace(/<[^>]*>/g,'').length>64)b='';
+    tq220Push({k:'b',ms:TQ220.banMs,fn:()=>{f.call(s,t,b,'')}})}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+#ztc116.on{animation-duration:4.6s}
+#ztc116 .ztd{margin-bottom:2px}
+#banner .bnr .b2:empty{display:none}
+</style>`);
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

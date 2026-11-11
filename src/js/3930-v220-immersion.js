@@ -152,7 +152,7 @@ body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116)
 #xw.dlg220 .wf button:hover,#xw.dlg220 .wf button:focus-visible{background:linear-gradient(90deg,rgba(232,195,106,.34),rgba(201,162,74,.08))!important;transform:translateX(4px);color:#fff6dc!important}
 #xw.dlg220 .wf button.pri{border-left-color:#f0d48a!important;color:#fff3d2!important}
 #xw.dlg220 .wf .mut{font-style:italic;text-align:center;padding-top:2px}
-body.mob #xw.dlg220 .cq132say{font-size:.98rem;min-height:3.6em}body.mob #xw.dlg220 .wb{padding:22px 16px 8px}body.mob #xw.dlg220 .wf{padding:4px 14px 12px}
+body.mob #xw.dlg220 .cq132say{font-size:.98rem;min-height:3.6em}body.mob #xw.dlg220 .wb{padding:32px 16px 8px}body.mob #xw.dlg220 .wsub{display:none}body.mob #xw.dlg220 .wf{padding:4px 14px 12px}
 /* ---- shop: the window to the left, the keeper on the right ---- */
 .modal.w.sk220{justify-content:flex-start;background:linear-gradient(90deg,rgba(4,6,9,.86) 0%,rgba(4,6,9,.7) 52%,rgba(4,6,9,.18) 70%,rgba(4,6,9,0) 82%)!important}
 .modal.w.sk220>.win{width:min(63%,980px)!important;animation:sk220in .4s ease both}
