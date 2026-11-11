@@ -104,8 +104,10 @@ function dl220Show(){const x=$('xw'),S=$('xwB').querySelector('.cq132say');if(!S
   const done=()=>{clearInterval(DL220.tm);DL220.typed=true;T.innerHTML=pg;const more=!dl220Last();x.classList.toggle('dl220more',more);
     N.innerHTML=more?'<em>'+(DL220.i+1)+' / '+n+'</em> Continue ▸':'';N.className='dl220n'+(more?' on':'')};
   if(DL220.typed){done();return}
-  x.classList.add('dl220more');let c=0;const step=Math.max(1,Math.ceil(txt.length/90));T.textContent='';
-  DL220.tm=setInterval(()=>{c+=step;if(c>=txt.length||!dl220On()){done();return}T.textContent=txt.slice(0,c)},22)}
+  x.classList.add('dl220more');let c=0;const step=Math.max(1,Math.ceil(txt.length/90));
+  // the whole passage is laid out from the start (the part not yet "spoken" is invisible), so the box never jumps while it types
+  T.innerHTML='<span></span><span style="visibility:hidden"></span>';const a=T.firstChild,b=T.lastChild;b.textContent=txt;
+  DL220.tm=setInterval(()=>{c+=step;if(c>=txt.length||!dl220On()){done();return}a.textContent=txt.slice(0,c);b.textContent=txt.slice(c)},22)}
 // next passage (or finish typing this one); returns true when it did something
 function dl220Next(){if(!dl220On())return false;if(!DL220.typed){DL220.typed=true;dl220Show();return true}
   if(!dl220Last()){DL220.i++;DL220.typed=false;dl220Show();return true}return false}

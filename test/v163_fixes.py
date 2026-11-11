@@ -34,7 +34,7 @@ def s(pg):
     if not r['below'] or not r['onscreen']:F('trackers not under the minimap / off screen: %s'%r)
     # ---- 3. one title card at a time
     r=ev("""async()=>{const n0=$('banner').children.length;zt116Ins(INSL[1]);banner('Welcome back, Test','Lv 1','');const n1=$('banner').children.length;
-      await new Promise(r=>setTimeout(r,5600));const n2=$('banner').children.length;return {n0,n1,n2,zt:/\\bon\\b/.test($('ztc116').className)}}""")
+      await new Promise(r=>setTimeout(r,3200));const n2=$('banner').children.length;return {n0,n1,n2,zt:/\\bon\\b/.test($('ztc116').className)}}""")
     print('cards',json.dumps(r))
     if r['n1']!=r['n0']:F('Welcome back shown on top of the zone card')
     if r['n2']<=r['n0']:F('Welcome back never shown after the zone card')

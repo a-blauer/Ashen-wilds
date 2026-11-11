@@ -26,6 +26,7 @@ function tq220Push(it){const Q=TQ220;Q.q.push(it);while(Q.q.length>Q.max)Q.q.shi
 // what stays of a card's last line
 function tq220Foot(foot){if(!foot)return '';const s=String(foot);return TQ220_KEEP.test(s)?s:''}
 {const f=zt116Show;zt116Show=function(T,kick,title,sub,foot,cls){const s=this,camp=/camp123/.test(cls||''),Q=TQ220;
+    if(title==='Abeksi Has Fallen'||title==='Abeksi Escaped')return;   // dropped since v207 (3780): don't hold a place in the queue for a card that never shows
     if(camp&&(Q.cur||Q.q.length||tq220Busy()))return;
     const ft=camp?'':tq220Foot(foot);
     tq220Push({k:'c',ms:camp?Q.campMs:Q.cardMs,fn:()=>{f.call(s,T,kick,title,'',ft,cls);

@@ -42,7 +42,7 @@ def s(pg):
     ok=wait(pg,"()=>IC151.run&&IC151.mode==='p2'",15000)
     pg.wait_for_timeout(3000)
     st=ev("""()=>({run:IC151.run,mode:IC151.mode,t:IC151.live&&(performance.now()-IC151.live.t0)/1000+IC151.live.off,cls:hero.cls,sp:party[0]&&party[0].n,
-      fol:!!(fols[0]&&fols[0].parent),town:!!(IC151.S&&IC151.S.D&&IC151.S.D.on),ban:(IC151.q||[]).length,skip:getComputedStyle(document.querySelector('#ic151 .skip')).display})""");print(st,'picked',sp)
+      fol:!!(fols[0]&&fols[0].parent),town:!!(IC151.S&&IC151.S.D&&IC151.S.D.on),ban:(IC151.q||[]).length+(typeof TQ220!='undefined'?TQ220.q.length:0),skip:getComputedStyle(document.querySelector('#ic151 .skip')).display})""");print(st,'picked',sp)
     chk('part two plays after Begin, in Duskhold',ok and st['town'] and st['t'] and st['t']>=55.9,st)
     chk('with the hero and companion the player made',st['cls']=='mage' and sp and st['sp']==sp and st['fol'],(st['cls'],st['sp'],sp,st['fol']))
     chk('welcome banner waits for it',st['ban']>=1,st['ban'])
