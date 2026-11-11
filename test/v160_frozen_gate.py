@@ -43,8 +43,9 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),N=()=>pe
   for(let i=0;i<100;i++){aimAt();clk+=33;god();mq160Tick(1/30,clk)}out.ovh=E.ovh;const m5=E.melt;for(let i=0;i<30;i++){aimAt();clk+=33;god();mq160Tick(1/30,clk)}out.noMeltHot=+(E.melt-m5).toFixed(3);
   atkHeld=false;for(let i=0;i<130;i++){clk+=33;god();mq160Tick(1/30,clk)}out.cooled=E.ovh===0&&E.heat<.05;
   out.spiders=enemies.filter(e=>e.fs160sp&&!e.dead).length;out.hunt=enemies.filter(e=>e.fs160sp&&!e.dead).every(e=>e.hunt&&e.agg&&e.minion);
-  // v166: twice as many spiders: two or more per spawn, up to MQ160.cap alive
-  enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});E.spT=0;clk+=33;god();mq160Tick(1/30,clk);out.spawn1=enemies.filter(e=>e.fs160sp&&!e.dead).length;
+  // v166: twice as many spiders: two or more per spawn, up to MQ160.cap alive (v219 leaves out every 4th spider: start its count at 0
+  // here, or a spawn of two could lose one and this check failed about one run in three)
+  enemies.slice().forEach(e=>{if(e.fs160sp)removeE(e)});if(typeof FG218!='undefined')FG218.n=0;E.spT=0;clk+=33;god();mq160Tick(1/30,clk);out.spawn1=enemies.filter(e=>e.fs160sp&&!e.dead).length;
   for(let i=0;i<40;i++){E.spT=0;clk+=33;god();mq160Tick(1/30,clk)}out.spawnMax=enemies.filter(e=>e.fs160sp&&!e.dead).length;out.cap=MQ160.cap;
   // v192: spawn spots are inside the AI's wake range with a clear walk to the hero; event spiders never sleep during the melt
   {const L=enemies.filter(e=>e.fs160sp&&!e.dead),P=pl.position;out.spawnNear=+(L.filter(e=>Math.hypot(e.m.position.x-P.x,e.m.position.z-P.z)<=FS192.wake+.5&&fs192Line(e.m.position.x,e.m.position.z,P.x,P.z)).length/Math.max(1,L.length)).toFixed(2);
