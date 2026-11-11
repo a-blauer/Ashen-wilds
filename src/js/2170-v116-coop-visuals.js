@@ -141,7 +141,7 @@ function mpvPlay(r,e){
       ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
       ()=>{if(h._mpvP===id)h.sw=0})}
   else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
-    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():e[13]===2&&typeof kn211Mesh=='function'?kn211Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782); v211: 2 = a thrown knife (3820) */
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():e[13]===2&&typeof kn211Mesh=='function'?kn211Mesh(r.m):shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782); v211: 2 = a thrown knife (3820); v219: the partner's held model (3910) */
     const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1&&e[13]!==2)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
     tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */

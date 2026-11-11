@@ -22,7 +22,7 @@ var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4
   lines:[{a:1.4,b:4.7,s:'Kindlelight is a cursed place.'},
     {a:8.0,b:11.8,s:'Rot and wrath manifested…'},
     {a:14.9,b:18.9,s:'…through caustic rivers and decaying flora.'},
-    {a:22.2,b:25.9,s:'The Thousand-eyed wolf sulks in the shadows,'},
+    {a:22.2,b:25.9,s:'The Hundred-eyed wolf sulks in the shadows,'},
     {a:26.3,b:30.0,s:'stalking and preying upon all who enter.'},
     {a:31.8,b:35.7,s:'Find his den, slay him and bring me his essence.'}],
   den:[23.8,25.8,27.6,28.85],   // the cuts inside the Den: wide → flank eyes → muzzle → brow eye → the howl

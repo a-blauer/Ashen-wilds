@@ -139,3 +139,6 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 v217|songs|music|0600-|3580-: v217_songs.py
 # v216 Argus rebuilt (made as v215): one skinned painted body, his own gait and the smoothing follow (3880; his moves 1971/3054, the cinematic 3800)
 3880|v216|argus|1971-|3054-|viewer/: v216_argus.py v216_coop.py v216_viewer.py v146_sovs.py v112_argus.py v209_kindlelight.py v163_fixes.py v192_sov_range.py
+# v219 owner's list (3910–3921): thrown weapons are the held model, shuriken; cinematics; Burningeye gate/spiders/song; Searing Sands II
+# temple, trees; flames; the Sandskimmer and the Run; Ssith'ra's body; Dirge I graves; the Hidden Sanctum; daggers' rest; the raft
+3910|3911|3912|3913|3914|3915|3916|3917|3918|3919|3920|3921|v219|3820|2170|2770|3373|1260|3160|3510|3890|3280|3282|3283|3301|3302|3291|3312|3314|3316|3315|1974|3078|1270|2270|0250: v219_owner.py v219_throw.py v219_coop.py v211_knife.py v214_zone_cine.py v210_hillside_cine.py
