@@ -10,7 +10,7 @@
 //     their lights). The first frame that draws them makes the browser build their shaders (and every shader again when the
 //     number of lights in view changes), a stall of a second or more on a slow machine; the stall landed on the short dip to
 //     black at the cut, so the screen sat black. Now every shot is drawn once while the cinematic sets up (cin218Warm, before the
-//     clock and the music start), so the shaders exist before the cuts; the den's approach is also lit sooner (CIN218.den).
+//     clock and the music start; not under test automation unless window.KQ_WARM218), so the shaders exist before the cuts; the den's approach is also lit sooner (CIN218.den).
 var CIN218={on:true,warm:true,den:1.2,ahead:40,rise:12,look:42};
 // the way into the instance the hero stands in (radians, as pl.rotation.y), or null: along its road (~CIN218.ahead tiles on from the
 // nearest point of the road: roads run through open land), else toward its middle
@@ -32,7 +32,7 @@ function cin218Open(S,k){const V=THREE.Vector3,Io=ic151Io,Sm=ic151Sm,K=ic151K,H=
 {const f=zc214Cam;zc214Cam=function(S,i,k,t){if(CIN218.on&&i===0&&S&&S.H)try{return cin218Open(S,k)}catch(_){}return f.apply(this,arguments)}}
 {const f=hc208Build;hc208Build=function(){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}return S}}
 {const f=zc214Build;zc214Build=function(z){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}
-  try{if(CIN218.warm&&!CIN218.cap)cin218Warm(S)}catch(e){console.warn('v219 warm',e)}return S}}
+  try{if(CIN218.warm&&!CIN218.cap&&!(navigator.webdriver&&!window.KQ_WARM218))cin218Warm(S)}catch(e){console.warn('v219 warm',e)}return S}}
 {const f=zc214Cap;zc214Cap=function(){CIN218.cap=1;try{return f.apply(this,arguments)}finally{CIN218.cap=0}}}
 // draw the middle of every shot once (nothing on screen yet: the page still shows the game's last frame), then back to t = 0
 function cin218Warm(S){const T=ZC214.T,ts=[];for(let i=0;i<T.length;i++)ts.push(i<T.length-1?(T[i]+T[i+1])/2:ZC214.rise[1]+.2);

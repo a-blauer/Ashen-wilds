@@ -11,11 +11,12 @@
 //  * The altar ("the coffin", 3280 'CY165|altar'): its two offering bowls hung in the air beside the slab and its gold bands stuck out
 //    past its ends; the bowls now stand on posts on the top step, the bands run round the slab, the canopic jars sit on the step. It
 //    never turns see-through for the camera (noFade135), and the slab and the posts are solid for everyone (CBLK).
-//  * Kheprit walks from the altar to the rift stones round the dais, not across it (TS218.path, via rf165KhSpot).
+//  * Kheprit walks from the altar to the rift stones round the dais, not across it (TS218.path, via rf165KhSpot), a little faster
+//    on the way round (TS218.sp) so he still takes his place as soon as before.
 //  * The heaped dead (3283 rf165After) appear only once the hero has left the court: the rift used to show them the moment the
 //    hero stepped in (the state changes before the hero is moved).
 //  * The entrance: below (ts218Gate).
-var TS218={on:true,path:[[-3.2,4.9],[3.4,4.9],[7.6,2.6]],pick:.5,err:0};
+var TS218={on:true,path:[[-2.6,4.4],[2.8,4.4]],pick:.5,sp:1.2,err:0};
 // ---------- the urns: clear of the statues, obelisks and columns ----------
 function ts218Obst(T){const O=[];
   for(let k=0;k<6;k++){const ang=Math.PI/6+k*Math.PI/3;O.push([Math.cos(ang)*13.9,Math.sin(ang)*13.9,1.7])}
@@ -125,3 +126,6 @@ function ts218Gateway(q,p,T){const F=T.F,W2=F.W2,y0=T.y0,yw=F.yaw,sd=[0xc8a070,0
   {const [x,z]=W2(-R-.2,0);p.call(q,'','box','c',0x9a7a50,x,y0+.06,z,2.9,.14,.9,0,yw,0)}
   [-1,1].forEach(s=>{const a=-R-TS218.road.flat-.6,b=s*2.3,[x,z]=W2(a,b),g=GH(x,z);[0,1,2].forEach(j=>{const aa=j*2.09;q.L('','m',0x3a3c42,[x+Math.cos(aa)*.32,g,z+Math.sin(aa)*.32],[x,g+1.0,z],.025,.025,4)});
     p.call(q,'','cyl','m',0x4a3a2a,x,g+1.05,z,.34,.2,.34);p.call(q,'','sph','g',0xff7a2a,x,g+1.16,z,.27,.1,.27);CY165.fires.push([x,g+1.3,z])})}
+// the longer way round: he strides a little faster on it (TS218.sp more per second) so he reaches the stones as soon as before
+{const f=rf165Tick;rf165Tick=function(dt,now){const r=f.apply(this,arguments);try{const E=RF165.E,K=KH165W.e;if(TS218.on&&E&&!E.go&&K&&E.w218!=null&&E.w218<TS218.path.length){
+    const P=rf165KhSpot(),dx=P.x-K.m.position.x,dz=P.z-K.m.position.z,L=Math.hypot(dx,dz);if(L>.05){const st=Math.min(L,dt*TS218.sp);K.m.position.x+=dx/L*st;K.m.position.z+=dz/L*st}}}catch(_){}return r}}

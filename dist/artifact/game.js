@@ -75754,20 +75754,20 @@ function wh218Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
 //     built from (userData.kq218), and kn211Mesh(h) builds that same item again for hero h (the player, or a co-op partner's hero in
 //     2170, whose gear is built from the partner's own equipment, so partners see the right model with no new message field).
 //  2. Shuriken: Blackstar Shuriken (v137 'kn_star') was a kunai handle with a star stuck on its end, and Galecut Shuriken (the v78
-//     tier-4 knives) drew a plain dagger. Both are now a lone star held between the fingers (SH218), and a thrown star flies flat,
+//     tier-4 knives) drew a plain dagger. Both are now a lone star held between the fingers (SH218: Blackstar four-pointed, Galecut six), and a thrown star flies flat,
 //     spinning about its centre like a shuriken, instead of flipping end over end like a knife.
 var SH218={ys:-.09,R:.11,r:.032,spin:30,sc:1};
 function sh218Is(it){try{const t=it&&itT(it);return !!t&&t.wt=='knives'&&(t.v7=='kn_star'||/shuriken/i.test(t.n||''))}catch(_){return false}}
 // a four-point star (with a ground edge and a hub) centred at (0, SH218.ys, 0) in the kit's x-y plane
-function sh218Kit(k,edge,core,hub,gl){const P=[];for(let i=0;i<8;i++){const a=i/8*Math.PI*2,r=i%2?SH218.r:SH218.R;P.push([Math.sin(a)*r,Math.cos(a)*r])}
-  w7Blade(k,'sh218',P,.012,core,edge,0,SH218.ys,0,0,.01);
+function sh218Kit(k,edge,core,hub,gl,pts){const N=pts||4,P=[];for(let i=0;i<N*2;i++){const a=i/(N*2)*Math.PI*2,r=i%2?SH218.r*(N>4?1.25:1):SH218.R;P.push([Math.sin(a)*r,Math.cos(a)*r])}
+  w7Blade(k,'sh218'+N,P,.012,core,edge,0,SH218.ys,0,0,.01);
   k.p('','cyl','m',hub,0,SH218.ys,0,.022,.018,.022,Math.PI/2);k.p('','cyl','c',0x101014,0,SH218.ys,0,.009,.02,.009,Math.PI/2);
   if(gl)k.p('','cyl','g',gl,0,SH218.ys,0,.012,.02,.012,Math.PI/2)}
 W137.kn_star=(k,c)=>sh218Kit(k,0x6a6a74,0x1e1e24,c.fit,c.gl);
 // the plain shuriken: the base builder draws a dagger (lgWpnKit 'dagger'); while a shuriken item is being built it draws the star,
 // so the later layers (v178 grade colours, loose pieces) still run over it
 {const f=v89WpnKit;v89WpnKit=function(k,it){const o=SH218.cur;SH218.cur=sh218Is(it)?it:null;try{return f.apply(this,arguments)}finally{SH218.cur=o}}}
-{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){const it=SH218.cur;if(it&&type=='dagger'){sh218Kit(k,lgCol(col,0xffffff,.25),lgCol(col,0,.45),LGW.iron2,(r|0)>=3?v89Rc(r|0):null);return}return f.apply(this,arguments)}}
+{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){const it=SH218.cur;if(it&&type=='dagger'){sh218Kit(k,lgCol(col,0xffffff,.25),lgCol(col,0,.45),LGW.iron2,(r|0)>=3?v89Rc(r|0):null,6);return}return f.apply(this,arguments)}}
 // v178's tier ornaments are measured for a grip and a blade (bands, pommel, collar): a star has neither, so its hub takes the tier
 // colour instead
 {const f=w176Kit;w176Kit=function(k,it){if(!sh218Is(it))return f.apply(this,arguments);try{const ti=Math.max(0,Math.min(4,itT(it).t|0));if(ti<1)return;
@@ -75799,7 +75799,7 @@ function kn218Held(h){h=h||pl;const G=(h&&h.gearG)||[];for(const o of G)if(o&&o.
 //     their lights). The first frame that draws them makes the browser build their shaders (and every shader again when the
 //     number of lights in view changes), a stall of a second or more on a slow machine; the stall landed on the short dip to
 //     black at the cut, so the screen sat black. Now every shot is drawn once while the cinematic sets up (cin218Warm, before the
-//     clock and the music start), so the shaders exist before the cuts; the den's approach is also lit sooner (CIN218.den).
+//     clock and the music start; not under test automation unless window.KQ_WARM218), so the shaders exist before the cuts; the den's approach is also lit sooner (CIN218.den).
 var CIN218={on:true,warm:true,den:1.2,ahead:40,rise:12,look:42};
 // the way into the instance the hero stands in (radians, as pl.rotation.y), or null: along its road (~CIN218.ahead tiles on from the
 // nearest point of the road: roads run through open land), else toward its middle
@@ -75821,7 +75821,7 @@ function cin218Open(S,k){const V=THREE.Vector3,Io=ic151Io,Sm=ic151Sm,K=ic151K,H=
 {const f=zc214Cam;zc214Cam=function(S,i,k,t){if(CIN218.on&&i===0&&S&&S.H)try{return cin218Open(S,k)}catch(_){}return f.apply(this,arguments)}}
 {const f=hc208Build;hc208Build=function(){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}return S}}
 {const f=zc214Build;zc214Build=function(z){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}
-  try{if(CIN218.warm&&!CIN218.cap)cin218Warm(S)}catch(e){console.warn('v219 warm',e)}return S}}
+  try{if(CIN218.warm&&!CIN218.cap&&!(navigator.webdriver&&!window.KQ_WARM218))cin218Warm(S)}catch(e){console.warn('v219 warm',e)}return S}}
 {const f=zc214Cap;zc214Cap=function(){CIN218.cap=1;try{return f.apply(this,arguments)}finally{CIN218.cap=0}}}
 // draw the middle of every shot once (nothing on screen yet: the page still shows the game's last frame), then back to t = 0
 function cin218Warm(S){const T=ZC214.T,ts=[];for(let i=0;i<T.length;i++)ts.push(i<T.length-1?(T[i]+T[i+1])/2:ZC214.rise[1]+.2);
@@ -75836,7 +75836,7 @@ function cin218Warm(S){const T=ZC214.T,ts=[];for(let i=0;i<T.length;i++)ts.push(
 // ================= v219: Burningeye Summit — fewer gate spiders worth 1 XP, a longer Rime Wraith song (owner, Nov 10 2026) =================
 // Owner: "reduce the amount of ice spiders by 25%" · "Reduce xp given by spiders to 1xp" · "Rime wraith song is too short- makes it
 // seem repetitive" (the frost gate's black bar: below).
-//  1. The Frozen Gate's ice spiders (3160): one spawn in four is left out (FG218.skip, a steady count, not a dice roll) and the most
+//  1. The Frozen Gate's ice spiders (3160): one spawn in four of the melt's spawner (mq160Tick) is left out (FG218.skip, a steady count, not a dice roll) and the most
 //     alive at once is 25% lower (MQ160.cap 32 → 24, co-op capC 40 → 30). Each gives 1 XP: v192's XP share (FS192.xp, 3510) is 0,
 //     and gainXP (0120) never gives less than 1. Loot stays as v192 left it.
 //  2. The Rime Wraith's fight song (z2x, 3890) was 8 chords played twice (A then B): 16 bars, ~26 s before it looped. It is now 16
@@ -75845,7 +75845,8 @@ function cin218Warm(S){const T=ZC214.T,ts=[];for(let i=0;i<T.length;i++)ts.push(
 var FG218={skip:4,n:0,capK:.75};
 FS192.xp=0;
 MQ160.cap=Math.round(MQ160.cap*FG218.capK);MQ160.capC=Math.round(MQ160.capC*FG218.capK);
-{const f=spawnEnemy;spawnEnemy=function(k,x,z,lv,o){try{if(k==='icespider'&&MQ160.E&&o&&o.agg&&lv===MQ160.lv&&FG218.skip>0&&(++FG218.n%FG218.skip)===0)return null}catch(_){}return f.apply(this,arguments)}}
+{const f=mq160Tick;mq160Tick=function(){FG218.in=1;try{return f.apply(this,arguments)}finally{FG218.in=0}}}
+{const f=spawnEnemy;spawnEnemy=function(k,x,z,lv,o){try{if(FG218.in&&k==='icespider'&&MQ160.E&&o&&o.agg&&lv===MQ160.lv&&FG218.skip>0&&(++FG218.n%FG218.skip)===0)return null}catch(_){}return f.apply(this,arguments)}}
 {const th=MTH.z2x;if(th){th.prog=[0,5,4,0,3,0,4,0, 5,3,4,0,1,5,4,0];const T=th.tune;delete T.on;
   T.A='4,16|5,16|6,8 8,8|7,16|10,16|9,16|8,8 6,8|7,16|9,12 7,4|10,8 7,8|8,8 6,8|7,12 _,4|8,8 10,8|9,8 12,8|11,8 8,8|7,16';
   T.B='7,2 4,2 2,2 0,2 7,2 4,2 2,2 0,2|9,2 7,2 5,2 2,2 9,2 7,2 5,2 2,2|8,2 6,2 4,2 1,2 8,2 6,2 4,2 1,2|7,4 4,4 0,8|10,2 7,2 5,2 3,2 10,2 7,2 5,2 3,2|9,2 7,2 4,2 2,2 9,2 7,2 4,2 2,2|8,2 6,2 4,2 1,2 6,8|7,16|'+
@@ -75873,11 +75874,12 @@ function fg218Void(){const S=MQ160.S;if(!S||!S.gate||!S.gate.g)return;let v=S.ga
 //  * The altar ("the coffin", 3280 'CY165|altar'): its two offering bowls hung in the air beside the slab and its gold bands stuck out
 //    past its ends; the bowls now stand on posts on the top step, the bands run round the slab, the canopic jars sit on the step. It
 //    never turns see-through for the camera (noFade135), and the slab and the posts are solid for everyone (CBLK).
-//  * Kheprit walks from the altar to the rift stones round the dais, not across it (TS218.path, via rf165KhSpot).
+//  * Kheprit walks from the altar to the rift stones round the dais, not across it (TS218.path, via rf165KhSpot), a little faster
+//    on the way round (TS218.sp) so he still takes his place as soon as before.
 //  * The heaped dead (3283 rf165After) appear only once the hero has left the court: the rift used to show them the moment the
 //    hero stepped in (the state changes before the hero is moved).
 //  * The entrance: below (ts218Gate).
-var TS218={on:true,path:[[-3.2,4.9],[3.4,4.9],[7.6,2.6]],pick:.5,err:0};
+var TS218={on:true,path:[[-2.6,4.4],[2.8,4.4]],pick:.5,sp:1.2,err:0};
 // ---------- the urns: clear of the statues, obelisks and columns ----------
 function ts218Obst(T){const O=[];
   for(let k=0;k<6;k++){const ang=Math.PI/6+k*Math.PI/3;O.push([Math.cos(ang)*13.9,Math.sin(ang)*13.9,1.7])}
@@ -75987,6 +75989,9 @@ function ts218Gateway(q,p,T){const F=T.F,W2=F.W2,y0=T.y0,yw=F.yaw,sd=[0xc8a070,0
   {const [x,z]=W2(-R-.2,0);p.call(q,'','box','c',0x9a7a50,x,y0+.06,z,2.9,.14,.9,0,yw,0)}
   [-1,1].forEach(s=>{const a=-R-TS218.road.flat-.6,b=s*2.3,[x,z]=W2(a,b),g=GH(x,z);[0,1,2].forEach(j=>{const aa=j*2.09;q.L('','m',0x3a3c42,[x+Math.cos(aa)*.32,g,z+Math.sin(aa)*.32],[x,g+1.0,z],.025,.025,4)});
     p.call(q,'','cyl','m',0x4a3a2a,x,g+1.05,z,.34,.2,.34);p.call(q,'','sph','g',0xff7a2a,x,g+1.16,z,.27,.1,.27);CY165.fires.push([x,g+1.3,z])})}
+// the longer way round: he strides a little faster on it (TS218.sp more per second) so he reaches the stones as soon as before
+{const f=rf165Tick;rf165Tick=function(dt,now){const r=f.apply(this,arguments);try{const E=RF165.E,K=KH165W.e;if(TS218.on&&E&&!E.go&&K&&E.w218!=null&&E.w218<TS218.path.length){
+    const P=rf165KhSpot(),dx=P.x-K.m.position.x,dz=P.z-K.m.position.z,L=Math.hypot(dx,dz);if(L>.05){const st=Math.min(L,dt*TS218.sp);K.m.position.x+=dx/L*st;K.m.position.z+=dz/L*st}}}catch(_){}return r}}
 // ================= v219: living flames in campfires and braziers (owner, Nov 10 2026) =================
 // Owner: "Make fires in campires and braziers flicker instead of being a static orange cone."
 // The camps' fires (0250, 2270: campfires, braziers, torches, candles: the flame cones in CFL) were solid cones of glow colour, only
@@ -76294,9 +76299,13 @@ dg165GMarks=function(g,P,k){if(!dg165GIn())return;dg165GravePlan().G.forEach((o,
 // Owner: "When using emberkiss daggers- they rest incorrectly and they phase into the assassin's body"
 // Daggers (every dagger pair, Emberkiss among them) rest in the v93 carry grip (1270 GRIP.dagger): tipped .6 forward and leaning
 // neither way, so standing and walking the blades crossed the forearms and slid into the chest and hips. They now rest a little more
-// upright (t .45) and lean out away from the body (rl −.45, mirrored for the left hand): both blades stand clear of the arms,
+// upright (t .45) and lean out away from the body (rl −.45, mirrored for the left hand: DR219): both blades stand clear of the arms,
 // chest and legs at rest and on the move. Attacks use the strike grip as before. Partners build the same grip from the same table.
-GRIP.dagger.t=.45;GRIP.dagger.rl=-.45;
+// Heroes only (the player, partners, previews): humanoid foes keep their own dagger grip (their strike tracks were tuned on it).
+var DR219={t:.45,rl:-.45,foe:0};
+{const f=gripCarry;gripCarry=function(ty,side){if(ty==='dagger'&&!DR219.foe){const G=GRIP.dagger,t=G.t,rl=G.rl;G.t=DR219.t;G.rl=DR219.rl;try{return f.apply(this,arguments)}finally{G.t=t;G.rl=rl}}return f.apply(this,arguments)}}
+{const f=mkHumanoid;mkHumanoid=function(){DR219.foe++;try{return f.apply(this,arguments)}finally{DR219.foe--}}}
+{const f=gripReg;gripReg=function(h){const foe=!!(h&&h._grHum);if(foe)DR219.foe++;try{return f.apply(this,arguments)}finally{if(foe)DR219.foe--}}}
 // ================= v219: The Hidden Sanctum — fair spikes, a steady bridge, a still tomb, a real flooded stair (owner, Nov 10 2026) =================
 // Owner: "In the hidden sanctum, the floor spikes need a delay to give the player a chance to step to the next spot. On the tiles that
 // fall, the character drops briefly when they first step on and step off the last one. In the last room the coffin shifts for no

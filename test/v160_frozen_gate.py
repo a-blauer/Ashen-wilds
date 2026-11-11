@@ -120,7 +120,7 @@ def s(pg):
     exp(r['cooled'],'it cools down after release')
     exp(r['spiders']>=1 and r['hunt'],'ice spiders spawn and hunt the hero (%s)'%r['spiders'])
     exp(r['spawn1']>=2,'v166: a spawn brings two or more spiders (%s)'%r['spawn1'])
-    exp(16<r['spawnMax']<=r['cap']==32,'v166: up to 32 spiders alive, twice the old 16 (%s of %s)'%(r['spawnMax'],r['cap']))
+    exp(16<r['spawnMax']<=r['cap']==24,'v166/v219: up to 24 spiders alive (v219: 25%% fewer than v166\'s 32) (%s of %s)'%(r['spawnMax'],r['cap']))
     exp(r['spawnNear']>=.8,'v192: spiders rise within %s tiles with a clear walk to the hero (%s of them, farthest %s)'%(26,r['spawnNear'],r['farD']))
     exp(r['awake'],'v192: event spiders stay awake (never put to sleep) during the melt')
     exp(r['reached']>=.85,'v192: spiders reach the hero instead of getting stuck (%s within 6 tiles after %s s, %s moved by the watchdog)'%(r['reached'],r['reachS'],r['unstuck']))

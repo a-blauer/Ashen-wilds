@@ -5,20 +5,20 @@
 //     built from (userData.kq218), and kn211Mesh(h) builds that same item again for hero h (the player, or a co-op partner's hero in
 //     2170, whose gear is built from the partner's own equipment, so partners see the right model with no new message field).
 //  2. Shuriken: Blackstar Shuriken (v137 'kn_star') was a kunai handle with a star stuck on its end, and Galecut Shuriken (the v78
-//     tier-4 knives) drew a plain dagger. Both are now a lone star held between the fingers (SH218), and a thrown star flies flat,
+//     tier-4 knives) drew a plain dagger. Both are now a lone star held between the fingers (SH218: Blackstar four-pointed, Galecut six), and a thrown star flies flat,
 //     spinning about its centre like a shuriken, instead of flipping end over end like a knife.
 var SH218={ys:-.09,R:.11,r:.032,spin:30,sc:1};
 function sh218Is(it){try{const t=it&&itT(it);return !!t&&t.wt=='knives'&&(t.v7=='kn_star'||/shuriken/i.test(t.n||''))}catch(_){return false}}
 // a four-point star (with a ground edge and a hub) centred at (0, SH218.ys, 0) in the kit's x-y plane
-function sh218Kit(k,edge,core,hub,gl){const P=[];for(let i=0;i<8;i++){const a=i/8*Math.PI*2,r=i%2?SH218.r:SH218.R;P.push([Math.sin(a)*r,Math.cos(a)*r])}
-  w7Blade(k,'sh218',P,.012,core,edge,0,SH218.ys,0,0,.01);
+function sh218Kit(k,edge,core,hub,gl,pts){const N=pts||4,P=[];for(let i=0;i<N*2;i++){const a=i/(N*2)*Math.PI*2,r=i%2?SH218.r*(N>4?1.25:1):SH218.R;P.push([Math.sin(a)*r,Math.cos(a)*r])}
+  w7Blade(k,'sh218'+N,P,.012,core,edge,0,SH218.ys,0,0,.01);
   k.p('','cyl','m',hub,0,SH218.ys,0,.022,.018,.022,Math.PI/2);k.p('','cyl','c',0x101014,0,SH218.ys,0,.009,.02,.009,Math.PI/2);
   if(gl)k.p('','cyl','g',gl,0,SH218.ys,0,.012,.02,.012,Math.PI/2)}
 W137.kn_star=(k,c)=>sh218Kit(k,0x6a6a74,0x1e1e24,c.fit,c.gl);
 // the plain shuriken: the base builder draws a dagger (lgWpnKit 'dagger'); while a shuriken item is being built it draws the star,
 // so the later layers (v178 grade colours, loose pieces) still run over it
 {const f=v89WpnKit;v89WpnKit=function(k,it){const o=SH218.cur;SH218.cur=sh218Is(it)?it:null;try{return f.apply(this,arguments)}finally{SH218.cur=o}}}
-{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){const it=SH218.cur;if(it&&type=='dagger'){sh218Kit(k,lgCol(col,0xffffff,.25),lgCol(col,0,.45),LGW.iron2,(r|0)>=3?v89Rc(r|0):null);return}return f.apply(this,arguments)}}
+{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){const it=SH218.cur;if(it&&type=='dagger'){sh218Kit(k,lgCol(col,0xffffff,.25),lgCol(col,0,.45),LGW.iron2,(r|0)>=3?v89Rc(r|0):null,6);return}return f.apply(this,arguments)}}
 // v178's tier ornaments are measured for a grip and a blade (bands, pommel, collar): a star has neither, so its hub takes the tier
 // colour instead
 {const f=w176Kit;w176Kit=function(k,it){if(!sh218Is(it))return f.apply(this,arguments);try{const ti=Math.max(0,Math.min(4,itT(it).t|0));if(ti<1)return;
