@@ -28,8 +28,8 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   const [dx,dz]=lotW103(l,0,DM196I.D2);out.inn.doorCol=DM196S.col.some(c=>Math.hypot(c.x-dx,c.z-dz)<.5);if(out.inn.doorCol)F.push('the doorway is blocked');
   const [tx,tz]=T.tv;toPos(tx,tz);STEP(5);promptTick();out.inn.rest=PR&&PR.label;if(!/Rest at/.test(out.inn.rest||''))F.push('the rest prompt at the bar is gone: '+out.inn.rest)}
  // ---- the rules ----
- {const P=c=>cd213Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],0],[['lan','lan','hol'],1.5],
-    [['lan','wild','hol'],1.5],[['lan','fang','gob'],0],[['hol','wild','wild'],1.5],[['lan','fang','wild'],1.5],[['eye','wild','wild'],25]];
+ {const P=c=>cd213Pay(c).m;const C=[[['crown','crown','crown'],50],[['wild','wild','wild'],100],[['crown','wild','crown'],50],[['hol','hol','hol'],13],[['lan','lan','hol'],1],
+    [['lan','wild','hol'],1],[['lan','gob','fang'],0],[['hol','wild','wild'],2.5],[['lan','fang','wild'],1],[['eye','wild','wild'],25]]; // v218: pairs pay by card, three Hollows wake the dead
   out.rules=C.map(([c,m])=>{const g=P(c);if(g!==m)F.push(c.join('+')+' pays ×'+g+' (want ×'+m+')');return g});
   let ret=0,win=0;const N=60000;for(let i=0;i<N;i++){const m=P([cd213Roll(),cd213Roll(),cd213Roll()]);ret+=m;if(m>0)win++}out.rtp=+(ret/N).toFixed(3);out.winRate=+(win/N).toFixed(3);
   if(!(out.rtp>.8&&out.rtp<.96))F.push('house edge off: returns '+out.rtp+' of every gold bet');if(!(out.winRate>.33&&out.winRate<.5))F.push('win rate off: '+out.winRate)}
@@ -50,8 +50,9 @@ JS=r"""()=>{const out={},F=[];window.VT=performance.now();performance.now=()=>VT
   out.plaque=!!(CD213.plq&&CD213.plq.parent&&CD213.plq.visible);if(!out.plaque)F.push('no result plaque over the table');
   out.heroHidden=!pl.visible;if(pl.visible)F.push('the hero blocks the table view');
   // the dealer's arms come back to rest after many hands (the old arm code stacked turns each frame and spun him)
-  {const b=CD213.rig.bones,snap=()=>['aR0','aR1','chest','head'].map(n=>[b[n].rotation.x,b[n].rotation.y,b[n].rotation.z]);const s0=snap();
-   for(let h=0;h<4;h++){gold=1000;CD213.busy=false;cd213Deal();STEP(240)}STEP(120);const s1=snap();let d=0;s0.forEach((r,i)=>r.forEach((v,j)=>d=Math.max(d,Math.abs(v-s1[i][j]))));out.armDrift=+d.toFixed(3);
+  {STEP(90); // v218: let the last hand's gesture end first (the hand + Corvin's gesture take ~3.6 s; a win's gesture was still on at the old snapshot)
+   const b=CD213.rig.bones,snap=()=>['aR0','aR1','chest'].map(n=>[b[n].rotation.x,b[n].rotation.y,b[n].rotation.z]);const s0=snap();
+   for(let h=0;h<4;h++){gold=1000;CD213.busy=false;cd213Deal();STEP(240)}STEP(120);const s1=snap();let d=0;s0.forEach((r,i)=>r.forEach((v,j)=>{const q=Math.abs(v-s1[i][j]);if(q>d){d=q;out.armWhich=['aR0','aR1','chest'][i]+'.'+'xyz'[j]}}));out.armDrift=+d.toFixed(3);out.armS=[s0,s1].map(S=>S.map(r=>r.map(v=>+v.toFixed(2))));
    if(!(d<.35))F.push('the dealer\'s pose drifted after four hands: '+out.armDrift);if(s1.flat().some(v=>!isFinite(v)))F.push('the dealer\'s bones went NaN')}
   out.lay=CD213.lay.length;const faces=CD213.lay.map(m=>Math.abs(m.userData.f.rotation.z)<.05);if(CD213.lay.length!==3||faces.some(f=>!f))F.push('the three cards are not lying face up on the table');
   // the cards lie on the table top

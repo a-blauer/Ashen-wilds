@@ -2364,10 +2364,12 @@ function dm196Ang(x,z){return Math.atan2(x,-z)}
 // v196: the building lots in rings round the fountain, every one facing the plaza (ry = -angle). Ring A (r 15): the five first lots,
 // the Trading Post and the Inn; ring B (r 25.5): rows 1-4 (3 lots each); ring C (r 35.5): row 5 and the four kingdom buildings
 // (granary, chapel, barracks, keep: 1850). Angles in degrees; w/d = footprint half sizes for the fixed buildings.
-var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-90,0],['NW','A',-127,0],
+var DM196_LOT=[['NE','A',34,0],['CE','A',71,0],['NM','A',108,0],['CW','A',-102,0],['NW','A',-136,0],
   ['S1E','B',47,1],['S1W','B',-47,1],['S1M','B',133,1],['S2W','B',-133,2],['S2E','B',76,2],['S2M','B',-76,2],
   ['S3E','B',104,3],['S3W','B',-104,3],['S3M','B',21,3],['S4W','B',-18,4],['S4E','B',158,4],['S4M','B',-158,4],
   ['S5E','C',90,5],['S5W','C',-90,5],['S5M','C',165,5]];
+// v218 (owner, Nov 10 2026: "scootch or rotate the blacksmith building a little so he's more accessible. The expanded tavern is kind of
+// blocking him"): lot CW (the Blacksmith's default) moved from -90 to -102 and NW from -127 to -136 to make room, clear of the v213 Inn's corner.
 var DM196_FIX={post:['A',146,3.5,3.5],inn:['A',-48,6.1,5.1,13.8],granary:['C',-136,4.5,4.5],chapel:['C',136,4.5,4.5],barracks:['C',-44,4.5,4.5],keep:['C',44,4.5,4.5]}; // v198: ring C's four 4° further from the exits I, III, IV, VI (were ±40, ±140)
 function dm196At(ring,deg){const r={A:DM196.RA,B:DM196.RB,C:DM196.RC}[ring],a=deg*Math.PI/180;return {x:+(r*Math.sin(a)).toFixed(3),z:+(-r*Math.cos(a)).toFixed(3),ry:-a,r,ang:a}}
 function dm196Lots(){const L=DM196_LOT.map(([id,ring,deg,st])=>Object.assign(dm196At(ring,deg),{id,st,a:st?'Row '+st:'By the plaza'}));
@@ -30332,7 +30334,7 @@ function mpvPlay(r,e){
       ch.forEach((c,j)=>{const a=A[j],bb=B[j];if(typeof a!='number'&&typeof bb!='number')return;const v=typeof a!='number'?bb:typeof bb!='number'?a:a+(bb-a)*w;const q=HACH[c];if(b[q[0]])b[q[0]].rotation[q[1]]=v})},
       ()=>{if(h._mpvP===id)h.sw=0})}
   else if(T==='L'){const p=new THREE.Vector3(+e[2]||0,+e[3]||0,+e[4]||0),d=new THREE.Vector3(+e[5]||0,+e[6]||0,+e[7]||0);if(d.lengthSq()<1e-6)return;d.normalize();
-    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():e[13]===2&&typeof kn211Mesh=='function'?kn211Mesh():shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782); v211: 2 = a thrown knife (3820) */
+    const spd=Math.max(1,Math.min(80,+e[8]||20)),life=Math.max(.1,Math.min(4,+e[12]||1.1));let m;try{m=e[13]===1&&typeof bl207Mesh=='function'?bl207Mesh():e[13]===2&&typeof kn211Mesh=='function'?kn211Mesh(r.m):shotMesh(e[9]|0,!!e[10])}catch(_){return}   /* v207: e[13] = a crossbow bolt (3782); v211: 2 = a thrown knife (3820); v219: the partner's held model (3910) */
     const sc=Math.max(.3,Math.min(4,+e[11]||1));if(sc!==1&&e[13]!==2)m.scale.multiplyScalar(sc);m.position.copy(gY(p,1.0)).addScaledVector(d,.7);m.lookAt(m.position.clone().add(d));scene.add(m);
     const s0=m.position.clone();let gone=false;
     tw(life*1000,k=>{if(gone)return;const t=k*life;m.position.copy(s0).addScaledVector(d,spd*t);const x=m.position.x,z=m.position.z;if(typeof sh207Y=='function')m.position.y=sh207Y(x,z,1.0);   /* v207: follows the ground like the real shot (3780) */
@@ -43119,7 +43121,7 @@ function ic151DuskInit(S){if(typeof TOWNS=='undefined'||typeof pl=='undefined')r
     if(C&&sp2){D.ch=C;D.chOwn=false;D.ched=[C.root.position.x,C.root.position.z];D.chY0=C.root.position.y;D.chR0=sp2&&sp2.ry!=null?sp2.ry:C.root.rotation.y}else D.ched=[45.32,287.93];
     const ry=D.chR0!=null?D.chR0:-1.03;D.chSt=[D.ched[0]+Math.sin(ry)*2.0,D.ched[1]+Math.cos(ry)*2.0]}
   const CS=D.chSt;
-  const route=dm196IntroRoute(sp,npcSt,CS); // v196: legs found on the round town's walking grid (3670)
+  const route=dm196IntroRoute(sp,npcSt,CS,D.npc.map(n=>[n.w.x,n.w.z])); // v218: the town folk's own spots, for the walk to step round // v196: legs found on the round town's walking grid (3670)
   for(let i=0;i<W.length&&i<route.length;i++)legs.push({a:W[i][0],b:W[i][1],pts:route[i]});D.legs=legs;D.end=route[route.length-1][route[route.length-1].length-1].slice();
   {const R=route[route.length-1],a=R[R.length-2],b=R[R.length-1];D.endYaw=Math.atan2(b[0]-a[0],b[1]-a[1])}
   // the hero's track at 60 Hz: position, heading (spring-damped, snapped at the cut), moving or not
@@ -69296,8 +69298,9 @@ function dm196InnOutK(k,R){const W2=DM196I.W2,D2=DM196I.D2;
   [-1,1].forEach((s,j)=>dm196Ivy(k,s*(W2+.03),D2+.03,2.9,0,1,j*4+2));dm196Ivy(k,-W2-.03,0,2.8,-1,0,7);dm196Ivy(k,W2+.03,1.4,2.8,1,0,9);
   for(let i=0;i<12;i++)dm196Moss(k,-W2+.3+i*1.15,.42,D2+.3,.9,i+40);dm196Pot(k,-1.6,D2+.7,3,1);dm196Pot(k,2.0,D2+.6,5,.9)}
 // the layout the builders and the villagers share (lot-local)
-DM196I.tables=[[-.5,-1.5],[.9,1.7],[3.4,3.0]];DM196I.bar=[-.9,-1.1];DM196I.rug=[.9,-.7];
-DM196I.lantern=[[-.5,-1.5],[.9,1.7],[-3.6,1.8],[3.4,3.0]];
+// v218: the third dining table (3.4, 3.0) made room for the Four Roads' card table (3900); its lantern hangs over that table now
+DM196I.tables=[[-.5,-1.5],[.9,1.7]];DM196I.bar=[-.9,-1.1];DM196I.rug=[.9,-.7];
+DM196I.lantern=[[-.5,-1.5],[.9,1.7],[-3.6,1.8],[3.6,2.95]];
 (function(){const S=[];DM196I.tables.forEach(([x,z],ti)=>{const n=ti==2?3:4;for(let j=0;j<n;j++){const a=(j/n)*6.283+(ti==2?.5:.785);const sx=x+Math.sin(a)*1.0,sz=z+Math.cos(a)*1.0;
     if(sz>DM196I.D2-.45||Math.abs(sx)>DM196I.W2-.5)continue;S.push({k:'chair',x:+sx.toFixed(2),z:+sz.toFixed(2),tx:x,tz:z,t:ti})}});
   const B=DM196I.bar,G=DM196I.rug;for(let i=0;i<4;i++)S.push({k:'stool',x:-4.6+i*1.05+B[0],z:-1.9+.85+B[1],tx:-4.6+i*1.05+B[0],tz:-1.9+B[1],t:-1});
@@ -69432,7 +69435,7 @@ function dm196Pose0(o,g,A,s,t){
 // ================= v196: the Steward's decorations in the round town =================
 // v190's decorations keep their models; their places move to the round layout (town-local, angles clockwise from north):
 //  * ring A gaps (r ~17.5, between the first lots, the Trading Post and the Inn): obelisk 127°, Hero's Statue -153°, candle shrine
-//    89.5°, well -108.5°, two planters 52.5° / -71.5° (v213: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
+//    89.5°, well -119° (v218; was -108.5°), two planters 52.5° / -71.5° (v213: was -69.5°, and the west bunting keeps only its -108.5° to -150° string: the bigger Inn stands where the other began) (two more flank the north avenue at the plaza's edge);
 //  * ring B gaps (r ~27.5, between the outer lots): carts and harvest piles ±61.5°, trophies 90° (one per Sovereign), groves ±147.5°,
 //    firewood -118.5°, the Elder Oak 118.5°, the Lantern Pavilion -90°, the Moonflower Gardens -32.5°, the Great Beacon 32.5°;
 //    stone benches face the first ring street at ±32.5° / 180°±40°. Until the walls reach them they stand in the meadow outside.
@@ -69469,7 +69472,7 @@ dc190Def('pavilion',{spf:F=>[dm196A(-90,27.6)]});
 dc190Def('oak',{spf:F=>[dm196A(118.5,27.6)]});
 dc190Def('garden',{spf:F=>[dm196A(-32.5,27.6)]});
 dc190Def('beacon',{spf:F=>[dm196A(32.5,27.6)]});
-{const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-108.5,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
+{const D=DECO103.find(q=>q.k=='cats');if(D){const w=dm196A(-119,17.3),b=TWN100_WD.bench[0];D.sp=[[0,-2.66,.72],[2.66,.1,.72],[w[0],w[1]+.9,.88],[b[0],b[1],.52],[-2.4,1.4,.72]]}}
 // stone benches along the first ring street, each facing it
 {const D=DECO103.find(q=>q.k=='benches');if(D){D.sp=[[...dm196A(32.5,23.0),dm196Face(32.5)],[...dm196A(-32.5,23.0),dm196Face(-32.5)],[...dm196A(-147.5,23.2),dm196Face(-147.5)]];
   D.b=function(k,D){D.sp.forEach(([x,z,ry])=>k.at(x,0,z,()=>{dc190B(k,'c',0x77737c,1.55,.1,.46,0,.47,0,0,'ashlar',.02);
@@ -69480,7 +69483,7 @@ function dm196Move(key,from,to,rot){const D=DECO103.find(q=>q.k==key);if(!D||!D.
   D.b=function(k){const at=k.at;let dep=0;k.at=function(x,y,z,fn,ry){if(dep==0&&Math.abs(x-from[0])<.05&&Math.abs(z-from[1])<.05){dep++;try{return at.call(k,to[0],y,to[1],fn,rot)}finally{dep--}}dep++;try{return at.call(k,x,y,z,fn,ry)}finally{dep--}};
     try{return b0.apply(this,arguments)}finally{k.at=at}};D.b.v196=1;D.col=function(){return [[to[0],to[1],1.0]]}}
 dm196Move('shrine',[14.6,6.4],dm196A(89.5,17.4),dm196Face(89.5));
-dm196Move('well',[-17.4,2.0],dm196A(-108.5,17.3),dm196Face(-108.5));
+dm196Move('well',[-17.4,2.0],dm196A(-119,17.3),dm196Face(-119)); // v218: the gap between lots CW and NW moved with them (was -108.5)
 // ---------------- along the round walls ----------------
 dc190Def('banner',{b(k,D,W){dm196WallsNow();const ban=TOWNS[0].pal.ban||0x8a2a3a,C=DC190C;dm196WallAngles(30,15).forEach((d,i)=>{const t=dm196WallTop(d);if(t==null||t<1.9)return;const y=Math.min(2.7,t-.2),h=Math.min(1.25,y-.5),r=dm196WallAt(d,y-.5);if(r==null)return;
     const [x,z]=dm196A(d,r-.06);dc190Banner(k,x,y,z,dm196Face(d),i%2?ban:C.blk,.62,h,i%2?C.brass:C.bone,1)})}});
@@ -69489,10 +69492,10 @@ dc190Def('ivy',{b(k,D,W){dm196WallsNow();const L=[0x24402a,0x2e4a30,0x35602e,0x1
     if(P.length<2)return;dc190Tube(k,'c',0x3a2e20,P,P.map((_,j)=>.028-j*.003),5,'bark');const a=d*Math.PI/180,ox=-Math.sin(a),oz=Math.cos(a);
     P.forEach((p,j)=>{dc190Clump(k,L[(i+j)%4],p[0]+ox*.05,p[1]+.05,p[2]+oz*.05,.22,.24,.22,i+j,'leaf',0);if(j%2==0)dc190Clump(k,L[(i+j+1)%4],p[0]+ox*.04,p[1]-.15,p[2]+oz*.04,.18,.17,.18,i+j+3,'leaf',0)})})}});
 // pennant strings between poles at the plaza's edge, in the gaps between the first lots' doors
-dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-108.5,-150]].forEach(([d0,d1],j)=>{const a=dm196A(d0,10.6),b=dm196A(d1,10.6),y=3.7;[a,b].forEach(([x,z])=>{dc190Rod(k,'c',C.woodD,[x,0,z],[x,3.85,z],.06,'wood',8,.8);dc190L(k,'m',C.iron,[[0,0],[.06,0],[.05,.06],[0,.12]],8,x,3.82,z,0,1,'iron')});
+dc190Def('bunting',{b(k){const C=DC190C,PI2=Math.PI;[[52.5,90],[90,127],[-119,-150]].forEach(([d0,d1],j)=>{const a=dm196A(d0,10.6),b=dm196A(d1,10.6),y=3.7;[a,b].forEach(([x,z])=>{dc190Rod(k,'c',C.woodD,[x,0,z],[x,3.85,z],.06,'wood',8,.8);dc190L(k,'m',C.iron,[[0,0],[.06,0],[.05,.06],[0,.12]],8,x,3.82,z,0,1,'iron')});
     const Y=t=>y-.22*Math.sin(t*PI2),P=[];for(let i=0;i<=8;i++)P.push([a[0]+(b[0]-a[0])*i/8,Y(i/8),a[1]+(b[1]-a[1])*i/8]);dc190Tube(k,'c',0x2a2420,P,.011,4,'plain');
     const ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);for(let i=0;i<9;i++){const t=(i+.5)/9;dc190Ext(k,'c',[C.crim,C.blk,0xb8ac90,0x5a1820][(i+j)%4],'pen',[[-.15,0],[.15,0],[0,-.36]],.02,dt168Mx(a[0]+(b[0]-a[0])*t,Y(t)-.01,a[1]+(b[1]-a[1])*t,.08*Math.sin(i*2.1),ry,0),'cloth')}})},
-  col(){const o=[];[52.5,90,127,-108.5,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
+  col(){const o=[];[52.5,90,127,-119,-150].forEach(d=>{const [x,z]=dm196A(d,10.6);o.push([x,z,.1])});return o}});
 // flower baskets on the lantern posts along the walls (the arm points toward the plaza)
 dc190Def('baskets',{b(k){const C=DC190C,R=kf109().R;(typeof TWN100_LP!='undefined'?TWN100_LP:[]).filter(([x,z])=>Math.hypot(x,z)>=R-1.8).forEach(([x,z],i)=>{if(i%2)return;const a=Math.atan2(z,-x),ux=Math.cos(a),uz=-Math.sin(a),bx=x+ux*.27,bz=z+uz*.27;
     dc190Rod(k,'m',C.iron,[x+ux*.05,1.86,z+uz*.05],[bx,1.86,bz],.012,'iron',4);for(let j=0;j<3;j++){const q=j/3*6.283;dc190Rod(k,'m',C.iron,[bx,1.86,bz],[bx+Math.cos(q)*.15,1.5,bz+Math.sin(q)*.15],.004,'iron',3)}
@@ -69512,7 +69515,7 @@ try{if(typeof DC103!='undefined'&&DC103.g)Object.keys(DC103.g).forEach(k=>dcDrop
 // two legs lead to the north gate and out toward Portal I's entryway, where the game begins (D.ref ahead, D.endYaw facing it).
 function dm196IntroInn(){const l=DM196I.l;return l?lotW103(l,-3.5+DM196I.bar[0]+.9,.2+DM196I.bar[1]):TOWNS[0].tv}
 function dm196IntroRef(){return dm196Ent(0,DM196.RM-1)}
-function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!P||P.length<3)return P;const o=[P[0]];for(let i=1;i<P.length-1;i++){const a=o[o.length-1],b=P[i],c=P[i+1];
+function dm196IntroRoute(sp,npcSt,CS,folk){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!P||P.length<3)return P;const o=[P[0]];for(let i=1;i<P.length-1;i++){const a=o[o.length-1],b=P[i],c=P[i+1];
       const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);if(Math.abs(cr)>.05||Math.hypot(b[0]-a[0],b[1]-a[1])>4)o.push(b)}o.push(P[P.length-1]);return o};
   const go=(a,b)=>{const P=czPath103(a[0],a[1],b[0],b[1]);return simp(P&&P.length>1?P:[a,b])};
   const l=DM196I.l,door=l?lotW103(l,0,DM196I.D2+1.4):null,inD=l?lotW103(l,0,DM196I.D2-1.6):null;
@@ -69527,6 +69530,12 @@ function dm196IntroRoute(sp,npcSt,CS){const T=TOWNS[0],R=kf109().R,simp=P=>{if(!
   // v198: the cut lands outside Portal I's own exit (v196: the north gate)
   // the cut: outside Portal I's exit in the walls, a few steps on toward its entry (on the exit's cleared way)
   const e=dm196Ent(0,DM196.RM-1),d=Math.hypot(e[0]-gout[0],e[1]-gout[1]),k=Math.min(1,6.5/d);legs.push([gout,[gout[0]+(e[0]-gout[0])*k*.5,gout[1]+(e[1]-gout[1])*k*.5],[gout[0]+(e[0]-gout[0])*k,gout[1]+(e[1]-gout[1])*k]]);
+  // v218: the walking grid has no room for the town folk themselves (folk: where the Steward, Innkeeper, Blacksmith and Merchant
+  // stand); since the Blacksmith's lot moved (0045) the forge's leg passed through the Steward: any leg that comes within 1 m of
+  // one of them steps round
+  (folk||[]).forEach(c=>legs.forEach(L=>{for(let pass=0;pass<3;pass++){let hit=-1,q=null;for(let i=0;i+1<L.length;i++){const a=L[i],b=L[i+1],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz||1e-9,u=Math.max(0,Math.min(1,((c[0]-a[0])*dx+(c[1]-a[1])*dz)/l2)),p=[a[0]+dx*u,a[1]+dz*u];
+      if(Math.hypot(p[0]-c[0],p[1]-c[1])<1.0&&u>0&&u<1){hit=i;q=p;break}}if(hit<0)break;
+    let nx=q[0]-c[0],nz=q[1]-c[1],nl=Math.hypot(nx,nz);if(nl<1e-3){const a=L[hit],b=L[hit+1];nx=-(b[1]-a[1]);nz=b[0]-a[0];nl=Math.hypot(nx,nz)||1}L.splice(hit+1,0,[c[0]+nx/nl*1.35,c[1]+nz/nl*1.35])}}));
   return legs.map(L=>L.map(p=>[+p[0],+p[1]]))}
 // the town part is replayed exactly by the intro preview (v159): its random choices (a companion sniffing about while the hero
 // talks, the town folk's errands) come from a generator seeded by the intro's clock, and the preview's reset puts back the
@@ -73165,7 +73174,7 @@ var KC208={on:false,run:false,seen:0,S:null,live:null,len:37.6,lbA:36.0,lbB:37.4
   lines:[{a:1.4,b:4.7,s:'Kindlelight is a cursed place.'},
     {a:8.0,b:11.8,s:'Rot and wrath manifested…'},
     {a:14.9,b:18.9,s:'…through caustic rivers and decaying flora.'},
-    {a:22.2,b:25.9,s:'The Thousand-eyed wolf sulks in the shadows,'},
+    {a:22.2,b:25.9,s:'The Hundred-eyed wolf sulks in the shadows,'},
     {a:26.3,b:30.0,s:'stalking and preying upon all who enter.'},
     {a:31.8,b:35.7,s:'Find his den, slay him and bring me his essence.'}],
   den:[23.8,25.8,27.6,28.85],   // the cuts inside the Den: wide → flank eyes → muzzle → brow eye → the howl
@@ -74040,22 +74049,43 @@ function snd213(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.sfx
 //  * Co-op: cd213Show (the dealing, plain card keys) is relayed, so a partner sees Corvin lay the same cards on their table; the bet
 //    and the gold stay with the player.
 var CD213={bets:[10,20,50,100],bet:20,busy:false,cards:null,res:null,line:'',stat:{n:0,won:0,bet:0},tex:{},url:{},root:null,dealer:null,col:[],cam:null,arm:0,fx:null,own:false,err:0,
-  stand:[-2.3,1.8],cv:[-2.15,2.1,1.8,-4.1,.25,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
-  D:{lan:{n:'The Lantern',num:'I',w:20,p:5,c:['#ffcf7a','#7a3a10'],d:'A light kept burning against the dark.'},
-     fang:{n:'The Fang',num:'II',w:18,p:6,c:['#f0e2c4','#5a1a14'],d:'What hunts in Kindlelight leaves its teeth behind.'},
-     gob:{n:'The Goblet',num:'III',w:15,p:8,c:['#ff6a6a','#4a0810'],d:'Drink deep; the Citadel always does.'},
-     rav:{n:'The Raven',num:'IV',w:13,p:10,c:['#b89aff','#1a1030'],d:'It carries word between the living and the not.'},
-     key:{n:'The Sealed Key',num:'V',w:10,p:15,c:['#7ae8d0','#0c3a34'],d:'Every gate in Duskhold has one. Most are lost.'},
-     eye:{n:'The Hundred Eyes',num:'VI',w:7,p:25,c:['#ffd25a','#5a2a04'],d:'Argus sees the hand before it is dealt.'},
-     crown:{n:'The Ashen Crown',num:'VII',w:4,p:50,c:['#ff8a3a','#3a0c04'],d:'A Sovereign’s crown, still warm from the pyre.'},
-     wild:{n:'The Wanderer',num:'0',w:5,p:100,c:['#9ad0ff','#0a1a34'],d:'Wild: stands in for any card.'},
-     hol:{n:'The Hollow',num:'XIII',w:16,p:0,c:['#b8c4b0','#141a14'],d:'Pays nothing, and stands in for nothing.'}},
+  free:0,freeBet:0,FREE:5,stand:[-2.3,1.8],cv:[-2.15,2.1,1.8,-4.1,.25,1.8],deck:[-4.2,1.62],T:{deal:.38,gap:.34,flip:.3,fgap:.36},
+  D:{lan:{n:'The Lantern',num:'I',w:20,p:5,p2:1,c:['#ffcf7a','#7a3a10'],d:'A light kept burning against the dark.'},
+     fang:{n:'The Fang',num:'II',w:18,p:6,p2:1,c:['#f0e2c4','#5a1a14'],d:'What hunts in Kindlelight leaves its teeth behind.'},
+     gob:{n:'The Goblet',num:'III',w:15,p:8,p2:1,c:['#ff6a6a','#4a0810'],d:'Drink deep; the Citadel always does.'},
+     rav:{n:'The Raven',num:'IV',w:13,p:10,p2:1.2,c:['#b89aff','#1a1030'],d:'It carries word between the living and the not.'},
+     key:{n:'The Sealed Key',num:'V',w:10,p:15,p2:1.5,c:['#7ae8d0','#0c3a34'],d:'Every gate in Duskhold has one. Most are lost.'},
+     eye:{n:'The Hundred Eyes',num:'VI',w:7,p:25,p2:2,c:['#ffd25a','#5a2a04'],d:'Argus sees the hand before it is dealt.'},
+     crown:{n:'The Ashen Crown',num:'VII',w:4,p:50,p2:3,c:['#ff8a3a','#3a0c04'],d:'A Sovereign’s crown, still warm from the pyre.'},
+     wild:{n:'The Wanderer',num:'0',w:5,p:100,p2:2.5,c:['#9ad0ff','#0a1a34'],d:'Wild: stands in for any card.'},
+     hol:{n:'The Hollow',num:'XIII',w:18,p:0,p2:0,c:['#b8c4b0','#141a14'],d:'Stands in for nothing, alone it pays nothing. Three of them wake the dead.'}},
+  // v218: the special hands (c: the cards, any order unless ord; m: × the bet; t: how big the show is, 1–5)
+  SP:{rise:{n:'The Hollow Rises',c:['hol','hol','hol'],m:13,t:5,d:'Three Hollows: the dead deal themselves in.'},
+     road:{n:'The Wanderer’s Road',c:['wild','wild','wild'],m:100,t:5,d:'Three Wanderers: ×100 and 5 free hands, every win doubled.'},
+     court:{n:'The Sovereign’s Court',c:['crown','eye','key'],m:15,t:3,d:'The Ashen Crown, the Hundred Eyes and the Sealed Key, in any order.'},
+     hunt:{n:'The Hunt',c:['fang','rav','eye'],m:6,t:2,d:'The Fang, the Raven and the Hundred Eyes, in any order.'},
+     asc:{n:'The Ascent',c:['lan','fang','gob'],m:4,t:2,ord:1,d:'Three numerals climbing by one, left to right (I II III … V VI VII).'},
+     dead:{n:'Among the Dead',c:['hol','hol','wild'],m:3,t:1,d:'Two Hollows and a Wanderer, in any order.'}},
+  spOrder:['road','rise','court','hunt','asc','dead'],
   order:['crown','eye','key','rav','gob','fang','lan','wild','hol'],
   say:{deal:['The cards remember every hand.','Fate deals. Fools pay. Let us see which you are.','Cut the deck? No. Corvin cuts the deck.','Three cards. One fortune.'],
     win:['The Lantern smiles on you tonight.','Hm. The deck likes you.','Take it before the deck changes its mind.'],
     big:['The house weeps!','By the Ashen Crown — again!','Drinks are on you, friend.'],
     lose:['The Hollow takes its due.','The deck is hungry tonight.','Another hand? Fortune turns.'],
-    pair:['A pair — your coin comes home with a friend.','Two of a kind. Small mercies.']}};
+    pair:['A pair — your coin comes home with a friend.','Two of a kind. Small mercies.'],
+    rise:['The dead have dealt themselves in.','Thirteen... the Hollow’s own number. Take it and go.','Do you hear them? Under the floor?'],
+    road:['The Wanderer walks with you. The road is free.','Three Wanderers... I have not seen this in a hundred hands.'],
+    court:['The Court is seated. Kneel and collect.','Crown, Eyes and Key. The old Sovereigns smile.'],
+    hunt:['The Hunt is up!','Fang, Raven, Eyes — the hunter’s omens.'],
+    asc:['The Ascent. Each card a step higher.','Up the stair, one card at a time.'],
+    dead:['The Wanderer walks among the dead, and pays you for it.']}};
+// v218 (owner, Nov 10 2026: "Getting 2 of a kind and getting the same payout for all of them isn't exciting. Let's vary the amount paid
+// depending on value of the card. Let's also make special bonus event if you get all 3 skulls or 3 wilds as well as other special
+// combinations"): a pair pays by its card (CD213.D[k].p2: The Lantern ×1 … The Ashen Crown ×3, two Wanderers ×2.5); special hands
+// (CD213.SP, checked before three alike): three Hollows = The Hollow Rises (×13, spectral skulls), three Wanderers = The Wanderer's Road
+// (×100 and CD213.FREE free hands at the same bet with every win doubled, CD213.free, saved), The Sovereign's Court (Crown, Eyes, Key in
+// any order), The Hunt (Fang, Raven, Eyes), The Ascent (three numerals rising by one, left to right as dealt), Among the Dead (two
+// Hollows and a Wanderer). Cards are now laid left to right as the player sees them. ~91% returned (tools: test/v218_games.py).
 // ---------------- the deck: paintings ----------------
 function cd213RR(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
 function cd213Grain(g,x,y,w,h,a,seed){let s=seed||7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647};for(let i=0;i<w*h/22;i++){g.fillStyle=R()<.5?`rgba(0,0,0,${a*R()})`:`rgba(255,240,210,${a*.6*R()})`;g.fillRect(x+R()*w,y+R()*h,1+R()*1.5,1+R()*1.5)}}
@@ -74157,19 +74187,27 @@ function cd213Paint(k){const W=256,H=384,c=document.createElement('canvas');c.wi
   const ry=306;g.beginPath();g.moveTo(26,ry-20);g.lineTo(W-26,ry-20);g.lineTo(W-40,ry);g.lineTo(W-26,ry+20);g.lineTo(26,ry+20);g.lineTo(40,ry);g.closePath();g.fillStyle=cd213Lin(g,0,ry-20,0,ry+20,['#4a1a14','#2a0a08']);g.fill();g.strokeStyle='#d4a54c';g.lineWidth=2;g.stroke();
   g.fillStyle='#f4e2b0';let fs=20;g.font=`700 ${fs}px Cinzel, Georgia, serif`;const nm=D.n.toUpperCase();while(g.measureText(nm).width>W-90&&fs>12){fs--;g.font=`700 ${fs}px Cinzel, Georgia, serif`}g.fillText(nm,W/2,ry+1);
   // the pay, small at the foot
-  g.fillStyle='#4a2a14';g.font='600 14px Cinzel, Georgia, serif';g.fillText(k==='wild'?'WILD · three pay ×'+D.p:k==='hol'?'— PAYS NOTHING —':'THREE PAY ×'+D.p,W/2,346);
+  g.fillStyle='#4a2a14';g.font='600 14px Cinzel, Georgia, serif';g.fillText(k==='wild'?'WILD · THREE ×'+D.p:k==='hol'?'THREE WAKE THE DEAD':'PAIR ×'+D.p2+' · THREE ×'+D.p,W/2,346);
   return c}
 function cd213Can(k){if(!CD213.tex[k]){const c=cd213Paint(k);const t=new THREE.CanvasTexture(c);t.anisotropy=4;CD213.tex[k]=t;CD213.url[k]=c.toDataURL('image/png')}return CD213.tex[k]}
 function cd213Url(k){cd213Can(k);return CD213.url[k]}
 // ---------------- the rules ----------------
 function cd213Roll(){const L=Object.keys(CD213.D),tot=L.reduce((s,k)=>s+CD213.D[k].w,0);let r=Math.random()*tot;for(const k of L){r-=CD213.D[k].w;if(r<0)return k}return 'hol'}
-// → {m: multiplier of the bet, kind: 'three' | 'pair' | '', k: the card that made it}
-function cd213Pay(c){const D=CD213.D;if(c.every(x=>x==='wild'))return {m:D.wild.p,kind:'three',k:'wild'};
+// → {m: multiplier of the bet, kind: 'sp' | 'three' | 'pair' | '', k: the card that made it, sp: the special hand's key, free: free hands won}
+// v218: the special hands first (they never mix with a Wanderer standing in, except the Wanderers' own), then three alike (a Wanderer
+// stands in), then the best pair (each card pays its own p2; two Wanderers and a Hollow are a pair of Wanderers).
+var CD213N={lan:1,fang:2,gob:3,rav:4,key:5,eye:6,crown:7};
+function cd213Sp(c){const S=CD213.SP,srt=a=>a.slice().sort().join();for(const id of CD213.spOrder){const P=S[id];
+    if(P.ord){if(c.every(x=>CD213N[x])&&CD213N[c[1]]===CD213N[c[0]]+1&&CD213N[c[2]]===CD213N[c[1]]+1)return id;continue}
+    if(srt(c)===srt(P.c))return id}return ''}
+function cd213Pay(c){const D=CD213.D,sp=cd213Sp(c);if(sp){const P=CD213.SP[sp];return {m:P.m,kind:'sp',sp,k:sp==='road'?'wild':sp==='rise'?'hol':'',free:sp==='road'?CD213.FREE:0}}
   const nw=c.filter(x=>x!=='wild'&&x!=='hol'),nh=c.filter(x=>x==='hol').length,w=3-nw.length-nh;
   if(!nh&&nw.length&&nw.every(x=>x===nw[0]))return {m:D[nw[0]].p,kind:'three',k:nw[0]};
   // two alike among the cards that are not The Hollow (a Wanderer makes a pair with anything)
-  const cnt={};nw.forEach(x=>cnt[x]=(cnt[x]||0)+1);const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||D[b].p-D[a].p)[0];
-  if(best&&cnt[best]+w>=2||w>=2)return {m:1.5,kind:'pair',k:best||'wild'};return {m:0,kind:'',k:''}}
+  const cnt={};nw.forEach(x=>cnt[x]=(cnt[x]||0)+1);const best=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||D[b].p2-D[a].p2)[0];
+  if(best&&cnt[best]+w>=2)return {m:D[best].p2,kind:'pair',k:best};if(w>=2)return {m:D.wild.p2,kind:'pair',k:'wild'};return {m:0,kind:'',k:''}}
+// the plural name of a card for the plaque ('A PAIR OF RAVENS')
+var CD213PL={lan:'LANTERNS',fang:'FANGS',gob:'GOBLETS',rav:'RAVENS',key:'SEALED KEYS',eye:'HUNDRED EYES',crown:'ASHEN CROWNS',wild:'WANDERERS'};
 // ---------------- the table, the dealer, the deck ----------------
 function cd213L(x,z){return lotW103(DM196I.l,x,z)}
 function cd213TableK(k,R){const [cx,cz]=DM196I.card,wood=0x4a2e1c,woodD=0x2a1a10,gold=0xc9a24a;
@@ -74220,22 +74258,24 @@ function cd213Text(lines,w,h){const c=document.createElement('canvas');c.width=w
 function cd213Sprite(canvas,sw){const t=new THREE.CanvasTexture(canvas);t.anisotropy=4;const m=new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,depthWrite:false});m.userData.noFade135=1;
   const sp=new THREE.Sprite(m);sp.scale.set(sw,sw*canvas.height/canvas.width,1);sp.renderOrder=40;sp.userData.lpsSkip=1;return sp}
 function cd213Drop(sp){if(!sp)return;if(sp.parent)sp.parent.remove(sp);sp.material.map.dispose();sp.material.dispose()}
-// the result: a plaque over the dealt cards ({kind,k,m,win,bet}; null takes it away)
-function cd213Plaque(r){cd213Drop(CD213.plq);CD213.plq=null;if(!r||!CD213.root)return;const D=CD213.D;
-  const L=r.kind==='three'?[{t:r.k==='wild'?'THREE WANDERERS':'THREE × '+D[r.k].n.toUpperCase(),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'},{t:'+'+r.win+' gold   (×'+r.m+')',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}]
-    :r.kind==='pair'?[{t:'A PAIR',f:'700 30px Cinzel, Georgia, serif',c:'#f0e2c0'},{t:'+'+r.win+' gold   (×1.5)',f:'700 36px Cinzel, Georgia, serif',c:'#ffd24a'}]
-    :[{t:'NO MATCH',f:'700 34px Cinzel, Georgia, serif',c:'#b8b0a4'},{t:'the house takes '+r.bet,f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'}];
-  const sp=cd213Sprite(cd213Text(L,560,150),r.kind==='three'&&r.m>=25?.98:.84),[cx,cz]=DM196I.card;sp.position.set(cx-.42,.95,cz);CD213.root.add(sp);CD213.plq=sp;
-  const t0=nowP();kqFx({tick(){if(CD213.plq!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=Math.min(1,a*4);sp.position.y=.95+Math.min(.05,a*.2)+(r.kind==='three'&&r.m>=25?Math.sin(a*6)*.012:0);return true}})}
+// the result: a plaque over the dealt cards ({kind,k,m,win,bet,sp,dbl,free}; null takes it away)
+function cd213Plaque(r){cd213Drop(CD213.plq);CD213.plq=null;if(!r||!CD213.root)return;const D=CD213.D,G='700 40px Cinzel, Georgia, serif',X=r.dbl?'  ×'+r.m+' ×2':'   (×'+r.m+')';
+  const L=r.kind==='sp'?[{t:CD213.SP[r.sp].n.toUpperCase(),f:'700 32px Cinzel, Georgia, serif',c:r.sp==='rise'?'#b8ffb0':r.sp==='road'?'#bfe4ff':'#ffe2a0'},{t:'+'+r.win+' gold'+X,f:G,c:'#ffd24a'}]
+    :r.kind==='three'?[{t:'THREE × '+D[r.k].n.toUpperCase(),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'},{t:'+'+r.win+' gold'+X,f:G,c:'#ffd24a'}]
+    :r.kind==='pair'?[{t:'A PAIR OF '+CD213PL[r.k],f:'700 30px Cinzel, Georgia, serif',c:'#f0e2c0'},{t:(r.m===1&&!r.dbl?'your '+r.win+' back':'+'+r.win+' gold'+X),f:'700 36px Cinzel, Georgia, serif',c:'#ffd24a'}]
+    :[{t:'NO MATCH',f:'700 34px Cinzel, Georgia, serif',c:'#b8b0a4'},{t:r.dbl?'a free hand':'the house takes '+r.bet,f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'}];
+  if(r.free)L.push({t:r.free+' FREE HANDS · EVERY WIN DOUBLED',f:'700 28px Cinzel, Georgia, serif',c:'#9ad0ff'});
+  const big=r.kind==='sp'&&r.m>=13||r.kind==='three'&&r.m>=25,sp=cd213Sprite(cd213Text(L,620,L.length*75),big?1.04:.84),[cx,cz]=DM196I.card;sp.position.set(cx-.42,.95+(L.length>2?.08:0),cz);CD213.root.add(sp);CD213.plq=sp;
+  const t0=nowP(),y0=sp.position.y;kqFx({tick(){if(CD213.plq!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=Math.min(1,a*4);sp.position.y=y0+Math.min(.05,a*.2)+(big?Math.sin(a*6)*.012:0);return true}})}
 // Corvin speaks: a line over his head for a few seconds
 function cd213Say(t){try{cd213Drop(CD213.bub);CD213.bub=null;if(!t||!CD213.root)return;const sp=cd213Sprite(cd213Text([{t:'“'+t+'”',f:'italic 600 26px Cinzel, Georgia, serif',c:'#f0e2c0'}],Math.min(900,90+t.length*15),70),.0016*Math.min(900,90+t.length*15));
   const [cx,cz]=DM196I.card;sp.position.set(cx-1.0,1.42,cz+.95);CD213.root.add(sp);CD213.bub=sp;const t0=nowP();
   kqFx({tick(){if(CD213.bub!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=a<.2?a*5:a>3.6?Math.max(0,1-(a-3.6)*2.5):1;if(a>4.1){cd213Drop(sp);CD213.bub=null;return false}return true}})}catch(_){}}
-function cd213Show(cards,big,bet){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
+function cd213Show(cards,big,bet,dbl){try{if(!CD213.root||!Array.isArray(cards)||cards.length!==3)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&CD213.busy)return;
   cards=cards.map(k=>CD213.D[k]?k:'hol');cd213Clear();const R=CD213.root,[cx,cz]=DM196I.card,y0=.725,T=CD213.T,L=[],r=cd213Pay(cards);bet=+bet||0;
   for(let i=0;i<3;i++){const m=cd213CardMesh();m.userData.face.material.map=cd213Can(cards[i]);m.userData.face.material.needsUpdate=true;m.rotation.y=Math.PI/2;m.userData.f.rotation.z=Math.PI;
     m.position.set(CD213.deck[0],y0+.06,CD213.deck[1]);m.visible=false;R.add(m);L.push(m)}CD213.lay=L;
-  const slot=i=>[cx+.05,cz+(i-1)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
+  const slot=i=>[cx+.05,cz+(1-i)*.46],tEnd=3*T.deal+T.gap*.5+2*T.fgap+T.flip+.15;let t=0;
   const o={tick(dt){if(o.dead)return false;t+=dt;
       for(let i=0;i<3;i++){const m=L[i],t0=i*T.deal,k=Math.max(0,Math.min(1,(t-t0)/T.deal));m.visible=t>=t0;const [sx,sz]=slot(i),e=haIO(k);
         m.position.set(CD213.deck[0]+(sx-CD213.deck[0])*e,y0+.06*(1-e)+Math.sin(k*Math.PI)*.18+.002*i,CD213.deck[1]+(sz-CD213.deck[1])*e);m.rotation.y=Math.PI/2+(1-e)*(i-1)*.6;
@@ -74244,17 +74284,35 @@ function cd213Show(cards,big,bet){try{if(!CD213.root||!Array.isArray(cards)||car
       // the dealer's arm: a reach for each card dealt, a tap on each one turned
       const dPh=t<3*T.deal?Math.sin(((t%T.deal)/T.deal)*Math.PI):0,fPh=(()=>{const f0=3*T.deal+T.gap*.5,u=t-f0;if(u<0||u>2*T.fgap+T.flip)return 0;const j=Math.floor(u/T.fgap),q=(u-j*T.fgap)/T.flip;return q>=0&&q<=1?Math.sin(q*Math.PI):0})();
       CD213.armK=t<3*T.deal?'reach':'tap';CD213.arm=Math.max(dPh,fPh);
-      if(t>=tEnd){if(!o.done){o.done=1;CD213.arm=0;try{o.end2&&o.end2()}catch(_){}cd213Result(r,bet,cards)}}return t<tEnd+.05},end(){CD213.arm=0}};
+      if(t>=tEnd){if(!o.done){o.done=1;CD213.arm=0;try{o.end2&&o.end2()}catch(_){}cd213Result(r,bet,cards,dbl)}}return t<tEnd+.05},end(){CD213.arm=0}};
   CD213.fx=o;kqFx(o);return o}catch(err){if(!CD213.err++)console.warn('v213 deal',err)}}
 // the end of a hand, on every screen that saw it dealt: the plaque, the winning cards lit, Corvin's gesture and the win's effect
-function cd213Result(r,bet,cards){try{const win=Math.floor(bet*r.m);cd213Plaque({kind:r.kind,k:r.k,m:r.m,win,bet});
-  if(r.kind){CD213.lay.forEach((m,i)=>{const k=cards[i];if(!(r.kind==='three'||k===r.k||k==='wild'))return;const g=new THREE.Mesh(CD213.gGeo||(CD213.gGeo=new THREE.PlaneGeometry(.44,.6)),new THREE.MeshBasicMaterial({map:fx186Tex?fx186Tex('soft'):null,color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.0}));
-    g.material.userData.noFade135=1;g.rotation.x=-Math.PI/2;g.position.set(m.position.x,.718,m.position.z);g.renderOrder=2;CD213.root.add(g);CD213.glow.push(g);const t0=nowP();
-    kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000;g.material.opacity=Math.min(.9,a*3)*(.75+.25*Math.sin(a*5));return true}})})}
-  cd213Gest(r.kind?'open':'sweep');cd213Say(r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose'));
-  cd213Win(cd213Tier(r))}catch(err){if(!CD213.err++)console.warn('v213 result',err)}}
-// how big a win is: 0 nothing, 1 a pair, 2 a small three (×5–×10), 3 a fine three (×15–×25), 4 the Crown or the Wanderers (×50, ×100)
-function cd213Tier(r){return !r.kind?0:r.kind==='pair'?1:r.m>=50?4:r.m>=15?3:2}
+function cd213Result(r,bet,cards,dbl){try{const win=Math.floor(bet*r.m*(dbl?2:1));cd213Plaque({kind:r.kind,k:r.k,m:r.m,win,bet,sp:r.sp,dbl:!!dbl,free:r.free||0});
+  if(r.kind){const col=r.sp==='rise'?0x7aff8a:r.sp==='road'?0x8ac8ff:0xffc040;CD213.lay.forEach((m,i)=>{const k=cards[i];if(!(r.kind!=='pair'||k===r.k||k==='wild'))return;const g=new THREE.Mesh(CD213.gGeo||(CD213.gGeo=new THREE.PlaneGeometry(.44,.6)),new THREE.MeshBasicMaterial({map:fx186Tex?fx186Tex('soft'):null,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.0}));
+    g.material.userData.noFade135=1;g.rotation.x=-Math.PI/2;g.position.set(m.position.x,.718,m.position.z);g.renderOrder=2;CD213.root.add(g);CD213.glow.push(g);const t0=nowP(),d0=r.sp==='asc'?i*.35:0;
+    kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000-d0;g.material.opacity=Math.max(0,Math.min(.9,a*3))*(.75+.25*Math.sin(a*5));return true}})})}
+  cd213Gest(r.kind?'open':'sweep');cd213Say(r.kind==='sp'?cd213Pick(r.sp):r.kind==='three'?(r.m>=25?cd213Pick('big'):cd213Pick('win')):r.kind==='pair'?cd213Pick('pair'):cd213Pick('lose'));
+  cd213Win(cd213Tier(r));if(r.sp==='rise')cd213Rise();if(r.sp==='road')cd213Road()}catch(err){if(!CD213.err++)console.warn('v213 result',err)}}
+// how big a win is: 0 nothing, 1 a pair, 2 a small three (×5–×10) or a small special, 3 a fine three (×15–×25) or the Court,
+// 4 the Crown (×50) or a great special (the Hollow Rises, the Wanderer's Road: their own shows on top, cd213Rise / cd213Road)
+function cd213Tier(r){return !r.kind?0:r.kind==='pair'?1:r.kind==='sp'?Math.min(4,CD213.SP[r.sp].t):r.m>=50?4:r.m>=15?3:2}
+// v218: The Hollow Rises: green grave-light over the table, three spectral skulls rise from the cards, circle the table and fade
+function cd213Skull(){if(CD213.skullC)return CD213.skullC;const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+  cd213Glow(g,128,128,124,'rgba(110,255,130,.55)');g.save();g.translate(128,132);g.scale(1.05,1.05);g.globalAlpha=.92;try{CD213E.hol(g)}catch(_){}g.restore();
+  g.globalCompositeOperation='source-atop';g.fillStyle='rgba(120,255,140,.28)';g.fillRect(0,0,256,256);CD213.skullC=c;return c}
+function cd213Rise(){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.05,cz),Y=R.position.y,p=new THREE.Vector3(wx,Y+.8,wz),rep=typeof MPV!='undefined'&&MPV.rep>0;
+  kqFlash(p,0x6aff7a,2.0,900);burst(p,0x7aff8a,40,2.2,2.6,.8);ring(new THREE.Vector3(wx,Y+.74,wz),0x5aff6a,3.2,900);try{flash('rgba(80,255,110,.18)')}catch(_){}cd213Snd('rise',rep?.5:1);
+  const tex=new THREE.CanvasTexture(cd213Skull());(CD213.lay||[]).forEach((m,i)=>{const mat=new THREE.SpriteMaterial({map:tex,color:0x9affa8,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0});mat.userData.noFade135=1;
+    const sp=new THREE.Sprite(mat);sp.scale.set(.5,.5,1);sp.renderOrder=41;sp.userData.lpsSkip=1;sp.position.copy(m.position);R.add(sp);const t0=nowP(),a0=i*2.094;
+    kqFx({tick(){const a=(nowP()-t0)/1000;if(a>4.6)return false;const up=Math.min(1,a/1.1),orb=Math.max(0,a-1.1),r=.75*Math.min(1,orb);
+      sp.position.set(cx+.05+Math.cos(a0+orb*2.2)*r+(m.position.x-cx-.05)*(1-Math.min(1,orb)),.75+up*.8+Math.sin(a*3+i)*.05+(a>3.6?(a-3.6)*.6:0),cz+Math.sin(a0+orb*2.2)*r+(m.position.z-cz)*(1-Math.min(1,orb)));
+      const s=.26+up*.16;sp.scale.set(s,s,1);mat.opacity=Math.min(.7,a*2)*(a>3.6?Math.max(0,1-(a-3.6)):1);mat.rotation=Math.sin(a*2+i)*.25;
+      if(Math.random()<.3)burst(sp.getWorldPosition(new THREE.Vector3()),0x8aff9a,1,.2,.8,.4);return true},end(){R.remove(sp);mat.dispose();if(!R.children.some(o=>o.material&&o.material.map===tex))tex.dispose()}})});
+  }catch(err){if(!CD213.err++)console.warn('v218 rise',err)}}
+// v218: The Wanderer's Road: starlight rises from the table and the free hands are announced
+function cd213Road(){try{const R=CD213.root;if(!R)return;const [cx,cz]=DM196I.card,[wx,wz]=cd213L(cx+.05,cz),Y=R.position.y,p=new THREE.Vector3(wx,Y+.8,wz);
+  setTimeout(()=>{try{ring(new THREE.Vector3(wx,Y+.74,wz),0x8ac8ff,3.6,800);burst(p,0x9ad0ff,36,2.6,3,.7);kqFlash(p,0x9ad0ff,1.8,500)}catch(_){}},900);const t0=nowP();
+  kqFx({tick(){const a=(nowP()-t0)/1000;if(a>3.4)return false;if(Math.random()<.7)burst(new THREE.Vector3(wx+(Math.random()-.5)*1.6,Y+.75+Math.random()*.4,wz+(Math.random()-.5)*1.6),0xbfe4ff,1,.25,2.2,.5);return true}})}catch(err){if(!CD213.err++)console.warn('v218 road',err)}}
 // a one-off gesture of Corvin's arms after the hand (an open-palmed flourish for a win, a sweep of the stake for a loss)
 function cd213Gest(k){const t0=nowP(),ms=k==='open'?1100:900;CD213.armK=k;kqFx({tick(){if(CD213.busy&&CD213.armK!==k)return false;const a=(nowP()-t0)/ms;if(a>=1){if(CD213.armK===k)CD213.arm=0;return false}CD213.armK=k;CD213.arm=Math.sin(Math.min(1,a)*Math.PI);return true}})}
 // coins: little gold discs thrown up from the cards that bounce and settle on the felt, then fade (one shared geometry and material)
@@ -74293,30 +74351,33 @@ function cd213Open(){const l=DM196I.l;if(!l||CD213.open)return;const [sx,sz]=cd2
   CD213.open=true;CD213.camK=0;CD213.plVis=pl.visible;pl.visible=false;cd213Panel().classList.remove('hide');cd213Render();cd213Say(cd213Pick('deal'));try{GD213&&gd213Up()}catch(_){}}
 function cd213Close(){if(!CD213.open)return;CD213.open=false;pl.visible=CD213.plVis!==false;const w=$('cd213w');if(w)w.classList.add('hide')}
 function cd213Pick(k){const L=CD213.say[k];return L[Math.floor(Math.random()*L.length)]}
-function cd213Deal(){if(CD213.busy)return;const b=CD213.bet;if(gold<b){cd213Say('Your purse is lighter than your courage.');return}
-  gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m);CD213.busy=true;CD213.cards=c;CD213.res=null;
-  CD213.stat.n++;CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}if(Math.random()<.35)cd213Say(cd213Pick('deal'));
-  const o=cd213Show(c,cd213Tier(r),b);
-  const fin=()=>{CD213.busy=false;gold+=win;CD213.stat.won+=win;CD213.res={c,r,win,bet:b};
-    cd213Snd(r.kind==='three'?(r.m>=25?'jack':'win'):r.kind==='pair'?'pair':'lose');
-    if(win>0)try{say('🃏 Fate’s Hand: '+(r.kind==='three'?'three × '+CD213.D[r.k].n:'a pair')+' — you win '+win+' gold.')}catch(_){}
+// v218: a free hand (CD213.free > 0, won on the Wanderer's Road) costs nothing, plays at the bet that won it and doubles its win
+function cd213Deal(){if(CD213.busy)return;const fr=CD213.free>0,b=fr?(CD213.freeBet||CD213.bet):CD213.bet;if(!fr&&gold<b){cd213Say('Your purse is lighter than your courage.');return}
+  if(fr)CD213.free--;else gold-=b;const c=[cd213Roll(),cd213Roll(),cd213Roll()],r=cd213Pay(c),win=Math.floor(b*r.m*(fr?2:1));CD213.busy=true;CD213.cards=c;CD213.res=null;
+  CD213.stat.n++;if(!fr)CD213.stat.bet+=b;cd213Render();try{hud()}catch(_){}if(Math.random()<.35)cd213Say(cd213Pick('deal'));
+  const o=cd213Show(c,cd213Tier(r),b,fr?1:0);
+  const fin=()=>{CD213.busy=false;gold+=win;CD213.stat.won+=win;if(r.free){CD213.free+=r.free;CD213.freeBet=b}CD213.res={c,r,win,bet:b,free:fr};
+    cd213Snd(r.kind==='sp'?(cd213Tier(r)>=3?'jack':'win'):r.kind==='three'?(r.m>=25?'jack':'win'):r.kind==='pair'?'pair':'lose');
+    if(win>0)try{say('🃏 Fate’s Hand: '+(r.kind==='sp'?CD213.SP[r.sp].n:r.kind==='three'?'three × '+CD213.D[r.k].n:'a pair of '+CD213PL[r.k].toLowerCase())+(fr?' (free hand, doubled)':'')+' — you win '+win+' gold.'+(r.free?' '+r.free+' free hands!':''))}catch(_){}
     try{hud()}catch(_){}cd213Render()};
-  if(o)o.end2=fin;else{fin();cd213Result(r,b,c)}}
+  if(o)o.end2=fin;else{fin();cd213Result(r,b,c,fr?1:0)}}
 function cd213Panel(){let w=$('cd213w');if(w)return w;w=document.createElement('div');w.id='cd213w';w.className='hide';
   w.innerHTML=`<div class="win"><div class="wh"><h2 id="cd213T">🃏 Fate’s Hand</h2><span class="wsub" id="cd213S"></span><button class="x" id="cd213X" title="Leave the table (Esc)">✕</button></div><div class="wb" id="cd213B"></div><div class="wf" id="cd213F"></div></div>`;
   ($('stage')||document.body).appendChild(w);w.addEventListener('pointerdown',e=>e.stopPropagation());
   w.addEventListener('click',e=>{const b=e.target.closest('[data-cdb],[data-cdd],#cd213X');if(!b||b.disabled)return;if(b.id==='cd213X'){cd213Close();return}
     if(b.dataset.cdb){CD213.bet=+b.dataset.cdb;cd213Render()}else if(b.dataset.cdd)cd213Deal()});return w}
-function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D;
+function cd213Render(){if(!CD213.open)return;cd213Panel();const D=CD213.D,fr=CD213.free>0;
   $('cd213S').textContent='Space / Enter deal · 1–4 bet · Esc leaves';
-  const bets=CD213.bets.map(b=>`<button class="cd213b${b===CD213.bet?' on':''}" data-cdb="${b}" ${gold<b||CD213.busy?'disabled':''}>${b} 🪙</button>`).join('');
-  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].n} — ${D[k].d}"><img src="${cd213Url(k)}"><b>${k==='hol'?'—':'×'+D[k].p}</b></div>`).join('');
-  $('cd213B').innerHTML=`<div class="cd213ctl"><span class="mut">Bet</span>${bets}<button class="cd213d" data-cdd="1" ${CD213.busy||gold<CD213.bet?'disabled':''}>${CD213.busy?'Dealing…':'Deal · '+CD213.bet+' 🪙'}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
-    <div class="cd213pg">${pt}</div><div class="mut cd213pn">Three alike pay the card’s ×. The Wanderer stands in for any card; The Hollow for none. Any two alike give 1.5× back.</div>`;
+  const bets=CD213.bets.map(b=>`<button class="cd213b${b===CD213.bet?' on':''}" data-cdb="${b}" ${gold<b||CD213.busy||fr?'disabled':''}>${b} 🪙</button>`).join('');
+  const pt=CD213.order.map(k=>`<div class="cd213p" title="${D[k].n} — ${D[k].d}"><img src="${cd213Url(k)}"><b>${k==='hol'?'—':'×'+D[k].p}</b><i>${k==='hol'?'&nbsp;':'pair ×'+D[k].p2}</i></div>`).join('');
+  const sp=CD213.spOrder.map(id=>{const P=CD213.SP[id],cs=id==='asc'?['lan','fang','gob']:P.c;return `<div class="cd218s" title="${P.n} — ${P.d}">${cs.map(k=>`<img src="${cd213Url(k)}">`).join('')}<span>${P.n}${id==='asc'?' (in order)':''}</span><b>×${P.m}${id==='road'?' + 5 free':''}</b></div>`}).join('');
+  const deal=CD213.busy?'Dealing…':fr?'Free hand · '+CD213.freeBet+' 🪙 ×2 ('+CD213.free+' left)':'Deal · '+CD213.bet+' 🪙';
+  $('cd213B').innerHTML=`<div class="cd213ctl"><span class="mut">Bet</span>${bets}<button class="cd213d${fr?' cd218f':''}" data-cdd="1" ${CD213.busy||!fr&&gold<CD213.bet?'disabled':''}>${deal}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
+    <div class="cd213pg">${pt}</div><div class="cd218sg">${sp}</div><div class="mut cd213pn">Three alike pay the big number, two alike the pair number. The Wanderer stands in for any card; The Hollow for none.</div>`;
   $('cd213F').innerHTML=''};
 // while at the table the keys belong to the panel (no walking off mid-hand, no swings at the dealer)
 addEventListener('keydown',e=>{if(!CD213.open)return;const k=String(e.key||'').toLowerCase();if(e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
-  if(k==='escape')cd213Close();else if(k===' '||k==='enter')cd213Deal();else if(k>='1'&&k<='4'&&!CD213.busy){const b=CD213.bets[+k-1];if(b&&gold>=b){CD213.bet=b;cd213Render()}}},true);
+  if(k==='escape')cd213Close();else if(k===' '||k==='enter')cd213Deal();else if(k>='1'&&k<='4'&&!CD213.busy&&!(CD213.free>0)){const b=CD213.bets[+k-1];if(b&&gold>=b){CD213.bet=b;cd213Render()}}},true);
 addEventListener('keyup',e=>{if(CD213.open)e.stopImmediatePropagation()},true);
 {const f=swing;swing=function(){if(CD213.open)return;return f.apply(this,arguments)}}
 // the table camera (v213b): head on from the player's seat, Corvin across the table, like a blackjack table (the hero is hidden
@@ -74330,6 +74391,9 @@ function cd213Cam(dt){const l=DM196I.l,T=TOWNS[0];if(!l)return;CD213.camK=Math.m
 .cd213d{font-weight:700;padding:6px 16px;background:linear-gradient(#7a2a18,#4a140c)!important;color:#ffe8c0!important}.cd213gold{color:#f0d48a;margin-left:6px}
 .cd213pg{display:flex;gap:5px;justify-content:center;margin-top:7px;flex-wrap:wrap}.cd213pn{text-align:center;font-size:.68rem;margin-top:3px}
 .cd213p{display:flex;flex-direction:column;align-items:center;font-size:.7rem}.cd213p img{width:38px;height:57px;border-radius:3px}.cd213p b{color:#f0d48a}
+.cd213p i{font-style:normal;font-size:.6rem;color:#c8b48a}.cd218sg{display:flex;gap:4px 10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.cd218s{display:flex;align-items:center;gap:2px;font-size:.66rem;color:#e8d8b8}.cd218s img{width:15px;height:22px;border-radius:2px}.cd218s span{margin:0 3px}.cd218s b{color:#ffd24a}
+.cd218f{background:linear-gradient(#2a4a7a,#142a4a)!important;box-shadow:0 0 8px #8ac8ff}body.mob .cd218s img{width:11px;height:16px}
 body.mob .cd213p img{width:28px;height:42px}`;document.head.appendChild(s)}
 // the walk-up prompt at the table
 {const f=townPortalPrompt;townPortalPrompt=function(T){try{if(T&&T===TOWNS[0]&&cd213Near())return {label:'F · Play Fate’s Hand at Corvin’s card table',fn:()=>cd213Open()}}catch(_){}return f.apply(this,arguments)}}
@@ -74348,7 +74412,11 @@ function cd213Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.s
     lose:()=>{T('sine',140,80,0,.4,.15,{atk:.01,wet:.3})},
     pair:()=>{coin(0,2600);coin(.08,3100)},
     win:()=>{for(let i=0;i<6;i++)coin(i*.07,2400+((i*530)%900));T('sine',523,523,0,.5,.04,{atk:.02,wet:.6});T('sine',784,784,.1,.6,.035,{atk:.02,wet:.6})},
+    rise:()=>{[110,138.6,164.8,207.7].forEach((f,i)=>T('sawtooth',f,f*.98,i*.12,2.2,.018,{atk:.4,wet:.85,lp:900}));N(500,200,0,2.4,.08,{q:.6,atk:.5,wet:.8});T('sine',55,40,0,2.6,.12,{atk:.3,wet:.5})},
     jack:()=>{for(let i=0;i<16;i++)coin(i*.06,2200+((i*730)%1300));[392,523,659,784].forEach((f,i)=>T('sine',f,f,i*.09,1.2,.04,{atk:.03,wet:.7}));try{mSfx('lvl',.6)}catch(_){}}})[k]?.()}catch(_){}}
+// v218: free hands won on the Wanderer's Road are kept with the save
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{if(CD213.free>0)o.cd218={n:CD213.free,b:CD213.freeBet}}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const q=s&&s.cd218;CD213.free=q&&q.n>0?Math.min(50,q.n|0):0;CD213.freeBet=q&&q.b>0?+q.b:0}catch(_){CD213.free=0}return r}}
 // ================= v214: arrival cinematics for Burningeye Summit, Searing Sands, The Dirge and The Citadel (names zc214*) =================
 // Owner (Nov 10 2026): "make intro cinematics for our other zones (ice, sand, graveyard, citadel) and make them similar to how we have
 // our kindlelight and plains intro cinematics."
@@ -75430,3 +75498,894 @@ function mu215Foe(){const P=pl.position;let r=0;for(const e of enemies){if(!e||e
   return w}}
 // fight songs come in fast, like v79's 'boss'
 {const f=muSwitch;muSwitch=function(now){const r=f.apply(this,arguments);try{if(MU.th&&MU.th.fight&&MU.cur!='boss'){MU.xg.gain.cancelScheduledValues(now);MU.xg.gain.setValueAtTime(0,now);MU.xg.gain.setTargetAtTime(1,now+.05,.3)}}catch(_){}return r}}
+// ================= v218: two more games of chance at the Last Lantern — the Ember Wheel and the Four Roads =================
+// Owner (Nov 10 2026): "Let's also add a wheel spin gambling game (like the game Rust has)" and "another card game where you bet on a
+// card type (using the cards we created). There will be 4 suits available to choose from. The card dealer then flips over cards from a
+// deck containing only those 4 suits. Each card flipped stacks onto the corresponding suit. First suit to 5 cards wins. Think of a fair
+// payout that makes it worth playing for the risk."
+//  * The Ember Wheel (WH218): a big wheel on the Inn's back wall over the fireside bench, 25 segments painted with the deck's emblems:
+//    12 × The Lantern (pays 1:1), 6 × The Fang (3:1), 4 × The Raven (5:1), 2 × The Sealed Key (10:1), 1 × The Ashen Crown (20:1). Like
+//    Rust's Big Wheel: put chips on as many symbols as you like (1–5 add a chip, the chip size from the panel), Space spins, the
+//    stakes stay on for the next spin (Backspace clears). A symbol with n:1 comes up (25 / segments) of the time: every bet returns
+//    84–96% over time (Lantern, Fang, Raven .96; Key .88; Crown .84). The pointer's leather flap clacks over the pegs as it slows.
+//  * The Four Roads (RC218): a card table in the Inn's front-right corner (it took the place of the third dining table) with its
+//    dealer Odile. Pick one of four suits (The Lantern, The Fang, The Raven, The Sealed Key; 1–4), a bet, Space: Odile turns cards
+//    from a 36-card deck of those four suits (9 each, shuffled), each laid on its suit's road; the first road to 5 cards reaches the
+//    gate and wins. Every suit wins 1 time in 4 (a fair price would be ×4): a win pays ×3.6 (your bet back and 2.6 more), a rout
+//    (your suit at the gate while no other road has more than 2 cards, ~14% of wins) pays ×5. ~95% returned over time.
+//  * Both: F at the spot opens the game's docked panel (#gm218w, not a pausing window), a seat camera frames the game above it and the
+//    hero is hidden while playing (like Fate's Hand, 3850); Esc or walking off leaves. The bet and the gold stay with the player.
+//  * Co-op: wh218Show (the spin: segment, turns, start angle) and rc218Show (the order the cards come out) are relayed like
+//    cd213Show, so a partner in Duskhold sees the same wheel spin and the same race laid out on their own table.
+var GM218={cur:null,root:null,col:[],err:0,camK:0,camT:null,plVis:true,chips:[10,20,50,100],
+  // the game spots (lot-local in the Inn): where the player stands and faces, the seat camera [x,y,z, look x,y,z] (y over the floor)
+  G:{wheel:{stand:[3.8,-2.3],face:Math.PI,cv:[3.8,2.05,-.95,3.8,1.55,-4.9],r:1.6,label:'F · Spin the Ember Wheel'},
+     race:{stand:[3.6,4.3],face:Math.PI,cv:[3.6,2.45,4.7,3.6,.15,2.78],r:1.9,label:'F · Bet on the Four Roads at Odile’s table'}}};
+var WH218={busy:false,th:0,st:{lan:0,fang:0,rav:0,key:0,crown:0},chip:20,res:null,stat:{n:0,bet:0,won:0},fx:null,tick:0,flap:0,
+  c:[3.8,2.25,-4.74],R:1.0,
+  M:{lan:1,fang:3,rav:5,key:10,crown:20},keys:['lan','fang','rav','key','crown'],
+  // the 25 segments clockwise from the top: the Lanterns between every other symbol, the Crown alone at the top
+  S:null,
+  say:{win:['The wheel favours you.','Ha! The embers like you tonight.'],big:['The Crown! The whole wheel burns gold!','Twenty to one — and the wheel pays!'],lose:['Round and round. The Lantern keeps the house warm.','The wheel turns. So does fortune.']}};
+(function(){const o=['crown','fang','rav','fang','key','fang','rav','fang','rav','key','fang','rav','fang'];const S=[];o.forEach((k,i)=>{S.push(k);if(i<12)S.push('lan')});WH218.S=S})();
+var RC218={busy:false,suits:['lan','fang','rav','key'],pick:0,bet:20,res:null,stat:{n:0,bet:0,won:0},lay:[],heads:[],glow:[],fx:null,
+  per:9,goal:5,pay:3.6,rout:5,c:[3.6,2.95],lz:[2.43,2.74,3.05,3.36],x0:2.68,dx:.27,deck:[4.52,2.45],T:{gap:.52,fly:.34},arm:0,armK:'reach',rig:null,dealer:null,
+  say:{deal:['Four roads, one gate. Choose.','The cards run the roads. You only pray.','Pick your suit and hold your breath.'],
+    near:['%s is one card from the gate!','%s is at the gate’s mouth!'],win:['%s takes the gate — and you with it!','Well picked. %s runs true.'],
+    rout:['%s left the others in the dust!','A rout! %s never looked back.'],lose:['%s takes the gate. Not yours, I fear.','The roads were cruel. %s wins.']}};
+function gm218L(x,z){return lotW103(DM196I.l,x,z)}
+// ---------------- the Ember Wheel: the painted face ----------------
+function wh218Face(){if(WH218.tex)return WH218.tex;const N=1024,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),cx=N/2,cy=N/2,R=N/2-6,S=WH218.S,A=6.2832/S.length;
+  const F={lan:['#c87a1a','#6a3008'],fang:['#c8b890','#5a2418'],rav:['#6a4ab8','#1a1030'],key:['#2a9a84','#0c3a34'],crown:['#e8501a','#3a0c04']};
+  g.fillStyle='#120806';g.beginPath();g.arc(cx,cy,R+6,0,6.2832);g.fill();
+  S.forEach((k,i)=>{const a0=-Math.PI/2+(i-.5)*A,a1=a0+A,G=g.createRadialGradient(cx,cy,R*.18,cx,cy,R);G.addColorStop(0,F[k][1]);G.addColorStop(.55,F[k][0]);G.addColorStop(1,F[k][1]);
+    g.beginPath();g.moveTo(cx,cy);g.arc(cx,cy,R,a0,a1);g.closePath();g.fillStyle=G;g.fill();
+    // the emblem, upright toward the rim
+    const am=-Math.PI/2+i*A;g.save();g.translate(cx+Math.cos(am)*R*.62,cy+Math.sin(am)*R*.62);g.rotate(am+Math.PI/2);g.scale(.42,.42);
+    g.beginPath();g.arc(0,0,92,0,6.2832);g.fillStyle='rgba(10,6,4,.55)';g.fill();g.strokeStyle='#d4a54c';g.lineWidth=5;g.stroke();g.save();g.beginPath();g.arc(0,0,90,0,6.2832);g.clip();g.scale(.82,.82);try{CD213E[k](g)}catch(_){}g.restore();g.restore();
+    // the multiplier near the rim
+    g.save();g.translate(cx+Math.cos(am)*R*.88,cy+Math.sin(am)*R*.88);g.rotate(am+Math.PI/2);g.fillStyle='#fff0c8';g.strokeStyle='#120806';g.lineWidth=6;g.font='700 44px Cinzel, Georgia, serif';g.textAlign='center';g.textBaseline='middle';
+    const t=WH218.M[k]+'';g.strokeText(t,0,0);g.fillText(t,0,0);g.restore()});
+  // gold spokes between segments, the rims, the hub
+  g.strokeStyle='#d4a54c';g.lineWidth=4;S.forEach((k,i)=>{const a=-Math.PI/2+(i+.5)*A;g.beginPath();g.moveTo(cx+Math.cos(a)*R*.2,cy+Math.sin(a)*R*.2);g.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);g.stroke()});
+  [[R,8,'#d4a54c'],[R*.78,3,'rgba(212,165,76,.6)'],[R*.2,8,'#d4a54c']].forEach(([r,w,s])=>{g.beginPath();g.arc(cx,cy,r,0,6.2832);g.strokeStyle=s;g.lineWidth=w;g.stroke()});
+  const H=g.createRadialGradient(cx-20,cy-20,4,cx,cy,R*.2);H.addColorStop(0,'#5a1a10');H.addColorStop(1,'#1a0604');g.beginPath();g.arc(cx,cy,R*.19,0,6.2832);g.fillStyle=H;g.fill();
+  g.save();g.translate(cx,cy);g.scale(.62,.62);try{CD213E.crown(g)}catch(_){}g.restore();cd213Grain(g,0,0,N,N,.07,9);
+  const t=new THREE.CanvasTexture(c);t.anisotropy=4;WH218.tex=t;WH218.can=c;return t}
+// the stand: a dark board on the wall, a gilt rim, two posts, the pointer's bracket; the turning wheel; the pointer (its flap swings)
+function wh218K(k){const [x,y,z]=WH218.c,R=WH218.R,wood=0x3a2416,woodD=0x22140c,gold=0xc9a24a;
+  k.as('wood',()=>{k.p('c',woodD,'box',x,y,z-.12,2.5,2.5,.08,0,0,0,.02);[-1.2,1.2].forEach(o=>k.L('c',wood,[x+o,0,z-.05],[x+o,y+1.25,z-.05],.07,'box'));k.p('c',wood,'box',x,y+1.25,z-.06,2.6,.12,.14,0,0,0,.02)});
+  for(let i=0;i<16;i++){const a=i/16*6.2832;k.p('m',gold,'box',x+Math.sin(a)*(R+.07),y+Math.cos(a)*(R+.07),z-.04,.12,.06,.06,0,0,-a,0)}
+  k.p('m',gold,'cyl8',x,y,z-.03,R+.1,.04,R+.1,Math.PI/2,0,0,0);k.p('m',0x2a2420,'box',x,y+R+.2,z+.02,.22,.16,.12,0,0,0,.02)}
+function wh218Build(root){const [x,y,z]=WH218.c,R=WH218.R;let k=null;if(!twHas('WH218FRM')){k=twKit(21801);wh218K(k)}root.add(twGroup(k,'WH218FRM'));
+  const w=new THREE.Group();w.position.set(x,y,z+.02);root.add(w);WH218.wheel=w;w.rotation.z=WH218.th;
+  const fm=new THREE.MeshBasicMaterial({map:wh218Face(),color:0xe0d8cc});fm.userData.noFade135=1;const face=new THREE.Mesh(WH218.fGeo||(WH218.fGeo=new THREE.CircleGeometry(R,50)),fm);w.add(face);
+  const pm=WH218.pMat||(WH218.pMat=new THREE.MeshLambertMaterial({color:0xe8c060,emissive:0x3a2808})),pg=WH218.pGeo||(WH218.pGeo=new THREE.CylinderGeometry(.018,.018,.08,6));
+  WH218.S.forEach((_,i)=>{const a=(i+.5)/WH218.S.length*6.2832,p=new THREE.Mesh(pg,pm);p.rotation.x=Math.PI/2;p.position.set(Math.sin(a)*R*.965,Math.cos(a)*R*.965,.04);w.add(p)});
+  const hub=new THREE.Mesh(WH218.hGeo||(WH218.hGeo=new THREE.CylinderGeometry(.09,.11,.08,10)),pm);hub.rotation.x=Math.PI/2;hub.position.z=.04;w.add(hub);
+  // the pointer: a leather flap hanging from the bracket at the top, its tip between two pegs
+  const f=new THREE.Group();f.position.set(x,y+R+.16,z+.1);root.add(f);WH218.flapG=f;
+  const lm=WH218.lMat||(WH218.lMat=new THREE.MeshLambertMaterial({color:0x6a2a14,emissive:0x1a0804}));const fl=new THREE.Mesh(WH218.lGeo||(WH218.lGeo=(()=>{const s=new THREE.Shape();s.moveTo(-.07,0);s.lineTo(.07,0);s.lineTo(0,-.24);s.lineTo(-.07,0);return new THREE.ShapeGeometry(s)})()),lm);
+  fl.material.side=THREE.DoubleSide;f.add(fl);const gm=new THREE.Mesh(WH218.gGeo||(WH218.gGeo=new THREE.SphereGeometry(.03,8,6)),pm);f.add(gm)}
+function wh218Seg(th){const n=WH218.S.length,A=6.2832/n;return ((Math.round(th/A)%n)+n)%n}
+// ---------------- the Four Roads: the board painted on the felt ----------------
+function rc218Board(){if(RC218.tex)return RC218.tex;const W=1024,H=704,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  // board space: x 2.5…4.4 → 0…W, z 2.28…3.58 → 0…H
+  const X=x=>(x-2.5)/1.9*W,Z=z=>(z-2.28)/1.3*H,D=CD213.D;
+  g.fillStyle='#0e1a12';g.fillRect(0,0,W,H);const V=g.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,W*.7);V.addColorStop(0,'rgba(40,70,50,.55)');V.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=V;g.fillRect(0,0,W,H);
+  cd213Grain(g,0,0,W,H,.1,21);g.strokeStyle='#c9a24a';g.lineWidth=6;cd213RR(g,6,6,W-12,H-12,16);g.stroke();
+  RC218.suits.forEach((k,j)=>{const zc=RC218.lz[j],y0=Z(zc-.145),y1=Z(zc+.145);
+    g.fillStyle=`rgba(${j%2?'255,240,200,.05':'0,0,0,.18'})`;g.fillRect(X(2.52),y0,X(4.38)-X(2.52),y1-y0);
+    g.strokeStyle='rgba(201,162,74,.5)';g.lineWidth=2;g.beginPath();g.moveTo(X(2.52),y1);g.lineTo(X(4.38),y1);g.stroke();
+    for(let s=0;s<RC218.goal;s++){const xc=RC218.x0+RC218.dx*(s+1);g.strokeStyle='rgba(240,212,138,.35)';g.setLineDash([8,6]);cd213RR(g,X(xc-.1),Z(zc-.13),X(xc+.1)-X(xc-.1),Z(zc+.13)-Z(zc-.13),8);g.stroke();g.setLineDash([]);
+      g.fillStyle='rgba(240,212,138,.4)';g.font='700 30px Cinzel, Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.fillText(['I','II','III','IV','V'][s],X(xc),Z(zc))}});
+  // the gate at the end of the roads
+  const gx=X(RC218.x0+RC218.dx*(RC218.goal+1)-.12);g.fillStyle='rgba(255,200,90,.18)';g.fillRect(gx-10,Z(2.28),20,H);g.strokeStyle='#ffd24a';g.lineWidth=5;g.beginPath();g.moveTo(gx,14);g.lineTo(gx,H-14);g.stroke();
+  g.save();g.translate(gx+26,H/2);g.rotate(Math.PI/2);g.fillStyle='#ffd24a';g.font='700 34px Cinzel, Georgia, serif';g.textAlign='center';g.fillText('THE GATE',0,0);g.restore();
+  const t=new THREE.CanvasTexture(c);t.anisotropy=4;RC218.tex=t;return t}
+function rc218K(k){const [cx,cz]=RC218.c,wood=0x4a2e1c,woodD=0x2a1a10,gold=0xc9a24a;
+  k.as('wood',()=>{k.p('c',wood,'box',cx,.68,cz,2.34,.08,1.5,0,0,0,.03);k.p('c',woodD,'box',cx,.61,cz,2.2,.07,1.38,0,0,0,.02);
+    [[-1.02,-.6],[1.02,-.6],[-1.02,.6],[1.02,.6]].forEach(([u,v])=>k.L('c',woodD,[cx+u,0,cz+v],[cx+u,.64,cz+v],.06,'box'))});
+  k.p('m',gold,'box',cx,.7,cz,2.38,.03,1.54,0,0,0,0);k.as('board',()=>k.p('c',0x5a0e18,'box',RC218.deck[0],.76,RC218.deck[1],.22,.06,.32,0,0,0,0));
+  dc190Candle(k,cx+1.0,.74,cz-.62,.14);[[cx-1.0,cz-.62,4],[cx-.92,cz-.5,2]].forEach(([x,z,n])=>{for(let i=0;i<n;i++)k.p('m',0xd4a54c,'cyl8',x,.76+i*.022,z,.06,.012,.06,0,i*.4,0,0)})}
+function rc218Build(root){const l=DM196I.l,T=TOWNS[0];let k=null;if(!twHas('RC218TBL')){k=twKit(21802);rc218K(k)}root.add(twGroup(k,'RC218TBL'));
+  const bm=new THREE.MeshBasicMaterial({map:rc218Board(),color:0xd8d0c4});bm.userData.noFade135=1;const b=new THREE.Mesh(RC218.bGeo||(RC218.bGeo=new THREE.PlaneGeometry(1.9,1.3)),bm);
+  b.rotation.x=-Math.PI/2;b.position.set(3.45,.723,2.93);b.renderOrder=1;root.add(b);
+  // a face-up card at the head of each road (its suit)
+  RC218.heads=RC218.suits.map((s,j)=>{const m=cd213CardMesh();m.scale.setScalar(.56);m.userData.face.material.map=cd213Can(s);m.userData.face.material.needsUpdate=true;m.position.set(RC218.x0,.732,RC218.lz[j]);root.add(m);return m});
+  // Odile, the dealer, behind the table facing the room
+  {const [nx,nz]=gm218L(RC218.c[0],RC218.c[1]-1.22),ng=new THREE.Group(),prev=T_cur,nc=[];T_cur={col:nc,cx:0,cy:0};
+    try{npc(ng,nx,nz,{robe:0x1e3a2a,trim:0xc9a24a,label:'Odile · Race Dealer',ry:l.ry,fkSp:'doe',fkOut:'cit'})}finally{T_cur=prev}ng.position.y=GH(nx,nz);scene.add(ng);RC218.dealer=ng;RC218.rig=ng.children[0]||null}}
+function gm218Build(){try{const l=DM196I.l;if(!l||typeof TOWNS=='undefined'||typeof CD213=='undefined')return;const T=TOWNS[0];
+  if(GM218.root)scene.remove(GM218.root);if(RC218.dealer&&RC218.dealer.parent)RC218.dealer.parent.remove(RC218.dealer);RC218.heads.forEach(m=>{m.userData.face.material.dispose();m.userData.back.material.dispose()});
+  (WH218.wheel?WH218.wheel.children:[]).forEach(m=>{if(m.material&&m.material.map===WH218.tex)m.material.dispose()});
+  const root=new THREE.Group(),[ox,oz]=gm218L(0,0);root.position.set(ox,T.ph,oz);root.rotation.y=l.ry;root.name='gm218';root.userData.lpsSkip=1;scene.add(root);GM218.root=root;
+  wh218Build(root);rc218Build(root);
+  const C=[];[[RC218.c[0]-.75,RC218.c[1]],[RC218.c[0],RC218.c[1]],[RC218.c[0]+.75,RC218.c[1]]].forEach(([x,z])=>{const [X,Z]=gm218L(x,z);C.push({x:X,z:Z,r:.72})});
+  {const [X,Z]=gm218L(RC218.c[0],RC218.c[1]-1.22);C.push({x:X,z:Z,r:.32})}
+  kfColSet109(GM218.col,C);DM196S.col=(DM196S.col||[]).filter(c=>GM218.col.indexOf(c)<0).concat(GM218.col)}catch(err){console.warn('v218 games',err)}}
+{const f=dm196InnBuild;dm196InnBuild=function(){const r=f.apply(this,arguments);gm218Build();return r}}
+gm218Build();
+// Odile's dealing arm, set the way Corvin's is (3850): the idle pauses while she poses and her bones go back exactly after
+{const f=idlNpc;idlNpc=function(g,now){if(!RC218.rig||g!==RC218.rig||!g.bones)return f.apply(this,arguments);
+  const b=g.bones,v=Math.max(0,Math.min(1,RC218.arm||0));
+  if(v>0){if(!RC218.S0){RC218.S0={};CD213B.forEach(n=>{if(b[n])RC218.S0[n]=b[n].rotation.clone()})}const P=CD213P[RC218.armK||'reach']||CD213P.reach;
+    CD213B.forEach(n=>{const o=b[n],B=RC218.S0[n];if(!o||!B)return;const d=P[n]||[0,0,0];o.rotation.set(B.x+d[0]*v,B.y+d[1]*v,B.z+d[2]*v)});return}
+  if(RC218.S0){CD213B.forEach(n=>{if(b[n]&&RC218.S0[n])b[n].rotation.copy(RC218.S0[n])});RC218.S0=null}
+  return f.apply(this,arguments)}}
+// ---------------- words over a game (the plaque and the dealer's line; 3850's canvas sprites) ----------------
+function gm218Plaque(key,L,pos,w){const o=GM218.plq=GM218.plq||{};cd213Drop(o[key]);o[key]=null;if(!L||!GM218.root)return;const sp=cd213Sprite(cd213Text(L,620,L.length*75),w||.84);sp.position.set(...pos);GM218.root.add(sp);o[key]=sp;
+  const t0=nowP(),y0=pos[1];kqFx({tick(){if(o[key]!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=Math.min(1,a*4);sp.position.y=y0+Math.min(.05,a*.2);return true}})}
+function gm218Say(key,t,pos,sc){try{const o=GM218.bub=GM218.bub||{};cd213Drop(o[key]);o[key]=null;if(!t||!GM218.root)return;const w=Math.min(900,90+t.length*15),sp=cd213Sprite(cd213Text([{t:'“'+t+'”',f:'italic 600 26px Cinzel, Georgia, serif',c:'#f0e2c0'}],w,70),(sc||.0016)*w);
+  sp.position.set(...pos);GM218.root.add(sp);o[key]=sp;const t0=nowP();
+  kqFx({tick(){if(o[key]!==sp)return false;const a=(nowP()-t0)/1000;sp.material.opacity=a<.2?a*5:a>3.6?Math.max(0,1-(a-3.6)*2.5):1;if(a>4.1){cd213Drop(sp);o[key]=null;return false}return true}})}catch(_){}}
+function gm218Pick(L,name){const t=L[Math.floor(Math.random()*L.length)];return name?t.replace('%s',name):t}
+function gm218W(x,y,z){const [X,Z]=gm218L(x,z);return new THREE.Vector3(X,TOWNS[0].ph+y,Z)}
+// a win's light and coins at a game: tier 1 small … 3 the big one
+function gm218Win(p,tier,col){try{col=col||0xffd24a;burst(p,col,10+tier*10,1.2+tier*.5,1.4+tier*.4,.6);if(tier>=2){ring(p.clone().setY(p.y-.05),col,1.2+tier*.5,450);kqFlash(p,0xffe0a0,.9+tier*.3,260)}
+  if(tier>=3){burst(p,0xff7a2a,40,3,3,1);kqFlash(p,0xffd890,2.2,450);try{flash('rgba(255,190,80,.2)')}catch(_){}try{if(!(typeof MPV!='undefined'&&MPV.rep)&&SET.shake!==false)shake(.15)}catch(_){}
+    setTimeout(()=>{try{ring(p,0xffd24a,3,600);burst(p,0xffd24a,26,2.4,3,.8)}catch(_){}},420)}}catch(_){}}
+// ---------------- the Ember Wheel: a spin (relayed: a partner's wheel turns the same way) ----------------
+// i: the segment that comes up, n: whole turns, th0: the angle it starts from, dur: seconds, jit: where in the segment it stops (-.35….35)
+function wh218Show(i,n,th0,dur,jit){try{if(!WH218.wheel)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&WH218.busy)return;i=(i|0)%WH218.S.length;n=Math.max(2,Math.min(8,n|0));dur=Math.max(3,Math.min(9,+dur||6.5));jit=Math.max(-.35,Math.min(.35,+jit||0));
+  if(WH218.fx)WH218.fx.dead=1;gm218Plaque('wh',null);const A=6.2832/WH218.S.length,a0=+th0||0,base=a0-(a0%6.2832+6.2832)%6.2832,th1=base+6.2832*n+(i+jit)*A,w=WH218.wheel;
+  let t=0,last=Math.floor((a0+A/2)/A);const o={tick(dt){if(o.dead)return false;t+=dt;const k=Math.min(1,t/dur),e=1-Math.pow(1-k,4);WH218.th=a0+(th1-a0)*e;w.rotation.z=WH218.th;
+      const pg=Math.floor((WH218.th+A/2)/A);if(pg!==last){last=pg;WH218.flap=Math.min(1,WH218.flap+.8);wh218Snd('tick',rep?.4:1)}
+      WH218.flap*=Math.pow(.0005,dt);if(WH218.flapG)WH218.flapG.rotation.z=-WH218.flap*.55;
+      if(k>=1){if(!o.done){o.done=1;if(WH218.flapG)WH218.flapG.rotation.z=0;try{o.end2&&o.end2()}catch(_){}wh218Result(i,o.pay)}return false}return true}};
+  WH218.fx=o;kqFx(o);return o}catch(err){if(!GM218.err++)console.warn('v218 wheel',err)}}
+// the end of a spin on every screen: the symbol named on a plaque in front of the wheel, a light for a win (pay: what the player won)
+function wh218Result(i,pay){try{const k=WH218.S[i],D=CD213.D,m=WH218.M[k],[x,y,z]=WH218.c,p=gm218W(x,y+WH218.R,z+.2);
+  const L=[{t:D[k].n.toUpperCase()+'  ·  '+m+' : 1',f:'700 32px Cinzel, Georgia, serif',c:k==='crown'?'#ffb070':'#ffe2a0'}];
+  if(pay!=null)L.push(pay>0?{t:'+'+pay+' gold',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}:{t:'the wheel keeps your stakes',f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'});
+  gm218Plaque('wh',L,[x+1.8,y-.35,z+.6],1.4);burst(p,0xffd24a,6,.6,.8,.4);
+  if(pay>0||k==='crown'&&pay==null)gm218Win(gm218W(x,y,z+.3),k==='crown'?3:m>=5?2:1,k==='crown'?0xff8a3a:0xffd24a);if(k==='crown')wh218Snd('crown',typeof MPV!='undefined'&&MPV.rep>0?.5:1)}catch(err){if(!GM218.err++)console.warn('v218 wheel result',err)}}
+function wh218Stake(){return WH218.keys.reduce((s,k)=>s+WH218.st[k],0)}
+function wh218Add(k){if(WH218.busy||!WH218.st.hasOwnProperty(k))return;const c=WH218.chip;if(wh218Stake()+c>gold){gm218Say('wh','Your purse can’t cover that chip.',[WH218.c[0]-1.95,2.9,WH218.c[2]+.6],.0024);return}if(WH218.st[k]+c>1000)return;WH218.st[k]+=c;wh218Snd('chip');gm218Render()}
+function wh218Clear(){if(WH218.busy)return;WH218.keys.forEach(k=>WH218.st[k]=0);gm218Render()}
+function wh218Spin(){if(WH218.busy)return;const tot=wh218Stake();if(!tot){gm218Say('wh','Put a chip on a symbol first.',[WH218.c[0]-1.95,2.9,WH218.c[2]+.6],.0024);return}if(gold<tot){gm218Say('wh','Your purse is lighter than your stakes.',[WH218.c[0]-1.95,2.9,WH218.c[2]+.6],.0024);return}
+  gold-=tot;const i=Math.floor(Math.random()*WH218.S.length),k=WH218.S[i],st=Object.assign({},WH218.st),win=st[k]?st[k]*(WH218.M[k]+1):0;WH218.busy=true;WH218.res=null;WH218.stat.n++;WH218.stat.bet+=tot;
+  try{hud()}catch(_){}gm218Render();const o=wh218Show(i,4+Math.floor(Math.random()*3),WH218.th,6+Math.random()*1.5,(Math.random()-.5)*.7);
+  const fin=()=>{WH218.busy=false;gold+=win;WH218.stat.won+=win;WH218.res={i,k,win,bet:tot,st};if(o)o.pay=win;
+    wh218Snd(win>0?(k==='crown'?'none':'win'):'lose');gm218Say('wh',gm218Pick(win>0?(k==='crown'?WH218.say.big:WH218.say.win):WH218.say.lose),[WH218.c[0]-1.95,2.9,WH218.c[2]+.6],.0024);
+    if(win>0)try{say('🎡 Ember Wheel: '+CD213.D[k].n+' ('+WH218.M[k]+':1) — you win '+win+' gold.')}catch(_){}
+    if(gold<wh218Stake())wh218Clear();try{hud()}catch(_){}gm218Render()};
+  if(o)o.end2=fin;else{fin();wh218Result(i,win)}}
+// ---------------- the Four Roads: a race (relayed: a partner sees the same cards run the same roads) ----------------
+// seq: the suits in the order the cards come out (indices into RC218.suits) up to the winning card; pick: the player's suit (-1 = none)
+function rc218Seq(){const d=[];for(let s=0;s<4;s++)for(let i=0;i<RC218.per;i++)d.push(s);for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),t=d[i];d[i]=d[j];d[j]=t}
+  const c=[0,0,0,0],out=[];for(const s of d){out.push(s);if(++c[s]>=RC218.goal)break}return out}
+function rc218Count(seq){const c=[0,0,0,0];seq.forEach(s=>c[s]++);const w=seq[seq.length-1],rout=Math.max(...c.filter((v,j)=>j!==w))<=2;return {c,w,rout}}
+function rc218Clear(){if(RC218.fx){RC218.fx.dead=1;RC218.fx=null}RC218.lay.forEach(m=>{if(m.parent)m.parent.remove(m);m.userData.face.material.dispose();m.userData.back.material.dispose()});RC218.lay=[];
+  RC218.glow.forEach(m=>{if(m.parent)m.parent.remove(m);m.material.dispose()});RC218.glow=[];gm218Plaque('rc',null)}
+function rc218Lane(j,col,op){const g=new THREE.Mesh(RC218.gGeo||(RC218.gGeo=new THREE.PlaneGeometry(1.86,.29)),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:op}));
+  g.material.userData.noFade135=1;g.rotation.x=-Math.PI/2;g.position.set(3.45,.726,RC218.lz[j]);g.renderOrder=2;GM218.root.add(g);RC218.glow.push(g);return g}
+function rc218Show(seq,pick,bet){try{if(!GM218.root||!Array.isArray(seq)||!seq.length||seq.length>40)return;const rep=typeof MPV!='undefined'&&MPV.rep>0;if(rep&&RC218.busy)return;
+  seq=seq.map(s=>Math.max(0,Math.min(3,s|0)));pick=pick==null||rep?-1:pick|0; // a partner's replay names no pick of theirs
+  bet=+bet||0;rc218Clear();const R=GM218.root,T=RC218.T,L=[],cnt=[0,0,0,0],[dx0,dz0]=RC218.deck;
+  if(pick>=0)rc218Lane(pick,0x8ac8ff,.16);
+  seq.forEach((s,i)=>{const m=cd213CardMesh();m.scale.setScalar(.56);m.userData.face.material.map=cd213Can(RC218.suits[s]);m.userData.face.material.needsUpdate=true;m.userData.f.rotation.z=Math.PI;
+    m.position.set(dx0,.8,dz0);m.visible=false;m.userData.slot=[RC218.x0+RC218.dx*(cnt[s]+1),RC218.lz[s]];cnt[s]++;m.userData.n=cnt[s];m.userData.s=s;R.add(m);L.push(m)});RC218.lay=L;
+  const tEnd=seq.length*T.gap+T.fly+.2;let t=0,said4=false;
+  const o={tick(dt){if(o.dead)return false;t+=dt;
+      for(let i=0;i<L.length;i++){const m=L[i],t0=i*T.gap,k=Math.max(0,Math.min(1,(t-t0)/T.fly));m.visible=t>=t0;if(!m.visible)continue;const [sx,sz]=m.userData.slot,e=haIO(k);
+        m.position.set(dx0+(sx-dx0)*e,.74+.06*(1-e)+Math.sin(k*Math.PI)*.16+.001*m.userData.n,dz0+(sz-dz0)*e);m.userData.f.rotation.z=Math.PI*(1-haIO(Math.min(1,k*1.25)));m.rotation.y=(1-e)*.5;
+        if(!m.userData.dl){m.userData.dl=1;cd213Snd('flip',rep?.5:1)}
+        if(k>=1&&!m.userData.ld){m.userData.ld=1;if(m.userData.n===RC218.goal-1&&!said4&&i<L.length-1){said4=true;rc218Say(gm218Pick(RC218.say.near,CD213.D[RC218.suits[m.userData.s]].n))}}}
+      const u=(t%T.gap)/T.gap;RC218.armK='reach';RC218.arm=t<seq.length*T.gap?Math.sin(Math.min(1,u*1.6)*Math.PI)*.8:0;
+      if(t>=tEnd){if(!o.done){o.done=1;RC218.arm=0;try{o.end2&&o.end2()}catch(_){}rc218Result(seq,pick,bet)}return false}return true},end(){RC218.arm=0}};
+  RC218.fx=o;kqFx(o);return o}catch(err){if(!GM218.err++)console.warn('v218 race',err)}}
+function rc218Say(t){gm218Say('rc',t,[RC218.c[0]-.75,2.0,RC218.c[1]-1.15],.0019)}
+function rc218Pay(seq,pick){const r=rc218Count(seq);return pick===r.w?(r.rout?RC218.rout:RC218.pay):0}
+function rc218Result(seq,pick,bet){try{const r=rc218Count(seq),D=CD213.D,nm=D[RC218.suits[r.w]].n,m=rc218Pay(seq,pick),win=Math.floor(bet*m);
+  rc218Lane(r.w,0xffc040,.0);const g=RC218.glow[RC218.glow.length-1],t0=nowP();kqFx({tick(){if(!g.parent)return false;const a=(nowP()-t0)/1000;g.material.opacity=Math.min(.45,a*1.5)*(.75+.25*Math.sin(a*5));return true}});
+  const L=[{t:nm.toUpperCase()+(r.rout?' — A ROUT!':' TAKES THE GATE'),f:'700 30px Cinzel, Georgia, serif',c:'#ffe2a0'}];
+  if(pick>=0)L.push(m>0?{t:'+'+win+' gold   (×'+m+')',f:'700 40px Cinzel, Georgia, serif',c:'#ffd24a'}:{t:'your '+D[RC218.suits[pick]].n.replace('The ','')+' falls short',f:'600 26px Cinzel, Georgia, serif',c:'#8a8278'});
+  gm218Plaque('rc',L,[RC218.c[0]+.15,1.0,RC218.c[1]-.8],.95);RC218.armK='open';rc218Gest(m>0?'open':'sweep');
+  rc218Say(gm218Pick(pick<0?RC218.say.win:m>0?(r.rout?RC218.say.rout:RC218.say.win):RC218.say.lose,nm));
+  if(m>0)gm218Win(gm218W(RC218.x0+RC218.dx*RC218.goal,.85,RC218.lz[r.w]),r.rout?3:2)}catch(err){if(!GM218.err++)console.warn('v218 race result',err)}}
+function rc218Gest(k){const t0=nowP(),ms=k==='open'?1100:900;RC218.armK=k;kqFx({tick(){if(RC218.busy&&RC218.armK!==k)return false;const a=(nowP()-t0)/ms;if(a>=1){if(RC218.armK===k)RC218.arm=0;return false}RC218.armK=k;RC218.arm=Math.sin(Math.min(1,a)*Math.PI);return true}})}
+function rc218Deal(){if(RC218.busy)return;const b=RC218.bet,p=RC218.pick;if(gold<b){rc218Say('Your purse is lighter than your courage.');return}
+  gold-=b;const seq=rc218Seq(),m=rc218Pay(seq,p),win=Math.floor(b*m);RC218.busy=true;RC218.res=null;RC218.stat.n++;RC218.stat.bet+=b;try{hud()}catch(_){}gm218Render();
+  if(Math.random()<.4)rc218Say(gm218Pick(RC218.say.deal));const o=rc218Show(seq,p,b);
+  const fin=()=>{RC218.busy=false;gold+=win;RC218.stat.won+=win;const r=rc218Count(seq);RC218.res={seq,pick:p,win,bet:b,w:r.w,rout:r.rout};
+    cd213Snd(m>0?(r.rout?'jack':'win'):'lose');if(win>0)try{say('🃏 Four Roads: '+CD213.D[RC218.suits[r.w]].n+(r.rout?' won by a rout':' took the gate')+' — you win '+win+' gold.')}catch(_){}
+    try{hud()}catch(_){}gm218Render()};
+  if(o)o.end2=fin;else{fin();rc218Result(seq,p,b)}}
+(function(){if(typeof MPV=='undefined'||!MPV.FX||typeof MPV_FX=='undefined')return;
+  ['wh218Show','rc218Show'].forEach(n=>{const f=window[n];if(typeof f!='function')return;if(MPV_FX[n]==null){MPV_FX[n]=MPV.FX.length;MPV.FX.push(n)}
+    window[n]=function(){if(MPV.dep||MPV.rep||!mpvLive())return f.apply(this,arguments);
+      let a=null;try{a=Array.prototype.map.call(arguments,x=>mpvSer(x,0))}catch(_){a=null}
+      if(a)mpvPush(['V',MPV_FX[n],mpvR(pl.position.x),mpvR(pl.position.y),mpvR(pl.position.z),mpvR(pl.rotation.y),a]);
+      MPV.dep++;try{return f.apply(this,arguments)}finally{MPV.dep--}}})})();
+// ---------------- sitting down, the panel, the keys ----------------
+function gm218Near(id){if(GM218.cur||CD213.open)return false;try{if(!DM196I.l)return false;const G=GM218.G[id],[sx,sz]=gm218L(...G.stand);return Math.hypot(pl.position.x-sx,pl.position.z-sz)<G.r&&townAt(pl.position.x,pl.position.z,0)===0}catch(_){return false}}
+function gm218Open(id){const l=DM196I.l,G=GM218.G[id];if(!l||!G||GM218.cur||CD213.open)return;const [sx,sz]=gm218L(...G.stand);pl.position.x=sx;pl.position.z=sz;pl.rotation.y=l.ry+G.face;
+  GM218.cur=id;GM218.camK=0;GM218.plVis=pl.visible;pl.visible=false;gm218Panel().classList.remove('hide');gm218Render();try{GD213&&gd213Up()}catch(_){}
+  if(id==='race')rc218Say(gm218Pick(RC218.say.deal))}
+function gm218Close(){if(!GM218.cur)return;GM218.cur=null;pl.visible=GM218.plVis!==false;const w=$('gm218w');if(w)w.classList.add('hide')}
+function gm218Panel(){let w=$('gm218w');if(w)return w;w=document.createElement('div');w.id='gm218w';w.className='hide';
+  w.innerHTML=`<div class="win"><div class="wh"><h2 id="gm218T"></h2><span class="wsub" id="gm218S"></span><button class="x" id="gm218X" title="Leave (Esc)">✕</button></div><div class="wb" id="gm218B"></div></div>`;
+  ($('stage')||document.body).appendChild(w);w.addEventListener('pointerdown',e=>e.stopPropagation());
+  w.addEventListener('click',e=>{const b=e.target.closest('[data-gc],[data-gs],[data-gw],[data-gp],[data-gb],[data-ga],#gm218X');if(!b||b.disabled)return;if(b.id==='gm218X'){gm218Close();return}const d=b.dataset;
+    if(d.gc){WH218.chip=+d.gc;gm218Render()}else if(d.gs)wh218Add(d.gs);else if(d.gw)(d.gw==='clear'?wh218Clear():wh218Spin());
+    else if(d.gp){if(!RC218.busy){RC218.pick=+d.gp;gm218Render()}}else if(d.gb){if(!RC218.busy){RC218.bet=+d.gb;gm218Render()}}else if(d.ga)rc218Deal()});return w}
+function gm218Render(){if(!GM218.cur)return;gm218Panel();const D=CD213.D,chips=(on,attr,busy)=>GM218.chips.map(c=>`<button class="cd213b${c===on?' on':''}" ${attr}="${c}" ${busy?'disabled':''}>${c} 🪙</button>`).join('');
+  if(GM218.cur==='wheel'){$('gm218T').textContent='🎡 The Ember Wheel';$('gm218S').textContent='1–5 add a chip · Space spins · Backspace clears · Esc leaves';const tot=wh218Stake(),n=WH218.S.length;
+    const syms=WH218.keys.map((k,i)=>{const c=WH218.S.filter(x=>x===k).length;return `<button class="gm218s${WH218.st[k]?' on':''}" data-gs="${k}" ${WH218.busy?'disabled':''} title="${D[k].n}: ${c} of ${n} segments, pays ${WH218.M[k]}:1"><img src="${cd213Url(k)}"><b>${WH218.M[k]}:1</b><i>${c}/${n}</i><u>${WH218.st[k]?WH218.st[k]+' 🪙':'—'}</u><kbd>${i+1}</kbd></button>`}).join('');
+    $('gm218B').innerHTML=`<div class="cd213ctl"><span class="mut">Chip</span>${chips(WH218.chip,'data-gc',WH218.busy)}<button class="cd213d" data-gw="spin" ${WH218.busy||!tot||gold<tot?'disabled':''}>${WH218.busy?'Spinning…':'Spin · '+tot+' 🪙'}</button><button class="cd213b" data-gw="clear" ${WH218.busy||!tot?'disabled':''}>Clear</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
+      <div class="gm218g">${syms}</div><div class="mut cd213pn">Chips on any symbols. Where the pointer stops pays its number : 1 (your chips back too). Stakes stay on.</div>`}
+  else{$('gm218T').textContent='🃏 The Four Roads';$('gm218S').textContent='1–4 pick a suit · Space / Enter deal · Esc leaves';
+    const su=RC218.suits.map((k,i)=>`<button class="gm218s${RC218.pick===i?' on':''}" data-gp="${i}" ${RC218.busy?'disabled':''} title="${D[k].n}"><img src="${cd213Url(k)}"><b>${D[k].n.replace('The ','')}</b><i>1 in 4</i><kbd>${i+1}</kbd></button>`).join('');
+    $('gm218B').innerHTML=`<div class="cd213ctl"><span class="mut">Bet</span>${chips(RC218.bet,'data-gb',RC218.busy)}<button class="cd213d" data-ga="1" ${RC218.busy||gold<RC218.bet?'disabled':''}>${RC218.busy?'The roads are run…':'Deal · '+RC218.bet+' 🪙 on '+D[RC218.suits[RC218.pick]].n}</button><span class="cd213gold">Purse 🪙 ${gold}</span></div>
+      <div class="gm218g">${su}</div><div class="mut cd213pn">Odile turns cards from a deck of these four suits; each goes on its suit’s road. First road to ${RC218.goal} cards reaches the gate. Your suit wins: ×${RC218.pay} back. Wins by a rout (no other road past 2): ×${RC218.rout}.</div>`}}
+addEventListener('keydown',e=>{if(!GM218.cur)return;const k=String(e.key||'').toLowerCase();if(e.ctrlKey||e.metaKey||e.altKey)return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
+  if(k==='escape'){gm218Close();return}
+  if(GM218.cur==='wheel'){if(k===' '||k==='enter')wh218Spin();else if(k==='backspace'||k==='delete')wh218Clear();else if(k>='1'&&k<='5')wh218Add(WH218.keys[+k-1])}
+  else{if(k===' '||k==='enter')rc218Deal();else if(k>='1'&&k<='4'&&!RC218.busy){RC218.pick=+k-1;gm218Render()}}},true);
+addEventListener('keyup',e=>{if(GM218.cur)e.stopImmediatePropagation()},true);
+{const f=swing;swing=function(){if(GM218.cur)return;return f.apply(this,arguments)}}
+function gm218Cam(dt){const l=DM196I.l,T=TOWNS[0],G=GM218.G[GM218.cur];if(!l||!G)return;GM218.camK=Math.min(1,(GM218.camK||0)+dt*2.2);const e=haIO(GM218.camK),C=G.cv,[px,pz]=gm218L(C[0],C[2]),[lx,lz]=gm218L(C[3],C[5]);
+  const P=new THREE.Vector3(px,T.ph+C[1],pz),Lk=new THREE.Vector3(lx,T.ph+C[4],lz);cam.position.lerp(P,e);look.lerp(Lk,e);cam.lookAt(look);cam.updateMatrixWorld();try{FADE.cam.value.copy(cam.position)}catch(_){}}
+{const s=document.createElement('style');s.textContent=`
+#gm218w{position:absolute;left:0;right:0;bottom:6px;z-index:6;display:flex;justify-content:center;pointer-events:none}#gm218w.hide{display:none}
+#gm218w .win{pointer-events:auto;width:min(720px,98%);max-height:34vh;overflow:auto}#gm218w .wb{padding:6px 10px}
+.gm218g{display:flex;gap:6px;justify-content:center;margin-top:7px;flex-wrap:wrap}
+.gm218s{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;column-gap:6px;align-items:center;padding:4px 8px!important;position:relative;min-width:92px}
+.gm218s img{grid-row:1/4;width:30px;height:45px;border-radius:3px}.gm218s b{color:#f0d48a;font-size:.78rem}.gm218s i{font-style:normal;font-size:.62rem;color:#b8a888}.gm218s u{text-decoration:none;font-size:.7rem;color:#fff0c8}
+.gm218s kbd{position:absolute;top:2px;right:4px;font-size:.55rem;color:#8a7a5a}.gm218s.on{box-shadow:0 0 0 1px #ffd24a,0 0 8px rgba(255,210,74,.4);color:#ffe8a8}
+body.mob .gm218s img{width:22px;height:33px}body.mob .gm218s{min-width:70px}`;document.head.appendChild(s)}
+// the walk-up prompts
+{const f=townPortalPrompt;townPortalPrompt=function(T){try{if(T&&T===TOWNS[0]){for(const id of ['wheel','race'])if(gm218Near(id))return {label:GM218.G[id].label,fn:()=>gm218Open(id)}}}catch(_){}return f.apply(this,arguments)}}
+// per frame: the seat camera; leave if pulled away; the race's cards go away a while after
+{const f=townTick;townTick=function(now,pp){const r=f.apply(this,arguments);try{if(GM218.cur){const n=nowP(),dt=Math.min(.05,(n-(GM218.camT||n))/1000);GM218.camT=n;gm218Cam(dt);
+      dp[0]=dp[1]=0;const [sx,sz]=gm218L(...GM218.G[GM218.cur].stand);if(Math.hypot(pl.position.x-sx,pl.position.z-sz)>1.2||hero.hp<=0||uiOpen())gm218Close()}else GM218.camT=null;
+    if(RC218.lay.length&&!RC218.busy&&GM218.cur!=='race'){RC218.idle=(RC218.idle||0)+1;if(RC218.idle>60*25){rc218Clear();RC218.idle=0}}else RC218.idle=0}catch(_){}return r}}
+// ---------------- sounds ----------------
+function wh218Snd(k,vol){try{if(typeof SET!='undefined'&&(SET.sfx===false||SET.sfxV!=null&&!(+SET.sfxV>0)))return;const a=typeof snd208Bus=='function'?snd208Bus():null;if(!a||a.state!='running')return;
+  const t0=a.currentTime;vol=vol||1;const T=(ty,f0,f1,at,dur,v,o)=>{o=Object.assign({},o||{},{dur,v});const t=t0+at,s=a.createOscillator();s.type=ty;s.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)s.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);const e=snd208V(a,s,o,t,vol);s.start(t);s.stop(e)},
+    N=(f0,f1,at,dur,v,o)=>{if(typeof NOISE=='undefined'||!NOISE)return;o=Object.assign({bp:f0},o||{},{dur,v,f1});const t=t0+at,s=a.createBufferSource();s.buffer=NOISE;s.loop=true;const e=snd208V(a,s,o,t,vol);s.start(t,Math.random()*.5);s.stop(e)};
+  ({tick:()=>{N(2200,1600,0,.03,.09,{q:2,atk:.001});T('square',900,500,0,.02,.012,{atk:.001})},chip:()=>{T('sine',2600,2600,0,.12,.03,{atk:.002});T('sine',3900,3900,.02,.1,.015,{atk:.002})},
+    win:()=>cd213Snd('win'),lose:()=>cd213Snd('lose'),crown:()=>cd213Snd('jack'),none:()=>{}})[k]?.()}catch(_){}}
+// ================= v219: the thrown weapon is the weapon in the hand; shuriken are shuriken (owner, Nov 10 2026) =================
+// Owner: "thrown weapons for assassin should match the equip model. shuriken also is attached to a knife model for some reason."
+//  1. Since v211 every throwing-knife throw launched the same plain dagger (3820 kn211Mesh), whatever the hero held. Now the thrown
+//     shot is a fresh copy of the held model: v89Wpn (the in-hand model, 1260, uniques 2480) is wrapped to remember which item it was
+//     built from (userData.kq218), and kn211Mesh(h) builds that same item again for hero h (the player, or a co-op partner's hero in
+//     2170, whose gear is built from the partner's own equipment, so partners see the right model with no new message field).
+//  2. Shuriken: Blackstar Shuriken (v137 'kn_star') was a kunai handle with a star stuck on its end, and Galecut Shuriken (the v78
+//     tier-4 knives) drew a plain dagger. Both are now a lone star held between the fingers (SH218), and a thrown star flies flat,
+//     spinning about its centre like a shuriken, instead of flipping end over end like a knife.
+var SH218={ys:-.09,R:.11,r:.032,spin:30,sc:1};
+function sh218Is(it){try{const t=it&&itT(it);return !!t&&t.wt=='knives'&&(t.v7=='kn_star'||/shuriken/i.test(t.n||''))}catch(_){return false}}
+// a four-point star (with a ground edge and a hub) centred at (0, SH218.ys, 0) in the kit's x-y plane
+function sh218Kit(k,edge,core,hub,gl){const P=[];for(let i=0;i<8;i++){const a=i/8*Math.PI*2,r=i%2?SH218.r:SH218.R;P.push([Math.sin(a)*r,Math.cos(a)*r])}
+  w7Blade(k,'sh218',P,.012,core,edge,0,SH218.ys,0,0,.01);
+  k.p('','cyl','m',hub,0,SH218.ys,0,.022,.018,.022,Math.PI/2);k.p('','cyl','c',0x101014,0,SH218.ys,0,.009,.02,.009,Math.PI/2);
+  if(gl)k.p('','cyl','g',gl,0,SH218.ys,0,.012,.02,.012,Math.PI/2)}
+W137.kn_star=(k,c)=>sh218Kit(k,0x6a6a74,0x1e1e24,c.fit,c.gl);
+// the plain shuriken: the base builder draws a dagger (lgWpnKit 'dagger'); while a shuriken item is being built it draws the star,
+// so the later layers (v178 grade colours, loose pieces) still run over it
+{const f=v89WpnKit;v89WpnKit=function(k,it){const o=SH218.cur;SH218.cur=sh218Is(it)?it:null;try{return f.apply(this,arguments)}finally{SH218.cur=o}}}
+{const f=lgWpnKit;lgWpnKit=function(k,type,col,r){const it=SH218.cur;if(it&&type=='dagger'){sh218Kit(k,lgCol(col,0xffffff,.25),lgCol(col,0,.45),LGW.iron2,(r|0)>=3?v89Rc(r|0):null);return}return f.apply(this,arguments)}}
+// v178's tier ornaments are measured for a grip and a blade (bands, pommel, collar): a star has neither, so its hub takes the tier
+// colour instead
+{const f=w176Kit;w176Kit=function(k,it){if(!sh218Is(it))return f.apply(this,arguments);try{const ti=Math.max(0,Math.min(4,itT(it).t|0));if(ti<1)return;
+  k.p('','cyl','m',W176.T[ti],0,SH218.ys,0,.03,.012,.03,Math.PI/2)}catch(_){}}}
+// the in-hand model remembers its item, so the throw can build the same thing
+{const f=v89Wpn;v89Wpn=function(it,type){const g=f.apply(this,arguments);try{if(g&&it&&it.tp!=null)g.userData.kq218={tp:it.tp,r:it.r|0,u:it.u,star:sh218Is(it)}}catch(_){}return g}}
+// the held item, and the size it is drawn at in the hand (the group's and its meshes' scale: the thrown copy flies at that size)
+function kn218Held(h){h=h||pl;const G=(h&&h.gearG)||[];for(const o of G)if(o&&o.userData&&o.userData.wt=='knives'&&o.userData.kq218){
+    let m=null;o.traverse(x=>{if(!m&&x.isMesh)m=x});const sc=o.scale.x*(m&&m!==o?m.scale.x:1);return Object.assign({},o.userData.kq218,{sc:sc>.05&&sc<4?sc:KN211.sc})}
+  return null}
+// kn211Mesh(h): +z is the flight; a pivot spins the model (a knife end over end about x, a star flat about y)
+{const f=kn211Mesh;kn211Mesh=function(h){let I=null;try{I=kn218Held(h)}catch(_){}if(!I)return f.apply(this,arguments);
+  let k=null;try{k=v89Wpn({tp:I.tp,r:I.r,u:I.u},'knives')}catch(_){}if(!k)return f.apply(this,arguments);
+  const out=new THREE.Group(),pv=new THREE.Group();k.rotation.x=-Math.PI/2;
+  if(I.star){k.position.z=SH218.ys;pv.scale.setScalar(I.sc*SH218.sc)}else{k.position.z=-.12;pv.scale.setScalar(I.sc)}
+  pv.add(k);out.add(pv);out.userData.lpsSkip=1;out.userData.kn211=1;out.userData.kn211pv=pv;out.userData.kn218=I.star?'star':'knife';
+  const t0=performance.now();let m=null;k.traverse(o=>{if(!m&&o.isMesh)m=o});
+  if(m)m.onBeforeRender=function(){const a=(performance.now()-t0)/1000;if(I.star)pv.rotation.y=-a*SH218.spin;else pv.rotation.x=a*KN211.spin};
+  return out}}
+// ================= v219: arrival cinematics open over the land, and the Dirge's has no long dark pauses (owner, Nov 10 2026) =================
+// Owner: "During the plains intro the beginning scene overlooks outside of the map" · "The opening to the dirge cinematic pans to
+// outside the map and had long pauses of darkness" · "The cinematic references argus as 'thousand-eyed' when it should be
+// 'hundred-eyed'" (the line itself is in 3800).
+//  1. The opening shot (Hillside Crest 3810 and the four zones of 3860) rose from behind the hero and looked 55 tiles ahead along
+//     the way the hero faced. A hero arrives at an instance's entrance near the map's edge, often facing out of it, so the camera
+//     looked out past the edge over the empty border. Now the shot faces into the instance, along its road (cin218Into),
+//     whatever way the hero faces, and rises a little less and looks down at the land CIN218.look tiles ahead (cin218Open).
+//  2. The dark pauses: each cut of 3860 shows things that were hidden until then (set pieces, stand-ins, the den's Sovereign and
+//     their lights). The first frame that draws them makes the browser build their shaders (and every shader again when the
+//     number of lights in view changes), a stall of a second or more on a slow machine; the stall landed on the short dip to
+//     black at the cut, so the screen sat black. Now every shot is drawn once while the cinematic sets up (cin218Warm, before the
+//     clock and the music start), so the shaders exist before the cuts; the den's approach is also lit sooner (CIN218.den).
+var CIN218={on:true,warm:true,den:1.2,ahead:40,rise:12,look:42};
+// the way into the instance the hero stands in (radians, as pl.rotation.y), or null: along its road (~CIN218.ahead tiles on from the
+// nearest point of the road: roads run through open land), else toward its middle
+function cin218Into(H){try{const I=insAt(Math.round(H.x),Math.round(H.z));if(!I||I.w==null||I.x0==null)return null;let y0=null;
+  const P=I.path;if(P&&P.length>4){let j=0,bd=1e9;P.forEach((q,n)=>{const d=Math.hypot(q[0]-H.x,q[1]-H.z);if(d<bd){bd=d;j=n}});
+    for(let n=j+1;n<P.length;n++){const dx=P[n][0]-H.x,dz=P[n][1]-H.z;if(Math.hypot(dx,dz)>=CIN218.ahead){y0=Math.atan2(dx,dz);break}}}
+  const cx=I.x0+I.w/2,cz=I.y0+I.h/2,yc=Math.hypot(cx-H.x,cz-H.z)<4?null:Math.atan2(cx-H.x,cz-H.z);if(y0==null)y0=yc;if(y0==null)return null;
+  // of a few ways round the road's, the most open one: no high ground close in front (a cliff filling the view), never off the instance
+  const h0=GH(H.x,H.z);let best=y0,bs=1e9;[0,.3,-.3,.6,-.6].map(d=>y0+d).concat(yc!=null?[yc]:[]).forEach((y,n)=>{let sc=n?3:0;
+    for(let d=8;d<=CIN218.look+6;d+=4){const x=H.x+Math.sin(y)*d,z=H.z+Math.cos(y)*d,J=insAt(Math.round(x),Math.round(z));if(!J||J.g!==I.g){sc+=60;continue}
+      sc+=Math.max(0,GH(x,z)-h0-2)*(1.4-d/(CIN218.look+10))}
+    if(sc<bs){bs=sc;best=y}});return best}catch(_){return null}}
+// the opening shot: up from behind the hero and over the land ahead, looking down at it (not out at the far horizon)
+function cin218Open(S,k){const V=THREE.Vector3,Io=ic151Io,Sm=ic151Sm,K=ic151K,H=S.H,fw=new V(Math.sin(S.yaw),0,Math.cos(S.yaw)),sd=new V(fw.z,0,-fw.x),q=Io(K(k,.3,1));
+  const p=H.clone().addScaledVector(fw,-3.1-.4*k+8*q).addScaledVector(sd,1.0-.5*q).add(new V(0,1.75+CIN218.rise*q,0));
+  const a=H.clone().addScaledVector(fw,6).add(new V(0,1.3,0)),fx=H.x+fw.x*CIN218.look,fz=H.z+fw.z*CIN218.look,b=new V(fx,GH(fx,fz)+2,fz);
+  return {p,l:a.lerp(b,Sm(K(k,.25,1))),fov:46+6*q,F:H}}
+{const f=hc208Cam;hc208Cam=function(S,i,k,t){if(CIN218.on&&i===0&&S&&S.H)try{return cin218Open(S,k)}catch(_){}return f.apply(this,arguments)}}
+{const f=zc214Cam;zc214Cam=function(S,i,k,t){if(CIN218.on&&i===0&&S&&S.H)try{return cin218Open(S,k)}catch(_){}return f.apply(this,arguments)}}
+{const f=hc208Build;hc208Build=function(){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}return S}}
+{const f=zc214Build;zc214Build=function(z){const S=f.apply(this,arguments);try{if(CIN218.on&&S&&S.H){const y=cin218Into(S.H);if(y!=null)S.yaw=y}}catch(_){}
+  try{if(CIN218.warm&&!CIN218.cap)cin218Warm(S)}catch(e){console.warn('v219 warm',e)}return S}}
+{const f=zc214Cap;zc214Cap=function(){CIN218.cap=1;try{return f.apply(this,arguments)}finally{CIN218.cap=0}}}
+// draw the middle of every shot once (nothing on screen yet: the page still shows the game's last frame), then back to t = 0
+function cin218Warm(S){const T=ZC214.T,ts=[];for(let i=0;i<T.length;i++)ts.push(i<T.length-1?(T[i]+T[i+1])/2:ZC214.rise[1]+.2);
+  const c0={p:cam.position.clone(),q:cam.quaternion.clone(),fov:cam.fov},ev=S.ev;S.ev={h0:1,sp:1,ro:1};const T0=performance.now();
+  try{ts.forEach(t=>{try{zc214Frame(S,t);if(typeof ren!='undefined'){ren.compile(scene,cam);ren.render(scene,cam)}}catch(e){console.warn('v219 warm shot',t,e)}})}
+  finally{S.ev=ev;S.lt=null;S.si=-1;try{zc214Frame(S,0)}catch(_){}S.lt=null;S.si=-1;cam.position.copy(c0.p);cam.quaternion.copy(c0.q);cam.fov=c0.fov;cam.updateProjectionMatrix()}
+  CIN218.ms=Math.round(performance.now()-T0)}
+// the den: its key light came up over the whole approach (27.0 → 30.1 s), so the first seconds of the shot were near black; now it
+// is up within CIN218.den seconds of the cut
+{const f=zc214Frame;zc214Frame=function(S,t){const r=f.apply(this,arguments);try{const T5=ZC214.T[5];if(CIN218.on&&S&&S.lgt&&t>=T5&&t<ZC214.cut){const d=S.Z.den;
+    if(d)S.lgt.intensity=Math.max(S.lgt.intensity,d[1]*ic151Sm(ic151K(t,T5,T5+CIN218.den)))}}catch(_){}return r}}
+// ================= v219: Burningeye Summit — fewer gate spiders worth 1 XP, a longer Rime Wraith song (owner, Nov 10 2026) =================
+// Owner: "reduce the amount of ice spiders by 25%" · "Reduce xp given by spiders to 1xp" · "Rime wraith song is too short- makes it
+// seem repetitive" (the frost gate's black bar: below).
+//  1. The Frozen Gate's ice spiders (3160): one spawn in four is left out (FG218.skip, a steady count, not a dice roll) and the most
+//     alive at once is 25% lower (MQ160.cap 32 → 24, co-op capC 40 → 30). Each gives 1 XP: v192's XP share (FS192.xp, 3510) is 0,
+//     and gainXP (0120) never gives less than 1. Loot stays as v192 left it.
+//  2. The Rime Wraith's fight song (z2x, 3890) was 8 chords played twice (A then B): 16 bars, ~26 s before it looped. It is now 16
+//     chords (the old 8, then VI iv V i · ii° VI V i) with each part twice as long: the choir's line climbs on to a high point and
+//     comes home in the second half, the celesta's falling shards run down the new chords. 32 bars, ~52 s a loop.
+var FG218={skip:4,n:0,capK:.75};
+FS192.xp=0;
+MQ160.cap=Math.round(MQ160.cap*FG218.capK);MQ160.capC=Math.round(MQ160.capC*FG218.capK);
+{const f=spawnEnemy;spawnEnemy=function(k,x,z,lv,o){try{if(k==='icespider'&&MQ160.E&&o&&o.agg&&lv===MQ160.lv&&FG218.skip>0&&(++FG218.n%FG218.skip)===0)return null}catch(_){}return f.apply(this,arguments)}}
+{const th=MTH.z2x;if(th){th.prog=[0,5,4,0,3,0,4,0, 5,3,4,0,1,5,4,0];const T=th.tune;delete T.on;
+  T.A='4,16|5,16|6,8 8,8|7,16|10,16|9,16|8,8 6,8|7,16|9,12 7,4|10,8 7,8|8,8 6,8|7,12 _,4|8,8 10,8|9,8 12,8|11,8 8,8|7,16';
+  T.B='7,2 4,2 2,2 0,2 7,2 4,2 2,2 0,2|9,2 7,2 5,2 2,2 9,2 7,2 5,2 2,2|8,2 6,2 4,2 1,2 8,2 6,2 4,2 1,2|7,4 4,4 0,8|10,2 7,2 5,2 3,2 10,2 7,2 5,2 3,2|9,2 7,2 4,2 2,2 9,2 7,2 4,2 2,2|8,2 6,2 4,2 1,2 6,8|7,16|'+
+    '12,2 9,2 7,2 5,2 12,2 9,2 7,2 5,2|10,2 7,2 5,2 3,2 10,2 7,2 5,2 3,2|11,2 8,2 6,2 4,2 11,2 8,2 6,2 4,2|7,4 4,4 0,8|8,2 5,2 3,2 1,2 8,2 5,2 3,2 1,2|12,2 9,2 7,2 5,2 9,2 7,2 5,2 2,2|8,2 6,2 4,2 1,2 6,8|7,16'}}
+// 3. The frost gate's black bar (owner: "Theres a black bar next to the gate still on frost gate in burning eye summit II"): the
+//    dark plane behind the gate's opening (3160 fs160Gate 'fg_v', the road beyond while the ice stands) ends up shifted half its width
+//    sideways and half its height down once the scene is running, so it stood beside the left pillar as a tall black slab. It is
+//    put back in the opening (FG218.vp) and kept there, a little narrower than the opening so its edges hide behind the pillars.
+FG218.vp=[0,3.35,-.6];FG218.vw=.93;
+function fg218Void(){const S=MQ160.S;if(!S||!S.gate||!S.gate.g)return;let v=S.gate.v219;
+  if(!v){S.gate.g.traverse(o=>{if(!v&&o.isMesh&&o.material&&o.material.isMeshBasicMaterial&&o.material.color&&o.material.color.getHex()===0x050608&&o.geometry&&o.geometry.type==='PlaneGeometry')v=o});if(!v)return;S.gate.v219=v}
+  const P=FG218.vp;if(v.position.x!==P[0]||v.position.y!==P[1]||v.position.z!==P[2]||v.scale.x!==FG218.vw){v.position.set(P[0],P[1],P[2]);v.rotation.set(0,0,0);v.scale.set(FG218.vw,1,1)}}
+{const f=mq160Build;mq160Build=function(){const S=f.apply(this,arguments);try{fg218Void()}catch(_){}return S}}
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(MQ160.S&&(FG218.t=(FG218.t||0)+dt)>.5){FG218.t=0;fg218Void()}}catch(_){}return r}}
+// ================= v219: Searing Sands II's temple court (owner, Nov 10 2026) =================
+// Owner: "The temple in searing sands 2 has no obvious entrance- and the correct entrance has dirt covering it and a black box in the
+// entrance. The sealed urns in there show a goo as the portrait- please fix. One of the urns also spawns inside a statue. The coffin
+// there also has floating discs- fix those. Also dont make the coffin transparent when the camera goes in it. Kheprit walks through
+// the coffin when you start the mission, and cultists also walk through it.. make it solid and people have to go around it. When
+// walking through the portal at the end of this mission you can see the bodies piled up that are only supposed to be visible when
+// you come back to the temple."
+//  * The urns (3282): a Sealed Urn is a hidden Sand Ooze carrying the urn model, so the target frame drew the ooze. The portrait is now
+//    the urn itself (TS218.urnPic). Urns that stood in a statue, an obelisk or a column of the court (3280 lays them out on a ring that
+//    crosses the statues' ring) are moved to the nearest clear spot (ts218Urns, at load, the same on every screen).
+//  * The altar ("the coffin", 3280 'CY165|altar'): its two offering bowls hung in the air beside the slab and its gold bands stuck out
+//    past its ends; the bowls now stand on posts on the top step, the bands run round the slab, the canopic jars sit on the step. It
+//    never turns see-through for the camera (noFade135), and the slab and the posts are solid for everyone (CBLK).
+//  * Kheprit walks from the altar to the rift stones round the dais, not across it (TS218.path, via rf165KhSpot).
+//  * The heaped dead (3283 rf165After) appear only once the hero has left the court: the rift used to show them the moment the
+//    hero stepped in (the state changes before the hero is moved).
+//  * The entrance: below (ts218Gate).
+var TS218={on:true,path:[[-3.2,4.9],[3.4,4.9],[7.6,2.6]],pick:.5,err:0};
+// ---------- the urns: clear of the statues, obelisks and columns ----------
+function ts218Obst(T){const O=[];
+  for(let k=0;k<6;k++){const ang=Math.PI/6+k*Math.PI/3;O.push([Math.cos(ang)*13.9,Math.sin(ang)*13.9,1.7])}
+  for(let k=0;k<4;k++){const ang=Math.PI/4+k*Math.PI/2;O.push([Math.cos(ang)*11.6,Math.sin(ang)*11.6,1.6])}
+  for(let i=0;i<28;i++){const ang=i/28*Math.PI*2;O.push([Math.cos(ang)*T.col,Math.sin(ang)*T.col,1.3])}
+  return O}
+function ts218Urns(){const T=ss165T2();if(!T||!T.urns||T.u218)return;T.u218=1;const O=ts218Obst(T),free=(a,b,i)=>Math.hypot(a,b)<T.R-1.6&&Math.hypot(a,b)>4.4&&Math.hypot(a-T.rift.a,b)>4.5&&
+    T.gates.every(g=>Math.hypot(a-g.a,b-g.b)>4.2)&&O.every(o=>Math.hypot(a-o[0],b-o[1])>o[2])&&T.urns.every((u,j)=>j===i||Math.hypot(u.a-a,u.b-b)>2.2);
+  T.urns.forEach((u,i)=>{if(O.every(o=>Math.hypot(u.a-o[0],u.b-o[1])>o[2]))return;
+    // the nearest clear spot: inward first, then round the ring
+    let best=null,bd=1e9;for(let r=.4;r<=4;r+=.4)for(let k=0;k<16;k++){const ang=k/16*Math.PI*2,a=u.a+Math.cos(ang)*r,b=u.b+Math.sin(ang)*r;if(!free(a,b,i))continue;const d=r+(Math.hypot(a,b)>Math.hypot(u.a,u.b)?.3:0);if(d<bd){bd=d;best=[a,b]}}
+    if(best){u.a=best[0];u.b=best[1];u.m218=1}})}
+try{ts218Urns()}catch(e){console.warn('v219 urns',e)}
+// the urn's portrait: the urn, not the hidden ooze
+{const f=setTarget;setTarget=function(e){const r=f.apply(this,arguments);try{if(TS218.on&&e&&e.kh165u!=null&&TPV.sc){if(TPV.m)TPV.sc.remove(TPV.m);
+    const g=new THREE.Group();g.add(kh165UrnModel(e.kh165u));g.rig=function(){};g.rotation.y=.55;g.updateMatrixWorld(true);TPV.sc.add(g);TPV.m=g;
+    const bb=new THREE.Box3().setFromObject(g),c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3()),q=Math.max(sz.x,sz.y,sz.z);
+    TPV.cam.position.set(c.x+q*.3,c.y+q*.32,c.z+q*1.45);TPV.cam.lookAt(c.x,c.y+sz.y*.06,c.z);portraitDraw(performance.now())}}catch(err){console.warn('v219 urn portrait',err)}return r}}
+// ---------- the altar ----------
+function ts218Altar(q){dt168Up(q);const T=ss165T2(),F=T.F,W2=F.W2,y0=T.y0,yw=F.yaw,sd=[0xc8a070,0xbc9464,0xd2ac7c,0xb08858],sdD=0x8a6a44,gl=0x2a1a0e,gold=0xd8a840,A=T.altar;
+  const [ax,az]=W2(A.a,A.b);
+  // the stepped dais (top at y0 + .9, its lining to .915)
+  [[6.8,.3],[5.6,.6],[4.4,.9]].forEach(([w,h],k)=>q.p('','box','c',k==1?sd[1]:sd[0],ax,y0+h-.15,az,w,.3,w,0,yw,0).p('','box','c',sdD,ax,y0+h+.005,az,w+.04,.02,w+.04,0,yw,0));
+  // the slab (long along the court's axis) and its cap
+  q.p('','box','c',sd[2],ax,y0+1.35,az,1.9,.9,3.8,0,yw,0).p('','box','c',sdD,ax,y0+1.82,az,2.1,.12,4.0,0,yw,0);
+  const fig=(aa,bb,w,l,ang)=>{const [x,z]=W2(A.a+aa,A.b+bb);q.p('','box','c',gl,x,y0+1.89,z,w,.02,l,0,yw+ang,0)};
+  fig(1.35,0,.42,.5,0);fig(.6,0,.6,.9,0);fig(-.55,0,.75,1.2,0);[-1,1].forEach(s=>{[.85,.55,.25].forEach((aa,k)=>fig(aa-.1,s*.62,.06,.9,s*(.9-k*.5)));fig(.95,s*.5,.06,.7,s*-.6)});
+  // canopic jars at the corners of the top step, standing on it
+  [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([a,b])=>{const [x,z]=W2(A.a+a*1.85,A.b+b*1.85);q.p('','cyl','c',0xd8c0a0,x,y0+1.165,z,.2,.5,.2).p('','sph','c',[0x6a5a3a,0x8a6a4a,0x5a4a3a,0x7a6a4a][(a+1)+(b+1)/2],x,y0+1.48,z,.17,.16,.17)});
+  // offering bowls of coals on posts beside the slab
+  [-1,1].forEach(s=>{const [x,z]=W2(A.a,A.b+s*1.55);q.p('','cyl','c',sdD,x,y0+1.215,z,.11,.6,.11).p('','cyl','c',sd[3],x,y0+.95,z,.2,.07,.2).p('','cyl','m',0x6a4a24,x,y0+1.565,z,.28,.1,.28).p('','sph','g',0xff8a3a,x,y0+1.62,z,.22,.06,.22);CY165.fires.push([x,y0+1.7,z])});
+  // gold bands round the slab, just under the cap: across each end, along each side
+  [-1,1].forEach(s=>{const [x,z]=W2(A.a+s*1.955,A.b);q.p('','box','m',gold,x,y0+1.62,z,1.9,.08,.02,0,yw,0)});
+  [-1,1].forEach(s=>{const [x,z]=W2(A.a,A.b+s*.955);q.p('','box','m',gold,x,y0+1.62,z,.02,.08,3.8,0,yw,0)})}
+{const f=dt168Group;dt168Group=function(key,build,W,mot){if(TS218.on&&key==='CY165|altar'){const g=f.call(this,key,ts218Altar,W,mot);
+    // never see-through: its own materials, kept out of the camera fade
+    try{g.traverse(o=>{if(o.isMesh&&o.material)o.material=ts218NoFade(o.material)})}catch(_){}
+    try{ts218Solid()}catch(e){console.warn('v219 altar solid',e)}return g}
+  return f.apply(this,arguments)}}
+// a copy of a shared material that the camera fade (2420 f135Patch) leaves alone: built fresh (the shared one's shader hook may
+// already carry the fade), with the v183 paint (3410) put back the way it is on the original (one copy per original)
+function ts218NoFade(o){const K=TS218.mats||(TS218.mats=new Map());if(K.has(o))return K.get(o);const m=o.clone(),P=THREE.Material.prototype;
+  if(Object.prototype.hasOwnProperty.call(m,'onBeforeCompile'))delete m.onBeforeCompile;if(Object.prototype.hasOwnProperty.call(m,'customProgramCacheKey'))delete m.customProgramCacheKey;
+  if(o.defines)m.defines=JSON.parse(JSON.stringify(o.defines));m.userData=Object.assign({},o.userData,{noFade135:1});
+  try{if(typeof ep183Hook=='function'&&o.defines&&o.defines.ENVDET!==undefined)ep183Hook(m)}catch(_){}m.needsUpdate=true;K.set(o,m);return m}
+// the slab and the bowls' posts are solid (a rectangle along the slab, tiles whose middle lies inside it)
+function ts218Solid(){const T=ss165T2(),F=T.F,A=T.altar,[cx,cz]=F.W2(A.a,A.b),ha=2.35,hb=1.85;
+  for(let j=Math.floor(cz-4);j<=cz+4;j++)for(let i=Math.floor(cx-4);i<=cx+4;i++){const dx=i-cx,dz=j-cz,a=dx*F.fx+dz*F.fz,b=dx*F.lx+dz*F.lz;if(Math.abs(a)<=ha&&Math.abs(b)<=hb)CBLK.add(j*W+i)}
+  // the court's wall is solid all round (it was only drawn: a hero could walk in through it anywhere); the way in is the road's gate
+  const RW=T.R+.9,G0=T.gates[0];for(let j=Math.floor(F.z-RW-2);j<=F.z+RW+2;j++)for(let i=Math.floor(F.x-RW-2);i<=F.x+RW+2;i++){const [a,b]=F.L2(i,j),d=Math.hypot(a,b);
+    if(Math.abs(d-RW)>.75)continue;if(Math.abs(b-G0.b)<1.45&&a<0)continue;CBLK.add(j*W+i)}}
+// ---------- Kheprit goes round the dais to the rift stones ----------
+// while he walks (RF165.E set, not yet channelling) rf165KhSpot gives the next corner of TS218.path (on the side he starts from),
+// then the stones; a corner counts as reached within TS218.pick
+{const f=rf165KhSpot;rf165KhSpot=function(){const E=typeof RF165!='undefined'&&RF165.E,K=typeof KH165W!='undefined'&&KH165W.e;if(!TS218.on||!E||E.go||!K)return f.apply(this,arguments);
+  try{const T=ss165T2(),F=T.F,P=K.m.position;if(E.w218==null){const dx=P.x-F.x,dz=P.z-F.z;E.w218=0;E.s218=(dx*F.lx+dz*F.lz)>=0?1:-1;
+      // already past the dais (a retry from where he fell): straight on
+      if(dx*F.fx+dz*F.fz>T.altar.a+3)E.w218=TS218.path.length}
+    while(E.w218<TS218.path.length){const c=TS218.path[E.w218],[x,z]=F.W2(c[0],c[1]*E.s218);if(Math.hypot(P.x-x,P.z-z)>TS218.pick)return {x,z,y:T.y0};E.w218++}}catch(_){}
+  return f.apply(this,arguments)}}
+// ---------- the dead: only once the hero has left the court ----------
+// kh165Sync removes the standing Kheprit and calls rf165After when the chapter is done; if that happens while this hero is in the
+// court with the living Warden there (the run into the rift, or a partner's), the heaps wait until this hero is elsewhere
+{const f=kh165Sync;kh165Sync=function(){const live=!!(typeof KH165W!='undefined'&&KH165W.e)&&ss165Here(1);TS218.live=live;try{return f.apply(this,arguments)}finally{TS218.live=false}}}
+{const f=rf165After;rf165After=function(){if(TS218.on&&(TS218.live||TS218.pend)&&ss165Here(1)){TS218.pend=1;return}TS218.pend=0;return f.apply(this,arguments)}}
+// while they wait, the rift still turns and still takes a hero who runs in (rf165Tick only does that once the heaps exist)
+{const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(TS218.pend){if(!ss165Here(1)){TS218.pend=0;rf165After();if(RF165.aft)RF165.aft.visible=false}
+    else if(!RF165.E){rf165RiftK(1,now/1000);rf165Enter()}}}catch(e){if(!TS218.err++)console.warn('v219 after',e)}return r}}
+// ---------- the entrance (ts218Gate) ----------
+// The road comes down into the court through the gate at its near end (T.gates[0]), but the court's rim bank (3280
+// ss165T2Terrain: the ground rises 1.2 per tile beyond the court's edge) heaped a hump of sand across the gateway, and the gateway
+// was filled with a black box (the "dark doorway" all three gates had). Now:
+//  * the ground through the road's gate is level with the court's floor out to just past the pylons, then rises gently to the road
+//    (TS218.road: the corridor's half width, its blend at the sides; the terrain mesh there is redrawn from the new heights);
+//  * the road's gateway is open, paved through, with a brazier burning either side of it outside;
+//  * the two side gates, which lead nowhere a hero can go, are shut with sealed stone doors instead of black boxes.
+TS218.road={hw:2.9,edge:1.6,flat:2.4,ramp:6.5,reach:9};
+function ts218RoadH(T,a,h0,yr){const R=T.R,u=-a-R;if(u<=TS218.road.flat-1)return T.y0;const k=Math.min(1,Math.max(0,(u-TS218.road.flat+1)/TS218.road.ramp));return T.y0+(yr-T.y0)*k*k*(3-2*k)}
+function ts218Road(){const T=ss165T2(),F=T.F,Rd=TS218.road,HI=(i,j)=>(j+HPD)*HW+i+HPD;if(T.y0==null)return;
+  // the road's own height a little way out (where the bank no longer reaches)
+  let yr=T.y0;{const [x,z]=F.W2(-T.R-Rd.reach,0);yr=Math.min(T.y0+1.2,Math.max(T.y0,GH(x,z)))}
+  let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9,n=0;
+  for(let a=-T.R-Rd.reach;a<=-T.R+1;a+=.5)for(let b=-Rd.hw-Rd.edge-1;b<=Rd.hw+Rd.edge+1;b+=.5){const [x,z]=F.W2(a,b),i=Math.round(x),j=Math.round(z),[la,lb]=F.L2(i,j);
+    if(la>-T.R+.6||la<-T.R-Rd.reach)continue;const ab=Math.abs(lb);if(ab>Rd.hw+Rd.edge)continue;const k=HI(i,j),h0=HF[k],t=ts218RoadH(T,la,h0,yr),w=ab<=Rd.hw?1:1-Math.min(1,(ab-Rd.hw)/Rd.edge),wo=la<-T.R-Rd.reach+2?(la+T.R+Rd.reach)/2:1,ww=w*w*(3-2*w)*Math.max(0,Math.min(1,wo));
+    const h=h0+(Math.min(h0,t)-h0)*ww;if(h!==h0){HF[k]=h;n++;x0=Math.min(x0,i);z0=Math.min(z0,j);x1=Math.max(x1,i);z1=Math.max(z1,j)}}
+  if(n)ts218Redraw(x0-1,z0-1,x1+1,z1+1);TS218.roadN=n;TS218.yr=yr}
+// the terrain mesh over a box of tiles, from the heights as they are now (buildTerrain in 0060 puts a vertex on every tile)
+function ts218Redraw(x0,z0,x1,z1){(typeof CHL!='undefined'?CHL:[]).forEach(c=>(c.ms||[]).forEach(m=>{const g=m&&m.geometry;if(!g||m.isInstancedMesh||!g.attributes.uv||!g.index)return;const P=g.attributes.position,N=g.attributes.normal;let ch=0;
+    for(let k=0;k<P.count;k++){const x=P.getX(k),z=P.getZ(k);if(x<x0||x>x1||z<z0||z>z1||x!==Math.round(x)||z!==Math.round(z))continue;const y=GHv(x,z);if(Math.abs(P.getY(k)-y)<1e-4)continue;P.setY(k,y);
+      if(N){const gx=GHv(x-1,z)-GHv(x+1,z),gz=GHv(x,z-1)-GHv(x,z+1),l=Math.hypot(gx,2,gz);N.setXYZ(k,gx/l,2/l,gz/l)}ch++}
+    if(ch){P.needsUpdate=true;if(N)N.needsUpdate=true;g.computeBoundingSphere();g.computeBoundingBox()}}))}
+try{ts218Road()}catch(e){console.warn('v219 temple road',e)}
+// the court's scenery: the road's gateway open and paved, braziers outside it, the side gates sealed
+{const f=dt168Group;dt168Group=function(key,build,W,mot){if(!TS218.on||key!=='CY165|court')return f.apply(this,arguments);
+  const T=ss165T2(),F=T.F,G0=T.gates[0],[rx,rz]=F.W2(G0.a+Math.cos(G0.ang)*.7,G0.b+Math.sin(G0.ang)*.7);
+  const b2=q=>{const p0=q.p;q.p=function(n,geo,t,col,x,y,z,sx,sy,sz,ax,ay,az){if(col===0x080402){
+        if(Math.hypot(x-rx,z-rz)<.6){ts218Gateway(q,p0,T);return q}
+        // a side gate: a sealed door of dressed stone, a seam down the middle, two bronze bands and a sun disc
+        p0.call(q,n,geo,t,0x8a6a44,x,y,z,sx,sy,sz*.9,ax,ay,az);p0.call(q,'','box','c',0x5a4430,x,y,z,.06,sy*.98,sz*.95,ax,ay,az);
+        [1.2,3.6].forEach(h=>p0.call(q,'','box','m',0x8a6a3a,x,y-sy/2+h,z,sx*.98,.12,sz*1.05,ax,ay,az));p0.call(q,'','cyl','m',0xd8a840,x,y+.6,z,.32,sz*1.1,.32,Math.PI/2,ay,0);return q}
+      return p0.apply(q,arguments)};try{build(q)}finally{q.p=p0}};
+  return f.call(this,key,b2,W,mot)}}
+// the open gateway: flagstones from the court's floor out between the pylons, a step down the ramp, braziers either side outside
+function ts218Gateway(q,p,T){const F=T.F,W2=F.W2,y0=T.y0,yw=F.yaw,sd=[0xc8a070,0xbc9464,0xd2ac7c,0xb08858],R=T.R;
+  for(let a=-R+.2;a>=-R-TS218.road.flat+.2;a-=1.5)for(let b=-1.2;b<=1.21;b+=1.2){const [x,z]=W2(a,b);p.call(q,'','box','c',sd[(Math.round(a*3+b*7)%4+4)%4],x,y0+.02,z,1.16,.1,1.44,0,yw,0)}
+  // a worn threshold stone between the pylons
+  {const [x,z]=W2(-R-.2,0);p.call(q,'','box','c',0x9a7a50,x,y0+.06,z,2.9,.14,.9,0,yw,0)}
+  [-1,1].forEach(s=>{const a=-R-TS218.road.flat-.6,b=s*2.3,[x,z]=W2(a,b),g=GH(x,z);[0,1,2].forEach(j=>{const aa=j*2.09;q.L('','m',0x3a3c42,[x+Math.cos(aa)*.32,g,z+Math.sin(aa)*.32],[x,g+1.0,z],.025,.025,4)});
+    p.call(q,'','cyl','m',0x4a3a2a,x,g+1.05,z,.34,.2,.34);p.call(q,'','sph','g',0xff7a2a,x,g+1.16,z,.27,.1,.27);CY165.fires.push([x,g+1.3,z])})}
+// ================= v219: living flames in campfires and braziers (owner, Nov 10 2026) =================
+// Owner: "Make fires in campires and braziers flicker instead of being a static orange cone."
+// The camps' fires (0250, 2270: campfires, braziers, torches, candles: the flame cones in CFL) were solid cones of glow colour, only
+// stretched up and down ±12% (campTick); the themed braziers (s2_brazier in Searing Sands II, c_brazier in the Citadel: instanced
+// decorations) and the baked fires of Searing Sands II's court and the Pilgrim's Stair (CY165.fires, TH165.fire) did not move at all.
+// Now each of them burns with soft flame sprites (FL218): a tall licking outer flame in the fire's own colour and a bright core,
+// each stretching, narrowing and leaning on its own uneven rhythm (a few sines at unrelated speeds per flame), the glow pulsing with
+// it. A camp's cone is hidden and its flame takes its place (same colour, base and size); the others get a flame over the coals.
+// Only flames near the camera move (FL218.near), and decoration flames show only near the camera and in the hero's own instance
+// (sprites are not clipped to the instance like the world's materials). Purely visual: every screen draws its own, nothing to relay.
+var FL218={on:true,L:[],near:55,far:70,ci:0,mats:{},tex:null,deco:null,t:0,err:0};
+// a flame: a soft teardrop, white (the material tints it), brightest low in the middle
+function fl218Tex(){if(FL218.tex)return FL218.tex;const Wd=48,Ht=96,c=document.createElement('canvas');c.width=Wd;c.height=Ht;const g=c.getContext('2d'),im=g.createImageData(Wd,Ht),D=im.data;
+  const ss=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x)};
+  for(let y=0;y<Ht;y++)for(let x=0;x<Wd;x++){const v=1-(y+.5)/Ht,u=((x+.5)/Wd-.5)*2,hw=v<.22?.5+2.2*v:Math.max(.001,(1-v)*1.24),r=Math.abs(u)/hw;
+    const a=(1-ss(.35,1,r))*ss(0,.1,v)*(1-Math.pow(v,4))*(1-.35*v),i=(y*Wd+x)*4;D[i]=D[i+1]=D[i+2]=255;D[i+3]=Math.round(255*Math.max(0,Math.min(1,a)))}
+  g.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);return FL218.tex=t}
+function fl218Mat(col,op){const k=col+'|'+op;if(FL218.mats[k])return FL218.mats[k];
+  const m=new THREE.SpriteMaterial({map:fl218Tex(),color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false});m.userData.evxS=1;m.userData.fxbS=1;return FL218.mats[k]=m}
+// a flame of height h and width w with its base at (x,y,z) in parent p; col = its colour; returns its record
+function fl218Add(p,x,y,z,h,w,col,o){o=o||{};const g=new THREE.Group();g.position.set(x,y,z);g.userData.lpsSkip=1;g.userData.fl218=1;
+  const out=new THREE.Sprite(fl218Mat(col,.9)),core=new THREE.Sprite(fl218Mat(new THREE.Color(col).lerp(new THREE.Color(0xfff2c0),.65).getHex(),.95));
+  [out,core].forEach(s=>{s.center.set(.5,.06);s.userData.lpsSkip=1;s.userData.kqsKeep=1;s.renderOrder=33;g.add(s)});
+  out.scale.set(w,h,1);core.scale.set(w*.5,h*.55,1);p.add(g);
+  const R={g,out,core,h,w,ph:Math.random()*100,sp:.85+Math.random()*.4,deco:!!o.deco,ins:o.ins,wx:o.wx,wz:o.wz};FL218.L.push(R);return R}
+// the camps' cones: hidden, a flame in their place (their base, height and width, their colour)
+function fl218Cones(){if(typeof CFL=='undefined')return;for(;FL218.ci<CFL.length;FL218.ci++){const f=CFL[FL218.ci];try{
+    if(!f||!f.isMesh||!f.geometry||f.geometry.type!=='ConeGeometry'||f.userData.fl218)continue;
+    if(!f.parent){fl218Orphan(f);continue}f.userData.fl218=1;f.userData.keep=1;
+    const sy=f.userData.sy||f.scale.y,col=f.material&&f.material.color?f.material.color.getHex():0xff7a1a,h=sy*1.0*(f.geometry.parameters.height||1),w=f.scale.x*2*(f.geometry.parameters.radius||1);
+    if(f.rotation.x||f.rotation.z)continue;   // a cone laid sideways is no flame
+    const R=fl218Add(f.parent,f.position.x,f.position.y-h/2,f.position.z,h*1.55,w*1.9,col);R.cone=f;f.visible=false}catch(e){if(!FL218.err++)console.warn('v219 flame',e)}}}
+// a cone already merged into its camp (camps built while the page loaded, before this file): it kept the world matrix it had when
+// it was merged; the flame goes into the camp group it stood in, at that spot
+function fl218Orphan(f){f.userData.fl218=1;const e=f.matrixWorld.elements;if(e[12]===0&&e[14]===0)return;const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();f.matrixWorld.decompose(p,q,s);
+  let C=null,bd=1e9;for(const c of (typeof CAMPS!='undefined'?CAMPS:[])){if(!c.g)continue;const d=Math.hypot(c.x-p.x,c.z-p.z);if(d<(c.r||14)+6&&d<bd){bd=d;C=c}}if(!C)return;
+  const P=f.geometry.parameters||{},h=s.y*(P.height||1),w=s.x*2*(P.radius||1);C.g.updateMatrixWorld(true);const L=C.g.worldToLocal(new THREE.Vector3(p.x,p.y-h/2,p.z));
+  fl218Add(C.g,L.x,L.y,L.z,h*1.55,w*1.9,f.material&&f.material.color?f.material.color.getHex():0xff7a1a)}
+// the themed braziers (instanced decorations): a flame over each bowl, made the first time the hero is near
+function fl218Deco(){if(FL218.deco)return;FL218.deco=[];try{const H={s2_brazier:[1.2,.6],c_brazier:[1.2,.55]};(WD&&WD.list||[]).forEach(d=>{const q=H[d.k];if(!q)return;const s=d.s||1;
+    FL218.deco.push({x:d.x,z:d.z,y:GH(d.x,d.z)+q[0]*s,h:q[1]*s*1.7,w:.5*s*1.5,col:d.k==='c_brazier'?0xff8a3a:0xff7a2a,R:null})})}catch(e){console.warn('v219 deco flames',e)}}
+function fl218Places(){const P=pl.position,I=insAt(Math.round(P.x),Math.round(P.z)),g=I?I.g:-1;
+  (FL218.deco||[]).forEach(q=>{const near=Math.hypot(q.x-P.x,q.z-P.z)<FL218.far;if(near&&!q.R){q.R=fl218Add(scene,q.x,q.y,q.z,q.h,q.w,q.col,{deco:1});const J=insAt(Math.round(q.x),Math.round(q.z));q.R.ins=J?J.g:-2}
+    if(q.R)q.R.g.visible=near&&q.R.ins===g});
+  // Searing Sands II's court and the Pilgrim's Stair: their baked bowls (made with their scenery)
+  try{if(typeof CY165!='undefined'&&CY165.g&&CY165.fires&&!CY165.fl218){CY165.fl218=1;CY165.fires.forEach(f=>fl218Add(CY165.g,f[0],f[1]-.12,f[2],.75,.5,0xff7a2a))}}catch(_){}
+  try{if(typeof TH165!='undefined'&&TH165.fire&&TH165.g&&!TH165.fl218){TH165.fl218=1;TH165.fire.forEach(f=>fl218Add(TH165.g,f[0],f[1]-.12,f[2],.75,.5,0xff7a2a))}}catch(_){}}
+// the flicker: a few sines at unrelated speeds per flame (stretch, narrow, lean); the core follows a little behind
+function fl218Tick(dt,now){const t=now/1000,C=cam.position,N=FL218.near*FL218.near,v=FL218.v||(FL218.v=new THREE.Vector3());
+  for(const R of FL218.L){const g=R.g;if(!g.parent||!g.visible)continue;g.getWorldPosition(v);if(v.distanceToSquared(C)>N)continue;
+    const a=(t+R.ph)*R.sp,s1=Math.sin(a*7.3)*.5+Math.sin(a*11.9+1.3)*.3+Math.sin(a*17.7+2.1)*.2,s2=Math.sin(a*5.1+.7)*.6+Math.sin(a*13.3)*.4,s3=Math.sin(a*3.7+2)*.7+Math.sin(a*9.1)*.3;
+    R.out.scale.set(R.w*(1-.12*s1),R.h*(1+.22*s2+.06*s1),1);R.out.position.x=R.w*.08*s3;
+    R.core.scale.set(R.w*.5*(1-.1*s2),R.h*.55*(1+.16*s1),1);R.core.position.x=R.w*.04*s3}}
+{const f=campTick;campTick=function(dt,now){const r=f.apply(this,arguments);if(!FL218.on)return r;try{fl218Cones();if(!FL218.deco&&typeof WD!='undefined'&&WD)fl218Deco();
+    if((FL218.t+=dt)>.4){FL218.t=0;fl218Places()}fl218Tick(dt,now)}catch(e){if(!FL218.err++)console.warn('v219 flames',e)}return r}}
+// The camp sites (2270 cs123Build, the v164 camps) merge every static mesh of a camp into one per colour (cs123Merge, cs164Merge), the flame
+// cones included: that is why their fires stood still. Before the merge each flame cone of the camp is taken out of it (kept,
+// hidden) and a living flame is put in its place.
+function fl218Merge(f){return function(g){const L=[];try{if(FL218.on&&typeof CFL!='undefined'&&CFL.length){const S=new Set(CFL);g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),M=new THREE.Matrix4(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();
+    g.traverse(c=>{if(!c.isMesh||!S.has(c)||c.userData.fl218||!c.geometry||c.geometry.type!=='ConeGeometry')return;M.multiplyMatrices(inv,c.matrixWorld);M.decompose(p,q,s);
+      const P=c.geometry.parameters||{},h=s.y*(P.height||1),w=s.x*2*(P.radius||1);L.push([p.x,p.y-h/2,p.z,h,w,c.material&&c.material.color?c.material.color.getHex():0xff7a1a]);c.userData.keep=1;c.userData.fl218=1;c.visible=false})}}catch(e){if(!FL218.err++)console.warn('v219 camp flames',e)}
+  const r=f.apply(this,arguments);try{L.forEach(([x,y,z,h,w,col])=>fl218Add(g,x,y,z,h*1.55,w*1.9,col))}catch(e){if(!FL218.err++)console.warn('v219 camp flames',e)}return r}}
+cs123Merge=fl218Merge(cs123Merge);if(typeof cs164Merge=='function')cs164Merge=fl218Merge(cs164Merge);
+// ================= v219: Searing Sands' trees in one piece (owner, Nov 10 2026) =================
+// Owner: "The trees in searing sands are broken and have floating pieces."
+// The sands' trees (the world's '#' tiles, built in 0070: BIOMES 'Searing Sands' tree ['cactus','cactus','spire']) are instanced
+// parts placed one by one. Two of them came apart:
+//  * the cactus: its arm was a short upright stub stood beside the trunk (each part sits at its own offset, turned about its own
+//    middle), with nothing joining it to the trunk. The arm now grows out of the trunk: a low elbow reaches from the trunk's axis
+//    out to the stub (TR218.cb), and every arm keeps the side its offset puts it on (its turn about the vertical is dropped; the
+//    trunk is round, so nothing else changes);
+//  * the spire: its glowing tip was placed and tilted on its own, so on a leaning spire it hung beside the apex. The tip now sits on
+//    each spire's own apex, leaning with it.
+// The same world on every screen (placement is seeded): nothing to relay.
+var TR218={on:true,n:{cactus:0,spire:0},err:null};
+function tr218Each(geo,fn){(typeof VIL!='undefined'?VIL:[]).forEach(v=>{if(v.geo===geo)fn(v)})}
+function tr218Set(v,i,m){m.toArray(v.M,i*16);const c=v.cm&&v.cm[i];if(c){m.toArray(c.instanceMatrix.array,v.cl[i]*16);c.instanceMatrix.needsUpdate=true}}
+function tr218Fix(){if(typeof TT=='undefined'||!TT.cactus||!TT.spire)return;const G=THREE,{fin,tr,merge}=NK,m4=new G.Matrix4(),p=new G.Vector3(),q=new G.Quaternion(),s=new G.Vector3(),e=new G.Euler();
+  // the cactus arm: the old stub (r .065-.07, .5 tall, centred), an elbow from the trunk's axis (x -.2 in the arm's own units) and a knuckle
+  const CB=TT.cactus[1][0],paint=(h,ny,r)=>{const v=(.72+.4*h)*(.86+.24*r);return [v,v*1.03,v*.92]};
+  const up=fin(new G.CylinderGeometry(.065,.07,.5,6,2),{j:.02,sd:18,paint}),el=fin(tr(new G.CylinderGeometry(.06,.068,.26,6,1),-.11,-.2,0,0,0,Math.PI/2),{j:.01,sd:21,paint}),
+    kn=fin(tr(new G.SphereGeometry(.072,6,4),-.005,-.205,0,0,0,0),{j:.008,sd:22,paint}),A=merge([up,el,kn]);
+  ['position','normal','color'].forEach(k=>{if(A.attributes[k])CB.setAttribute(k,A.attributes[k])});CB.setIndex(A.index||null);CB.computeBoundingSphere();CB.computeBoundingBox();
+  tr218Each(CB,v=>{for(let i=0;i<v.n;i++){m4.fromArray(v.M,i*16);m4.decompose(p,q,s);if(s.x===0)continue;e.setFromQuaternion(q,'XYZ');e.y=0;q.setFromEuler(e);m4.compose(p,q,s);tr218Set(v,i,m4);TR218.n.cactus++}});
+  // the spire's tip: on the apex of its own spire (the spire is a cone 1.8 tall, centred; the tip a cone .5 tall, centred: the tip's
+  // middle goes .7 above the spire's middle, along the spire's own axis)
+  const SP=TT.spire[0][0],SG=TT.spire[1][0];let vs=null,vg=null;tr218Each(SP,v=>vs=v);tr218Each(SG,v=>vg=v);
+  if(vs&&vg&&vs.n===vg.n){const pg=new G.Vector3(),qg=new G.Quaternion(),sg=new G.Vector3(),off=new G.Vector3();
+    for(let i=0;i<vs.n;i++){m4.fromArray(vs.M,i*16);m4.decompose(p,q,s);if(s.x===0)continue;const mg=new G.Matrix4().fromArray(vg.M,i*16);mg.decompose(pg,qg,sg);
+      off.set(0,.7*s.y,0).applyQuaternion(q);mg.compose(p.clone().add(off),q,sg);tr218Set(vg,i,mg);TR218.n.spire++}}}
+try{if(TR218.on)tr218Fix()}catch(err){TR218.err=String(err);console.warn('v219 sands trees',err)}
+// ================= v219: the Sandskimmer rebuilt where it was broken, and a Sandstorm Run that plays well (owner, Nov 10 2026) =================
+// Owner: "The wind turbine in the sandskimmer is malformed. Fix gun model on the sandskimmer- it has floating pieces. Do an overall
+// check on the sandskimmer model. The enemies ran too fast and boarded too quickly- think of a better way for the pacing and combat
+// so it feels engaging. Make it more obvious when the sandskimmer is getting damaged. Sandskimmers health is also being covered by
+// the tab target ui. Shooting and aiming in the sandskimmer feels awful. Make the camera fixed and more zoomed in so it doesn't
+// collide with terrain."
+// ---------------- the model (3291 sk165Build) ----------------
+//  * The Great Turbine: its cowl was an open, one-sided tube (with a second tube turned inside out for the lining), so from most
+//    sides half of it was missing; it sat so low that its lower third cut through the stern deck; its two support struts and post
+//    stood under where it used to be. Now the turbine is raised onto the deck (SKM218.up) and its duct is one solid turned shell
+//    (thick lip at the intake, tapering to the exhaust), brass rims at both ends, a saddle and four struts from the deck to the
+//    duct, the rear grille's spokes running from a hub ring to the duct's wall, fan blades that fit inside the duct.
+//  * The Twin Cannons: the curved shield stood clear of the turret plate (a gap under it) and its brass rim hung in the air above
+//    and to one side; the shield now stands on the plate, its rim follows its top edge.
+//  * The pennant mast stood where the raised duct now is: it moves forward of the turbine and stands taller, the pennant above it.
+//  * The rest was checked from eight sides (pictures: test/v219_skimmer.py): hull, ram, runners, helm, deck clutter and mast are
+//    joined.
+var SKM218={on:true,up:.55,keys:['skcowl','skcowli','skshld','skshld2','skblade']};
+function skm218Strip(R){const G=SKM218.keys.map(k=>SVX.gc[k]).filter(Boolean);const rm=[];R.root.traverse(o=>{if(o.isMesh&&G.includes(o.geometry))rm.push(o)});
+  // the turbine's old struts, post, grille bars, rims and side blocks: every mesh hung straight on the turbine's joint
+  R.J.pTurb.children.forEach(o=>{if(o.isMesh)rm.push(o)});rm.forEach(o=>{if(o.parent)o.parent.remove(o)})}
+{const f=sk165Build;sk165Build=function(R){f.apply(this,arguments);if(!SKM218.on)return;try{skm218Strip(R);skm218Turbine(R);skm218Shield(R);skm218Mast(R)}catch(e){console.warn('v219 skimmer model',e)}}}
+function skm218Turbine(R){const up=SKM218.up,brass=svMat(R,0xc89a40,{roughness:.32,metalness:.8,side:THREE.DoubleSide}),iron=svMat(R,0x45454c,{roughness:.55,metalness:.6}),dark=svMat(R,0x24221f,{roughness:.7,metalness:.3,side:THREE.DoubleSide}),wood2=svMat(R,0x5e3e22,{roughness:.9});
+  const Cy=1.95+up,Cz=-3.05,M=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz),G=(k,f)=>svG('sk218'+k,f);
+  R.J.fan.position.y+=up;R.J.jet.position.y+=up;
+  // the duct: one closed turned profile (r, z): intake lip, outer wall, exhaust, inner wall
+  M('pTurb',G('duct',()=>{const P=[[.97,.8],[1.06,.86],[1.17,.8],[1.17,.62],[1.13,0],[1.08,-.7],[1.1,-.8],[.99,-.8],[.95,-.7],[.95,.6]].map(q=>new THREE.Vector2(q[0],q[1]));P.push(P[0].clone());
+    const g=new THREE.LatheGeometry(P,22);g.rotateX(Math.PI/2);g.computeVertexNormals();return g}),brass,0,Cy,Cz);
+  M('pTurb',G('lin',()=>{const g=new THREE.CylinderGeometry(.94,.94,1.4,22,1,true);g.rotateX(Math.PI/2);return g}),dark,0,Cy,Cz);
+  [[.83,1.12,brass],[-.83,1.08,iron]].forEach(([dz,r,m],k)=>M('pTurb',G('rim'+k,()=>new THREE.TorusGeometry(r,.06,6,22)),m,0,Cy,Cz+dz));
+  // the saddle on the deck and four struts up to the duct
+  M('pTurb',G('sad',()=>new THREE.BoxGeometry(1.0,.26,1.3)),wood2,0,1.48,Cz+.05);M('pTurb',G('sad2',()=>new THREE.BoxGeometry(1.1,.06,1.4)),iron,0,1.62,Cz+.05);
+  [-1,1].forEach(s=>[-2.6,-3.15].forEach(z=>{M('pTurb',svTube([[s*.62,1.42,z],[s*.9,1.75,z-.05],[s*1.08,Cy-.25,z-.08]],.055,5),iron);M('pTurb',G('bolt',()=>new THREE.SphereGeometry(.07,6,4)),brass,s*1.08,Cy-.25,z-.08)}));
+  // the rear grille: a hub ring and spokes out to the duct's wall
+  M('pTurb',G('hr',()=>new THREE.TorusGeometry(.2,.04,5,12)),iron,0,Cy,Cz-.8);
+  for(let k=0;k<6;k++){const a=k/6*Math.PI*2;M('pTurb',G('sp',()=>{const g=new THREE.BoxGeometry(.05,.76,.05);g.translate(0,.58,0);return g}),iron,0,Cy,Cz-.8,0,0,a)}
+  // fan blades that fit inside the duct (hub .2 to tip .9)
+  for(let k=0;k<8;k++){const a=k/8*Math.PI*2;M('fan',G('bl',()=>{const g=new THREE.BoxGeometry(.2,.72,.035);g.translate(0,.54,0);return g}),k%2?brass:iron,0,0,0,0,.45,a)}}
+function skm218Shield(R){const iron=svMat(R,0x45454c,{roughness:.55,metalness:.6,side:THREE.DoubleSide}),brass=svMat(R,0xc89a40,{roughness:.32,metalness:.8});
+  // the curved shield: an arc in front of the guns, standing on the turret plate (its top .07), .95 tall
+  svM(R,'turret',svG('sk218shd',()=>{const g=new THREE.CylinderGeometry(.85,.85,.95,10,1,true,-.75,1.5);g.scale(1,1,.7);return g}),iron,0,.545,.05);
+  const pts=[];for(let i=0;i<=8;i++){const t=-.75+i/8*1.5;pts.push([.85*Math.sin(t),1.02,.05+.85*.7*Math.cos(t)])}svM(R,'turret',svTube(pts,.035,4),brass);
+  [-1,1].forEach(s=>svM(R,'turret',svG('sk218sb',()=>new THREE.BoxGeometry(.08,.95,.08)),brass,.85*Math.sin(s*.75),.545,.05+.85*.7*Math.cos(.75)))}
+function skm218Mast(R){const g=SVX.gc.skcy6;R.J.body.children.forEach(o=>{if(o.isMesh&&o.geometry===g&&Math.abs(o.position.z+2.2)<.01&&Math.abs(o.position.y-2.3)<.01){o.position.set(0,2.75,-1.72);o.scale.y=2.8}});
+  R.J.sail.position.set(0,4.05,-1.72)}
+// ---------------- the Run (3301 / 3302) ----------------
+//  * Scarabs (SKR218): they used to sprint at the hull ~5 faster than the Skimmer (up to 20) and cling the moment they touched it,
+//    6 at a time. Now a swarm runs up at a little over the Skimmer's cruising pace (SKR218.run: so boosting leaves them behind),
+//    then each one paces alongside the hull for 1.4–2.3 s, glowing red over its back (the warning, and the moment to shoot it),
+//    before it leaps aboard in a short arc; at most two pace on each side and four cling at once; a third fewer are sent.
+//  * Damage you can see and feel: a red flash round the screen's edge with every hit (stronger for bigger ones) and a steady red
+//    pulse while scarabs gnaw the hull; the hull flashes red; the hull bar shakes and flashes, says how many cling on; the machine
+//    smokes below half its hull and burns below a quarter.
+//  * The hull bar: the target frame (tab target) sat over it; it is hidden while riding (the guns aim on their own).
+//  * The camera (SKR218.cam): fixed behind and above the Skimmer, closer than before, following its heading with no lag and no mouse
+//    turning; it never dips into the ground (a floor over the terrain under it).
+//  * Aiming: the cursor is traced to the real ground (it hit a flat plane at deck height, so on dunes the shells flew short or
+//    long); a ring on the sand shows where the guns point, red when locked on a creature (the lock reaches a little further).
+// Co-op: the scarabs are the host's (their positions reach partners as before); the red warning glow is worked out on every screen
+// from where a scarab runs (beside a machine, not clinging), so partners see it too; camera, aim ring and damage flashes are each
+// player's own view of their own machine.
+var SKR218={on:true,run:2.5,runMax:17,paceMax:18,side:4.2,pace:[1.4,2.3],leap:.45,cling:4,perSide:2,skip:3,n:0,
+  cam:{d:7.4,h:4.1,ahead:6,ly:1.4,floor:1.6},fl:0,shk:0,lastHp:null,dom:null,ret:null,glow:new Map(),err:0};
+// a third fewer scarabs
+{const f=sr165Foe;sr165Foe=function(k,x,z,kind){if(SKR218.on&&kind==='sc'&&(++SKR218.n%SKR218.skip)===0)return null;return f.apply(this,arguments)}}
+function skr218Near(p){return sr165Near(p)}
+function skr218Scarab(e,dt,now){const m=e.m,[V]=skr218Near(m.position);if(!V)return false;const fx=Math.sin(V.h),fz=Math.cos(V.h),lx=fz,lz=-fx;
+  if(!e.k218){const rx=m.position.x-V.x,rz=m.position.z-V.z;e.k218={st:'run',t:0,side:(rx*lx+rz*lz)>=0?1:-1,f:(Math.random()*2-1)*1.8}}
+  const K=e.k218;K.t+=dt;
+  const pacing=s=>enemies.filter(o=>o!==e&&o.k218&&o.k218.st!=='run'&&o.k218.side===s&&!o.dead).length;
+  const tx=V.x+fx*(K.f+Math.max(0,V.v)*.08)+lx*K.side*SKR218.side,tz=V.z+fz*(K.f+Math.max(0,V.v)*.08)+lz*K.side*SKR218.side,dx=tx-m.position.x,dz=tz-m.position.z,L=Math.hypot(dx,dz)||1;
+  if(K.st==='run'||K.st==='pace'){const lim=K.st==='pace'?SKR218.paceMax:Math.min(SKR218.runMax,Math.max(6,Math.max(0,V.v)+SKR218.run)),st=Math.min(L,lim*dt);
+    m.position.x+=dx/L*st+(e.vx||0)*dt;m.position.z+=dz/L*st+(e.vz||0)*dt;e.vx=(e.vx||0)*.9;e.vz=(e.vz||0)*.9;m.position.y=GH(m.position.x,m.position.z);
+    m.rotation.y=L>.3?Math.atan2(dx,dz):V.h;animC(m,now,true,Math.max(4,lim)*.4);
+    if(K.st==='run'&&L<1.8){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
+    else if(K.st==='pace'){if(L>3.2){K.st='run';K.t=0}else if(K.t>=K.T){if(V.cling.length<SKR218.cling){K.st='leap';K.t=0;K.a=m.position.clone()}else K.t=K.T*.6}}
+    return true}
+  if(K.st==='leap'){const k=Math.min(1,K.t/SKR218.leap),bx=V.x+fx*K.f+lx*K.side*1.35,bz=V.z+fz*K.f+lz*K.side*1.35,by=V.y+.9;
+    m.position.set(K.a.x+(bx-K.a.x)*k,K.a.y+(by-K.a.y)*k+Math.sin(k*Math.PI)*1.6,K.a.z+(bz-K.a.z)*k);m.rotation.y=Math.atan2(bx-K.a.x,bz-K.a.z);animC(m,now,true,6);
+    if(k>=1){e.k218=null;if(V.cling.length>=SKR218.cling)return true;e.cl={V,f:Math.max(-2.6,Math.min(2.6,K.f)),l:K.side*1.35};V.cling.push(e);svSnd('thud',.4,1.4);
+      if(V===SR165.me)say('🪲 A scarab leaps aboard! Shoot it off — or boost!')}
+    return true}
+  return false}
+{const f=sr165FoeAI;sr165FoeAI=function(e,dt,now){if(SKR218.on&&e&&e.sr165==='sc'&&!e.cl&&SR165.on&&SR165.ph==='run'){
+    const [V,d]=sr165Near(e.m.position),P=sr165Path(),q=P.near(e.m.position.x,e.m.position.z);if(V&&(q.s<V.s-30||d>90)){removeE(e);return}
+    try{if(skr218Scarab(e,dt,now))return}catch(err){if(!SKR218.err++)console.warn('v219 scarab',err)}}
+  return f.apply(this,arguments)}}
+// the warning glow: any scarab running beside a machine (within the pacing band, not clinging), on every screen
+function skr218Glow(now){const M=SKR218.glow,seen=new Set();if(SR165.on)for(const e of enemies){if(e.dead||!e.m||!e.m.visible)continue;const sc=e.sr165==='sc'||(e.mir&&e.c&&e.c.en==='scarab');if(!sc||e.cl)continue;
+    let near=false;for(const V of SR165.V){if(V.wreck)continue;const fx=Math.sin(V.h),fz=Math.cos(V.h),rx=e.m.position.x-V.x,rz=e.m.position.z-V.z,a=rx*fx+rz*fz,b=Math.abs(rx*fz-rz*fx);if(Math.abs(a)<3.6&&b>2&&b<6.2){near=true;break}}
+    if(!near)continue;seen.add(e);let s=M.get(e);if(!s){s=kqSpr(0xff3020,1.1);s.material=s.material.clone();s.userData.lpsSkip=1;scene.add(s);M.set(e,s)}
+    s.position.set(e.m.position.x,e.m.position.y+1.2,e.m.position.z);s.material.opacity=.55+.35*Math.sin(now/70);s.scale.setScalar(1+.25*Math.sin(now/90))}
+  M.forEach((s,e)=>{if(!seen.has(e)){scene.remove(s);s.material.dispose();M.delete(e)}})}
+// ---------------- seeing the damage ----------------
+function skr218Dom(){if(SKR218.dom)return SKR218.dom;const v=document.createElement('div');v.id='sk218V';
+  v.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:29;opacity:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 52%,rgba(150,10,0,.55) 82%,rgba(190,0,0,.85) 100%)';
+  ($('stage')||document.body).appendChild(v);const st=document.createElement('style');st.textContent='body.sk218 #tgt{display:none!important}#sr165H.sk218hit{animation:sk218sh .28s}@keyframes sk218sh{0%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 7px))}50%{transform:translateX(calc(-50% + 6px))}75%{transform:translateX(calc(-50% - 3px))}100%{transform:translateX(-50%)}}#sr165H.sk218hit #sr165B{filter:brightness(2.2) saturate(.4)}#sk218C{color:#ff8a70;font-size:12px;margin-top:2px}';document.head.appendChild(st);
+  return SKR218.dom=v}
+{const f=sr165Hurt;sr165Hurt=function(V,d,why){const h0=V&&V.hp;const r=f.apply(this,arguments);try{if(SKR218.on&&V===SR165.me&&V.hp<h0){const dd=h0-V.hp;
+    SKR218.fl=Math.min(1,SKR218.fl+(dd>=1?.35+dd*.04:dd*.25));if(dd>=1){SKR218.shk=Math.min(.5,.12+dd*.02);const H=$('sr165H');if(H){H.classList.remove('sk218hit');void H.offsetWidth;H.classList.add('sk218hit')}}
+    SKR218.hit=performance.now()}}catch(_){}return r}}
+function skr218Feel(V,dt,now){const D=skr218Dom(),n=V.cling.length,low=V.hp/V.hpM;SKR218.fl=Math.max(0,SKR218.fl-dt*2.2);
+  const pulse=n?(.18+.07*n)*(.6+.4*Math.sin(now/120)):0,lowp=low<.35?.15*(.5+.5*Math.sin(now/200)):0;D.style.opacity=Math.min(1,SKR218.fl+pulse+lowp).toFixed(3);
+  // the hull flashes red with the hit
+  const k=Math.max(0,1-(now-(SKR218.hit||0))/180);V.R.mats.forEach(m=>{if(!m.emissive)return;if(k>0){m.emissive.setRGB(.9*k,.06*k,0);m.emissiveIntensity=1}else if(m.userData.k218){m.emissive.setHex(m.userData.e0||0);m.emissiveIntensity=m.userData.ei0==null?1:m.userData.ei0}m.userData.k218=k>0});
+  // smoke below half, fire below a quarter
+  if(low<.5&&Math.random()<dt*(low<.25?22:9)){const fx=Math.sin(V.h),fz=Math.cos(V.h),p=new THREE.Vector3(V.x-fx*(Math.random()*3-1),V.y+1.6,V.z-fz*(Math.random()*3-1));burst(p,0x2a2622,2,.6,1.8,1.3);if(low<.25)burst(p,Math.random()<.5?0xff6a20:0xffb040,2,.8,1.6,.5)}
+  // the count of scarabs on the hull, under the bar
+  const H=$('sr165H');if(H){let c=$('sk218C');if(!c){c=document.createElement('div');c.id='sk218C';H.appendChild(c)}c.textContent=n?'🪲 ×'+n+' gnawing at the hull — shoot them off or boost!':'';c.style.display=n?'':'none'}}
+// ---------------- the camera ----------------
+function skr218Cam(){const V=SR165.me,C=SKR218.cam;if(!V)return;const fx=Math.sin(V.h),fz=Math.cos(V.h),x=V.x-fx*C.d,z=V.z-fz*C.d;let y=V.y+C.h;y=Math.max(y,GH(x,z)+C.floor,GH((x+V.x)/2,(z+V.z)/2)+C.floor+.6);
+  const p=new THREE.Vector3(x,y,z);if(SKR218.shk>0){p.x+=(Math.random()-.5)*SKR218.shk;p.y+=(Math.random()-.5)*SKR218.shk;SKR218.shk=Math.max(0,SKR218.shk-.03)}
+  cam.position.copy(p);const l=new THREE.Vector3(V.x+fx*C.ahead,V.y+C.ly,V.z+fz*C.ahead);cam.lookAt(l);if(typeof look!='undefined')look.copy(l);try{FADE.cam.value.copy(cam.position)}catch(_){}cam.updateMatrixWorld()}
+{const f=POST.render;POST.render=function(){try{if(SKR218.on&&typeof SR165!='undefined'&&SR165.on&&SR165.me&&sr165In())skr218Cam()}catch(e){if(!SKR218.err++)console.warn('v219 skimmer cam',e)}return f.apply(this,arguments)}}
+// ---------------- aiming at the real ground ----------------
+const SKR218RC=new THREE.Raycaster();
+function skr218Ground(){if(!mOn)return null;SKR218RC.setFromCamera(mnd,cam);const o=SKR218RC.ray.origin,d=SKR218RC.ray.direction,p=new THREE.Vector3();let prev=0;
+  for(let t=1;t<160;t+=1.2){p.copy(o).addScaledVector(d,t);if(p.y<=GH(p.x,p.z)+.5){let a=prev,b=t;for(let i=0;i<6;i++){const m=(a+b)/2;p.copy(o).addScaledVector(d,m);if(p.y<=GH(p.x,p.z)+.5)b=m;else a=m}p.copy(o).addScaledVector(d,b);p.y=GH(p.x,p.z)+.6;return p}prev=t}
+  return null}
+sr165Aim=function(V,dt){const tp=sr165Seat(V,'turret');let A=null;try{A=skr218Ground()}catch(_){}
+  let best=null,bd=A?6:40;sr165Foes().forEach(f=>{const p=f.p,d=A?Math.hypot(p.x-A.x,p.z-A.z):Math.hypot(p.x-tp.x,p.z-tp.z);if(d<bd){bd=d;best=f}});
+  if(best)A=best.p.clone();if(!A){const fx=Math.sin(V.h),fz=Math.cos(V.h);A=new THREE.Vector3(V.x+fx*20,V.y+.9,V.z+fz*20)}V.aim=A;V.lock218=!!best;
+  let y=Math.atan2(A.x-tp.x,A.z-tp.z)-V.h;y=Math.atan2(Math.sin(y),Math.cos(y));let d=y-V.aY;d=Math.atan2(Math.sin(d),Math.cos(d));V.aY+=d*Math.min(1,dt*16);
+  const dist=Math.hypot(A.x-tp.x,A.z-tp.z);V.aP=Math.max(-.35,Math.min(.25,Math.atan2(tp.y-(A.y||V.y),dist)*.8))};
+function skr218Ret(V,now){let R=SKR218.ret;const on=SR165.on&&V&&V.gun==='me'&&V.aim&&SR165.ph==='run';
+  if(!R){if(!on)return;R=SKR218.ret=new THREE.Mesh(new THREE.RingGeometry(.7,.95,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd070,transparent:true,opacity:.8,depthWrite:false,fog:false}));R.renderOrder=40;R.userData.lpsSkip=1;scene.add(R)}
+  R.visible=!!on;if(!on)return;const A=V.aim;R.position.set(A.x,GH(A.x,A.z)+.12,A.z);R.material.color.setHex(V.lock218?0xff4030:0xffd070);R.scale.setScalar(V.lock218?1.3+.15*Math.sin(now/80):1)}
+// ---------------- each frame of the Run ----------------
+{const f=sr165Tick;sr165Tick=function(dt,now){const r=f.apply(this,arguments);try{const on=SKR218.on&&SR165.on;document.body.classList.toggle('sk218',!!on);
+    if(on&&SR165.me){skr218Feel(SR165.me,dt,now);skr218Glow(now)}else{if(SKR218.dom)SKR218.dom.style.opacity=0;if(SKR218.glow.size)skr218Glow(now)}skr218Ret(SR165.me,now)}catch(e){if(!SKR218.err++)console.warn('v219 run',e)}return r}}
+// ================= v219: Ssith'ra can be struck anywhere along her body (owner, Nov 10 2026) =================
+// Owner: "Make it so you can also hit Ssith'ra's body- not just the head."
+// Every hit test in the game measures to a foe's position (e.m.position); Ssith'ra's is her head, and her fourteen body segments
+// trail behind it along the path she took (3078), so swings, spells and shots that met her body did nothing. Now, for the length of
+// each hit test (area() for swings and spells, shotTick for shots and bolts), she counts as standing at whichever of her head or
+// visible segments is nearest to the blow (SB218.pts: the segments' joints, skipping any under the sand; none while she is burrowed),
+// and she is put back straight after. Damage numbers and hit sparks appear where the blow landed. A hit on the body counts the same
+// as a hit on the head. Co-op: each player tests their own blows (as before) and the damage is sent as usual.
+var SB218={on:true,R:2.6,n:0};
+function sb218Is(e){return !!(e&&!e.dead&&e.boss&&e.bi===3&&e.sv&&e.sv.R&&e.sv.R.J&&e.sv.R.J.s0&&e.m&&e.m.visible)}
+function sb218Pts(e){if(e.sv.gone)return [];const R=e.sv.R,out=[];e.m.updateMatrixWorld(true);for(let k=0;k<SSR.N;k++){const J=R.J['s'+k];if(!J||!J.visible)continue;const v=J.getWorldPosition(new THREE.Vector3());
+    if(v.y<GH(v.x,v.z)-.35)continue;out.push(v)}return out}
+// move each Ssith'ra (x/z only) to her point nearest to any of the given points (within SB218.R of it); returns what to undo
+function sb218Swap(P){const U=[];if(!SB218.on||!P.length||typeof enemies=='undefined')return U;for(const e of enemies){if(!sb218Is(e))continue;
+    const H=e.m.position;let best=null,bd=1e9;for(const p of P)bd=Math.min(bd,Math.hypot(p.x-H.x,p.z-H.z));
+    for(const q of sb218Pts(e))for(const p of P){const d=Math.hypot(p.x-q.x,p.z-q.z);if(d<bd-.05&&d<SB218.R+6){bd=d;best=q}}
+    if(best){U.push([e,H.x,H.z]);H.x=best.x;H.z=best.z;SB218.n++}}return U}
+function sb218Back(U){for(const [e,x,z] of U){e.m.position.x=x;e.m.position.z=z}}
+{const f=area;area=function(p,r,dm,s,dir,half){let U=[];try{if(p)U=sb218Swap([dir&&dir.x!=null?p.clone().addScaledVector(dir,Math.min(r||2,3)*.6):p,p])}catch(_){}try{return f.apply(this,arguments)}finally{sb218Back(U)}}}
+{const f=shotTick;shotTick=function(dt){let U=[];try{if(typeof shots!='undefined'&&shots.length)U=sb218Swap(shots.filter(s=>s&&s.m&&!s.dead).map(s=>s.m.position))}catch(_){}try{return f.apply(this,arguments)}finally{sb218Back(U)}}}
+// ================= v219: The Dirge I — the angel at the start, graves on the map, digging that holds (owner, Nov 10 2026) =================
+// Owner: "In the dirge 1, have the weeping angel at the beginning so you can get the spade and search tombs while you explore instead
+// of backtracking. Make graves both undug and dug marked on the map. When digging up a grave in the dirge- your players gets shifted
+// away from the grave if youre slightly on top of it and it cancels the digging. Enemies also spawn on top of the open hole and its
+// hard to reach them and they get stuck. Also the grave and grave elements shrink while digging"
+//  * The weeping angel (3312, the 'sanctum' gateway record) stands beside the road a little way in from the entrance (DG218.at of the
+//    road, DG218.side off it, facing it) instead of at the road's end: read it on the way in, take the spade, and every grave along
+//    the road can be dug as you pass. Its other prompt (travel on to II once the Sanctum is done) is unchanged; the Keeper's stair
+//    still leads down too.
+//  * The map: every grave of the quest is drawn on the minimap and the world map (M) from the start: a pale cross for one not dug
+//    yet (brighter once read), a dark open pit for one dug and found empty, the green stair for the Keeper's once it is open.
+//  * Digging: the dig prompt's spot (1.3 from the grave's middle) lay on the grave's own blocked tiles, so the hero was pushed off it
+//    and the dig stopped (it stops if you move more than .6). F now steps the hero to the foot of the grave, just clear of its tiles,
+//    facing it, and only a real step away (DG218.leave) stops the dig. The grave no longer squashes down while you dig (the spade's
+//    dirt flies as before).
+//  * The dead of a wrong grave climb out onto open ground beside it (the nearest free spots 2.6–4 from the grave, never on its
+//    blocked tiles), so they can be reached and do not stick in the pit.
+// Co-op: the angel's spot is computed the same on every screen; a dig and its risen dead go through 3312's own messages as before.
+var DG218={on:true,at:12,side:5.5,foot:2.65,leave:1.4,risen:null,err:0};
+// ---------- the angel near the start ----------
+function dg218AngelSpot(){const I=INSL[20],P=I.path,N=P.length,props=new Set();try{MAP.props.forEach(q=>props.add(q[1]*W+q[0]))}catch(_){}
+  const free=(x,z)=>{const X=Math.round(x),Z=Math.round(z),t=MAP[Z]&&MAP[Z][X];if(!t||t=='#'||t=='r'||t=='~'||t=='R'||props.has(Z*W+X)||solid(X,Z))return false;const J=insAt(X,Z);return !!J&&J.g===20&&MAP.DW[Z*W+X]<-.8};
+  const G=dg165GravePlan().G,far=(x,z)=>G.every(o=>Math.hypot(x-o.x,z-o.z)>6)&&Math.hypot(x-I.en[0],z-I.en[1])>6;
+  let i0=0;for(let i=0;i<N;i++)if(Math.hypot(P[i][0]-I.en[0],P[i][1]-I.en[1])>=DG218.at){i0=i;break}
+  for(const di of [0,4,8,-3,12,16,20])for(const sd of [1,-1])for(const b of [DG218.side,DG218.side+1.5,DG218.side-1,DG218.side+3]){const k=Math.max(2,Math.min(N-3,i0+di)),q=P[k],a=P[k-2],c=P[k+2];
+    let tx=c[0]-a[0],tz=c[1]-a[1];const L=Math.hypot(tx,tz)||1;tx/=L;tz/=L;const x=q[0]-tz*b*sd,z=q[1]+tx*b*sd;
+    if(!free(x,z)||!far(x,z))continue;let ok=true;for(const [ox,oz] of [[1.4,0],[-1.4,0],[0,1.4],[0,-1.4],[1,1],[-1,-1],[1,-1],[-1,1]])if(!free(x+ox,z+oz)){ok=false;break}if(!ok)continue;
+    const ux=(x-q[0])/b,uz=(z-q[1])/b;return {x,z,ry:Math.atan2(-ux,-uz),ux,uz,v219:1}}
+  return null}
+try{const Gt=SP152.gates.sanctum;if(Gt&&DG218.on){const w0=Gt.where;Gt.where=function(){let s=null;try{s=dg218AngelSpot()}catch(e){console.warn('v219 angel spot',e)}return s||(w0?w0.apply(this,arguments):sp152GateSpot(Gt.ig))}}}catch(e){console.warn('v219 angel',e)}
+// the tracker's first step says where it is now
+{const f=SP152.trk.dirgeI;if(f)SP152.trk.dirgeI=function(I){const r=f.apply(this,arguments);try{if(r&&r.lines&&DG165Q.g.st<1&&r.lines[0]&&r.lines[0][0]==='Follow the road to its end')r.lines[0]=['The weeping angel by the road, near the entrance']}catch(_){}return r}}
+// ---------- digging that holds ----------
+function dg218Foot(o){return [o.x+Math.sin(o.ry)*DG218.foot,o.z+Math.cos(o.ry)*DG218.foot]}
+{const f=dg165DigStart;dg165DigStart=function(G){f.apply(this,arguments);try{const D=DG165GR.dig;if(DG218.on&&D&&D.G===G){const o=G.o,[x,z]=dg218Foot(o);
+    if(!solid(Math.round(x),Math.round(z))){pl.position.x=x;pl.position.z=z;pl.position.y=GH(x,z);pl.rotation.y=Math.atan2(o.x-x,o.z-z)}D.x=pl.position.x;D.z=pl.position.z}}catch(e){if(!DG218.err++)console.warn('v219 dig start',e)}}}
+{const f=dg165DigTick;dg165DigTick=function(dt,now){const D=DG165GR.dig;if(DG218.on&&D){const P=pl.position,d=Math.hypot(P.x-D.x,P.z-D.z);
+    // a nudge from the ground or a partner is no reason to stop: only a real step away is
+    if(d>.55&&d<DG218.leave){D.x=P.x;D.z=P.z}}
+  const r=f.apply(this,arguments);try{if(D&&D.G&&D.G.body)D.G.body.children.forEach(m=>{m.scale.y=1})}catch(_){}return r}}
+// ---------- the risen climb out beside the grave ----------
+{const f=dg165DigDone;dg165DigDone=function(G,mine){if(DG218.on&&G&&G.o&&G.o.i!==DG165G.K)DG218.risen={o:G.o,t:performance.now(),n:0};return f.apply(this,arguments)}}
+function dg218Out(o,k){const ca=Math.cos(o.ry),sa=Math.sin(o.ry),C=[];for(const r of [2.7,3.2,3.8])for(let a=0;a<12;a++){const q=a/12*Math.PI*2+k*.9,x=o.x+Math.sin(q)*r*1.15,z=o.z+Math.cos(q)*r;
+    if(solid(Math.round(x),Math.round(z))||solid(Math.round(x+.4),Math.round(z))||solid(Math.round(x),Math.round(z+.4)))continue;
+    // not on the grave's own footprint (in the grave's frame: across lx, along lz)
+    const dx=x-o.x,dz=z-o.z,lx=ca*dx-sa*dz,lz=sa*dx+ca*dz;if(Math.abs(lx)<1.7&&lz>-2.2&&lz<2.6)continue;C.push([x,z])}
+  return C.length?C[0]:null}
+{const f=spawnEnemy;spawnEnemy=function(k,x,z,lv,o){const R=DG218.risen;if(DG218.on&&R&&o&&o.minion&&(k==='ghoul'||k==='skeleton')&&performance.now()-R.t<4000&&Math.hypot(x-R.o.x,z-R.o.z)<2.5){
+    const q=dg218Out(R.o,R.n++);if(q){x=q[0];z=q[1];try{burst(gY(new THREE.Vector3(R.o.x,0,R.o.z),.4),0x3a3026,12,1.6,2.2,.6)}catch(_){}}}
+  return f.call(this,k,x,z,lv,o)}}
+// ---------- every grave on the minimap and the world map ----------
+function dg218Mark(g,X,Y,k,st){g.save();g.translate(X,Y);g.scale(k,k);
+  if(st==='keep'){g.fillStyle='#0e2a1a';g.fillRect(-3.6,-4.6,7.2,9.2);g.strokeStyle='#7affb0';g.lineWidth=1.4/k;for(let i=0;i<3;i++){g.beginPath();g.moveTo(-2.6+i*.6,-2.6+i*2);g.lineTo(2.6-i*.6,-2.6+i*2);g.stroke()}}
+  else if(st==='dug'){g.fillStyle='#1a120c';g.beginPath();g.ellipse(0,0,3.2,4.2,0,0,Math.PI*2);g.fill();g.strokeStyle='#8a6a4a';g.lineWidth=1.2/k;g.stroke();
+    g.strokeStyle='#5a4634';g.beginPath();g.moveTo(-1.6,-1.8);g.lineTo(1.6,1.8);g.moveTo(1.6,-1.8);g.lineTo(-1.6,1.8);g.stroke()}
+  else{const c=st==='read'?'#e8ece4':'#9aa09a';g.fillStyle='#141618';g.fillRect(-3.4,-4.4,6.8,8.8);g.strokeStyle=c;g.lineWidth=1.4/k;g.beginPath();g.moveTo(0,-3.4);g.lineTo(0,3.4);g.moveTo(-2.2,-1.2);g.lineTo(2.2,-1.2);g.stroke()}
+  g.restore()}
+function dg218St(i){const keep=i===DG165G.K;if(keep&&dg165GDone())return 'keep';if(!keep&&DG165Q.g.bad[i])return 'dug';return DG165Q.g.ex[i]?'read':'new'}
+dg165GMarks=function(g,P,k){if(!dg165GIn())return;dg165GravePlan().G.forEach((o,i)=>{const q=P(o.x,o.z);if(!q)return;dg218Mark(g,q[0],q[1],k,dg218St(i))})};
+{const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{if(DG218.on&&dg165GIn()){const I=INSL[20],c=$('wmc'),g=c.getContext('2d'),k=Math.min(1060/I.w,640/I.h),T=(x,z)=>[(x-I.x0+.5)*k,(z-I.y0+.5)*k];
+    dg165GravePlan().G.forEach((o,i)=>{const [X,Y]=T(o.x,o.z);dg218Mark(g,X,Y,1.6,dg218St(i))});
+    const A=SP152.gates.sanctum;if(A&&A.spot){const [X,Y]=T(A.spot.x,A.spot.z);g.font='700 12px system-ui,sans-serif';g.textAlign='center';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.85)';g.strokeText('Weeping Angel',X,Y-12);g.fillStyle='#cfe8dc';g.fillText('Weeping Angel',X,Y-12)}}}catch(e){console.warn('v219 dirge map',e)}return r0}}
+// ================= v219: daggers held clear of the body (owner, Nov 10 2026) =================
+// Owner: "When using emberkiss daggers- they rest incorrectly and they phase into the assassin's body"
+// Daggers (every dagger pair, Emberkiss among them) rest in the v93 carry grip (1270 GRIP.dagger): tipped .6 forward and leaning
+// neither way, so standing and walking the blades crossed the forearms and slid into the chest and hips. They now rest a little more
+// upright (t .45) and lean out away from the body (rl −.45, mirrored for the left hand): both blades stand clear of the arms,
+// chest and legs at rest and on the move. Attacks use the strike grip as before. Partners build the same grip from the same table.
+GRIP.dagger.t=.45;GRIP.dagger.rl=-.45;
+// ================= v219: The Hidden Sanctum — fair spikes, a steady bridge, a still tomb, a real flooded stair (owner, Nov 10 2026) =================
+// Owner: "In the hidden sanctum, the floor spikes need a delay to give the player a chance to step to the next spot. On the tiles that
+// fall, the character drops briefly when they first step on and step off the last one. In the last room the coffin shifts for no
+// reason, and the flooded stair is just a flat wall. Add an actual flooded stairway"
+//  * The Spike Hall (3314 dg165SSpikes): the bands rolled on every .62 s with a .36 s red warning, too quick to read and step. They now
+//    move every 1.05 s (DS218.step) and glow red for .65 s first (DS218.warn): each safe spot stays safe long enough to step into.
+//  * The Chasm: next to the bridge the ledge's ground dips toward the pit below it (the ground's corners are shared with the pit), so
+//    the hero sank for a moment stepping onto the first slab and off the last. On the ledges the hero now stands on the floor.
+//  * The Keeper's Tomb: the sarcophagus lid slid and turned by itself as you walked in (a scare); it stays shut now (the whisper
+//    still comes).
+//  * The flooded stair: the steps were built going down past the end wall, outside the level, so only the wall showed. Now a
+//    stairwell is cut into the tomb's floor before the end wall (DS218.well): an arched entrance, nine stone steps going down
+//    between walls into green water that fills the bottom, the ground lowered under it so the hero can walk down into it.
+//    "F · Descend the flooded stair" works on the steps as before.
+var DS218={on:true,step:1.05,warn:.65,well:{u0:90.6,u1:93.4,v0:313,v1:319.8,n:9,dy:.32,water:1.45},err:0};
+if(DS218.on){DG165SP.spkStep=DS218.step;DG165SP.spkWarn=DS218.warn}
+// ---------- the stairwell: no floor slabs over it, the ground lowered under it ----------
+function ds218InWell(u,v){const w=DS218.well;return u>=w.u0-.6&&u<w.u1+.6&&v>=w.v0&&v<w.v1+.2}
+{const f=dg165SFloor;dg165SFloor=function(I){DS218.cut=1;try{return f.apply(this,arguments)}finally{DS218.cut=0}}}
+{const f=dg165SanFloor;dg165SanFloor=function(u,v){if(DS218.cut&&DS218.on&&ds218InWell(u,v))return 'pit';return f.apply(this,arguments)}}
+function ds218StepTop(v){const w=DS218.well,F0=dg165SY(),d=(w.v1-.5-w.v0)/w.n;const i=Math.max(0,Math.min(w.n-1,Math.floor((v-w.v0)/d)));return F0-w.dy*(i+1)}
+function ds218Ground(){const I=dg165SI(),w=DS218.well,HI=(i,j)=>(j+HPD)*HW+i+HPD;if(!I)return;let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9,n=0;
+  for(let Z=Math.floor(I.y0+w.v0-2);Z<=I.y0+w.v1+2;Z++)for(let X=Math.floor(I.x0+w.u0-2);X<=I.x0+w.u1+2;X++){const u=X-I.x0+.5,v=Z-I.y0+.5;if(u<w.u0-.2||u>w.u1+.2||v<w.v0+.4||v>w.v1+.1)continue;
+    const h=ds218StepTop(v)-.3;if(HF[HI(X,Z)]>h){HF[HI(X,Z)]=h;n++;x0=Math.min(x0,X);z0=Math.min(z0,Z);x1=Math.max(x1,X);z1=Math.max(z1,Z)}}
+  if(n&&typeof ts218Redraw=='function')ts218Redraw(x0-1,z0-1,x1+1,z1+1);DS218.n=n}
+try{if(DS218.on)ds218Ground()}catch(e){console.warn('v219 sanctum well ground',e)}
+// ---------- the stairwell's stone: steps, walls down into the water, an arch over the top, the water ----------
+function ds218Kit(k){const C=DG165SM.c,w=DS218.well,F0=dg165SY(),W2=(u,v)=>dg165SW(u,v),cu=(w.u0+w.u1)/2,wd=w.u1-w.u0,d=(w.v1-.5-w.v0)/w.n;
+  for(let i=0;i<w.n;i++){const top=F0-w.dy*(i+1),[x,z]=W2(cu,w.v0+d*(i+.5));k.p('','box','c',lgCol(0x4a4a4e,0x16201c,i/w.n),x,top-.5,z,wd,1.0,d*1.02);if(i%2==0)k.p('','box','c',C.st3,x,top+.01,z-d*.48,wd*.98,.02,.06)}
+  // the side walls (from the floor's edge down past the water) and the end wall
+  [[w.u0-.32,.64],[w.u1+.32,.64]].forEach(([u,t])=>{const [x,z]=W2(u,(w.v0+w.v1)/2);k.p('','box','c',C.st2,x,F0-1.55,z,t,3.4,w.v1-w.v0+.4);k.p('','box','c',C.st,x,F0+.08,z,t+.06,.16,w.v1-w.v0+.45)});
+  {const [x,z]=W2(cu,w.v1+.12);k.p('','box','c',C.st2,x,F0-1.55,z,wd+1.3,3.4,.34)}
+  {const [x,z]=W2(cu,w.v0-.12);k.p('','box','c',C.st3,x,F0+.02,z,wd+1.3,.06,.28)}
+  // the arch over the way down: two pillars and a lintel with a carved skull
+  [w.u0-.32,w.u1+.32].forEach(u=>{const [x,z]=W2(u,w.v0+.2);k.p('','box','c',C.st,x,F0+1.3,z,.58,2.6,.58);k.p('','box','c',C.st2,x,F0+2.66,z,.7,.14,.7)});
+  {const [x,z]=W2(cu,w.v0+.2);k.p('','box','c',C.st,x,F0+2.92,z,wd+1.4,.42,.62);k.p('','sph','c',C.bone,x,F0+2.92,z-.33,.2,.18,.12)}
+  // bones on the steps above the water
+  for(let i=0;i<4;i++){const [x,z]=W2(cu+(i%2?.6:-.7),w.v0+d*(i+.4));k.p('','sph','c',C.bone2,x,F0-w.dy*(i+1)+.05,z,.12,.05,.14)}}
+{const f=dg165SBuild;dg165SBuild=function(){const had=!!DG165S.S,S=f.apply(this,arguments);if(had||!DS218.on||!S)return S;try{
+    if(S.stair)S.stair.visible=false;const g=dt168G('DG218|well',ds218Kit,0);S.root.add(g);S.well218=g;
+    const w=DS218.well,F0=dg165SY(),[x,z]=dg165SW((w.u0+w.u1)/2,(w.v0+w.v1+1.2)/2);
+    if(S.water){const og=S.water.geometry;S.water.geometry=new THREE.PlaneGeometry(w.u1-w.u0,w.v1-w.v0-1.2).rotateX(-Math.PI/2);S.water.position.set(x,F0-w.water+.03,z);og.dispose()}
+    const wm=new THREE.Mesh(new THREE.PlaneGeometry(w.u1-w.u0,w.v1-w.v0-1.2).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x123a30,roughness:.08,metalness:.3,transparent:true,opacity:.82}));
+    wm.material.userData.noFade135=1;wm.position.set(x,F0-w.water,z);S.root.add(wm);S.water218=wm;
+    S.spots.push({x,y:F0-w.water+.4,z,c:0x3affb0,i:1.4,r:8,fq:1.2})}catch(e){console.warn('v219 sanctum well',e)}return S}}
+// ---------- each frame: the ledges hold the hero up; the lid stays put; the water moves ----------
+{const f=dg165STick;dg165STick=function(dt,now){
+  // the tomb's scare without the sliding lid: claimed here first, the whisper played here
+  try{if(DS218.on&&dg165SIn()&&DG165S.S&&!DG165S.scare.tomb){const [hu,hv]=dg165SL(pl.position.x,pl.position.z);if(hv>291){DG165S.scare.tomb=1;
+      setTimeout(()=>{try{dg165Snd('whisper',.8,.7);say('🕯 <i>“…below… what lies below, I keep…”</i>')}catch(_){}},900)}}}catch(_){}
+  const r=f.apply(this,arguments);
+  try{if(DS218.on&&dg165SIn()&&!DG165S.fall&&!(typeof AWD!='undefined'&&AWD.dead)){const H=pl.position,[hu,hv]=dg165SL(H.x,H.z),room=dg165SanFloor(hu,hv),F0=dg165SY();
+      if(room==='ledge'&&H.y<F0)H.y=F0;
+      const S=DG165S.S;if(S&&S.water218){const t=now/1000;S.water218.position.y=F0-DS218.well.water+Math.sin(t*1.3)*.03}}}catch(e){if(!DS218.err++)console.warn('v219 sanctum tick',e)}
+  return r}}
+// ================= v219: The Black Channel's raft — the drowned keep coming, the Hulk slams like one (owner, Nov 10 2026) =================
+// Owner: "When doing the raft mission- the enemies got staggered every time they were hit so the threat of them breaking the raft was a
+// lot less than it should be- especially for the elite. Improve the elite's animation when hes attached to the raft and attacking as
+// well- and make the raft rock less when he slams it"
+//  * Staggering (3316 rt165WTick): any hit on a clinging drowned cancelled what it was doing (its rake too, before the rake landed)
+//    and made it flinch, so steady fire kept every plank safe. Now the Drowned Hulk never flinches, and a Wretch flinches only
+//    when hit while it is not already tearing or lunging, at most once every RF218.cd seconds: their attacks land.
+//  * The Hulk's attack on the planks is its own slam (RF218 pose 'hslam'): it hauls itself up out of the water, both arms high over
+//    its head with a roar, holds there (the warning), then hammers both fists down on the planks with its whole body behind them,
+//    and drags itself back onto its elbows. Clinging, it heaves its shoulders slowly and lifts its head to look over the deck.
+//  * The rocking: a Hulk's slam rocked the raft hard (a 1.6 kick to its roll); it now rocks it about a third as much (RF218.rock).
+// Co-op: the host's drowned reach partners as before; partners' copies of a Hulk use the same new poses (3316 rt165Mirror).
+var RF218={on:true,cd:2.6,rock:.35,hulk:false};
+// ---------- no stagger lock ----------
+{const f=rt165WTick;rt165WTick=function(e,w,dt,now){if(RF218.on&&w&&e&&e.c){const hurt=e.c.h<w.hp-.5;
+    if(hurt){const t=now/1000,busy=w.act&&(w.act.k==='rake'||w.act.k==='lunge');if(w.hulk||busy||t-(w.fl218||-99)<RF218.cd)w.hp=e.c.h;else w.fl218=t}}
+  const o=RF218.hulk;RF218.hulk=!!(w&&w.hulk);
+  try{const r=f.apply(this,arguments);
+    // the Hulk's body rises with the slam's wind-up and drops into the blow
+    try{if(RF218.on&&w&&w.hulk&&w.st==='cling'&&w.act&&w.act.k==='rake'&&e.m){const k=Math.min(1,w.act.t/w.act.T);e.m.position.y+=rf218Rise(k)}}catch(_){}
+    return r}finally{RF218.hulk=o}}}
+{const f=rt165Mirror;rt165Mirror=function(e,w){const o=RF218.hulk;RF218.hulk=!!(w&&w.hulk);try{return f.apply(this,arguments)}finally{RF218.hulk=o}}}
+// ---------- less rocking ----------
+{const f=rt165Rake;rt165Rake=function(R,w){const r0=R&&R.rollV;const r=f.apply(this,arguments);try{if(RF218.on&&w&&w.hulk&&R&&r0!=null)R.rollV=r0+(R.rollV-r0)*RF218.rock}catch(_){}return r}}
+// ---------- the Hulk's poses ----------
+function rf218Rise(a){const up=a<.42?a/.42:a<.5?1-(a-.42)/.08:0,e=up*up*(3-2*up);return .5*e-(a>=.5&&a<.62?.12*Math.sin((a-.5)/.12*Math.PI):0)}
+// keys: on the planks (K0) → both arms high overhead, rearing back (K1, by .42) → fists down on the planks, body thrown forward
+// (K2, by .52, held to .6) → back onto the elbows (K0, by 1)
+var RF218K=[{pitch:.62,sp:.2,ch:.12,nk:-.1,hx:-.5,ax:-1.25,az:.45,ae:-.55,aw:.35},{pitch:.08,sp:-.18,ch:-.22,nk:-.3,hx:-.95,ax:-3.0,az:.28,ae:-.2,aw:-.3},{pitch:1.08,sp:.5,ch:.42,nk:.05,hx:.05,ax:-.85,az:.5,ae:-.12,aw:.3}];
+function rf218Slam(a,t,ph){const sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)},K=RF218K,L=(A,B,u)=>{const o={};for(const k in A)o[k]=A[k]+(B[k]-A[k])*u;return o};
+  const q=a<.42?L(K[0],K[1],sm(a/.42)):a<.52?L(K[1],K[2],Math.pow((a-.42)/.1,2)):a<.6?K[2]:L(K[2],K[0],sm((a-.6)/.4));
+  const hold=a>.3&&a<.42?.05*Math.sin(t*40):0,arm=(d)=>({x:q.ax+d,z:q.az,e:q.ae,w:q.aw});
+  return {pitch:q.pitch,roll:0,sp:q.sp,ch:q.ch,nk:q.nk,hx:q.hx,hy:.06*Math.sin(t*2+ph),hz:0,arms:[arm(hold),arm(-hold)],legs:{k:a*4,a:.25,b:.3,kb:.6}}}
+function rf218Cling(t,ph){const s=Math.sin,w=t*.8+ph,look=Math.max(0,s(w*.37));
+  return {pitch:.5+.06*s(w),roll:.04*s(w*.7),sp:.14+.06*s(w),ch:.2+.08*s(w*1.1),nk:-.1-.15*look,hx:-.35-.2*look+.08*s(w*.9),hy:.45*s(w*.31),hz:.08*s(w*.5),
+    arms:[{x:-1.35+.12*s(w),z:.62+.06*s(w*1.3),e:-.75+.12*s(w*1.1),w:.4},{x:-1.35+.12*s(w+1.9),z:.62+.06*s(w*1.3+1),e:-.75+.12*s(w*1.1+1),w:.4}],legs:{k:w,a:.18,b:.3,kb:.6}}}
+{const f=dg165WPose;dg165WPose=function(st,t,ph,k){if(RF218.on&&RF218.hulk){try{if(st==='rake')return rf218Slam(k&&k.k!=null?k.k:0,t,ph);if(st==='cling')return rf218Cling(t,ph)}catch(_){}}return f.apply(this,arguments)}}

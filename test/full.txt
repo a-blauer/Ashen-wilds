@@ -179,6 +179,7 @@ v211_coop.py
 v213_guard.py
 v213_cards.py
 v213_coop.py
+v218_games.py
 v212_white.py
 v217_songs.py
 v216_argus.py
