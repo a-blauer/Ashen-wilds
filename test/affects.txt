@@ -116,7 +116,7 @@ v203|OB203|mist|cobweb|windMat|ob192|3570|0060-v52: v203_mist.py v177_env.py v20
 3760|373[0-9]|374[0-9]|375[0-9]|3180|coop|co-op|0520: v205_coop.py
 # v206 owner's list: companion orders, threat, fishing ponds, pouch Add food, intro without the town tour, lantern, menu (3770–3774)
 377[0-4]|v206|0860-|0005-|3200-|threat|eTarget|fishing|pouch|companion-food|lantern|sysmenu: v206_owner.py v206_coop.py v164_kite.py v122_support.py v150_coop.py
-3774|3080|3081|3082|intro: v151_intro_live.py v151_intro.py
+3774|3080|3081|3082|intro: v151_intro_live.py v151_intro.py v224_portal_view.py
 # v207 owner's list (3780 gameplay/UI, 3781 places; boxes, swing pacing, shots, Abeksi, the Ascent's crack and mount, camera on the stair)
 3780|3781|3782|v207|0370|3241|1710|2270|3033|3162|3250|3330|3260|3520|3630|knife|xbow|crossbow: v207_owner.py v207_coop.py v207_throws.py v186_knife.py v153_ascent.py v167_obstacles.py v144_glowmire.py
 # v208 Sovereign essence (siphon, rift, fountain pour), the fountain of essence, heavier RPG sounds
@@ -156,3 +156,4 @@ v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-:
 3960|v223|2940|2930|1880|1910|2200|3220|3700|3780|1960|3950|ledger: v223_menus.py v139_checks.py v117_menus.py v103_kingdom.py v222_ledger.py
 # v223 town folk (3963, 3964): smith grip, bard arms, keepers hold still while their window is open, the Scholar's Tower lectern
 3963|3964|v223|1900|2995|3081|3550|3680|3700|3702|3708|1030-|1860|3630|3490|3940|0490: v223_town.py v103_kingdom.py v192_hero_fit.py v200_stations.py v220_town.py v221_immersion.py v151_intro.py
+3620|1830|v224: v224_portal_view.py

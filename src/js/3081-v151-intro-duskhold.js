@@ -102,7 +102,7 @@ function ic151DCam(D,t,h){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,g
   else if(t>=IV.v1[0]){if(t<IV.v1[1]){const k=Io(K(t,IV.v1[0],IV.v1[1]));p=H.clone().add(new V(1.2+2*k,2.2+11*k,-4.5-9*k));l=H.clone().add(up(1.2)).lerp(H.clone().add(new V(Math.sin(D.endYaw)*38,0,Math.cos(D.endYaw)*38)),k);fov=52}
     else if(t<IV.v2[1]){const k=Sm(K(t,IV.v2[0],IV.v2[1]));{const T0=TOWNS[0];p=new V(T0.cx+24-26*k,46+4*k,T0.cy+42-8*k);l=new V(T0.cx,2,T0.cy+4-4*k);F=new V(T0.cx,0,T0.cy+10)}fov=50} // v196: over the round town
     else if(t<IV.v3+6*IV.v3d){const i=Math.min(5,Math.floor((t-IV.v3)/IV.v3d)),k=Sm(K(t-IV.v3-i*IV.v3d,0,IV.v3d)),G=D.gates[i];z=i;
-      if(G){const P=new V(G.x,gy(G.x,G.z),G.z),a=new V(G.a[0],0,G.a[1]),dr=a.clone().sub(P).setY(0).normalize(),sv=new V(dr.z,0,-dr.x);p=P.clone().addScaledVector(dr,10.5-1.8*k).addScaledVector(sv,(i%2?-1:1)*2.6).add(up(3.0+.5*k));l=P.clone().add(up(2.5));F=P.clone().addScaledVector(dr,4)}
+      if(G){const P=new V(G.x,gy(G.x,G.z),G.z),a=new V(G.a[0],0,G.a[1]),dr=a.clone().sub(P).setY(0).normalize(),sv=new V(dr.z,0,-dr.x);p=P.clone().addScaledVector(dr,8.0-1.4*k).addScaledVector(sv,-1.6).add(up(2.9+.4*k));l=P.clone().add(up(2.3));F=P.clone().addScaledVector(dr,4)} // v224: inside the clearing, in its open front, on the side away from the signpost (it stood at the clearing's edge, in the trees)
       else{p=H.clone().add(up(5));l=H.clone()}fov=48}
     else if(t<IV.v4[1]){const k=Sm(K(t,IV.v4[0],IV.v4[1]));p=H.clone().add(new V(.9+.4*k,.75+.15*k,2.9-.4*k));l=H.clone().add(up(1.35));fov=46}
     else if(t<IV.v5[1]){const k=Sm(K(t,IV.v5[0],IV.v5[1])),a=.95-1.6*k,c=H.clone().lerp(new V(D.ref[0],H.y,D.ref[1]),.35);p=c.clone().add(new V(Math.sin(a)*5.4,2.0+.4*k,Math.cos(a)*5.4));l=c.add(up(.9));fov=48}
@@ -136,6 +136,7 @@ function ic151Dusk(S,t){const D=ic151DStart(S);if(!D)return;const now=2e6+t*1000
     C.root.position.y=(D.chY0!=null?D.chY0:GH(D.ched[0],D.ched[1]))+hop;C.root.rotation.y=r0+da*kf;try{C.update(t,dt)}catch(_){}}
   const c=ic151DCam(D,t,h);cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
   try{compTick(dt,now)}catch(_){}
+  if(c.z!==D.lz){D.lz=c.z;try{DM196RC.t=-1e9}catch(_){}}   // v224: a cut to another portal shows its room at once (3620 updates the rooms every 0.4 s)
   const F=c.F;try{townTick(now,F);townLights(F)}catch(_){}ic151DTags(D,false);WIND.t.value=now/1000;
   const sv=pl.position.clone();try{pl.position.set(F.x,GH(F.x,F.z),F.z);chunkVis();atmos(dt,now)}catch(_){}finally{pl.position.copy(sv)}
   try{torch.position.set(pl.position.x,pl.position.y+2.2,pl.position.z+.3);pln.constant=-pl.position.y}catch(_){}

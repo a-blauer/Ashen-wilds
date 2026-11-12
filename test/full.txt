@@ -87,6 +87,7 @@ v189_fusion_stars.py
 v150_ritual.py
 TIMES=4,20,27,40,53,57.5 v151_intro.py
 v151_intro_live.py
+v224_portal_view.py
 v159_preview.py
 v152_abeksi.py
 v152_route.py
