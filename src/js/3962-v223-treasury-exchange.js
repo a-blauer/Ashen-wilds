@@ -25,7 +25,7 @@ function t223Q(i,n){const per=t223Per(),p=trs200P(i,n),p1=trs200P(i,Math.max(0,n
 function t223Candles(i,n){const [D,B]=T223.R[T223.rg]||T223.R['3D'],per=t223Per(),from=Math.max(0,n-D*per),P=trs200Hist(i,n),C=[];
   for(let s=from;s<=n;s+=B){const e=Math.min(n,s+B);let h=-1e9,l=1e9;for(let j=Math.max(0,s-1);j<=e;j++){h=Math.max(h,P[j]);l=Math.min(l,P[j])}C.push({s,e,o:P[Math.max(0,s-1)],c:P[e],h,l});if(e>=n)break}return C}
 function t223Time(step,long){const d=new Date(TRS200.T0+step*TRS200.S),hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  return long?d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+hm:(T223.rg=='1D'?hm:d.toLocaleDateString(undefined,{month:'short',day:'numeric'}))}
+  const day=d.toLocaleDateString(undefined,{month:'short',day:'numeric'});return long||T223.rg=='3D'?day+' '+hm:(T223.rg=='1D'?hm:day)}
 function t223Chart(cv){const i=T223.v,n=trs200N(),C=t223Candles(i,n),dpr=Math.min(2,window.devicePixelRatio||1),W=cv.clientWidth||600,Hh=cv.clientHeight||220;if(W<20)return;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(Hh*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(Hh*dpr)}
   const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,Hh);
@@ -86,7 +86,8 @@ function t223Build(){const B=$('xwB');if(!B)return;const n=trs200N(),cap=trs200C
       <div class="t223-side t223-sell"><div class="t223-lab">Sell <small>${H?'all pays about '+t223G(Math.floor(H.s*q.p*(1-TRS200.fee))):'nothing to sell'}</small></div><div class="t223-row">${sells}</div></div></div>
    </div>${head?head.outerHTML:''}</div>`;
   B.innerHTML=html;B.dataset.t223=1;
-  requestAnimationFrame(()=>{try{const R=B.querySelector('.t223');if(!R)return;R.querySelectorAll('[data-t223sp]').forEach(c=>t223Spark(c,+c.dataset.t223sp));const cv=R.querySelector('[data-t223cv]');if(cv)t223Chart(cv)}catch(e){console.warn('v223 chart',e)}});
+  const draw=()=>{try{const R=B.querySelector('.t223');if(!R)return;R.querySelectorAll('[data-t223sp]').forEach(c=>t223Spark(c,+c.dataset.t223sp));const cv=R.querySelector('[data-t223cv]');if(cv)t223Chart(cv)}catch(e){console.warn('v223 chart',e)}};
+  draw();requestAnimationFrame(draw);   // now (the layout is known) and once more after the first paint (fonts, scrollbar)
   clearInterval(T223.tm);T223.tm=setInterval(t223Tick,1000)}
 function t223Tick(){const x=$('xw'),R=$('xwB')&&$('xwB').querySelector('.t223');
   if(xwMode!='treas200'||!x||x.classList.contains('hide')||!R){clearInterval(T223.tm);T223.tm=0;if(R)R.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0});return}

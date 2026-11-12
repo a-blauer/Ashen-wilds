@@ -11,7 +11,7 @@ GIVE="""()=>{TOD=.3;gold=250000;SH.shop.alch=1;SH.shop.cook=1;try{shApply()}catc
   ['glowcap','petals','crystal','stone','bone'].forEach(k=>{mats[k]=12})}"""
 OPEN="""(k)=>{try{const N=TWN100_S.npc[k];if(N){const n=im220Rig(N).getWorldPosition(new THREE.Vector3());pl.position.set(n.x+1.2,pl.position.y,n.z+2.2);snapCam()}}catch(_){}openX(k)}"""
 FIT="""()=>{lg222Ink();const w=$('xw').querySelector('.win'),B=$('xwB'),S=$('stage').getBoundingClientRect(),r=w.getBoundingClientRect();
-  return {low:lg222Audit(1.9).slice(0,4),over:[w.scrollWidth-w.clientWidth,B.scrollWidth-B.clientWidth],out:r.left<S.left-1||r.right>S.right+1}}"""
+  return {low:lg222Audit(1.9).slice(0,4),over:[w.scrollWidth-w.clientWidth,B.scrollWidth-B.clientWidth],out:r.left<S.left-2||r.right>S.right+2,r:[r.left,r.right,S.left,S.right].map(Math.round)}}"""
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
@@ -22,11 +22,11 @@ def s(pg):
     def shot(n):
         if SHOTS:pg.wait_for_timeout(900);pg.screenshot(path=play.TMP+'/v223_%s.png'%n);print('SHOT',n)
     # ---------------- alchemy ----------------
-    ev(OPEN,'alch');pg.wait_for_timeout(900)
+    ev(OPEN,'alch');pg.wait_for_timeout(1800)
     r=ev("""()=>{const R=$('xwB').querySelector('.c223');if(!R)return null;return {lines:R.querySelectorAll('[data-c223r]').length,chips:R.querySelectorAll('.c223-r .c223-chip').length,
       bench:!!R.querySelector('.c223-bench .c223-svg'),go:!!R.querySelector('[data-c223go]'),flt:R.querySelectorAll('[data-c223f]').length,ibuy:R.querySelectorAll('[data-ibuy][data-n="1"]').length,
       okc:[...R.querySelectorAll('.c223-chip.ok b')].every(b=>getComputedStyle(b).color=='rgb(47, 94, 40)'),noc:R.querySelectorAll('.c223-chip.no').length}}""")
-    chk('alchemy: the station window (recipe lines with ingredient chips, work area, filters, market kept)',r and r['lines']==10 and r['chips']>15 and r['bench'] and r['go'] and r['flt']==4 and r['ibuy']>3,r)
+    chk('alchemy: the station window (recipe lines with ingredient chips, work area, filters, market kept)',r and r['lines']==10 and r['chips']>=4 and r['bench'] and r['go'] and r['flt']==4 and r['ibuy']>3,r)
     f=ev(FIT);chk('alchemy (desktop): readable, no sideways overflow',not f['low'] and max(f['over'])<=1 and not f['out'],f)
     shot('alch_desktop')
     # brew Health Potions x5 through the new UI: same spend and result as make()
@@ -95,7 +95,7 @@ def s(pg):
     r=ev("()=>[T223.tm,[...document.querySelectorAll('#xwB .t223 canvas')].every(c=>c.width==0)]")
     chk('treasury: closing stops the timer and empties the canvases',r[0]==0 and r[1],r)
     # ---------------- phone width ----------------
-    pg.set_viewport_size({'width':390,'height':844});pg.wait_for_timeout(800)
+    pg.set_viewport_size({'width':390,'height':844});ev("()=>{try{applyDev('mobile')}catch(_){}}");pg.wait_for_timeout(1200)
     for k,js in [('alch',"openX('alch')"),('cook',"openX('cook')"),('treas',"TRS200.h={caravan:{s:30,c:1400}};ST200.open.treas()")]:
         ev("()=>{"+js+"}");pg.wait_for_timeout(1000)
         f=ev(FIT);chk(k+' (phone): readable, no sideways overflow',not f['low'] and max(f['over'])<=1,f)

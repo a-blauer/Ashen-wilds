@@ -231,8 +231,6 @@ html body.kq .c223 .c223-sp{position:absolute;top:40px;left:50%;width:6px;height
 html body.kq .c223 .c223-sp.s1{--sx:-70px;--sy:-40px}html body.kq .c223 .c223-sp.s2{--sx:70px;--sy:-46px}html body.kq .c223 .c223-sp.s3{--sx:-54px;--sy:30px;animation-delay:.1s}html body.kq .c223 .c223-sp.s4{--sx:58px;--sy:26px;animation-delay:.15s}
 html body.kq .c223 .c223-res.still .c223-sp{display:none}
 @keyframes c223spk{0%{transform:translate(0,0) scale(1.4);opacity:1}100%{transform:translate(var(--sx),var(--sy)) scale(0);opacity:0}}
-/* the market tab */
-html body.kq .c223 .c223-mkt{display:block}
 /* narrow windows and phones: the work area on top, the list under it */
 @container c223 (max-width:640px){
   html body.kq .c223 .c223-make{grid-template-columns:minmax(0,1fr);gap:10px}
