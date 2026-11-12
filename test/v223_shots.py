@@ -28,6 +28,7 @@ SETUP="""()=>{[0,1,2,3,4,5].forEach(i=>bossDone.add(i));try{kfApply109()}catch(e
 def s(pg):
     L.start(pg);ev=pg.evaluate
     INFO.append(ev(SETUP))
+    if os.environ.get('PRE'):INFO.append(ev('()=>{'+os.environ['PRE']+'}'))   # e.g. PRE='TF223.bPole=[1,0,-1]' (try a setting)
     def go(k):
         ev("([k])=>{const l=KL(k),[x,z]=lotW103(l,0,4.8);toPos(x,z);pl.visible=false;visTick();STEP(.3);try{im220Rig(KP(k)).parent.traverse(o=>{if(o.isSprite)o.visible=false})}catch(_){}}",[k])
     def view(k,side,dist=2.3,up=1.3,look=.95,hand=False):
@@ -44,6 +45,12 @@ def s(pg):
                     if hd:view(k,side,.75,.95,.85,hd);ims.append(grab(pg,(.2,.05,.8,.95),(300,280)))
                     else:view(k,side);ims.append(grab(pg,(.22,.04,.78,.96),(300,280)))
             sheet(ims,'%s_%s.png'%(TAG,k),8)
+    if 'bardc' in SC:
+        go('bard');ims=[]
+        for side in [0,-.7,-1.5]:
+            for t in [0,.13,.26,.39]:
+                ev('([t])=>STEP(t>0?.13:.02)',[t]);view('bard',side,1.25,1.15,1.0);ims.append(grab(pg,(.15,0,.85,1),(420,372)))
+        sheet(ims,'%s_bardc.png'%TAG,4)
     if 'talk' in SC:
         for k,js in [('trainer',"openX('visitor','trainer')"),('smith',"KQM_SMITH=true;$('bag').classList.remove('hide');try{rB()}catch(_){}")]:
             if k not in KS:continue

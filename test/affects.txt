@@ -147,3 +147,5 @@ v217|songs|music|0600-|3580-: v217_songs.py
 v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-: v220_town.py v142_folk.py v137_npcs.py v197_arms.py v196_meadow.py v200_stations.py v200_coop.py v143_lantern_road.py
 # v221 immersion (3940–3943): dialogue view, shopkeeper view, menu theme, nameplates, title pop-ups one at a time
 3940|3942|3943|3950|3951|3952|v221|v222|ledger|preview|1040|1050|1060|1260|0160|0520|2800|1870|3023|3282|3732|3750|2210|2290|0106|1080|1900|3630: v221_immersion.py v221_coop.py v222_ledger.py v117_titles.py v117_menus.py v201_icons.py v163_fixes.py v143_lantern_road.py v209_kindlelight.py v117_menus.py v199_town.py
+# v223 town folk (3963, 3964): smith grip, bard arms, keepers hold still while their window is open, the Scholar's Tower lectern
+3963|3964|v223|1900|2995|3081|3550|3680|3700|3702|3708|1030-|1860|3630|3490|3940|0490: v223_town.py v103_kingdom.py v192_hero_fit.py v200_stations.py v220_town.py v221_immersion.py v151_intro.py
