@@ -147,3 +147,5 @@ v217|songs|music|0600-|3580-: v217_songs.py
 v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-: v220_town.py v142_folk.py v137_npcs.py v197_arms.py v196_meadow.py v200_stations.py v200_coop.py v143_lantern_road.py
 # v221 immersion (3940–3943): dialogue view, shopkeeper view, menu theme, nameplates, title pop-ups one at a time
 3940|3942|3943|3950|3951|3952|v221|v222|ledger|preview|1040|1050|1060|1260|0160|0520|2800|1870|3023|3282|3732|3750|2210|2290|0106|1080|1900|3630: v221_immersion.py v221_coop.py v222_ledger.py v117_titles.py v117_menus.py v201_icons.py v163_fixes.py v143_lantern_road.py v209_kindlelight.py v117_menus.py v199_town.py
+# v223 the Magic Shop evolution preview shows the hero (3965): keeper view vs the v119 preview stage
+3965|3940|2240|2410|3593|v223|magic-shop|ability-preview|evo-preview: v223_evo_preview.py v119_abprev.py v194_shops.py v221_immersion.py
