@@ -36,8 +36,8 @@ def s(pg):
         const sw=W(B.aL2),se=W(B.aL1),ss=W(B.aL0),paw=sw.clone().add(sw.clone().sub(se).normalize().multiplyScalar(.04));
         const nw=W(B.aR2),nl=neck.worldToLocal(nw.clone());
         const pl=lo(paw),el=lo(se),sh=lo(ss);
-        out.push({t:+t.toFixed(2),paw:+Math.hypot(pl.x,pl.y,pl.z).toFixed(2),pawFront:+pl.z.toFixed(3),elbowUp:+(se.y-W(bowl).y).toFixed(3),neckD:+Math.hypot(nl.x,nl.z).toFixed(3),neckY:+nl.y.toFixed(3)})}return out}""")
-    chk('the strumming paw is at the lute\'s body (bowl-local distance < 0.32, on the soundboard side)',all(f['paw']<.32 and f['pawFront']>0 for f in r),r[:4])
+        out.push({t:+t.toFixed(2),paw:+paw.distanceTo(W(bowl)).toFixed(3),pawFront:+pl.z.toFixed(3),elbowUp:+(se.y-W(bowl).y).toFixed(3),neckD:+Math.hypot(nl.x,nl.z).toFixed(3),neckY:+nl.y.toFixed(3)})}return out}""")
+    chk('the strumming paw is at the lute\'s body (within 0.25 m of the bowl centre, on the soundboard side)',all(f['paw']<.25 and f['pawFront']>0 for f in r),r[:4])
     chk('the strumming forearm comes over the top of the bowl (elbow above the bowl\'s middle, beside the body)',all(f['elbowUp']>-.05 for f in r),r[:4])
     chk('the other hand holds the neck',all(f['neckD']<.12 and -.3<f['neckY']<.3 for f in r),r[:4])
     # ---------------- 3. hold still while the window is open ----------------

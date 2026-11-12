@@ -58,13 +58,18 @@ if(typeof wkAnim103=='function'){const f0=wkAnim103;wkAnim103=function(n,now){co
 //    over the bowl's top edge and the paw comes down onto the strings between the sound hole and the neck (TF223.bStrum,
 //    lute frame), strumming across the strings (lute x) at the old rate;
 //  * neck arm: the paw under the neck, sliding along it a little (TF223.bNeck), elbow down and out (TF223.bNPole).
-Object.assign(TF223,{bPole:[1,.8,-.15],bNPole:[1,-1,-.3],bStrum:[.0,.1,.135],bSw:.04,bNeck:[0,.42,-.045],bNk:.05});
+Object.assign(TF223,{bPole:[1,.8,-.15],bNPole:[1,-1,-.3],bStrum:[.0,.1,.135],bClear:1.04,bSw:.04,bNeck:[0,.42,-.045],bNk:.05});
 function bard223(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.aL0||!B.aR0||typeof fc116IK!='function')return;const V=THREE.Vector3,t=now/1000+(S.t0||0);
   n.updateMatrixWorld(true);L.updateMatrixWorld(true);const rs=Math.sign(n.worldToLocal(B.aR0.getWorldPosition(new V())).x)||-1,C=TF223;
   const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),s=Math.sin(t*9.5),f=Math.sin(t*2.1);
   const TS=W([C.bStrum[0]+C.bSw*s,C.bStrum[1],C.bStrum[2]]),TN=W([C.bNeck[0],C.bNeck[1]+C.bNk*f,C.bNeck[2]]);
   const pole=(p,sx)=>new V(sx*p[0],p[1],p[2]).normalize().transformDirection(n.matrixWorld);
   fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,TS,pole(C.bPole,-rs),1);
+  // the forearm rests on the bowl's rim, never through it, and the paw stays in front of the soundboard: while any part of
+  // the arm or paw is inside the bowl (bard192Out, 3550: < 1 inside), the strum point moves out from the soundboard
+  const bowl=L.children[0];if(bowl&&typeof bard192Out=='function'){if(!BARD192_T)BARD192_T={mi:new THREE.Matrix4(),a:new V(),e:new V(),w:new V(),t:new V(),l:new V(),p:new V()};
+    for(let i=0,dz=0;i<8;i++){bowl.updateMatrixWorld(true);if(bard192Out(L,bowl,B.aL0,B.aL1,B.aL2)>=C.bClear)break;dz+=.015;
+      fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,W([C.bStrum[0]+C.bSw*s,C.bStrum[1],C.bStrum[2]+dz]),pole(C.bPole,-rs),1)}}
   fc116IK(B.aR0.getWorldPosition(new V()),B.aR0,B.aR1,B.aR2,TN,pole(C.bNPole,rs),1)}
 // the Bard: while he holds still his strum stops (bard141 reads the time; it is held where it was); then the v223 arms
 if(typeof bard141=='function'){const f0=bard141;bard141=function(n,now){const S=n&&n._wk;if(TF223.on&&S&&S.h223>0&&S.f223!=null)now=S.f223;const r=f0.call(this,n,now);
