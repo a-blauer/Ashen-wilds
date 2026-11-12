@@ -24,8 +24,12 @@ B.evaluate("()=>{hero.cls='paladin';hero.look=null;heroRebuild();refreshGear(pl,
 mp_until("()=>{const r=Object.values(MP.rh)[0];return !!(r&&r.m&&r.m.cls==='paladin')}",60000,[A])
 SH="""(H)=>{const sh=H.gearG[H.gearG.length-1],V=THREE.Vector3,a=H.rotation.y,fw=new V(Math.sin(a),0,Math.cos(a)),c=sh.getWorldPosition(new V()).sub(H.position),n=new V(0,0,-1).applyQuaternion(sh.getWorldQuaternion(new THREE.Quaternion()));return [+c.dot(fw).toFixed(2),+n.dot(fw).toFixed(2)]}"""
 B.evaluate("()=>{gd213Down()}")
-B.wait_for_timeout(2500);A.wait_for_timeout(1500)
-own=B.evaluate("()=>{gd213Down();return ("+SH+")(pl)}")
-seen=A.evaluate("()=>{const r=Object.values(MP.rh)[0];return ("+SH+")(r.m)}")
-chk('partner sees the shield up in front',seen[0]>.25 and abs(seen[1])>.75,json.dumps({'own [forward, face]':own,'partner':seen}))
+# the guard is a 4 s pose re-sent every 3.6 s: sample the partner's copy over a few seconds (a sample can fall between two)
+own=None;seen=[]
+for i in range(14):
+    A.wait_for_timeout(350)
+    if i%2==0:own=B.evaluate("()=>{gd213Down();return ("+SH+")(pl)}")
+    if i>=4:seen.append(A.evaluate("()=>{const r=Object.values(MP.rh)[0];return ("+SH+")(r.m)}"))
+up=[x for x in seen if x[0]>.25 and abs(x[1])>.75]
+chk('partner sees the shield up in front',len(up)>=len(seen)//2,json.dumps({'own [forward, face]':own,'partner samples':seen}))
 B.evaluate("()=>gd213Up()")
