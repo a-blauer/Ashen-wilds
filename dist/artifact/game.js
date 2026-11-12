@@ -77273,17 +77273,15 @@ html body.kq .win .lg-tabs{margin:0 24px 4px;padding:0}
 html body.kq .win .sellbar{background:none;border-top:1px solid var(--lg-rule);position:static}
 html body.mob .lg-nm{font-size:1rem}
 </style>`);
-// ================= v223 menu fixes (owner, Nov 11 2026) =================
-// "Dont show floating item mockup to the left when in inventory, and dont show mount icon to left when in stable - we have an
-// actual 3d visual for the stable that works better for that."
-//  * the v222 floating item (3951 IP222) no longer shows beside the plain Inventory (#bag) or the Stable window (xwMode
-//    'stable', which already shows the mount itself in 3D). It still shows in shops and at the forge (#bag in the smith's
-//    keeper view, class sk220), where it floats in front of the keeper.
-// "Remove the shop button inside the menu - it doesnt make sense to have it there when we have a npc to interact with":
-//  * the ☰ menu's 🛒 Shop button is hidden (2200 hides Fusion and Sovereigns the same way); the shops are opened at their keepers.
-function ip223Skip(){try{
-  const bag=$('bag');if(bag&&!bag.classList.contains('hide')&&!bag.classList.contains('sk220')&&!bag.classList.contains('sk220v'))return true;
-  const xw=$('xw');if(xw&&!xw.classList.contains('hide')&&typeof xwMode!='undefined'&&xwMode==='stable')return true}catch(_){}
-  return false}
-{const f=ip222Pick;ip222Pick=function(){if(ip223Skip())return null;return f.apply(this,arguments)}}
-{const b=$('shopBtn');if(b)b.style.setProperty('display','none','important')}
+// ================= v223 the Magic Shop's evolution preview shows the hero again =================
+// Owner: "The magic shop evolved ability animation preview has the character model missing from the animation."
+// Why: the v119 preview lends the real hero model (`pl`) to its training stage. The Magic Shop is a v221 keeper view, and that
+// view hides the hero (`pl.visible=false`) so the keeper is seen alone — but the hero it hid was the one standing on the
+// preview stage, so the evolved ability played with nobody casting it. (The Abilities window is not a keeper view: fine.)
+// A second slip of the same kind: a preview that started before the view hid the hero gave the world back a visible hero
+// when it stopped (switching to Reforge / Wares), standing in front of the keeper.
+// Fix: right after each view step, while the view hides the hero, the hero is shown when it is on the preview stage and
+// hidden when it is in the world. Nothing else changes: companions stay hidden, the view ends as before (im220End).
+{const f=im220Tick;im220Tick=function(){const r=f.apply(this,arguments);
+  try{if(IM220.on&&IM220.hid&&typeof pl!='undefined'&&pl){const st=typeof ABX!='undefined'&&ABX.on&&ABX.root&&abxOnStage(pl);pl.visible=!!st}}catch(_){}
+  return r}}
