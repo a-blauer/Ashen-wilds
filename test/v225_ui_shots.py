@@ -8,7 +8,13 @@ TAG=os.environ.get('TAG','')
 def shot(pg,n):pg.wait_for_timeout(500);pg.screenshot(path=play.TMP+'/v225_ui_%s%s.png'%(n,TAG),timeout=900000)
 def s(pg):
     pg.set_default_timeout(2400000)
-    pg.click('[data-dev=desktop]',timeout=60000);pg.wait_for_timeout(1500)
+    pg.evaluate("()=>localStorage.clear()");pg.wait_for_timeout(2500);pg.keyboard.press('Enter');pg.wait_for_timeout(1500)
+    pg.click('[data-dev=desktop]',timeout=60000);pg.wait_for_timeout(800)
+    for sel in ['#svpN','text=New Hero','text=New game']:
+        try:
+            if pg.locator(sel).count():pg.click(sel,timeout=3000);break
+        except Exception:pass
+    pg.wait_for_timeout(800)
     pg.click('[data-c="assassin"]',timeout=60000);pg.wait_for_timeout(2000);pg.click('#ccNext');pg.wait_for_timeout(2500)
     pg.evaluate("()=>{LK.look=Object.assign({},LK.look,{pat:1,fp:1,scar:2,hs:1.06,tl:1.15});lkStep()}");pg.wait_for_timeout(2500);shot(pg,'creator')
     pg.evaluate("()=>{const a=$('ccList'),b=$('ccInfo');if(a)a.scrollTop=9999;if(b)b.scrollTop=9999}");shot(pg,'creator_scrolled')
