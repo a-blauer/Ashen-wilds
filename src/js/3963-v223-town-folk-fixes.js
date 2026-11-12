@@ -68,7 +68,7 @@ function bard223(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.aL0||!
   // the forearm rests on the bowl's rim, never through it, and the paw stays in front of the soundboard: while any part of
   // the arm or paw is inside the bowl (bard192Out, 3550: < 1 inside), the strum point moves out from the soundboard
   const bowl=L.children[0];if(bowl&&typeof bard192Out=='function'){if(!BARD192_T)BARD192_T={mi:new THREE.Matrix4(),a:new V(),e:new V(),w:new V(),t:new V(),l:new V(),p:new V()};
-    for(let i=0,dz=0;i<8;i++){bowl.updateMatrixWorld(true);if(bard192Out(L,bowl,B.aL0,B.aL1,B.aL2)>=C.bClear)break;dz+=.015;
+    for(let i=0,dz=0;i<12;i++){bowl.updateMatrixWorld(true);if(bard192Out(L,bowl,B.aL0,B.aL1,B.aL2)>=C.bClear)break;dz+=.018;
       fc116IK(B.aL0.getWorldPosition(new V()),B.aL0,B.aL1,B.aL2,W([C.bStrum[0]+C.bSw*s,C.bStrum[1],C.bStrum[2]+dz]),pole(C.bPole,-rs),1)}}
   fc116IK(B.aR0.getWorldPosition(new V()),B.aR0,B.aR1,B.aR2,TN,pole(C.bNPole,rs),1)}
 // the Bard: while he holds still his strum stops (bard141 reads the time; it is held where it was); then the v223 arms
