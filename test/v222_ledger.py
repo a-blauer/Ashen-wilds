@@ -43,12 +43,25 @@ def s(pg):
     pg.wait_for_function("()=>document.querySelectorAll('#shop [data-kqt]').length>3",timeout=60000);pg.wait_for_timeout(600)
     r=ev("""()=>{const L=[...document.querySelectorAll('#shop [data-kqt]')],g=L.find(e=>{const i=ip222Info(e);return i&&i.it}),p=L.find(e=>{const i=ip222Info(e);return i&&!i.it});
       const out={n:L.length,gear:!!g,other:!!p};KQM.tipEl=g;ip222Tick();const d=IP222.el;out.g=[IP222.cur,d&&d.className,!!IP222.P,d&&d.querySelector('b').textContent,ip222Info(g).nm];
-      const S=$('stage').getBoundingClientRect(),W=$('shop').querySelector('.win').getBoundingClientRect(),R=d.getBoundingClientRect();out.beside=R.left>=W.right-2&&R.right<=S.right+2;
+      const S=$('stage').getBoundingClientRect(),W=$('shop').querySelector('.win').getBoundingClientRect(),R=d.getBoundingClientRect();out.beside=R.left>=W.right-2&&R.right<=S.right+2;out.mid=Math.abs((R.left+R.right)/2-(W.right+S.right)/2)<6;out.big=R.width>=220;
       let tris=0;if(IP222.P)IP222.P.traverse(m=>{if(m.isMesh)tris+=(m.geometry.index?m.geometry.index.count:m.geometry.attributes.position.count)/3});out.tris=tris;
       KQM.tipEl=p;ip222Tick();out.p=[IP222.cur,d.className,!!IP222.P,d.querySelector('.ip222i').children.length+d.querySelector('.ip222i').textContent.length,IP222.key];
-      KQM.tipEl=null;ip222Tick();out.none=[IP222.cur,d.className];KQM.tipEl=g;ip222Tick();$('shop').classList.add('hide');ip222Tick();out.closed=[IP222.cur,d.className,!!IP222.P,IP222.key];KQM.tipEl=null;return out}""")
+      KQM.tipEl=null;ip222Tick();out.none=[IP222.cur,d.className];
+      // the ledger list: one line per ware with its name, a leader and the price; choosing one fills the page beside the list
+      const C=[...document.querySelectorAll('#sb .kqm-cell')],c0=C.find(c=>c._kq&&c._kq.item&&c._kq.item())||C[0],r0=C[0].getBoundingClientRect(),r1=C[1].getBoundingClientRect();
+      out.list={n:C.length,names:C.every(c=>c.querySelector('.lg-nm')&&c.querySelector('.lg-nm').textContent.trim().length>1&&c.querySelector('.lg-dots')),lines:Math.abs(r0.left-r1.left)<2&&r1.top>=r0.bottom-1&&r0.width>200,price:!!C[0].querySelector('.kqm-pr').textContent.trim()};
+      c0.click();const bar=$('sb').querySelector(':scope>.kqm-bbar'),det=bar&&bar.querySelector('.lg-det'),lr=$('sb').querySelector('.kqm-shopg').getBoundingClientRect(),br=bar.getBoundingClientRect();
+      out.page={det:!!det,name:det&&det.textContent.indexOf(c0.querySelector('.lg-nm').textContent.trim().slice(0,8))>=0,buy:bar.querySelectorAll('button').length,beside:br.left>=lr.right-2,on:c0.classList.contains('on')};
+      const g0=gold;bar.querySelector('button').click();out.bought=gold<g0;
+      lg222Tab('s');out.tabs=[$('sb').offsetParent===null,$('ss').offsetParent!==null];lg222Tab('b');out.tabs.push($('sb').offsetParent!==null,$('ss').offsetParent===null);
+      KQM.tipEl=g&&g.isConnected?g:document.querySelector('#sb .kqm-cell');ip222Tick();$('shop').classList.add('hide');ip222Tick();out.closed=[IP222.cur,d.className,!!IP222.P,IP222.key];KQM.tipEl=null;return out}""")
+    chk('the shop is a written list: name, leader, price on each line',r['list']['n']>3 and r['list']['names'] and r['list']['lines'] and r['list']['price'],r['list'])
+    chk('choosing a ware describes it on the page beside the list, with Buy',r['page']['det'] and r['page']['name'] and r['page']['buy']>=1 and r['page']['beside'] and r['page']['on'],r['page'])
+    chk('Buy on that page buys it',r['bought'],r)
+    chk('Buy and Sell are two tabs',r['tabs']==[True,True,True,True],r['tabs'])
     chk('the shop has gear and other wares to look at',r['gear'] and r['other'],r)
     chk('gear floats as its 3D model, named, beside the window',r['g'][1]=='m3' and r['g'][2] and r['g'][3]==r['g'][4] and r['tris']>8 and r['beside'],r)
+    chk('in the keeper view it is large and centred in the space in front of the keeper',r['mid'] and r['big'],r)
     chk('other wares float as their painted icon; the model is freed',r['p'][1]=='m2' and not r['p'][2] and r['p'][3]>0 and r['p'][4]=='',r)
     chk('nothing pointed at or selected: nothing floats',r['none']==['','hide'],r)
     chk('closing the window puts it away and frees the model',r['closed'][1]=='hide' and not r['closed'][2] and r['closed'][3]=='',r)

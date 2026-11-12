@@ -77368,17 +77368,17 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 //  - Dialogue (the talk view) and the keeper's greeting are the same paper; item slots and 3D previews stay dark plates, like
 //    illustrations pasted into the book.
 // Each player styles their own windows: nothing here is shared in co-op.
-var LG222={fix:new Set(),fixB:new Set(),raf:0,paper:[226,212,180],on:true};
+var LG222={fix:new Set(),fixB:new Set(),raf:0,paper:[204,186,144],on:true};
 LG222.stain="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='900' height='600' preserveAspectRatio='none'><filter id='a' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.006 .009' numOctaves='4' seed='11'/><feColorMatrix values='0 0 0 0 .36  0 0 0 0 .25  0 0 0 0 .12  0 0 0 1.1 -.52'/></filter><filter id='b' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .22  0 0 0 0 .12  0 0 0 .5 -.2'/></filter><rect width='100%' height='100%' filter='url(#a)'/><rect width='100%' height='100%' filter='url(#b)' opacity='.5'/></svg>")+"\")";
 LG222.knot=r=>"url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g transform='rotate("+r+" 30 30)' fill='none' stroke='#3a2a1a' stroke-width='1.3' stroke-linecap='round'><path d='M3 57V16C3 8 8 3 16 3h41'/><path d='M8 57V19c0-7 4-11 11-11h38' opacity='.5'/><path d='M3 30c9 0 14-5 14-13S12 6 9 9s0 9 8 9 13-6 13-15'/><path d='M17 17c5 5 13 5 13 13s-8 8-8 3 6-5 12 0' opacity='.8'/><circle cx='9.5' cy='9.5' r='2.2' fill='#8c2f1f' stroke='none'/></g></svg>")+"\")";
 LG222.circle="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='#3a2a1a' stroke-opacity='.16' stroke-width='.9'><circle cx='100' cy='100' r='96'/><circle cx='100' cy='100' r='88' stroke-dasharray='1.5 4'/><circle cx='100' cy='100' r='60'/><path d='M100 12l76 132H24z'/><path d='M100 188L24 56h152z' opacity='.7'/><circle cx='100' cy='100' r='22'/><path d='M100 4v20M100 176v20M4 100h20M176 100h20M100 78v44M78 100h44'/><circle cx='100' cy='40' r='5'/><circle cx='48' cy='130' r='5'/><circle cx='152' cy='130' r='5'/></svg>")+"\")";
 document.head.insertAdjacentHTML('beforeend',`<style>
 html body.kq .modal.w{background:radial-gradient(ellipse at 50% 45%,rgba(8,6,4,.5),rgba(3,2,1,.84))}
-html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#6a5c48;--kq-dim:#8a7a62;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
-  --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#6a5c48;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
-  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#eee2c6 0%,#e2d4b4 46%,#cfbc96 100%) no-repeat;background-blend-mode:normal,multiply,normal;
+html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#54473a;--kq-dim:#6e604c;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
+  --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#54473a;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
+  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#dccba4 0%,#cdb98e 46%,#b29a6c 100%) no-repeat;background-blend-mode:normal,multiply,normal;
   border:0;border-image:none;border-radius:2px;color:#2a2118;font-family:'EB Garamond',Georgia,'Times New Roman',serif;font-size-adjust:.5;
-  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 80px rgba(120,88,46,.3)}
+  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 90px rgba(92,64,30,.42)}
 html body.kq .win::before{display:none}
 html body.kq .modal.w>.win::after{content:'';position:absolute;inset:7px;z-index:3;pointer-events:none;border:1px solid var(--lg-rule);outline:1px solid rgba(58,44,28,.2);outline-offset:-4px;
   background:${LG222.knot(0)} left -1px top -1px/38px 38px no-repeat,${LG222.knot(90)} right -1px top -1px/38px 38px no-repeat,${LG222.knot(180)} right -1px bottom -1px/38px 38px no-repeat,${LG222.knot(270)} left -1px bottom -1px/38px 38px no-repeat}
@@ -77433,7 +77433,7 @@ html body.kq .win .rw.on,html body.kq #xw .rw.on{background:linear-gradient(90de
 html body.kq .win .rw.on.it{box-shadow:inset 3px 0 0 var(--lg-red)}
 html body.kq .win .kv,html body.kq .win .mi,html body.kq .win .df{border-bottom-color:rgba(58,44,28,.2)}
 html body.kq .win .panel{background:rgba(58,44,28,.07);border:1px solid rgba(58,44,28,.3);border-radius:2px}
-html body.kq .win select,html body.kq .win input[type=text],html body.kq .win input:not([type]),html body.kq .win input[type=number],html body.kq .win textarea{background:rgba(255,250,235,.45);color:#2a2118;border:1px solid rgba(58,44,28,.5);border-radius:2px;font-family:inherit}
+html body.kq .win select,html body.kq .win input[type=text],html body.kq .win input:not([type]),html body.kq .win input[type=number],html body.kq .win textarea{background:rgba(240,228,200,.5);color:#2a2118;border:1px solid rgba(58,44,28,.55);border-radius:2px;font-family:inherit}
 html body.kq .win input[type=range],html body.kq .win input[type=checkbox]{accent-color:#8c2f1f}
 html body.kq .win details.grp{border-color:rgba(58,44,28,.3);background:rgba(58,44,28,.05);color:#2a2118}
 /* plates pasted into the book: item slots and 3D previews stay dark */
@@ -77442,9 +77442,8 @@ html body.kq .win .kqm-slot.kqm-empty{background:rgba(58,44,28,.1);border:1px da
 html body.kq .win .kqm-slot.on{outline:2px solid var(--lg-red);outline-offset:1px}
 html body.kq .win .pvbox{border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
 html body.kq .win .ch139-pvw{background:radial-gradient(ellipse at 50% 68%,#3b3244,#15110d 76%);border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
-html body.kq .win .kqm-bbar{background:linear-gradient(180deg,rgba(232,220,192,.97),rgba(222,208,176,.97));border-top:1px solid var(--lg-rule);color:#2a2118}
 /* ---- dialogue: the same page, a strip of it ---- */
-#xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6 0%,#e0d1b0 55%,#cdb992 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
+#xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#dccba4 0%,#cdb98e 55%,#b29a6c 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
   box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 18px 44px rgba(0,0,0,.75),inset 0 0 60px rgba(120,88,46,.3)!important}
 #xw.dlg220>.win::after{inset:6px;background-size:34px 34px,34px 34px,34px 34px,34px 34px}
 #xw.dlg220 .wh{min-height:0;margin:0;padding:0}
@@ -77461,7 +77460,7 @@ html body.kq .win .kqm-bbar{background:linear-gradient(180deg,rgba(232,220,192,.
 #xw.dlg220 .wf button:hover,#xw.dlg220 .wf button:focus-visible{background:rgba(140,47,31,.12)!important;border-left-color:var(--lg-red)!important;color:#2a2118!important}
 #xw.dlg220 .wf button.pri{border-left-color:var(--lg-red)!important;color:#2a2118!important}
 #sk220say{color:#2a2118;border:0;border-radius:2px;font-family:'IM Fell English','EB Garamond',Georgia,serif;
-  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6,#d8c7a2) no-repeat;background-blend-mode:multiply,normal;box-shadow:0 0 0 1px #4a3826,0 0 0 4px #1c140c,0 0 0 5px #6a4e2c,0 10px 26px rgba(0,0,0,.6)}
+  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#dccba4,#bfa878) no-repeat;background-blend-mode:multiply,normal;box-shadow:0 0 0 1px #4a3826,0 0 0 4px #1c140c,0 0 0 5px #6a4e2c,0 10px 26px rgba(0,0,0,.6)}
 #sk220say b{font-family:'IM Fell English',Georgia,serif;font-size:.86rem;letter-spacing:.04em;text-transform:none;font-style:italic;color:#8c2f1f}
 #sk220say i{font-size:1.05rem}
 </style>`);
@@ -77526,7 +77525,7 @@ function ip222El(){let d=IP222.el;if(d)return d;d=IP222.el=document.createElemen
   ($('stage')||document.body).appendChild(d);return d}
 function ip222Pick(){const sel='.modal.w:not(.hide)';if(!document.querySelector(sel)||document.body.classList.contains('im220t'))return null;
   let el=null;try{el=KQM.tipEl}catch(_){}if(el&&(!el.isConnected||!el.closest(sel)))el=null;
-  if(!el)el=document.querySelector(sel+' .kqm-slot.on[data-kqt],'+sel+' [data-kqt].on,'+sel+' .on>[data-kqt],'+sel+' .kqm-cell.on [data-kqt]');
+  IP222.hov=!!el;if(!el){el=[...document.querySelectorAll(sel+' .kqm-slot.on[data-kqt],'+sel+' [data-kqt].on,'+sel+' .on>[data-kqt],'+sel+' .kqm-cell.on [data-kqt]')].find(e=>e.offsetParent!==null)||null}
   return el}
 function ip222Info(el){const k=el.dataset.kqt||'',i=k.indexOf(':'),ty=i<0?k:k.slice(0,i),v=i<0?'':k.slice(i+1);
   const ico=()=>{const q=el.querySelector('.kqm-ic')||el;return q.innerHTML},gear=it=>({id:'g'+it.tp+'.'+(it.r|0)+'.'+it.id,it,nm:itT(it).n,sub:RAR[it.r|0][0],rc:RAR[it.r|0][1]});
@@ -77545,22 +77544,24 @@ function ip222Gl(){const I=IP222;if(I.r)return true;if(I.r===false)return false;
   try{const cv=ip222El().querySelector('canvas');I.r=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});I.r.setPixelRatio(1);I.r.setSize(440,440,false);I.r.setClearColor(0,0);
     try{I.r.outputEncoding=ren.outputEncoding}catch(_){}
     I.sc=new THREE.Scene();I.cam=new THREE.PerspectiveCamera(30,1,.05,50);
-    I.sc.add(new THREE.HemisphereLight(0xfff0d8,0x40302a,.95));const k=new THREE.DirectionalLight(0xffe8c0,1.15);k.position.set(2.5,4,3.5);I.sc.add(k);const b=new THREE.DirectionalLight(0x8aa0ff,.5);b.position.set(-3,1.5,-3);I.sc.add(b);
+    I.sc.add(new THREE.HemisphereLight(0xfff4e0,0x5a4638,1.35));const k=new THREE.DirectionalLight(0xffeccc,1.6);k.position.set(2.5,4,3.5);I.sc.add(k);const b=new THREE.DirectionalLight(0x8aa0ff,.5);b.position.set(-3,1.5,-3);I.sc.add(b);
     return true}catch(e){I.r=false;console.warn('v222 item preview: no WebGL',e);return false}}
 function ip222Model(it){const I=IP222;ip222Free();if(!ip222Gl())return false;
   try{const key='KQP|'+v89Key(it),g=lgGroup(key,k=>v89Kit(k,it),.14),P=new THREE.Group(),T=new THREE.Group();I.key=key;T.add(g);v89Pose(g,itT(it));T.updateMatrixWorld(true);
     const bb=new THREE.Box3().setFromObject(T),c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3()),R=Math.max(.05,sz.length()/2);T.position.sub(c);P.add(T);I.sc.add(P);I.P=P;
-    const d=R/Math.sin(15*Math.PI/180)*1.08;I.cam.position.set(0,R*.22,d);I.cam.lookAt(0,0,0);I.cam.near=d/50;I.cam.far=d*4;I.cam.updateProjectionMatrix();return true}
+    const d=Math.max(sz.y/2,Math.hypot(sz.x,sz.z)/2)/Math.tan(15*Math.PI/180)*.98+Math.hypot(sz.x,sz.z)/2;I.cam.position.set(0,R*.12,d);I.cam.lookAt(0,0,0);I.cam.near=d/50;I.cam.far=d*4;I.cam.updateProjectionMatrix();return true}
   catch(e){ip222Free();if(!I.err){I.err=1;console.warn('v222 item preview',e)}return false}}
 function ip222Loop(now){const I=IP222;I.raf=0;if(!I.cur||!I.P||!I.r)return;const t=(now-I.t0)/1000;I.P.rotation.y=t*.9;I.P.rotation.z=Math.sin(t*.7)*.06;try{I.r.render(I.sc,I.cam)}catch(_){}I.raf=requestAnimationFrame(ip222Loop)}
 function ip222Place(){const d=IP222.el,st=$('stage'),m=document.querySelector('.modal.w:not(.hide)>.win');if(!d||!st||!m)return false;
   const S=st.getBoundingClientRect(),W=m.getBoundingClientRect(),w=IP222.S,gapR=S.right-W.right,gapL=W.left-S.left,right=gapR>=gapL;let k=Math.min(1,(Math.max(gapR,gapL)-14)/w),x,y;
-  if(k>=.6){x=right?W.right-S.left+8:W.left-S.left-w*k-8;y=Math.max(8,Math.min(S.height-(w+80)*k-8,W.top-S.top+W.height*.2))}
+  if(m.parentElement.classList.contains('sk220')&&gapR>=200){// the keeper view: large, in the middle of the open space in front of the keeper
+    k=Math.max(.8,Math.min(1.45,(gapR-36)/w,(S.height-150)/(w+70)));x=W.right-S.left+(gapR-w*k)/2;y=Math.max(8,S.height*.45-(w+70)*k/2)}
+  else if(k>=.6){x=right?W.right-S.left+8:W.left-S.left-w*k-8;y=Math.max(8,Math.min(S.height-(w+80)*k-8,W.top-S.top+W.height*.2))}
   else{// no room beside the window: float next to the slot itself (left of it, else above it)
-    const el=IP222.pel;if(!el||!el.isConnected||S.width<560)return false;const R=el.getBoundingClientRect();k=.72;const h=(w+70)*k;
+    const el=IP222.pel;if(!el||!el.isConnected||S.width<560||!IP222.hov)return false;   // only while pointing at it: it covers part of the windowconst R=el.getBoundingClientRect();k=.72;const h=(w+70)*k;
     x=R.left-S.left-w*k-10;y=R.top-S.top+R.height/2-h/2;if(x<6){x=R.left-S.left+R.width/2-w*k/2;y=R.top-S.top-h-8;if(y<6)return false}
     x=Math.max(6,Math.min(S.width-w*k-6,x));y=Math.max(6,Math.min(S.height-h-6,y))}
-  d.style.transformOrigin='left top';d.style.transform=k<1?'scale('+k.toFixed(3)+')':'';d.style.left=Math.round(x)+'px';d.style.top=Math.round(y)+'px';return true}
+  d.style.transformOrigin='left top';d.style.transform=k!==1?'scale('+k.toFixed(3)+')':'';d.style.left=Math.round(x)+'px';d.style.top=Math.round(y)+'px';return true}
 function ip222Tick(){const I=IP222;let inf=null;I.pel=null;if(I.on){try{const el=ip222Pick();if(el){inf=ip222Info(el);I.pel=el}}catch(_){}}
   const d=I.el;if(!inf){if(I.cur){I.cur='';ip222Free();if(d)d.className='hide'}return}
   if(inf.id===I.cur){if(!ip222Place()&&d)d.className='hide';else if(d&&d.classList.contains('hide'))d.className=I.cls;return}
@@ -77584,7 +77585,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .ip222i img{object-fit:contain;border-radius:4px}
 #ip222.m3 .ip222i{display:none}
 .ip222n{text-align:center;padding:5px 16px 6px;max-width:220px;color:#2a2118;font-family:'IM Fell English','EB Garamond',Georgia,serif;
-  background:radial-gradient(130% 160% at 28% 0%,#eee2c6,#d8c7a2);box-shadow:0 0 0 1px #4a3826,0 0 0 3px #1c140c,0 0 0 4px #6a4e2c,0 8px 20px rgba(0,0,0,.6);border-radius:1px}
+  background:radial-gradient(130% 160% at 28% 0%,#dccba4,#bfa878);box-shadow:0 0 0 1px #4a3826,0 0 0 3px #1c140c,0 0 0 4px #6a4e2c,0 8px 20px rgba(0,0,0,.6);border-radius:1px}
 .ip222n b{display:block;font-weight:400;font-size:1.02rem;line-height:1.2}
 .ip222n span{display:block;font-size:.78rem;font-style:italic;color:#8c2f1f}.ip222n span:empty{display:none}
 @keyframes ip222b{0%,100%{transform:translateY(-5px)}50%{transform:translateY(6px)}}
@@ -77592,5 +77593,78 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes ip222t{to{transform:rotate(360deg)}}
 @keyframes ip222w{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 @media (prefers-reduced-motion:reduce){.ip222m,.ip222g,.ip222i,.ip222r::before{animation:none}}
+</style>`);
+// ================= v222b shops are written as a ledger: a list of wares, the chosen one described beside it =================
+// Owner (Nov 12 2026): "You did not implement the visual list in shops that was shown in the ledger style."
+// The shops kept the v88 slot grids (rows of dark squares with a price under each). Now every shop list is what the Ledger
+// mock-up showed: one line per ware - a small picture, the name, a dotted leader, the price - and, beside the list, a page
+// for the chosen ware: its full description (the same text the tooltip gives: type, stats, the comparison with what you wear,
+// the price) and the Buy buttons.
+// How: the grids are built in one place, kqmSlotify (1060), and the buy buttons in kqmBuyBar. Both stay as they are (the cells,
+// their clicks, double-click to buy and the tooltips are unchanged, so nothing about buying or selling changes); lg222Rows
+// adds the name and the leader to each cell, lg222Det puts the description into the buy bar, and CSS lays the cells out as
+// lines and the bar as the right-hand page (class lg-two on the list's box when it is at least 540 px wide; narrower boxes and
+// phones keep the description under the list).
+// The Trading Post (#shop) showed Buy and Sell side by side; as lists they are too narrow for that, so they are two tabs
+// (lg222Tab, class lg-sell on #shop). Inventory, eggs and crafting stations keep their slot sheets: those are not shop lists.
+// Your own windows only: nothing is sent in co-op.
+function lg222Rows(){document.querySelectorAll('.kqm-shopg .kqm-cell:not([data-lg])').forEach(c=>{const I=c._kq;if(!I)return;c.dataset.lg='1';
+    const pr=c.querySelector('.kqm-pr'),n=document.createElement('span'),d=document.createElement('i');n.className='lg-nm';d.className='lg-dots';
+    let nm=I.nm||'';try{const eg=I.egg&&I.egg();if(eg)nm=RAR[eg.tier|0][0]+' Egg'}catch(_){}
+    n.innerHTML=nm+(I.own!=null&&I.own>0?' <small>have '+I.own+'</small>':'');
+    try{if((I.item&&I.item())||(I.egg&&I.egg()))n.style.color=I.rc||''}catch(_){}
+    c.insertBefore(n,pr);c.insertBefore(d,pr)})}
+function lg222Det(cells,o){const host=o&&o.bar;if(!host)return;const bar=host.querySelector(':scope > .kqm-bbar');if(!bar)return;
+  host.classList.toggle('lg-two',host.clientWidth>=540);
+  const c=cells.find(x=>x.classList.contains('on'));const old=bar.querySelector('.lg-det');if(old)old.remove();bar.classList.toggle('lg-has',!!c);if(!c)return;
+  let t=null;try{t=kqmTipHTML(c)}catch(_){}if(!t)return;const d=document.createElement('div');d.className='lg-det kqm-tip';d.innerHTML=t[0];d.style.setProperty('--rc',t[1]||'');bar.insertBefore(d,bar.firstChild)}
+{const f=kqmBuyBar;kqmBuyBar=function(cells,o){const r=f.apply(this,arguments);try{lg222Det(cells,o)}catch(e){console.warn('v222 shop page',e)}return r}}
+{const f=kqmSlotify;kqmSlotify=function(rows,o){const r=f.apply(this,arguments);try{lg222Rows()}catch(e){console.warn('v222 shop list',e)}return r}}
+// the Trading Post: Buy and Sell as two tabs
+function lg222Tab(k){LG222.shopTab=k=='s'?'s':'b';const S=$('shop');if(!S)return;S.classList.toggle('lg-sell',LG222.shopTab=='s');
+  let T=S.querySelector('.lg-tabs');if(!T){T=document.createElement('div');T.className='tabs lg-tabs';T.innerHTML='<button data-lgt="b">Buy</button><button data-lgt="s">Sell</button>';const wb=S.querySelector('.wb');wb.parentElement.insertBefore(T,wb);
+    T.addEventListener('click',e=>{const b=e.target.closest('[data-lgt]');if(b)lg222Tab(b.dataset.lgt)})}
+  T.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.lgt==LG222.shopTab))}
+{const f=rS;rS=function(){const r=f.apply(this,arguments);try{lg222Tab(LG222.shopTab||'b')}catch(_){}return r}}
+{const f=openShop;openShop=function(){LG222.shopTab='b';return f.apply(this,arguments)}}
+document.head.insertAdjacentHTML('beforeend',`<style>
+html body.kq .win .kqm-shopg{display:flex;flex-direction:column;gap:0;margin:2px 0 12px}
+html body.kq .win .kqm-shopg .kqm-cell{display:grid;grid-template-columns:30px minmax(0,auto) minmax(14px,1fr) auto;align-items:center;gap:0 9px;flex-direction:row;width:100%;padding:4px 8px 4px 6px;text-align:left;
+  background:none;border:0;border-radius:0;box-shadow:none;border-left:3px solid transparent}
+html body.kq .win .kqm-shopg .kqm-cell .kqm-slot{width:28px;height:28px;aspect-ratio:auto;border-width:1px}
+html body.kq .win .kqm-shopg .kqm-cell .kqm-slot .kqm-ic{font-size:1.05rem}
+html body.kq .win .kqm-shopg .kqm-cell .kqm-slot .kqm-ct{display:none}
+html body.kq .win .kqm-shopg .kqm-cell.on .kqm-slot,html body.kq .win .kqm-shopg .kqm-cell.kqm-sel .kqm-slot{outline:0}
+.lg-nm{font-size:1.06rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lg-nm small{font-size:.74em;font-style:italic;color:var(--kq-mut);margin-left:4px}
+.lg-dots{display:block;align-self:end;height:.7em;margin-bottom:.38em;border-bottom:1px dotted rgba(58,44,28,.55)}
+html body.kq .win .kqm-shopg .kqm-cell .kqm-pr{font-size:.98rem;font-weight:500;text-align:right;color:#2a2118;overflow:visible}
+html body.kq .win .kqm-shopg .kqm-cell.kqm-poor .kqm-pr{color:#9a2a1a}
+html body.kq .win .kqm-shopg .kqm-cell.kqm-off{opacity:.55}
+html body.kq .win .kqm-shopg .kqm-cell:hover{background:rgba(140,47,31,.07)}
+html body.kq .win .kqm-shopg .kqm-cell.on,html body.kq .win .kqm-shopg .kqm-cell.kqm-sel{background:linear-gradient(90deg,rgba(140,47,31,.17),rgba(140,47,31,.03) 85%,transparent);border-left-color:var(--lg-red)}
+html body.kq .win .kqm-shopg .kqm-cell.kqm-sel .lg-nm::before{content:'✓ ';color:var(--lg-red)}
+/* the chosen ware's page */
+html body.kq .win .kqm-bbar{flex-direction:column;align-items:stretch;gap:8px;background:none;border-top:1px solid var(--lg-rule);padding:10px 2px 4px;position:static}
+html body.kq .win .kqm-bbar.lg-has .kqm-bn{display:none}
+html body.kq .win .kqm-bbar>.mut{font-style:italic}
+html body.kq .win .kqm-bbar button{padding:7px 12px;font-size:.95rem}
+html body.kq .win .lg-det.kqm-tip{position:static;display:block;width:auto;background:none;border:0;border-radius:0;box-shadow:none;padding:0;max-width:none;font-size:.95rem;pointer-events:auto;color:#2a2118;z-index:auto}
+html body.kq .win .lg-det.kqm-tip .kqm-tn{font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;font-size:1.3rem;line-height:1.15;font-size-adjust:none;flex-wrap:wrap}
+html body.kq .win .lg-det.kqm-tip .kqm-ts{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;opacity:.9;margin-top:2px}
+html body.kq .win .lg-det.kqm-tip .kqm-tst{margin:10px 0 6px;gap:3px}html body.kq .win .lg-det.kqm-tip .kqm-tr{font-size:.95rem}html body.kq .win .lg-det.kqm-tip .kqm-tr .kqm-d{font-size:.86rem}
+html body.kq .win .lg-det.kqm-tip .kqm-td,html body.kq .win .lg-det.kqm-tip .kqm-tc{font-style:italic;font-size:.92rem;border-top-color:rgba(58,44,28,.25)}
+html body.kq .win .lg-det.kqm-tip .kqm-tp{font-size:1rem;font-weight:500}html body.kq .win .lg-det.kqm-tip .kqm-th{display:none}
+html body.kq .win .lg-two{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);column-gap:24px;align-items:start;align-content:start}
+html body.kq .win .lg-two>*{grid-column:1;min-width:0}
+html body.kq .win .lg-two>.kqm-bbar{grid-column:2;grid-row:1/span 80;align-self:start;position:sticky;top:0;margin:0;border-top:0;border-left:1px solid var(--lg-rule);padding:2px 0 8px 20px;min-height:180px}
+/* the Trading Post: one list at a time */
+#shop .wb.cols2{grid-template-columns:minmax(0,1fr)}
+#shop:not(.lg-sell) .wb.cols2>div:nth-child(2),#shop.lg-sell .wb.cols2>div:nth-child(1){display:none}
+#shop .wb.cols2>div:nth-child(1)>.sec{display:none}
+html body.kq .win .lg-tabs{margin:0 24px 4px;padding:0}
+#shop.lg-sell #ss .kqm-shopg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px}
+html body.kq .win .sellbar{background:none;border-top:1px solid var(--lg-rule);position:static}
+html body.mob .lg-nm{font-size:1rem}
 </style>`);
 </script></body></html>

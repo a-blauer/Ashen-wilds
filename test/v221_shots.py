@@ -41,6 +41,12 @@ def s(pg):
         ev("()=>{$('bag').classList.remove('hide');rB()}");pg.wait_for_timeout(1500)
         print('pv',ev("()=>{const g=document.querySelector('#bag [data-kqt^=\\\"e:\\\"]');KQM.tipEl=g;ip222Tick();return [IP222.cur,IP222.el&&IP222.el.className]}"))
         shot('pv_bag',2000);ev("()=>{KQM.tipEl=null;$('bag').classList.add('hide')}")
+    if want('shoplist'):
+        ev("()=>{const n=im220Rig(DM196TP.npc).getWorldPosition(new THREE.Vector3());pl.position.set(n.x+1.2,pl.position.y,n.z+2.2);snapCam();openShop('m')}");pg.wait_for_timeout(5000)
+        ev("()=>{const L=[...document.querySelectorAll('#sb .kqm-cell')];const g=L.find(c=>c._kq&&c._kq.item&&c._kq.item())||L[0];g.click()}");shot('sl_buy',2500)
+        ev("()=>{lg222Tab('s')}");shot('sl_sell',1200);ev("()=>{$('shop').classList.add('hide')}")
+        ev("()=>{openX('alch')}");pg.wait_for_timeout(800);ev("()=>{const c=document.querySelector('#xwB .kqm-cell');if(c)c.click()}");shot('sl_alch',1500);ev("()=>closeX()")
+        ev("()=>{openX('stable',0)}");pg.wait_for_timeout(800);ev("()=>{const c=document.querySelector('#xwB .kqm-cell');if(c)c.click()}");shot('sl_stable',1500);ev("()=>closeX()")
     if want('talk'):
         ev("()=>{insGo(INSL[insG(0,0)])}");pg.wait_for_function("()=>curMap()==0&&MQ143.S&&MQ143.S.war&&MQ143.S.war.captain",timeout=180000);pg.wait_for_timeout(1500)
         ev("()=>{try{if(KC208.on)kc208End()}catch(_){}const g=MQ143.S.war.captain.g,p=g.getWorldPosition(new THREE.Vector3());pl.position.set(p.x+1.2,GH(p.x+1.2,p.z+2),p.z+2);snapCam()}");pg.wait_for_timeout(800)

@@ -20,17 +20,17 @@
 //  - Dialogue (the talk view) and the keeper's greeting are the same paper; item slots and 3D previews stay dark plates, like
 //    illustrations pasted into the book.
 // Each player styles their own windows: nothing here is shared in co-op.
-var LG222={fix:new Set(),fixB:new Set(),raf:0,paper:[226,212,180],on:true};
+var LG222={fix:new Set(),fixB:new Set(),raf:0,paper:[204,186,144],on:true};
 LG222.stain="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='900' height='600' preserveAspectRatio='none'><filter id='a' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.006 .009' numOctaves='4' seed='11'/><feColorMatrix values='0 0 0 0 .36  0 0 0 0 .25  0 0 0 0 .12  0 0 0 1.1 -.52'/></filter><filter id='b' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .22  0 0 0 0 .12  0 0 0 .5 -.2'/></filter><rect width='100%' height='100%' filter='url(#a)'/><rect width='100%' height='100%' filter='url(#b)' opacity='.5'/></svg>")+"\")";
 LG222.knot=r=>"url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g transform='rotate("+r+" 30 30)' fill='none' stroke='#3a2a1a' stroke-width='1.3' stroke-linecap='round'><path d='M3 57V16C3 8 8 3 16 3h41'/><path d='M8 57V19c0-7 4-11 11-11h38' opacity='.5'/><path d='M3 30c9 0 14-5 14-13S12 6 9 9s0 9 8 9 13-6 13-15'/><path d='M17 17c5 5 13 5 13 13s-8 8-8 3 6-5 12 0' opacity='.8'/><circle cx='9.5' cy='9.5' r='2.2' fill='#8c2f1f' stroke='none'/></g></svg>")+"\")";
 LG222.circle="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='#3a2a1a' stroke-opacity='.16' stroke-width='.9'><circle cx='100' cy='100' r='96'/><circle cx='100' cy='100' r='88' stroke-dasharray='1.5 4'/><circle cx='100' cy='100' r='60'/><path d='M100 12l76 132H24z'/><path d='M100 188L24 56h152z' opacity='.7'/><circle cx='100' cy='100' r='22'/><path d='M100 4v20M100 176v20M4 100h20M176 100h20M100 78v44M78 100h44'/><circle cx='100' cy='40' r='5'/><circle cx='48' cy='130' r='5'/><circle cx='152' cy='130' r='5'/></svg>")+"\")";
 document.head.insertAdjacentHTML('beforeend',`<style>
 html body.kq .modal.w{background:radial-gradient(ellipse at 50% 45%,rgba(8,6,4,.5),rgba(3,2,1,.84))}
-html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#6a5c48;--kq-dim:#8a7a62;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
-  --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#6a5c48;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
-  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#eee2c6 0%,#e2d4b4 46%,#cfbc96 100%) no-repeat;background-blend-mode:normal,multiply,normal;
+html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#54473a;--kq-dim:#6e604c;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
+  --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#54473a;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
+  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#dccba4 0%,#cdb98e 46%,#b29a6c 100%) no-repeat;background-blend-mode:normal,multiply,normal;
   border:0;border-image:none;border-radius:2px;color:#2a2118;font-family:'EB Garamond',Georgia,'Times New Roman',serif;font-size-adjust:.5;
-  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 80px rgba(120,88,46,.3)}
+  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 90px rgba(92,64,30,.42)}
 html body.kq .win::before{display:none}
 html body.kq .modal.w>.win::after{content:'';position:absolute;inset:7px;z-index:3;pointer-events:none;border:1px solid var(--lg-rule);outline:1px solid rgba(58,44,28,.2);outline-offset:-4px;
   background:${LG222.knot(0)} left -1px top -1px/38px 38px no-repeat,${LG222.knot(90)} right -1px top -1px/38px 38px no-repeat,${LG222.knot(180)} right -1px bottom -1px/38px 38px no-repeat,${LG222.knot(270)} left -1px bottom -1px/38px 38px no-repeat}
@@ -85,7 +85,7 @@ html body.kq .win .rw.on,html body.kq #xw .rw.on{background:linear-gradient(90de
 html body.kq .win .rw.on.it{box-shadow:inset 3px 0 0 var(--lg-red)}
 html body.kq .win .kv,html body.kq .win .mi,html body.kq .win .df{border-bottom-color:rgba(58,44,28,.2)}
 html body.kq .win .panel{background:rgba(58,44,28,.07);border:1px solid rgba(58,44,28,.3);border-radius:2px}
-html body.kq .win select,html body.kq .win input[type=text],html body.kq .win input:not([type]),html body.kq .win input[type=number],html body.kq .win textarea{background:rgba(255,250,235,.45);color:#2a2118;border:1px solid rgba(58,44,28,.5);border-radius:2px;font-family:inherit}
+html body.kq .win select,html body.kq .win input[type=text],html body.kq .win input:not([type]),html body.kq .win input[type=number],html body.kq .win textarea{background:rgba(240,228,200,.5);color:#2a2118;border:1px solid rgba(58,44,28,.55);border-radius:2px;font-family:inherit}
 html body.kq .win input[type=range],html body.kq .win input[type=checkbox]{accent-color:#8c2f1f}
 html body.kq .win details.grp{border-color:rgba(58,44,28,.3);background:rgba(58,44,28,.05);color:#2a2118}
 /* plates pasted into the book: item slots and 3D previews stay dark */
@@ -94,9 +94,8 @@ html body.kq .win .kqm-slot.kqm-empty{background:rgba(58,44,28,.1);border:1px da
 html body.kq .win .kqm-slot.on{outline:2px solid var(--lg-red);outline-offset:1px}
 html body.kq .win .pvbox{border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
 html body.kq .win .ch139-pvw{background:radial-gradient(ellipse at 50% 68%,#3b3244,#15110d 76%);border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
-html body.kq .win .kqm-bbar{background:linear-gradient(180deg,rgba(232,220,192,.97),rgba(222,208,176,.97));border-top:1px solid var(--lg-rule);color:#2a2118}
 /* ---- dialogue: the same page, a strip of it ---- */
-#xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6 0%,#e0d1b0 55%,#cdb992 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
+#xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#dccba4 0%,#cdb98e 55%,#b29a6c 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
   box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 18px 44px rgba(0,0,0,.75),inset 0 0 60px rgba(120,88,46,.3)!important}
 #xw.dlg220>.win::after{inset:6px;background-size:34px 34px,34px 34px,34px 34px,34px 34px}
 #xw.dlg220 .wh{min-height:0;margin:0;padding:0}
@@ -113,7 +112,7 @@ html body.kq .win .kqm-bbar{background:linear-gradient(180deg,rgba(232,220,192,.
 #xw.dlg220 .wf button:hover,#xw.dlg220 .wf button:focus-visible{background:rgba(140,47,31,.12)!important;border-left-color:var(--lg-red)!important;color:#2a2118!important}
 #xw.dlg220 .wf button.pri{border-left-color:var(--lg-red)!important;color:#2a2118!important}
 #sk220say{color:#2a2118;border:0;border-radius:2px;font-family:'IM Fell English','EB Garamond',Georgia,serif;
-  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6,#d8c7a2) no-repeat;background-blend-mode:multiply,normal;box-shadow:0 0 0 1px #4a3826,0 0 0 4px #1c140c,0 0 0 5px #6a4e2c,0 10px 26px rgba(0,0,0,.6)}
+  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#dccba4,#bfa878) no-repeat;background-blend-mode:multiply,normal;box-shadow:0 0 0 1px #4a3826,0 0 0 4px #1c140c,0 0 0 5px #6a4e2c,0 10px 26px rgba(0,0,0,.6)}
 #sk220say b{font-family:'IM Fell English',Georgia,serif;font-size:.86rem;letter-spacing:.04em;text-transform:none;font-style:italic;color:#8c2f1f}
 #sk220say i{font-size:1.05rem}
 </style>`);
