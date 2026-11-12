@@ -154,3 +154,5 @@ v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-:
 3961|3962|v223|craft|alchem|cook|treasur|3704|3706|3700|0160|0490|1060|3950|3952|3940: v223_stations.py v222_ledger.py v200_stations.py v109_kingdom_shops.py
 # v223 menu layouts (3960): Character window, Kingdom Construction and Villagers tabs
 3960|v223|2940|2930|1880|1910|2200|3220|3700|3780|1960|3950|ledger: v223_menus.py v139_checks.py v117_menus.py v103_kingdom.py v222_ledger.py
+# v223 town folk (3963, 3964): smith grip, bard arms, keepers hold still while their window is open, the Scholar's Tower lectern
+3963|3964|v223|1900|2995|3081|3550|3680|3700|3702|3708|1030-|1860|3630|3490|3940|0490: v223_town.py v103_kingdom.py v192_hero_fit.py v200_stations.py v220_town.py v221_immersion.py v151_intro.py
