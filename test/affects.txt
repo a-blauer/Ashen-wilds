@@ -150,3 +150,5 @@ v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-:
 3966|v223_menu|shopBtn: v223_menu_fixes.py v222_ledger.py v117_menus.py
 # v223 the Magic Shop evolution preview shows the hero (3965): keeper view vs the v119 preview stage
 3965|3940|2240|2410|3593|v223|magic-shop|ability-preview|evo-preview: v223_evo_preview.py v119_abprev.py v194_shops.py v221_immersion.py
+# v223 stations (3961 alchemy / cooking, 3962 treasury exchange)
+3961|3962|v223|craft|alchem|cook|treasur|3704|3706|3700|0160|0490|1060|3950|3952|3940: v223_stations.py v222_ledger.py v200_stations.py v109_kingdom_shops.py
