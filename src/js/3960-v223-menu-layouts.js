@@ -142,10 +142,10 @@ html body.kq #xw .vlsec .mut{font-family:'EB Garamond',Georgia,serif;font-size:.
 html body.kq #xw .vltr{font-size:.76rem!important;min-width:0}html body.kq #xw .vltr small{font-size:.7rem}
 html body.kq #xw .vltr.on,html body.kq #xw .vljob.on{color:#2a2118!important;background:rgba(140,47,31,.14)!important;border-color:#8c2f1f!important;opacity:1!important}
 html body.kq #xw .vljobs{flex-direction:column;flex-wrap:nowrap;gap:3px;max-height:190px}
-html body.kq #xw .vljob{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;border-radius:2px!important;padding:5px 8px 5px 24px!important;font-size:.8rem!important;line-height:1.2}
+html body.kq #xw .vljob{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;border-radius:2px!important;padding:5px 8px 5px 24px!important;font-size:.76rem!important;line-height:1.2}
 html body.kq #xw .vljob::before{content:'○';position:absolute;left:8px;top:5px;font-size:.8rem;color:#6e604c}
 html body.kq #xw .vljob.on::before{content:'●';color:#8c2f1f}
-html body.kq #xw .vljob .vj-z{display:block;font-size:.68rem;color:#54473a;margin-top:1px}
+html body.kq #xw .vljob .vj-n{font-size:1em;line-height:1.2}html body.kq #xw .vljob .vj-z{display:block;line-height:1.3;font-size:.68rem;color:#54473a;margin-top:1px}
 html body.kq #xw .vlft{font-size:.74rem;flex-wrap:wrap}html body.kq #xw .vlft button{white-space:nowrap}
 html body.kq #xw .vlsum{gap:6px 8px}
 </style>`);
