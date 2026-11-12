@@ -28,7 +28,7 @@ JS=r"""async()=>{const out={},F=[];window.VT=performance.now();performance.now=(
   tp225Go('town');await wait(900);STEP(2);{const T=TOWNS[0],d=Math.hypot(pl.position.x-T.cx,pl.position.z-T.cy);out.tp4=Math.round(d);if(d>150)F.push('teleport home did not reach Duskhold ('+Math.round(d)+' m away)')}}
  catch(e){F.push('teleport: '+e.message)}
  // ---- 4 · basic foods in the companion food pouch ----
- try{const c=party[0];c.cf200=[];mats.meat=5;sup.berries=4;
+ try{const c=party[0];c.cf200=[];if(SUP.meat)sup.meat=5;else mats.meat=5;if(SUP.berries)sup.berries=4;else mats.berries=4;
   cf200Put(c,'meat',3);out.pouch=JSON.stringify(c.cf200);if(!(c.cf200[0]&&c.cf200[0].k=='meat'&&c.cf200[0].n==3))F.push('meat did not go in the pouch: '+out.pouch);if(cnt('meat')!==2)F.push('meat not taken from the bag: '+cnt('meat'));
   cf200Put(c,'berries',2);if(cnt('berries')!==2)F.push('berries not taken from the bag: '+cnt('berries'));
   const mx=M(c);c.h=1;c._cf200=0;cf200Eat(c,0);out.ate=Math.round(c.h-1);if(!(c.h>1))F.push('the companion did not eat a basic food');
@@ -39,10 +39,14 @@ JS=r"""async()=>{const out={},F=[];window.VT=performance.now();performance.now=(
  catch(e){F.push('pouch: '+e.message)}
  // ---- 5 · mana ----
  try{out.mana=v225Mana();const M=out.mana;
-  for(const c in M){const r=M[c];if(r.l50.sustain<.35||r.l50.sustain>.85)F.push(c+' level 50 sustain '+r.l50.sustain+' (casting every ability on cooldown)');
-    if(r.l10.sustain<.35||r.l10.sustain>.9)F.push(c+' level 10 sustain '+r.l10.sustain);
-    if(r.l50.regenPct>1.75)F.push(c+' regenerates '+r.l50.regenPct+'% of max mana per second');}
-  const S=Object.values(M).map(r=>r.l50.sustain),spread=Math.max(...S)-Math.min(...S);out.manaSpread=+spread.toFixed(2);if(spread>.25)F.push('classes differ too much in mana sustain: '+S.join(' '))}
+  // sustain: the share of casting the six costliest abilities on cooldown that regeneration pays for (.15 at level 1 → .30 at 50)
+  for(const c in M){const r=M[c];if(r.l50.sustain<.24||r.l50.sustain>.38)F.push(c+' level 50 sustain '+r.l50.sustain+' (casting every ability on cooldown)');
+    if(r.l10.sustain<.12||r.l10.sustain>.26)F.push(c+' level 10 sustain '+r.l10.sustain);
+    if(r.l50.geared>.6)F.push(c+' with mana gear sustains '+r.l50.geared+' at level 50 (endless mana)');
+    if(Math.abs(r.l50.regenPct-1.6)>.25)F.push(c+' regenerates '+r.l50.regenPct+'% of max mana per second');}
+  for(const L of ['l10','l50']){const S=Object.values(M).map(r=>r[L].sustain),spread=Math.max(...S)-Math.min(...S);if(spread>.06)F.push('classes differ in mana sustain at '+L+': '+S.join(' '))}
+  // the cost a hero pays follows the multiplier, and a miss refunds exactly what was paid
+  {const sk=heroSkills()[0];if(sk&&sk.__mp225!=null){const m=mana225Mul(hero.cls,hero.lvl);if(sk.mp!==Math.max(1,Math.round(sk.__mp225*m)))F.push('the cost getter disagrees: '+sk.mp)}}}
  catch(e){F.push('mana: '+e.message)}
  // ---- 6 · hero looks ----
  try{const L0={pat:3,pc:'#ece4d4',bel:1,fp:2,fpc:'#a8261c',scar:1,hs:1.08,tl:1.2,height:1.1};
@@ -68,7 +72,7 @@ JS=r"""async()=>{const out={},F=[];window.VT=performance.now();performance.now=(
   const old=mpLookIn(a.slice(0,10));if(!old||old.pat)F.push('an older partner\'s look array broke');
   const s=gameSnapshot();if(!s.hero.look||s.hero.look.pat!==3||s.hero.look.tl!==1.2)F.push('the save lost the new look: '+JSON.stringify(s.hero.look));
   // the editors render the new controls
-  const ct=lkCtl(lkFull('ranger',L0));['data-lk="pat"','data-lk="bel"','data-lk="tl"','data-lk="hs"','data-lk="fp"','data-lk="scar"','data-lk="pc"','data-lk="fpc"'].forEach(k=>{if((ct.body+ct.head).indexOf(k)<0)F.push('editor misses '+k)});
+  const ct=lkCtl(lkFull('ranger',L0));['data-lk="ns"','data-lk="cl"','data-lk="pat"','data-lk="bel"','data-lk="tl"','data-lk="hs"','data-lk="fp"','data-lk="scar"','data-lk="pc"','data-lk="fpc"'].forEach(k=>{if((ct.body+ct.head).indexOf(k)<0)F.push('editor misses '+k)});
   out.furN=BRD[5].fur.length;if(BRD[5].fur.length<12)F.push('only '+BRD[5].fur.length+' fur colours')}
  catch(e){F.push('look: '+e.message+' '+String(e.stack).slice(0,200))}
  // ---- 7 · the paladin holds the shield up in front ----

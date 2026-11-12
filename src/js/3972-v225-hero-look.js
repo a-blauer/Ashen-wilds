@@ -4,9 +4,10 @@
 // Before: build, height, fur colour (6) and eye colour (5). Now, in the creator's Appearance step and the Barber:
 //  * Body:  build · height (90–110 %, the model now follows the whole slider; it stopped at 94–106 %) · tail length (70–130 %)
 //           · fur colour (14 per animal) · underside (natural, pale, cream, matching, dark, marking colour)
-//  * Coat:  pattern (13: tabby stripes, spots, bandit mask, dark saddle, socks, face blaze, pale bib, piebald patches, dark
-//           points, grizzled, brindle, ringed tail) · marking colour (12)
-//  * Head:  head size (90–112 %) · eye colour (up to 14) · war paint (7 designs) · paint colour (10) · scar (5)
+//  * Coat:  pattern (13: tabby stripes, spots, bandit mask, saddle, socks, face blaze, bib, piebald patches,
+//           points, grizzled, brindle, ringed tail) · marking colour (Auto + 12)
+//  * Head:  head size (90–112 %) · eye colour (up to 14) · war paint (7 designs) · paint colour (10) · scar (5) · nose (5)
+//           · claws (6)
 // How it stays safe with gear:
 //  * Patterns, underside, war paint and scars are PAINT: while the hero's body is built (mdHeroB) every fur triangle is recoloured
 //    by a mask worked out from its position and its bone (mdTri, the one funnel every builder triangle goes through). Armour,
@@ -17,14 +18,16 @@
 //    on those bones, so weapons, shields and their grips are unchanged. Height still scales the whole model, gear included.
 // Saves: the new fields live in hero.look (lkClean keeps them, old saves have none and look as before). The geometry cache key
 // (mdLookKey) includes the paint fields. Co-op: the look array grows at the end (index 10 on: pattern, marking colour,
-// underside, paint, paint colour, scar, head size, tail length); older partners ignore the extra fields.
+// underside, paint, paint colour, scar, head size, tail length, claws, nose); older partners ignore the extra fields.
 var LK225={
-  pat:['None','Tabby stripes','Spots','Bandit mask','Dark saddle','Socks','Face blaze','Pale bib','Piebald patches','Dark points','Grizzled','Brindle','Ringed tail'],
+  pat:['None','Tabby stripes','Spots','Bandit mask','Saddle','Socks','Face blaze','Bib','Piebald patches','Points','Grizzled','Brindle','Ringed tail'],
   mark:['#14100e','#2e2622','#4a3626','#6a4a2e','#8a5a2a','#b8742e','#d8b070','#ece4d4','#f8f6f0','#8a8a92','#5a2418','#2a3644'],
   bel:['Natural','Pale','Cream','Matching','Dark','Marking colour'],
   fp:['None','Twin streaks','Brow band','Eye rings','Forehead rune','Clan slash','Muzzle stripe'],
   fpc:['#a8261c','#e8e2d4','#141210','#2a58a8','#d8a428','#3a8a46','#7a3aa8','#e86a1a','#2ab8b0','#c83a7a'],
   scar:['None','Over the left eye','Over the right eye','Across the cheek','Across the muzzle'],
+  cl:['Natural','Ivory','Black','Gold','Blood red','Silver'],clC:[null,0xe8dcc0,0x121010,0xd8a428,0x8a1a14,0xb8bcc4],
+  ns:['Natural','Black','Pink','Brown','Grey'],nsC:[null,0x141210,0xc88a90,0x5a3a2a,0x6a6a70],
   hs:[.9,1.12],tl:[.7,1.3],ht:[.9,1.1],
   // extra coat colours per animal (appended: the old first colour stays each animal's default) and eye colours for all
   fur:{1:['#1c1816','#c8c0b4','#7a5a40','#a04a2a','#4a4a52','#d8c090','#3a2a2a','#9a8a7a'],
@@ -46,23 +49,25 @@ function lk225Of(o){const r={};if(!o||typeof o!='object')return r;
   if(o.bel!=null){const v=lk225Int(o.bel,LK225.bel.length,null);if(v!=null)r.bel=v}
   if(o.fp!=null){const v=lk225Int(o.fp,LK225.fp.length,null);if(v!=null)r.fp=v}
   if(o.scar!=null){const v=lk225Int(o.scar,LK225.scar.length,null);if(v!=null)r.scar=v}
+  if(o.cl!=null){const v=lk225Int(o.cl,LK225.cl.length,null);if(v!=null)r.cl=v}
+  if(o.ns!=null){const v=lk225Int(o.ns,LK225.ns.length,null);if(v!=null)r.ns=v}
   if(lk225Hex(o.pc))r.pc=o.pc.toLowerCase();else if(o.pc==='auto')r.pc='auto';if(lk225Hex(o.fpc))r.fpc=o.fpc.toLowerCase();
   if(o.hs!=null){const v=lk225Num(o.hs,LK225.hs,null);if(v!=null)r.hs=+v.toFixed(2)}
   if(o.tl!=null){const v=lk225Num(o.tl,LK225.tl,null);if(v!=null)r.tl=+v.toFixed(2)}
   return r}
 // defaults: nothing painted, natural underside, normal head and tail
-function lk225Full(L){return Object.assign({pat:0,pc:'auto',bel:0,fp:0,fpc:LK225.fpc[0],scar:0,hs:1,tl:1},lk225Of(L))}
+function lk225Full(L){return Object.assign({pat:0,pc:'auto',bel:0,fp:0,fpc:LK225.fpc[0],scar:0,cl:0,ns:0,hs:1,tl:1},lk225Of(L))}
 {const f=lkClean;lkClean=function(o){const r=f.apply(this,arguments);try{Object.assign(r,lk225Of(o))}catch(_){}return r}}
 {const f=mdLookN;mdLookN=function(L,cls){const r=f.apply(this,arguments);try{Object.assign(r,lk225Full(L));
     // height: the model follows the editor's whole range (0.90–1.10)
     if(L&&L.height!=null&&isFinite(+L.height))r.height=Math.max(LK225.ht[0],Math.min(LK225.ht[1],+L.height))}catch(_){}return r}}
-{const f=mdLookKey;mdLookKey=function(L){let k=f.apply(this,arguments);try{if(L&&(L.pat||L.bel||L.fp||L.scar))k+='.v'+[L.pat|0,L.pc,L.bel|0,L.fp|0,L.fpc,L.scar|0].join('_')}catch(_){}return k}}
+{const f=mdLookKey;mdLookKey=function(L){let k=f.apply(this,arguments);try{if(L&&(L.pat||L.bel||L.fp||L.scar||L.cl||L.ns))k+='.v'+[L.pat|0,L.pc,L.bel|0,L.fp|0,L.fpc,L.scar|0,L.cl|0,L.ns|0].join('_')}catch(_){}return k}}
 // co-op: appended after index 9 (older partners stop reading at 9)
 {const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a)){const L=lk225Full(mdLookOf(pl,hero.cls));
-    while(a.length<10)a.push(0);a.push(L.pat,L.pc,L.bel,L.fp,L.fpc,L.scar,Math.round(L.hs*100),Math.round(L.tl*100))}}catch(_){}return a}}
+    while(a.length<10)a.push(0);a.push(L.pat,L.pc,L.bel,L.fp,L.fpc,L.scar,Math.round(L.hs*100),Math.round(L.tl*100),L.cl,L.ns)}}catch(_){}return a}}
 {const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);try{if(r&&Array.isArray(a)&&a.length>=18){
     const c=v=>typeof v=='number'&&isFinite(v)?'#'+('00000'+(v>>>0&0xffffff).toString(16)).slice(-6):v;
-    Object.assign(r,lk225Of({pat:a[10],pc:c(a[11]),bel:a[12],fp:a[13],fpc:c(a[14]),scar:a[15],hs:(+a[16]||100)/100,tl:(+a[17]||100)/100}))}}catch(_){}return r}}
+    Object.assign(r,lk225Of({pat:a[10],pc:c(a[11]),bel:a[12],fp:a[13],fpc:c(a[14]),scar:a[15],hs:(+a[16]||100)/100,tl:(+a[17]||100)/100,cl:a[18],ns:a[19]}))}}catch(_){}return r}}
 
 // ---------------- the underside colour (each animal's palette, at build) ----------------
 // the marking colour: the one chosen, or (Auto) a light one on dark fur and a dark one on light fur
@@ -71,7 +76,9 @@ function lk225Mark(L,fur){if(L&&lk225Hex(L.pc))return mdC(L.pc);return lk225Lum(
 function lk225Bel(C,L){const b=L.bel|0;if(!b)return C;const f=C.FUR,o=Object.assign({},C);
   o.BELLY=b==1?mdMix(f,0xe8e2d6,.62):b==2?mdMix(f,0xe0c896,.6):b==3?f:b==4?mdSh(f,.58):mdMix(f,lk225Mark(L,f),.82);return o}
 (function(){for(let id=1;id<=5;id++){const D=typeof BRD!='undefined'&&BRD[id];if(!D||typeof D.cols!='function'||D.cols.v225)continue;const f=D.cols;
-  D.cols=function(L){const C=f.apply(this,arguments);try{return L&&L.bel?lk225Bel(C,L):C}catch(_){return C}};D.cols.v225=1}})();
+  D.cols=function(L){let C=f.apply(this,arguments);try{if(L&&L.bel)C=lk225Bel(C,L);
+    if(L&&(L.cl|0)&&LK225.clC[L.cl|0]!=null)C=Object.assign({},C,{CLAW:LK225.clC[L.cl|0]});
+    if(L&&(L.ns|0)&&LK225.nsC[L.ns|0]!=null)C=Object.assign({},C,{NOSE:LK225.nsC[L.ns|0]})}catch(_){}return C};D.cols.v225=1}})();
 
 // ---------------- paint: patterns, war paint and scars on the fur ----------------
 var K225={on:0,L:null,D:null,C:null,fur:null,line:null,E:null,R:null,tc:null};
@@ -135,7 +142,7 @@ function lk225Scar(k,p){const E=K225.E,x=p.x,y=p.y,z=p.z,ax=Math.abs(x);if(z<E.z
   switch(k){
     case 1:return x<0&&Math.abs(ax-E.x)<.008&&Math.abs(y-E.y)<.05&&Math.hypot(ax-E.x,y-E.y)>.008?1:0;
     case 2:return x>0&&Math.abs(ax-E.x)<.008&&Math.abs(y-E.y)<.05&&Math.hypot(ax-E.x,y-E.y)>.008?1:0;
-    case 3:return x>0&&ax>E.x-.015&&ax<E.x+.05&&Math.abs((y-(E.y-.04))+(ax-E.x)*.55)<.008?1:0;
+    case 3:return x>0&&ax>E.x-.015&&ax<E.x+.05&&Math.abs((y-(E.y-.04))+(ax-E.x)*.55)<.012?1:0;
     case 4:return z>E.z&&Math.abs((y-(E.y-.03))-x*.9)<.008&&ax<.04?1:0}
   return 0}
 // one corner: its colour (0..1) after paint, or null when nothing changes
@@ -171,19 +178,19 @@ function lk225Ctl(L){const F=lk225Full(L),g=(t,x)=>`<div class="lkg">${t?`<div c
     sl=(k,lab,r,v)=>g(`${lab} <b data-lk225l="${k}">${Math.round(v*100)}%</b>`,`<input class="lkr" type="range" min="${r[0]}" max="${r[1]}" step="0.01" value="${v}" data-lk="${k}" aria-label="${lab}">`);
   const body=sl('tl','Tail length',LK225.tl,F.tl)+g('Underside',ch('bel',LK225.bel,F.bel))+
     `<div class="lk225sec">Coat</div>`+g('Pattern',ch('pat',LK225.pat,F.pat))+(F.pat||F.bel==5?g('Marking colour',`<div class="lks"><button class="lkc${F.pc=='auto'?' on':''}" data-lk="pc" data-v="auto" title="Light on dark fur, dark on light fur">Auto</button></div>`+sw('pc',LK225.mark,F.pc)):'');
-  const head=`<div class="lk225sec">Face</div>`+sl('hs','Head size',LK225.hs,F.hs)+g('War paint',ch('fp',LK225.fp,F.fp))+(F.fp?g('Paint colour',sw('fpc',LK225.fpc,F.fpc)):'')+g('Scar',ch('scar',LK225.scar,F.scar));
+  const head=`<div class="lk225sec">Face</div>`+sl('hs','Head size',LK225.hs,F.hs)+g('War paint',ch('fp',LK225.fp,F.fp))+(F.fp?g('Paint colour',sw('fpc',LK225.fpc,F.fpc)):'')+g('Scar',ch('scar',LK225.scar,F.scar))+g('Nose',ch('ns',LK225.ns,F.ns))+g('Claws',ch('cl',LK225.cl,F.cl));
   return {body,head}}
 {const f=lkCtl;lkCtl=function(L){const r=f.apply(this,arguments);try{const x=lk225Ctl(L);
     r.body=r.body+x.body;
     // the face options go before the Randomize / Reset row
     const i=r.head.lastIndexOf('<div class="lkb">');r.head=i>=0?r.head.slice(0,i)+x.head+r.head.slice(i):r.head+x.head}catch(e){console.warn('v225 editor',e)}return r}}
 {const f=lkSet;lkSet=function(state,k,v){if(k=='pc'||k=='fpc'){state.look=Object.assign({},state.look,{[k]:v});return}
-  if(k=='hs'||k=='tl'||k=='pat'||k=='bel'||k=='fp'||k=='scar'){state.look=Object.assign({},state.look,{[k]:+v});return}return f.apply(this,arguments)}}
+  if(k=='hs'||k=='tl'||k=='pat'||k=='bel'||k=='fp'||k=='scar'||k=='cl'||k=='ns'){state.look=Object.assign({},state.look,{[k]:+v});return}return f.apply(this,arguments)}}
 // randomize: the new options too (about half the heroes get a pattern, a few war paint or a scar); reset clears them
 {const f=lkInput;lkInput=function(state,e){const a=e.target&&e.target.closest&&e.target.closest('[data-lka]'),r=f.apply(this,arguments);
   try{if(a&&r){if(a.dataset.lka=='rnd'){const R=x=>x[Math.floor(Math.random()*x.length)],q=Math.random;
       Object.assign(state.look,{pat:q()<.55?1+Math.floor(q()*(LK225.pat.length-1)):0,pc:q()<.6?'auto':R(LK225.mark),bel:q()<.6?0:Math.floor(q()*LK225.bel.length),
-        fp:q()<.25?1+Math.floor(q()*(LK225.fp.length-1)):0,fpc:R(LK225.fpc),scar:q()<.15?1+Math.floor(q()*(LK225.scar.length-1)):0,
+        fp:q()<.25?1+Math.floor(q()*(LK225.fp.length-1)):0,fpc:R(LK225.fpc),scar:q()<.15?1+Math.floor(q()*(LK225.scar.length-1)):0,cl:q()<.3?Math.floor(q()*LK225.cl.length):0,ns:q()<.25?Math.floor(q()*LK225.ns.length):0,
         hs:+(.95+q()*.1).toFixed(2),tl:+(.85+q()*.3).toFixed(2)})}}}catch(_){}return r}}
 // the sliders' labels follow the value while dragging (the editors only knew the height slider)
 function lk225Lbl(e){const t=e.target;if(!t||t.tagName!='INPUT')return;const k=t.dataset.lk;if(k!='hs'&&k!='tl')return;const g=t.closest('.lkg'),b=g&&g.querySelector('[data-lk225l]');if(b)b.textContent=Math.round(+t.value*100)+'%'}

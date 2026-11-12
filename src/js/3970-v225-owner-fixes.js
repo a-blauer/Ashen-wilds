@@ -94,27 +94,35 @@ cf200Html=function(c){const P=cf200P(c),t=CF200.pts.includes(c.cf200t)?c.cf200t:
 // taking a basic food out puts it back in the bag (giveS knows every supply key)
 cf200Take=function(c,k){const P=cf200P(c),s=P.find(q=>q.k==k);if(!s)return;cf225Add(k,s.n);P.splice(P.indexOf(s),1)};
 
-// ---------------- 5 · mana: costs follow the level, the same regeneration for every class ----------------
-// Before: ability costs were fixed numbers (8–25 for the old skills, about the same for the v88 ones) while the mana pool grows
-// with level, gear and Wisdom (a level-50 Mage has ~380 before gear), and four classes regenerated 2.2 % of their pool a second
-// (the Mage 1.2 %). By the mid levels every class could cast its whole bar on cooldown without running dry.
+// ---------------- 5 · mana: one rule for every class, and mana from gear no longer outgrows the costs ----------------
+// Measured before (test/v225_mana_cmp.js; "sustain" = how much of casting the six costliest abilities a hero can own at that level,
+// all on cooldown, regeneration pays for; a hero with no mana gear):
+//              L10   L30   L50     regen / s
+//   Warrior    .16   .20   .29     2.2 %          The costs were fixed numbers (8–25) while the pool grows with level, and
+//   Paladin    .18   .29   .42     2.0 %          gear mana and Wisdom piled on top: a level-50 Mage with mana gear paid for
+//   Assassin   .17   .26   .38     2.2 %          ~85 % of an all-out rotation, a Warrior ~60 %, so the casters never ran dry
+//   Ranger     .20   .26   .37     2.2 %          and the classes felt very different.
+//   Mage       .16   .26   .38     1.2 %
 // Now:
-//  * regeneration: every class MANA225.reg of max mana a second (KQR_CLS.mpr = reg − the base 1.2 %); Wisdom and gear add on top.
-//  * cost: the listed cost × a multiplier per class and level, so that casting the six costliest abilities the hero could own at
-//    that level on cooldown is paid MANA225.tgt by regeneration (on a hero with no mana gear: sustain = regen / what the six
-//    cost a second). The multiplier never goes under MANA225.min (the cheapest early abilities stay a real choice). Gear and
-//    Wisdom mana are then a true bonus: more pool, more regeneration, the same costs.
+//  * regeneration: MANA225.reg (1.6 %) of max mana a second for every class (KQR_CLS.mpr = reg − the base 1.2 %); Wisdom, gear,
+//    food and the Wisp's empowerment still add on top.
+//  * cost: the listed cost × a multiplier per class, level and max mana, chosen so that a hero with no mana gear sustains the
+//    same share of that all-out rotation in every class: MANA225.tgt(L) = .15 at level 1 rising to .30 at level 50 (a bit under
+//    the old averages). Mana from gear and Wisdom raises the costs with the square root of how far it lifts the pool, so it still
+//    helps (a pool 1.8× the class's own sustains ~1.3× as long) but no longer makes mana endless.
 //  Every ability object's mp becomes a getter (the cast, the "not enough mana" check, the refund on a miss and the tooltips all
 //  read it), so evolved copies (Object.create) follow too. Co-op: mana is each player's own; nothing is sent.
-var MANA225={reg:.015,tgt:.6,min:.85,C:{}};
+var MANA225={reg:.016,lo:.15,hi:.30,min:.6,max:4,C:{}};
+function mana225Tgt(L){return MANA225.lo+(MANA225.hi-MANA225.lo)*Math.max(0,Math.min(1,((L|0)-1)/49))}
 function mana225Pool(cls,L){const C=CLS[cls];if(!C)return 50;L=Math.max(1,L|0);let p=C.base.mp+C.per.mp*(L-1);
   try{const k=KQR_CLS[cls];if(k&&k.mp!=null)p+=typeof k.mp=='function'?k.mp(L):k.mp}catch(_){}return p}
 // what the six costliest abilities (listed costs) the class can own at level L cost a second, cast on cooldown
-function mana225Need(cls,L){let a=[];try{a=kqsAll(cls)}catch(_){a=(SKB[cls]||[]).slice()}
-  const rate=s=>{const b=s.__mp225!=null?s.__mp225:+s.mp||0;const cd=Math.max(1,(+s.cd||1)*(typeof kqrC=='function'?1:1));return b/cd};
-  return a.filter(s=>s&&(s.lv|0)<=L&&(s.__mp225!=null||s.mp!=null)).map(rate).sort((x,y)=>y-x).slice(0,6).reduce((x,y)=>x+y,0)}
-function mana225Mul(cls,L){cls=cls||(hero&&hero.cls);L=L||(hero&&hero.lvl)||1;const k=cls+'|'+L;let m=MANA225.C[k];if(m!=null)return m;
-  const N=mana225Need(cls,L);m=N>0?Math.max(MANA225.min,MANA225.reg*mana225Pool(cls,L)/(MANA225.tgt*N)):1;MANA225.C[k]=m;return m}
+function mana225Need(cls,L){const k=cls+'|'+L;if(MANA225.C[k]!=null)return MANA225.C[k];let a=[];try{a=kqsAll(cls)}catch(_){a=(SKB[cls]||[]).slice()}
+  const n=a.filter(s=>s&&(s.lv|0)<=L&&s.__mp225!=null).map(s=>s.__mp225/Math.max(1,+s.cd||1)).sort((x,y)=>y-x).slice(0,6).reduce((x,y)=>x+y,0);return MANA225.C[k]=n}
+// the cost multiplier; mm = max mana (the hero's own when not given)
+function mana225Mul(cls,L,mm){cls=cls||(hero&&hero.cls);L=Math.max(1,L||(hero&&hero.lvl)||1);const N=mana225Need(cls,L),P=mana225Pool(cls,L);if(!(N>0))return 1;
+  if(mm==null){try{mm=cls===hero.cls?mpMax():P}catch(_){mm=P}}
+  const m=MANA225.reg*Math.sqrt(Math.max(1,mm)*P)/(mana225Tgt(L)*N);return Math.max(MANA225.min,Math.min(MANA225.max,m))}
 (function(){const seen=new Set();for(const c in CLS){let a=[];try{a=SKB[c].concat(SKX[c]||[],KQN[c]||[])}catch(_){a=SKB[c]||[]}
   a.forEach(s=>{if(!s||seen.has(s)||typeof s.mp!='number')return;seen.add(s);s.__mp225=s.mp;s.__c225=c;
     Object.defineProperty(s,'mp',{configurable:true,enumerable:true,get(){const m=typeof hero!='undefined'&&hero&&hero.cls===this.__c225?mana225Mul(hero.cls,hero.lvl|0):1;
@@ -124,6 +132,9 @@ function mana225Mul(cls,L){cls=cls||(hero&&hero.cls);L=L||(hero&&hero.lvl)||1;co
 function v225Mana(){const c0=hero.cls,l0=hero.lvl,R={};
   try{for(const c of Object.keys(CLS)){R[c]={};for(const L of [10,30,50]){hero.cls=c;hero.lvl=L;hsDirty();const s=HS(),mm=mpMax(),reg=mm*(.012+(s.mpr||0));
       const ab=kqsAll(c).filter(k=>k.lv<=L).map(k=>({n:k.n,mp:k.mp,cd:k.cd*kqrC(k)*(1-Math.min(.5,s.cdr||0))})),top=ab.slice().sort((a,b)=>b.mp/b.cd-a.mp/a.cd).slice(0,6),need=top.reduce((a,k)=>a+k.mp/k.cd,0);
-      R[c]['l'+L]={mm:Math.round(mm),regenPct:+(100*reg/mm).toFixed(2),mul:+mana225Mul(c,L).toFixed(2),avgCost:+(ab.reduce((a,k)=>a+k.mp,0)/Math.max(1,ab.length)).toFixed(1),
-        sustain:+(reg/Math.max(.01,need)).toFixed(2),dryIn:need>reg?Math.round(mm/(need-reg)):-1}}}}
+      R[c]['l'+L]={mm:Math.round(mm),regenPct:+(100*reg/mm).toFixed(2),mul:+mana225Mul(c,L,mm).toFixed(2),avgCost:+(ab.reduce((a,k)=>a+k.mp,0)/Math.max(1,ab.length)).toFixed(1),
+        sustain:+(reg/Math.max(.01,need)).toFixed(2),dryIn:need>reg?Math.round(mm/(need-reg)):-1};
+      // the same hero with mana gear and Wisdom: 1.8× the pool and +0.3 % regeneration a second
+      const mmG=mm*1.8,regG=mmG*(.015+(s.mpr||0)),nb=top.reduce((a,k)=>a+(kqsAll(c).find(q=>q.n==k.n).__mp225||0)/k.cd,0);
+      R[c]['l'+L].geared=+(regG/Math.max(.01,mana225Mul(c,L,mmG)*nb)).toFixed(2)}}}
   finally{hero.cls=c0;hero.lvl=l0;hsDirty()}return R}
