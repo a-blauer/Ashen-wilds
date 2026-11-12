@@ -57,7 +57,7 @@ def s(pg):
         chk('%s: after the window closes he works again'%k,m[0]>.15 and m[1]==0,m)
     hold('trainer',"openX('visitor','trainer')","closeX()",1)
     hold('smith',"KQM_SMITH=true;$('bag').classList.remove('hide');try{rB()}catch(_){}","$('bag').classList.add('hide');KQM_SMITH=false",1)
-    r=ev("()=>{const n=KP('bard');n._wk.h223=0;openX('visitor','bard');STEP(1.5);const L=n._wk.tool,V=THREE.Vector3,P=[];for(let i=0;i<8;i++){STEP(.1);P.push(n.bones.aL2.getWorldPosition(new V()).toArray())}closeX();let m=0;P.forEach(p=>P.forEach(q=>m=Math.max(m,Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]))));return {m:+m.toFixed(3),h:n._wk.h223}}")
+    r=ev("()=>{const n=KP('bard'),l=KL('bard'),W0=WK103.bard,[x,z]=lotW103(l,W0.x,W0.z+1.8);toPos(x,z);visTick();STEP(.3);n._wk.h223=0;openX('visitor','bard');STEP(1.5);const L=n._wk.tool,V=THREE.Vector3,P=[];for(let i=0;i<8;i++){STEP(.1);P.push(n.bones.aL2.getWorldPosition(new V()).toArray())}closeX();let m=0;P.forEach(p=>P.forEach(q=>m=Math.max(m,Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]))));return {m:+m.toFixed(3),h:n._wk.h223}}")
     chk('bard: he stops strumming while you talk',r['m']<.02 and r['h']==1,r)
     # ---------------- 4. the Scholar's Tower lectern ----------------
     r=ev("""()=>{SH.lv.tower=1;if(!SH.pos['u:tower'])lotSync103();kdSync();STEP(.2);const T=TOWNS[0],st=kdState().up.tower,s=st223Spot(),l=lotOf103('u:tower');

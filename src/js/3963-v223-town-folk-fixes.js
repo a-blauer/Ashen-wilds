@@ -58,7 +58,7 @@ if(typeof wkAnim103=='function'){const f0=wkAnim103;wkAnim103=function(n,now){co
 //    over the bowl's top edge and the paw comes down onto the strings between the sound hole and the neck (TF223.bStrum,
 //    lute frame), strumming across the strings (lute x) at the old rate;
 //  * neck arm: the paw under the neck, sliding along it a little (TF223.bNeck), elbow down and out (TF223.bNPole).
-Object.assign(TF223,{bPole:[1,.35,-.55],bNPole:[1,-1,-.3],bStrum:[.0,.1,.135],bSw:.04,bNeck:[0,.42,-.045],bNk:.05});
+Object.assign(TF223,{bPole:[1,.8,-.15],bNPole:[1,-1,-.3],bStrum:[.0,.1,.135],bSw:.04,bNeck:[0,.42,-.045],bNk:.05});
 function bard223(n,now){const S=n._wk,B=n.bones,L=S&&S.tool;if(!L||!B||!B.aL0||!B.aR0||typeof fc116IK!='function')return;const V=THREE.Vector3,t=now/1000+(S.t0||0);
   n.updateMatrixWorld(true);L.updateMatrixWorld(true);const rs=Math.sign(n.worldToLocal(B.aR0.getWorldPosition(new V())).x)||-1,C=TF223;
   const W=p=>L.localToWorld(new V(p[0],p[1],p[2])),s=Math.sin(t*9.5),f=Math.sin(t*2.1);

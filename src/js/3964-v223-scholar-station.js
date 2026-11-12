@@ -11,7 +11,7 @@
 // no new draw calls), so it follows the tower's lot, its quarter turns (SH.rot) and every level; one round collider.
 // The tower is baked under its own cache key (KDU|tower223|n) and gets the v190 decoration shading (dc190Shade).
 // Co-op: scenery from the shared kingdom (tower level and lot), fixed numbers only; the prompt is local, as before.
-var ST223={on:true,x:-1.5,z:2.3,ry:.72,r:1.7,col:.42,k:null};
+var ST223={on:true,x:-1.5,z:2.3,ry:.72,s:1.15,r:1.7,col:.45,k:null};
 function st223Lect(k){const W=0x3a281c,WD=0x2a1d14,ST=0x5e5a66,IR=0x2c2c32,BR=0xa8843a,PG=0xd9cba6,LE=0x4a1a1c;
   const at=(M0,x,y,z,rx,ry,rz,sx,sy,sz)=>M0.clone().multiply(dt168Mx(x,y,z,rx,ry,rz,sx,sy,sz));
   // plinth: two stepped octagonal stones
@@ -52,7 +52,7 @@ function st223Lect(k){const W=0x3a281c,WD=0x2a1d14,ST=0x5e5a66,IR=0x2c2c32,BR=0x
 // the lectern into the tower's kit (lot-local spot, turned toward the path) and its collider
 if(typeof KDU!='undefined'&&KDU.tower&&KDU.tower.b&&!KDU.tower.b.v223){const b0=KDU.tower.b;
   KDU.tower.b=function(k,l){const c=b0.apply(this,arguments)||[];if(!ST223.on)return c;
-    try{k.at(ST223.x,0,ST223.z,()=>st223Lect(k),ST223.ry);c.push([ST223.x,ST223.z,ST223.col]);ST223.k=k}catch(e){console.warn('v223 tower station',e)}return c};
+    try{k.at(ST223.x,0,ST223.z,()=>{const n0=k.P.length;st223Lect(k);const M=new THREE.Matrix4().makeScale(ST223.s,ST223.s,ST223.s);for(let i=n0;i<k.P.length;i++)k.P[i].m.premultiply(M)},ST223.ry);c.push([ST223.x,ST223.z,ST223.col]);ST223.k=k}catch(e){console.warn('v223 tower station',e)}return c};
   KDU.tower.b.v223=1;Object.keys(b0).forEach(p=>{if(KDU.tower.b[p]==null)KDU.tower.b[p]=b0[p]});
   // shading pass once the kit is baked (only when it was just built), then whatever ring the tower had
   {const r0=KDU.tower.ring;KDU.tower.ring=function(g,l){try{if(ST223.k){dc190Shade(ST223.k,'KDU|tower223|'+l);ST223.k=null}}catch(e){console.warn('v223 tower shade',e)}return r0?r0.apply(this,arguments):undefined}}
