@@ -25,9 +25,10 @@ def s(pg):
         ev("()=>{const p=CHQ148.P.ch.root.getWorldPosition(new THREE.Vector3());pl.position.set(p.x+1,pl.position.y,p.z+2.4);snapCam();openX('chq132')}");shot('board',2200);ev("()=>closeX()")
     if want('bag'):
         ev("()=>{$('bag').classList.remove('hide');rB()}");shot('bag',800);ev("()=>$('bag').classList.add('hide')")
-    if want('menus'):
-        for n,js in [('m_bag',"$('bag').classList.remove('hide');rB()"),('m_cmp',"$('cmp').classList.remove('hide');try{rC()}catch(_){}"),('m_tal',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}))"),
+    if want('menus') or any(o.startswith('m_') for o in ONLY):
+        for n,js in [('m_bag',"$('bag').classList.remove('hide');rB()"),('m_cmp',"$('cmp').classList.remove('hide');try{rC()}catch(_){}"),('m_tal',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}))"),('m_tal2',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}))"),
                      ('m_set',"$('setw').classList.remove('hide')"),('m_portal',"openX('portal')"),('m_inc',"$('inc').classList.remove('hide');rI()"),('m_abil',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',bubbles:true}))"),('m_alch',"openX('alch')"),('m_cook',"openX('cook')"),('m_stable',"openX('stable',0)"),('m_bosses',"openX('bosses')"),('m_hatch',"openX('hatch200')"),('m_magic',"openX('magic')"),('m_map',"$('wmap').classList.remove('hide')")]:
+            if ONLY and 'menus' not in ONLY and n not in ONLY:continue
             try:ev("()=>{"+js+"}")
             except Exception as e:print('ERR',n,str(e)[:200])
             shot(n,900);ev("()=>{try{closeX()}catch(_){}document.querySelectorAll('.modal.w').forEach(e=>e.classList.add('hide'));try{KQMENU.on=false}catch(_){}}")

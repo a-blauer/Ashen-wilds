@@ -77047,6 +77047,8 @@ html body.kq .win .kqm-slot{background:#1c1611;border-radius:2px;box-shadow:inse
 html body.kq .win .kqm-slot.kqm-empty{background:rgba(58,44,28,.1);border:1px dashed rgba(58,44,28,.3);box-shadow:none}
 html body.kq .win .kqm-slot.on{outline:2px solid var(--lg-red);outline-offset:1px}
 html body.kq .win .pvbox{border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
+html body.kq .win .ch139-pvw{background:radial-gradient(ellipse at 50% 68%,#3b3244,#15110d 76%);border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
+html body.kq .win .kqm-bbar{background:linear-gradient(180deg,rgba(232,220,192,.97),rgba(222,208,176,.97));border-top:1px solid var(--lg-rule);color:#2a2118}
 /* ---- dialogue: the same page, a strip of it ---- */
 #xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6 0%,#e0d1b0 55%,#cdb992 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
   box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 18px 44px rgba(0,0,0,.75),inset 0 0 60px rgba(120,88,46,.3)!important}
