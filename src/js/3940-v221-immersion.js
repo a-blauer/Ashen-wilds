@@ -76,7 +76,7 @@ function im220Tick(){const A=IM220;
   C.set(w.x,fy,w.z);P.set(w.x+ox*D,fy+(talk?h*.06:h*.12+.15),w.z+oz*D);
   if(talk)L.set(w.x,fy-D*tf*.34,w.z);                       // the face sits above the middle: the dialogue box is below
   else if(w.narrow)L.set(w.x,fy-D*tf*.55,w.z);              // tall screens: the keeper above the window
-  else{const th=Math.atan(.5*tf*asp),vx=w.x-P.x,vz=w.z-P.z,c2=Math.cos(th),s2=Math.sin(th);L.set(P.x+vx*c2+vz*s2,fy-D*tf*.1,P.z-vx*s2+vz*c2)}   // wide screens: the keeper on the right
+  else{const th=Math.atan(.64*tf*asp),vx=w.x-P.x,vz=w.z-P.z,c2=Math.cos(th),s2=Math.sin(th);L.set(P.x+vx*c2+vz*s2,fy-D*tf*.1,P.z-vx*s2+vz*c2)}   // wide screens: the keeper on the right
   cam.position.lerpVectors(A.p0,P,e);look.lerpVectors(A.l0,L,e);cam.lookAt(look);cam.updateMatrixWorld();
   try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(C)}catch(_){}
   // the speaker looks at you (the camera, in a shop); your hero steps out of the picture
@@ -124,7 +124,7 @@ addEventListener('keydown',e=>{if(!dl220On()||e.ctrlKey||e.metaKey||e.altKey)ret
 document.head.insertAdjacentHTML('beforeend',`<style>
 /* ---- talk: the HUD steps aside, two bars, a dialogue box ---- */
 body.im220t #stage>*:not(#gl):not(#xw):not(#fade):not(#ztc116):not(#banner){visibility:hidden!important}
-body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116):not(#banner):not(#kqmTip){visibility:hidden!important}
+body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116):not(#banner):not(#kqmTip):not(#ip222){visibility:hidden!important}
 #xw.dlg220{background:none!important;align-items:flex-end;padding:0 12px max(18px,5%);pointer-events:none}
 #xw.dlg220::before,#xw.dlg220::after{content:'';position:absolute;left:0;right:0;height:9%;background:#000;pointer-events:none;animation:dl220bar .5s ease both}
 #xw.dlg220::before{top:0;transform-origin:top}#xw.dlg220::after{bottom:0;transform-origin:bottom;height:5%}

@@ -5,6 +5,8 @@ def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=%s]'%os.environ.get('DEV','desktop'),timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
     ev=pg.evaluate
+    if os.environ.get('FONTS','1')=='1':
+        ev("()=>{const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cinzel:wght@600;800&family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap';document.head.appendChild(l)}");pg.wait_for_timeout(2500)
     def shot(n,wait=1500):
         pg.wait_for_timeout(wait);pg.screenshot(path=play.TMP+'/%s_%s.png'%(TAG,n));print('SHOT',n)
     def want(n):return not ONLY or n in ONLY
@@ -25,10 +27,19 @@ def s(pg):
         ev("()=>{$('bag').classList.remove('hide');rB()}");shot('bag',800);ev("()=>$('bag').classList.add('hide')")
     if want('menus'):
         for n,js in [('m_bag',"$('bag').classList.remove('hide');rB()"),('m_cmp',"$('cmp').classList.remove('hide');try{rC()}catch(_){}"),('m_tal',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true}))"),
-                     ('m_set',"$('setw').classList.remove('hide')"),('m_portal',"openX('portal')"),('m_inc',"$('inc').classList.remove('hide');rI()"),('m_abil',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',bubbles:true}))")]:
+                     ('m_set',"$('setw').classList.remove('hide')"),('m_portal',"openX('portal')"),('m_inc',"$('inc').classList.remove('hide');rI()"),('m_abil',"document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',bubbles:true}))"),('m_alch',"openX('alch')"),('m_cook',"openX('cook')"),('m_stable',"openX('stable',0)"),('m_bosses',"openX('bosses')"),('m_hatch',"openX('hatch200')"),('m_magic',"openX('magic')"),('m_map',"$('wmap').classList.remove('hide')")]:
             try:ev("()=>{"+js+"}")
             except Exception as e:print('ERR',n,str(e)[:200])
             shot(n,900);ev("()=>{try{closeX()}catch(_){}document.querySelectorAll('.modal.w').forEach(e=>e.classList.add('hide'));try{KQMENU.on=false}catch(_){}}")
+    if want('pv'):
+        ev("()=>{const n=im220Rig(DM196TP.npc).getWorldPosition(new THREE.Vector3());pl.position.set(n.x+1.2,pl.position.y,n.z+2.2);snapCam();openShop('m')}");pg.wait_for_timeout(5000)
+        print('pv',ev("()=>{const L=[...document.querySelectorAll('#shop [data-kqt]')];const g=L.find(e=>{const i=ip222Info(e);return i&&i.it})||L[0];KQM.tipEl=g;ip222Tick();return [L.length,IP222.cur,IP222.el&&IP222.el.className]}"))
+        shot('pv_post',2500)
+        print('pv',ev("()=>{const L=[...document.querySelectorAll('#shop [data-kqt]')];const g=L.find(e=>{const i=ip222Info(e);return i&&!i.it});KQM.tipEl=g;ip222Tick();return [IP222.cur,IP222.el&&IP222.el.className]}"))
+        shot('pv_post2',1500);ev("()=>{KQM.tipEl=null;$('shop').classList.add('hide')}")
+        ev("()=>{$('bag').classList.remove('hide');rB()}");pg.wait_for_timeout(1500)
+        print('pv',ev("()=>{const g=document.querySelector('#bag [data-kqt^=\\\"e:\\\"]');KQM.tipEl=g;ip222Tick();return [IP222.cur,IP222.el&&IP222.el.className]}"))
+        shot('pv_bag',2000);ev("()=>{KQM.tipEl=null;$('bag').classList.add('hide')}")
     if want('talk'):
         ev("()=>{insGo(INSL[insG(0,0)])}");pg.wait_for_function("()=>curMap()==0&&MQ143.S&&MQ143.S.war&&MQ143.S.war.captain",timeout=180000);pg.wait_for_timeout(1500)
         ev("()=>{try{if(KC208.on)kc208End()}catch(_){}const g=MQ143.S.war.captain.g,p=g.getWorldPosition(new THREE.Vector3());pl.position.set(p.x+1.2,GH(p.x+1.2,p.z+2),p.z+2);snapCam()}");pg.wait_for_timeout(800)

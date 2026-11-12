@@ -31,7 +31,7 @@ window.KVLOG=[];(function(){const keep=(t,a)=>{try{const m=t+' '+[].map.call(a,x
   setInterval(()=>{if(T.q.length&&T.lastTs!=null&&rp()-T.lastTs>500)advance(T.lastTs+250)},250);
 })();
 </script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cinzel:wght@600;800&family=VT323&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English+SC&family=Pirata+One&family=Grenze+Gotisch:wght@700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cinzel:wght@600;800&family=VT323&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Pirata+One&family=Grenze+Gotisch:wght@700;900&display=swap">
 <style>
 :root{--bg:#0b0f14;--glass:rgba(22,17,12,.74);--glass2:rgba(34,26,18,.92);--line:rgba(236,200,130,.16);--ink:#eadfc6;--mut:#a39378;--acc:#c9a24a;--gold:#f0cc72;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
@@ -77255,7 +77255,7 @@ function im220Tick(){const A=IM220;
   C.set(w.x,fy,w.z);P.set(w.x+ox*D,fy+(talk?h*.06:h*.12+.15),w.z+oz*D);
   if(talk)L.set(w.x,fy-D*tf*.34,w.z);                       // the face sits above the middle: the dialogue box is below
   else if(w.narrow)L.set(w.x,fy-D*tf*.55,w.z);              // tall screens: the keeper above the window
-  else{const th=Math.atan(.5*tf*asp),vx=w.x-P.x,vz=w.z-P.z,c2=Math.cos(th),s2=Math.sin(th);L.set(P.x+vx*c2+vz*s2,fy-D*tf*.1,P.z-vx*s2+vz*c2)}   // wide screens: the keeper on the right
+  else{const th=Math.atan(.64*tf*asp),vx=w.x-P.x,vz=w.z-P.z,c2=Math.cos(th),s2=Math.sin(th);L.set(P.x+vx*c2+vz*s2,fy-D*tf*.1,P.z-vx*s2+vz*c2)}   // wide screens: the keeper on the right
   cam.position.lerpVectors(A.p0,P,e);look.lerpVectors(A.l0,L,e);cam.lookAt(look);cam.updateMatrixWorld();
   try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(C)}catch(_){}
   // the speaker looks at you (the camera, in a shop); your hero steps out of the picture
@@ -77303,7 +77303,7 @@ addEventListener('keydown',e=>{if(!dl220On()||e.ctrlKey||e.metaKey||e.altKey)ret
 document.head.insertAdjacentHTML('beforeend',`<style>
 /* ---- talk: the HUD steps aside, two bars, a dialogue box ---- */
 body.im220t #stage>*:not(#gl):not(#xw):not(#fade):not(#ztc116):not(#banner){visibility:hidden!important}
-body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116):not(#banner):not(#kqmTip){visibility:hidden!important}
+body.im220s #stage>*:not(#gl):not(.modal):not(#sk220say):not(#fade):not(#ztc116):not(#banner):not(#kqmTip):not(#ip222){visibility:hidden!important}
 #xw.dlg220{background:none!important;align-items:flex-end;padding:0 12px max(18px,5%);pointer-events:none}
 #xw.dlg220::before,#xw.dlg220::after{content:'';position:absolute;left:0;right:0;height:9%;background:#000;pointer-events:none;animation:dl220bar .5s ease both}
 #xw.dlg220::before{top:0;transform-origin:top}#xw.dlg220::after{bottom:0;transform-origin:bottom;height:5%}
@@ -77345,36 +77345,6 @@ body.mob #xw.dlg220 .cq132say{font-size:.98rem;min-height:3.6em}body.mob #xw.dlg
 #sk220say.hide{display:none}#sk220say.on{animation:dl220in .5s .45s ease forwards}
 #sk220say b{display:block;font-family:Cinzel,Georgia,serif;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#e8c36a;margin-bottom:4px}
 #sk220say i{font-size:.95rem;line-height:1.35}
-</style>`);
-// ================= v221 (made as v220, names *220) menus: a second pass, leaning into the fantasy =================
-// Owner (Nov 11 2026): "improve our ui menus and do a second pass on them to make sure their UX is cleanly and optimally
-// displayed and easy to navigate. Our ui menus are also a little barbones so I want you to lean into the fantasy elements."
-// Styling only (no window's contents or behaviour change), on top of the v88 theme (1080):
-//  - every window: a gold gem set into the top of the frame, a faint arcane seal worked into the leather, a soft candle glow
-//    under the title, and the title's rule drawn longer;
-//  - lists in the shared window (#xw: shops, the Steward, portals, stations): each entry is its own inset plate with a gold
-//    edge that lights when pointed at, so it is clear what one click covers; section headings carry a ❖ mark;
-//  - easier to use: the close button is larger (and larger still on touch screens); the footer hint
-//    text reads as a scribe's note; the keyboard focus ring is a clear gold line; scroll areas keep a little space at the end.
-// Each player styles their own windows: nothing here is shared in co-op.
-document.head.insertAdjacentHTML('beforeend',`<style>
-:root{--im220-seal:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%23e8c36a' stroke-width='1.1'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Ccircle cx='100' cy='100' r='84' stroke-dasharray='2 5'/%3E%3Ccircle cx='100' cy='100' r='58'/%3E%3Cpath d='M100 4 L156 180 L10 70 L190 70 L44 180 Z'/%3E%3Cpath d='M100 42 L158 100 L100 158 L42 100 Z'/%3E%3Ccircle cx='100' cy='100' r='14'/%3E%3Cpath d='M100 4v24M100 172v24M4 100h24M172 100h24'/%3E%3C/svg%3E")}
-body.kq .win{background:var(--im220-seal) right -70px bottom -70px/300px 300px no-repeat,radial-gradient(ellipse 60% 90px at 50% 0,rgba(255,196,110,.13),transparent 70%),var(--kq-grain),var(--kq-leath),radial-gradient(ellipse 120% 70% at 50% 0%,rgba(150,100,50,.16),transparent 60%),linear-gradient(180deg,#271a10 0%,#1b120b 55%,#130c07 100%);
-  background-size:300px 300px,auto,160px 160px,260px 260px,auto,auto;background-blend-mode:soft-light,normal,normal,normal,normal,normal}
-body.kq .modal.w>.win::before{content:'';position:absolute;top:-13px;left:50%;width:18px;height:18px;transform:translateX(-50%) rotate(45deg);z-index:4;pointer-events:none;
-  background:radial-gradient(circle at 35% 35%,#fff3c8,#e0b050 45%,#7a4e18 100%);border:1px solid #120b05;box-shadow:0 0 0 2px #8a6230,0 0 0 3px #120b05,0 0 14px rgba(240,190,90,.55)}
-#xw.dlg220>.win::before{display:none}
-body.kq .win .wh .x{width:32px;height:32px}
-body.kq.mob .win .wh .x{width:38px;height:38px;font-size:.95rem}
-body.kq .win .wf .mut,body.kq .win .wf .dtl{font-style:italic}
-body.kq .win .wb{padding-bottom:16px}
-body.kq .win button:focus-visible,body.kq .win .rw:focus-visible{outline:2px solid #f0d48a;outline-offset:1px}
-body.kq .win .sec::before,body.kq .win .setg::before{content:'❖';margin-right:7px;font-size:.62em;color:#e0b660;vertical-align:1px}
-/* list entries in the shared window: inset plates */
-body.kq #xw:not(.dlg220) .wb .rw{margin:0 0 5px;padding:7px 10px;border:1px solid rgba(138,98,48,.38);border-radius:3px;
-  background:linear-gradient(180deg,rgba(255,220,150,.05),rgba(0,0,0,.16));box-shadow:inset 0 1px 0 rgba(255,225,160,.06),0 1px 2px rgba(0,0,0,.35);transition:border-color .12s,background .12s,box-shadow .12s}
-body.kq #xw:not(.dlg220) .wb .rw:hover:not(:disabled){border-color:#c99a4a;background:linear-gradient(180deg,rgba(240,180,90,.14),rgba(0,0,0,.14));box-shadow:inset 0 1px 0 rgba(255,225,160,.12),0 0 10px rgba(230,170,80,.18)}
-body.kq #xw:not(.dlg220) .wb .rw.on{border-color:#f0d48a;background:linear-gradient(180deg,rgba(240,190,100,.22),rgba(60,36,10,.2));box-shadow:inset 0 0 0 1px rgba(240,212,138,.3),0 0 12px rgba(230,170,80,.22)}
 </style>`);
 // ================= v221 (made as v220, names *220) nameplates: carved plaques that always fit the name =================
 // Owner (Nov 11 2026): "rework the nameplates for our npcs - right now they sometimes get cut off (like the stronghold upgrade
@@ -77476,6 +77446,251 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #ztc116.on{animation-duration:4.6s}
 #ztc116 .ztd{margin-bottom:2px}
 #banner .bnr .b2:empty{display:none}
+</style>`);
+// ================= v222 the Ledger: every menu is a page of ink on paper =================
+// Owner (Nov 12 2026): "I'm still not satisfied with the UI for our menus. I want a better looking, cleaner UI ... shops and
+// menus to not look like a mobile game", "the background you chose for menus is clearly the same texture repeated - I can see
+// the edges", then picked the "Ledger" direction out of four mock-ups: "I like the Ledge one - but lets add more fantasy accents".
+// What this file does (styling only: no window's contents or behaviour change):
+//  - SURFACE. Every window (.win) is aged paper: two soft washes and one stain layer drawn by an SVG noise filter that is
+//    stretched over the whole window (LG222.stain, background-size 100% 100%). Nothing is tiled, so there is no seam to see.
+//    The v88 leather tile, the gold frame image, glossy gold buttons and the v221 gem / seal / row plates are gone (3941 removed).
+//  - INK. Text is dark ink in EB Garamond; titles in IM Fell English (both added to the page's font link). font-size-adjust
+//    keeps the small sizes as readable as the old sans. The theme's colour variables are re-pointed inside .win
+//    (--kq-ink, --kq-mut, --kq-gold, --ink, --acc ...), which carries most of the old window CSS over to ink colours.
+//  - THE INK PASS (lg222Ink). Hundreds of older rules and inline styles still ask for light text. After a window's content
+//    changes, one walk over it works out each element's real background (paper, or a dark plate such as an item slot or a
+//    3D preview) and, where light text would sit on paper, sets a dark ink of the same hue (gold -> ochre, green -> forest,
+//    rarity colours keep their hue); dark text that ends up on a dark plate is made light again. So nothing is unreadable,
+//    whatever window it is. LG222.fix holds what the pass changed (cleared and redone each pass).
+//  - FANTASY ACCENTS. A double ruled margin with a knotwork ornament in each corner, a red illuminated first letter on the
+//    title, a fleuron rule under it, a faint alchemist's circle drawn into the page, a wax seal for the close button, a red
+//    ribbon on the selected line, section headings marked with a hedera leaf.
+//  - Dialogue (the talk view) and the keeper's greeting are the same paper; item slots and 3D previews stay dark plates, like
+//    illustrations pasted into the book.
+// Each player styles their own windows: nothing here is shared in co-op.
+var LG222={fix:new Set(),fixB:new Set(),raf:0,paper:[226,212,180],on:true};
+LG222.stain="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='900' height='600' preserveAspectRatio='none'><filter id='a' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.006 .009' numOctaves='4' seed='11'/><feColorMatrix values='0 0 0 0 .36  0 0 0 0 .25  0 0 0 0 .12  0 0 0 1.1 -.52'/></filter><filter id='b' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .22  0 0 0 0 .12  0 0 0 .5 -.2'/></filter><rect width='100%' height='100%' filter='url(#a)'/><rect width='100%' height='100%' filter='url(#b)' opacity='.5'/></svg>")+"\")";
+LG222.knot=r=>"url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g transform='rotate("+r+" 30 30)' fill='none' stroke='#3a2a1a' stroke-width='1.3' stroke-linecap='round'><path d='M3 57V16C3 8 8 3 16 3h41'/><path d='M8 57V19c0-7 4-11 11-11h38' opacity='.5'/><path d='M3 30c9 0 14-5 14-13S12 6 9 9s0 9 8 9 13-6 13-15'/><path d='M17 17c5 5 13 5 13 13s-8 8-8 3 6-5 12 0' opacity='.8'/><circle cx='9.5' cy='9.5' r='2.2' fill='#8c2f1f' stroke='none'/></g></svg>")+"\")";
+LG222.circle="url(\"data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='#3a2a1a' stroke-opacity='.16' stroke-width='.9'><circle cx='100' cy='100' r='96'/><circle cx='100' cy='100' r='88' stroke-dasharray='1.5 4'/><circle cx='100' cy='100' r='60'/><path d='M100 12l76 132H24z'/><path d='M100 188L24 56h152z' opacity='.7'/><circle cx='100' cy='100' r='22'/><path d='M100 4v20M100 176v20M4 100h20M176 100h20M100 78v44M78 100h44'/><circle cx='100' cy='40' r='5'/><circle cx='48' cy='130' r='5'/><circle cx='152' cy='130' r='5'/></svg>")+"\")";
+document.head.insertAdjacentHTML('beforeend',`<style>
+html body.kq .modal.w{background:radial-gradient(ellipse at 50% 45%,rgba(8,6,4,.5),rgba(3,2,1,.84))}
+html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#6a5c48;--kq-dim:#8a7a62;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
+  --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#6a5c48;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
+  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#eee2c6 0%,#e2d4b4 46%,#cfbc96 100%) no-repeat;background-blend-mode:normal,multiply,normal;
+  border:0;border-image:none;border-radius:2px;color:#2a2118;font-family:'EB Garamond',Georgia,'Times New Roman',serif;font-size-adjust:.5;
+  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 80px rgba(120,88,46,.3)}
+html body.kq .win::before{display:none}
+html body.kq .modal.w>.win::after{content:'';position:absolute;inset:7px;z-index:3;pointer-events:none;border:1px solid var(--lg-rule);outline:1px solid rgba(58,44,28,.2);outline-offset:-4px;
+  background:${LG222.knot(0)} left -1px top -1px/38px 38px no-repeat,${LG222.knot(90)} right -1px top -1px/38px 38px no-repeat,${LG222.knot(180)} right -1px bottom -1px/38px 38px no-repeat,${LG222.knot(270)} left -1px bottom -1px/38px 38px no-repeat}
+html body.kq .win .wh,html body.kq .win .wf{background:none;box-shadow:none;border-radius:0}
+html body.kq .win .wh{height:auto;min-height:52px;padding:14px 20px 6px 34px;border-bottom:0;margin-bottom:10px}
+html body.kq .win .wh::after{content:'❦';left:22px;right:22px;bottom:-11px;height:16px;display:flex;align-items:center;justify-content:center;font-size:.8rem;line-height:1;color:var(--lg-red);
+  background:linear-gradient(90deg,transparent,var(--lg-rule) 12%,var(--lg-rule) 46%,transparent 47.5%,transparent 52.5%,var(--lg-rule) 54%,var(--lg-rule) 88%,transparent) center/100% 1px no-repeat}
+html body.kq .win .wh h2,html body.kq.psx .win .wh h2#xwT{font:400 1.5rem/1.1 'IM Fell English','EB Garamond',Georgia,serif!important;letter-spacing:0;text-transform:none;color:#2a2118;text-shadow:none;gap:6px;font-size-adjust:none}
+html body.kq .win .wh h2::before,html body.kq .win .wh h2::after{display:none}
+html body.kq .win .wh h2::first-letter{color:var(--lg-red);font-size:1.32em}
+html body.kq .wsub,html body.kq .win .wsub{color:var(--kq-mut);font-style:italic;font-size:.82rem}
+html body.kq .win .wh .x{width:32px;height:32px;border-radius:47% 53% 50% 50%/52% 46% 54% 48%;border:0;background:radial-gradient(circle at 36% 30%,#c4553e,#8c2f1f 52%,#5e1a10);color:#f1dfc0;font-size:.78rem;text-shadow:0 1px 0 rgba(0,0,0,.4);
+  box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 0 0 3px rgba(94,26,16,.55),inset 0 2px 2px rgba(255,200,170,.3);position:relative;z-index:4;flex:none}
+html body.kq .win .wh .x:hover{background:radial-gradient(circle at 36% 30%,#d9664c,#a03624 52%,#6e2014);color:#fff3dc;border:0}
+html body.kq.mob .win .wh .x{width:38px;height:38px}
+html body.kq .win .wb{padding:8px 22px 18px;scrollbar-color:#8a7350 transparent}
+html body.kq .win .wf{border-top:0;padding:10px 30px 18px;min-height:0;position:relative;color:var(--kq-mut)}
+html body.kq .win .wf::before{content:'';position:absolute;left:22px;right:22px;top:0;height:1px;background:var(--lg-rule);opacity:.6}
+html body.kq .win .wf:empty{display:none}
+html body.kq .win .wf .mut,html body.kq .win .wf .dtl{font-style:italic}
+html body.kq .win ::-webkit-scrollbar{width:9px;height:9px}
+html body.kq .win ::-webkit-scrollbar-track{background:rgba(58,44,28,.08);border:0}
+html body.kq .win ::-webkit-scrollbar-thumb{background:rgba(58,44,28,.42);border:2px solid transparent;background-clip:padding-box;border-radius:5px}
+/* type */
+html body.kq .win h3,html body.kq .win h4{font-family:'IM Fell English','EB Garamond',Georgia,serif;color:#2a2118;letter-spacing:0;font-weight:400}
+html body.kq .win .sec,html body.kq .win .setg,html body.kq .win .hsec,html body.kq .win .ceh{font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;font-style:italic;font-size:.98rem;letter-spacing:.01em;text-transform:none;color:var(--lg-red);
+  background:linear-gradient(90deg,var(--lg-rule),rgba(58,44,28,.12) 70%,transparent) left bottom/100% 1px no-repeat;padding-bottom:2px;font-size-adjust:none}
+html body.kq .win .sec::before,html body.kq .win .setg::before{content:'❧';margin-right:6px;font-style:normal;color:var(--lg-red);opacity:.85}
+html body.kq .win kbd{font-family:inherit;color:#2a2118;opacity:.8}
+html body.kq .win b,html body.kq .win strong{font-weight:600}
+/* buttons: ink-ruled labels; the one that matters is a block of red wax */
+html :where(body.kq .win) button{background:rgba(58,44,28,.07);border:1px solid rgba(58,44,28,.52);border-radius:2px;color:#2a2118;box-shadow:none;text-shadow:none;font-family:inherit}
+html :where(body.kq .win) button:hover:not(:disabled){background:rgba(140,47,31,.12);border-color:var(--lg-red);box-shadow:none}
+html :where(body.kq .win) button:active:not(:disabled){box-shadow:inset 0 1px 4px rgba(58,44,28,.45)}
+html :where(body.kq .win) button:disabled{opacity:.45;filter:none}
+html body.kq .win button.pri{background:linear-gradient(180deg,#a23a27,#7a2416);border:1px solid #4e150c;color:#f6ead0;text-shadow:0 1px 0 rgba(0,0,0,.35);font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;letter-spacing:.03em;
+  box-shadow:inset 0 1px 0 rgba(255,200,170,.25),0 1px 3px rgba(58,30,14,.5)}
+html body.kq .win button.pri:hover:not(:disabled){background:linear-gradient(180deg,#b6452f,#8a2a1a);box-shadow:inset 0 1px 0 rgba(255,200,170,.3),0 2px 6px rgba(58,30,14,.5)}
+html body.kq .win button.pri:disabled{filter:grayscale(.6);opacity:.5}
+html body.kq .win button:focus-visible,html body.kq .win .rw:focus-visible{outline:2px solid var(--lg-red);outline-offset:1px}
+/* tabs: written headings, the open one underlined in red */
+html body.kq .win .tabs{border-bottom:1px solid var(--lg-rule);box-shadow:none;gap:4px 18px;flex-wrap:wrap}
+html body.kq .win .tabs button,html body.kq #btabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--kq-mut);font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;font-style:italic;font-size:1rem;
+  letter-spacing:0;padding:4px 2px 5px;box-shadow:none;margin-bottom:-1px;font-size-adjust:none}
+html body.kq .win .tabs button:hover:not(:disabled){background:none;color:#2a2118}
+html body.kq .win .tabs button.on,html body.kq #btabs button.on{color:#2a2118;font-style:normal;border-color:transparent;border-bottom-color:var(--lg-red);background:none;box-shadow:none}
+html body.kq .win .tabs button.on::after{display:none}
+/* lines of a list: dotted rules, a red ribbon on the chosen one */
+html body.kq .win .rw{background:none;border-bottom:1px dotted rgba(58,44,28,.38);color:#2a2118}
+html body.kq .win .rw:hover:not(:disabled){background:rgba(140,47,31,.07)}
+html body.kq .win .rw.on,html body.kq #xw .rw.on{background:linear-gradient(90deg,rgba(140,47,31,.16),rgba(140,47,31,.03) 80%,transparent);box-shadow:inset 3px 0 0 var(--lg-red);outline:0}
+html body.kq .win .rw.on.it{box-shadow:inset 3px 0 0 var(--lg-red)}
+html body.kq .win .kv,html body.kq .win .mi,html body.kq .win .df{border-bottom-color:rgba(58,44,28,.2)}
+html body.kq .win .panel{background:rgba(58,44,28,.07);border:1px solid rgba(58,44,28,.3);border-radius:2px}
+html body.kq .win select,html body.kq .win input[type=text],html body.kq .win input:not([type]),html body.kq .win input[type=number],html body.kq .win textarea{background:rgba(255,250,235,.45);color:#2a2118;border:1px solid rgba(58,44,28,.5);border-radius:2px;font-family:inherit}
+html body.kq .win input[type=range],html body.kq .win input[type=checkbox]{accent-color:#8c2f1f}
+html body.kq .win details.grp{border-color:rgba(58,44,28,.3);background:rgba(58,44,28,.05);color:#2a2118}
+/* plates pasted into the book: item slots and 3D previews stay dark */
+html body.kq .win .kqm-slot{background:#1c1611;border-radius:2px;box-shadow:inset 0 0 12px -4px var(--rc,transparent),0 1px 2px rgba(58,30,14,.4);color:#eadfc6}
+html body.kq .win .kqm-slot.kqm-empty{background:rgba(58,44,28,.1);border:1px dashed rgba(58,44,28,.3);box-shadow:none}
+html body.kq .win .kqm-slot.on{outline:2px solid var(--lg-red);outline-offset:1px}
+html body.kq .win .pvbox{border:1px solid #3a2a1a;border-radius:2px;box-shadow:0 0 0 3px rgba(58,44,28,.12),0 2px 6px rgba(58,30,14,.4)}
+/* ---- dialogue: the same page, a strip of it ---- */
+#xw.dlg220 .win{background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6 0%,#e0d1b0 55%,#cdb992 100%) no-repeat!important;background-blend-mode:multiply,normal!important;border:0!important;border-radius:2px!important;
+  box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 18px 44px rgba(0,0,0,.75),inset 0 0 60px rgba(120,88,46,.3)!important}
+#xw.dlg220>.win::after{inset:6px;background-size:34px 34px,34px 34px,34px 34px,34px 34px}
+#xw.dlg220 .wh{min-height:0;margin:0;padding:0}
+#xw.dlg220 .wh h2{font-size:1.05rem;padding:5px 20px;color:#f6ead0;background:linear-gradient(180deg,#a23a27,#7a2416);border:1px solid #4e150c;box-shadow:0 2px 8px rgba(0,0,0,.6);letter-spacing:.03em}
+#xw.dlg220 .wh h2::first-letter{color:inherit;font-size:1em}
+#xw.dlg220 .wsub{color:#eadcb8;text-shadow:0 1px 3px #000,0 0 8px #000}
+#xw.dlg220 .wh .x{width:28px;height:28px;margin-top:6px;border:0!important;background:radial-gradient(circle at 36% 30%,#c4553e,#8c2f1f 52%,#5e1a10)!important;color:#f1dfc0}
+#xw.dlg220 .cq132say{color:#2a2118;text-shadow:none;font-family:'IM Fell English','EB Garamond',Georgia,serif;font-size:1.22rem;font-size-adjust:none}
+#xw.dlg220 .dl220n{color:var(--lg-red);font-family:'IM Fell English',Georgia,serif;font-style:italic;font-size:.9rem;letter-spacing:0;text-transform:none}
+#xw.dlg220 .dl220n em{color:var(--kq-mut)}
+#xw.dlg220 .wf::before{display:none}
+#xw.dlg220 .wf button{color:#2a2118!important;background:rgba(58,44,28,.05)!important;border:0!important;border-bottom:1px dotted rgba(58,44,28,.4)!important;border-left:3px solid transparent!important;font-family:'IM Fell English','EB Garamond',Georgia,serif;font-size:1.08rem;font-size-adjust:none}
+#xw.dlg220 .wf button::before{color:var(--lg-red);font-family:'IM Fell English',Georgia,serif;font-size:.9rem;content:counter(dl220) '.  '}
+#xw.dlg220 .wf button:hover,#xw.dlg220 .wf button:focus-visible{background:rgba(140,47,31,.12)!important;border-left-color:var(--lg-red)!important;color:#2a2118!important}
+#xw.dlg220 .wf button.pri{border-left-color:var(--lg-red)!important;color:#2a2118!important}
+#sk220say{color:#2a2118;border:0;border-radius:2px;font-family:'IM Fell English','EB Garamond',Georgia,serif;
+  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 160% at 28% 0%,#eee2c6,#d8c7a2) no-repeat;background-blend-mode:multiply,normal;box-shadow:0 0 0 1px #4a3826,0 0 0 4px #1c140c,0 0 0 5px #6a4e2c,0 10px 26px rgba(0,0,0,.6)}
+#sk220say b{font-family:'IM Fell English',Georgia,serif;font-size:.86rem;letter-spacing:.04em;text-transform:none;font-style:italic;color:#8c2f1f}
+#sk220say i{font-size:1.05rem}
+</style>`);
+
+// ---------------- the ink pass ----------------
+function lg222Rgb(s){const m=/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?/.exec(s||'');if(!m)return null;let a=m[4]==null?1:(/%$/.test(m[4])?parseFloat(m[4])/100:+m[4]);return [+m[1],+m[2],+m[3],a]}
+function lg222Lum(c){return (.2126*c[0]+.7152*c[1]+.0722*c[2])/255}
+function lg222Over(b,c){const a=c[3];return [b[0]+(c[0]-b[0])*a,b[1]+(c[1]-b[1])*a,b[2]+(c[2]-b[2])*a]}
+// a light colour as ink of the same hue
+function lg222ToInk(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;const l=(mx+mn)/2,s=d?d/(1-Math.abs(2*l-1)):0;
+  if(d){h=mx==r?((g-b)/d)%6:mx==g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360}
+  if(s<.16)return '#2a2118';                                   // greys and creams: plain ink
+  const L=(h>38&&h<75)?24:(h>=75&&h<170)?24:(h>=170&&h<255)?30:28;   // yellows and greens need to go darker to read
+  return 'hsl('+Math.round(h)+','+Math.round(Math.min(.78,Math.max(.45,s))*100)+'%,'+L+'%)'}
+function lg222Ink(){const L=LG222;L.raf=0;if(!L.on)return;
+  L.fix.forEach(e=>{try{e.style.color=e._lg0||''}catch(_){}});L.fix.clear();
+  L.fixB.forEach(e=>{try{const o=e._lgb;e.style.background=o[0];e.style.borderColor=o[1];e.style.boxShadow=o[2]}catch(_){}});L.fixB.clear();
+  document.querySelectorAll('.modal.w:not(.hide)>.win,#cd213w:not(.hide) .win,#gm218w:not(.hide) .win').forEach(w=>{try{lg222Walk(w,L.paper,0)}catch(e){if(!L.err){L.err=1;console.warn('v222 ink',e)}}})}
+function lg222Keep(el,cs){const c=el.classList;return c.contains('kqm-slot')||c.contains('pvbox')||c.contains('pri')||c.contains('meter')||c.contains('bar')||c.contains('xpbar')||c.contains('x')||el.tagName==='BUTTON'&&c.contains('on')||/url\(/.test(cs.backgroundImage)||/(^|[\s-_])(pv|prev|preview|view|map)/i.test(el.className||'')||!!el.querySelector(':scope>canvas,:scope>div>canvas')||!!el.closest('.kqm-slot,.pvbox,.wh')}
+function lg222Walk(el,bg,depth){if(depth>40)return;const bg0=bg;const tag=el.tagName;if(tag==='CANVAS'||tag==='svg'||tag==='SVG'||tag==='IMG'||tag==='SELECT'||tag==='INPUT'||tag==='TEXTAREA')return;
+  const cs=getComputedStyle(el);if(cs.display==='none')return;
+  if(depth>0){const bc=lg222Rgb(cs.backgroundColor);if(bc&&bc[3]>0)bg=lg222Over(bg,bc);
+    const bi=cs.backgroundImage;if(bi&&bi!=='none'){const m=bi.match(/rgba?\([^)]+\)/g);
+      if(m){let r=0,g=0,b=0,a=0;m.forEach(s=>{const c=lg222Rgb(s);if(c){r+=c[0];g+=c[1];b+=c[2];a+=c[3]}});const n=m.length;bg=lg222Over(bg,[r/n,g/n,b/n,Math.min(1,a/n)])}
+      else if(/url\(/.test(bi)&&!/gradient/.test(bi))bg=[28,22,17]}}          // a picture behind text: treat as a dark plate
+  // an old dark card or panel becomes a pale inset on the page (item slots, previews, bars, wax buttons and pictures stay as they are)
+  if(depth>0&&lg222Lum(bg)<.36&&!lg222Keep(el,cs)){const r=el.getBoundingClientRect();if(r.width>110&&r.height>34){if(el._lgb===undefined)el._lgb=[el.style.background||'',el.style.borderColor||'',el.style.boxShadow||''];
+      el.style.background='rgba(58,44,28,.075)';el.style.borderColor='rgba(58,44,28,.32)';el.style.boxShadow='none';LG222.fixB.add(el);bg=lg222Over(bg0,[58,44,28,.075])}}
+  let txt=false;for(let n=el.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.nodeValue.trim()){txt=true;break}}
+  if(txt||el.childElementCount===0){const c=lg222Rgb(cs.color);if(c){const lb=lg222Lum(bg),lc=lg222Lum(c);
+      if(lb>.42&&lc>.42){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color=lg222ToInk(c);LG222.fix.add(el)}
+      else if(lb<.3&&lc<.3){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color='#eadfc6';LG222.fix.add(el)}}}
+  for(let c=el.firstElementChild;c;c=c.nextElementSibling)lg222Walk(c,bg,depth+1)}
+function lg222Kick(){if(!LG222.raf)LG222.raf=requestAnimationFrame(lg222Ink)}
+try{new MutationObserver(recs=>{for(const r of recs){const t=r.target;if(t&&t.closest&&t.closest('.modal,#cd213w,#gm218w')){lg222Kick();return}}})
+  .observe($('stage')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']})}catch(_){}
+addEventListener('pointerup',()=>setTimeout(lg222Kick,30),true);addEventListener('keyup',()=>setTimeout(lg222Kick,30),true);
+try{document.fonts.ready.then(lg222Kick)}catch(_){}
+// how readable is every piece of text in the open windows? (used by the test: nothing may come out nearly invisible)
+function lg222Audit(min){min=min||2.2;const out=[],lin=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)},rl=c=>.2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);
+  const walk=(el,bg,d)=>{const tag=el.tagName;if(d>40||tag==='CANVAS'||tag==='svg'||tag==='IMG'||tag==='SELECT'||tag==='INPUT')return;const cs=getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden'||+cs.opacity<.35)return;
+    if(d>0){const bc=lg222Rgb(cs.backgroundColor);if(bc&&bc[3]>0)bg=lg222Over(bg,bc);const bi=cs.backgroundImage;if(bi&&bi!=='none'){const m=bi.match(/rgba?\([^)]+\)/g);
+        if(m){let r=0,g=0,b=0,a=0;m.forEach(s=>{const c=lg222Rgb(s);if(c){r+=c[0];g+=c[1];b+=c[2];a+=c[3]}});const n=m.length;bg=lg222Over(bg,[r/n,g/n,b/n,Math.min(1,a/n)])}else if(/url\(/.test(bi)&&!/gradient/.test(bi))bg=[28,22,17]}}
+    let t='';for(let n=el.firstChild;n;n=n.nextSibling)if(n.nodeType===3)t+=n.nodeValue;t=t.trim();
+    if(t&&el.getClientRects().length){const c=lg222Rgb(cs.color);if(c){const a=rl(bg),b=rl(c),k=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);if(k<min)out.push([t.slice(0,30),+k.toFixed(2),(el.className||tag)+'<'+((el.parentElement||{}).className||''),cs.color,bg.map(Math.round).join(',')])}}
+    for(let c=el.firstElementChild;c;c=c.nextElementSibling)walk(c,bg,d+1)};
+  document.querySelectorAll('.modal.w:not(.hide)>.win').forEach(w=>walk(w,LG222.paper,0));return out}
+// ================= v222 the floating item: the thing you are looking at, turning in the air =================
+// Owner (Nov 12 2026): "let's have a floating preview model of the item thats selected".
+// Beside any open window (shops, the inventory, the forge, crafting), the item under the pointer - or, when nothing is pointed
+// at, the selected one - floats and turns slowly over a ring of runes, with its name on a slip of paper.
+//  - Gear (weapons, shields, armour, jewellery) is the item's real 3D model: the same kit its icon and the hero's hand use
+//    (lgGroup + v89Kit + v89Pose, 1260), on a small renderer of its own (IP222.r, made on first use, see-through background).
+//  - Everything else (potions, materials, food, eggs, runes ...) has no model, so its painted icon floats instead, enlarged.
+//  - Where: to the right of the window when there is room (in the keeper view that is between the window and the keeper),
+//    else to its left; on screens with no room beside the window (phones) it is not shown.
+// ip222Pick() finds the slot ([data-kqt], the same tag the tooltips read), ip222Info() says what it is, a 150 ms check swaps the
+// model when that changes; the model's geometry is freed when it is replaced. Your own view only: nothing is sent in co-op.
+var IP222={el:null,r:null,sc:null,cam:null,P:null,key:'',cur:'',raf:0,t0:0,ids:new WeakMap(),n:0,S:220,on:true};
+function ip222El(){let d=IP222.el;if(d)return d;d=IP222.el=document.createElement('div');d.id='ip222';d.className='hide';
+  d.innerHTML='<div class="ip222s"><i class="ip222g"></i><i class="ip222r"></i><div class="ip222m"><canvas width="440" height="440"></canvas><div class="ip222i"></div></div></div><div class="ip222n"><b></b><span></span></div>';
+  ($('stage')||document.body).appendChild(d);return d}
+function ip222Pick(){const sel='.modal.w:not(.hide)';if(!document.querySelector(sel)||document.body.classList.contains('im220t'))return null;
+  let el=null;try{el=KQM.tipEl}catch(_){}if(el&&(!el.isConnected||!el.closest(sel)))el=null;
+  if(!el)el=document.querySelector(sel+' .kqm-slot.on[data-kqt],'+sel+' [data-kqt].on,'+sel+' .on>[data-kqt],'+sel+' .kqm-cell.on [data-kqt]');
+  return el}
+function ip222Info(el){const k=el.dataset.kqt||'',i=k.indexOf(':'),ty=i<0?k:k.slice(0,i),v=i<0?'':k.slice(i+1);
+  const ico=()=>{const q=el.querySelector('.kqm-ic')||el;return q.innerHTML},gear=it=>({id:'g'+it.tp+'.'+(it.r|0)+'.'+it.id,it,nm:itT(it).n,sub:RAR[it.r|0][0],rc:RAR[it.r|0][1]});
+  try{
+    if(ty=='g'||ty=='e'){const it=kqmFind(ty,+v);return it?gear(it):null}
+    if(ty=='x'){const o=KQM.wm.get(el);if(!o)return null;const it=o.item&&o.item();if(it&&it.tp!=null)return gear(it);
+      let id=IP222.ids.get(el);if(!id){id=++IP222.n;IP222.ids.set(el,id)}const eg=o.egg&&o.egg();
+      return {id:'x'+id,ico:ico(),nm:eg?(RAR[eg.tier|0][0]+' Egg'):String(o.nm||'').replace(/<[^>]*>/g,''),sub:eg?'Egg':'',rc:eg?RAR[eg.tier|0][1]:(o.rc||'#c9a24a')}}
+    if(ty=='m')return {id:k,ico:ico(),nm:matInfo(v)[0],sub:'Material',rc:'#c9a24a'};
+    if(ty=='s'){const S=SUP[v];return S?{id:k,ico:ico(),nm:S.n,sub:'',rc:'#c9a24a'}:null}
+    if(ty=='egg'){const e=eggs.find(q=>q.id==+v);return e?{id:k,ico:ico(),nm:RAR[e.tier|0][0]+' Egg',sub:'Egg',rc:RAR[e.tier|0][1]}:null}
+  }catch(_){}
+  return null}
+function ip222Free(){const I=IP222;if(I.P){try{I.sc.remove(I.P)}catch(_){}I.P=null}if(I.key){try{const gs=LGB[I.key];if(gs){for(const q in gs)gs[q].dispose();delete LGB[I.key]}}catch(_){}I.key=''}}
+function ip222Gl(){const I=IP222;if(I.r)return true;if(I.r===false)return false;
+  try{const cv=ip222El().querySelector('canvas');I.r=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});I.r.setPixelRatio(1);I.r.setSize(440,440,false);I.r.setClearColor(0,0);
+    try{I.r.outputEncoding=ren.outputEncoding}catch(_){}
+    I.sc=new THREE.Scene();I.cam=new THREE.PerspectiveCamera(30,1,.05,50);
+    I.sc.add(new THREE.HemisphereLight(0xfff0d8,0x40302a,.95));const k=new THREE.DirectionalLight(0xffe8c0,1.15);k.position.set(2.5,4,3.5);I.sc.add(k);const b=new THREE.DirectionalLight(0x8aa0ff,.5);b.position.set(-3,1.5,-3);I.sc.add(b);
+    return true}catch(e){I.r=false;console.warn('v222 item preview: no WebGL',e);return false}}
+function ip222Model(it){const I=IP222;ip222Free();if(!ip222Gl())return false;
+  try{const key='KQP|'+v89Key(it),g=lgGroup(key,k=>v89Kit(k,it),.14),P=new THREE.Group(),T=new THREE.Group();I.key=key;T.add(g);v89Pose(g,itT(it));T.updateMatrixWorld(true);
+    const bb=new THREE.Box3().setFromObject(T),c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3()),R=Math.max(.05,sz.length()/2);T.position.sub(c);P.add(T);I.sc.add(P);I.P=P;
+    const d=R/Math.sin(15*Math.PI/180)*1.08;I.cam.position.set(0,R*.22,d);I.cam.lookAt(0,0,0);I.cam.near=d/50;I.cam.far=d*4;I.cam.updateProjectionMatrix();return true}
+  catch(e){ip222Free();if(!I.err){I.err=1;console.warn('v222 item preview',e)}return false}}
+function ip222Loop(now){const I=IP222;I.raf=0;if(!I.cur||!I.P||!I.r)return;const t=(now-I.t0)/1000;I.P.rotation.y=t*.9;I.P.rotation.z=Math.sin(t*.7)*.06;try{I.r.render(I.sc,I.cam)}catch(_){}I.raf=requestAnimationFrame(ip222Loop)}
+function ip222Place(){const d=IP222.el,st=$('stage'),m=document.querySelector('.modal.w:not(.hide)>.win');if(!d||!st||!m)return false;
+  const S=st.getBoundingClientRect(),W=m.getBoundingClientRect(),w=IP222.S,gapR=S.right-W.right,gapL=W.left-S.left,right=gapR>=gapL;let k=Math.min(1,(Math.max(gapR,gapL)-14)/w),x,y;
+  if(k>=.6){x=right?W.right-S.left+8:W.left-S.left-w*k-8;y=Math.max(8,Math.min(S.height-(w+80)*k-8,W.top-S.top+W.height*.2))}
+  else{// no room beside the window: float next to the slot itself (left of it, else above it)
+    const el=IP222.pel;if(!el||!el.isConnected||S.width<560)return false;const R=el.getBoundingClientRect();k=.72;const h=(w+70)*k;
+    x=R.left-S.left-w*k-10;y=R.top-S.top+R.height/2-h/2;if(x<6){x=R.left-S.left+R.width/2-w*k/2;y=R.top-S.top-h-8;if(y<6)return false}
+    x=Math.max(6,Math.min(S.width-w*k-6,x));y=Math.max(6,Math.min(S.height-h-6,y))}
+  d.style.transformOrigin='left top';d.style.transform=k<1?'scale('+k.toFixed(3)+')':'';d.style.left=Math.round(x)+'px';d.style.top=Math.round(y)+'px';return true}
+function ip222Tick(){const I=IP222;let inf=null;I.pel=null;if(I.on){try{const el=ip222Pick();if(el){inf=ip222Info(el);I.pel=el}}catch(_){}}
+  const d=I.el;if(!inf){if(I.cur){I.cur='';ip222Free();if(d)d.className='hide'}return}
+  if(inf.id===I.cur){if(!ip222Place()&&d)d.className='hide';else if(d&&d.classList.contains('hide'))d.className=I.cls;return}
+  const e=ip222El();I.cur=inf.id;let is3=false;if(inf.it)is3=ip222Model(inf.it);else ip222Free();
+  e.querySelector('.ip222i').innerHTML=is3?'':(inf.ico||(inf.it?icoOf(inf.it):''));e.querySelector('b').textContent=inf.nm||'';e.querySelector('span').textContent=inf.sub||'';
+  e.style.setProperty('--rc',inf.rc||'#c9a24a');I.cls=is3?'m3':'m2';e.className=ip222Place()?I.cls:'hide';
+  if(is3){I.t0=performance.now();if(!I.raf)I.raf=requestAnimationFrame(ip222Loop)}}
+setInterval(()=>{try{ip222Tick()}catch(e){if(!IP222.err2){IP222.err2=1;console.warn('v222 item preview',e)}}},150);
+document.head.insertAdjacentHTML('beforeend',`<style>
+#ip222{position:absolute;z-index:6;width:220px;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+#ip222.hide{display:none}
+.ip222s{position:relative;width:220px;height:220px}
+.ip222g{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--rc) 46%,transparent) 0%,color-mix(in srgb,var(--rc) 14%,transparent) 42%,transparent 70%);filter:blur(4px);animation:ip222p 3.2s ease-in-out infinite}
+.ip222r{position:absolute;left:14%;right:14%;bottom:2%;height:22%;border-radius:50%;border:1px solid color-mix(in srgb,var(--rc) 70%,#f6ead0);box-shadow:0 0 14px color-mix(in srgb,var(--rc) 60%,transparent),inset 0 0 12px color-mix(in srgb,var(--rc) 40%,transparent)}
+.ip222r::before{content:'';position:absolute;inset:12% 9%;border-radius:50%;border:1px dashed color-mix(in srgb,var(--rc) 75%,#f6ead0);animation:ip222t 9s linear infinite}
+.ip222m{position:absolute;inset:0;animation:ip222b 3.2s ease-in-out infinite}
+.ip222m canvas{width:100%;height:100%;display:block}
+#ip222.m2 canvas{display:none}
+.ip222i{position:absolute;inset:22%;display:flex;align-items:center;justify-content:center;font-size:92px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.7));animation:ip222w 5s ease-in-out infinite}
+.ip222i>*{width:100%!important;height:100%!important;max-width:none!important;font-size:inherit}
+.ip222i img{object-fit:contain;border-radius:4px}
+#ip222.m3 .ip222i{display:none}
+.ip222n{text-align:center;padding:5px 16px 6px;max-width:220px;color:#2a2118;font-family:'IM Fell English','EB Garamond',Georgia,serif;
+  background:radial-gradient(130% 160% at 28% 0%,#eee2c6,#d8c7a2);box-shadow:0 0 0 1px #4a3826,0 0 0 3px #1c140c,0 0 0 4px #6a4e2c,0 8px 20px rgba(0,0,0,.6);border-radius:1px}
+.ip222n b{display:block;font-weight:400;font-size:1.02rem;line-height:1.2}
+.ip222n span{display:block;font-size:.78rem;font-style:italic;color:#8c2f1f}.ip222n span:empty{display:none}
+@keyframes ip222b{0%,100%{transform:translateY(-5px)}50%{transform:translateY(6px)}}
+@keyframes ip222p{0%,100%{opacity:.75}50%{opacity:1}}
+@keyframes ip222t{to{transform:rotate(360deg)}}
+@keyframes ip222w{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@media (prefers-reduced-motion:reduce){.ip222m,.ip222g,.ip222i,.ip222r::before{animation:none}}
 </style>`);
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
