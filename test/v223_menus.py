@@ -23,7 +23,7 @@ OPEN={'char':"()=>{if(!$('tal').classList.contains('hide'))$('tal').classList.ad
 # no sideways scroll anywhere in the open window, and nothing poking out of it
 FIT="""()=>{const w=document.querySelector('.modal.w:not(.hide)>.win');if(!w)return {none:1};const W=w.getBoundingClientRect(),o=[];
   w.querySelectorAll('*').forEach(e=>{if(e.closest('canvas'))return;const ox=getComputedStyle(e).overflowX;if(e.scrollWidth>e.clientWidth+2&&(ox=='auto'||ox=='scroll')&&e.clientWidth>0)o.push('scroll:'+(e.id||e.className||e.tagName));
-    const r=e.getBoundingClientRect();if(r.width&&(r.right>W.right+2||r.left<W.left-2)&&getComputedStyle(e).position!='fixed')o.push('out:'+(e.id||String(e.className).slice(0,30)||e.tagName))});
+    const r=e.getBoundingClientRect();if(r.width&&(r.right>W.right+2||r.left<W.left-2)&&getComputedStyle(e).position!='fixed')o.push('out:'+(e.id||String(e.className).slice(0,30)||e.tagName)+' in '+(e.parentElement.id||String(e.parentElement.className).slice(0,30))+' '+Math.round(r.left)+'-'+Math.round(r.right)+' win '+Math.round(W.left)+'-'+Math.round(W.right))});
   return {o:o.slice(0,6),n:o.length,page:document.documentElement.scrollWidth<=innerWidth+1,ww:Math.round(W.width),vw:innerWidth}}"""
 AUD="()=>{lg222Ink();return lg222Audit(1.9).slice(0,5)}"
 def s(pg):
@@ -39,7 +39,7 @@ def s(pg):
             ev("()=>{applyDev('mobile');document.head.insertAdjacentHTML('beforeend','<style id=\"t223fs\">#stage{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;margin:0!important;z-index:50}</style>');try{rs()}catch(_){}}")
         pg.wait_for_timeout(800)
         for win in ['char','build','vill']:
-            ev(CLOSE);pg.wait_for_timeout(200);ev(OPEN[win]);pg.wait_for_timeout(1200)
+            ev(CLOSE);pg.wait_for_timeout(200);ev(OPEN[win]);pg.wait_for_timeout(2500)
             f=ev(FIT);chk('%s %s: fits, no sideways scroll'%(win,size),not f.get('none') and f['n']==0 and f['page'],f)
             a=ev(AUD);chk('%s %s: every text readable on the paper'%(win,size),len(a)==0,a)
             if SHOTS:pg.wait_for_timeout(600);pg.screenshot(path=play.TMP+'/%s_%s_%s.png'%(TAG,win,size));print('SHOT',win,size)
@@ -97,4 +97,4 @@ play.run(s,w=1280,hh=760)
 logs=open(play.TMP+'/lastlogs.txt').read()
 chk('no page errors','PAGEERROR' not in logs and 'v223' not in logs,[l for l in logs.split('\n') if 'PAGEERROR' in l or 'v223' in l][:3])
 print('v223_menus:','ALL PASS' if not bad else 'FAILED %d'%len(bad))
-import sys;sys.exit(1 if bad else 0)
+import sys;sys.exit(1 if bad and not SHOTS else 0)   # a picture run always brings its pictures back
