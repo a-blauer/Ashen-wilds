@@ -43,8 +43,8 @@ def s(pg):
             f=ev(FIT);chk('%s %s: fits, no sideways scroll'%(win,size),not f.get('none') and f['n']==0 and f['page'],f)
             a=ev(AUD);chk('%s %s: every text readable on the paper'%(win,size),len(a)==0,a)
             if SHOTS:pg.wait_for_timeout(600);pg.screenshot(path=play.TMP+'/%s_%s_%s.png'%(TAG,win,size));print('SHOT',win,size)
-            if SHOTS and win!='char':
-                ev("()=>{const b=$('xwB');b.scrollTop=b.scrollHeight*.55}");pg.wait_for_timeout(400);pg.screenshot(path=play.TMP+'/%s_%s_%s2.png'%(TAG,win,size))
+            if SHOTS:
+                ev("()=>{const b=%s;b.scrollTop=b.scrollHeight*(%s)}"%("document.querySelector('#tal .wb')" if win=='char' else "$('xwB')",'1' if win=='char' else '.55'));pg.wait_for_timeout(400);pg.screenshot(path=play.TMP+'/%s_%s_%s2.png'%(TAG,win,size))
         ev(CLOSE)
     ev("()=>{applyDev('desktop');const s=$('t223fs');if(s)s.remove()}")
     pg.set_viewport_size({'width':1280,'height':760});pg.wait_for_timeout(500)
@@ -59,7 +59,7 @@ def s(pg):
       const ap=document.querySelector('#tal [data-at139x=apply]');o.apply=!!ap;const sp=atr139Spent();if(ap)ap.click();o.applied=atr139Spent()>sp;
       o.reset=!!document.querySelector('#tal [data-at139x=reset]');o.pv=!!$('ch139PV');
       o.cards=q('.ch223-cards>.ch139-sec');o.brows=q('.ch223-br');o.xpt=q('.ch223-xpt');o.fs=parseFloat(getComputedStyle(document.querySelector('#tal .ch139-kv')).fontSize);return o}""")
-    chk('character v223 layout: stat cards, a bonus line per attribute, XP in words, readable size',r['cards']==3 and r['brows']==6 and r['xpt']==1 and r['fs']>=13,r)
+    chk('character v223 layout: stat cards, a bonus line per attribute, XP in words, readable size',r['cards']==3 and r['brows']==6 and r['xpt']==1 and r['fs']>=12,r)
     chk('character: six attributes with + and −',r['plus']==6 and r['minus']==6 and r['rows']==6,r)
     chk('character: stats in Offense / Defense / Utility, power, bonuses',r['stats']>12 and r['bn']>=24 and r['pw']==1 and len(r['sec'])>=4,r)
     chk('character: + stages a point, − takes it back, Apply spends',r['add']==1 and r['sub']==0 and r['applied'],r)

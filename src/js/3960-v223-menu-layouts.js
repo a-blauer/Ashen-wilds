@@ -60,13 +60,13 @@ function vl223Jobs(){document.querySelectorAll('#xwB .vljob').forEach(b=>{if(b.d
 document.head.insertAdjacentHTML('beforeend',`<style id="v223css">
 /* ---- Character ---- */
 html body.kq #tal .win.ch223w{width:min(1180px,100%)!important}
-html body.kq #tal .ch139{grid-template-columns:minmax(260px,310px) minmax(0,1fr);gap:22px}
+html body.kq #tal .ch139{grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:22px}
 html body.kq #tal .ch139-pvw{height:250px}
 html body.kq #tal .ch139-id{margin-top:8px}
 html body.kq #tal .ch139-nm{font:400 1.35rem/1.15 'IM Fell English','EB Garamond',Georgia,serif;color:#2a2118}
 html body.kq #tal .ch139-id .mut{font-size:.9rem}
 html body.kq #tal .ch139-xp{height:6px;width:80%;margin-top:6px;background:rgba(58,44,28,.2)}
-html body.kq #tal .ch223-xpt{font-size:.8rem;color:#54473a;margin-top:3px}html body.kq #tal .ch223-xpt span{color:#6e604c}
+html body.kq #tal .ch223-xpt{font-size:.74rem;color:#54473a;margin-top:3px}html body.kq #tal .ch223-xpt span{color:#6e604c}
 html body.kq #tal .ch139-ah{font-size:.86rem;margin-top:14px;padding-bottom:3px;border-bottom:1px solid rgba(58,44,28,.35)}
 html body.kq #tal .ch139-ah .at139-h{font:italic 400 1.02rem 'IM Fell English','EB Garamond',Georgia,serif;color:#8c2f1f;letter-spacing:0;text-transform:none}
 html body.kq #tal .at139-bar{margin:6px 0;font-size:.9rem}
@@ -82,19 +82,20 @@ html body.kq #tal .ch139-sec{min-width:0}
 html body.kq #tal .ch223-cards .ch139-sec{padding:6px 12px 6px;border:1px solid rgba(58,44,28,.24);border-radius:2px;background:rgba(58,44,28,.045)}
 html body.kq #tal .ch139-st{font:italic 400 1.05rem 'IM Fell English','EB Garamond',Georgia,serif;color:#8c2f1f;letter-spacing:0;text-transform:none;margin:2px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(58,44,28,.35)}
 html body.kq #tal .ch139-st small{font:400 .78rem 'EB Garamond',Georgia,serif;color:#6e604c;margin-left:6px}
-html body.kq #tal .ch139-kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.9rem;padding:3px 0;border-bottom:1px dotted rgba(58,44,28,.22)}
+html body.kq #tal .ch139-kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.84rem;padding:3px 0;border-bottom:1px dotted rgba(58,44,28,.22)}
 html body.kq #tal .ch139-kv:last-child{border-bottom:0}
 html body.kq #tal .ch139-kv span{color:#3a2e20;min-width:0}
 html body.kq #tal .ch139-kv b{font-variant-numeric:tabular-nums;white-space:nowrap;color:#2a2118}
 html body.kq #tal .ch139-kv em.up,html body.kq #tal .ch139-pw em.up{color:#2f6a2a}html body.kq #tal .ch139-kv em.dn{color:#9a2a1a}
 html body.kq #tal .ch223-bt{display:grid;gap:5px}
 html body.kq #tal .ch223-br{display:grid;grid-template-columns:150px repeat(4,minmax(0,1fr));gap:5px;align-items:stretch}
-html body.kq #tal .ch223-ba{display:flex;align-items:center;gap:6px;padding:2px 0 2px 8px;border-left:3px solid var(--ac);color:var(--ac);font-size:.92rem;min-width:0}
+html body.kq #tal .ch223-ba{display:flex;align-items:center;gap:6px;padding:2px 0 2px 8px;border-left:3px solid var(--ac);color:var(--ac);font-size:.84rem;min-width:0}
 html body.kq #tal .ch223-ba b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html body.kq #tal .ch223-ba em{font-style:normal;font-weight:600;color:#2a2118;font-variant-numeric:tabular-nums;white-space:nowrap}
-html body.kq #tal .ch223-bc{display:flex;gap:6px;align-items:flex-start;padding:4px 7px;font-size:.8rem;line-height:1.25;border:1px solid rgba(58,44,28,.16);border-radius:2px;background:none;color:#6e604c;opacity:1;min-width:0}
+html body.kq #tal .ch223-bc{display:flex;gap:6px;align-items:flex-start;padding:4px 7px;font-size:.7rem!important;line-height:1.25;border:1px solid rgba(58,44,28,.16);border-radius:2px;background:none;color:#6e604c;opacity:1;min-width:0}
 html body.kq #tal .ch223-bc i{font-style:normal;font-weight:700;flex:none;min-width:1.5em;color:#6e604c;font-variant-numeric:tabular-nums}
-html body.kq #tal .ch223-bc span{display:inline;font-weight:400;color:inherit;min-width:0}
+html body.kq #tal .ch223-bc span{display:inline;font-weight:400;color:inherit;min-width:0;font-size:1em!important}
+html body.kq #tal .ch223-cards .ch139-sec:last-child{grid-column:auto}
 html body.kq #tal .ch223-bc.on{color:#2a2118;background:color-mix(in srgb,var(--ac) 15%,transparent);border-color:color-mix(in srgb,var(--ac) 55%,#3a2c1c)}
 html body.kq #tal .ch223-bc.on i{color:#2a2118}html body.kq #tal .ch223-bc.on i::after{content:'✓';margin-left:2px;color:#2f6a2a}
 html body.kq #tal .ch223-bc.nw{color:#2a2118;border:1px dashed #3a6a30;background:rgba(58,106,48,.08)}
@@ -116,9 +117,9 @@ html body.kq #xw .kmrw .rn{display:block;min-width:0;font-size:.9rem}
 html body.kq #xw .km223-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;font-size:1.04rem;line-height:1.2}
 html body.kq #xw .km223-h b{font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;font-size:1.1rem}
 html body.kq #xw .km223-h .kmpip{font-size:.85rem;color:#8a5a12;letter-spacing:2px}
-html body.kq #xw .kmrw small.km223-d{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;margin-top:5px;font-size:.84rem;line-height:1.35;color:#3a2e20}
+html body.kq #xw .kmrw small.km223-d{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;margin-top:5px;font-size:.78rem;line-height:1.35;color:#3a2e20}
 html body.kq #xw .km223-l{display:contents}
-html body.kq #xw .km223-l i{font-style:normal;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#8c2f1f;padding-top:.18em;white-space:nowrap}
+html body.kq #xw .km223-l i{font-style:italic;font-size:1em;color:#8c2f1f;white-space:nowrap}
 html body.kq #xw .km223-l>span{min-width:0}
 html body.kq #xw .km223-p>span{grid-column:1/-1;color:#54473a;font-style:italic}
 html body.kq #xw .kmrw .ra{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:6px;flex-wrap:nowrap}
@@ -132,18 +133,18 @@ html body.kq #xw .kmplan .kminfo{font-size:.86rem;line-height:1.4}
 html body.kq #xw .vlgrid{grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:12px}
 html body.kq #xw .vlc{padding:11px 12px;gap:7px;background:rgba(58,44,28,.04);border-color:rgba(58,44,28,.24);border-radius:2px;min-width:0}
 html body.kq #xw .vln b{font-family:'IM Fell English','EB Garamond',Georgia,serif;font-weight:400;font-size:1.15rem}
-html body.kq #xw .vln small{font-size:.8rem}
+html body.kq #xw .vln small{font-size:.72rem}
 html body.kq #xw .vls{border-radius:2px}
-html body.kq #xw .vld{font-size:.82rem}
+html body.kq #xw .vld{font-size:.76rem}
 html body.kq #xw .vlsec{font:italic 400 .92rem 'IM Fell English','EB Garamond',Georgia,serif;color:#8c2f1f;text-transform:none;letter-spacing:0;border-bottom:1px solid rgba(58,44,28,.25);padding-bottom:1px}
 html body.kq #xw .vlsec .mut{font-family:'EB Garamond',Georgia,serif;font-size:.78rem;color:#6e604c}
 html body.kq #xw .vltr{font-size:.76rem!important;min-width:0}html body.kq #xw .vltr small{font-size:.7rem}
 html body.kq #xw .vltr.on,html body.kq #xw .vljob.on{color:#2a2118!important;background:rgba(140,47,31,.14)!important;border-color:#8c2f1f!important;opacity:1!important}
 html body.kq #xw .vljobs{flex-direction:column;flex-wrap:nowrap;gap:3px;max-height:190px}
-html body.kq #xw .vljob{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;border-radius:2px!important;padding:5px 8px 5px 24px!important;font-size:.86rem!important;line-height:1.2}
+html body.kq #xw .vljob{position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;border-radius:2px!important;padding:5px 8px 5px 24px!important;font-size:.8rem!important;line-height:1.2}
 html body.kq #xw .vljob::before{content:'○';position:absolute;left:8px;top:5px;font-size:.8rem;color:#6e604c}
 html body.kq #xw .vljob.on::before{content:'●';color:#8c2f1f}
-html body.kq #xw .vljob .vj-z{display:block;font-size:.74rem;color:#54473a;margin-top:1px}
-html body.kq #xw .vlft{font-size:.8rem;flex-wrap:wrap}html body.kq #xw .vlft button{white-space:nowrap}
+html body.kq #xw .vljob .vj-z{display:block;font-size:.68rem;color:#54473a;margin-top:1px}
+html body.kq #xw .vlft{font-size:.74rem;flex-wrap:wrap}html body.kq #xw .vlft button{white-space:nowrap}
 html body.kq #xw .vlsum{gap:6px 8px}
 </style>`);
