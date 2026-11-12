@@ -10,7 +10,7 @@ GIVE="""()=>{TOD=.3;gold=250000;SH.shop.alch=1;SH.shop.cook=1;try{shApply()}catc
   ['sunleaf','moonpetal','emberroot','pepper','meat','fish','wheat','carrot','honey','berries','frostcap','starbloom','pumpkin'].forEach((k,i)=>{sup[k]=12+i%3});
   ['glowcap','petals','crystal','stone','bone'].forEach(k=>{mats[k]=12})}"""
 OPEN="""(k)=>{try{const N=TWN100_S.npc[k];if(N){const n=im220Rig(N).getWorldPosition(new THREE.Vector3());pl.position.set(n.x+1.2,pl.position.y,n.z+2.2);snapCam()}}catch(_){}openX(k)}"""
-FIT="""()=>{lg222Ink();const w=$('xw').querySelector('.win'),B=$('xwB'),S=$('stage').getBoundingClientRect(),r=w.getBoundingClientRect();
+FIT="""()=>{lg222Ink();try{$('xw').querySelector('.win').getAnimations().forEach(a=>a.finish())}catch(_){}const w=$('xw').querySelector('.win'),B=$('xwB'),S=$('stage').getBoundingClientRect(),r=w.getBoundingClientRect();
   return {low:lg222Audit(1.9).slice(0,4),over:[w.scrollWidth-w.clientWidth,B.scrollWidth-B.clientWidth],out:r.left<S.left-2||r.right>S.right+2,r:[r.left,r.right,S.left,S.right].map(Math.round)}}"""
 def s(pg):
     pg.set_default_timeout(1200000)
