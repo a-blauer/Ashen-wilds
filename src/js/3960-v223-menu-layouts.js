@@ -53,7 +53,7 @@ function km223Rows(){document.querySelectorAll('#xwB .kmrw').forEach(r=>{if(r.da
 
 // ---------------- Villagers tab ----------------
 function vl223Jobs(){document.querySelectorAll('#xwB .vljob').forEach(b=>{if(b.dataset.v223)return;b.dataset.v223='1';
-  const m=/^([\s\S]*?)\s*\(([^()<>]*)\)([\s\S]*)$/.exec(b.innerHTML);
+  const m=/^([\s\S]*?)\s*\(([^()<>]*)\)(\s*(?:<small>[^<]*<\/small>)?\s*)$/.exec(b.innerHTML);   // "Job (zones)" + an optional "rank N" note
   b.innerHTML=m?`<span class="vj-n">${m[1]}${m[3]}</span><small class="vj-z">${m[2]}</small>`:`<span class="vj-n">${b.innerHTML}</span>`})}
 {const f=vlRender116;vlRender116=function(){const r=f.apply(this,arguments);try{vl223Jobs()}catch(e){console.warn('v223 villagers',e)}return r}}
 
