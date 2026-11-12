@@ -43,7 +43,7 @@ function dm196InnK(k,R){const W2=DM196I.W2,D2=DM196I.D2,H=DM196I.H,st=0x6e6a64,s
   // a rug before the fire, the fireside bench
   k.at(DM196I.rug[0],FL,DM196I.rug[1],()=>{
   k.as('cloth',()=>{k.p('c',0x6a1e26,'box',2.4,.41,-.9,2.8,.02,2.0,0,0,0,.01);k.p('c',0xc9a24a,'box',2.4,.415,-.9,2.5,.02,1.7,0,0,0,0);k.p('c',0x4a1018,'box',2.4,.42,-.9,2.2,.02,1.4,0,0,0,.01)});
-  k.as('wood',()=>{k.p('c',0x6a4a2e,'box',2.9,.66,-2.9,2.2,.08,.46,0,0,0,.03);k.p('c',woodD,'box',2.9,1.03,-3.12,2.2,.62,.08,0,0,0,.03);[-.9,.9].forEach(o=>k.L('c',woodD,[2.9+o,.36,-2.9],[2.9+o,.64,-2.9],.06,'box'))});
+  // v225 (owner): the fireside bench is gone: it stood between the player and the Ember Wheel (3900)
   });k.at(0,FL,0,()=>{
   // three round tables, chairs, candles, mugs, a loaf and a roast
   DM196I.tables.forEach(([x,z],ti)=>k.at(0,-.1,0,()=>{k.as('wood',()=>{k.p('c',0x6a4a2e,'cyl8',x,1.08,z,.62,.08,.62,0,0,0,.02);k.L('c',woodD,[x,.36,z],[x,1.04,z],.09,'cyl6');k.p('c',woodD,'cyl8',x,.42,z,.32,.06,.32,0,0,0,.02)});
@@ -94,7 +94,7 @@ DM196I.lantern=[[-.5,-1.5],[.9,1.7],[-3.6,1.8],[3.6,2.95]];
 (function(){const S=[];DM196I.tables.forEach(([x,z],ti)=>{const n=ti==2?3:4;for(let j=0;j<n;j++){const a=(j/n)*6.283+(ti==2?.5:.785);const sx=x+Math.sin(a)*1.0,sz=z+Math.cos(a)*1.0;
     if(sz>DM196I.D2-.45||Math.abs(sx)>DM196I.W2-.5)continue;S.push({k:'chair',x:+sx.toFixed(2),z:+sz.toFixed(2),tx:x,tz:z,t:ti})}});
   const B=DM196I.bar,G=DM196I.rug;for(let i=0;i<4;i++)S.push({k:'stool',x:-4.6+i*1.05+B[0],z:-1.9+.85+B[1],tx:-4.6+i*1.05+B[0],tz:-1.9+B[1],t:-1});
-  [2.3,3.5].forEach(x=>S.push({k:'bench',x:x+G[0],z:-2.9+.1+G[1],tx:x+G[0],tz:-1.0+G[1],t:-2}));DM196I.seats=S})();
+  DM196I.seats=S})();   // v225: no fireside bench seats (the bench was removed)
 function dm196InnBuild(){const T=TOWNS[0],l=dm196Fix('inn');if(!l)return;DM196I.l=l;
   [DM196I.g,DM196I.roof,DM196I.out,DM196I.outF].concat(Object.values(DM196I.w)).forEach(o=>{if(o)scene.remove(o)});
   const mk=(key,seed,fn)=>{let k=null;if(!twHas(key)){k=twKit(seed);fn(k,k.R)}const g=twGroup(k,key),[x,z]=lotW103(l,0,0);g.position.set(x,T.ph-.0,z);g.rotation.y=l.ry;g.userData.lpsSkip=1;scene.add(g);return g};
@@ -110,7 +110,7 @@ function dm196InnBuild(){const T=TOWNS[0],l=dm196Fix('inn');if(!l)return;DM196I.
   // colliders: the walls as a chain of small circles (the doorway open), the bar, the hearth, tables and the bench
   const C=[],cw=(x0,z0,x1,z1)=>{const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/.45));for(let i=0;i<=n;i++){const t=i/n,[X,Z]=lotW103(l,x0+(x1-x0)*t,z0+(z1-z0)*t);C.push({x:X,z:Z,r:.26})}};
   const W2=DM196I.W2,D2=DM196I.D2,B=DM196I.bar,G=DM196I.rug;cw(-W2,-D2,W2,-D2);cw(-W2,-D2,-W2,D2);cw(W2,-D2,W2,D2);cw(-W2,D2,-1.0,D2);cw(1.0,D2,W2,D2);
-  cw(-5.0+B[0],-1.9+B[1],-.9+B[0],-1.9+B[1]);cw(-.95+B[0],-1.9+B[1],-.95+B[0],-2.75+B[1]);cw(W2-.9,hz-1.3,W2-.9,hz+1.3);cw(W2-.9,hz-1.2,W2-.1,hz-1.2);cw(W2-.9,hz+1.2,W2-.1,hz+1.2);cw(1.9+G[0],-2.95+G[1],3.9+G[0],-2.95+G[1]);
+  cw(-5.0+B[0],-1.9+B[1],-.9+B[0],-1.9+B[1]);cw(-.95+B[0],-1.9+B[1],-.95+B[0],-2.75+B[1]);cw(W2-.9,hz-1.3,W2-.9,hz+1.3);cw(W2-.9,hz-1.2,W2-.1,hz-1.2);cw(W2-.9,hz+1.2,W2-.1,hz+1.2);
   DM196I.tables.forEach(([x,z])=>{const [X,Z]=lotW103(l,x,z);C.push({x:X,z:Z,r:.55})});
   [[-5.0,-3.0],[-4.3,-3.0]].forEach(([x,z])=>{const [X,Z]=lotW103(l,x+B[0],z+B[1]);C.push({x:X,z:Z,r:.32})});
   {const [X,Z]=lotW103(l,-4.9,D2+.85);C.push({x:X,z:Z,r:.5})}[-1.25,1.25].forEach(x=>{const [X,Z]=lotW103(l,x,D2+1.35);C.push({x:X,z:Z,r:.2})});{const [X,Z]=lotW103(l,4.4,D2+.75);C.push({x:X,z:Z,r:.45})}
