@@ -128,7 +128,8 @@ html body.kq #xw .km223-b{display:flex;gap:4px;align-items:center;flex-wrap:nowr
 html body.kq #xw .km223-b button{white-space:nowrap;font-size:.86rem;padding:4px 10px;min-height:30px}
 html body.kq #xw .km223-b button.km223-q{background:none;border-color:rgba(58,44,28,.35);padding:4px 8px}
 html body.kq #xw .kmplan .kminfo{font-size:.86rem;line-height:1.4}
-@media (max-width:560px){html body.kq #xw .kmrw{grid-template-columns:minmax(0,1fr)}html body.kq #xw .kmrw .ra{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between}}
+@media (max-width:560px){html body.kq #xw .wh #xwT{min-width:0}html body.kq #xw .wh #xwS{min-width:0;flex:1 1 0;text-align:right;overflow-wrap:anywhere}
+  html body.kq #xw .kmrw{grid-template-columns:minmax(0,1fr)}html body.kq #xw .kmrw .ra{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between}}
 /* ---- Villagers ---- */
 html body.kq #xw .vlgrid{grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:12px}
 html body.kq #xw .vlc{padding:11px 12px;gap:7px;background:rgba(58,44,28,.04);border-color:rgba(58,44,28,.24);border-radius:2px;min-width:0}
