@@ -19,13 +19,18 @@ SEARCH2=r"""()=>{const p=PMAP[1],q=p.path[Math.floor(p.path.length/2)];toPos(q[0
       hn=pl.bones.aL2.getWorldPosition(new V()).sub(P);
     return {up:c.y,fwd:c.dot(fw),side:c.dot(rt),nf:n.dot(fw),vert:u.y,hy:hd.y,cy:ch.y,hf:hn.dot(fw)}};
   const T=JSON.parse(window.TGT||'{}'),upT=T.up,sideT=T.side==null?-.04:T.side,fwT=T.fwd||.42;
-  const cost=m=>{const ut=upT!=null?upT:(m.cy*.35+m.hy*.65);return 6*Math.max(0,fwT-m.fwd)+1.5*Math.max(0,m.fwd-fwT-.12)+5*Math.abs(m.side-sideT)+4*Math.abs(m.up-ut)+3*(1-Math.abs(m.nf))+1.5*(1-m.vert)+2*Math.max(0,.12-m.hf)};
-  const R={lx:[-2.3,.3],lz:[-1,1.3],le:[-2.4,.6],ly:[-1.7,1.7],lw:[-1.2,1.2],lq:[-1.4,1.4],sx:[0,.2],hx:[0,.15]};
+  const W=pl.gearG[0],RA=!!window.RARM;
+  const wm=()=>{const P=pl.position,a=pl.rotation.y,fw=new V(Math.sin(a),0,Math.cos(a)),rt=new V(Math.cos(a),0,-Math.sin(a)),Q=W.getWorldQuaternion(new THREE.Quaternion()),c=W.getWorldPosition(new V()).sub(P),u=new V(0,1,0).applyQuaternion(Q);
+    return {wup:c.y,wfwd:c.dot(fw),wside:c.dot(rt),wy:u.y,wf:u.dot(fw)}};
+  const cost=m=>{const ut=upT!=null?upT:(m.cy*.35+m.hy*.65);let c=6*Math.max(0,fwT-m.fwd)+1.5*Math.max(0,m.fwd-fwT-.12)+5*Math.abs(m.side-sideT)+4*Math.abs(m.up-ut)+3*(1-Math.abs(m.nf))+1.5*(1-m.vert)+2*Math.max(0,.12-m.hf);
+    if(RA){const w=wm();c+=2*Math.max(0,.75-w.wy)+3*Math.abs(w.wside-(T.ws==null?.3:T.ws))+2*Math.max(0,w.wfwd-.2)+2*Math.max(0,-.12-w.wfwd)+2*Math.abs(w.wup-(T.wu==null?.95:T.wu))}return c};
+  const R=Object.assign(RA?{ax:[-1.2,.35],az:[-1.0,1.0],ex:[-2.4,-.1],ay:[-1.2,1.2],rw:[-1.2,1.2],rz:[-1.2,1.2]}:{},window.ONLYR?{}:{lx:[-2.3,.3],lz:[-1,1.3],le:[-2.4,.6],ly:[-1.7,1.7],lw:[-1.2,1.2],lq:[-1.4,1.4],sx:[0,.2],hx:[0,.15]});
+  if(window.POSE0)Object.assign(P0,JSON.parse(window.POSE0));
   const ev=()=>{STEP(.05);return cost(hp())};
   const ks=Object.keys(R);ks.forEach(k=>{if(P0[k]==null)P0[k]=0});let best=ev(),st=.4,log=[];
   for(let it=0;it<9&&st>.02;it++){let imp=false;for(const k of ks){for(const d of [st,-st]){const o=P0[k];P0[k]=Math.max(R[k][0],Math.min(R[k][1],o+d));if(P0[k]===o)continue;const c=ev();if(c<best-1e-4){best=c;imp=true}else P0[k]=o}}
     log.push(+best.toFixed(3));if(!imp)st/=2}
-  ev();const m=hp(),out={};for(const k in P0)out[k]=+P0[k].toFixed(2);for(const k in m)m[k]=+m[k].toFixed(2);return {best:+best.toFixed(3),pose:out,m,init,log}}"""
+  ev();const m=Object.assign(hp(),wm()),out={};for(const k in P0)out[k]=+P0[k].toFixed(2);for(const k in m)m[k]=+m[k].toFixed(2);return {best:+best.toFixed(3),pose:out,m,init,log}}"""
 def s(pg):
     pg.set_default_timeout(2400000);ev=pg.evaluate
     ev("()=>localStorage.clear()")
@@ -37,9 +42,18 @@ def s(pg):
     ev(L.LIB);ev("()=>{for(const id of ['topl','mini','bbar','glog','sysBtn','fsBtn','hudTop','locBox','chInfo','prompt','acts'])try{$(id).style.visibility='hidden'}catch(_){}}")
     if os.environ.get('GRID'):ev("(g)=>{window.GRID=g}",os.environ['GRID'])
     if POSE:ev("(p)=>{GD213P.paladin=JSON.parse(p)}",POSE)
+    if os.environ.get('RARM'):ev("()=>{window.RARM=1}")
+    if os.environ.get('ONLYR'):ev("()=>{window.ONLYR=1}")
+    if os.environ.get('POSE0'):ev("(g)=>{window.POSE0=g}",os.environ['POSE0'])
     if os.environ.get('TGT'):ev("(g)=>{window.TGT=g}",os.environ['TGT'])
     if os.environ.get('SEARCH2'):
-        r=ev(SEARCH2);print('SEARCH2',json.dumps(r));return
+        r=ev(SEARCH2);print('SEARCH2',json.dumps(r),flush=True)
+        if not os.environ.get('SHOTS'):return
+        ev("(p)=>{GD213P.paladin=p}",r['pose'])
+        for nm,ang,dist,hy in [('front',0,2.6,1.0),('34',.75,2.6,1.0),('side',1.57,2.6,1.0),('back',2.6,2.6,1.0)]:
+            ev("([ang,dist,hy])=>{const P=pl.position,a=pl.rotation.y+ang;FC([P.x+Math.sin(a)*dist,P.y+hy+.25,P.z+Math.cos(a)*dist],[P.x,P.y+hy-.25,P.z])}",[ang,dist,hy])
+            L.shot(pg,OUT+'/v225_block%s_%s.png'%(TAG,nm))
+        return
     if os.environ.get('SEARCH'):
         r=ev(SEARCH);print('SEARCH',json.dumps(r));return
     r=ev("""()=>{{const pm=PMAP[1],q=pm.path[Math.floor(pm.path.length/2)];toPos(q[0],q[1],0)}STEP(.4);enemies.slice().forEach(e=>{if(!e.boss)removeE(e)});gd213Down();STEP(.6);

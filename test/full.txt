@@ -198,3 +198,5 @@ v223_evo_preview.py
 v223_stations.py
 v223_menus.py
 v223_town.py
+v225_checks.py
+v225_coop.py

@@ -46,12 +46,12 @@ function lk225Of(o){const r={};if(!o||typeof o!='object')return r;
   if(o.bel!=null){const v=lk225Int(o.bel,LK225.bel.length,null);if(v!=null)r.bel=v}
   if(o.fp!=null){const v=lk225Int(o.fp,LK225.fp.length,null);if(v!=null)r.fp=v}
   if(o.scar!=null){const v=lk225Int(o.scar,LK225.scar.length,null);if(v!=null)r.scar=v}
-  if(lk225Hex(o.pc))r.pc=o.pc.toLowerCase();if(lk225Hex(o.fpc))r.fpc=o.fpc.toLowerCase();
+  if(lk225Hex(o.pc))r.pc=o.pc.toLowerCase();else if(o.pc==='auto')r.pc='auto';if(lk225Hex(o.fpc))r.fpc=o.fpc.toLowerCase();
   if(o.hs!=null){const v=lk225Num(o.hs,LK225.hs,null);if(v!=null)r.hs=+v.toFixed(2)}
   if(o.tl!=null){const v=lk225Num(o.tl,LK225.tl,null);if(v!=null)r.tl=+v.toFixed(2)}
   return r}
 // defaults: nothing painted, natural underside, normal head and tail
-function lk225Full(L){return Object.assign({pat:0,pc:LK225.mark[0],bel:0,fp:0,fpc:LK225.fpc[0],scar:0,hs:1,tl:1},lk225Of(L))}
+function lk225Full(L){return Object.assign({pat:0,pc:'auto',bel:0,fp:0,fpc:LK225.fpc[0],scar:0,hs:1,tl:1},lk225Of(L))}
 {const f=lkClean;lkClean=function(o){const r=f.apply(this,arguments);try{Object.assign(r,lk225Of(o))}catch(_){}return r}}
 {const f=mdLookN;mdLookN=function(L,cls){const r=f.apply(this,arguments);try{Object.assign(r,lk225Full(L));
     // height: the model follows the editor's whole range (0.90–1.10)
@@ -65,8 +65,11 @@ function lk225Full(L){return Object.assign({pat:0,pc:LK225.mark[0],bel:0,fp:0,fp
     Object.assign(r,lk225Of({pat:a[10],pc:c(a[11]),bel:a[12],fp:a[13],fpc:c(a[14]),scar:a[15],hs:(+a[16]||100)/100,tl:(+a[17]||100)/100}))}}catch(_){}return r}}
 
 // ---------------- the underside colour (each animal's palette, at build) ----------------
+// the marking colour: the one chosen, or (Auto) a light one on dark fur and a dark one on light fur
+function lk225Lum(h){h=mdC(h);return (.3*((h>>16)&255)+.59*((h>>8)&255)+.11*(h&255))/255}
+function lk225Mark(L,fur){if(L&&lk225Hex(L.pc))return mdC(L.pc);return lk225Lum(fur)<.36?mdMix(fur,0xeee2c8,.72):mdSh(fur,.32)}
 function lk225Bel(C,L){const b=L.bel|0;if(!b)return C;const f=C.FUR,o=Object.assign({},C);
-  o.BELLY=b==1?mdMix(f,0xe8e2d6,.62):b==2?mdMix(f,0xe0c896,.6):b==3?f:b==4?mdSh(f,.58):mdMix(f,mdC(L.pc||LK225.mark[0]),.82);return o}
+  o.BELLY=b==1?mdMix(f,0xe8e2d6,.62):b==2?mdMix(f,0xe0c896,.6):b==3?f:b==4?mdSh(f,.58):mdMix(f,lk225Mark(L,f),.82);return o}
 (function(){for(let id=1;id<=5;id++){const D=typeof BRD!='undefined'&&BRD[id];if(!D||typeof D.cols!='function'||D.cols.v225)continue;const f=D.cols;
   D.cols=function(L){const C=f.apply(this,arguments);try{return L&&L.bel?lk225Bel(C,L):C}catch(_){return C}};D.cols.v225=1}})();
 
@@ -79,7 +82,7 @@ function lk225Setup(){const C=BR.C||{},D=BR.R,fur=new Set(),pts=[];
   ['FUR','FURD','FURL','BELLY'].forEach(k=>{if(C[k]!=null){const h=mdC(C[k]);fur.add(h);pts.push(lk225Rgb(h))}});
   if(C.FUR!=null&&C.BELLY!=null)[[C.FUR,C.BELLY,.4],[C.FUR,C.BELLY,.5]].forEach(q=>fur.add(mdC(mdMix(q[0],q[1],q[2]))));
   const not=[];['NOSE','PINK','PINKD','EYE','CLAW','TOOTH','MOUTH','BEAK','BEAKL','SCALE','SCALED'].forEach(k=>{if(C[k]!=null){const h=mdC(C[k]);if(!fur.has(h))not.push(lk225Rgb(h))}});
-  K225.fur=fur;K225.pts=pts;K225.not=not;
+  K225.fur=fur;K225.pts=pts;K225.not=not;if(C.FUR!=null)K225.mk=lk225Rgb(lk225Mark(K225.L,C.FUR));
   const E=D&&D.EYEP?D.EYEP:[.035,1.2,.09];K225.E={x:Math.abs(E[0]),y:E[1],z:E[2]};
   const T=D&&D.HBX&&D.TB&&D.TB.length?D.HBX[D.TB[0]]:null;K225.tr=T?[T[1],T[2],T[3]]:null;K225.tn=D&&D.TB?D.TB.length:0}
 // is this colour (0..1 rgb) fur? close to the line between the palette's fur colours, and closer to it than to nose / eye / claws
@@ -102,8 +105,10 @@ function lk225Pat(k,p,bn,rg){const E=K225.E,x=p.x,y=p.y,z=p.z,ax=Math.abs(x),SS=
       if(rg=='torso'){const b=.5+.5*Math.sin(y*58+2.2*Math.sin(x*22));return SS(.6,.8,b)*SS(.05,-.01,z)}
       if(rg=='arm'||rg=='leg')return SS(.62,.82,.5+.5*Math.sin(y*62))*.95;
       if(rg=='tail')return SS(.55,.8,.5+.5*Math.sin(lk225Tail(p,bn)*24));
-      if(rg=='head')return y>E.y+.012&&z<E.z+.02?SS(.55,.85,.5+.5*Math.sin(x*150))*SS(E.y+.012,E.y+.03,y):0;return 0}
-    case 2:{if(rg=='torso'&&z>.04)return 0;if(rg=='head'&&y<E.y)return 0;const n=Math.sin(x*61+1.3)*Math.sin(y*53+.7)*Math.sin(z*67+2.1);return SS(.3,.48,n)}
+      if(rg=='head'){if(y>E.y+.012)return SS(.5,.8,.5+.5*Math.sin(x*130))*SS(E.y+.012,E.y+.03,y);   // the brow's "M"
+        if(ax>E.x*.75&&y<E.y-.005)return SS(.55,.8,.5+.5*Math.sin(y*150+ax*40));return 0}   // cheek bars
+      return 0}
+    case 2:{if(rg=='torso'&&z>.04)return 0;const f=rg=='head'?2.1:1,n=Math.sin(x*61*f+1.3)*Math.sin(y*53*f+.7)*Math.sin(z*67*f+2.1);return SS(.3,.48,n)}
     case 3:return rg=='head'&&z>E.z-.06?SS(.034,.018,Math.abs(y-E.y))*SS(E.x+.05,E.x+.03,ax):0;
     case 4:{if(rg=='torso')return SS(.0,-.035,z)*SS(.56,.62,y);if(rg=='head')return SS(E.z-.02,E.z-.06,z)*SS(E.y,E.y+.025,y);if(rg=='tail')return 1;return 0}
     case 5:{if(rg=='paw'||rg=='foot')return 1;if(rg=='arm')return SS(.68,.62,y);if(rg=='leg')return SS(.24,.16,y);return 0}
@@ -119,7 +124,7 @@ function lk225Pat(k,p,bn,rg){const E=K225.E,x=p.x,y=p.y,z=p.z,ax=Math.abs(x),SS=
 // war paint (head only, crisp per face)
 function lk225Paint(k,p){const E=K225.E,x=p.x,y=p.y,z=p.z,ax=Math.abs(x),fr=z>E.z-.045;if(!fr)return 0;
   switch(k){
-    case 1:return Math.abs(ax-E.x)<.011&&y<E.y-.012&&y>E.y-.085?1:0;
+    case 1:return Math.abs(ax-E.x*.95)<.016&&y<E.y-.01&&y>E.y-.09?1:0;
     case 2:return y>E.y+.016&&y<E.y+.04?1:0;
     case 3:{const d=Math.hypot(ax-E.x,y-E.y);return d>.012&&d<.032?1:0}
     case 4:return ax+Math.abs(y-(E.y+.05))<.024?1:0;
@@ -137,7 +142,7 @@ function lk225Scar(k,p){const E=K225.E,x=p.x,y=p.y,z=p.z,ax=Math.abs(x);if(z<E.z
 function lk225Corner(B,v,base,face){const L=K225.L,bn=lk225Bone(B,v),rg=lk225Reg(bn);if(!rg)return null;let c=base,ch=false;
   const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
   if(L.pat){const m=lk225Pat(L.pat,v,bn,rg);if(m>.01){c=mix(c,K225.mk,m);ch=true}}
-  if(rg=='head'&&face){if(L.scar&&lk225Scar(L.scar,face)){c=mix(c,[.82,.62,.58],.85);ch=true}
+  if(rg=='head'&&face){if(L.scar&&lk225Scar(L.scar,face)){const l=.3*c[0]+.59*c[1]+.11*c[2];c=mix(c,l>.55?[.52,.28,.26]:[.86,.64,.6],.88);ch=true}
     else if(L.fp&&lk225Paint(L.fp,face)){c=mix(c,K225.pc,.92);ch=true}}
   return ch?c:null}
 {const f=mdTri;mdTri=function(B,t,a,b,c,col){if(K225.on&&BR.on&&(t=='c'||!t)){try{if(!K225.fur)lk225Setup();
@@ -148,7 +153,7 @@ function lk225Corner(B,v,base,face){const L=K225.L,bn=lk225Bone(B,v),rg=lk225Reg
   return f.apply(this,arguments)}}
 {const f=mdHeroB;mdHeroB=function(cls,L,E){const paint=L&&!L.skn164&&(L.pat||L.fp||L.scar);if(!paint)return f.apply(this,arguments);
   // the fur palette is only known inside the race build (BR.C): lk225Setup runs on the first painted triangle
-  const o={on:K225.on,L:K225.L,fur:K225.fur};K225.on=1;K225.L=L;K225.mk=lk225Rgb(L.pc||LK225.mark[0]);K225.pc=lk225Rgb(L.fpc||LK225.fpc[0]);K225.fur=null;
+  const o={on:K225.on,L:K225.L,fur:K225.fur};K225.on=1;K225.L=L;K225.mk=lk225Rgb(lk225Hex(L.pc)?L.pc:LK225.mark[0]);K225.pc=lk225Rgb(L.fpc||LK225.fpc[0]);K225.fur=null;
   try{return f.apply(this,arguments)}finally{K225.on=o.on;K225.L=o.L;K225.fur=o.fur}}}
 
 // ---------------- head size and tail length: bones ----------------
@@ -165,7 +170,7 @@ function lk225Ctl(L){const F=lk225Full(L),g=(t,x)=>`<div class="lkg">${t?`<div c
     ch=(k,a,cur)=>`<div class="lkcs">${a.map((n,i)=>`<button class="lkc${cur==i?' on':''}" data-lk="${k}" data-v="${i}">${n}</button>`).join('')}</div>`,
     sl=(k,lab,r,v)=>g(`${lab} <b data-lk225l="${k}">${Math.round(v*100)}%</b>`,`<input class="lkr" type="range" min="${r[0]}" max="${r[1]}" step="0.01" value="${v}" data-lk="${k}" aria-label="${lab}">`);
   const body=sl('tl','Tail length',LK225.tl,F.tl)+g('Underside',ch('bel',LK225.bel,F.bel))+
-    `<div class="lk225sec">Coat</div>`+g('Pattern',ch('pat',LK225.pat,F.pat))+(F.pat||F.bel==5?g('Marking colour',sw('pc',LK225.mark,F.pc)):'');
+    `<div class="lk225sec">Coat</div>`+g('Pattern',ch('pat',LK225.pat,F.pat))+(F.pat||F.bel==5?g('Marking colour',`<div class="lks"><button class="lkc${F.pc=='auto'?' on':''}" data-lk="pc" data-v="auto" title="Light on dark fur, dark on light fur">Auto</button></div>`+sw('pc',LK225.mark,F.pc)):'');
   const head=`<div class="lk225sec">Face</div>`+sl('hs','Head size',LK225.hs,F.hs)+g('War paint',ch('fp',LK225.fp,F.fp))+(F.fp?g('Paint colour',sw('fpc',LK225.fpc,F.fpc)):'')+g('Scar',ch('scar',LK225.scar,F.scar));
   return {body,head}}
 {const f=lkCtl;lkCtl=function(L){const r=f.apply(this,arguments);try{const x=lk225Ctl(L);
@@ -177,7 +182,7 @@ function lk225Ctl(L){const F=lk225Full(L),g=(t,x)=>`<div class="lkg">${t?`<div c
 // randomize: the new options too (about half the heroes get a pattern, a few war paint or a scar); reset clears them
 {const f=lkInput;lkInput=function(state,e){const a=e.target&&e.target.closest&&e.target.closest('[data-lka]'),r=f.apply(this,arguments);
   try{if(a&&r){if(a.dataset.lka=='rnd'){const R=x=>x[Math.floor(Math.random()*x.length)],q=Math.random;
-      Object.assign(state.look,{pat:q()<.55?1+Math.floor(q()*(LK225.pat.length-1)):0,pc:R(LK225.mark),bel:q()<.6?0:Math.floor(q()*LK225.bel.length),
+      Object.assign(state.look,{pat:q()<.55?1+Math.floor(q()*(LK225.pat.length-1)):0,pc:q()<.6?'auto':R(LK225.mark),bel:q()<.6?0:Math.floor(q()*LK225.bel.length),
         fp:q()<.25?1+Math.floor(q()*(LK225.fp.length-1)):0,fpc:R(LK225.fpc),scar:q()<.15?1+Math.floor(q()*(LK225.scar.length-1)):0,
         hs:+(.95+q()*.1).toFixed(2),tl:+(.85+q()*.3).toFixed(2)})}}}catch(_){}return r}}
 // the sliders' labels follow the value while dragging (the editors only knew the height slider)

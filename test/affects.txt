@@ -157,3 +157,4 @@ v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-:
 # v223 town folk (3963, 3964): smith grip, bard arms, keepers hold still while their window is open, the Scholar's Tower lectern
 3963|3964|v223|1900|2995|3081|3550|3680|3700|3702|3708|1030-|1860|3630|3490|3940|0490: v223_town.py v103_kingdom.py v192_hero_fit.py v200_stations.py v220_town.py v221_immersion.py v151_intro.py
 3620|1830|v224: v224_portal_view.py
+v225|owner-fixes|hero-look: v225_checks.py v225_coop.py v213_guard.py v213_coop.py v221_immersion.py v200_stations.py v206_owner.py v218_games.py v196_meadow.py v138_abil_balance.py v117_abilities.py v114_race.py v117_creator.py v140_creator.py v188_coop_look.py v164_skins.py v136_gear.py v178_gear_audit.py
