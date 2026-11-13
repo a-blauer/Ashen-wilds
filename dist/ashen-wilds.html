@@ -77855,8 +77855,9 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
 (function(){if(typeof cgHuman!='function'||typeof cg181Reg!='function')return;const cl=va_C;
   // skull without a lower jaw (base head coordinates): skull base, palate, the upper jaw's rim far forward, muzzle, nose pits,
   // under the eyes, eye line, brow ridge, then the long cranium going up and back
-  const HEAD=[[1.52,.044,.03,.06,-.082],[1.531,.058,.05,.066,-.058],[1.541,.073,.112,.068,.026],[1.554,.071,.117,.072,.028],[1.57,.064,.106,.078,.024],[1.588,.076,.094,.086,.018],[1.606,.072,.088,.094,.012],
-    [1.622,.079,.103,.1,.01],[1.642,.074,.09,.104,.002],[1.664,.066,.076,.1,-.006],[1.684,.05,.056,.084,-.012],[1.698,.026,.03,.05,-.016]];
+  // (the back radii carry the back of the skull down in one curve into the neck: no shelf under the cranium)
+  const HEAD=[[1.508,.05,.03,.098,-.07],[1.522,.056,.03,.104,-.06],[1.533,.064,.022,.108,-.04],[1.542,.073,.112,.108,.022],[1.554,.071,.117,.114,.028],[1.57,.064,.106,.112,.024],[1.588,.076,.094,.106,.018],[1.606,.072,.088,.1,.012],
+    [1.622,.079,.103,.1,.01],[1.642,.074,.09,.1,.002],[1.664,.066,.076,.094,-.006],[1.684,.05,.056,.078,-.012],[1.698,.026,.03,.046,-.016]];
   // (owner, Nov 13: "I do not like the long round head ... his body should be way bigger proportionate to his head. He should be a
   // massive menacing gangly creature") a small angular skull on a huge frame: wide bony shoulders, a deep ribcage, a long back
   const S=cgHuman({h:1.3,w:1.0,d:.92,rw:[.7,.8,.42,.8,1.08,1.16,1.3,1.0],rf:[.74,.72,.36,.94,1.1,1.0,.9,.8],rb:[.78,.8,.54,.9,1.14,1.22,1.24,1.0],
@@ -77867,8 +77868,10 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
   // (owner, Nov 13: "the creature's neck is visible through his mouth ... an anatomy issue, not a painting issue") the neck now
   // meets the skull at the back of its base, as on a real skull, and leans forward into it from between the shoulders, so the
   // whole mouth (palate, jaw, throat) hangs in front of the neck instead of sitting on top of it; the jaw hinges in front of it
-  {const N=S.neck,y0=T[T.length-1][0],y1=S.head[0][0],z0=T[T.length-1][4]||0,z1=S.head[0][4];N.forEach(q=>{const t=(q[0]-y0)/(y1-y0);q[4]=z0+(z1-z0)*(.25+.75*t);q[2]=.036+.008*(1-t);q[3]=.05});
-    S.J.neck=[0,S.J.neck[1],z0+(z1-z0)*.5];S.J.head=[0,S.J.head[1],z1+.01]}
+  // the neck: four rings from between the shoulders, leaning forward and widening into the skull's base (owner: "a hard right
+  // angle from the neck to jaw ... connect the neck to the back of the head and smooth out that area")
+  {const tp=T[T.length-1],y0=tp[0],H0=S.head[0],y1=H0[0],z0=tp[4]||0;S.neck=[.25,.5,.75].map(t=>{const e=t*t*(3-2*t);return [y0+(y1-y0)*t,tp[1]*.62+(H0[1]-tp[1]*.62)*e,.05+(H0[2]-.05)*e,.062+(H0[3]-.062)*e,z0+(H0[4]-z0)*e]});
+    S.J.neck=[0,S.J.neck[1],z0+(H0[4]-z0)*.4];S.J.head=[0,y1+.015,H0[4]]}
   S.pron={'-1':1.1,'1':1.1};FN229B.Sb=S;
   HUMLOOK.fn229beast={skin:[180,178,192],tunic:0x101014,cape:[20,20,24],pants:[20,20,24],sc:1,wpn:'none'};
   const FACE=(x,y,z,n)=>{let d=0;const f=Math.max(0,Math.min(1,n[2]*1.6+.2));
@@ -77916,7 +77919,7 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
     for(let i=0;i<11;i++){const a=2.0+i*.23+.1*a181H(i,3),r=.062+.02*a181H(i,5);let p=S.hp(Math.sin(a)*r,1.66-.03*a181H(i,7),-.02+Math.cos(a)*.085),d=[Math.sin(a)*.03,-.06,Math.cos(a)*.03-.01];
       const N=5+(i%3);for(let j=0;j<N;j++){const q=add3(p,[d[0],d[1]-.014*j,d[2]]);k.L('head','c',0x08070b,p,q,.0042-.0006*j,.0036-.0006*j,3);p=q;d=[d[0]*.6,d[1],d[2]*.6]}}
     // where the pieces drawn at run time sit: eyes, the upper jaw's teeth (model space)
-    const F=FN229B.fit.beast={eye:[],up:[],lo:[],hinge:S.hp(0,1.537,-.022),S,lm:[RY[0],.052,sh-.02,sh-.62]};
+    const F=FN229B.fit.beast={eye:[],up:[],lo:[],hinge:S.hp(0,1.536,-.03),S,lm:[RY[0],.052,sh-.02,sh-.62]};
     [-1,1].forEach(s=>{const q=S.hp(s*.04,1.606,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});F.eye.push(p?[p[0],p[1],p[2]+.004]:[q[0],q[1],q[2]+.09*hs])});
     for(let i=0;i<15;i++){const a=((i/14)-.5)*3.3,q=S.hp(Math.sin(a)*.067,1.56,.031+Math.cos(a)*.116),p=cgRay(M,[q[0]*1.6,q[1]-.03*hs,q[2]+(Math.cos(a)>0?.2:0)],nrm3([-q[0]*.6,.03*hs,-(Math.cos(a)>0?.2:0)]),{head:1});
       F.up.push({p:S.hp(Math.sin(a)*.064,1.546,.031+Math.cos(a)*.111),a,len:(.026+.03*a181H(i,11)+(Math.abs(a)<.3?.012:0))*hs})}})})();
@@ -77969,8 +77972,8 @@ function fn229BodyFree(Bd){if(!Bd)return;if(Bd.g.parent)Bd.g.parent.remove(Bd.g)
 function fn229Jaw(Bd,mk){const F=Bd.fit,S=F.S,hs=S.hs,C={skin:[.6,.59,.66],dark:[.3,.28,.36],gum:[.22,.07,.11],maw:[.07,.012,.03],bone:[.86,.82,.7],boneD:[.62,.57,.44],tong:[.1,.04,.09]},H=F.hinge,B=fn229Buf();
   const pin=fn229Pin(Bd,'head',H),L=.182*hs,W=.072*hs,sec=[0,.12,.3,.52,.74,.9,1],R=[];
   // cross-sections from the hinge to the chin: outer skin round the bottom, two rims, the floor of the mouth between them
-  sec.forEach((u,i)=>{const z=u*L,w=W*(1-.22*u*u)*(u>.9?1-(u-.9)*4.2:1),top=-.004*hs-.006*hs*Math.sin(u*3.1),dep=(.03+.03*Math.sin(u*2.6))*hs*(1-u*.35),fl=top-.014*hs;
-    R.push([[-w,top,z],[-w*1.02,top-dep*.55,z],[-w*.55,top-dep,z+dep*.1],[w*.55,top-dep,z+dep*.1],[w*1.02,top-dep*.55,z],[w,top,z],[w*.82,top,z-.002],[w*.5,fl,z-.004],[-w*.5,fl,z-.004],[-w*.82,top,z-.002]])});
+  sec.forEach((u,i)=>{const z=u*L,w=W*(1-.22*u*u)*(u>.9?1-(u-.9)*4.2:1),top=-.004*hs-.006*hs*Math.sin(u*3.1),dep=((.03+.03*Math.sin(u*2.6))*(1-u*.35)+.085*Math.pow(1-u,1.3))*hs,fl=top-.014*hs;
+    const nr=.55+.45*Math.min(1,u*2.2),zb=z-dep*.28*(1-u);R.push([[-w,top,z],[-w*1.02*nr,top-dep*.55,zb+dep*.05],[-w*.5*nr,top-dep,zb+dep*.1],[w*.5*nr,top-dep,zb+dep*.1],[w*1.02*nr,top-dep*.55,zb+dep*.05],[w,top,z],[w*.82,top,z-.002],[w*.5,fl,z-.004],[-w*.5,fl,z-.004],[-w*.82,top,z-.002]])});
   fn229Loft(B,R,(i,j,c)=>{const n=fn229Nz(c[0]*30,c[1]*30,c[2]*30);if(j>=6&&j<=8)return fn229Sh(j==7?C.maw:C.gum,.8+.4*n);if(j==5||j==9)return fn229Sh(C.gum,.9+.3*n);return fn229Sh(fn229Mx(C.skin,C.dark,(j==2?.55:.2)+(i<1?.3:0)),.85+.3*n)},{cap0:true,cap1:true});
   // the lower teeth along both rims and across the front; the tongue: long, black, lolling over the front teeth
   const rimPt=a=>{const u=Math.min(1,Math.abs(a)<.5?1-.05*Math.abs(a):1-(Math.abs(a)-.5)*.62),z=u*L,w=W*(1-.22*u*u)*(u>.9?1-(u-.9)*4.2:1);return [Math.sign(a)*(Math.abs(a)<.5?Math.abs(a)*2*w*.9+.001:w*.92),-.004*hs,z]};
