@@ -3206,21 +3206,44 @@ function buildTerrain(chk){
      float n0=fb3(q*.045);diffuseColor.rgb*=mix(mix(vec3(.74,.9,.62),vec3(1.02,.98,.86),n0),mix(vec3(.86,.8,.72),vec3(1.06,1.,.9),n0),sand)*(.86+.24*n2)*mix(.93+.14*fh,1.,pav);
      diffuseColor.rgb=mix(diffuseColor.rgb,rock,rm);float sn=smoothstep(9.5,14.,yc+(n1-.5)*4.)*(1.-smoothstep(.22,.6,sl))*(1.-sand);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.9,.94,1.)*(.84+.16*fh),sn);}`)};
   GTX.list.forEach(T=>{const m=T===GTX.main?mat:mat.clone();m.map=T.t;m.flatShading=true;m.userData.lps=1;m.onBeforeCompile=obc(T);T.mat=m});
+  // v229: a chunk's ground mesh is made the first time the chunk is shown and freed again when it has been out of
+  // sight for a while (lt229Build / lt229Free below). The whole world's ground used to be built here: ~76 MB of
+  // vertex data for zones the player is not in. Until it is built the Mesh carries LT229.ph, a shared empty geometry.
   for(let cz=0;cz*CHN<H;cz++)for(let cx=0;cx*CHN<W;cx++){
-    const x0=cx*CHN,z0=cz*CHN,TT=GTX.pick(cx,cz),nx=Math.min(CHN,W-x0),nz=Math.min(CHN,H-z0),vc=(nx+1)*(nz+1),pos=new Float32Array(vc*3),nor=new Float32Array(vc*3),uv=new Float32Array(vc*2),idx=[];
+    const x0=cx*CHN,z0=cz*CHN,TT=GTX.pick(cx,cz),nx=Math.min(CHN,W-x0),nz=Math.min(CHN,H-z0);
     let y0=1e9,y1=-1e9;
-    for(let iz=0;iz<=nz;iz++)for(let ix=0;ix<=nx;ix++){
-      const x=x0+ix,z=z0+iz,k=iz*(nx+1)+ix,y=GHv(x,z);pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;
-      const gx=GHv(x-1,z)-GHv(x+1,z),gz=GHv(x,z-1)-GHv(x,z+1),l=Math.hypot(gx,2,gz);nor[k*3]=gx/l;nor[k*3+1]=2/l;nor[k*3+2]=gz/l;
-      uv[k*2]=(x-TT.x0+.5)/TT.w;uv[k*2+1]=1-(z-TT.y0+.5)/TT.h;if(y<y0)y0=y;if(y>y1)y1=y}
-    for(let iz=0;iz<nz;iz++)for(let ix=0;ix<nx;ix++){const a=iz*(nx+1)+ix,b=a+1,c=a+nx+1,d=c+1;if((ix+iz)&1)idx.push(a,c,b,b,c,d);else idx.push(a,c,d,a,d,b)}
+    for(let iz=0;iz<=nz;iz++)for(let ix=0;ix<=nx;ix++){const y=GHv(x0+ix,z0+iz);if(y<y0)y0=y;if(y>y1)y1=y}
     if(y1<-30)continue; // v89: skip chunks that are all void
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(idx);
-    const m=new THREE.Mesh(g,TT.mat);m.receiveShadow=true;m.frustumCulled=false;m.visible=false;m.userData.cast=false;scene.add(m);
+    const m=new THREE.Mesh(lt229Ph(),TT.mat);m.receiveShadow=true;m.frustumCulled=false;m.visible=false;m.userData.cast=false;m.userData.lt229=1;scene.add(m);
     const k=cz*100+cx,c=chk[k]=chk[k]||{ms:[],ns:[],on:false,non:false,box:null};c.ms.push(m);
     c.box=new THREE.Box3(new THREE.Vector3(x0-2,y0-2,z0-2),new THREE.Vector3(x0+nx+2,y1+9,z0+nz+2));
+    c.lt={m,x0,z0,nx,nz,TT,g:null,t:0};
   }
 }
+// ---- v229 lazy ground: build / free one chunk's ground mesh ----
+// LT229.on=false builds every chunk and keeps it (the old behaviour, for A/B checks); LT229.keep = ms a built chunk may
+// stay out of sight before it is freed; LT229.st counts. Heights are read when the chunk is built, so a chunk built
+// later already has every change made to the height field since load (roads, the Buried Temple's floor).
+var LT229={on:true,keep:20000,built:new Set(),ph:null,f:0,st:{builds:0,frees:0,ms:0}};
+function lt229Ph(){if(!LT229.ph){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,-1e4,0,0,-1e4,0,0,-1e4,0]),3));
+  g.boundingSphere=new THREE.Sphere(new THREE.Vector3(0,-1e4,0),0);g.boundingBox=new THREE.Box3(new THREE.Vector3(0,-1e4,0),new THREE.Vector3(0,-1e4,0));g.userData.lt229ph=1;LT229.ph=g}return LT229.ph}
+function lt229Geo(t){const x0=t.x0,z0=t.z0,nx=t.nx,nz=t.nz,TT=t.TT,vc=(nx+1)*(nz+1),pos=new Float32Array(vc*3),nor=new Float32Array(vc*3),uv=new Float32Array(vc*2),idx=new Uint16Array(nx*nz*6);
+  for(let iz=0;iz<=nz;iz++)for(let ix=0;ix<=nx;ix++){
+    const x=x0+ix,z=z0+iz,k=iz*(nx+1)+ix,y=GHv(x,z);pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;
+    const gx=GHv(x-1,z)-GHv(x+1,z),gz=GHv(x,z-1)-GHv(x,z+1),l=Math.hypot(gx,2,gz);nor[k*3]=gx/l;nor[k*3+1]=2/l;nor[k*3+2]=gz/l;
+    uv[k*2]=(x-TT.x0+.5)/TT.w;uv[k*2+1]=1-(z-TT.y0+.5)/TT.h}
+  let o=0;for(let iz=0;iz<nz;iz++)for(let ix=0;ix<nx;ix++){const a=iz*(nx+1)+ix,b=a+1,c=a+nx+1,d=c+1;if((ix+iz)&1){idx[o++]=a;idx[o++]=c;idx[o++]=b;idx[o++]=b;idx[o++]=c;idx[o++]=d}else{idx[o++]=a;idx[o++]=c;idx[o++]=d;idx[o++]=a;idx[o++]=d;idx[o++]=b}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(new THREE.BufferAttribute(idx,1));return g}
+function lt229Build(c){const t=c&&c.lt;if(!t||t.g)return false;const t0=performance.now();t.g=lt229Geo(t);t.m.geometry=t.g;t.t=t0;LT229.built.add(c);LT229.st.builds++;LT229.st.ms+=performance.now()-t0;return true}
+function lt229Free(c){const t=c&&c.lt;if(!t||!t.g)return false;t.m.geometry=lt229Ph();t.g.dispose();t.g=null;LT229.built.delete(c);LT229.st.frees++;return true}
+// every chunk's ground at once (tests, LT229.on=false)
+function lt229All(){let n=0;CHL.forEach(c=>{if(lt229Build(c))n++});return n}
+// before each draw: build the ground of every chunk that is shown; now and then free the ones long out of sight
+function lt229Sync(){if(!LT229.on){if(!LT229.all){lt229All();LT229.all=1}return}
+  LT229.all=0;
+  const L=(typeof CVG!='undefined'&&CVG.live)?CVG.live:CHL,now=performance.now();
+  for(const c of L){const t=c.lt;if(!t||!c.on)continue;t.t=now;if(!t.g)lt229Build(c)}
+  if(++LT229.f%90===0)for(const c of LT229.built)if(!c.on&&now-c.lt.t>LT229.keep)lt229Free(c)}
 
 // ---- v83 low-poly nature kit: jittered, flat-shaded shapes with painted per-face colours ----
 // Colours are multipliers on top of each instance's colour, so biome tints still apply.
@@ -20306,6 +20329,7 @@ function psChunks(){if(typeof CHL=='undefined')return 0;let n=0;
 // container visibility follows the chunk (chunkVis sets c.on/c.non); runs right before each render
 var PSV=new Set();
 function psChunkVis(){
+  try{lt229Sync()}catch(err){console.warn('v229 lazy ground',err);LT229.on=false}   // v229: the shown chunks get their ground mesh here
   for(const c of PSV)if(!(c.on||c.non)){if(c.g)c.g.visible=false;PSV.delete(c)}
   const L=(typeof CVG!='undefined'&&CVG.live)?CVG.live:CHL;
   for(const c of L)if((c.on||c.non)&&c.g&&!PSV.has(c)){c.g.visible=true;PSV.add(c)}}
