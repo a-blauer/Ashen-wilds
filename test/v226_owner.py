@@ -43,6 +43,7 @@ JS=r"""async()=>{const o={},V3=THREE.Vector3,wait=ms=>new Promise(r=>setTimeout(
     {sr165FoesReset();const s=Math.round(P.S*.45);sr165Place(V,s,0);SR165.ph='run';SKR226.T.calm=0;SKR226.T.cp=SR165.cp;SKR226.T.e=[0,0];sr165Spawn(.03);o.brood=enemies.some(e=>!e.dead&&e.sr165==='gs'&&e.c.al)}
     sr165FoesReset();sr165End()}
   // ---- sounds ----
+  FX141.t=-1e9;   // v227: a kill-streak text just before (floating text quiets effects for 80 ms, 2970) must not colour the measurement
   o.bus=!!(SND226.n&&SND226.a===AUD);
   {const real=AUD,meas=async fn=>{const sr=44100,oc=new OfflineAudioContext(1,sr,sr);Object.defineProperty(oc,'state',{get:()=>'running'});const g=oc.createGain();g.gain.value=.32;g.connect(oc.destination);oc.out=g;
       AUD=oc;const a0=SND226.a;snd226Bus();SND208.a=oc;SND208.rv=null;SND208.rvq=1;SND208.last={};for(const k in sfxLast)delete sfxLast[k];try{fn()}finally{AUD=real;SND226.a=a0}
