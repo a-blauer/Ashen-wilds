@@ -2729,7 +2729,7 @@ function buildTerrain(chk){
 // LT229.on=false builds every chunk and keeps it (the old behaviour, for A/B checks); LT229.keep = ms a built chunk may
 // stay out of sight before it is freed; LT229.st counts. Heights are read when the chunk is built, so a chunk built
 // later already has every change made to the height field since load (roads, the Buried Temple's floor).
-var LT229={on:true,keep:20000,built:new Set(),ph:null,f:0,st:{builds:0,frees:0,ms:0}};
+var LT229={on:true,keep:20000,built:new Set(),fq:[],ph:null,f:0,st:{builds:0,frees:0,ms:0}};
 function lt229Ph(){if(!LT229.ph){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,-1e4,0,0,-1e4,0,0,-1e4,0]),3));
   g.boundingSphere=new THREE.Sphere(new THREE.Vector3(0,-1e4,0),0);g.boundingBox=new THREE.Box3(new THREE.Vector3(0,-1e4,0),new THREE.Vector3(0,-1e4,0));g.userData.lt229ph=1;LT229.ph=g}return LT229.ph}
 function lt229Geo(t){const x0=t.x0,z0=t.z0,nx=t.nx,nz=t.nz,TT=t.TT,vc=(nx+1)*(nz+1),pos=new Float32Array(vc*3),nor=new Float32Array(vc*3),uv=new Float32Array(vc*2),idx=new Uint16Array(nx*nz*6);
@@ -2748,7 +2748,10 @@ function lt229Sync(){if(!LT229.on){if(!LT229.all){lt229All();LT229.all=1}return}
   LT229.all=0;
   const L=(typeof CVG!='undefined'&&CVG.live)?CVG.live:CHL,now=performance.now();
   for(const c of L){const t=c.lt;if(!t||!c.on)continue;t.t=now;if(!t.g)lt229Build(c)}
-  if(++LT229.f%90===0)for(const c of LT229.built)if(!c.on&&now-c.lt.t>LT229.keep)lt229Free(c)}
+  // freeing is spread out, one chunk a frame: leaving Duskhold used to free its ~16 chunks in one frame 20 s later (a hitch
+  // on a slow GPU; test v172 saw the camera step grow on GitHub's machines)
+  if(++LT229.f%90===0&&!LT229.fq.length)for(const c of LT229.built)if(!c.on&&now-c.lt.t>LT229.keep)LT229.fq.push(c);
+  if(LT229.fq.length){const c=LT229.fq.pop();if(!c.on&&c.lt.g&&now-c.lt.t>LT229.keep)lt229Free(c)}}
 
 // ---- v83 low-poly nature kit: jittered, flat-shaded shapes with painted per-face colours ----
 // Colours are multipliers on top of each instance's colour, so biome tints still apply.
