@@ -12,8 +12,9 @@
 //    stairwell is cut into the tomb's floor before the end wall (DS218.well): an arched entrance, nine stone steps going down
 //    between walls into green water that fills the bottom, the ground lowered under it so the hero can walk down into it.
 //    "F · Descend the flooded stair" works on the steps as before.
-var DS218={on:true,step:1.05,warn:.65,well:{u0:90.6,u1:93.4,v0:313,v1:319.8,n:9,dy:.32,water:1.45},err:0};
-if(DS218.on){DG165SP.spkStep=DS218.step;DG165SP.spkWarn=DS218.warn}
+// v226: a step of 1.2 s, and the next band rises .55 s after the last one drops (DG165SP.spkGap, 3314): see dg165SSpikes
+var DS218={on:true,step:1.2,warn:.7,gap:.55,well:{u0:90.6,u1:93.4,v0:313,v1:319.8,n:9,dy:.32,water:1.45},err:0};
+if(DS218.on){DG165SP.spkStep=DS218.step;DG165SP.spkWarn=DS218.warn;DG165SP.spkGap=DS218.gap}
 // ---------- the stairwell: no floor slabs over it, the ground lowered under it ----------
 function ds218InWell(u,v){const w=DS218.well;return u>=w.u0-.6&&u<w.u1+.6&&v>=w.v0&&v<w.v1+.2}
 {const f=dg165SFloor;dg165SFloor=function(I){DS218.cut=1;try{return f.apply(this,arguments)}finally{DS218.cut=0}}}

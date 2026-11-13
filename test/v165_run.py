@@ -19,7 +19,10 @@ JS=r"""async(step)=>{const out={},errs=[];const oe=console.error;console.error=(
   if(step==='board'){const p=worldPrompt()||{};if(p.fn)p.fn();await wait(900);out.on=SR165.on;out.here=sp152Here('sandrun');const V=SR165.me;out.drv=V&&V.drv;out.gun=V&&V.gun;out.tris=SK165.tris;
     out.obs=SR165.obs.length;out.S=Math.round(sr165Path().S);out.errs=errs;return out}
   if(step==='ride'){const V=SR165.me,P=sr165Path();atkHeld=true;mOn=false;let t=0,stuck=0,lastS=V.s,minHp=V.hp,wrecks=0;const keep=CHEAT.god;CHEAT.god=false;
-    const log=[];while(t<260&&SR165.ph!=='win'){tick(1);t+=1;hero.hp=heroMax();if(SR165.ph==='wreck'){wrecks++;tick(3);await wait(700);tick(.1)}
+    // v226: the guns follow the crosshair: aim it at the nearest creature ahead or beside (what a player does)
+    const bot=()=>{try{skr218Cam();let best=null,bd=1e9;sr165Foes().forEach(f=>{const al=(f.p.x-V.x)*Math.sin(V.h)+(f.p.z-V.z)*Math.cos(V.h);if(al<-2)return;const d=f.p.distanceTo(V.m.position);if(d<bd){bd=d;best=f}});
+      if(best){const q=best.p.clone().project(cam);SKR226.rx=q.x;SKR226.ry=q.y}else{SKR226.rx=0;SKR226.ry=-.1}}catch(_){}};
+    const log=[];while(t<260&&SR165.ph!=='win'){tick(1,bot);t+=1;hero.hp=heroMax();if(SR165.ph==='wreck'){wrecks++;tick(3);await wait(700);tick(.1)}
       minHp=Math.min(minHp,V.hp);if(V.s-lastS<2&&SR165.ph==='run')stuck++;else stuck=0;lastS=V.s;if(stuck>8)break;if(t%20==0)log.push([t,Math.round(V.s),Math.round(V.hp),enemies.filter(e=>e.sr165&&!e.dead).length,SR165F.wy.length])}
     atkHeld=false;CHEAT.god=keep;out.t=t;out.s=Math.round(V.s);out.S=Math.round(P.S);out.ph=SR165.ph;out.minHp=Math.round(minHp);out.wrecks=SR165.tries;out.stuck=stuck;out.log=log;out.cp=SR165.cp;out.errs=errs;return out}
   if(step==='arrive'){await wait(1500);out.run=SS165.run.st;out.on=SR165.on;out.ins=curIns()?curIns().g:-1;out.errs=errs;return out}

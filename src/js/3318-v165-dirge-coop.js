@@ -37,7 +37,8 @@ function dg165On(q,peer){const k=q[1],a=q[2],b=q[3],I=curIns(),g=I?I.g:-1;
   if(k=='scp'){if((a|0)>DG165Q.s.cp&&(a|0)<=5)DG165Q.s.cp=a|0;return}
   if(k=='gate'){if(dg165SIn()&&DG165S.S&&!(DG165S.gate&&DG165S.gate.open)&&DG165Q.s.cp<3){DG165S.gate={open:1,t:DG165SP.gateT,y:0};dg165SDoors();say('⚙ '+mpEsc(mpName(peer))+' stands on the plate: the portcullis is rising!')}return}
   if(k=='cw'){if(a==2){if(!DG165Q.s.cw){DG165Q.s.cw=1;if(DG165S.cw)DG165S.cw.ph='done';dg165SDoors()}}else if(a==1&&dg165SIn()&&DG165S.S&&!DG165S.cw&&!DG165Q.s.cw){const [hu,hv]=dg165SL(pl.position.x,pl.position.z);if(dg165SanFloor(hu,hv)=='walls'||DG165Q.s.cp>=4){dg165SCwStart(DG165S.S)}}return}
-  if(k=='turn'){const S=DG165S.S,s=S&&S.statues[a|0];if(s&&DG165S.cw&&DG165S.cw.ph=='run'&&s.f!==(b&3)&&!s.anim){const a0=s.g.rotation.y;s.f=b&3;s.anim={t:0,a:a0,b:a0+Math.PI/2};dg165Snd('grind',.4,1.4)}return}
+  // v226: eight facings ('turn8'); an older partner's 'turn' (four facings, 90° apart) is read as twice the 45° step
+  if(k=='turn'||k=='turn8'){const S=DG165S.S,s=S&&S.statues[a|0],f=k=='turn8'?b&7:(b&3)*2;if(s&&DG165S.cw&&DG165S.cw.ph=='run'&&s.f!==f&&!s.anim){const a0=s.g.rotation.y,st=((f-s.f)%8+8)%8;s.f=f;s.anim={t:0,a:a0,b:a0+st*Math.PI/4};dg165Snd('grind',.4,1.4)}return}
   if(k=='sout'){if(dg165SIn())dg165SFinish();else DG165Q.s.st=Math.max(DG165Q.s.st,1);return}
   // the raft
   if(k=='renter'){if(g===21&&!rt165In()&&!dg165RDone()){say('🌊 '+mpEsc(mpName(peer))+' takes the party aboard the raft.');rt165Enter()}return}

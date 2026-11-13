@@ -25,7 +25,7 @@ function dg165SanPlan(){if(dg165SanPlan.c)return dg165SanPlan.c;
     plate:[60,110,68,116],       // the antechamber: a pressure plate opens the far gate for a moment
     flame:[61,116,67,160],       // the Fire Walk: skull mouths in the walls breathe fire; the portcullis at its end
     chasm:[40,160,104,214],      // the Chasm: a bridge of slabs that crumble under your feet
-    walls:[72,214,112,250],      // the Chamber of Closing Walls: four statues to turn before the walls meet
+    walls:[72,214,112,250],      // the Chamber of Closing Walls: eight statues to turn before the walls meet (v226: four)
     gal:[88,250,96,286],         // the Ossuary Gallery
     tomb:[76,286,108,320]};      // the Keeper's Tomb and the flooded stair down
   const P={R,
@@ -36,16 +36,18 @@ function dg165SanPlan(){if(dg165SanPlan.c)return dg165SanPlan.c;
     // the spike grid: cells of 2×2 tiles over the hall floor (entry and exit strips stay safe)
     spk:{u0:58,u1:102,v0:82,v1:106,cs:2,step:.62,warn:.36},
     plate:[64,113.2],
-    jets:[122,129,136,143,150].map((v,i)=>({v,side:i%2?1:-1,ph:i*.55})),jet:{per:2.9,on:1.25},
+    jets:[120,125.5,131,136.5,142,147.5,153].map((v,i)=>({v,side:i%2?1:-1,ph:i*.43})),jet:{per:2.9,on:1.25},   // v226: seven (were five)
     gate:{v:158.5,u0:61,u1:67,open:16},
     // the chasm's bridge: a chain of 2×2 slabs from the entry ledge to the exit ledge
     ledgeA:[58,160,70,166],ledgeB:[86,206,98,214],
     bridge:(()=>{const L=[[64,167],[64,175],[72,175],[72,183],[84,183],[84,191],[76,191],[76,199],[92,199],[92,205]],out=[],seen={};
       for(let i=0;i<L.length-1;i++){const [a,b]=[L[i],L[i+1]],n=Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let k=0;k<=n;k++){const u=a[0]+(b[0]-a[0])*k/n,v=a[1]+(b[1]-a[1])*k/n,key=u+'_'+v;if(seen[key])continue;seen[key]=1;out.push([u,v])}}
       return out})(),
-    // the closing walls: start at the room's sides, meet at the middle; statues stand ±6 from the middle
+    // the closing walls: start at the room's sides, meet at the middle
     cw:{mid:92,half:20,stop:1.6,T:62,doorN:214,doorS:250},
-    statues:[[92,225.5],[92,239.5],[88.5,232.5],[95.5,232.5]],altar:[92,232.5],   // north, south, west, east of the altar
+    // v226 (owner: "too easy - add 4 more statues and spread them out a bit"): eight knights, each wants to face the altar along one of eight
+    // bearings (45° a turn): far north and south, west and east, and four on the diagonals (all inside the walls' last gap, ±3.8)
+    statues:[[92,221],[92,244],[88.3,232.5],[95.7,232.5],[88.4,228.9],[95.6,228.9],[88.4,236.1],[95.6,236.1]],altar:[92,232.5],
     exit:[92,316.5],keeper:[92,300]};
   return dg165SanPlan.c=P}
 // is (u, v) floor inside the sanctum (the chasm's pit is not; its ledges and bridge are)

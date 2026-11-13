@@ -36,11 +36,16 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   const goS=(u,v)=>{const [x,z]=dg165SW(u,v);toPos(x,z,0);tick(.03)};
   // pendulums: stand in a blade's path long enough to be cut
   tough();goS(80,SP.pend[1].v);let hp=hero.hp;hero.iv=0;for(let i=0;i<120&&hero.hp>=hp;i++){goS(80,SP.pend[1].v);hero.iv=0;tick(.05)}out.pend=hero.hp<hp;
+  // spikes: a dropping band and the next rising one never move at the same moment (v226: DG165SP.spkGap apart)
+  {const K=S.spk,prev=Array.from(K.up),up=[],dn=[];for(let t=100;t<108;t+=.01){dg165SSpikes(S,.01,t,-99,-99,false);for(let i=0;i<K.up.length;i++){if(K.up[i]&&!prev[i])up.push(t);if(!K.up[i]&&prev[i])dn.push(t);prev[i]=K.up[i]}}
+    let md=99;up.forEach(a=>dn.forEach(b=>md=Math.min(md,Math.abs(a-b))));out.spkSep=+md.toFixed(2);out.spkN=[up.length,dn.length]}
   // spikes
   tough();goS(81,95);hp=hero.hp;for(let i=0;i<120&&hero.hp>=hp;i++){hero.iv=0;goS(81,95);tick(.05)}out.spike=hero.hp<hp;
   // the plate and the gate
   goS(64,111);tick(.1);const gk=dg165SW(64,158.5),gk2=Math.round(gk[1])*W+Math.round(gk[0]);out.gateShut=CBLK.has(gk2);goS(SP.plate[0],SP.plate[1]);tick(.1);out.gateOpen=!!(DG165S.gate&&DG165S.gate.open)&&!CBLK.has(gk2);
   goS(64,120);tick(DG165SP.gateT+.5);out.gateFell=!DG165S.gate.open&&CBLK.has(gk2);
+  // v226: through the gate before it falls, the countdown ends (the gate stays up behind you)
+  goS(SP.plate[0],SP.plate[1]);tick(.1);goS(64,SP.gate.v+2);tick(.1);out.gatePast=!!(DG165S.gate&&DG165S.gate.perm&&DG165S.gate.open);dg165SHud();out.gateHud=$('dg165sh').querySelector('.tm').classList.contains('on');DG165S.gate=null;dg165SDoors();
   // fire
   tough();hp=hero.hp;for(let i=0;i<120&&hero.hp>=hp;i++){hero.iv=0;goS(64,SP.jets[0].v);tick(.05)}out.fire=hero.hp<hp;
   // the chasm: a slab crumbles under you, and you fall
@@ -48,7 +53,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   const [cu,cv]=dg165SL(pl.position.x,pl.position.z);out.afterFall=[Math.round(cu),Math.round(cv),hero.hp<hp];out.slabsBack=S.slabs.every(s=>s.st==0);
   // the closing walls: start, solve with the knights
   DG165Q.s.cp=4;goS(92,216.5);goS(92,219);tick(.2);out.cwRun=!!(DG165S.cw&&DG165S.cw.ph=='run');out.doorN=S.shutN;
-  for(let i=0;i<4;i++){const s=S.statues[i];goS(s.u+(i<2?0:(i==2?-1.6:1.6)),s.v+(i==0?-1.6:i==1?1.6:0));let n=0;while(s.f!==[0,2,1,3][s.want]&&n<5){const p=worldPrompt();if(!p||!/knight/i.test(p.label))break;p.fn();tick(.7);n++}}
+  out.knights=S.statues.length;for(let i=0;i<S.statues.length;i++){const s=S.statues[i],du=SP.altar[0]-s.u,dv=SP.altar[1]-s.v,L=Math.hypot(du,dv)||1;goS(s.u+du/L*1.6,s.v+dv/L*1.6);let n=0;while(s.f!==s.want&&n<9){const p=worldPrompt();if(!p||!/knight/i.test(p.label))break;p.fn();tick(.5);n++}}
   tick(.3);out.cwSolved=DG165Q.s.cw;out.doorS=S.shutS;tick(4.5);
   // the walls crush when time runs out (a fresh try: forget the solve)
   DG165Q.s.cw=0;dg165SCwReset();goS(92,219);tick(.2);DG165S.cw.t=DG165SP.cwT-.05;hero.hp=heroMax();tick(1.2);out.crushed=typeof AWD!='undefined'&&AWD.dead;
@@ -101,6 +106,9 @@ def s(pg):
     e(r['gst']==2 and 'Sanctum' in r['lk'],'I: the Keeper\'s grave opens on the stair (%s %s)'%(r['gst'],r['lk']))
     e(r['inS'] and r['sst']==1,'Sanctum: the stair leads into it')
     e(r['walk'],'Sanctum: the way from the arrival to the flooded stair is walkable end to end')
+    e(r.get('spkSep',0)>=.5 and min(r.get('spkN',[0,0]))>10,'Sanctum: spikes drop before the next band rises (closest rise/drop %s s apart, %s)'%(r.get('spkSep'),r.get('spkN')))
+    e(r.get('gatePast') and not r.get('gateHud'),'Sanctum: past the portcullis the gate countdown is gone (%s %s)'%(r.get('gatePast'),r.get('gateHud')))
+    e(r.get('knights')==8,'Sanctum: eight knights (%s)'%r.get('knights'))
     e(r['pend'] and r['spike'] and r['fire'],'Sanctum: blades, spikes and fire hurt (%s %s %s)'%(r['pend'],r['spike'],r['fire']))
     e(r['gateShut'] and r['gateOpen'] and r['gateFell'],'Sanctum: the plate lifts the gate and it falls again (%s %s %s)'%(r['gateShut'],r['gateOpen'],r['gateFell']))
     e(r['crack']==1 and r['slabFell'] and r['afterFall'][2] and r['afterFall'][1]<166 and r['slabsBack'],'Sanctum: a slab crumbles, the fall costs health and goes back to the edge (%s %s %s %s)'%(r['crack'],r['slabFell'],r['afterFall'],r['slabsBack']))

@@ -9,14 +9,14 @@
 //                             DG165SP.gateT seconds: run it before the gate drops again (timed).
 //  5 The Chasm                a bridge of slabs over a black drop; each slab cracks under your feet and falls a moment later.
 //                             Falling costs health and puts you back at the chasm's edge with the bridge whole again.
-//  6 The Closing Walls        the doors slam, spiked walls grind in from both sides; turn the four weeping knights to face the
+//  6 The Closing Walls        the doors slam, spiked walls grind in from both sides; turn the eight weeping knights to face the
 //                             altar before the walls meet (timed: DG165SP.cwT). The dead in the walls' niches climb out to stop you.
 //  7 The Ossuary Gallery      bones in the walls, cages overhead; something passes in the dark.
 //  8 The Keeper's Tomb        the flooded stair down: F · Descend into the Drowned Crypts.
 // Checkpoints at the start of halls 1, 3, 4, 5, 6, 7 (DG165Q.s.cp). Dying wakes you at the last checkpoint, healed; the hall you
 // died in starts over. Inside: companions wait above, no mount, no recall (the stair back up is in the first hall).
 var DG165S={S:null,err:0,fall:null,cw:null,gate:null,scare:{},hT:0};
-var DG165SP={amp:.62,armL:6.5,pivot:7.6,spkStep:.62,spkWarn:.36,jetPer:2.9,jetOn:1.25,gateT:16,cwT:42,cwEnd:4.6,cwStart:20,slabT:.75,fallT:1.1};
+var DG165SP={amp:.62,armL:6.5,pivot:7.6,spkStep:.62,spkWarn:.36,spkGap:0,jetPer:2.9,jetOn:1.25,gateT:18,cwT:50,cwEnd:4.6,cwStart:20,slabT:.75,fallT:1.1};
 function dg165SIn(){return sp152Here('sanctum')}
 function dg165SI(){return sp152I('sanctum')}
 function dg165SW(u,v){const I=dg165SI();return [I.x0+u-.5,I.y0+v-.5]}
@@ -81,7 +81,7 @@ function dg165SBuild(){if(DG165S.S)return DG165S.S;const I=dg165SI(),P=dg165SanP
     S.cwL.visible=S.cwR.visible=false;
     const dN=dg165Portcullis(12,4.2);put(dN,92,C.doorN-.15,0);S.doorN=dN;const dS=dg165Portcullis(8,4.2);put(dS,92,C.doorS,0);S.doorS=dS;
     put(dt168G('DG165|altar',dg165AltarKit,0),P.altar[0],P.altar[1],0);const sK=dt168G('DG165|statue',dg165StatueKit,0);
-    P.statues.forEach((q,i)=>{const g=sK.clone();put(g,q[0],q[1],0);S.statues.push({g,u:q[0],v:q[1],f:0,want:i,yaw:0,anim:null})});
+    P.statues.forEach((q,i)=>{const g=sK.clone();put(g,q[0],q[1],0);S.statues.push({g,u:q[0],v:q[1],f:0,want:dg165SWant(q,P.altar),yaw:0,anim:null})});
     S.spots.push({x:at(92,232.5)[0],y:F0+1.6,z:at(92,232.5)[2],c:0x9affc8,i:1.2,r:12,fq:2})}
   // the Keeper's Tomb: his sarcophagus (the lid slides), coffins along the walls, the flooded stair
   {S.sarc=put(dt168G('DG165|sarc',k=>dg165SarcKit(k,false),0),P.keeper[0],P.keeper[1],0);S.lid=put(dt168G('DG165|lid',k=>dg165SarcKit(k,true),0),P.keeper[0],P.keeper[1],0);
@@ -119,13 +119,16 @@ function dg165SPend(S,dt,t,hu,hv,live){const A=DG165SP.amp;for(const p of S.pend
     if(Math.abs(th)<.12&&!p.wh&&Math.abs(hv-q.v)<9){p.wh=1;try{dg165Snd('scrape',.25,1.6);svSnd('whoosh',.35,.7)}catch(_){}}else if(Math.abs(th)>.3)p.wh=0;
     if(live&&Math.abs(hv-q.v)<.62&&Math.abs(hu-bu)<1.25&&by<1.7&&Math.abs(w)>.4){if(dg165Hurt(.3,'SLASHED')){const d=hv<q.v?-1:1;pl.step={x:0,z:d,sp:7,t:.22};burst(gY(pl.position,1.1),0x8a0a0a,18,3,2,.5)}}}}
 // the spike hall: bands of raised spikes rolling toward the entrance; a red glow warns of the next row
-function dg165SSpikes(S,dt,t,hu,hv,live){const Q=S.P.spk,K=S.spk,st=DG165SP.spkStep,k=Math.floor(t/st),fr=t/st-k,warn=fr>1-DG165SP.spkWarn/st,F0=dg165SY(),o=dg165SSpikes.o||(dg165SSpikes.o=new THREE.Object3D());
-  const upAt=(c,r,kk)=>((r+kk+(((c>>2)&1)*2))%4)<2;let mv=false,gw=false;
+// v226 (owner: "there still isn't enough time to get to a clear area between spikes- they raise and lower at the same time so you take
+// damage either way"): a band that drops goes down at the step, the next band rises only DG165SP.spkGap later, so for that moment the
+// rows on both sides of you are clear; the red glow shows DG165SP.spkWarn before a row rises.
+function dg165SSpikes(S,dt,t,hu,hv,live){const Q=S.P.spk,K=S.spk,st=DG165SP.spkStep,gp=DG165SP.spkGap||0,F0=dg165SY(),o=dg165SSpikes.o||(dg165SSpikes.o=new THREE.Object3D());
+  const upAt=(c,r,kk)=>((r+kk+(((c>>2)&1)*2))%4)<2,upT=(c,r,tt)=>upAt(c,r,Math.floor(tt/st))&&upAt(c,r,Math.floor((tt-gp)/st));let mv=false,gw=false;
   const hc=Math.floor((hu-Q.u0)/Q.cs),hr=Math.floor((hv-Q.v0)/Q.cs),inG=hc>=0&&hr>=0&&hc<K.cols&&hr<K.rows;
-  for(let c=0;c<K.cols;c++)for(let r=0;r<K.rows;r++){const i=c*K.rows+r,u=upAt(c,r,k),want=u?1:0;let h=K.h[i];if(h!==want){h+=(want-h)*Math.min(1,dt*(want?28:9));if(Math.abs(h-want)<.01)h=want;K.h[i]=h;mv=true}
+  for(let c=0;c<K.cols;c++)for(let r=0;r<K.rows;r++){const i=c*K.rows+r,u=upT(c,r,t),want=u?1:0;let h=K.h[i];if(h!==want){h+=(want-h)*Math.min(1,dt*(want?28:9));if(Math.abs(h-want)<.01)h=want;K.h[i]=h;mv=true}
     if(u&&!K.up[i]&&Math.abs(c-hc)<6&&Math.abs(r-hr)<5&&Math.random()<.25)dg165Snd('spikes',.18,.9+Math.random()*.3);K.up[i]=u?1:0;
     const [x,z]=dg165SW(Q.u0+c*Q.cs+1,Q.v0+r*Q.cs+1);o.position.set(x,F0-1.0+h*1.0,z);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrix();K.M.setMatrixAt(i,o.matrix);
-    const g=warn&&!u&&upAt(c,r,k+1);o.position.set(x,F0+.07,z);o.scale.setScalar(g?1:.0001);o.updateMatrix();K.G.setMatrixAt(i,o.matrix);gw=gw||g}
+    const g=!u&&upT(c,r,t+DG165SP.spkWarn);o.position.set(x,F0+.07,z);o.scale.setScalar(g?1:.0001);o.updateMatrix();K.G.setMatrixAt(i,o.matrix);gw=gw||g}
   K.M.instanceMatrix.needsUpdate=true;K.G.instanceMatrix.needsUpdate=true;K.G.material.opacity=.35+.3*Math.sin(t*30);
   if(live&&inG){const i=hc*K.rows+hr;if(K.h[i]>.55)dg165Hurt(.24,'IMPALED')}}
 // the fire walk: skull mouths breathe fire across the corridor in a rolling pattern
@@ -145,7 +148,9 @@ function dg165SGate(S,dt,now,hu,hv){const P=S.P,G=P.gate,F0=dg165SY();let g=DG16
         // anyone under the gate is pushed back to the near side
         if(Math.abs(hv-G.v)<.9&&hu>G.u0&&hu<G.u1){const [x,z]=dg165SW(hu,G.v-1.2);pl.position.x=x;pl.position.z=z}
         dg165SDoors();if(hv<G.v)say('⛓ The portcullis crashes down. Step on the plate again.')}}}
-  g=DG165S.gate;const tgt=g&&g.open?1:0;if(g){g.y=(g.y||0)+(tgt-(g.y||0))*Math.min(1,dt*(tgt?2.2:14))}const y=g?g.y:0;if(S.gateM)S.gateM.position.y=F0+y*3.8}
+  // v226: past the gate, the timer is done (the gate stays up behind you; the countdown used to run on over the chasm)
+  g=DG165S.gate;if(g&&g.open&&!g.perm&&hv>G.v+1.2){g.perm=1;g.t=0}
+  const tgt=g&&g.open?1:0;if(g){g.y=(g.y||0)+(tgt-(g.y||0))*Math.min(1,dt*(tgt?2.2:14))}const y=g?g.y:0;if(S.gateM)S.gateM.position.y=F0+y*3.8}
 // the chasm: a slab under you cracks, then falls; on a fallen slab you fall
 function dg165SChasm(S,dt,now,hu,hv,room){const F0=dg165SY(),H=pl.position;let on=null;
   if(room=='bridge')for(const s of S.slabs)if(Math.abs(hu-s.u)<1&&Math.abs(hv-s.v)<1){on=s;break}
@@ -163,19 +168,21 @@ function dg165SChasmReset(){const S=DG165S.S;if(!S)return;const F0=dg165SY();S.s
 // the closing walls
 function dg165SCwReset(){const S=DG165S.S;DG165S.cw=null;enemies.slice().forEach(e=>{if(e.dg165cw&&!e.dead)try{removeE(e)}catch(_){}});if(S){S.cwL.visible=S.cwR.visible=false;S.statues.forEach(s=>{s.anim=null})}dg165SDoors()}
 function dg165SCwStart(S){const R=svRng(Math.floor(performance.now())%9973+11);DG165S.cw={ph:'run',t:0,half:DG165SP.cwStart,sp:0,gT:0};
-  S.statues.forEach(s=>{const g=[0,2,1,3][s.want];s.f=(g+1+Math.floor(R()*3))%4;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
+  S.statues.forEach(s=>{s.f=(s.want+2+Math.floor(R()*4))%8;s.yaw=dg165SFaceYaw(s.f);s.g.rotation.y=s.yaw;s.anim=null});S.cwL.visible=S.cwR.visible=true;
   dg165SDoors();dg165Snd('slam',1.1,.8);shake(.35);dg165Fear(.7);setTimeout(()=>{dg165Snd('grind',1,.8);dg165Snd('rumble',.8,1)},350);
-  dg165Title('The Closing Walls','The doors slam shut. The walls begin to move.','Turn the four knights to face the altar','The Hidden Sanctum');
+  dg165Title('The Closing Walls','The doors slam shut. The walls begin to move.','Turn the eight knights to face the altar','The Hidden Sanctum');
   say('⚔ The walls are closing! Turn each weeping knight (F) until it faces the altar.');dg165Co('cw',1)}
-// facing 0 = +v (south), 1 = +u (east), 2 = −v (north), 3 = −u (west); the statues are N, S, W, E of the altar and want 0, 2, 1, 3
-function dg165SFaceYaw(f){return [0,Math.PI/2,Math.PI,-Math.PI/2][f&3]}
+// v226: eight facings, 45° apart: f = 0 faces +v (south), 2 +u (east), 4 −v (north), 6 −u (west), odd ones between; each statue
+// wants the facing nearest its bearing to the altar (dg165SWant)
+function dg165SFaceYaw(f){return (f&7)*Math.PI/4}
+function dg165SWant(q,alt){const a=Math.atan2(alt[0]-q[0],alt[1]-q[1]);return ((Math.round(a/(Math.PI/4))%8)+8)%8}
 function dg165SCw(S,dt,now,hu,hv,room){const C=S.P.cw,cw=DG165S.cw,F0=dg165SY();
   if(!cw){if(!DG165Q.s.cw&&room=='walls'&&hv>217.2&&!(typeof AWD!='undefined'&&AWD.dead))dg165SCwStart(S);
     if(DG165Q.s.cw&&S.cwL.visible){S.cwL.visible=S.cwR.visible=false}
     S.doorN.position.y=F0+3.9*(S.shutN?0:1);S.doorS.position.y=F0+(DG165Q.s.cw?3.9:0);return}
   // statues turning
-  S.statues.forEach(s=>{if(s.anim){s.anim.t+=dt;const k=Math.min(1,s.anim.t/.6),e=k*k*(3-2*k);s.g.rotation.y=s.anim.a+(s.anim.b-s.anim.a)*e;if(k>=1){s.anim=null;s.yaw=s.g.rotation.y}}});
-  const ok=S.statues.every(s=>s.f===[0,2,1,3][s.want]&&!s.anim);
+  S.statues.forEach(s=>{if(s.anim){s.anim.t+=dt;const k=Math.min(1,s.anim.t/.45),e=k*k*(3-2*k);s.g.rotation.y=s.anim.a+(s.anim.b-s.anim.a)*e;if(k>=1){s.anim=null;s.yaw=s.g.rotation.y}}});
+  const ok=S.statues.every(s=>s.f===s.want&&!s.anim);
   if(cw.ph=='run'){cw.t+=dt;cw.half=DG165SP.cwStart-(DG165SP.cwStart-DG165SP.cwEnd)*Math.min(1,cw.t/DG165SP.cwT);cw.gT-=dt;if(cw.gT<=0){cw.gT=1.25;dg165Snd('grind',.7,.75+Math.random()*.1)}
     dg165Fear(.2+.6*cw.t/DG165SP.cwT);if(cw.t>DG165SP.cwT*.7&&Math.random()<dt*2)dg165Snd('heart',.6,1+cw.t/DG165SP.cwT*.4);
     // the dead in the walls' niches climb out (and are crushed if they are still there when the walls pass)
@@ -193,7 +200,7 @@ function dg165SCw(S,dt,now,hu,hv,room){const C=S.P.cw,cw=DG165S.cw,F0=dg165SY();
   S.doorN.position.y=F0+3.9*(S.shutN?0:1);S.doorS.position.y=F0+(DG165Q.s.cw?3.9:0)}
 function dg165SCwDead(S,n){const lv=dg165Lv(20),C=S.P.cw;for(let i=0;i<n;i++){const sd=i%2?1:-1,v=C.doorN+6+Math.random()*24,u=C.mid+sd*(DG165S.cw.half-1.2),[x,z]=dg165SW(u,v);
   setTimeout(()=>{try{if(!DG165S.cw||DG165S.cw.ph!='run')return;const e=spawnEnemy(i%2?'skeleton':'ghoul',x,z,lv[1],{agg:1,minion:1});if(e){e.agg=1;e.hunt=1;e.dg165cw=1;e.dg165r=1;burst(gY(V(x,0,z),1),0xc8c0a8,20,2,2,.6);dg165Snd('gasp',.6,.7)}}catch(err){console.warn('v165 cw dead',err)}},i*600)}}
-function dg165STurn(i){const S=DG165S.S,s=S&&S.statues[i];if(!s||s.anim||!DG165S.cw||DG165S.cw.ph!='run')return;const a=s.g.rotation.y;s.f=(s.f+1)&3;s.anim={t:0,a,b:a+Math.PI/2};dg165Snd('grind',.6,1.4);dg165Co('turn',i,s.f)}
+function dg165STurn(i){const S=DG165S.S,s=S&&S.statues[i];if(!s||s.anim||!DG165S.cw||DG165S.cw.ph!='run')return;const a=s.g.rotation.y;s.f=(s.f+1)&7;s.anim={t:0,a,b:a+Math.PI/4};dg165Snd('grind',.6,1.4);dg165Co('turn8',i,s.f)}   // v226: 'turn8' (8 facings; 'turn' meant 4)
 // scares: the gallery's passing shade, the Keeper's lid
 function dg165SScares(S,dt,now,hu,hv){const sc=DG165S.scare;
   if(!sc.gal&&hv>262&&hv<284){sc.gal=1;sc.dark=now+2400;dg165Snd('wail',.9,.9);dg165Fear(1);setTimeout(()=>dg165Snd('whisper',.7,.8),900);setTimeout(()=>dg165Snd('whisper',.6,1.1),1500);
@@ -220,7 +227,7 @@ function dg165SRise(){hero.hp=heroMax();hero.mp=mpMax();try{party.forEach(c=>c.h
 // prompts inside: the knights, the flooded stair, the stair back up
 {const f=worldPrompt;worldPrompt=function(){try{if(dg165SIn()&&DG165S.S){const S=DG165S.S,[hu,hv]=dg165SL(pl.position.x,pl.position.z);
     if(DG165S.cw&&DG165S.cw.ph=='run'){let best=-1,bd=2.3;S.statues.forEach((s,i)=>{const d=Math.hypot(hu-s.u,hv-s.v);if(d<bd){bd=d;best=i}});
-      if(best>=0){const s=S.statues[best],good=s.f===[0,2,1,3][s.want];return {label:(good?'✦ This knight faces the altar · F · turn it anyway':'F · Turn the weeping knight'),fn:()=>dg165STurn(best)}}}
+      if(best>=0){const s=S.statues[best],good=s.f===s.want;return {label:(good?'✦ This knight faces the altar · F · turn it anyway':'F · Turn the weeping knight'),fn:()=>dg165STurn(best)}}}
     if(Math.hypot(hu-S.P.exit[0],hv-S.P.exit[1])<2.4)return {label:'F · Descend the flooded stair into '+INSL[21].n,fn:()=>dg165SFinish()};
     if(Math.hypot(hu-80,hv-10.4)<2.4)return {label:'F · Climb back up to the graveyard ('+INSL[20].n+')',fn:()=>dg165SLeave()}}}catch(e){if(!DG165S.err++)console.warn('v165 sanctum prompt',e)}return f.apply(this,arguments)}}
 // ---------------- the rules while inside ----------------
