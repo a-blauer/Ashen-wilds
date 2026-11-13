@@ -111,11 +111,11 @@ function co165Sim(V){return V.drv==='me'||(V.drv==='chd'&&(V.gun==='me'||!co151O
   if(own){if(co165Sim(V))return f.apply(this,arguments);return}
   if(!co151Host())return;if(co165Sim(V))return f.apply(this,arguments);if(V&&V.id)CO165.vh[V.id]=(CO165.vh[V.id]||0)+d}}
 CO165.vh={};
-function co165VSync(now){if(!SR165.on||!co151On()||now-CO165.tV<100)return;CO165.tV=now;SR165.V.forEach(V=>{if(!co165Sim(V))return;co165Send(['s5v',V.id,co165R(V.x),co165R(V.z),co165R(V.h),co165R(V.v),V.boost|0,co165R(V.st),Math.round(V.hp),Math.round(V.s),co165R(V.aY),co165R(V.aP),V.wreck|0])});
+function co165VSync(now){if(!SR165.on||!co151On()||now-CO165.tV<100)return;CO165.tV=now;SR165.V.forEach(V=>{if(!co165Sim(V))return;co165Send(['s5v',V.id,co165R(V.x),co165R(V.z),co165R(V.h),co165R(V.v),V.boost|0,co165R(V.st),Math.round(V.hp),Math.round(V.s),co165R(V.aY),co165R(V.aP),V.wreck|0,co165R(V.air>0?Math.max(0,V.y-GH(V.x,V.z)):0),V.gap==null?'':co165R(V.gap)])});   // v227: + height in the air, the storm's distance
   // a gunner's aim goes to the driver's screen
   const me=SR165.me;if(me&&me.gun==='me'&&!co165Sim(me))co165Send(['s5a',me.id,co165R(me.aY),co165R(me.aP)]);
   for(const id in CO165.vh){const d=CO165.vh[id];if(d>0)co165Send(['s5h',id,Math.round(d*10)/10]);delete CO165.vh[id]}}
-function co165Shot(V,A){if(co151On())co165Send(['s5f',V.id,co165R(A.x),co165R(A.z)])}
+function co165Shot(V,A,hv){if(co151On())co165Send(hv?['s5f',V.id,co165R(A.x),co165R(A.z),1]:['s5f',V.id,co165R(A.x),co165R(A.z)])}   // v227: 1 = the heavy shell
 function co165Worm(W){if(co151On()&&co151Host())co165Send(['s5wy',Math.round(W.s*10)/10,co165R(W.o0),co165R(W.o1),co165R(W.a.x),co165R(W.a.z),co165R(W.b.x),co165R(W.b.z)])}
 {const f=sr165Sting;sr165Sting=function(from,x,z,T){if(co151On()&&co151Host()&&!CO165.rx)co165Send(['s5st',co165R(from.x),co165R(from.y),co165R(from.z),co165R(x),co165R(z),co165R(T)]);return f.apply(this,arguments)}}
 function co165RunWin(){co165Credit('run');if(co151On())co165Send(['s5win'])}
@@ -153,9 +153,9 @@ function co165RunWin(){co165Credit('run');if(co151On())co165Send(['s5win'])}
       else if(t==='s5ga'){const pr=msg.peer;if(iHost&&!SR165.on&&SS165.c3.built)setTimeout(()=>{if(!SR165.on)co165RunGo(co165Crews(pr))},0)}
       else if(t==='s5go'){let C=null;try{C=JSON.parse(String(q[1]||''))}catch(_){}if(Array.isArray(C)&&C.length<=8&&ss165Here(2))co165RunUse(C.filter(c=>c&&typeof c.id==='string'))}
       else if(t==='s5v'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.drvOrig===msg.peer&&V.drv==='chd'&&V.gun==='me'){V.drv=V.drvOrig;V.drvOrig=null;if(V.chd){V.chd.root.parent&&V.chd.root.parent.remove(V.chd.root);V.chd=null}say('🐭 Cheddar hands the wheel back.')}
-        if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
+        if(V&&!co165Sim(V)){V.net={x:+q[2],z:+q[3],h:+q[4],v:+q[5],b:q[6]|0,st:+q[7],hp:+q[8],s:+q[9],ya:+q[13]||0,gap:q[14]==null||q[14]===''||!isFinite(+q[14])?null:+q[14]};V.hp=+q[8];V.netT=performance.now();if(V.gun!=='me'){V.aY=+q[10];V.aP=+q[11]}if(q[12]&&!V.wreck){V.wreck=1;burst(gY(V.m.position,1.5),0xff8a3a,60,4,3,.8)}else if(!q[12])V.wreck=0}}
       else if(t==='s5a'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&V.gun!=='me'){V.aY=+q[2]||0;V.aP=+q[3]||0}}
-      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false)}}   // a partner's own shells hurt the host's monsters through their copies
+      else if(t==='s5f'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&isFinite(q[2])&&isFinite(q[3])){V.aim=new THREE.Vector3(+q[2],V.y+.9,+q[3]);V.fT=0;sr165Fire(V,false,q[4]?1:0)}}   // a partner's own shells hurt the host's monsters through their copies
       else if(t==='s5h'){const V=SR165.V.find(o=>o.id===q[1]);if(V&&co165Sim(V)){CO165.ap=1;try{sr165Hurt(V,Math.max(0,Math.min(200,+q[2]||0)),'host')}finally{CO165.ap=0}}}
       else if(t==='s5wy'){if(fromHost&&SR165.on)sr165Worm(+q[1],+q[2],+q[3],false,[+q[4],+q[5],+q[6],+q[7]])}
       else if(t==='s5st'){if(fromHost&&SR165.on){const from=new THREE.Vector3(+q[1],+q[2],+q[3]);sr165Sting(from,+q[4],+q[5],+q[6]);const g=SR165F.st[SR165F.st.length-1];if(g)g.noHit=1}}

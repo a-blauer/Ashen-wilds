@@ -26,16 +26,16 @@ JS=r"""async()=>{const o={},V3=THREE.Vector3,wait=ms=>new Promise(r=>setTimeout(
     SKR226.rx=0;SKR226.ry=0;Object.defineProperty(document,'pointerLockElement',{configurable:true,get:()=>gl});
     gl.dispatchEvent(new PointerEvent('pointermove',{movementX:60,movementY:-20,bubbles:true}));delete document.pointerLockElement;o.look=[+SKR226.rx.toFixed(3),+SKR226.ry.toFixed(3)];
     // keys (Cheddar drives): D sweeps right
-    mOn=false;SKR226.rx=0;K.d=1;skr226Steer(V,.5);K.d=0;o.key=+SKR226.rx.toFixed(3);
+    mOn=false;SKR226.rx=0;{const d0=V.drv;V.drv='p1';K.d=1;skr226Steer(V,.5);K.d=0;V.drv=d0}o.key=+SKR226.rx.toFixed(3);   // v227: keys sweep the crosshair only while a partner steers
     // shells to kill each kind
     const fwd=(s,ox)=>P.at(V.s+s,ox);const mk=(k)=>{const [x,z]=fwd(14,4);return k==='sb'||k==='gs'?skr226Spawn(k,x,z):sr165Foe(k=='sc'?'scarab':'scorp',x,z,k)};
-    o.shots={};for(const k of ['sc','sp','sb','gs']){const e=mk(k);if(!e){o.shots[k]=-1;continue}let n=0;while(!e.dead&&n<40){const f=sr165FoeList().find(q=>q.e===e);if(!f)break;f.hit(1);n++}o.shots[k]=n;if(!e.dead)removeE(e)}
+    o.shots={};for(const k of ['sc','sp','sb','gs']){const e=mk(k);if(!e){o.shots[k]=-1;continue}let n=0;while(!e.dead&&n<90){const f=sr165FoeList().find(q=>q.e===e);if(!f)break;f.hit(1);n++}o.shots[k]=n;if(!e.dead)removeE(e)}
     // splash (.6) kills a scarab
     {const e=mk('sc');const f=sr165FoeList().find(q=>q.e===e);f.hit(.6);o.splash=!!e.dead;if(!e.dead)removeE(e)}
     // behind the guns: it falls behind and is gone
     {sr165Place(V,300,0);const [x,z]=P.at(V.s-9,4);const e=sr165Foe('scarab',x,z,'sc');for(let i=0;i<6;i++){__T+=33;eTick(e,1/30,__T)}o.fell=!!e.fall226;sr165Place(V,V.s+45,0);for(let i=0;i<10&&!e.dead&&enemies.includes(e);i++){__T+=33;eTick(e,1/30,__T)}o.gone=!enemies.includes(e)||e.dead}
     // the speed cap
-    {V.thr=1;V.st=0;V.boost=0;V.trap=0;for(let i=0;i<150;i++)sr165Drive(V,1/30);o.vmax=[+V.v.toFixed(2),SKR226.v]}
+    {V.thr=1;V.st=0;V.boost=0;V.trap=0;for(let i=0;i<150;i++)sr165Drive(V,1/30);o.vmax=[+V.v.toFixed(2),SKR227.v]}
     // worms take 8
     {const W=sr165Worm(V.s+40,-5,5,true);o.worm=W?W.hp:null}
     // the Brood Scorpion past ~40%
@@ -74,11 +74,11 @@ def s(pg):
     a,b=r['arc'];ok(a<=b+1e-3 and a>b-.08 and r['aimArc']<=b+1e-3,'the guns stop at the half circle (%s / %s, aim %s)'%(a,b,r['aimArc']))
     ok(r['look'][0]>.05 and r['look'][1]>.02,'mouse-look moves the crosshair %s'%r['look'])
     ok(r['key']>.5,'D sweeps the crosshair right %s'%r['key'])
-    ok(r['shots']=={'sc':1,'sp':3,'sb':6,'gs':16},'shells to kill: scarab 1, scorpion 3, Shellback 6, Brood Scorpion 16 %s'%r['shots'])
-    ok(r['splash'],'a shell\'s blast kills a scarab')
+    ok(r['shots']=={'sc':1,'sp':5,'sb':9,'gs':55},'shells to kill (v227): scarab 1, scorpion 5, Shellback 9, Brood Scorpion 55 %s'%r['shots'])
+    ok(not r['splash'],'v227: a glancing .6 of a shell no longer kills a scarab')
     ok(r['fell'] and r['gone'],'a creature behind the guns falls behind and is gone (%s %s)'%(r['fell'],r['gone']))
     ok(r['vmax'][0]<=r['vmax'][1]+.05,'the Skimmer cruises at %s at most %s'%(r['vmax'][1],r['vmax']))
-    ok(r['worm']==8,'worms take 8 shells (%s)'%r['worm'])
+    ok(r['worm']==12,'worms take 12 shells (v227) (%s)'%r['worm'])
     ok(r['brood'],'a Brood Scorpion hunts the Skimmer past 40%')
     ok(r['bus'],'the effects bus is rewired (make-up, presence, limiter)')
     ok(-9<=r['hit']<=-.3 and r['slash']>-15 and r['swing']>-28,'hits stand out without clipping: hit (blunt) %s dB, slash %s, swing %s'%(r['hit'],r['slash'],r['swing']))

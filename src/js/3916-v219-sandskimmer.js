@@ -78,7 +78,7 @@ function skr218Scarab(e,dt,now){const m=e.m,[V]=skr218Near(m.position);if(!V)ret
   if(K.st==='leap'){const k=Math.min(1,K.t/SKR218.leap),bx=V.x+fx*K.f+lx*K.side*1.35,bz=V.z+fz*K.f+lz*K.side*1.35,by=V.y+.9;
     m.position.set(K.a.x+(bx-K.a.x)*k,K.a.y+(by-K.a.y)*k+Math.sin(k*Math.PI)*1.6,K.a.z+(bz-K.a.z)*k);m.rotation.y=Math.atan2(bx-K.a.x,bz-K.a.z);animC(m,now,true,6);
     if(k>=1){e.k218=null;if(V.cling.length>=SKR218.cling)return true;e.cl={V,f:Math.max(-2.6,Math.min(2.6,K.f)),l:K.side*1.35};V.cling.push(e);svSnd('thud',.4,1.4);
-      if(V===SR165.me)say('🪲 A scarab leaps aboard! Shoot it off — or boost!')}
+      if(V===SR165.me&&!(performance.now()-(SKR218.saidT||0)<12000)){SKR218.saidT=performance.now();say('🪲 A scarab leaps aboard! Shoot it off — or boost!')}}
     return true}
   return false}
 {const f=sr165FoeAI;sr165FoeAI=function(e,dt,now){if(SKR218.on&&e&&e.sr165==='sc'&&!e.cl&&SR165.on&&SR165.ph==='run'){

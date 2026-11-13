@@ -214,4 +214,4 @@ function skr226Hud(){const H=$('sr165H');if(!H)return;let b=$('sk226B');const g=
 {const f=sr165End;sr165End=function(){const r=f.apply(this,arguments);try{SKR226.space=0;SKR226.heat=0;SKR226.hot=0;skr226Draw(performance.now());skr226Glow(0)}catch(_){}return r}}
 // the start card says how to aim
 {const f=sr165Go;sr165Go=function(crews){SKR226.rx=0;SKR226.ry=-.12;SKR226.hotSaid=0;SKR226.sbSaid=0;const r=f.apply(this,arguments);
-  setTimeout(()=>{try{const V=SR165.me;if(SR165.on&&V&&V.gun==='me')say('🎯 Aim with the mouse (with or without mouse-look)'+(V.drv!=='me'?' or A / D':'')+' · left click or Space fires · the guns cover the front and both sides.')}catch(_){}},1800);return r}}
+  setTimeout(()=>{try{const V=SR165.me;if(SR165.on&&V&&V.gun==='me'&&!(typeof SKR227!='undefined'&&SKR227.on))say('🎯 Aim with the mouse (with or without mouse-look)'+(V.drv!=='me'?' or A / D':'')+' · left click or Space fires · the guns cover the front and both sides.')}catch(_){}},1800);return r}}

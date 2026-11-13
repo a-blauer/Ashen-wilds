@@ -23,6 +23,6 @@ chk('the partner\'s guns know them as Shellback and Brood Scorpion',k=='gs,sb',k
 H.evaluate("()=>{const V=SR165.me;sr165Worm(V.s+40,-5,5,true)}")
 w=mp_until("()=>SR165F.wy.length>0",15000,[G])
 hp=G.evaluate("()=>SR165F.wy.map(W=>W.hp).join(',')")
-chk('a worm sent by the host takes 8 shells on the partner\'s screen',w and hp.startswith('8'),hp)
+chk('a worm sent by the host takes 12 shells (v227) on the partner\'s screen',w and hp.startswith('12'),hp)
 if fails:print('FAILED',fails)
 else:print('v226 co-op: checked')

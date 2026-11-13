@@ -9,7 +9,8 @@
 //    end the ridges climb into a cliff with the cave of the Den in it.
 //  * The hazards along the way (sr165Obs, seeded): salt boulders and spires to steer round, sand traps (quicksand) that grip the
 //    runners. Checkpoints at a quarter, half and three quarters (banners on poles).
-function sr165Cfg(){return sr165Cfg.c||(sr165Cfg.c={hw:10.5,cp:[[40,560],[44,500],[70,450],[130,418],[205,440],[262,498],[340,522],[408,476],[424,396],[366,342],[276,330],[186,302],[96,262],[60,192],[98,120],[186,88],[278,118],[356,160],[418,118],[432,60],[430,26]]})}
+// v227: a longer, sweeping course (six long rows joined by wide hairpins, ~2800 long) for a much faster Skimmer; it was ~1580
+function sr165Cfg(){return sr165Cfg.c||(sr165Cfg.c={hw:10.5,cp:[[54,524],[88,524],[164,540],[240,512],[316,510],[392,524],[425,510],[439,477],[425,444],[392,430],[316,442],[240,444],[164,414],[88,430],[55,416],[41,383],[55,350],[88,336],[164,322],[240,352],[316,324],[392,336],[425,322],[439,289],[425,256],[392,242],[316,226],[240,254],[164,256],[88,242],[55,228],[41,195],[55,162],[88,148],[164,136],[240,134],[316,164],[392,148],[425,134],[439,101],[425,68],[392,54],[316,68],[240,38],[164,66],[88,54],[58,54]]})}
 var SR165C=sr165Cfg();
 // 0380's freeSpot (secrets, treasure, events) must not see the Run's corridor, which is walkable since v165 (this later declaration wins)
 function freeSpot(x,y,r){if(x>=714&&y>=1452&&x<1174&&y<2022)return false;   // v165: never inside the Sandstorm Run (keeps every older world's spots)
@@ -44,21 +45,28 @@ function sr165Map(m,bio,DW,I,bi){const D=sr165Dist(),hw=sr165Cfg().hw;
   for(let y=I.y0;y<I.y0+I.h;y++)for(let x=I.x0;x<I.x0+I.w;x++){if(!m[y])continue;const k=(y-I.y0)*D.w+(x-I.x0),d=D.best[k];bio[y][x]=bi;
     if(d<=hw){m[y][x]=sr165Hash(x,y)<.1?'a':'.';DW[y*W+x]=d-hw}else{m[y][x]='';DW[y*W+x]=Math.min(9,d-hw)}}}
 // 3150 → after every other height pass: the swells of the corridor, the dunes either side, the cliff at the end
-function sr165Terrain(I){const D=sr165Dist(),P=sr165Path(),hw=sr165Cfg().hw,HI=(i,j)=>(j+HPD)*HW+i+HPD;
+function sr165Terrain(I){const D=sr165Dist(),P=sr165Path(),hw=sr165Cfg().hw,HI=(i,j)=>(j+HPD)*HW+i+HPD;const RM=sr165Ramps();
   for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const X=Math.max(0,Math.min(D.w-1,i-I.x0)),Z=Math.max(0,Math.min(D.h-1,j-I.y0)),k=Z*D.w+X,d=D.best[k],s=D.si[k]<0?0:D.si[k];
     const g0=.6+(fbm2(i*.035,j*.035,3)-.5)*1.6+Math.sin(s*.045)*.5;let h=g0;
     if(d>hw-1){const t=Math.min(1,Math.max(0,(d-hw+1)/8));h=g0+Math.pow(t,1.5)*(9+fbm2(i*.05+7,j*.05+3,3)*12)+Math.max(0,d-hw-8)*.35}
     // the end: ridges rise into a cliff round the cave
     const e=Math.max(0,s-(P.S-40))/40;if(e>0&&d>hw-2)h+=e*e*26;
+    // v227: dune crests across the course (a long windward slope, a short slip face): the Skimmer flies off them
+    if(d<hw+4&&D.si[k]>=0){for(const r of RM){const u=s-r.s;if(u>-r.L&&u<=0)h+=r.H*Math.pow((u+r.L)/r.L,1.3);else if(u>0&&u<2.5)h+=r.H*Math.pow(1-u/2.5,2)}}
     HF[HI(i,j)]=h}}
+// v227: where the crests stand (seeded, on the straighter stretches; the same for everyone): {s (the lip), L (the slope's length), H}
+function sr165Ramps(){if(sr165Ramps.c)return sr165Ramps.c;const P=sr165Path(),rn=dkRng(22701),L=[],bend=(a,b)=>{let m=0;for(let q=a;q<b;q+=6){const d=P.yaw(q+6)-P.yaw(q);m+=Math.abs(Math.atan2(Math.sin(d),Math.cos(d)))}return m};
+  let s=150;while(s<P.S-130){if(bend(s-14,s+52)<.3){L.push({s:Math.round(s),L:11,H:1.9+rn()*.5});s+=210+rn()*110}else s+=18}
+  return sr165Ramps.c=L}
 // ---------------- the hazards (seeded; the same for everyone) ----------------
 function sr165Obs(){if(sr165Obs.c)return sr165Obs.c;const P=sr165Path(),rn=dkRng(16590),L=[];let s=110;
   while(s<P.S-45){const r=rn(),k=r<.42?'rock':r<.78?'trap':'spire',o=(rn()-.5)*(SR165C.hw*1.3),rad=k=='rock'?1.5+rn()*.9:k=='trap'?2.6+rn()*.9:1.0+rn()*.3;
     const [x,z]=P.at(s,o);L.push({k,s,o,x,z,r:rad,ry:rn()*6.28});
     // a second one beside it sometimes (never closing the way: a gap of 6 at least)
     if(rn()<.35){const k2=rn()<.5?'rock':'spire',r2=k2=='rock'?1.4+rn()*.6:1.0,o2=o>0?o-rad-r2-5.5-rn()*2:o+rad+r2+5.5+rn()*2;if(Math.abs(o2)<SR165C.hw-1.5-r2){const [x2,z2]=P.at(s+(rn()-.5)*4,o2);L.push({k:k2,s,o:o2,x:x2,z:z2,r:r2,ry:rn()*6.28})}}
-    s+=22+rn()*18}
-  return sr165Obs.c=L}
+    s+=26+rn()*22}
+  // v227: none before a crest's lip or where the Skimmer comes down behind it
+  const RM=sr165Ramps();return sr165Obs.c=L.filter(o=>!RM.some(r=>o.s>r.s-24&&o.s<r.s+56))}
 function sr165CPs(){const P=sr165Path();return [0,P.S*.25,P.S*.5,P.S*.75].map(s=>Math.round(s))}
 // ---------------- the level's rules and look ----------------
 SP152.R.sandrun={park:1,noMount:'🛷 You are riding the Sandskimmer.',noRecall:'🌪️ No way out in the storm — ride for the Den (or 🏳 turn back).',
