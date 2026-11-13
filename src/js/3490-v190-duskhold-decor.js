@@ -20,7 +20,7 @@ var DC190={v:189};
 var DC190_BUDGET={'*':9000,trees:9500,oak:16000,torches:9000,total:170000};
 // set pieces against the ward walls (town-local), from stage s on
 var DC190_SET=[{k:'pavilion',s:1,x:17.6,z:15.8,r:2.4},{k:'oak',s:2,x:-17.4,z:22.4,r:2.2},{k:'garden',s:3,x:17.1,z:29.6,r:3.4},{k:'beacon',s:4,x:-17.4,z:37.6,r:2.0}];
-function dc190WallClear(side,z,F){return !DC190_SET.some(q=>F.s>=q.s&&Math.sign(q.x)===side&&Math.abs(q.z-z)<q.r)}
+function dc190WallClear(side,z,F){}
 // ---------------- kit helpers (the town kit takes non-indexed geometry, no jitter for these precise shapes) ----------------
 function dc190NI(g){let n=g.userData.ni189;if(!n){n=g.index?g.toNonIndexed():g.clone();['normal','uv','color'].forEach(a=>{if(n.attributes[a])n.deleteAttribute(a)});g.userData.ni189=n}return n}
 function dc190P(k,t,col,geo,M,mt){k.P.push({t,col,geo:dc190NI(geo),m:M,j:0,f:.95+.1*k.R(),mt:mt===undefined?k.mt:mt,s189:1});return k}

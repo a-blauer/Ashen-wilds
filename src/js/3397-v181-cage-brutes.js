@@ -12,31 +12,17 @@ function b7_FaceHuman(o){o=o||{};const nz=o.nose||1,br=o.brow||1,ch=o.cheek||1;r
   d+=.009*br*cgG(x,y,0,1.648,.05,.006);d-=.004*cgG(x,y,0,1.558,.02,.003);d+=.009*(o.chin||1)*cgG(x,y,0,1.538,.018,.012);return d*f}}
 function b7_FacePaint(S,m,skin,o){o=o||{};if(m.part=='head'&&m.s>.3){const bx=m.x/S.hs;if(Math.abs(Math.abs(bx)-(o.ex||.036))<.02&&Math.abs(m.y-S.hp(0,o.ey||1.629,0)[1])<.012*S.hs)return o.sock==null?mdSh(skin,.45):o.sock;
   if(Math.abs(m.y-S.hp(0,o.my||1.557,0)[1])<.0042*S.hs&&Math.abs(bx)<(o.mw||.026))return o.lip==null?0x2a1210:o.lip}return null}
-function cgFaceTroll(o){o=o||{};return (x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math.min(1,n[2]*1.5);let d=0;
-  d+=.05*(o.nose||1)*cgG(x,y,0,1.582,.016,.02)+.025*(o.nose||1)*cgG(x,y,0,1.608,.012,.014);                      // a long, drooping nose
-  [-1,1].forEach(s=>{d-=.018*cgG(x,y,s*.04,1.63,.015,.01);d+=.006*cgG(x,y,s*.062,1.6,.016,.012)});d+=.022*cgG(x,y,0,1.65,.06,.009);  // small deep eyes under a heavy brow
-  d-=.007*cgG(x,y,0,1.553,.04,.004);d+=.014*(o.jaw||1)*cgG(x,y,0,1.535,.04,.016);return d*f}}
 const BRUTEJAW=(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);return (i>=1&&i<=4&&sa>-.2&&side>.5)?.012:0};
-function cgBruteBody(B,k,C,S,K,o){o=o||{};const M=C.M;cgSculpt(M,{head:1},S.sculpt(o.face||b7_FaceHuman({nose:1.2,nw:1.5,brow:1.8,chin:1.4,cheek:1.3})));
-  if(o.sculpt)o.sculpt(M);
-  M.b7col=m=>(o.paint&&o.paint(m))||b7_FacePaint(S,m,K.sk,{sock:mdSh(K.sk,.35),mw:.032})||(m.s<-.4?mdSh(K.sk,.82):a181Nz(K.sk,m,.22,16));M.b7hide=[];
-  cgEyes(k,M,S,K.eye,o.ex||.038,1.629,o.er||.9,-.002);if(o.tusks)b7_Tusks(k,M,S,.034,1.552,o.tusks,o.tr||.012,0xe8e0c8);
-  if(o.ears)cgEars(k,M,S,K.sk,1.625,o.ears,.3,.5,.024);
-  [-1,1].forEach(s=>{if(!o.noHands)cgFingers(k,S,s,K.hand||K.sk,K.fist&&K.fist(s)?'fist':'claw',o.fl||1,K.claw||mdSh(K.sk,.5),K.fist&&K.fist(s)?0:(o.tip||.02));if(!o.boots)cgToes(k,S,s,mdSh(K.sk,.85),o.toe||.015,K.claw)});return M}
 // ---------------- small helpers ----------------
 // a shell (clothes, armour) whose rim lies on the skin; the skin under it is not drawn (b7_Body draws the rest of the body
 // at the end), so a covered body costs no extra triangles
 function b7_Sh(B,M,sel,off,col,o){o=Object.assign({},o||{},{rim:0});cgShell(B,M,sel,off,col,o);(M.b7hide||(M.b7hide=[])).push(sel)}
-function b7_Body(B,M){const H=M.b7hide||[];cgEmit(B,M,M.b7col,{keep:m=>!H.some(f=>f(m))})}
 // the torso bone at height y
 function b7_TB(S,y){return y>S.J.chest[1]-.04?'chest':y>S.J.spine[1]?'spine':'pelvis'}
 // a point on the face (base head coordinates x, y), found by a ray from the front
 function b7_Face(M,S,x,y){const q=S.hp(x,y,0);return cgRay(M,[q[0],q[1],q[2]+.4],[0,0,-1],{head:1})}
 // a point on the top of the head (base x, z), found by a ray from above
 function b7_Top(M,S,x,z){const q=S.hp(x,1.7,z);return cgRay(M,[q[0],q[1]+.4,q[2]],[0,-1,0],{head:1})}
-// big tusks jutting up from the lower jaw, their roots inside the lip
-function b7_Tusks(k,M,S,x,y,len,r,col){[-1,1].forEach(s=>{const p=b7_Face(M,S,s*x,y);if(!p)return;const a=[p[0]-s*.002*S.hs,p[1]-.008*S.hs,p[2]-.01*S.hs],
-  b=[p[0]+s*len*.2*S.hs,p[1]+len*.95*S.hs,p[2]+len*.15*S.hs];k.L('head','c',col,a,b,r*S.hs,.0025,5)})}
 // a fan of spikes across the crown, swept back (the trolls' crest)
 function b7_Crest(k,M,S,col,col2,n,len,r){const mid=(n-1)/2;for(let i=0;i<n;i++){const x=(i-mid)*.024,z=-.012-Math.abs(i-mid)*.006,p=b7_Top(M,S,x,z);if(!p)continue;
   const L=len*(1-Math.abs(i-mid)/(mid+1)*.4)*S.hs,a=[p[0],p[1]-.014*S.hs,p[2]+.004],b=[p[0]+(i-mid)*.2*L,p[1]+L*.5,p[2]-L*.86];k.L('head','c',i%2?col2:col,a,b,r*S.hs,.002,4)}}

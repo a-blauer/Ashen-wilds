@@ -17,7 +17,7 @@ SPEC.Gloomcap=Object.assign({},SPEC.Gloomcap,{anim:'quad',hd:[0,.33,.33],bk:[['p
     hl0:['pelvis',-.15,.22,-.18],hl1:['hl0',-.3,.31,-.24],hl2:['hl1',-.38,.05,-.29],hr0:['pelvis',.15,.22,-.18],hr1:['hr0',.3,.31,-.24],hr2:['hr1',.38,.05,-.29],
     fl0:['chest',-.15,.24,.15],fl1:['fl0',-.29,.32,.22],fl2:['fl1',-.37,.05,.29],fr0:['chest',.15,.24,.15],fr1:['fr0',.29,.32,.22],fr2:['fr1',.37,.05,.29]},
   legs:[['hl',0],['hr',Math.PI],['fl',Math.PI],['fr',0]]});
-if(typeof EVO100!='undefined'&&EVO100.surf)Object.keys(EVO100.surf).forEach(k=>{if(/^Gloomcap/.test(k))delete EVO100.surf[k]});
+if(typeof EVO100!='undefined'&&EVO100.surf)Object.keys(EVO100.surf).forEach(k=>{});
 // body sections [z, centre y, half width, above, below, bones]
 FC186.B={Gloomcap:[[-.38,.2,.04,.035,.03,['tail0','tail0',0]],[-.32,.22,.16,.11,.08,['pelvis','tail0',.3]],[-.22,.24,.23,.15,.1,['pelvis','pelvis',0]],
     [-.1,.26,.27,.18,.11,['pelvis','spine',.5]],[.03,.27,.28,.19,.11,['spine','spine',0]],[.14,.27,.25,.17,.1,['chest','chest',0]],

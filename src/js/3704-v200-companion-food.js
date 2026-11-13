@@ -30,28 +30,18 @@ function cf200Group(){const row=r=>{const ok=recOk(r[3]),own=cnt(r[0]);
   const mine=CF200.R.filter(q=>cnt(q[0])>0),sec=[...$('xwB').querySelectorAll('.sec')].find(x=>/^yours/i.test(x.textContent.trim())),rows=sec&&sec.nextElementSibling;
   if(rows&&mine.length){if(!rows.querySelector('.rw'))rows.innerHTML='';rows.insertAdjacentHTML('beforeend',mine.map(q=>`<div class="rw"><span class="rn">${q[2]} <b>${q[1]}</b> <span class="mut">×${cnt(q[0])}</span><small>Companion food · put it in a companion's food pouch (P)</small></span></div>`).join(''))}}catch(e){console.warn('v200 cook',e)}return r}}
 // ---------------- the pouch ----------------
-function cf200P(c){if(!Array.isArray(c.cf200))c.cf200=[];c.cf200=c.cf200.filter(s=>s&&cf200R(s.k)&&s.n>0);return c.cf200}
-function cf200Put(c,k,n){if(!c||!cf200R(k))return;const P=cf200P(c);let s=P.find(q=>q.k==k);if(!s){if(P.length>=CF200.max)return say('🍖 '+c.n+'\'s pouch holds '+CF200.max+' kinds of food.');s={k,n:0};P.push(s)}
-  const m=Math.min(n,CF200.stack-s.n,cnt(k));if(m<=0)return say(s.n>=CF200.stack?'🍖 That stack is full ('+CF200.stack+').':'You have none left.');sup[k]-=m;s.n+=m;if(!s.n)P.splice(P.indexOf(s),1)}
-function cf200Take(c,k){const P=cf200P(c),s=P.find(q=>q.k==k);if(!s)return;giveS(k,s.n);P.splice(P.indexOf(s),1)}
+function cf200P(c){}
+function cf200Put(c,k,n){}
+function cf200Take(c,k){}
 // the bite: shown on this page and on co-op partners' pages
 function cf200Fx(x,y,z,amt,ic){try{const p=new THREE.Vector3(x,y,z);burst(p,0x6ee7b7,18,1.6,2,.6);dn(p,(ic||'🍖')+' +'+amt,'#6ee7b7',-12)}catch(_){}}
 try{sg2Reg(['cf200Fx'])}catch(_){}
-function cf200Eat(c,i){const P=cf200P(c);if(!P.length)return false;const mx=M(c),miss=mx-c.h;
-  const L=P.slice().sort((a,b)=>cf200R(a.k)[5]-cf200R(b.k)[5]);let s=L.find(q=>cf200R(q.k)[5]*mx>=miss*.85)||L[L.length-1];
-  const r=cf200R(s.k),amt=Math.max(1,Math.round(mx*r[5]));c.h=Math.min(mx,c.h+amt);c._ph=c.h;s.n--;if(s.n<=0)P.splice(P.indexOf(s),1);
-  const fo=typeof fols!='undefined'&&fols[i];if(fo&&fo.visible){try{mpvRun(cf200Fx,null,[fo.position.x,fo.position.y+.8,fo.position.z,amt,r[2]])}catch(_){cf200Fx(fo.position.x,fo.position.y+.8,fo.position.z,amt,r[2])}}
-  if(!P.length)try{say('🍖 '+c.n+' ate the last food in its pouch.')}catch(_){}return true}
+function cf200Eat(c,i){}
 setInterval(()=>{try{if(typeof party=='undefined'||!party.length||typeof hero=='undefined'||hero.hp<=0)return;const A=actN141(),now=Date.now();
   party.slice(0,A).forEach((c,i)=>{if(!c||c.h<=0||c.tr200||!c.cf200||!c.cf200.length)return;const t=CF200.pts.includes(c.cf200t)?c.cf200t:.4;
     if(c.h/M(c)>=t||now-(c._cf200||0)<CF200.cd*1000)return;c._cf200=now;cf200Eat(c,i)})}catch(e){console.warn('v200 pouch',e)}},250);
 // ---------------- the pouch in the Companions window (P) ----------------
-function cf200Html(c){const P=cf200P(c),t=CF200.pts.includes(c.cf200t)?c.cf200t:.4,have=CF200.R.filter(r=>cnt(r[0])>0);
-  let h=`<div class="cf200"><div class="hsec">🍖 Food pouch <span class="mut" style="text-transform:none;letter-spacing:0;font-weight:500">· eats at once below <select data-cf200t="1">${CF200.pts.map(p=>`<option value="${p}" ${p==t?'selected':''}>${Math.round(p*100)}%</option>`).join('')}</select> health</span></div><div class="cf200s">`;
-  for(let i=0;i<CF200.max;i++){const s=P[i],r=s&&cf200R(s.k);h+=r?`<div class="cf200x" title="${st200Esc(r[1])}: heals ${Math.round(r[5]*100)}% at once"><span>${r[2]}</span><b>${s.n}</b><button data-cf200o="${s.k}" title="Take it out">✕</button></div>`:'<div class="cf200x e">empty</div>'}
-  h+='</div>';h+=have.length?`<div class="cf200a">${have.map(r=>`<button data-cf200p="${r[0]}" title="${st200Esc(r[1])} (you have ${cnt(r[0])}) · heals ${Math.round(r[5]*100)}%">${r[2]} +1</button><button data-cf200p="${r[0]}" data-n="5" title="Add 5">+5</button>`).join('')}</div>`
-    :'<div class="mut" style="font-size:.72rem">Cook companion food at the Cooking Hearth in Duskhold to fill the pouch.</div>';
-  return h+'</div>'}
+function cf200Html(c){}
 {const f=rC0;rC0=function(){const r=f.apply(this,arguments);try{if(!party.length||CE.hat||CE.sel!=null)return r;const c=party[cmpSel],cd=$('cd');if(!c||!cd||cd.querySelector('.cf200'))return r;
   const bt=cd.querySelector('.btns');if(bt)bt.insertAdjacentHTML('beforebegin',cf200Html(c));else cd.insertAdjacentHTML('beforeend',cf200Html(c))}catch(e){console.warn('v200 pouch ui',e)}return r}}
 $('cd').addEventListener('click',e=>{const t=e.target.closest('[data-cf200p],[data-cf200o]');if(!t)return;e.stopImmediatePropagation();const c=party[cmpSel];if(!c)return;

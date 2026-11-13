@@ -113,8 +113,7 @@ function bossDefeated(e){
 }
 // ---- Wave Trials ----
 var WV=null,WV_N=10,waveBest={};
-function waveStart(i){if(AF||WV)return;const p=PMAP[i];WV={pi:i,w:0,n:WV_N,foes:[],brk:3,lv:p.lv[1],go:0,nt:0};
-  fadeTo(()=>{toPos(p.wa[0],p.wa[1]+6,0);WV.go=1;banner('⚔️ WAVE TRIAL',p.n,WV_N+' waves, one every '+WV_GAP+' seconds — they don’t wait for you. Clear them all for the reward chest.')})}
+function waveStart(i){}
 var WV_GAP=20;
 function waveSpawn(){const W2=WV,p=PMAP[W2.pi],L=BIOEN[p.n]||['hobgoblin'],last=W2.w==W2.n,cnt=Math.min(26,4+2*W2.w+(last?4:0)),lv=Math.min(MAXLV,W2.lv+Math.floor((W2.w-1)/2));
   const ne=W2.w%3==0?Math.ceil(W2.w/4):0,nel=last?3:ne;

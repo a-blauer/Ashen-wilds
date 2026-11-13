@@ -58,36 +58,7 @@ function lpPart(S,bones,bn,geo,mat,x,y,z,sx,sy,sz,rx,ry,rz){
   const r=S.bones[bn],p=new THREE.Group();p.position.set(x-r[1],y-r[2],z-r[3]);p.rotation.order='YXZ';
   const m=new THREE.Mesh(geo,mat);m.scale.set(sx,sy==null?sx:sy,sz==null?sx:sz);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;p.add(m);bones[bn].add(p);return p}
 // variant & trait extras on a dkKit, using the creature's back line D.back [[bone,x,y,z]…] and head point D.head [bone,x,y,z]
-function lpExtras(k,c,D){
-  let bk=D.back||[],hd=D.head;const up=D.up||.09;
-  // v180: anchors drawn above a body (horns and shards hung in the air on the Mossfrog and Bogmaw, spikes over the Titanshell's
-  // shell) are lowered onto it: the anchor's height becomes at most the body's top there (less 1 cm for the head)
-  // (and a head point buried deep in a tall head, the Sporelord's cap, comes up to 3 cm under its top); back points sit on the back
-  if(typeof lk180Top=='function'&&(c.v||c.tr)){try{const G=D.geo(c.cl[0],c),top=q=>q&&lk180Top(G,q[1],q[3]);
-    if(hd){const t=top(hd);if(t!=null&&Math.abs(t-hd[2])<.15)hd=[hd[0],hd[1],Math.max(Math.min(hd[2],t-.01),t-.03),hd[3]]}
-    bk=bk.map(q=>{const t=top(q);return t!=null&&Math.abs(q[2]-t)<.2?[q[0],q[1],t-.004,q[3]]:q})}catch(e){}}
-  if(c.v=='Ember')bk.forEach((q,i)=>k.L(q[0],'g',i%2?0xffb040:0xff6a1a,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up*.8,q[3]-.05],.03,.002,4));
-  if(c.v=='Frost')bk.forEach(q=>k.L(q[0],'g',0xd8f6ff,[q[1],q[2]-.03,q[3]],[q[1],q[2]+up,q[3]-.03],.03,.002,4));
-  // v180: the Golden and Universal marks grow from the head as crystal shards (they were a halo and orbs hovering over it)
-  if(c.v=='Golden'&&hd){k.L(hd[0],'g',0xffd84a,[hd[1],hd[2],hd[3]],[hd[1],hd[2]+.11,hd[3]-.04],.022,.002,4);[-1,1].forEach(s=>k.L(hd[0],'g',0xe8b830,[hd[1]+s*.02,hd[2],hd[3]],[hd[1]+s*.05,hd[2]+.075,hd[3]-.03],.015,.002,4))}
-  if(c.tr=='Horned'&&hd){const h=D.horn||1;[-1,1].forEach(s=>{k.L(hd[0],'c',0xb8ac90,[hd[1]+s*.045,hd[2],hd[3]+.03],[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],.022*h,.014*h,5).L(hd[0],'c',0x8a8070,[hd[1]+s*.06*h,hd[2]+.06*h,hd[3]-.04*h],[hd[1]+s*.075*h,hd[2]+.1*h,hd[3]-.11*h],.014*h,.002,5)})}
-  if(c.tr=='Spiked')bk.forEach(q=>k.L(q[0],'c',0x2a2a30,[q[1],q[2]-.02,q[3]],[q[1],q[2]+up*1.1,q[3]-.05],.035,.003,5));
-  if(c.tr=='Armored')lpArmor151(k,bk,D.armor||.17); // v151: a riveted war harness (was grey domes that read as stones)
-  if(c.tr=='Universal'&&hd)[0,1,2].forEach(i=>{const a=(i-1)*.5;k.L(hd[0],'g',[0xd86a8a,0x6ad0e0,0xe0c060][i],[hd[1]+Math.sin(a)*.02,hd[2],hd[3]-.01*i],[hd[1]+Math.sin(a)*.07,hd[2]+.09-Math.abs(i-1)*.02,hd[3]-.05],.02,.002,4)});
-}
-// v151 Armored trait: a war harness over the shoulders and back, following the back line (front → rear): a dark leather
-// blanket, overlapping iron spine plates (each tilted to the slope of the back, the next one tucked under), a raised spine
-// ridge, brass rivets and leather flaps hanging down both flanks. w = the species' armour width (D.armor).
-function lpArmor151(k,bk,w){const B=bk.slice(0,4),n=B.length;if(!n)return;
-  const LE=0x3e2a1c,LD=0x2a1c12,IR=0x5e646e,RG=0x8c929c,BR=0xa8823a;
-  B.forEach((q,i)=>{const a=B[Math.max(0,i-1)],b=B[Math.min(n-1,i+1)],dz=(a[3]-b[3])||.1,dy=a[2]-b[2],st=Math.max(.06,Math.min(.16,Math.hypot(dy,dz)/(i>0&&i<n-1?2:1)));
-    const rx=-Math.atan2(dy,Math.abs(dz))-.06,y=q[2]+.004,x=q[1],z=q[3];
-    k.p(q[0],'box','c',LE,x,y-.012,z,w*1.22,.016,st*1.15,rx);                       // leather blanket
-    [-1,1].forEach(s=>{k.p(q[0],'box','c',LD,x+s*w*.6,y-.045,z,.014,.07,st*1.05,rx,0,s*.32); // flank flap
-      k.p(q[0],'sph','m',BR,x+s*w*.36,y+.012,z+st*.32,.011,.007,.011,rx)});        // rivets
-    k.p(q[0],'box','m',IR,x,y+.004,z,w*.86,.016,st*.98,rx-.1);                     // iron plate (the rear edge lifts over the next)
-    k.p(q[0],'box','m',RG,x,y+.017,z,.022,.016,st*.9,rx-.1)});                     // spine ridge
-  const f=B[0];k.p(f[0],'box','m',BR,f[1],f[2]+.006,f[3]+.035,w*.9,.012,.016,-.1)} // brass trim on the front edge
+function lpExtras(k,c,D){} // brass trim on the front edge
 // The generic rig. D = LPR[n]:
 //   geo(C,c)            → skinned BufferGeometry (cache it with lpGeo, keyed by colour)
 //   kit(k,c,C,red)      → add rigid detail parts to dkKit k (eyes, teeth, claws …); positions in model space

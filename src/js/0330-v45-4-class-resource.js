@@ -10,5 +10,5 @@ function cast(i){
 }
 {const b=document.createElement('div');b.id='resb';b.innerHTML='<span class="ri"></span><div class="rbar"><i></i><b class="m50"></b></div><span class="rt"></span>';$('bmid').insertBefore(b,$('bmid').firstChild)}
 // =============== 6. TEAM-UP ===============
-{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='team';b.title='Team-up';b.textContent='🤝';mb.appendChild(b);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();})}}
+{const mb=$('mbtn');if(mb){const b=document.createElement('button');b.dataset.m='team';b.title='Team-up';b.textContent='🤝';mb.appendChild(b);b.addEventListener('pointerdown',e=>{})}}
 

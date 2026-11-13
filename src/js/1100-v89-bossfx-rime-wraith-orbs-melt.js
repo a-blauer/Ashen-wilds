@@ -67,11 +67,8 @@ function bfxMark(now){let m=BFX.mk;const t=tgt,on=t&&t.bfx&&bfxLive(t);
 // ---------------- melee / projectiles reach a proxy once (no double hits with the dens' own hit paths) ----------------
 {const f=area;area=function(){const o=BFX.aHit;BFX.aHit=new Set();try{return f.apply(this,arguments)}finally{BFX.aHit=o}}}
 const bfxMt=s=>(s&&s.mt)||heroMt();
-if(DEN[1]&&DEN[1].hitA)DEN[1].hitA=function(A,p,r,dm,s,dir,half){for(const N of HY.necks){if(N.st!='up'&&N.st!='rise')continue;
-  if(!(d01InArc(p,r,dir,half,N.x,N.z,1.1)||d01InArc(p,r,dir,half,N.p.x,N.p.z,.9)))continue;const e=N._bfx;
-  if(bfxLive(e)){if(!(BFX.aHit&&BFX.aHit.has(e)))heroHit(e,dm,bfxMt(s),{s,proc:!s||s.proc!==false})}else hyHitNeck(A,N,dm)}};
-if(DEN[0]&&DEN[0].hitA)DEN[0].hitA=function(A,p,r,dm,s,dir,half){for(const T of AR.st){if(T.st=='dead')continue;if(!d01InArc(p,r,dir,half,T.x,T.z,1.0))continue;const e=T._bfx;
-  if(bfxLive(e)){if(!(BFX.aHit&&BFX.aHit.has(e)))heroHit(e,dm,bfxMt(s),{s,proc:!s||s.proc!==false})}else arHitStalk(A,T,dm)}};
+if(DEN[1]&&DEN[1].hitA)DEN[1].hitA=function(A,p,r,dm,s,dir,half){};
+if(DEN[0]&&DEN[0].hitA)DEN[0].hitA=function(A,p,r,dm,s,dir,half){};
 // den projectile check: the shot itself is passed on so a proxy is struck through the normal hit path and the shot ends
 function d01Shots(fn){if(typeof shots=='undefined')return;for(let i=shots.length-1;i>=0;i--){const sh=shots[i];if(!sh||sh.t<=0||(sh.s&&sh.s.cc)||sh.d01)continue;
   const r=fn(sh.m.position,sh.dm,sh.s,sh);if(r){sh.t=0;sh.d01=1;if(r==='rm'){scene.remove(sh.m);shots.splice(i,1)}}}}
@@ -112,9 +109,7 @@ addEventListener('pointerup',ev=>{try{const t=BFX.tap;if(!t||t.id!==ev.pointerId
   const e=bfxPick(ev.clientX,ev.clientY);if(e&&e!==tgt)setTarget(e)}catch(err){}},{capture:true});
 // in a den fight the boss bar sits where the target frame goes: a non-boss target gets the frame just below the bar
 {const st=document.createElement('style');st.textContent='body.bossf.bfxT #tgt{display:flex!important}';document.head.appendChild(st)}
-function bfxTgtCls(){const t=tgt,on=!!(t&&!t.boss&&!t.dead&&AF&&AF.f);document.body.classList.toggle('bfxT',on);const el=$('tgt');if(!el)return;
-  if(!on){if(el.style.top)el.style.top='';return}let y=0;[$('boss'),$('rwCold')].forEach(q=>{if(q&&q.offsetParent!==null&&q.style.display!='none'){const b=q.getBoundingClientRect();if(b.height)y=Math.max(y,b.bottom)}});
-  const pr=(el.offsetParent||el.parentElement||document.body).getBoundingClientRect();if(y)el.style.top=Math.round(y-pr.top+6)+'px'}
+function bfxTgtCls(){}
 function bfxPortrait(e){const b=e.bfx,g=new THREE.Group(),bm=q=>(q&&q.userData.bfxBase)||q;try{
     if(b.pm=='neck'){const N=b.ref;g.add(new THREE.Mesh(N.neck.geometry,bm(N.neck.material)),new THREE.Mesh(N.eyes.geometry,bm(N.eyes.material)))}
     else if(b.pm=='stalk'){const T=b.ref;T.g.children.forEach(c=>{if(c.isMesh)g.add(new THREE.Mesh(c.geometry,bm(c.material)))});const eg=T.eye.clone(true);eg.traverse(q=>{if(q.isSprite)q.visible=false;else if(q.isMesh)q.material=bm(q.material)});g.add(eg)}

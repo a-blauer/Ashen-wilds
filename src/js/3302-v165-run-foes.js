@@ -15,14 +15,7 @@ function sr165FM(){if(SR165F.M)return SR165F.M;const M={skin:new THREE.MeshStand
 function sr165Host(){return typeof co151On!='function'||!co151On()||co151Host()}
 function sr165Lv(){const I=sp152I('sandrun');return (I&&I.lv&&I.lv[0])||35}
 // ---------------- spawning ----------------
-function sr165Spawn(dt){const me=SR165.me;if(!me||SR165.ph!=='run'||!sr165Host())return;const P=sr165Path(),f=me.s/P.S,T=SR165F.t;
-  // nothing in the last stretch before the cave, a breath after each checkpoint
-  if(me.s>P.S-35)return;
-  T.sc-=dt;if(T.sc<=0){T.sc=Math.max(3.6,8.5-f*5)+Math.random()*2;const n=3+Math.floor(f*4+Math.random()*2),behind=Math.random()<.4,s0=behind?me.s-16:me.s+38+Math.random()*10,sd=Math.random()<.5?-1:1;
-    for(let i=0;i<n;i++){const [x,z]=P.at(s0+(Math.random()-.5)*6,sd*(SR165C.hw-1.2-Math.random()*3));sr165Foe('scarab',x,z,'sc')}
-    if(f>.2&&!behind)say('🪲 Scarabs over the dunes!')}
-  T.sp-=dt;if(T.sp<=0){T.sp=Math.max(5,11-f*6)+Math.random()*3;const k=f>.45&&Math.random()<.5?2:1;for(let i=0;i<k;i++){const sd=i?-1:(Math.random()<.5?-1:1),[x,z]=P.at(me.s+46+Math.random()*14+i*8,sd*(SR165C.hw-1.6));sr165Foe('scorp',x,z,'sp')}}
-  T.wy-=dt;if(T.wy<=0&&f>.08){T.wy=Math.max(6.5,13-f*7)+Math.random()*3;const s=me.s+40+Math.random()*16,half=Math.random()<.5?-1:1,o0=half<0?-SR165C.hw+.5:-1.5+Math.random()*1.5,o1=half<0?1.5-Math.random()*1.5:SR165C.hw-.5;sr165Worm(s,o0,o1,true)}}
+function sr165Spawn(dt){}
 function sr165Foe(k,x,z,kind){let e=null;try{e=spawnEnemy(k,x,z,sr165Lv(),{agg:1})}catch(err){if(!SR165F.err++)console.warn('v165 run foe',err)}if(!e)return null;e.sr165=kind;e.agg=1;e.hunt=1;e.srT=Math.random()*2;
   burst(gY(e.m.position,.5),0xd8b080,14,1.6,1.4,.5);return e}
 function sr165FoesReset(){enemies.slice().forEach(e=>{if(e.sr165)try{removeE(e)}catch(_){}});SR165F.wy.forEach(w=>{if(w.g)scene.remove(w.g);if(w.rip)scene.remove(w.rip)});SR165F.wy=[];SR165.wy=SR165F.wy;
@@ -78,11 +71,6 @@ function sr165WormTick(dt){SR165F.wy=SR165F.wy.filter(W=>{W.t+=dt;
     SR165.V.forEach(V=>{if(V.wreck||W.hitV.has(V))return;for(const m of W.segs){if(!m.visible||m.position.y-V.y>2.6)continue;if(Math.hypot(m.position.x-V.x,m.position.z-V.z)<2.4){W.hitV.add(V);sr165Hurt(V,18,'worm');V.v*=.3;V.bump=.6;svSnd('heavy',.9,.6);burst(gY(V.m.position,1.5),0xd8b080,40,3,3,.7);if(V===SR165.me)say('🪱 The worm slams into the Skimmer!');break}}});
     if(uh-18*.06>1||(!any&&W.t>1)){scene.remove(W.g);scene.remove(W.rip);W.rip.material.dispose();return false}return true})}
 // ---------------- what the shells can hit ----------------
-function sr165FoeList(){const L=[];enemies.forEach(e=>{if(e.dead)return;
-    // a partner's world: the host's scarabs and scorpions are copies here (a hit on one goes to the host)
-    if(!e.sr165&&e.mir&&SR165.on&&e.c&&(e.c.en==='scarab'||e.c.en==='scorp')){const sp=e.c.en==='scorp';L.push({p:gY(e.m.position,.6),r:sp?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(sp?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}}});return}
-    if(!e.sr165)return;L.push({p:gY(e.m.position,.6),r:e.sr165==='sp'?1.5:.9,hit:k=>{try{hurt(e,M(e.c)*(e.sr165==='sp'?.3:.62)*k,{col:0xffc060},Math.random()<.15)}catch(_){}
-      if(e.dead&&e.cl){const i=e.cl.V.cling.indexOf(e);if(i>=0)e.cl.V.cling.splice(i,1);e.cl=null}}})});
-  SR165F.wy.forEach(W=>{if(W.ph==='tell'||!W.segs)return;[0,5,10].forEach(i=>{const m=i?W.segs[i]:W.head;if(m&&m.visible)L.push({p:m.position.clone(),r:1.4,hit:k=>{W.hp-=k;burst(m.position,0xffc060,10,1.6,1.4,.4);if(W.hp<=0&&W.ph!=='down'){W.ph='down';popT(m.position,'Driven under!','#ffe080',true);svSnd('shriek',.6,1.1)}}})})});return L}
+function sr165FoeList(){}
 // ---------------- the tick ----------------
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{if(SR165.on&&sr165In()){sr165Spawn(dt);sr165WormTick(dt);sr165StingTick(dt)}}catch(e){if(!SR165F.err++)console.warn('v165 run foes',e)}return r}}

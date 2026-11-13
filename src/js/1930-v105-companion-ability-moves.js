@@ -116,9 +116,6 @@ function mvPlay105(a,R,to,onHit){const M=MV105[R.m]||MV105.snap,D=M.D*(R.d||1),A
 {const f=rigAnim;rigAnim=function(x,now,mv,sp){f.apply(this,arguments);try{const g=x.g,S=g&&g._m105;if(!S)return;const [o,B]=mvEval105(S.M,S.k,S.A,S.L);const Lm=gaLegLen(x.spec);
     crApply(x,o,Lm);x.b.position.z=B.z;x.b.position.y+=B.y*Lm*2.2;x.b.rotation.set(B.rx,B.ry*S.sgn,B.rz);
     if(S.M.wing&&x.wings)x.wings.forEach(w=>{if(w.p)w.p.rotation.z+=Math.sin(now/45)*.5*w.s*S.M.wing*Math.min(1,Math.max(0,(1-S.k)*5))})}catch(e){}}}
-// ---------- the recipes ----------
-// ctx: c companion, f its model, sp spell, t target (may be null), P companion position, d facing, tp target position, hp hero position
-const HP5=()=>pl.position;
 var SPX105={
  'Hamstring Bite':{m:'snap',a:.9,fx(x){if(!x.tp)return;fxClaw(x.tp,x.d,0xe8833a,2,.8,280);x5('ring',0x9ad8ff,900,(k,m)=>{const p=x.t&&x.t.m?x.t.m.position:x.tp;m.position.set(p.x,p.y+.15,p.z);m.scale.setScalar(.9+.15*Math.sin(k*20));m.material.opacity=.8*(1-k)},{p:x.tp.clone(),r:[-Math.PI/2,0,0]})}},
  'Howling Rend':{m:'spin',a:.6,d:.8,zr:0,fx(x){for(let i=-1;i<=1;i++){const d=fwd5(x.d,i*.45);fxClaw(x.P.clone().addScaledVector(d,1.6),d,0xd04a4a,3,1.1,320)}fxWaves(gY(x.P,.6),x.d,0xd04a4a,2,2.6,320,.9)}},

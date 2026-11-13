@@ -20,4 +20,4 @@ function evNearest(p,R,not){return enemies.filter(e=>!e.dead&&(!not||!not.has(e)
 // lunge timing of the melee single-target handlers (kqsLunge), to land extra effects with the blow
 function evLungeMs(t){if(!t)return 0;const L=d2(pl.position,t.m.position)-1.5-(t.boss?1.2:0);return L<=.25?0:Math.round(L/16*1000)}
 // a heavy ground hit: shock + glyph + spikes (visual)
-function evSlam(p,col,R){ev137Shock(p,col,R,520);ev137Shards(p,col,Math.round(6+R*2),R*.75,1+R*.12,760);ev137Flare(evxGY(p,.8),col,1.2+R*.25,300)}
+function evSlam(p,col,R){}

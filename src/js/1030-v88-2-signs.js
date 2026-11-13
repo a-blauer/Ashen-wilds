@@ -71,9 +71,6 @@ function kdOld(T){const K=kdState();if(K.old)return K.old;const o={gate:[],tw:[]
 function kdCol(T,list,add){list.forEach(c=>{const i=T.col.indexOf(c);if(i>=0)T.col.splice(i,1)});list.length=0;(add||[]).forEach(c=>{T.col.push(c);list.push(c)})}
 function kdLamps(add){const K=kdState();K.lamps.forEach(l=>{const i=TLAMP.indexOf(l);if(i>=0)TLAMP.splice(i,1)});K.lamps=add||[];K.lamps.forEach(l=>TLAMP.push(l))}
 // glowing flames for braziers and torches
-function kdFlame(k,x,y,z,s){k.p('g',0xff7a20,'cone4',x,y+.18*s,z,.2*s,.42*s,.2*s,0,.3,0).p('g',0xffc848,'cone4',x,y+.13*s,z,.12*s,.3*s,.12*s,0,1.1,0)}
-function kdBrazier(k,x,z,y0,s){y0=y0||0;s=s||1;[0,1,2].forEach(i=>{const a=i/3*6.283+.4;k.L('m',TWC.iron,[x+Math.cos(a)*.28*s,y0,z+Math.sin(a)*.28*s],[x+Math.cos(a)*.12*s,y0+.72*s,z+Math.sin(a)*.12*s],.025*s,'cyl6',0)});
-  k.p('m',TWC.iron,'frus8',x,y0+.8*s,z,.3*s,.18*s,.3*s,Math.PI,0,0,0);k.p('c',0x2a1a10,'cyl8',x,y0+.86*s,z,.24*s,.04*s,.24*s,0,0,0,0);kdFlame(k,x,y0+.88*s,z,s)}
 // a cloth banner hanging from a short iron rod (front faces +z)
 function kdBanner(k,x,y,z,ry,col,w,h){const c=Math.cos(ry),s=Math.sin(ry),P=(lx,ly,lz)=>[x+lx*c+lz*s,y+ly,z-lx*s+lz*c];w=w||.7;h=h||1.3;
   let q=P(0,0,0);const a=P(-w/2-.08,0,0),b=P(w/2+.08,0,0);k.L('m',TWC.iron,a,b,.025,'cyl6',0);

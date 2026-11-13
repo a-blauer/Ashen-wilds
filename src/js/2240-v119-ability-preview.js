@@ -47,7 +47,7 @@ function abxOnStage(o){const R=ABX.root;for(let p=o.parent;p;p=p.parent)if(p===R
 {const f=hurt;hurt=function(e){if(ABX.ctx){abxFlinch();return}return f.apply(this,arguments)}}
 {const f=compHit;compHit=function(){if(ABX.ctx)return 0;return f.apply(this,arguments)}}
 {const f=eStatus;eStatus=function(){if(ABX.ctx)return;return f.apply(this,arguments)}}
-{const f=brkShot;brkShot=function(){if(ABX.ctx)return false;return f.apply(this,arguments)}}
+{const f=brkShot;brkShot=function(){}}
 {const f=solid;solid=function(){if(ABX.ctx)return false;return f.apply(this,arguments)}}
 {const f=tcHit;tcHit=function(){if(ABX.ctx)return false;return f.apply(this,arguments)}}
 // words and HUD stay with the world
@@ -137,7 +137,7 @@ function abxStop(){if(!ABX.on)return;const W=ABX.w;
   try{if(W.fxaPar){W.fxaPar.add(FXA.root);(W.fxaLive||[]).forEach(m=>m.visible=true)}}catch(_){}
   try{if(PV.obj===ABX.root){PV.sc.remove(ABX.root);PV.obj=null;PV.upd=null}if(W.cam){PV.cam.position.copy(W.cam.p);PV.cam.quaternion.copy(W.cam.q);PV.cam.fov=W.cam.fov;PV.cam.far=W.cam.far;PV.cam.updateProjectionMatrix()}}catch(_){}
   abxPtsClear();ABX.sb=null;ABX.dum=null;try{hsDirty()}catch(_){}}
-function abxWatch(){if(!ABX.on||ABX.ctx)return;const x=$('xw');if(!PV.cv||!PV.cv.isConnected||PV.obj!==ABX.root||!x||x.classList.contains('hide')||xwMode!='abil'||(typeof mpLive=='function'&&mpLive()))abxStop()}
+function abxWatch(){}
 // closing the window, switching tab or opening another preview stops it before the next frame of the (unpaused) world
 {const x=$('xw');if(x&&typeof MutationObserver!='undefined')new MutationObserver(()=>{try{abxWatch()}catch(_){}}).observe(x,{attributes:true,attributeFilter:['class'],childList:true,subtree:true})}
 setInterval(()=>{try{abxWatch()}catch(_){}},300);

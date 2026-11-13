@@ -104,7 +104,7 @@ function kqsMig(){const T=hero.tal;if(!T||T.__ab)return;const c=hero.cls;if(!SKB
   T.__ld=ld.join('|');T.__apB=(T.__apB|0)+bonus;T.__ab=1;hsDirty&&hsDirty();
   if(old)setTimeout(()=>{try{say('⚡ <b>Abilities reworked:</b> you kept '+kept.length+' abilit'+(kept.length==1?'y':'ies')+' and have <b>'+apFree()+'</b> ability points to spend (K · Abilities). Talent points spent on skills were refunded.')}catch(_){}},4200)}
 // talent points no longer pay for skills
-{const f=talSpent;talSpent=function(b){if(b!=null)return f(b);let n=0;const T=TAL[hero.cls]||[];for(let i=0;i<T.length;i++)n+=f(i);return n}}
+{const f=talSpent;talSpent=function(b){}}
 // the hotbar: the equipped abilities, in slot order (packed, 1-4)
 function skLoad(c){const all=kqsAll(c),T=hero.tal||{},out=[];
   String(T.__ld||'').split('|').forEach(n=>{const s=all.find(q=>q.n===n);if(s&&kqsUnl(c,s)&&!out.includes(s)&&out.length<KQS_SLOTS)out.push(s)});

@@ -37,8 +37,7 @@ function cam192Out(x,y,z,I,lite){
   if(d>CAM192.band){let g=-1e9;for(const [a,b] of CAM192R)g=Math.max(g,GH(x+a,z+b));if(y<g+CAM192.clr)return 'edge'}   // in or against the wall
   return ''}
 // v172's names, now with the v192 rule (later definitions win; 3360's hooks in 0104 and before drawing call these)
-function cam172Ok(x,y,z,I){const w=cam192Out(x,y,z,I,CAM192.lite);CAM172.why=CAM192.why=w;return !w}
-function cam172Ab(){return false}   // v192: Abeksi's houses fade like every other object (3361); the camera no longer slides in for them
+function cam172Ok(x,y,z,I){const w=cam192Out(x,y,z,I,CAM192.lite);CAM172.why=CAM192.why=w;return !w}   // v192: Abeksi's houses fade like every other object (3361); the camera no longer slides in for them
 function cam192Ins(){try{const k=cvKey();return k>=0?INSL[k]:null}catch(_){return null}}
 // the first spot along the line from the hero's chest (y0) in direction v (unit) that is out, as a safe distance, or L when none
 function cam192Walk(P,y0,vx,vy,vz,L,I){CAM192.lite=!!cam192Out(P.x,y0,P.z,I,false);if(CAM192.lite)CAM192.st.lite++;

@@ -44,7 +44,7 @@ function im220Box(o){const B=new THREE.Box3(),b=new THREE.Box3();o.updateMatrixW
     if(isFinite(b.min.y)&&isFinite(b.max.y)&&b.max.y-b.min.y<12)B.union(b)});
   if(B.isEmpty()){const p=o.getWorldPosition(new THREE.Vector3());B.set(new THREE.Vector3(p.x-.4,p.y,p.z-.4),new THREE.Vector3(p.x+.4,p.y+1.7,p.z+.4))}return B}
 function im220WorldYaw(o){if(!o)return 0;const q=o.getWorldQuaternion(new THREE.Quaternion()),e=new THREE.Euler().setFromQuaternion(q,'YXZ');return e.y}
-function im220Narrow(){const s=$('stage');return !!s&&(s.clientWidth<720||s.clientWidth<s.clientHeight*1.05)}
+function im220Narrow(){}
 function im220Begin(w){const A=IM220;A.on=w;w.t0=nowP();A.p0.copy(cam.position);A.l0.copy(look);
   const p=w.o.getWorldPosition(new THREE.Vector3());let h=1.7,y0=p.y;
   try{const B=im220Box(w.o);h=Math.max(.5,Math.min(6,B.max.y-p.y));y0=p.y}catch(_){}

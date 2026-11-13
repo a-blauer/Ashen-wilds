@@ -19,7 +19,6 @@ function c9_face(o){o=o||{};return (x,y,z,n)=>{if(n[2]<.05)return 0;const f=Math
   d+=.05*(o.nose||1)*cgG(x,y,0,1.582,.016,.02)+.025*(o.nose||1)*cgG(x,y,0,1.608,.012,.014);
   [-1,1].forEach(s=>{d-=.018*cgG(x,y,s*.04,1.63,.015,.01);d+=.006*cgG(x,y,s*.062,1.6,.016,.012)});d+=.022*(o.brow||1)*cgG(x,y,0,1.65,.06,.009);
   d-=.007*cgG(x,y,0,1.553,.04,.004);d+=.014*(o.jaw||1)*cgG(x,y,0,1.535,.04,.016);if(o.snout)d+=o.snout*cgG(x,y,0,1.568,.034,.024);return d*f}}
-const c9_JAW=(i,j,a)=>{const ca=Math.cos(a),sa=Math.sin(a),side=Math.abs(ca);return (i>=1&&i<=4&&sa>-.2&&side>.5)?.012:0};
 // the part just added keeps its place (glow lines laid in the surface: cgSeat would bury them)
 function c9_keep(k){k.P[k.P.length-1].noSeat=1;return k}
 // a part laid along direction d from p (its base at p): oct / sph / dod are centred, cone4 / box / cyl are full length
@@ -397,13 +396,6 @@ const cr_IHEAD=cr_H8.map((q,i)=>{const f=[.62,.68,.76,.86,.96,1,1,1][i];return [
       const L=s<0?'lh':'rh',K=J[L+'1'],kp=cgRay(M,[K[0],K[1]+.01,K[2]+.4],[0,0,-1],{leg:1});if(kp){c9_along(k,L+'1','cone4','c',ed,add3(kp,[0,0,-.012]),[0,.7,1],.085,.017);WS(kp)}
       cr_toes(B,S,s,{n:2,col:c3,r:.02,len:.055,spread:.032,nail:bone,claw:.028})})})})();
 cr_stance('akidon',{sx:.36,hx:-.32,lk:.2,rk:.2,dy:-.03,ax:-.35,lx:-.35,ex:-.7,le:-.7,az:.04,lz:-.04});
-
-// ---------------- Gharial Reaver: a hulking crocodile-man — a big head with a long toothy snout and a nostril knob, scutes down
-// the back, a pale plated belly, a long heavy tail, a hide harness, a necklace of teeth, a loincloth ----------------
-// (refine) a crocodile, not a man in a mask: a thick neck that merges into the base of the skull, a barrel chest and heavy hips,
-// stooped forward with the snout held level, a heavier tail rooted deep in the hips; the harness and belt are paint
-const GHARIALHEAD=[[1.52,.066,.085,.062,.02],[1.536,.07,.15,.066,.03],[1.55,.07,.22,.07,.04],[1.562,.068,.28,.074,.05],[1.572,.066,.3,.076,.052],[1.582,.068,.28,.08,.05],
-  [1.596,.074,.2,.086,.04],[1.61,.08,.14,.09,.03],[1.625,.082,.11,.092,.02],[1.64,.078,.09,.092,.012],[1.654,.066,.068,.08,.006],[1.664,.036,.036,.048,0]];
 // (round 2, owner: "head still too cartoony") a real gharial's head: a heavy, flat, armoured skull (a short muzzle) and out of it a
 // long, very narrow snout ending in the bulbous nasal knob, small deep-set eyes high on the skull under bony brow ridges, scutes on
 // the skull, irregular splayed teeth interlocking along the jaw line, dark mottled hide with a pale underjaw

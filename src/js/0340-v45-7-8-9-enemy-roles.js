@@ -36,5 +36,4 @@ function soundAlarm(e){
   enemies.forEach(o=>{if(!o.dead&&d2(o.m.position,e.m.position)<24){o.agg=1;o.wt=0}});
   const C=e.camp;for(let i=0;i<2;i++){const a=Math.random()*6.283,x=e.m.position.x+Math.cos(a)*3,z=e.m.position.z+Math.sin(a)*3;if(solid(x,z))continue;const k=C?pickMem(C.th):e.c.en,b=BIOMES[MAP.bio[Math.round(z)][Math.round(x)]];const n=spawnEnemy(k,x,z,e.c.l,{zt:b.t,agg:1});n.agg=1;if(C)n.camp=C}
 }
-function makeScout(e){e.scout=1;e.smk=marker(e,0xfde047,EN[e.c.en]&&EN[e.c.en].hum?2.25:1.7);e.c.n='Scout '+e.c.n}
 

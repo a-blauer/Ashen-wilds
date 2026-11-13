@@ -22,157 +22,10 @@
 // Weakness: posture. Hits fill the yellow bar; a break staggers him (+35% damage). Big moves have armour.
 var VLR={col:0xff2040,blood:0xd01030,gold:0xd8b060,spk:null};
 function vlrSpkMat(){return VLR.spk||(VLR.spk=new THREE.MeshStandardMaterial({color:0x5a0410,emissive:0x3a0008,roughness:.3,metalness:.45,flatShading:true}))}
-// the breastplate surface (for straps, runes and the ridge that lie on it)
-var VLR_CH=[[-.1,.42,.28],[.25,.52,.33],[.5,.55,.34],[.68,.42,.27]];
-function vlrCS(x,y,d){const C=VLR_CH;let i=0;while(i<C.length-2&&y>C[i+1][0])i++;const a=C[i],b=C[i+1],k=Math.max(0,Math.min(1,(y-a[0])/(b[0]-a[0]))),rx=a[1]+(b[1]-a[1])*k,rz=a[2]+(b[2]-a[2])*k;
-  return [x,y,rz*Math.sqrt(Math.max(0,1-(x/rx)*(x/rx)))+(d||0)]}
 // a star-shaped flat polygon (wing membranes): fan from the centroid
 function vlrPoly(P){const c=[0,0,0];P.forEach(p=>{c[0]+=p[0]/P.length;c[1]+=p[1]/P.length;c[2]+=p[2]/P.length});const pos=[];
   for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];pos.push(...c,...a,...b)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
-// a cape panel with soft vertical folds (a strip of columns; the back of the cape is -z), optionally a ragged hem
-function vlrCloth(w0,w1,h,rag,seed,dz){const r=svRng(seed),n=12,pos=[],T=[],B=[];for(let i=0;i<=n;i++){const u=i/n,x0=-w0+2*w0*u,x1=-w1+2*w1*u,f=Math.sin(u*Math.PI*4)*.045,c=-.06*Math.sin(u*Math.PI);
-    T.push([x0,.06,c*.5+f*.3+(dz||0)]);B.push([x1,-h-(rag?(i%2?.1+r()*.2:r()*.05):0),c+f+(dz||0)])}
-  for(let i=0;i<n;i++){const a=T[i],b=T[i+1],c=B[i+1],d=B[i];pos.push(...a,...c,...b,...a,...d,...c)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
-function vlrBuild(R,e){
-  const plate=svMat(R,0x1c1418,{roughness:.35,metalness:.65,emissive:0x0a0204}),plate2=svMat(R,0x4a0c18,{roughness:.4,metalness:.55,emissive:0x140206}),gold=svMat(R,0xb08a3a,{roughness:.35,metalness:.8}),
-    skin=svMat(R,0xc4b8c2,{roughness:.6,emissive:0x080608}),cape=svMat(R,0x3e0610,{roughness:.8,side:THREE.DoubleSide,emissive:0x0a0104}),capeIn=svMat(R,0x1a0a10,{roughness:.9,side:THREE.DoubleSide}),
-    steel=svMat(R,0x8a1424,{roughness:.2,metalness:.7,emissive:0x5a0614}),hair=svMat(R,0xe8e4ec,{roughness:.7}),mem=svMat(R,0x2a0810,{roughness:.7,side:THREE.DoubleSide,emissive:0x0a0004}),
-    leath=svMat(R,0x24140f,{roughness:.85,metalness:.1}),eye=svGlowMat(R,0xff3050),rune=svGlowMat(R,0x8a1020);R.rune=rune;
-  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('v2'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
-  const ball=r=>G('ball'+r,()=>svLump(r,1,.05,60+Math.round(r*100))),RV=G('rv',()=>new THREE.IcosahedronGeometry(.026,0)),rv=(j,x,y,z,s)=>Mm(j,RV,gold,x,y,z,0,0,0,s||1);
-  J('root',null,0,0,0);J('hips','root',0,1.8,0);J('spine','hips',0,.25,0);J('chest','spine',0,.6,0);
-  // ---------------- hips: pelvis, rivet belt with a ruby buckle, side/back tassets, a skull trophy on a chain ----------------
-  Mm('hips',G('hp',()=>svLoft([[-.22,.29,.22],[0,.36,.27],[.28,.33,.24]],10)),plate2);
-  Mm('hips',G('blt',()=>svLoft([[.07,.385,.285],[.23,.37,.27]],12)),leath);
-  Mm('hips',G('bkl',()=>svLump(.08,0,.15,61)),gold,0,.15,.29,0,0,0,1.25,1,.55);Mm('hips',G('bkg',()=>new THREE.OctahedronGeometry(.04,0)),rune,0,.15,.33,0,0,0,1,1.3,1);
-  for(let k=0;k<12;k++){const a=k/12*6.283+.26;if(Math.cos(a)>.93)continue;rv('hips',Math.sin(a)*.39,.15,Math.cos(a)*.29)}
-  [1.45,2.0,2.55,-1.45,-2.0,-2.55].forEach((a,k)=>Mm('hips',G('ts',()=>svBlade([[-.17,0],[.17,0],[.15,-.5],[0,-.62],[-.15,-.5]],.03)),plate,Math.sin(a)*.4,.12,Math.cos(a)*.3,-.18,a,0));
-  [1.75,2.3,-1.75,-2.3].forEach(a=>Mm('hips',G('ts2',()=>svBlade([[-.12,0],[.12,0],[.1,-.36],[0,-.44],[-.1,-.36]],.025)),plate2,Math.sin(a)*.43,.06,Math.cos(a)*.33,-.22,a,0));
-  [1.45,2.0,-1.45,-2.0].forEach(a=>rv('hips',Math.sin(a)*.43,.06,Math.cos(a)*.32));
-  // a small skull hanging on the left hip
-  Mm('hips',G('chn',()=>svTube([[0,0,0],[.04,-.08,.02],[.05,-.17,.02]],.012,4)),gold,.36,.1,.16);
-  Mm('hips',G('skl',()=>svLump(.075,0,.12,62)),hair,.41,-.13,.18,0,0,0,1,1.1,1);Mm('hips',G('skj',()=>svLump(.05,0,.1,63)),hair,.41,-.2,.2,0,0,0,1,.6,.9);
-  [-1,1].forEach(s=>Mm('hips',G('sko',()=>new THREE.OctahedronGeometry(.02,0)),eye,.41+s*.03,-.12,.25));
-  // the crimson tabard (its own joint: it sways and lifts with the legs)
-  J('tab','hips',0,.12,.3);
-  Mm('tab',G('tb',()=>svBlade([[-.17,0],[.17,0],[.18,-.9],[.12,-1.02],[.05,-.92],[-.02,-1.06],[-.09,-.93],[-.18,-1.0]],.016)),cape,0,0,.01);
-  [-1,1].forEach(s=>Mm('tab',G('tbt',()=>svBlade([[-.012,0],[.012,0],[.012,-.88],[-.012,-.88]],.02)),gold,s*.16,-.02,.02));
-  Mm('tab',G('tbe',()=>svBlade([[0,.08],[.08,0],[0,-.14],[-.08,0]],.02)),gold,0,-.3,.025);Mm('tab',G('tbg',()=>new THREE.OctahedronGeometry(.035,0)),rune,0,-.3,.04);
-  // ---------------- waist: three overlapping lames over a crimson under-plate ----------------
-  Mm('spine',G('wa',()=>svLoft([[-.12,.28,.2],[.66,.41,.27]],9)),plate2);
-  Mm('spine',G('ab0',()=>svLoft([[-.06,.305,.225],[.17,.315,.232]],10)),plate);
-  Mm('spine',G('ab1',()=>svLoft([[.13,.325,.24],[.35,.345,.252]],10)),plate);
-  Mm('spine',G('ab2',()=>svLoft([[.31,.355,.258],[.6,.44,.29]],10)),plate);
-  [.06,.24].forEach(y=>[-1,1].forEach(s=>rv('spine',s*.24,y,.18,.8)));
-  // ---------------- chest: breastplate, pectoral plates, ridge, ruby, blood-rune veins, baldric, gorget, collar, mantle ----------------
-  Mm('chest',G('ch',()=>svLoft([[-.1,.42,.28],[.25,.52,.33,0,.02],[.5,.55,.34],[.68,.42,.27]],10)),plate);
-  Mm('chest',G('trm',()=>svLoft([[-.11,.435,.292],[-.05,.455,.302]],12,{cap:false})),gold);
-  [-1,1].forEach(s=>Mm('chest',G('pec',()=>svLump(.3,1,.08,51)),plate2,s*.21,.33,.23,0,s*.25,0,1.0,.85,.42));
-  Mm('chest',G('rdg',()=>svBlade([[-.025,0],[.025,0],[.02,.42],[0,.48],[-.02,.42]],.03)),gold,0,-.06,vlrCS(0,.2)[2]-.01,-.08,0,0);
-  Mm('chest',G('rbg',()=>new THREE.OctahedronGeometry(.07,0)),rune,0,.36,.4,0,0,0,.75,1.5,.55);Mm('chest',G('rbs',()=>svLump(.1,0,.1,64)),gold,0,.36,.35,0,0,0,1,1.3,.5);
-  [-1,1].forEach(s=>{const P=[[.03,.24],[.1,.15],[.17,.1],[.25,.0],[.3,-.08]].map(([x,y])=>vlrCS(s*x,y,.012));Mm('chest',G('vn'+s,()=>svTube(P,[.016,.014,.012,.01,.007],4)),rune);
-    const Q=[[.07,.16],[.12,.05],[.13,-.07]].map(([x,y])=>vlrCS(s*x,y,.012));Mm('chest',G('vm'+s,()=>svTube(Q,[.012,.01,.006],4)),rune)});
-  {const P=[];for(let k=0;k<=8;k++){const u=k/8;P.push(vlrCS(-.5+u*.85,.6-u*.66,.03))}Mm('chest',G('bdr',()=>svTube(P,.035,4)),leath);
-    [2,4,6].forEach(k=>rv('chest',P[k][0],P[k][1],P[k][2]+.03,1.1))}
-  // the clasp chain across the collar
-  [-1,1].forEach(s=>{const p=vlrCS(s*.3,.58,.02);Mm('chest',G('clp',()=>svLump(.06,0,.15,65)),gold,p[0],p[1],p[2],0,0,0,1,1,.6)});
-  Mm('chest',G('chc',()=>svTube([vlrCS(-.3,.56,.04),vlrCS(-.15,.49,.05),vlrCS(0,.46,.08),vlrCS(.15,.49,.05),vlrCS(.3,.56,.04)],.014,4)),gold);
-  Mm('chest',G('gor',()=>svLoft([[.58,.27,.22],[.7,.22,.18],[.8,.15,.13]],10)),plate2);Mm('chest',G('gtr',()=>svLoft([[.66,.235,.195],[.7,.235,.195]],10,{cap:false})),gold);
-  for(let k=0;k<7;k++){const a=-2.4+k*.8;Mm('chest',G('cl',()=>svBlade([[-.11,0],[.11,0],[.08,.3],[0,.42],[-.07,.28]],.03)),plate2,Math.sin(a)*.3,.66,Math.cos(a)*.22-.05,-.5,a,0)}
-  for(let k=0;k<6;k++){const a=-2.0+k*.8;Mm('chest',G('cl2',()=>svBlade([[-.05,0],[.05,0],[.035,.22],[0,.28],[-.035,.2]],.02)),gold,Math.sin(a)*.27,.68,Math.cos(a)*.2-.05,-.42,a,0)}
-  for(let k=0;k<11;k++){const a=Math.PI+(k-5)*.3;Mm('chest',G('mn',()=>svBlade([[-.09,0],[.09,0],[.06,-.42],[0,-.52],[-.06,-.4]],.02)),capeIn,Math.sin(a)*.44,.72,Math.cos(a)*.3-.02,.35,a,0)}
-  // ---------------- head: pale face, fangs, pointed ears, long white hair, a thorned crown with a ruby ----------------
-  J('neck','chest',0,.7,.02);J('head','neck',0,.17,0);
-  Mm('neck',G('nk',()=>svLoft([[-.1,.1,.1],[.24,.085,.085]],7)),skin);
-  Mm('head',G('hd',()=>svLoft([[-.11,.06,.07,0,.04],[-.05,.1,.12,0,.02],[.05,.15,.16,0,.01],[.18,.16,.17],[.3,.13,.14],[.36,.06,.07]],8)),skin);
-  Mm('head',G('nos',()=>svHorn(.026,.08,0,-.02,4,2)),skin,0,.13,.15,.45,0,0);
-  Mm('head',G('brw',()=>svLump(.1,0,.1,66)),skin,0,.19,.13,0,0,0,1.6,.3,.45);
-  [-1,1].forEach(s=>{Mm('head',G('chk',()=>svLump(.045,0,.15,67)),skin,s*.085,.1,.12,0,0,0,1,.8,.8);
-    Mm('head',G('ear',()=>svHorn(.035,.17,0,.05,4,3)),skin,s*.14,.16,-.02,-.35,s*(Math.PI/2+.35),0);
-    Mm('head',G('fng',()=>svHorn(.013,.06,0,0,4,1)),hair,s*.028,.04,.135,Math.PI/2,0,0);
-    Mm('head',G('ey',()=>new THREE.SphereGeometry(.025,5,4)),eye,s*.06,.15,.15);svSpr(R,'head',VLR.col,.2,s*.06,.15,.17)});
-  Mm('head',G('mth',()=>new THREE.BoxGeometry(.07,.012,.02)),plate,0,.06,.142);
-  Mm('head',G('hr',()=>svLoft([[-.25,.12,.1,0,-.12],[.05,.19,.18,0,-.05],[.3,.18,.18],[.36,.1,.1]],8)),hair,0,0,-.02);
-  for(let k=0;k<9;k++){const u=(k-4)/4;Mm('head',G('hs'+(k%3),()=>svBlade([[-.045,0],[.045,0],[.035,-.42-(k%3)*.06],[0,-.56-(k%3)*.06],[-.03,-.42]],.014)),hair,u*.15,.02,-.13+Math.abs(u)*.05,.22,u*.4,-u*.1)}
-  [-1,1].forEach(s=>Mm('head',G('hl',()=>svBlade([[-.03,0],[.03,0],[.02,-.36],[0,-.44],[-.02,-.34]],.012)),hair,s*.15,.13,.04,.05,0,s*.08));
-  Mm('head',G('cr',()=>svLoft([[0,.18,.18],[.07,.19,.19]],9,{cap:false})),gold,0,.3,0);
-  for(let k=0;k<9;k++){const a=k/9*6.283;Mm('head',G('thn',()=>svHorn(.025,k%2?.18:.26,0,-.05,4,2)),gold,Math.sin(a)*.18,.34,Math.cos(a)*.18,-Math.PI/2+.3*Math.cos(a),a,0)}
-  Mm('head',G('crg',()=>new THREE.OctahedronGeometry(.045,0)),rune,0,.36,.2,0,0,0,1,1.5,.7);
-  // ---------------- arms: shoulder ball, three-lame pauldron with spikes and rivets, mail sleeve and rerebrace, couter,
-  //                  vambrace with a rune line and a gold cuff, gauntlet (right: a fist round the grip; left: an open claw) ----------------
-  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*.55,.5,0,0,0,s*.1);
-    Mm('sh'+L,ball(.135),plate2);
-    Mm('sh'+L,G('pd',()=>svLump(.24,1,.15,52)),plate2,s*.05,.08,0,0,0,0,1.25,.85,1.1);
-    Mm('sh'+L,G('pd2',()=>svLump(.22,1,.12,53)),plate,s*.1,-.06,0,0,0,s*.25,1.15,.6,1.05);
-    Mm('sh'+L,G('pd3',()=>svLump(.2,1,.12,54)),plate2,s*.13,-.18,0,0,0,s*.35,1.0,.45,.95);
-    for(let k=0;k<3;k++)Mm('sh'+L,G('ps',()=>svHorn(.05,.32,0,-.1,4,2)),gold,s*.12,.22,-.12+k*.12,-1.3,0,s*-.4);
-    for(let k=0;k<5;k++){const a=(k-2)*.5;rv('sh'+L,s*(.13+.17*Math.abs(Math.sin(a))*0)+s*.2*Math.cos(a)*.55,-.02,Math.sin(a)*.24)}
-    if(s>0){Mm('sh'+L,G('pskl',()=>svLump(.085,0,.12,68)),hair,s*.24,.02,.16,0,0,0,1,1.1,1);[-1,1].forEach(q=>Mm('sh'+L,G('psko',()=>new THREE.OctahedronGeometry(.018,0)),eye,s*.24+q*.03,.04,.24))}
-    Mm('sh'+L,G('ua',()=>svLoft([[.06,.11,.11],[-.63,.09,.09]],8)),plate2);
-    Mm('sh'+L,G('rb',()=>svLoft([[-.16,.118,.118],[-.34,.122,.122],[-.52,.105,.105]],8)),plate);
-    J('el'+L,'sh'+L,0,-.6,0,-.15);Mm('el'+L,ball(.105),plate);
-    Mm('el'+L,G('ctr',()=>svBlade([[-.1,0],[.1,0],[.06,.14],[0,.2],[-.06,.14]],.025)),plate2,0,0,-.09,Math.PI/2+.3,0,0);
-    Mm('el'+L,G('cts',()=>svHorn(.035,.16,0,-.04,4,2)),gold,0,0,-.11,Math.PI,0,0);
-    Mm('el'+L,G('fa',()=>svLoft([[.05,.09,.09],[-.44,.112,.102],[-.57,.088,.088]],8)),plate2);
-    Mm('el'+L,G('cuf',()=>svLoft([[-.53,.12,.11],[-.4,.125,.115]],8)),gold);
-    Mm('el'+L,G('far',()=>svHorn(.04,.3,0,.02,4,2)),plate,s*.09,-.05,0,Math.PI/2,0,0,1,1,1);
-    Mm('el'+L,G('frn',()=>svTube([[0,-.08,.096],[0,-.2,.104],[0,-.33,.108]],.012,4)),rune);
-    J('hd'+L,'el'+L,0,-.58,0);Mm('hd'+L,ball(.085),plate);
-    Mm('hd'+L,G('hn',()=>svLump(.08,0,.2,53)),plate,0,-.07,0,0,0,0,1,1.4,.8);
-    Mm('hd'+L,G('knk',()=>svLoft([[-.1,.07,.05],[-.06,.075,.055]],6)),gold,0,0,.01);
-    if(s<0){Mm('hd'+L,G('fst',()=>svLump(.075,0,.15,69)),plate,0,-.12,.03,0,0,0,1.05,.85,1.2);Mm('hd'+L,G('thb',()=>svHorn(.025,.09,0,0,4,2)),plate,-.06,-.1,.06,0,-.4,0)}
-    else{for(let k=0;k<4;k++)Mm('hd'+L,G('cw',()=>svHorn(.022,.2,0,-.08,4,4)),plate,-.045+k*.03,-.14,.02,Math.PI/2+.1,0,0);
-      Mm('hd'+L,G('cwt',()=>svHorn(.024,.15,0,-.05,4,3)),plate,-.05,-.08,.06,Math.PI/2-.5,-.6,0)}});
-  // the sword (right hand): a long blood-steel flamberge with a glowing fuller, a swept gold guard and a ruby pommel
-  const sw=J('swd','hdR',0,-.1,.02,0,0,0);
-  Mm(sw,G('gp',()=>svLoft([[-.32,.04,.04],[.02,.04,.04]],6)),leath,0,0,0,Math.PI/2,0,0);
-  [-.27,-.18,-.09].forEach(z=>Mm(sw,G('gw',()=>svLoft([[-.015,.047,.047],[.015,.047,.047]],6)),gold,0,0,z,Math.PI/2,0,0));
-  Mm(sw,G('pm',()=>svLump(.07,0,.2,70)),gold,0,0,-.36);Mm(sw,G('pmg',()=>new THREE.OctahedronGeometry(.05,0)),rune,0,0,-.42);
-  Mm(sw,G('gd',()=>svBlade([[-.38,.12],[-.3,0],[.3,0],[.38,.12],[.22,.06],[0,.15],[-.22,.06]],.05)),gold,0,.02,0,Math.PI/2,0,0);
-  [-1,1].forEach(s=>Mm(sw,G('qt',()=>svHorn(.03,.14,0,.05,4,2)),gold,s*.37,0,.12,0,0,0));
-  Mm(sw,G('ggm',()=>new THREE.OctahedronGeometry(.045,0)),rune,0,.0,.1);
-  Mm(sw,G('bl',()=>svBlade([[-.075,0],[.075,0],[.065,1.25],[.092,1.42],[.062,1.6],[.03,2.2],[0,2.42],[-.03,2.2],[-.062,1.6],[-.092,1.42],[-.065,1.25]],.025)),steel,0,.06,0,Math.PI/2,0,0);
-  Mm(sw,G('fl',()=>svBlade([[-.016,.12],[.016,.12],[.012,1.5],[0,1.62],[-.012,1.5]],.05)),rune,0,.06,0,Math.PI/2,0,0);
-  Mm(sw,G('lng',()=>svBlade([[-.09,0],[.09,0],[.04,.2],[0,.26],[-.04,.2]],.045)),gold,0,.08,0,Math.PI/2,0,0);
-  // ---------------- legs: hip ball, mail thigh with a cuisse, front tassets that follow the leg, a strap; knee ball and
-  //                  poleyn with a side fan; greave with a gold ridge; ankle ball and a pointed sabaton with lames and a spur ----------------
-  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('th'+L,'hips',s*.18,-.1,0);
-    Mm('th'+L,ball(.15),plate2);
-    Mm('th'+L,G('tg',()=>svLoft([[.1,.15,.16],[-.4,.152,.162],[-.88,.105,.115]],8)),plate2);
-    Mm('th'+L,G('cui',()=>svLump(.16,0,.14,55)),plate,0,-.36,.07,0,0,0,.95,1.6,.62);
-    Mm('th'+L,G('tf1',()=>svBlade([[-.16,0],[.16,0],[.14,-.3],[-.14,-.3]],.03)),plate,s*.02,.1,.19,-.22,0,0);
-    Mm('th'+L,G('tf2',()=>svBlade([[-.15,0],[.15,0],[.12,-.26],[0,-.33],[-.12,-.26]],.025)),plate2,s*.02,-.14,.2,-.16,0,0);
-    [-1,1].forEach(q=>rv('th'+L,s*.02+q*.11,.06,.215));
-    Mm('th'+L,G('stp',()=>svLoft([[-.6,.128,.138],[-.54,.13,.14]],8)),leath);rv('th'+L,s*.12,-.57,.06,1.2);
-    J('kn'+L,'th'+L,0,-.84,0);Mm('kn'+L,ball(.115),plate);
-    Mm('kn'+L,G('kp',()=>svLump(.1,0,.2,54)),plate2,0,0,.09);Mm('kn'+L,G('kps',()=>svHorn(.035,.12,0,.03,4,2)),gold,0,.02,.17,0,0,0);
-    Mm('kn'+L,G('kf',()=>svBlade([[0,.1],[.12,.03],[.14,-.06],[0,-.1]],.02)),gold,s*.11,0,.02,0,s>0?0:Math.PI,0);
-    Mm('kn'+L,G('sh',()=>svLoft([[.06,.1,.11],[-.3,.112,.125,0,.01],[-.86,.086,.096]],8)),plate2);
-    Mm('kn'+L,G('srd',()=>svBlade([[-.018,0],[.018,0],[.012,-.62],[-.012,-.62]],.025)),gold,0,-.12,.128,.03,0,0);
-    J('ft'+L,'kn'+L,0,-.82,0);Mm('ft'+L,ball(.095),plate);
-    Mm('ft'+L,G('ft',()=>svLoftZ([[-.13,.085,.085,0,.035],[0,.095,.09,0,.04],[.12,.085,.065,0,.015],[.24,.07,.045,0,-.005],[.34,.035,.025,0,-.025]],7)),plate,0,0,0);
-    [.06,.15].forEach(z=>Mm('ft'+L,G('fl'+z,()=>svLoftZ([[z-.035,.093,.08,0,.03],[z+.035,.088,.07,0,.02]],7,{cap:false})),gold,0,0,0));
-    Mm('ft'+L,G('toe',()=>svHorn(.03,.14,0,-.03,4,2)),plate2,0,-.03,.32);Mm('ft'+L,G('spr',()=>svHorn(.02,.14,0,.03,4,2)),gold,0,.02,-.12,0,Math.PI,0)});
-  // ---------------- cape: a rolled collar, three panels (lined) with a ragged hem ----------------
-  J('cp0','chest',0,.62,-.3,.06);J('cp1','cp0',0,-.85,0);J('cp2','cp1',0,-.85,0);
-  Mm('cp0',G('crl',()=>svLump(.2,0,.1,71)),capeIn,0,.02,.02,0,0,0,2.6,.5,.6);
-  [['cp0',.5,.64,0],['cp1',.64,.76,0],['cp2',.76,.86,1]].forEach(([n,w0,w1,rg],q)=>{Mm(n,G('c'+n,()=>vlrCloth(w0,w1,.92,rg,5,0)),cape);Mm(n,G('ci'+n,()=>vlrCloth(w0-.02,w1-.02,.9,rg,5,.025)),capeIn);
-    [-1,1].forEach(s=>Mm(n,G('ct'+n+s,()=>svTube([[s*w0,.06,0],[s*w1,-.88,0]],.016,4)),gold))});
-  Mm('cp0',G('cem',()=>svBlade([[0,.16],[.1,.04],[.34,.14],[.26,-.04],[.12,-.06],[0,-.24],[-.12,-.06],[-.26,-.04],[-.34,.14],[-.1,.04]],.015)),gold,0,-.5,-.075,0,Math.PI,0);
-  Mm('cp0',G('cemg',()=>new THREE.OctahedronGeometry(.05,0)),rune,0,-.48,-.09,0,0,0,1,1.4,.6);
-  // ---------------- bat wings (Phase II): arm bone, wrist knuckle and thumb claw, four finger bones, scalloped membranes ----------------
-  [-1,1].forEach(s=>{const L=s>0?'L':'R';const w=J('wg'+L,'chest',s*.2,.45,-.3,0,s*.35,0),E=[s*1.15,.55,0];
-    Mm(w,G('wb'+L,()=>svTube([[0,0,0],[s*.6,.36,-.04],E],[.075,.06,.05],5)),leath);
-    Mm(w,G('wk',()=>svLump(.075,0,.15,72)),leath,E[0],E[1],E[2]);Mm(w,G('wt'+L,()=>svHorn(.035,.22,0,.08,4,3)),hair,E[0],E[1]+.04,E[2],-1.2,s*.3,0);
-    Mm(w,G('wm'+L,()=>vlrPoly([[0,0,0],E,[E[0],-.75,0],[s*.75,-.52,0],[s*.38,-.78,0],[s*.12,-.6,0]])),mem);
-    const f=J('wf'+L,w,E[0],E[1],E[2]),T=[[s*1.25,.35,-.04],[s*1.0,-.55,-.04],[s*.55,-1.1,-.02],[0,-1.3,0]];
-    T.forEach((t,k)=>Mm(f,G('wfb'+L+k,()=>svTube([[0,0,0],[t[0]*.5,t[1]*.5+.05,t[2]*.5],t],[.045,.03,.012],4)),leath));
-    Mm(f,G('wcl'+L,()=>svHorn(.025,.16,0,-.06,4,3)),hair,T[0][0],T[0][1],T[0][2],0,s*Math.PI/2,0);
-    const P=[[0,0,0]];T.forEach((t,k)=>{P.push(t);if(k<T.length-1){const n=T[k+1];P.push([(t[0]+n[0])*.36,(t[1]+n[1])*.36,(t[2]+n[2])*.5])}});
-    Mm(f,G('wfm'+L,()=>vlrPoly(P)),mem);
-    w.scale.setScalar(.01);R['wing'+L]=w});
-}
+function vlrBuild(R,e){}
 function vlrWings(R,k){['L','R'].forEach(s=>{const w=R['wing'+s];w.scale.setScalar(Math.max(.01,k));w.visible=k>.02})}
 function vlrLoco(e,S,O,dt,now){const t=now/1000,a=Math.min(1,S.spd/2.2);S.gp=(S.gp||0)+dt*(2+S.spd*2.3);const g=S.gp;
   O.hips[4]+=.03*Math.sin(t*1.4)+.05*Math.abs(Math.sin(g))*a;O.chest[0]+=.015*Math.sin(t*1.4);O.head[1]+=.08*Math.sin(t*.5);
@@ -247,16 +100,7 @@ function vlrSpear(c,q,T){const e=c.e,S2={k:'c',r:1.5},an={x:q.x,z:q.z,a:0};c.M.w
 function vlrGone(e,on){const S=e.sv;S.gone=on;S.ghost=on;e.m.visible=!on;const p=e.m.position;for(let k=0;k<24;k++)burst(gY(p,1+Math.random()*2.2),0x1a0408,2,2.5,1.5,.9);burst(gY(p,1.8),VLR.blood,30,2,2,.6);svSnd('whoosh',.8,1.4)}
 // ---- v112 effects ----
 // Hemorrhage Grasp: five barbed blood tendrils shoot from the left claw along the cone; a caught hero is reeled in by the middle one
-function vlrTendrils(c,an,hit){const e=c.e,o=svWP(e,'hdL',0,-.16,.04),N=5,L=9.2,mat=new THREE.MeshBasicMaterial({color:0xb0102a,fog:false}),
-  g=svG('vl2_tnd',()=>{const P=[],r=[];for(let k=0;k<=7;k++){const u=k/7;P.push([Math.sin(u*9)*.06*(1-u),Math.cos(u*7)*.05*(1-u),u]);r.push(.11*(1-u*.9))}return svTube(P,r,5)}),T=[];
-  for(let k=0;k<N;k++){const a=an.a+(k-(N-1)/2)*.15,l=L*(k===2?1:.82+.06*Math.abs(k-2)),ms=new THREE.Mesh(g,mat);ms.position.copy(o);ms.userData.lpsSkip=1;ms.renderOrder=19;ms.frustumCulled=false;scene.add(ms);
-    const tip=new THREE.Vector3(an.x+Math.sin(a)*l,GH(an.x,an.z)+1.0,an.z+Math.cos(a)*l);T.push({ms,tip})}
-  let t=0;svSnd('blood',1,.8);svSnd('hiss',.7,.7);
-  kqFx({tick(dt){t+=dt||0;const p=svWP(e,'hdL',0,-.16,.04);
-    const ext=t<.13?svEase.o(t/.13):t<(hit?.62:.4)?1:Math.max(0,1-svEase.io((t-(hit?.62:.4))/.28));
-    T.forEach((q,k)=>{let tip=q.tip;if(hit&&k===2){tip=gY(pl.position,1.0)}q.ms.position.copy(p);const d=tip.clone().sub(p),len=Math.max(.01,d.length()*ext);q.ms.lookAt(tip);q.ms.scale.set(1,1,len);
-      if(ext>.9&&Math.random()<.25){const b=p.clone().addScaledVector(d,Math.random()*ext);burst(b,VLR.blood,1,.5,.4,.4)}});
-    return t<(hit?.95:.72)&&!e.dead},end(){T.forEach(q=>scene.remove(q.ms));mat.dispose()}})}
+function vlrTendrils(c,an,hit){}
 // Danse Macabre: a crescent of blood that trails the blade round the spin
 function vlrCrescent(c,T){const e=c.e,m=c.m,g=svG('vl2_dmc',()=>{const q=new THREE.RingGeometry(1.1,4.5,22,1,-Math.PI/2-1.1,1.1);q.rotateX(-Math.PI/2);return q}),
   mt=new THREE.MeshBasicMaterial({color:VLR.col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),ms=new THREE.Mesh(g,mt);ms.renderOrder=24;ms.userData.lpsSkip=1;scene.add(ms);let t=0;

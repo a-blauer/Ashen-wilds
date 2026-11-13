@@ -37,7 +37,6 @@ function dh150Rot(dir,nrm){const Y=new THREE.Vector3(...dh150N(dir)),Z=new THREE
 function dh150F(k,bn,geo,t,col,a,dir,nrm,len,w,th){const d=dh150N(dir),r=dh150Rot(d,nrm);k.p(bn,geo,t,col,a[0]+d[0]*len/2,a[1]+d[1]*len/2,a[2]+d[2]*len/2,w,len,th,r[0],r[1],r[2])}
 // rigid kit bone for a point along a drake's body line
 function dh150DB(z){return z>.51?'head':z>.34?'neck':z>.1?'chest':z>-.14?'spine':z>-.4?'pelvis':z>-.56?'tail0':z>-.84?'tail1':z>-1.09?'tail2':'tail3'}
-function dh150HB(z){return z>.34?'head':z>.27?'neck':z>.15?'chest':z>.0?'spine':z>-.22?'pelvis':'tail0'}
 // legs: rows [x,y,z,rx,rz,bones,foot] for the right side; mirrored for s<0
 function dh150Legs(L,s,seg,paint){return L.map(R=>({rings:R.map(r=>({p:[s*r[0],r[1],r[2]],rx:r[3],ryT:r[4],ryB:r[4],b:r[5].map(v=>typeof v=='string'?v.replace(/^([fh])r/,s<0?'$1l':'$1r'):v),d:r[6]||0,y:r[1]})),seg:seg||6,ref:[0,0,1],capB:1,paint}))}
 // per-variant anchors for the trait / colour-variant extras (lpExtras reads D.head, D.back)
@@ -289,16 +288,7 @@ function st150Kit(k,c,C,red){
   [-1,1].forEach(s=>{dh150F(k,'tail0','cone4','c',deep,[s*.02,.535,-.34],[s*.18,-.06,-1],[0,1,0],.62,.05,.012);
     dh150F(k,'tail0','cone4','c',0xb8c0c8,[s*.08,.5,-.78],[s*.18,-.06,-1],[0,1,0],.14,.03,.014)});
   k.L('tail0','c',back,[0,.565,-.24],[0,.53,-.42],.06,.035,6);
-}
-function st150Post(x,c,C,mat){
-  const K=st150Cols(C),root=K.main.clone().multiplyScalar(.82),tipC=K.main.clone().multiplyScalar(.25).lerp(new THREE.Color(0x14161c),.5),lead=new THREE.Color(0xa8b8c8);
-  // long, narrow, swept falcon wings with a pointed tip
-  const W=lpwWing('st150|'+C,
-    [[0,0,.06],[.3,.07,.09],[.6,.07,.03],[.95,.03,-.12],[1.25,0,-.32],[1.1,-.02,-.33],[1.04,0,-.38],[.88,-.02,-.36],[.8,0,-.42],[.64,-.02,-.38],[.56,0,-.44],[.4,-.02,-.38],[.32,0,-.42],[.18,-.02,-.36],[0,0,-.26]],
-    [.45,.04,-.16],
-    [[[0,.01,.06],[.6,.08,.03],.024],[[.6,.08,.03],[1.25,.01,-.32],.013]],
-    root,tipC,lead,5);
-  lpwPair(x,'chest',W,mat,.07,.74,.14,.5,.15,.35,.55)} // v180: the wing root on the shoulder (it hinged 1.5 cm out from the body)
+} // v180: the wing root on the shoulder (it hinged 1.5 cm out from the body)
 
 // ======================================================================== Rocsovereign ========================================================================
 var RS150={body:[
@@ -317,8 +307,7 @@ var RS150={body:[
  leg:[[.09,.52,-.03,.1,.11,['pelvis','hr0',.5]],[.088,.42,0,.095,.1,['hr0','hr0',0]],[.082,.32,.015,.075,.082,['hr0','hr1',.6]],
       [.078,.24,.02,.058,.062,['hr1','hr1',0]],[.076,.17,0,.034,.036,['hr1','hr1',0],1],[.075,.11,-.015,.031,.033,['hr1','hr2',.8],1],[.075,.04,0,.034,.036,['hr2','hr2',0],1]],
  head:['head',0,1.0,.4],back:[['neck',0,.93,.3],['chest',0,.86,.2],['spine',0,.8,.06],['pelvis',0,.72,-.08]]};
-function rs150Cols(C){const main=lpMain(C,.25);return {main,back:main.clone().multiplyScalar(.55),dk:main.clone().multiplyScalar(.32).lerp(new THREE.Color(0x2a1e14),.35),
-  cream:new THREE.Color(0xe8d8b0).lerp(main,.25),scale:new THREE.Color(0xc8a040),ivory:new THREE.Color(0xd8c088)}}
+function rs150Cols(C){}
 function rs150Geo(C){
   const K=rs150Cols(C);
   const body={rings:dh150Rings(RS150.body).map(r=>(r.j=r.k?0:.05,r)),seg:12,capA:1,capB:1,paint:(o,r,s,cc,i)=>{
@@ -360,15 +349,6 @@ function rs150Kit(k,c,C,red){
     k.p('tail0','box','c',cream,Math.sin(a)*.33,.537-Math.abs(i)*.008,-.48-Math.cos(a)*.34,.086,.016,.04,0,a,0)});
   k.L('tail0','c',back,[0,.58,-.24],[0,.55,-.42],.085,.05,6);
 }
-function rs150Post(x,c,C,mat){
-  const K=rs150Cols(C),root=K.main.clone().multiplyScalar(.9),tipC=K.dk.clone(),lead=K.cream.clone().multiplyScalar(.8);
-  // broad rounded wings with fingered (slotted) primaries
-  const W=lpwWing('rs150|'+C,
-    [[0,0,.08],[.25,.08,.12],[.55,.1,.08],[.8,.07,-.02],[1.02,.03,-.14],[.9,0,-.2],[1.04,.02,-.27],[.9,0,-.31],[1.0,.01,-.4],[.84,-.01,-.42],[.9,0,-.52],[.72,-.02,-.52],[.62,0,-.62],[.46,-.02,-.58],[.32,0,-.64],[.16,-.02,-.55],[0,0,-.4]],
-    [.42,.04,-.24],
-    [[[0,.01,.08],[.55,.11,.08],.03],[[.55,.11,.08],[1.02,.03,-.14],.015]],
-    root,tipC,lead,4);
-  lpwPair(x,'chest',W,mat,.125,.78,.14,.35,.2,.35,.5)}
 
 // ---------------- hook the variants into the shared rigs ----------------
 {const D=LPR.Drakelet,g0=D.geo,k0=D.kit,p0=D.post;
@@ -379,7 +359,7 @@ function rs150Post(x,c,C,mat){
 {const D=LPR.Skyhawk,g0=D.geo,k0=D.kit,p0=D.post;
   D.geo=function(C,c){const sp=rv137('Skyhawk',c);if(sp=='Stormtalon')return st150Geo(C);if(sp=='Rocsovereign')return rs150Geo(C);return g0.apply(this,arguments)};
   D.kit=function(k,c,C,red){const sp=rv137('Skyhawk',c);if(sp=='Stormtalon')return st150Kit(k,c,C,red);if(sp=='Rocsovereign')return rs150Kit(k,c,C,red);return k0.apply(this,arguments)};
-  D.post=function(x,c,C,mat){const sp=rv137('Skyhawk',c);if(sp=='Stormtalon')return st150Post(x,c,C,mat);if(sp=='Rocsovereign')return rs150Post(x,c,C,mat);return p0.apply(this,arguments)};
+  D.post=function(x,c,C,mat){};
   dh150Anchors(D,'Skyhawk',{Stormtalon:ST150,Rocsovereign:RS150})}
 
 // ---------------- evolution looks for the new bodies ----------------

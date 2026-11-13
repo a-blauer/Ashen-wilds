@@ -219,10 +219,7 @@ function ssrBur(o){const sf=o.from!=='under',h0=sf?1.5:.05,tw=h0+o.T,tb=tw+o.W,h
     end(c,silent){c.S.rip=0;c.S.skT=null;if(c.S.gone&&(silent||!hd))ssrGone(c.e,false)}}}
 function ssrGlob(c,q,T){const e=c.e,S2={k:'c',r:2},an={x:q.x,z:q.z,a:0},o=svWP(e,'head',0,.2,1.3);c.M.warn.push(svWarn(S2,an,T));
   svShot(o,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),T,SSR.col,1.4,5,P=>{if(e.dead||!AF)return;burst(P,SSR.col,26,2.6,2.5,.6);svDecal(P,0x2a0800,1.8,3.5,.6);svSnd('squelch',.6,.8);svHitNow(e,S2,an,.85,{col:SSR.col})})}
-function ssrSpray(c,a0){const e=c.e,o=svWP(e,'head',0,0,1.2),S2={k:'a',r:9,h:.38},an={x:e.m.position.x,z:e.m.position.z,a:e.m.rotation.y+a0};
-  for(let k=0;k<22;k++){const d=1.5+Math.random()*7.5,a=an.a+(Math.random()-.5)*.7;burst(new THREE.Vector3(an.x+Math.sin(a)*d,GH(an.x,an.z)+.3+Math.random()*1.5,an.z+Math.cos(a)*d),SSR.acid,2,1,1.2,.6)}
-  burst(o,SSR.acid,16,3,1,.5);svSnd('hiss',.8,1.1);svHitNow(e,S2,an,.9,{col:SSR.acid,on:()=>dqDebuff('Acid','🟡',{pdP:-.15},3000,'Armour melting')});
-  for(let d=3;d<9;d+=2.5)svDecal(new THREE.Vector3(an.x+Math.sin(an.a)*d,0,an.z+Math.cos(an.a)*d),0x3a5a08,1.2,2.5,.4)}
+function ssrSpray(c,a0){}
 // ---- v112 effects ----
 // Sun Lance: a white-gold beam from the maw down the line, then molten-glass spikes running out along it
 function ssrBeam(c,an,L){const e=c.e,o=svWP(e,'head',0,-.2,1.45),end=new THREE.Vector3(an.x+Math.sin(an.a)*L,0,an.z+Math.cos(an.a)*L);end.y=GH(end.x,end.z)+.3;
@@ -280,9 +277,8 @@ var SSRM={
     trk:[[.55,'gUp','io'],[1.0,'gAim','io'],[1.55,'gAim','l',.022],[1.68,'gFire','s'],[2.25,'gFire','l',.012],[3.0,'sRec','io']],
     hit:[{t:1.68,s:{k:'l',w:2.4,l:17,b:0},f:0,dm:1.45,w:.68,col:SSR.glass,fx:(c,an)=>{ssrBeam(c,an,17);shake(.3);svSnd('crack',1,.6);svSnd('whoosh',1,1.4)}}],
     ev:[[.15,c=>svSnd('hiss',.7,.9)],[.55,c=>{svCharge(c.e,'head',0xffd070,2.8,1.15,0,-.2,1.5);svSnd('charge',1,.7)}],[1.05,c=>svSnd('hum',.8,1.3)],
-      [1.72,c=>{const an=c.M.an.h0;if(c.S.ph>1&&an)c.M.warn.push(svWarn({k:'l',w:2.4,l:17,b:0},an,.6,{col:0xff8a10}))}],
-      [2.32,c=>{const an=c.M.an.h0;if(c.S.ph<2||!an)return;svHitNow(c.e,{k:'l',w:2.4,l:17,b:0},an,1.1,{col:SSR.glass});
-        for(let d=1.5;d<17;d+=1.2){const x=an.x+Math.sin(an.a)*d,z=an.z+Math.cos(an.a)*d;burst(new THREE.Vector3(x,GH(x,z)+.6,z),SSR.glass,5,2.4,3,.6)}svSnd('ice',1,.6);shake(.25)}]],rec:.4},
+      [1.72,c=>{}],
+      [2.32,c=>{}]],rec:.4},
   sinkhole:{wt:6,r:[3,13],a:'f',cd:11,dur:3.4,lock:.7,armor:1,trn:[[0,.7,2.6]],
     trk:[[.5,'kDig','i'],[.75,'kDig','l',.02],[1.05,'kChurn','io'],[1.35,'kChurn~','io'],[1.65,'kChurn','io'],[1.95,'kChurn~','io'],[2.25,'kDig','io'],[2.45,'kRip','o'],[2.9,'kRip','l'],[3.4,'sRec','io']],
     hit:[{t:2.45,s:{k:'c',r:2.6},o:c=>c.M.an.vx||c.at(6),dm:1.5,w:1.55,kb:2,col:SSR.sand,fx:(c,an)=>ssrCollapse(an)}],

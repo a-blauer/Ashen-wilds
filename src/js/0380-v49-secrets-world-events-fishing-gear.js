@@ -1,8 +1,6 @@
 // ================= v49: secrets, world events, fishing, gear sets & legendaries, creature runes, realm visitors, bestiary =================
 const UW={rnd:(()=>{let s=4242;return ()=>(s=s*16807%2147483647)/2147483647})()};
 const opn=(x,y)=>{const t=MAP[y]&&MAP[y][x];return t&&t!='#'&&t!='~'&&t!='r'&&t!='R'&&t!='W'&&t!='B'&&t!='a'};
-function freeSpot(x,y,r){for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++)if(i*i+j*j<=r*r&&!opn(x+i,y+j))return false;
-  if(townAt(x,y,18)>=0||CAMPS.some(C=>Math.hypot(C.x-x,C.z-y)<CAMP_R+8)||ARN.some(A=>Math.hypot(A.cx-x,A.cz-y)<ARENA_R+10)||DUNS.some(D=>Math.hypot((D.x||D.tx)-x,(D.y||D.ty)-y)<10))return false;return true}
 function pickSpot(T,minD,tries){for(let k=0;k<(tries||400);k++){const x=8+Math.floor(UW.rnd()*(W-16)),y=8+Math.floor(UW.rnd()*(H-16));if(tierAt(x,y)!==T)continue;if(SECRETS.some(s=>Math.hypot(s.x-x,s.z-y)<(minD||30)))continue;if(freeSpot(x,y,3))return [x,y]}return null}
 // shared loot chest
 const CHESTS=[];

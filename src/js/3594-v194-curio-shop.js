@@ -22,11 +22,7 @@ function cu194T(){return Math.max(1,Math.min(5,tierOfLv(hero.lvl)))}
 function cu194Off(ms){const L=cu194L();return ms.map(([k,n])=>[k,Math.max(1,Math.ceil(n*(1-.05*L)))])}
 function cu194Fam(seed){return FAM[FAMS[mdHash('f'+seed)%FAMS.length]][0]}
 // ---- prices in resources (tier T 1..5) ----
-function cu194Price(kind,T,fam){const P={
-  egg:[['wood',6+4*T],['fiber',4+3*T],['bone',2+2*T]],pots:[['glowcap',4+T],['petals',3+T]],rune:[['crystal',2+T],['bone',3+2*T]],
-  shiny:[['crystal',4+2*T],['glowcap',6+2*T],[fam,2+T]],rune2:[['crystal',6+2*T],['bone',6+3*T],['Ectoplasm',1+T]],
-  armament:[['iron',10+5*T],['stone',8+4*T],['crystal',3+T],[UPM[T-1][0],2]],fortune:[['petals',8+2*T],['glowcap',6+2*T],['fiber',6+2*T]],
-  elder:[['wood',10+5*T],['fiber',8+4*T],[fam,3+T]]}[kind]||[];return cu194Off(P)}
+function cu194Price(kind,T,fam){}
 // ---- the stock ----
 function cu194Key(){return Math.floor(Date.now()/(20*60000))+'|'+SR194.n}
 function cu194HKey(){return Math.floor(Date.now()/3600000)+'|'+SR194.n}

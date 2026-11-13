@@ -31,9 +31,6 @@ function u8_bake(B,k){const v=new THREE.Vector3();k.P.forEach(p=>{const g=p.geo,
 // a point on an arm (t: 0 shoulder … 1 elbow … 2 wrist) on its outer side (dir a: 0 out, +π/2 front), sunk dep into the skin
 function u8_armPt(M,S,s,t,a,dep){const A=s<0?'aL':'aR',J=S.J,c=t<=1?lerp3(J[A+'0'],J[A+'1'],t):lerp3(J[A+'1'],J[A+'2'],t-1),d=[s*Math.cos(a||0),0,Math.sin(a||0)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{arm:1,hand:1});
   return p?sub3(p,mul3(d,dep==null?.006:dep)):c}
-// strands from the crown (base head coordinates): [angle round the head (0 front), base y, width, length, outward tilt, colour, seed]
-function u8_strands(k,M,S,L){L.forEach(([a,y,w,len,tl,col,sd])=>{const c=S.hp(0,y,0),d=[Math.sin(a),0,Math.cos(a)],p=cgRay(M,add3(c,mul3(d,.4)),mul3(d,-1),{head:1});if(!p)return;
-  const r=sub3(p,mul3(d,.007)),t=dkKit();t.S('head',col,r[0],r[1],r[2],w,len,a,-tl,sd);u8_bake(k.B181,t)})}
 // hand bones: a wrist knob, the carpals, metacarpals out to each finger's root (the frame of cgFingers), the fingers, a thumb;
 // (attack review) a gripping hand is a closed bony fist curled round the grip centre G, where S.grip puts the handle
 function u8_hand(k,S,s,col,kind,nail,th,rf,tip){rf=rf||1;const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*Math.sqrt(rf))),L=.08*Math.sqrt(rf);

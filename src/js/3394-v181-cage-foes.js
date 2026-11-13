@@ -56,15 +56,7 @@ function cgEars(k,M,S,col,y,len,up,back,r,inner){const B=k.B181;[-1,1].forEach(s
     d=nrm3([s*.55,up,-back]),root=sub3(p,[s*.02*S.hs,0,0]),P=t=>add3(add3(p,mul3(d,L*t)),[0,0,0]);
   const R=[{p:root,rx:w*.9,f:.006,b:.006,w:[['head',1]]},{p:P(0),rx:w,f:.006,b:.006,w:[['head',1]]},{p:P(.45),rx:w*.72,f:.005,b:.005,w:[['head',1]]},{p:P(.8),rx:w*.3,f:.004,b:.004,w:[['head',1]]},{p:P(1),rx:.002,f:.002,b:.002,w:[['head',1]]}];
   if(B)mdLoft(B,R,{seg:8,ref:[s,0,0],capA:true,capB:true,col:m=>inner!=null&&m.s<-.2&&m.i>.8&&m.i<3.2?inner:col});
-  else k.L('head','c',col,root,P(1),w,.002,4)})}
-// fingers from the knuckles: kind 'open' | 'claw' | 'fist', len, nail colour, claw tip
-function cgFingers(k,S,s,col,kind,len,nail,tip,t){const bn=s<0?'aL':'aR',a1=S.J[bn+'1'],a2=S.J[bn+'2'],d=nrm3(sub3(a2,a1)),kn=add3(a2,mul3(d,.08*(S.hand||1))),L=(len||1)*.08;
-  // the hand's frame: u = the back of the hand, f = across the knuckles (thumb side), turned by S.pron like the cage's hand
-  const u0=nrm3(sub3([s,0,0],mul3(d,d[0]*s))),fv=nrm3(cross3(d,u0)),f0=fv[2]<0?mul3(fv,-1):fv,tw=(S.pron&&S.pron[s])||0,u=add3(mul3(u0,Math.cos(tw)),mul3(f0,Math.sin(tw))),f=sub3(mul3(f0,Math.cos(tw)),mul3(u0,Math.sin(tw))),ax=nrm3(cross3(u,d));   // the curl axis: each joint turns the finger toward the palm (−u)
-  const P=(b,x,y)=>add3(add3(b,mul3(f,x)),mul3(u,y)),D=(a,b,c)=>nrm3(add3(add3(mul3(d,a),mul3(u,b)),mul3(f,c)));
-  for(let i=0;i<4;i++){const z=(1.5-i)*.016,p=P(kn,z,-.004);if(kind=='fist')a181Digit(k,bn+'2',col,p,D(1,-.45,.05),L*.7,.0095,2,1.15,ax,0,null,t);
-    else a181Digit(k,bn+'2',col,p,D(1,-.15,z*.6),L*(i==3?.82:1),.0085,3,kind=='claw'?.26:.14,ax,tip||0,nail,t)}
-  const tb=add3(a2,mul3(d,.03));a181Digit(k,bn+'2',col,P(tb,.026,-.01),D(.6,-.3,.75),L*.62,.009,2,.3,nrm3(cross3(u,f)),tip?tip*.6:0,nail,t)}   // the thumb curls across the palm
+  else k.L('head','c',col,root,P(1),w,.002,4)})}   // the thumb curls across the palm
 function cgToes(k,S,s,col,claw,nail){const l=s<0?'lh2':'rh2',A=S.J[l],L=S.foot.len,W=S.foot.w;for(let i=0;i<5;i++){const tx=A[0]+(i-2)*.018*W,tz=A[2]+.16*L;k.L(l,'c',col,[tx,.018,tz-.02],[tx+(i-2)*.004,.012,tz+.012],.009*W,.007*W,4);if(claw)k.L(l,'c',nail||0x1a1214,[tx+(i-2)*.004,.012,tz+.012],[tx+(i-2)*.006,.004,tz+.012+claw],.006*W,.001,4)}}
 // a point on the body surface at height y, angle a round the body (0 front, π/2 right side), pushed out by off (rays from
 // outside find the smoothed surface; parts limits which faces count)
@@ -220,13 +212,6 @@ function cgTube(B,pts,r,w,col,o){mdLoft(B,pts.map((p,i)=>({p,rx:r[i],f:r[i],b:r[
     va_Belt(B,M,wy-.022,.018,.042,0x2a1e16);
     cgCollar(B,k,S,{top:1.64,w:1.1,col:co,ins:0x2a0a0a,rag:.5,cut:.4})});
 })();
-
-// ---------------- fur and fringes on cage bodies ----------------
-// hanging tufts round the body at height y: rays from outside find the surface (or the shell's height), each tuft hangs down
-// and out by len; bone by height (torso) or the given bone
-function cgTufts(k,M,S,y,n,len,col,col2,o){o=o||{};const c=o.c||[0,y,cgTAt(S,y).z],off=o.off||0,bn=o.bn||(y>S.J.chest[1]-.04?'chest':y>S.J.spine[1]?'spine':'pelvis');
-  for(let i=0;i<n;i++){const a=(o.a0||0)+i/n*((o.a1==null?Math.PI*2:o.a1)-(o.a0||0))+a181H(i,y*40)*.2,dx=Math.sin(a),dz=Math.cos(a),p=cgRay(M,[c[0]+dx*.8,c[1],c[2]+dz*.8],[-dx,0,-dz]);if(!p)continue;
-    const L=len*(.7+a181H(i,y*30,3)*.6),q=[p[0]+dx*off,p[1],p[2]+dz*off];k.L(bn,'c',a181H(i,5,y*20)<.35?(col2||col):col,[q[0]-dx*.01,q[1]+.01,q[2]-dz*.01],[q[0]+dx*L*.35,q[1]-L,q[2]+dz*L*.35],(o.r||.03),.003,4)}}
 // tufts round a limb at the point t along a bone pair (a → b), around its axis
 function cgLimbTufts(k,M,a,b,t,n,len,col,col2,bn,o){o=o||{};const c=lerp3(a,b,t),d=nrm3(sub3(b,a)),u=nrm3(cross3(d,[0,0,1])),v=nrm3(cross3(d,u));
   for(let i=0;i<n;i++){const an=i/n*Math.PI*2+a181H(i,t*20)*.3,r=add3(mul3(u,Math.cos(an)),mul3(v,Math.sin(an))),p=cgRay(M,add3(c,mul3(r,.5)),mul3(r,-1),o.parts||{arm:1,leg:1,hand:1,foot:1});if(!p)continue;

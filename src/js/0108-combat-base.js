@@ -105,20 +105,8 @@ const topL=()=>hero.lvl||1,SV=[40,140,500],EV=[30,90,250,700,1800];
 const val=i=>Math.round(((i.atk||0)*9+(i.def||0)*8+(i.hp||0)*1.5)*[1,1.6,2.6,4.5,9][i.r]),pr=v=>Math.round(v*1.8);
 $('shopBtn').onclick=()=>{const ti=townAt(pl.position.x,pl.position.z,2);if(ti<0)return say('Shops are inside the town walls. Walk to a town to trade.');const T=TOWNS[ti],a=Math.hypot(pl.position.x-T.mp[0],pl.position.z-T.mp[1]),b=Math.hypot(pl.position.x-T.mv[0],pl.position.z-T.mv[1]);openShop(a<=b?'m':'x')};
 $('sClose').onclick=()=>$('shop').classList.add('hide');
-$('sb').onclick=e=>{
-  const b=e.target.closest('[data-b]');if(!b)return;const k=b.dataset.b,n=+k.slice(1);let c;
-  if(k=='pot'){c=30}else if(k[0]=='g'){c=pr(val(stock.gear[n]))}else if(k[0]=='s'){c=SV[MOVES[stock.scrolls[n]].r]*2}else c=EV[0]*3;
-  if(gold<c)return say('Not enough gold.');gold-=c;
-  if(k=='pot')pots++;else if(k[0]=='g')gear.push(stock.gear.splice(n,1)[0]);else if(k[0]=='s'){const m=stock.scrolls.splice(n,1)[0];inv[m]=(inv[m]||0)+1}else{eggs.push(stock.egg);stock.egg=null}
-  rS();hud();
-};
-$('ss').onclick=e=>{
-  const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s,t=k[0],id=k.slice(1);
-  if(t=='g'){const i=gear.findIndex(g=>g.id==+id);if(i<0)return;gold+=Math.round(val(gear[i])*.5);gear.splice(i,1)}
-  if(t=='s'){inv[id]--;gold+=SV[MOVES[id].r]}
-  if(t=='e'){const i=eggs.findIndex(g=>g.id==+id);if(i<0)return;gold+=EV[eggs[i].tier];eggs.splice(i,1)}
-  rS();hud();
-};
+$('sb').onclick=e=>{};
+$('ss').onclick=e=>{};
 // bag
 let selI=null;
 let bagTab=0;
@@ -181,9 +169,9 @@ $('iClose').onclick=()=>$('inc').classList.add('hide');
 
 // companions menu
 let cmpSel=0;
-$('cmpBtn').onclick=()=>{$('cmp').classList.remove('hide');rC()};
+$('cmpBtn').onclick=()=>{};
 $('cClose').onclick=()=>$('cmp').classList.add('hide');
-$('cl').onclick=e=>{const b=e.target.closest('button');if(b){cmpSel=+b.dataset.i;rC()}};
+$('cl').onclick=e=>{};
 $('cd').onclick=e=>{const id=e.target.id;if(id!='mkLead'&&id!='mk2')return;const c=party[cmpSel];if(c.h<=0)return say('Rest at a tavern to revive it first.');party.splice(cmpSel,1);const at=id=='mkLead'?0:Math.min(1,party.length);party.splice(at,0,c);cmpSel=at;hero.hp=Math.min(hero.hp,heroMax());ui();rC()};
 $('fuseBtn').onclick=()=>{held=null;sel=[];rF();$('fz').classList.remove('hide')};
 $('fCancel').onclick=()=>$('fz').classList.add('hide');
@@ -191,16 +179,5 @@ $('fl').onclick=e=>{
   const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
   sel=sel.includes(i)?sel.filter(x=>x!=i):sel.length<2?[...sel,i]:[sel[1],i];rF();
 };
-$('doF').onclick=()=>{
-  if(sel.length!=2||!compat(party[sel[0]],party[sel[1]]))return;
-  const a=party[sel[0]],b=party[sel[1]],base=a.l>=b.l?a:b,o=base==a?b:a,same=a.g.join()==b.g.join();
-  const r=mk(base.g[0],Math.max(a.l,b.l)+1,Math.min(5,Math.max(a.f,b.f)+1+(same?1:0)),base.v),mp={};
-  // merge looks: every species from both parents (up to 3) with their colors, and a brand-new name
-  [base,o].forEach(p=>p.g.forEach((s,i)=>{mp[s]=mp[s]||p.cl[i]}));
-  r.g=Object.keys(mp).slice(0,3);r.cl=r.g.map(s=>mp[s]);r.sy=[base.sy[0],o.sy[1]];r.z=(a.z+b.z)/2;
-  r.n=r.sy[0]+r.sy[1];r.iv={hp:(a.iv.hp+b.iv.hp)/2*1.04,a:(a.iv.a+b.iv.a)/2*1.04,d:(a.iv.d+b.iv.d)/2*1.04};r.sp=[...new Set([...base.sp,...o.sp])].slice(0,3);r.tr=base.tr=='Universal'?(o.tr&&o.tr!='Universal'?o.tr:''):base.tr;r.h=M(r);
-  party=party.filter((_,i)=>!sel.includes(i));party.push(r);
-  say('Fusion complete! '+nm(r)+' was born.');
-  $('fz').classList.add('hide');ui();
-};
+$('doF').onclick=()=>{};
 

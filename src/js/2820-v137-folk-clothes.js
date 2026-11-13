@@ -79,7 +79,6 @@ function fkBeret(k,D,col,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z
 function fkBrimHat(k,D,col,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),cr=Math.min(o.cr||.08,c.half+.01),y=c.y-(o.sink||.012);
   k.p('head','cyl','c',col,0,y+.002,z,o.brim||.2,.008,o.brim||.2,o.tx||-.05,0,o.tz||0);k.p('head','tor','c',mdSh(col,.92),0,y+(o.ch||.07)/2,z,cr,o.ch||.07,cr*1.05,o.tx||-.05,0,o.tz||0);
   k.p('head','cyl','c',o.band||mdSh(col,.55),0,y+.014,z,cr*1.03,.018,cr*1.08,o.tx||-.05,0,o.tz||0);return {y,cr,z}}
-function fkBrimHatB(B,D,col,o){}
 // a chef's toque
 function fkToque(k,D,o){o=o||{};const z=o.z==null?D.crownZ:o.z,c=fkCrown(D,z),r=Math.min(.075,c.half+.006),y=c.y-.01;
   k.p('head','cyl','c',0xe8e2d6,0,y+.06,z-.005,r,.12,r,-.1,0,0);k.p('head','sph2','c',0xf0ece2,0,y+.13,z-.012,r*1.35,.055,r*1.35,-.1,0,0);

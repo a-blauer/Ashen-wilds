@@ -52,8 +52,8 @@ function dm196Free(o){if(o.act&&o.act.s&&o.act.s.busy===o)o.act.s.busy=null;o.ac
 // ---------------- poses (rest pose + offsets, on the folk skeleton) ----------------
 // every offset is written down (DM196V.cur) and taken off again before the next frame: the folk idle layers its own motion
 // additively over whatever the bones hold (idlAp), so offsets left in place would pile up
-function dm196R(g,k,x,y,z){const b=g.bones[k];if(!b)return;x=x||0;y=y||0;z=z||0;b.rotation.x+=x;b.rotation.y+=y;b.rotation.z+=z;if(DM196V.cur)DM196V.cur.push([b,x,y,z])}
-function dm196Undo(o){const L=o._pz;if(!L)return;for(const [b,x,y,z,py] of L){if(py!=null){b.position.y=py;continue}b.rotation.x-=x;b.rotation.y-=y;b.rotation.z-=z}o._pz=null}
+function dm196R(g,k,x,y,z){}
+function dm196Undo(o){}
 function dm196Sit(g,h){const B=g.bones,R=g.userData.rest;if(!B.pelvis||!R)return;
   // thighs forward, shins down; the pelvis drops so the seat carries it (h = seat height)
   const drop=(g.userData.hipY||.55)-(h+.07); // negative: a seat higher than the hip (the fountain's rim) lifts the body onto it

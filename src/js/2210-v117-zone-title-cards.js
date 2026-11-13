@@ -20,12 +20,7 @@ var ZT116={mute:0,el:null,tm:0,
      keep:'<path d="M5.5 21V8.5h2.2V5.2h2.1v3.3h4.4V5.2h2.1v3.3h2.2V21h-4.3v-4.6a2.2 2.2 0 0 0-4.4 0V21z"/>'}};
 function zt116Orn(e){return `<div class="ztd"><i></i><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ZT116.E[e]||''}</svg><i></i></div>`}
 function zt116Esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c])}
-function zt116Show(T,kick,title,sub,foot,cls){
-  let h=ZT116.el;if(!h){h=ZT116.el=document.createElement('div');h.id='ztc116';($('stage')||document.body).appendChild(h)}
-  clearTimeout(ZT116.tm);h.className='';void h.offsetWidth;
-  h.style.cssText=`--zc1:${T.c1};--zc2:${T.c2};--zc3:${T.c3};--zf:${T.f}`;
-  h.innerHTML=`<div class="ztk">${zt116Esc(kick)}</div><div class="ztt">${zt116Esc(title)}</div>${zt116Orn(T.e)}<div class="zts">${zt116Esc(sub)}</div>${foot?`<div class="ztf">${foot}</div>`:''}`;
-  h.className='on '+(cls||'');ZT116.tm=setTimeout(()=>{h.className=''},5200)}
+function zt116Show(T,kick,title,sub,foot,cls){}
 function zt116Ins(I){if(!I||!PMAP[I.z])return;const p=PMAP[I.z],T=ZT116.Z[I.z]||ZT116.Z[0],t=typeof TH112!='undefined'&&TH112&&TH112.byG?TH112.byG[I.g]:null;
   let kick,title,sub;
   if(I.den){const B=BOSSES[I.z]||{};kick=p.n+' · Sovereign’s Den';title=B.name||'The Den';sub=B.title||p.sub}

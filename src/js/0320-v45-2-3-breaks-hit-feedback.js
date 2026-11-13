@@ -7,24 +7,7 @@ function elRing(e,on){
   e.elR.visible=!!on;if(on)e.elR.material.color.setHex(ELI[on][1]);
 }
 // returns a damage multiplier for the hit that applied it; side effects (stun, chains, explosions) happen here
-function applyEl(e,el,raw,src){
-  if(!el||!e||e.dead)return 1;const t=nowP(),cur=e.el&&e.el.t>t?e.el.k:null,P=e.m.position;
-  if(!cur||cur==el){e.el={k:el,t:t+5000};elRing(e,el);return 1}
-  const key=[cur,el].sort().join('+');e.el=null;elRing(e,null);let mult=1;
-  const splash=(r,k,col,fx)=>enemies.forEach(o=>{if(o.dead||o===e||d2(o.m.position,P)>r)return;heroHit_base(o,raw*k,heroMt(),{proc:false,s:{col}});if(fx&&!o.dead)eStatus(o,fx,0)});
-  switch(key){
-    case 'fire+frost':mult=2;popT(P,'MELT!','#fb923c');break;
-    case 'frost+water':e.stun=Math.max(e.stun||0,e.boss?.6:2.2);e.frz=2.2;if(!e.boss)mCancel(e);popT(P,'FROZEN!','#93c5fd');burst(gY(P,.8),0xbfe8ff,30,1.5,1.5,.6);break;
-    case 'shock+water':{popT(P,'CONDUCT!','#fde047');let n=0;enemies.slice().sort((a,b)=>d2(a.m.position,P)-d2(b.m.position,P)).forEach(o=>{if(n>=3||o.dead||o===e||d2(o.m.position,P)>6)return;n++;zapLine(P,o.m.position);heroHit_base(o,raw*.7,heroMt(),{proc:false,s:{col:0xfff06a}})});mult=1.3;break}
-    case 'fire+poison':popT(P,'COMBUST!','#f97316',true);ring(P,0xff7a2a,3.2,380);burst(gY(P,.6),0xff8a3a,60,4,3,.7);shake(.3);sfx('boom');splash(3.2,.9,0xff7a2a);mult=1.6;break;
-    case 'fire+shock':popT(P,'OVERLOAD!','#facc15');ring(P,0xfff06a,2.6,320);enemies.forEach(o=>{if(o.dead||d2(o.m.position,P)>2.8)return;const a=V().subVectors(o.m.position,P).setY(0).normalize();o.vx=a.x*9;o.vz=a.z*9});splash(2.8,.7,0xfff06a);mult=1.4;sfx('boom',.6);break;
-    case 'frost+shock':e.wk=Math.max(e.wk||0,8);popT(P,'BRITTLE!','#a5f3fc');mult=1.25;break;
-    case 'fire+water':e.stun=Math.max(e.stun||0,e.boss?.3:1);if(!e.boss)mCancel(e);popT(P,'STEAM!','#e2e8f0');burst(gY(P,1),0xffffff,30,1.5,2,.8);mult=1.2;break;
-    case 'poison+water':popT(P,'SPREAD!','#a3e635');enemies.forEach(o=>{if(o.dead||o===e||d2(o.m.position,P)>5)return;eStatus(o,{poison:5},atkOf(heroMt())*1.2)});mult=1.2;break;
-    default:e.el={k:el,t:t+5000};elRing(e,el);return 1;
-  }
-  return mult;
-}
+function applyEl(e,el,raw,src){}
 function zapLine(a,b){const g=new THREE.BufferGeometry().setFromPoints([gY(a,1),gY(b,1)]),l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xfff06a,transparent:true,opacity:1}));scene.add(l);tw(260,k=>l.material.opacity=1-k,()=>{scene.remove(l);g.dispose()})}
 // weak points: big enemies carry a glowing spot on their back
 const WEAKK={giant:1,tortoise:1,boghorror:1,sandwyrm:1,magmadrake:1,orc:1,hollowknight:1};

@@ -111,8 +111,7 @@ function ab152Caught(a){if(AB152H.cau)return;AB152H.cau={a,t:0};AB152H.frz=1;a.s
   try{const p=a.g.position,P=pl.position;a.yaw=Math.atan2(P.x-p.x,P.z-p.z);svSnd('hiss',1.1,1);flash('rgba(255,40,20,.8)');shake(.25)}catch(_){}
   ab152AfterCaught(a)}
 // what being seen leads to (v157: the city's alarm, 3192; this was the v152 rule: back to the last checkpoint)
-function ab152AfterCaught(a){say('👁 <b>Spotted!</b> Back to the last checkpoint.');
-  setTimeout(()=>{fadeTo(()=>{ab152Restart(false);try{say('✦ Checkpoint · '+ab152Spot(AB152Q.cp).name)}catch(_){}})},1500)}
+function ab152AfterCaught(a){}
 // ---------------- each frame in the city ----------------
 function ab152Tick(dt,now){if(!ab152In()){if(AB152.S){AB152.S.root.visible=false;AB152.S.lights.forEach(L=>L.lt.intensity=0);AB152.S.acts.forEach(a=>{if(a.lt)a.lt.intensity=0})}
     if(AB152H.cr)ab152SetCrouch(false);AB152H.crK=Math.max(0,AB152H.crK-dt*4);if(!AB152H.off){AB152H.off=1;try{ab152Hud()}catch(_){}}return}

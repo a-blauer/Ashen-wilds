@@ -9,11 +9,7 @@
 //    Now an element set by a companion's hit only reacts with elements from other sources (your hits, the other companion).
 var CH127=null;
 {const f=compHit;compHit=function(c,e){const o=CH127;CH127=e?{c,e}:null;try{return f.apply(this,arguments)}finally{CH127=o}}}
-{const f=applyEl;applyEl=function(e,el,raw,src){
-  if(!CH127||CH127.e!==e||!e||e.dead)return f.apply(this,arguments);
-  const t=nowP(),cur=e.el&&e.el.t>t?e.el:null;
-  if(cur&&cur.k!==el&&cur.by===CH127.c){cur.t=t+5000;return 1}   // own element: refresh, no reaction
-  const r=f.apply(this,arguments);if(e.el&&e.el.k===el)e.el.by=CH127.c;return r}}
+{const f=applyEl;applyEl=function(e,el,raw,src){}}
 
 // 2. Companion spells (CSP.m = damage per hit/tick). Lingering area spells hit 6–8 times and were 2–2.4× a normal spell on one
 //    target; they keep their crowd strength but come down. The weakest spells come up (crowd control spells stay a little lower).

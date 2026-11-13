@@ -187,7 +187,6 @@ function ic151Shatter(S){const V=THREE.Vector3,R=ic151Rng(2024),NB=140,B=[];for(
       vertexShader:'attribute float ar;varying float vR;void main(){vR=ar;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader:'uniform float uR,uA;varying float vR;void main(){float k=smoothstep(uR+.5,uR-.5,vR);gl_FragColor=vec4(vec3(.55,.85,1.)*k*uA,1.);}'});
     S.cracks=new THREE.LineSegments(g,m);S.sc.add(S.cracks)}}
-function ic151CellAt(S,x,z){for(const c of S.cells){const p=c.pts,n=p.length;let ins=false;for(let a=0,b=n-1;a<n;b=a++){const pa=p[a],pb=p[b];if((pa[1]>z)!=(pb[1]>z)&&x<(pb[0]-pa[0])*(z-pa[1])/(pb[1]-pa[1])+pa[0])ins=!ins}if(ins)return c}return null}
 
 // ---------------- the earth breaking: physics ----------------
 // A small rigid-body simulation run once (time-sliced while the opening plays; all at once in tests): gravity, contacts
@@ -207,7 +206,6 @@ function ic151PhysInit(S){const P=S.phys={T0:IC151G.imp,T1:34.9,dt:1/240,n:0,don
   S.cells.forEach(c=>{const b=c.body;b.c=c;b.kin=c.chunk||c===S.rcell;b.tr=c.chunk?c.tr:null;b.sleep=!b.kin;b.x=b.x0.slice();b.q=[0,0,0,1];b.v=[0,0,0];b.w=[0,0,0];b.still=0;b.lastEv=-9;
     b.wp=new Float32Array(b.pts.length);b.ws=new Float32Array(b.sph.length);b.rec=new Float32Array(P.nF*7);b.nr=0;P.B.push(b)});
   P.dyn=P.B.filter(b=>!b.kin);ic151PhysRec(S);return P}
-function ic151PhysAll(S){return S.phys.B}
 function ic151PhysRec(S){const P=S.phys,f=Math.round((P.t-P.T0)*60);if(f>=P.nF)return;P.B.forEach(b=>{b.rec.set([b.x[0],b.x[1],b.x[2],b.q[0],b.q[1],b.q[2],b.q[3]],f*7);b.nr=f+1});P.nf=f+1}
 function ic151PhysStep(S){const P=S.phys,dt=P.dt,t=P.t+dt,G=12.2,B=P.B,o=[0,0,0],o2=[0,0,0],K=ic151K;
   const cr=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -673,9 +671,7 @@ function ic151Play(done,mode){if(IC151.run)return;mode=mode||'all';IC151.mode=mo
   L.rs=()=>{try{S.rd.setSize(innerWidth,innerHeight);S.cam.aspect=innerWidth/innerHeight;S.cam.updateProjectionMatrix()}catch(_){}};addEventListener('resize',L.rs);
   const tick=now=>{if(!IC151.run)return;L.raf=requestAnimationFrame(tick);const t=Math.max(L.off,(now-L.t0)/1000+L.off);if(mode==='p1'&&t>=IC151.p1End){ic151P1Out();return}if(S.phys&&!S.phys.done)try{ic151PhysRun(S,t>18.9?1e9:6)}catch(e){console.warn('intro physics',e);S.phys.done=true}ic151Seek(t)};L.raf=requestAnimationFrame(tick)}
 // render/apply time t (live play and tests). Past the cut the game runs again under the clearing light.
-function ic151Seek(t){const S=IC151.S;if(!S)return;if(t<IC151.cut){IC151.on=true;try{ic151Frame(S,t)}catch(e){console.warn('intro frame',e);IC151.err=String(e&&e.stack||e);t=IC151.cut}}
-  if(t>=IC151.cut&&IC151.on){IC151.on=false;try{if(IC151.live&&IC151.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}}
-  ic151Dom(S,t);if(t>=IC151.len)ic151End()}
+function ic151Seek(t){}
 function ic151Skip(){const L=IC151.live;if(!L||!IC151.on)return;const t=(performance.now()-L.t0)/1000+L.off,to=IC151.mode==='p1'?IC151.p1End:IC151.skipT;if(t>=to)return;L.off+=to-t;
   L.timers.forEach(clearTimeout);L.timers=[];try{speechSynthesis.cancel()}catch(_){}try{if(L.voice)L.voice.pause()}catch(_){}
   try{if(L.out){L.out.gain.cancelScheduledValues(L.ac.currentTime);L.out.gain.setTargetAtTime(0,L.ac.currentTime,.12)}}catch(_){}}

@@ -242,7 +242,5 @@ SP152.trk.dirgeI=I=>{if(I.g!==20||dg165SDone())return null;const n=DG165Q.g.ex.f
   if(DG165Q.g.st<1)return {name:'The Keeper’s Grave',lines:[['Follow the road to its end'],['Read the weeping angel'],['Graves read',n+'/'+N]]};
   return {name:'The Keeper’s Grave',lines:[['Find the Keeper’s grave'],['A broken stone · a raven · undying candles',null,1],['Graves read',n+'/'+N]]}};
 // ---------------- the minimap: graves you have read ----------------
-function dg165GMarks(g,P,k){if(!dg165GIn())return;dg165GravePlan().G.forEach((o,i)=>{const seen=DG165Q.g.ex[i],keep=i===DG165G.K&&dg165GDone();if(!seen&&!keep)return;const q=P(o.x,o.z);if(!q)return;
-  g.save();g.translate(q[0],q[1]);g.scale(k,k);const c=keep?'#7affb0':DG165Q.g.bad[i]?'#6a5a4a':'#c8ccc4';g.fillStyle='#141618';g.fillRect(-3.4,-4.4,6.8,8.8);g.strokeStyle=c;g.lineWidth=1.4/k;
-  g.beginPath();g.moveTo(0,-3.4);g.lineTo(0,3.4);g.moveTo(-2.2,-1.2);g.lineTo(2.2,-1.2);g.stroke();g.restore()})}
+function dg165GMarks(g,P,k){}
 {const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{dg165GMarks(mmX,(x,z)=>{const X=(x-(cx-vw/2)+.5)*w/vw,Y=(z-(cy-vh/2)+.5)*h/vh;return X<-6||Y<-6||X>w+6||Y>h+6?null:[X,Y]},1)}catch(_){}}}

@@ -5,13 +5,7 @@ const SECRETS=[];const secOpen=new Set();let tmaps=[];
     for(let k=0;k<2;k++){const s=pickSpot(T,26);if(s)SECRETS.push({id:SECRETS.length,k:'boulder',x:s[0],z:s[1],T})}
   }
 }
-function buildSecret(S){
-  const g=new THREE.Group();g.position.set(S.x,GH(S.x,S.z),S.z);
-  {const b=TQ(g,new THREE.DodecahedronGeometry(1,0),sm(0x6e6a64),0,.95,0,1.25,1.05,1.15,.3,.6,0);
-    [[0,1.2,.9,.5],[.5,.9,.8,-.6],[-.4,1.4,.75,.9]].forEach(([x,y,z,r])=>{const c=TQ(g,G_BOX,gmat(0xffb050),x,y,z,.06,.6,.02,0,0,r);c.castShadow=false});
-    S.body=b;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)CBLK.add((S.z+j)*W+S.x+i)}
-  scene.add(g);S.g=g;
-}
+function buildSecret(S){}
 function breakBoulder(S){
   if(S.broken)return;S.broken=1;secOpen.add('b'+S.id);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)CBLK.delete((S.z+j)*W+S.x+i);
   burst(gY(V(S.x,0,S.z),1),0x8a8478,60,4,3,.8);burst(gY(V(S.x,0,S.z),1),0xffb050,30,3,3,.6);shake(.25);sfx('boom');

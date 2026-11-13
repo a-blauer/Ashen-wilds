@@ -12,7 +12,6 @@ const MOUNTS={
  obsidrake:{n:'Duskfire Drake',i:'🐲',t:5,rig:'Drakelet',col:0x2a1a2a,sc:1.7,d:'A young dragon broken to the saddle.'}
 };
 const MNTK=Object.keys(MOUNTS),MBASE=[25,40,55,70,85],MPRICE=[350,1600,5200,14000,32000],MGROW=100,MCAP=40;
-const mountsOfTier=T=>MNTK.filter(k=>MOUNTS[k].t==T);
 let mounts=[],meggs=[],riding=null,mActive=null,mModel=null,mLast=null;
 const mOf=id=>mounts.find(m=>m.id==id);
 function newMount(k,bonus){const T=MOUNTS[k].t,s=MBASE[T-1]+R(0,bonus||6);const m={id:uid++,k,n:MOUNTS[k].n,spd:s,cap:s+MCAP,dist:0};mounts.push(m);if(!mActive)mActive=m.id;return m}
@@ -44,15 +43,7 @@ function mPreview(k){
 }
 const spdBar=m=>`<span class="hpm" title="Speed ${m.spd} of ${m.cap}"><i style="width:${Math.round(100*m.spd/m.cap)}%;background:linear-gradient(90deg,#7ac8f0,#c9a24a)"></i></span>`;
 const mRow=(m,act)=>{const D=MOUNTS[m.k];return `<div class="rw${mSel==m.k?' on':''}" data-msel="${m.k}" style="--rc:${RAR[D.t-1][1]}"><span class="rn">${D.i} <b>${m.n}</b> ${mActive==m.id?'<em style="color:var(--acc)">● active</em>':''}<small>Tier ${D.t} · Speed <b>${m.spd}</b> / ${m.cap} · +${Math.round(m.spd)}% move speed · next point in ${Math.ceil(MGROW-m.dist)} steps</small></span><span class="ra">${spdBar(m)}${act||''}</span></div>`};
-XR.stable=()=>{
-  const T=TOWNS[xwArg]||TOWNS[0],tier=T.i+1,L=mountsOfTier(tier),P=c=>`<span class="gp${gold<c?' poor':''}">${c} 🪙</span>`;mSel=mSel||L[0];
-  $('xwT').textContent='🐎 Stable Master · '+T.n;$('xwS').innerHTML='Tier '+tier+' mounts · 🪙 <b>'+gold+'</b>';
-  const sale=L.map(k=>{const D=MOUNTS[k],c=MPRICE[tier-1];return `<div class="rw${mSel==k?' on':''}" data-msel="${k}" style="--rc:${RAR[tier-1][1]}"><span class="rn">${D.i} <b>${D.n}</b><small>Speed ${MBASE[tier-1]}-${MBASE[tier-1]+6} at birth · up to +${MCAP} with riding</small></span><span class="ra">${P(c)}<button class="pri" data-mbuy="${k}" ${gold<c?'disabled':''}>Buy</button></span></div>`}).join('');
-  const eg=meggs.map(e=>{const D=MOUNTS[e.k];return `<div class="rw" data-msel="${e.k}" style="--rc:${RAR[e.t-1][1]}"><span class="rn">🥚 <b>${D.n} Egg</b><small>Tier ${e.t} · hatched mounts can roll a better speed than bought ones</small></span><span class="ra"><button class="pri" data-mhatch="${e.id}">Hatch</button></span></div>`}).join('')||'<div class="mut" style="padding:6px 8px">No mount eggs. They are very rare drops from monsters, more likely from elites and bosses.</div>';
-  const mine=mounts.map(m=>mRow(m,`${mActive==m.id?'':`<button data-mact="${m.id}">Ride this</button>`}<button data-msell="${m.id}" title="Sell for ${Math.round(MPRICE[MOUNTS[m.k].t-1]*.3)} gold">Sell</button>`)).join('')||'<div class="mut" style="padding:6px 8px">You have no mounts yet.</div>';
-  $('xwB').innerHTML=`<div class="xcols"><div><div class="sec">For sale</div><div class="rows">${sale}</div><div class="sec">Mount eggs</div><div class="rows">${eg}</div><div class="sec">Your mounts</div><div class="rows">${mine}</div></div><div>${mDetail(mSel)}</div></div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Press V to ride and to dismount. Mounts get faster the more you ride them. You cannot summon a mount in combat, and attacking dismounts you.</span>';mPreview(mSel);
-};
+XR.stable=()=>{};
 XR.mounts=()=>{
   if(!mSel||!mounts.some(m=>m.k==mSel))mSel=(mOf(mActive)||mounts[0]||{}).k||null;
   $('xwT').textContent='🐎 Mounts';$('xwS').textContent=mounts.length+' owned · press V to ride';
@@ -121,14 +112,6 @@ function fuseVal(a,b){let v=fuseVal_base(a,b);const c=fCat&&(sup[fCat]||0)>0?fCa
   if(c=='c_asc')v=(tierSp(a.g[0])>tierSp(b.g[0])?v*2:v)*1.25;else if(c=='c_kin')v*=1.25;else if(c=='c_ess')v*=1.6;return v}
 function compat(a,b){return compat_v2(a,b)||(fCat=='c_bind'&&(sup.c_bind||0)>0)}
 $('fz').addEventListener('click',e=>{const b=e.target.closest('[data-fc]');if(b){e.stopPropagation();fCat=b.dataset.fc;rF()}});
-$('doF').onclick=()=>{
-  if(sel.length!=2)return;const a=party[sel[0]],b=party[sel[1]];if(!compat(a,b))return;
-  const cat=fCat&&(sup[fCat]||0)>0?fCat:'',v=fuseVal(a,b);a.fp=Math.min(10,(a.fp||0)+v);a.f=Math.floor(a.fp);
-  ['hp','a','d'].forEach(k=>a.iv[k]=Math.max(a.iv[k],a.iv[k]*.75+b.iv[k]*.25+.01));
-  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<5&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
-  if(b.tr=='Universal'&&a.tr!='Universal'){}else if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))a.tr='';
-  if(cat){sup[cat]--;say(SUP[cat].i+' '+SUP[cat].n+' was used up.');if(!(sup[cat]>0))fCat=''}
-  a.h=M(a);party=party.filter((_,i)=>i!=sel[1]);say('Fusion complete! '+nm(a)+' grew stronger (+'+Math.round(v*10)+'% stats).');$('fz').classList.add('hide');hsDirty();ui();
-};
+$('doF').onclick=()=>{};
 
 $('mntBtn').onclick=()=>openMounts();

@@ -81,8 +81,6 @@ function rlx197Nose(rig){const m=rig.meshes[0],G=m&&m.geometry;if(!G)return null
     R('aL0',sb(s)*a,-.03*a);R('aR0',sb(-s)*a,.03*a);
     R('aL1',-(.1+.34*Math.max(0,-s)+.06*Math.max(0,s))*a,0);R('aR1',-(.1+.34*Math.max(0,s)+.06*Math.max(0,-s))*a,0);
     if(B.aL2)B.aL2.rotation.x+=-.12*Math.max(0,-s)*a;if(B.aR2)B.aR2.rotation.x+=-.12*Math.max(0,s)*a}}catch(e){}return r}}
-// ---- arm IK in the chest's frame: the paw at a point, the elbow toward a pole; returns the shoulder / elbow eulers ----
-var RLX197_T={q0:null,q1:null,v:null};
 function rlx197Aim(g,A,sd,T,pole,tw){const B=g.bones,a0=B['a'+sd+'0'],a1=B['a'+sd+'1'],a2=B['a'+sd+'2'],V=THREE.Vector3,Q=THREE.Quaternion;
   const S=a0.position,l0=a1.position.length(),l1=a2.position.length(),D=new V().subVectors(T,S);let d=D.length();if(d<1e-5)return null;
   const n=D.clone().divideScalar(d);d=Math.min(Math.max(d,Math.abs(l0-l1)+1e-3),l0+l1-1e-3);

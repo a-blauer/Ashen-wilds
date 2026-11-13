@@ -14,8 +14,6 @@ var AB152C={plaster:[0xb89a6e,0xa8885c,0xc2a676,0x9a7a52,0xb08a60,0xa07a58],trim
   iron:0x3a3a40,ironL:0x6a6a70,brass:0xb8923a,jade:0x3ac890,rat:0x5a4a40,ratD:0x3a2e28,ratP:0xc89a8a,meat:0x9a4a32,meatD:0x6a2a1a,fire:0xff7a28,fireL:0xffd080};
 var AB152={S:null,err:0};
 function ab152R(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return ()=>(s=s*16807%2147483647)/2147483647}
-// plan (u, v) → world (x, z)
-function ab152W(u,v){const I=sp152I('abeksi');return [I.x0+u,I.y0+v]}
 
 // ---------------- buildings ----------------
 // one face of a house: windows per storey, a door on the ground floor, a frieze; n = outward normal (unit, in x/z), t = along
@@ -153,8 +151,7 @@ AB152KB.bench=(k,C)=>{k.p('','box','c',C.woodL,0,.45,0,1.8,.08,.45);[-.75,.75].f
 AB152KB.stool=(k,C)=>{k.p('','cyl','c',C.woodL,0,.44,0,.22,.06,.22);for(let i=0;i<3;i++){const a=i/3*Math.PI*2;k.L('','c',C.woodD,[Math.sin(a)*.16,0,Math.cos(a)*.16],[Math.sin(a)*.08,.42,Math.cos(a)*.08],.025,.02,4)}};
 AB152KB.platform=(k,C)=>{k.p('','box','c',C.woodL,0,.6,0,2.6,.12,2.6);[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>k.p('','box','c',C.woodD,a*1.2,.3,b*1.2,.14,.6,.14));
       for(let i=0;i<3;i++)k.p('','box','c',C.wood,0,.1+i*.18,1.45+i*.15,1,.06,.3)};
-AB152KB.gate=(k,C)=>{k.p('','box','c',C.woodD,0,1.8,0,5.4,3.6,.3);k.p('','box','c',C.stoneL,0,3.75,.5,6.2,.3,1.6);for(let i=0;i<7;i++)k.p('','box','c',C.stone,-2.9+i*.97,4.1,1.25,.5,.45,.18);for(let i=0;i<9;i++)k.p('','box','c',i%2?C.wood:C.woodL,-2.4+i*.6,1.8,.17,.5,3.5,.04);
-      [.6,1.8,3.0].forEach(y=>k.p('','box','m',C.iron,0,y,.2,5.4,.16,.05));for(let i=0;i<14;i++)k.p('','sph','m',C.ironL,-2.6+i*.4,1.8+(i%2?1.2:-1.2),.24,.05);k.p('','cyl','m',C.brass,0,1.8,.25,.35,.05,.35,Math.PI/2,0,0)};
+AB152KB.gate=(k,C)=>{};
 AB152KB.drain=(k,C)=>{k.p('','box','g',0x1a2a1a,0,.04,0,1.2,.02,.6)};
 AB152KB.fenceV=(k,C)=>{[-.95,.95].forEach(z=>k.p('','box','c',C.woodD,0,.5,z,.1,1.0,.1));[.35,.75].forEach(y=>k.p('','box','c',C.wood,0,y,0,.05,.08,2.0))};
 AB152KB.fence=(k,C)=>{[-.95,.95].forEach(x=>k.p('','box','c',C.woodD,x,.5,0,.1,1.0,.1));[.35,.75].forEach(y=>k.p('','box','c',C.wood,0,y,0,2.0,.08,.05))};

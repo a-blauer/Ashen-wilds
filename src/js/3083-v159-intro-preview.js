@@ -27,12 +27,7 @@ function kqpvPut(o) { try { localStorage.setItem('kqpv', JSON.stringify(Object.a
 
 // the town part runs the real game (companions follow, smoke drifts): a jump there replays it without drawing, from the
 // cut (or from the last exact time when moving forward), so the frame matches what the video and the game show
-function kqpvFols(save) {
-  try {
-    if (save) KQPV.fs = (typeof fols != 'undefined' ? fols : []).map(f => f ? [f, f.position.clone(), f.rotation.y] : null);
-    else (KQPV.fs || []).forEach(x => { if (x) { x[0].position.copy(x[1]); x[0].rotation.y = x[2] } })
-  } catch (_) {}
-}
+function kqpvFols(save) {}
 function kqpvGo(t, exact) {
   t = Math.max(0, Math.min(kqpvEnd(), t)); KQPV.t = t; const S = IC151.S; if (!S) return;
   const tok = ++KQPV.tok;

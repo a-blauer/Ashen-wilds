@@ -71,18 +71,7 @@ function cs150WQGeo(C,sp){const K=CS150.pal(C,sp),T=CS150.wqAb.concat(CS150.wqFr
     L.push(v150Leg(pts,[.044,.034,.031,.034,.03,.028,.033,.026,.023,.02,.024,.019,.012,.004].map(r=>r*rs),[a,a,a,a,a,[k+'0',k+'1',.3],ab,b,b,[k+'1',k+'2',.3],bc,c2,c2,c2],
       [0,0,0,1,0,0,1,0,0,0,1,0,0,0],(o,r,s2)=>{o.copy(r.jt?K.red:K.blk);if(!r.jt&&s2>.5)o.lerp(K.gloss,.45)},5))}));
   return lpGeo('CS150|'+sp+'|'+C,'Cryptspider',L,151)}
-function cs150HMGeo(C,sp){const K=CS150.pal(C,sp),T=CS150.hmSac.concat(CS150.hmFr);
-  const rings=T.map((q,i)=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[0]<-.13?cs150AbB(q[0]):cs150FrB(q[0]),z:q[0],sac:q[0]<-.43,j:q[0]<-.43&&q[0]>-1.15?.07:0,i}));
-  const L=[{rings,seg:16,capA:1,capB:1,paint:(o,r,s,cc,i)=>{const a=Math.atan2(s,cc);
-    if(r.sac){o.copy(K.sac);if(Math.sin(a*6+r.z*9)>.8||Math.sin(a*11-r.z*14)>.9)o.copy(K.vein);if(s<-.5)o.lerp(K.vein,.25);return}
-    if(r.z<-.08){o.copy(r.i%2?K.amb:K.dark);if(s<-.4)o.copy(K.dark);return}                                          // banded armour behind the waist
-    o.copy(K.amb);if(s<-.3)o.copy(K.dark);else if(Math.abs(cc)>.8)o.lerp(K.dark,.6);if(r.z>.35&&s>.2)o.lerp(K.dark,.35)}}];
-  [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg(sp,s,i),k=G.k,P=G.P,rs=1-i*.02;
-    const pts=[v150Lerp(P[0],P[1],-.1),v150Lerp(P[0],P[1],.5),P[1],P[2],v150Lerp(P[2],P[3],.35),v150Lerp(P[2],P[3],.75),P[3],v150Lerp(P[3],P[4],.5),P[4]];
-    L.push(v150Leg(pts,[.07,.062,.056,.06,.05,.043,.045,.03,.008].map(r=>r*rs),
-      [[k+'0',k+'0',0],[k+'0',k+'0',0],[k+'0',k+'0',0],[k+'0',k+'1',.5],[k+'1',k+'1',0],[k+'1',k+'1',0],[k+'1',k+'2',.5],[k+'2',k+'2',0],[k+'2',k+'2',0]],
-      [0,0,0,1,0,0,1,0,0],(o,r,s2)=>{o.copy(r.jt?K.dark:(r.lg>.3&&r.lg<.6?K.amb2:K.amb));if(s2<-.3&&!r.jt)o.lerp(K.dark,.5);if(r.lg>.85)o.copy(K.dark)},6))}));
-  return lpGeo('CS150|'+sp+'|'+C,'Cryptspider',L,152)}
+function cs150HMGeo(C,sp){}
 function cs150WQKit(k,C,red){const K=CS150.pal(C,'Widowqueen'),blk=K.blk.getHex(),rd=K.red.getHex(),gl=K.gloss.getHex(),eye=red?0xff7a2a:0xff2a2a,AB=CS150.wqAb;
   // the hourglass: two red triangles meeting tip to tip on the top of the abdomen
   {const z0=-.62,cen=v150Surf(AB,z0,Math.PI/2,.002);[1,-1].forEach(d=>{const p=v150Surf(AB,z0+d*.075,Math.PI/2,.004),T=[0,cen[1]-p[1],cen[2]-p[2]],l=Math.hypot(T[1],T[2]);
@@ -103,34 +92,7 @@ function cs150WQKit(k,C,red){const K=CS150.pal(C,'Widowqueen'),blk=K.blk.getHex(
     for(let i=0;i<7;i++){const a=(i/6-.5)*Math.PI*1.5,x=Math.sin(a)*.068,z=cz+Math.cos(a)*.058,h=.15-Math.abs(i-3)*.022,d=[Math.sin(a)*.35,1,Math.cos(a)*.2-.3],l=Math.hypot(...d);
       const b=[x,cy,z],m=[x+d[0]/l*h*.7,cy+d[1]/l*h*.7,z+d[2]/l*h*.7],t=[x+d[0]/l*h,cy+d[1]/l*h,z+d[2]/l*h];k.L('head','c',blk,b,m,.014,.008,4);k.L('head','c',rd,m,t,.008,.001,4)}
     k.p('head','oct','c',rd,0,cy+.01,cz+.07,.018,.026,.012)}}
-function cs150HMKit(k,C,red){const K=CS150.pal(C,'Hivemother'),amb=K.amb.getHex(),dk=K.dark.getHex(),sac=K.sac.getHex(),egg=K.egg.getHex(),eye=red?0xff4a2a:0xffb020,R=dkRng(57),SAC=CS150.hmSac;
-  // eggs bulging through the sac: glowing ones and pale ones
-  for(let n=0;n<34;n++){const z=-.55-R()*.65,a=-.5+R()*(Math.PI+1),sz=.028+R()*.026,p=v150Surf(SAC,z,a,-sz*.4);k.p('tail0','sph',n%3==0?'g':'c',n%3==0?egg:dkShade(sac,1.25),p[0],p[1],p[2],sz,sz*.9,sz*1.1)}
-  // the old chitin plates, stretched far apart along the top of the swollen sac
-  for(let j=0;j<6;j++){const z=-.52-j*.13,p=v150Surf(SAC,z,Math.PI/2,.002);k.p('tail0','dod','c',j%2?dkShade(amb,.75):dkShade(amb,.55),p[0],p[1],p[2],.075-Math.abs(j-2.5)*.008,.016,.04)}
-  // spiderlings clinging to the sac
-  [[-.62,1.25],[-.8,2.2],[-.98,1.0],[-.72,.45],[-1.08,2.5],[-.9,2.9],[-.6,.1]].forEach((q,n)=>{const p=v150Surf(SAC,q[0],q[1],.01),nx=Math.cos(q[1]),ny=Math.sin(q[1]),f=n%2?1:-1,col=n%2?dk:0x1a1410;
-    k.p('tail0','sph','c',col,p[0]+nx*.012,p[1]+ny*.012,p[2]-f*.02,.03,.024,.036);k.p('tail0','sph','c',col,p[0]+nx*.01,p[1]+ny*.01,p[2]+f*.025,.02,.016,.022);
-    k.p('tail0','sph','g',eye,p[0]+nx*.02,p[1]+ny*.02,p[2]+f*.042,.006);
-    for(let l=0;l<4;l++)[-1,1].forEach(sd=>{const tz=p[2]+f*(.03-l*.018),tx=-ny*sd,ty=nx*sd;
-      k.L('tail0','c',col,[p[0]+nx*.01,p[1]+ny*.01,tz],[p[0]+tx*.05+nx*.012,p[1]+ty*.05+ny*.012,tz+f*(.012-l*.012)],.005,.003,3)})});
-  // banded armour plates behind the waist, an armoured carapace on the thorax with a ridge of short spikes
-  [-.36,-.29,-.22,-.15].forEach((z,i)=>{const q=v150At(CS150.hmFr,z);k.p(z<-.27?'tail0':'pelvis','hem','c',i%2?dk:amb,0,q[1]+q[3]*.55,z,q[2]*1.02,q[3]*.5,.05,0,0,0)});
-  k.p('chest','hem','c',dkShade(amb,.8),0,.47,.17,.2,.075,.17);k.p('chest','hem','c',dk,0,.49,.17,.13,.06,.11);
-  [.28,.2,.12,.04].forEach((z,i)=>k.p(z>.1?'chest':'spine','cone4','c',dk,0,.535-Math.abs(z-.16)*.3,z,.016,.05,.02,-.4,0,0));
-  // the head: a brow plate over a cluster of amber eyes, big sickle mandibles (jaw bone: they open on a bite)
-  k.p('head','box','c',dk,0,.47,.43,.14,.026,.075,-.35,0,0);[-1,1].forEach(s=>k.p('head','box','c',dk,s*.062,.462,.43,.05,.024,.07,-.35,0,-s*.35));
-  [-1,1].forEach(s=>{k.p('head','sph','c',0x080606,s*.038,.452,.48,.02);k.p('head','sph','g',eye,s*.04,.453,.488,.013);
-    [[.07,.445,.46,.01],[.085,.43,.44,.009],[.02,.465,.475,.009],[.06,.465,.455,.008]].forEach(q=>k.p('head','sph','g',eye,s*q[0],q[1],q[2],q[3]));
-    k.p('head','cone4','c',dk,s*.09,.475,.4,.02,.06,.02,-.6,0,-s*.5);
-    const m0=[s*.05,.38,.49],m1=[s*.1,.36,.56],m2=[s*.09,.34,.63],m3=[s*.03,.33,.66];
-    k.L('jaw','c',dk,m0,m1,.032,.026,5);k.L('jaw','c',dk,m1,m2,.026,.018,5);k.L('jaw','c',dkShade(0xe8d8b0,.9),m2,m3,.018,.003,4);
-    k.p('jaw','cone4','c',0xe8d8b0,s*.075,.355,.585,.008,.025,.008,Math.PI/2,0,s*.6);
-    // spikes on the legs
-    [0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i),kk=G.k,P=G.P;[.35,.75].forEach(t=>{const p=v150Lerp(P[0],P[1],t);k.L(kk+'0','c',dk,[p[0],p[1]+.04,p[2]],[p[0]+s*.02,p[1]+.1,p[2]-.02],.016,.002,4)});
-      [.3,.65].forEach(t=>{const p=v150Lerp(P[2],P[3],t);k.L(kk+'1','c',dk,[p[0]+s*.03,p[1],p[2]],[p[0]+s*.09,p[1]+.03,p[2]],.014,.002,4)})})});
-  // spinnerets
-  [-1,1].forEach(s=>k.L('tail0','c',dk,[s*.03,.36,-1.28],[s*.04,.34,-1.35],.022,.006,4))}
+function cs150HMKit(k,C,red){}
 // Hivemother: the egg sac slowly swells and settles (the tail0 bone carries the whole abdomen)
 {const f=lpRig;lpRig=function(c,n,D){const g=f.apply(this,arguments);
   if(n=='Cryptspider'&&g&&c&&c.g&&c.g[0]=='Hivemother'&&g.rig){const body=g.b.children.find(m=>m.isSkinnedMesh&&m.skeleton),i=Object.keys(SPEC.Cryptspider.bones).indexOf('tail0'),bn=body&&body.skeleton.bones[i];
@@ -236,8 +198,7 @@ var V150_EX={
   Widowqueen:{back:[['tail0',0,1.0,-.58],['tail0',0,1.02,-.46],['tail0',0,.98,-.34],['chest',0,.6,.18]],head:['head',0,.56,.41],up:.1}, // v180: head mark on the head proper
   Hivemother:{back:[['tail0',0,.79,-1.0],['tail0',0,.81,-.8],['tail0',0,.78,-.6],['tail0',0,.6,-.3],['chest',0,.54,.15]],head:['head',0,.5,.41],up:.1},
   Lichbone:{back:[['neck',...boneP([0,.75,.36])],['chest',...boneP([0,.76,.24])],['chest',...boneP([0,.76,.12])],['spine',...boneP([0,.72,.0])],['pelvis',...boneP([0,.66,-.24])]],head:['head',...boneP([0,.78,.52])],up:.08}};
-{const f=lpExtras;lpExtras=function(k,c,D){const sp=c&&c.g&&c.g[0],o=V150_EX[sp];
-  if(o&&(D===LPR.Cryptspider||D===LPR.Boneling))return f.call(this,k,c,Object.assign({},D,o));return f.apply(this,arguments)}}
+{const f=lpExtras;lpExtras=function(k,c,D){}}
 
 // ===================================================================== evolution looks for the new bodies =====================================================================
 // The base species keep their v100 designs (1760, 1770). The variants get designs drawn for their own shapes; the rays
@@ -267,25 +228,7 @@ function cs150WQEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},blk=0x0c0a0e,top=(
   if(L>=5){// venom mist rising from the abdomen, glowing tips on the crown's spines
     for(let i=0;i<5;i++){const p=top((i-2)*.07,-.5-(i%2)*.14,-.01);if(p)E.L(p,E.add(p,[(i-2)*.01,.09+(i%2)*.03,-.05]),.012,.001,'g',P.glow2,3)}
     for(let i=0;i<7;i++){const a=(i/6-.5)*Math.PI*1.5,h=.15-Math.abs(i-3)*.022,d=E.nrm([Math.sin(a)*.35,1,Math.cos(a)*.2-.3]);E.pd('sph','g',P.glow,E.add([Math.sin(a)*.068,.574,.335+Math.cos(a)*.058],d,h),[0,1,0],.01,null,hb)}}}
-function cs150HMEvo(E,L,P){const jb={bn:'jaw'},hb={bn:'head'},SAC=CS150.hmSac,wax=0xc89a3a,sacHit=(z,a)=>{const q=v150At(SAC,z),o=v150Surf(SAC,z,a,.4);return E.on(o,[-Math.cos(a),-Math.sin(a),0])};
-  // L1: venom on the mandible tips, glowing veins over the egg sac
-  [-1,1].forEach(s=>E.pd('sph','g',P.glow,[s*.03,.322,.66],[0,1,0],[.01,.016,.01],null,jb));
-  for(let v=0;v<7;v++){const a0=-.2+v/6*(Math.PI+.4);let prev=null;for(let j=0;j<7;j++){const z=-.5-j*.11,a=a0+Math.sin(j*1.3+v)*.18,h=sacHit(z,a),p=h?E.add(h.p,h.n,.006):null;
-    if(p&&prev)E.L(prev,p,.006,.006,'g',j%2?P.glow:P.glowD,3,{vs:1});prev=p}}
-  if(L>=2){// clusters of wax brood cells on the sac's flanks, a crest of three chitin horns on the brow
-    [-1,1].forEach(s=>{for(let i=0;i<7;i++){const z=-.62-(i%4)*.07-(i>3?.04:0),a=s>0?.35+(i>3?.22:0):Math.PI-.35-(i>3?.22:0),h=sacHit(z,a);if(!h)continue;
-      E.pd('cyl','c',wax,E.add(h.p,h.n,.01),h.n,[.03,.03,.03]);E.pd('cyl','g',P.glowD,E.add(h.p,h.n,.026),h.n,[.02,.004,.02])}});
-    [-1,0,1].forEach(i=>E.horn([i*.04,.48,.425],[i*.3,1,-.6],[0,0,-.04],.09-Math.abs(i)*.02,.016,'c',P.dark,4,hb))}
-  if(L>=3){// iron plates riveted over the thorax and the brow, iron caps on the hips of the legs
-    [.08,.17,.26].forEach((z,i)=>{const h=E.top(0,z);if(h){E.pd('hem','m',P.metal,E.add(h.p,h.n,-.004),h.n,[.13-i*.015,.03,.06],[0,0,1]);E.pd('sph','m',P.trim,E.add(h.p,h.n,.022),h.n,.008)}});
-    E.pd('box','m',P.metal,[0,.488,.44],[0,1,.5],[.15,.012,.06],null,hb);
-    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const G=CS150.leg('Hivemother',s,i).P,p=v150Lerp(G[0],G[1],.55);E.pd('hem','m',P.metal,E.add(p,[0,.035,0]),[s*.3,1,0],[.05,.03,.06],null,{bn:G.k+'0'})}))}
-  if(L>=4){// a crown of horns tipped in gold, gold bands on the legs
-    for(let i=0;i<5;i++){const a=(i/4-.5)*2.2,b=[Math.sin(a)*.09,.47,.4+Math.cos(a)*.02];E.horn(b,[Math.sin(a)*.6,1,-.5],[0,0,-.03],.11-Math.abs(i-2)*.015,.016,'c',P.dark,4,hb,P.trim)}
-    [-1,1].forEach(s=>[0,1,2,3].forEach(i=>{const LG=CS150.leg('Hivemother',s,i),G=LG.P;E.band(v150Lerp(G[2],G[3],.45),[G[3][0]-G[2][0],G[3][1]-G[2][1],G[3][2]-G[2][2]],.003,.007,'m',P.trim,6,{bn:LG.k+'1'})}))} // v180: on the leg bone (G.k was undefined: the bands rode the hips)
-  if(L>=5){// the brood stirs: glowing grubs on the sac, a glowing seam along the top of the sac
-    for(let i=0;i<10;i++){const h=sacHit(-.55-(i%5)*.13,.4+i*.27);if(h)E.pd('ico','g',i%2?P.glow:P.glow2,E.add(h.p,h.n,.012),h.n,[.016,.026,.016])}
-    let prev=null;for(let j=0;j<8;j++){const h=E.top(0,-.5-j*.1),p=h?E.add(h.p,h.n,.012):null;if(p&&prev)E.L(prev,p,.008,.008,'g',P.glow,3,{vs:1});prev=p}}}
+function cs150HMEvo(E,L,P){}
 function lb150Evo(E,L,P){const B=boneP,hb={bn:'head'},nb={bn:'neck'};
   // L1: soul-fire wisps rising from the eye sockets, a grave chain round the throat with a charm
   [-1,1].forEach(s=>{const e=B([s*.057,.7,.577]);E.L(e,E.add(e,[s*.02,.06,-.07]),.016,.002,'g',P.glow,4,hb);if(L>=3)E.L(E.add(e,[0,.01,0]),E.add(e,[s*.035,.1,-.14]),.012,.001,'g',P.glow2,3,hb)});

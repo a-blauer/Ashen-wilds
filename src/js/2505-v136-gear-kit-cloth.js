@@ -108,5 +108,3 @@ function gkSpike(k,bn,base,dir,len,r,col,t,w){const tip=[base[0]+dir[0]*len,base
 function gkRunes(k,bn,pts,col,w,sz){pts.forEach((p,i)=>{const s=sz||1,v=i%3;if(v==0)gkW(k.p(bn,'box','g',col,p[0],p[1],p[2],.004*s,.018*s,.003,0,p[3]||0,0),w);
   else if(v==1){gkW(k.p(bn,'box','g',col,p[0]-.003*s,p[1],p[2],.003*s,.014*s,.003,0,p[3]||0,.5),w);gkW(k.p(bn,'box','g',col,p[0]+.003*s,p[1],p[2],.003*s,.014*s,.003,0,p[3]||0,-.5),w)}
   else gkW(k.p(bn,'oct','g',col,p[0],p[1],p[2],.006*s,.009*s,.003,0,p[3]||0,0),w)});return k}
-// a point on the torso surface with its weights and the angle (for kit parts): {p, w, a}
-function gkTP(P,y,a,off){return {p:mdTP(P,y,a,(P.tOff||0)+(off||0)),w:mdTorsoW(y),a}}

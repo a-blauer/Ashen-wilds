@@ -49,43 +49,22 @@ const CHQ132_SAY={
   ready:'Ha! You actually did it. Come here, take your pay before I change my mind.',
   done:'That’s all I need from this stretch of road. I’ll be further along. I always get there first.',
   none:'Nothing for you here yet. The tunnels are still settling. Try the other roads.'};
-function chqList132(I){return I&&!I.tri&&I.k<=2?(CHQD132[I.z+'_'+I.k]||[]):[]}
+function chqList132(I){}
 function chqS132(q){return CHQ132.st[q.id]||null}
-function chqState132(I){const L=chqList132(I);let av=0,rd=0,ac=0,dn=0;L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s)av++;else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn}}
+function chqState132(I){}
 function chqHere132(){try{const I=curIns();return I&&!I.tri?I:null}catch(_){return null}}
-
-// ---------------- rewards ----------------
-function chqLv132(I){return I.lv[1]}
-function chqXP132(I,q){const L=chqLv132(I);return Math.max(5,Math.round((8+12*L)*.6375*(typeof ECON96!='undefined'?ECON96.xp:1)*(14+L)*(q.w||1)*.7))}   // v132.1: 30% less than first shipped
-function chqGold132(I,q){const L=chqLv132(I);return Math.max(10,Math.round((3+1.4*L)*.65*(16+L)*(q.w||1)))}
-function chqGear132(I,sl){const lv=Math.max(1,Math.min(chqLv132(I),hero.lvl+2)),minR=I.k>=2?2:1;let it=null;
-  for(let i=0;i<12&&!it;i++){try{const c=genItem(lv,{cls:hero.cls,sl,minR});if(c&&itT(c).sl===sl&&(sl!='weapon'||fitsCls(itT(c),hero.cls)))it=c}catch(_){}}
-  if(!it)try{it=genItem(lv,{cls:hero.cls,sl,minR})}catch(_){}return it}
 function chqEgg132(I){const L=zEggs104(I.z);if(!L.length)return rollEgg(Math.max(1,Math.min(5,PMAP[I.z].t||1)));const sp=L[Math.floor(Math.random()*L.length)];
   return mkEgg(sp,Math.max(0,SP2[sp][1]-1),.95+Math.random()*.15+(I.k>=2?.05:0))}
 function chqGiveXP132(xp){
   if(hero.lvl<MAXLV){hero.xp+=hxp164(xp);while(hero.lvl<MAXLV&&hero.xp>=needH(hero.lvl)){hero.xp-=needH(hero.lvl);heroLevelUp()}}else hero.xp=0;
   party.slice(0,actN141()).forEach(c2=>{if(!c2||c2.l>=MAXLV)return;c2.x+=hxp164(xp);while(c2.l<MAXLV&&c2.x>=needH(c2.l)){c2.x-=needH(c2.l);c2.l++;c2.h=M(c2);say(nm(c2)+' reached Lv '+c2.l+'!')}})}
-function chqReward132(I,q){const xp=chqXP132(I,q),g=chqGold132(I,q);
-  if(q.rw=='egg'){const eg=chqEgg132(I);if(eg){try{(CHQ132.egS||(CHQ132.egS=new WeakSet())).add(eg)}catch(_){}take({kind:'egg',data:eg})}try{dex.egg.add(eg.sp)}catch(_){}}
-  else{const it=chqGear132(I,q.rw);if(it)take({kind:'gear',data:it})}
-  gold+=g;chqGiveXP132(xp);try{dn(pl.position,'+'+hxp164(xp)+' XP','#c4b5fd',0,1600);dn(pl.position,'+'+g+' 🪙','#fbbf24',-26,1600)}catch(_){}
-  say('🐭 <b>'+q.t+'</b> turned in: +'+xp+' XP, +'+g+' gold.')}
+function chqReward132(I,q){}
 
 // ---------------- progress ----------------
-function chqEv132(kind,n,arg){const I=chqHere132();if(!I)return;const L=chqList132(I);if(!L.length)return;let ch=0;
-  L.forEach(q=>{const S=chqS132(q);if(!S||S.s!==1)return;q.o.forEach((o,i)=>{if(o[0]!==kind)return;
-      if(kind=='allCamps'){S.cj=S.cj||[];if(arg==null||S.cj.includes(arg))return;S.cj.push(arg);S.p[i]=Math.min(chqNeed132(I,o),S.cj.length)}
-      else S.p[i]=Math.min(chqNeed132(I,o),(S.p[i]||0)+(n||1));ch=1});
-    if(ch&&q.o.every((o,i)=>(S.p[i]||0)>=chqNeed132(I,o))){S.s=2;
-      try{pickup({ic:'🐭',t:'Quest complete: '+q.t,col:'#f0cc72',sub:'Return to Cheddar by the portal',r:3})}catch(_){}
-      try{sfx('chime')}catch(_){}}});
-  if(ch){CHQ132.trkK='';chqTrk132()}}
-function chqNeed132(I,o){return o[0]=='allCamps'?Math.max(1,(I.cl&&I.cl.length)||o[1]):o[1]}
-function chqAccept132(id){const q=CHQ132_ID[id],I=chqHere132();if(!q||!I||q.ik!==I.z+'_'+I.k||chqS132(q))return;
-  CHQ132.st[id]={s:1,p:q.o.map(()=>0)};say('🐭 Quest accepted: <b>'+q.t+'</b>');try{sfx('chime')}catch(_){}CHQ132.trkK=''}
-function chqTurnIn132(id){const q=CHQ132_ID[id],I=chqHere132(),S=q&&chqS132(q);if(!q||!I||!S||S.s!==2||q.ik!==I.z+'_'+I.k)return;
-  S.s=3;chqReward132(I,q);try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}CHQ132.trkK='';try{hud()}catch(_){}}
+function chqEv132(kind,n,arg){}
+function chqNeed132(I,o){}
+function chqAccept132(id){}
+function chqTurnIn132(id){}
 
 // ---------------- Cheddar's spot beside each Duskhold portal ----------------
 function chqSpot132(I){if(CHQ132.spots[I.g])return CHQ132.spots[I.g];
@@ -110,37 +89,7 @@ function chqSpotEnd135(I){const E=CHQ132.e;if(E.spots[I.g]!==undefined)return E.
     if(free(x,z)&&free(bx,bz)&&Math.abs(GH(x,z)-GH(bx,bz))<.6){best={x,z,bx,bz};break}}
   if(!best){const x=r.x+dx*5.4+sx*2,z=r.z+dz*5.4+sz*2;best={x,z,bx:x-dx*1.2,bz:z-dz*1.2}}
   best.face=Math.atan2(q[0]-best.x,q[1]-best.z);best.g=I.g;E.spots[I.g]=best;return best}
-function chqPosts135(){return [CHQ132,CHQ132.e]}
-function chqPSpot135(P,I){return P.end?chqSpotEnd135(I):chqSpot132(I)}
-// v148: Cheddar no longer stands in the zone instances (he keeps the quest board in Duskhold, 3075), so no colliders on his old spots
-
-// v148: (the grass round his old spots is no longer cleared)
-
-// ---------------- the burrow hole ----------------
-const CHQ132_DIRT=[0x3a2a1c,0x5a4630,0x4a4448,0xa88c5c,0x3c3a34,0x3a2c2a];
-function chqBurrow132(){const g=new THREE.Group();g.name='CheddarBurrow';g.userData.psNo=1;
-  const M=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:1,side:THREE.DoubleSide});   // v132.1: the lathe rim faced down and vanished from above
-  const shade=(geo,c)=>{geo=geo.index?geo.toNonIndexed():geo;const p=geo.attributes.position,a=new Float32Array(p.count*3),col=new THREE.Color();
-    for(let i=0;i<p.count;i+=3){const h=Math.sin((p.getX(i)+p.getZ(i+1))*91.7+p.getY(i)*37.3)*43758.5,v=.8+.35*(h-Math.floor(h));col.setHex(c).multiplyScalar(v);for(let k=0;k<3;k++)a.set([col.r,col.g,col.b],(i+k)*3)}
-    geo.setAttribute('color',new THREE.BufferAttribute(a,3));geo.computeVertexNormals();return geo};
-  g.userData.parts=[];const add=(geo,c,m)=>{const o=new THREE.Mesh(shade(geo,c),m||M);o.castShadow=false;o.receiveShadow=true;g.add(o);g.userData.parts.push([o,c]);return o};
-  // raised dirt rim (a low lathe ring), the hole's throat going down, a dark floor
-  const rim=[[.3,-.12],[.31,.04],[.35,.13],[.44,.19],[.56,.17],[.68,.09],[.8,-.04]].map(p=>new THREE.Vector2(p[0],p[1]));
-  const rg=new THREE.LatheGeometry(rim,11);{const p=rg.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),a=Math.atan2(x,z);p.setY(i,p.getY(i)*(1+.35*Math.sin(a*3+.7)))}}
-  add(rg,0);
-    {const mg=new THREE.CircleGeometry(.33,11),p=mg.attributes.position,c=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const r=Math.hypot(p.getX(i),p.getY(i))/.33,v=.012+.07*r*r;c.set([v*1.25,v,v*.7],i*3)}
-    mg.setAttribute('color',new THREE.BufferAttribute(c,3));const mouth=new THREE.Mesh(mg,new THREE.MeshBasicMaterial({vertexColors:true}));mouth.rotation.x=-Math.PI/2;mouth.position.y=.05;g.add(mouth)}
-  // the spoil heap he kicked out, loose clods and a pebble or two
-  const heap=add(new THREE.SphereGeometry(.42,7,5,0,Math.PI*2,0,Math.PI/2),0);heap.position.set(.1,-.05,.9);heap.scale.set(1.05,.34,.6);
-  [[.55,.62,.09],[-.48,.7,.07],[.22,1.18,.06],[-.18,1.1,.08],[.84,.25,.05],[-.8,.18,.06],[.42,-.7,.045],[-.6,-.5,.05]].forEach(([x,z,r],i)=>{
-    const c=add(new THREE.DodecahedronGeometry(r,0),i>5?1:0);c.position.set(x,r*.5,z);c.rotation.set(i,i*2.1,i*.7)});
-  [[.62,.3,.05],[-.3,.8,.04]].forEach(([x,z,r])=>{const s=add(new THREE.DodecahedronGeometry(r,0),2);s.position.set(x,r*.4,z)});
-  return g}
-function chqBurrowTint132(z,P){const B=(P||CHQ132).bur;if(!B||B.userData.z===z)return;B.userData.z=z;const base=CHQ132_DIRT[z]||CHQ132_DIRT[0];
-  const pal=[base,new THREE.Color(base).multiplyScalar(.72).getHex(),0x5a5652,0x4a3020];
-  B.userData.parts.forEach(([o,k])=>{const geo=o.geometry,p=geo.attributes.position,a=geo.attributes.color,col=new THREE.Color();
-    for(let i=0;i<p.count;i+=3){const h=Math.sin((p.getX(i)+p.getZ(i+1))*91.7+p.getY(i)*37.3)*43758.5,v=.8+.35*(h-Math.floor(h));col.setHex(pal[k]).multiplyScalar(v);for(let j=0;j<3;j++)a.setXYZ(i+j,col.r,col.g,col.b)}
-    a.needsUpdate=true})}
+function chqPosts135(){}
 
 // ---------------- the "!" / "?" marker ----------------
 function chqMarkTex132(ch){const c=document.createElement('canvas');c.width=128;c.height=160;const x=c.getContext('2d');
@@ -153,51 +102,13 @@ function chqMarker132(){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:c
   s.userData.tx={'!':s.material.map,'?':chqMarkTex132('?')};s.scale.set(.42,.52,1);s.renderOrder=5;s.visible=false;s.userData.psNo=1;s.userData.noFarCull=1;return s}
 
 // ---------------- building and ticking Cheddar ----------------
-var CHQ132_SC=1.1;   // the concept model is 0.78 tall; a hero is ~1.45, so Cheddar stands ~0.86 (about 60% of a hero)
-function chqBuild132(P){P=P||CHQ132;if(P.ch)return;try{
-  const C=chd132Model({game:true});C.root.scale.setScalar(CHQ132_SC);C.root.userData.psNo=1;C.root.userData.noFarCull=1;
-  C.root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  P.ch=C;P.bur=chqBurrow132();P.mk=chqMarker132();
-  [C.root,P.bur,P.mk].forEach(o=>{o.visible=false;scene.add(o)})}catch(err){console.warn('chq132 build',err);P.ch=null}}
-function chqPlace132(I,P){P=P||CHQ132;const s=I?chqPSpot135(P,I):null;if(!s&&!P.ch)return;chqBuild132(P);const C=P.ch;if(!C)return;const show=!!(I&&s);
-  [C.root,P.bur].forEach(o=>o.visible=show);if(!show){P.mk.visible=false;return}
-  C.root.position.set(s.x,GH(s.x,s.z),s.z);C.root.rotation.y=s.face;
-  P.bur.position.set(s.bx,GH(s.bx,s.bz)+.02,s.bz);P.bur.rotation.y=Math.atan2(s.bx-s.x,s.bz-s.z);chqBurrowTint132(I.z,P);
-  P.pop=P.end?0:1;P.wave=0;P.near=0;C.setPose('idle')}
-function chqTick132(dt,now){
-  const I=chqHere132(),g=I?I.g:-1;
-  if(g!==CHQ132.g){CHQ132.g=g;chqPosts135().forEach(P=>chqPlace132(I,P));CHQ132.trkK='';chqTrk132()}
-  if(!I)return;const st=chqState132(I);chqPosts135().forEach(P=>chqTickP135(P,I,st,dt,now))}
-function chqTickP135(P,I,st,dt,now){
-  const C=P.ch;if(!C||!C.root.visible)return;const R=C.root,s=chqPSpot135(P,I);if(!s)return;
-  const Pp=pl.position,d=Math.hypot(Pp.x-s.x,Pp.z-s.z),y0=GH(s.x,s.z);
-  // climbing out of the burrow when you arrive (he slides up from the hole, then hops across to his spot); the gateway Cheddar
-  // climbs out when you first come near
-  if(P.end&&!P.popD&&d<16){P.popD=1;P.pop=1}
-  if(P.end&&d>40)P.popD=0;
-  if(P.pop>0){P.pop=Math.max(0,P.pop-dt/1.1);const k=1-P.pop,up=Math.min(1,k/.55),hop=Math.max(0,(k-.55)/.45);
-    const e=1-Math.pow(1-up,3);R.position.set(s.bx+(s.x-s.bx)*hop,y0-.95*(1-e)+Math.sin(hop*Math.PI)*.22,s.bz+(s.z-s.bz)*hop);
-    if(P.pop===0)R.position.set(s.x,y0,s.z);
-    if(k>.05&&!P.popB){P.popB=1;try{burst(V(s.bx,GH(s.bx,s.bz)+.25,s.bz),CHQ132_DIRT[I.z]||0x5a4630,14,1.3,1.8,.55)}catch(_){}}}
-  else P.popB=0;
-  if(dt<=0&&P.pop<=0){chqMark132(I,st,now,P);return}
-  // turn towards the hero when they come close, otherwise back towards the road
-  const want=d<9?Math.atan2(Pp.x-R.position.x,Pp.z-R.position.z):s.face;let da=want-R.rotation.y;da=Math.atan2(Math.sin(da),Math.cos(da));R.rotation.y+=da*Math.min(1,dt*4);
-  // a wave when you walk up and he has something for you
-  if(d<7&&!P.near){P.near=1;if(st.av||st.rd){P.wave=2.6;C.setPose('wave')}}
-  if(d>10)P.near=0;
-  if(P.wave>0){P.wave-=dt;if(P.wave<=0)C.setPose('idle')}
-  if(d<40)C.update(now/1000,Math.min(.05,dt));
-  chqMark132(I,st,now,P)}
-function chqMark132(I,st,now,P){P=P||CHQ132;const m=P.mk,R=P.ch&&P.ch.root;if(!m||!R)return;
-  const ch=st.rd?'?':st.av?'!':'';m.visible=!!ch&&R.visible;if(!ch)return;if(P.mkK!==ch){P.mkK=ch;m.material.map=m.userData.tx[ch];m.material.needsUpdate=true}
-  const t=now/1000;m.position.set(R.position.x,R.position.y+.78*CHQ132_SC+.42+Math.sin(t*2.2)*.06,R.position.z);const k=1+.06*Math.sin(t*4.4);m.scale.set(.42*k,.52*k,1)}
+var CHQ132_SC=1.1;
+function chqTick132(dt,now){}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{chqTick132(dt,now)}catch(err){if(!CHQ132.err){CHQ132.err=1;console.warn('chq132',err)}}
   try{if(now-CHQ132.t>400){CHQ132.t=now;chqRunes132();chqEggs132();chqTrk132();if(!$('chqt132').classList.contains('hide'))chqTrkPos132()}}catch(_){}return r}}
 
 // ---------------- talking to him ----------------
-function chqNear132(){const I=chqHere132();if(!I)return null;
-  for(const P of chqPosts135()){if(!P.ch||!P.ch.root.visible)continue;const s=chqPSpot135(P,I);if(s&&Math.hypot(pl.position.x-s.x,pl.position.z-s.z)<2.3)return I}return null}
+function chqNear132(){}
 {const f=worldPrompt;worldPrompt=function(){try{const I=chqNear132();if(I){const st=chqState132(I);
     return {label:'F · Talk to Cheddar'+(st.rd?' (quest complete!)':st.av?' (new quests)':''),fn:()=>openX('chq132')}}}catch(_){}return f.apply(this,arguments)}}
 // v132.1: the window is a grid of quest cards; each card ends in a large reward panel with a "mystery" medallion per reward type
@@ -224,28 +135,7 @@ function chqIco132(type,col,done){const u='cq132i'+(CHQ132_IC++),S=CHQ132_SIL[ty
     '<g fill="url(#'+u+'s)" stroke="'+col+'" stroke-opacity=".6" stroke-width="1.15" stroke-linejoin="round" opacity="'+(done?.45:.95)+'">'+S+'</g>'+mark+'</svg>'}
 const CHQ132_XPI='<svg viewBox="0 0 20 20" class="cq132si" aria-hidden="true"><path d="M10 1.5 L12 8 L18.5 10 L12 12 L10 18.5 L8 12 L1.5 10 L8 8 Z" fill="#c4a6ff" stroke="#3a2466" stroke-width="1"/><circle cx="10" cy="10" r="2" fill="#fff"/></svg>';
 const CHQ132_GPI='<svg viewBox="0 0 20 20" class="cq132si" aria-hidden="true"><circle cx="10" cy="10" r="8.4" fill="#e8b84a" stroke="#6a4410" stroke-width="1.2"/><circle cx="10" cy="10" r="5.6" fill="none" stroke="#9a6a1c" stroke-width="1"/><path d="M10 6.2 L11.2 9 L10 13.8 L8.8 9 Z" fill="#fff2b8"/></svg>';
-function chqRwInfo132(I,q){const minR=I.k>=2?2:1,lv=Math.max(1,Math.min(chqLv132(I),hero.lvl+2));
-  if(q.rw=='egg')return {n:'Mystery Egg',sub:'A '+PMAP[I.z].n+' companion egg',col:'#f0cc72'};
-  const R=RAR[minR]||['Uncommon','#6ee7b7'],nm={weapon:'Weapon',chest:'Chest Armour',helm:'Helm',boots:'Boots'}[q.rw]||'Gear';
-  return {n:'Mystery '+nm,sub:'<span style="color:'+R[1]+'">'+R[0]+' or better</span> · item level '+lv,col:R[1]}}
-function chqRwHTML132(I,q,s){const r=chqRwInfo132(I,q);
-  return '<div class="cq132rw'+(s==2?' glow':'')+'">'+chqIco132(q.rw,r.col,s==3)+'<div class="cq132ri"><div class="cq132rl">'+(s==3?'Claimed':'Reward')+'</div><div class="cq132rn">'+r.n+'</div><div class="cq132rs">'+r.sub+'</div>'+
-    '<div class="cq132rc"><span>'+CHQ132_XPI+'<b>'+hxp164(chqXP132(I,q))+'</b> XP</span><span>'+CHQ132_GPI+'<b>'+chqGold132(I,q)+'</b> gold</span></div></div></div>'}
-XR.chq132=()=>{const I=chqHere132();$('xwT').textContent='🐭 Cheddar';$('xwS').textContent='Burrow-walker'+(I?' · '+I.n:'');
-  if(!I){$('xwB').innerHTML='<div class="cq132say">'+CHQ132_SAY.none+'</div>';$('xwF').innerHTML='';return}
-  const L=chqList132(I),st=chqState132(I);
-  const line=!L.length?CHQ132_SAY.none:st.rd?CHQ132_SAY.ready:st.av?CHQ132_SAY.hi:st.ac?CHQ132_SAY.busy:CHQ132_SAY.done;
-  let b='<div class="cq132say"><span class="cq132who">Cheddar</span>“'+line+'”</div><div class="cq132g">';
-  const rk=q=>{const S=chqS132(q),s=S?S.s:0;return s==2?0:s==0?1:s==1?2:3};
-  L.slice().sort((a,c)=>rk(a)-rk(c)).forEach(q=>{const S=chqS132(q),s=S?S.s:0;
-    const obj=q.o.map((o,i)=>{const need=chqNeed132(I,o),have=S?Math.min(need,S.p[i]||0):0,pc=Math.round(have/need*100);
-      return '<div class="cq132o'+(s&&have>=need?' full':'')+'"><div class="cq132ot"><span>'+o[2]+'</span><span class="cq132n">'+(s?have+' / '+need:need>1?'× '+need:'')+'</span></div>'+
-        (s?'<div class="cq132ob"><i style="width:'+pc+'%"></i></div>':'')+'</div>'}).join('');
-    const tag=['New','In progress','Ready','Done'][s],btn=!s?'<button class="pri cq132bt" data-cqa="'+q.id+'">Accept quest</button>':s==1?'<button class="cq132bt" disabled>In progress…</button>':
-      s==2?'<button class="pri cq132bt cq132go" data-cqt="'+q.id+'">Claim reward</button>':'';
-    b+='<div class="cq132 s'+s+'"><div class="cq132h"><b>'+q.t+'</b><span class="cq132tag">'+tag+'</span></div><div class="cq132d">'+q.d+'</div>'+obj+chqRwHTML132(I,q,s)+btn+'</div>'});
-  $('xwB').innerHTML=b+'</div>';
-  $('xwF').innerHTML=(st.av>1?'<button class="pri" data-cqall="1">Accept all</button> ':'')+'<span class="mut dtl">Quests only count while you are in '+I.n+'; your progress is kept if you leave.</span>'};
+XR.chq132=()=>{};
 $('xw').addEventListener('click',e=>{if(xwMode!='chq132')return;const t=e.target.closest('[data-cqa],[data-cqt],[data-cqall]');if(!t||t.disabled)return;const ds=t.dataset;
   if(ds.cqa)chqAccept132(ds.cqa);
   if(ds.cqt)chqTurnIn132(ds.cqt);
@@ -300,30 +190,13 @@ $('xw').addEventListener('click',e=>{if(xwMode!='chq132')return;const t=e.target
 #chqt132 .rd{color:#f0cc72}
 body.mob #chqt132{width:170px;font-size:11px}`;document.head.appendChild(st);
   const d=document.createElement('div');d.id='chqt132';d.className='hide';document.body.appendChild(d)})();
-function chqTrk132(){const el=$('chqt132');if(!el)return;const I=chqHere132(),L=I?chqList132(I).filter(q=>{const S=chqS132(q);return S&&(S.s==1||S.s==2)}):[];
-  const hideAll=typeof uiOpen=='function'&&uiOpen();
-  const key=(I?I.g:-1)+'|'+(hideAll?1:0)+'|'+L.map(q=>{const S=chqS132(q);return q.id+S.s+S.p.join(',')}).join(';');if(key===CHQ132.trkK)return;CHQ132.trkK=key;
-  if(!L.length||hideAll){el.classList.add('hide');return}
-  el.innerHTML='<div class="h">🐭 Cheddar · '+I.n+'</div>'+L.map(q=>{const S=chqS132(q);
-    if(S.s==2)return '<div class="q"><b>'+q.t+'</b><div class="o rd"><span>✓ Return to Cheddar</span></div></div>';
-    return '<div class="q"><b>'+q.t+'</b>'+q.o.map((o,i)=>'<div class="o"><span>'+o[2]+'</span><span>'+Math.min(chqNeed132(I,o),S.p[i]||0)+'/'+chqNeed132(I,o)+'</span></div>').join('')+'</div>'}).join('');
-  el.classList.remove('hide');chqTrkPos132()}
-function chqTrkPos132(){const el=$('chqt132'),m=$('mini');if(!el||!m||!m.offsetParent)return;const mr=m.getBoundingClientRect();let b=mr.bottom;
-  ['locBox','fsBtn','sysBtn','sysmenu','mbtn'].forEach(id=>{const e=$(id);if(!e||!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.width&&r.right>mr.left-40&&r.left<mr.right+40)b=Math.max(b,r.bottom)});
-  if(b+140>innerHeight)b=Math.max(mr.bottom,innerHeight*.35);el.style.top=Math.round(b+10)+'px';el.style.right=Math.max(8,Math.round(innerWidth-mr.right))+'px'}
+function chqTrk132(){}
+function chqTrkPos132(){}
 addEventListener('resize',()=>{try{chqTrkPos132()}catch(_){}})
-
-// ---------------- events ----------------
-function chqRemote132(){return typeof MP!='undefined'&&!!MP.rk}
 function chqBuffKind132(){const t=nowP(),B=hero.buffs||[];
   const comp=typeof party!='undefined'&&party.slice(0,actN141()).some(c=>c&&c.emp&&c.h>0);   // empowering only, not companion buff spells
   const food=B.some(b=>b.food&&b.k&&SUP[b.k]&&SUP[b.k].c=='food'&&b.t>t),bard=B.some(b=>b.n=='Inspired'&&b.t>t);return {comp,food,bard}}
-function chqKill132(e,C,was){if(!e||e.dprop||e.wv)return;
-  if(C&&!C.raid&&!was&&campCleared(C)){chqEv132('camp',1);chqEv132('allCamps',1,C.j!=null?C.j:C.i)}
-  if(chqRemote132()||e.mir)return;
-  if(e.c&&e.c.al)chqEv132('elite',1);
-  const b=chqBuffKind132();if(b.comp)chqEv132('empKill',1);if(b.food)chqEv132('foodKill',1);if(b.bard)chqEv132('bardKill',1);
-  const w=typeof eq!='undefined'&&eq.weapon;if(w&&w.up>=2&&e.lhH&&nowP()-e.lhH<3000)chqEv132('forgeKill',1)}
+function chqKill132(e,C,was){}
 {const f=kill;kill=function(e){if(!e||(e.chq132&&e.chq132===e.c))return f.apply(this,arguments);let C=null,was=true;try{C=e.camp||null;was=C?campCleared(C):true}catch(_){}
   const r=f.apply(this,arguments);try{e.chq132=e.c;chqKill132(e,C,was)}catch(err){console.warn('chq132 kill',err)}return r}}
 {const f=gFinish;gFinish=function(tg){const a={w:mats.wood||0,s:mats.stone||0,g:mats.glowcap||0,i:mats.iron||0};const r=f.apply(this,arguments);

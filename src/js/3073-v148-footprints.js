@@ -22,5 +22,4 @@ function fp148Redo(){try{for(const k in KL103.own){const L=KL103.own[k];if(L&&L.
 try{fp148Redo()}catch(_){}
 // with yards walkable, a building turned to face the town wall left its door in the narrow strip behind it, still reachable;
 // a door that close to the wall now counts as blocked, so turning skips that way as before
-{const f=kfDoors109;kfDoors109=function(){const bad=f.apply(this,arguments);try{const T=TOWNS[0];for(const k in SH.pos){if(bad.includes(k)||!lotBuilt103(k))continue;const l=lotOf103(k);if(!l)continue;
-    const [x,z]=lotDoor103(l);if(!kfIn109(x-T.cx,z-T.cy,1.2))bad.push(k)}}catch(_){}return bad}}
+{const f=kfDoors109;kfDoors109=function(){}}

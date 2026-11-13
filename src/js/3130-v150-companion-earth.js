@@ -288,24 +288,7 @@ function er150CragEvo(E,L,P){const R=E.R,moss=0x4a6a2a,moss2=0x3a5a22,T=ER150.CR
 }
 // Titanshell (levels 2, 3, 4, 5): lit windows and wall braziers → glowing runes round the rim and tattered banners →
 // a floating heart crystal in the shrine gate and glowing cracks down the dome → a beacon on the keep, glowing horn tips
-function er150TitanEvo(E,L,P){const Y=ER150.TI.Y,sb={bn:'spine'},hb={bn:'head'},kx=-.05,kz=-.08;
-  // L2: lit windows in the keep and turret, braziers on the walls
-  [[.1,0],[.17,-.02],[.17,.03]].forEach(([h,dx])=>E.p('box','g',P.glow,[kx+dx,Y+h,kz+.068],[.016,.026,.006],null,sb));
-  E.p('box','g',P.glowD,[kx,Y+.035,kz+.068],[.03,.045,.006],null,sb);E.p('box','g',P.glow,[.12,Y+.09,-.082],[.01,.02,.006],null,sb);
-  [[3,.09],[6,.085]].forEach(([i,h])=>{const a=i/10*Math.PI*2,x=Math.sin(a)*.19,z=Math.cos(a)*.19-.02;E.p('cyl','m',P.metal,[x,Y+h+.008,z],[.018,.02,.018],null,sb);E.p('oct','g',P.glow2,[x,Y+h+.032,z],[.014,.03,.014],null,sb)});
-  if(L>=3){// runes round the shell rim, banners on the keep and the turret
-    for(let i=0;i<10;i++){const a=i/10*6.283+.3,h=E.on([Math.sin(a)*.9,.36,Math.cos(a)*1-.02],[-Math.sin(a),0,-Math.cos(a)]);if(h&&h.p[1]>.3&&h.p[1]<.45)E.rune(h,[0,1,0],.045,P.glow)}
-    [[kx+.05,Y+.25,kz+.05,.15],[.12,Y+.19,-.13,.1]].forEach(([x,y,z,hh])=>{E.L([x,y,z],[x,y+hh,z],.004,.004,'m',P.metal,4,sb);
-      E.fan([x,y+hh,z],[[x,y+hh-.005,z],[x+.075,y+hh-.02,z+.01],[x+.06,y+hh-.06,z+.012],[x+.08,y+hh-.09,z+.01],[x,y+hh-.08,z]],P.mainD,P.glowD,'c',sb)})}
-  if(L>=4){// a heart crystal floating in the gate, glowing cracks down the dome from the platform
-    E.pd('oct','g',P.glow,[0,Y+.08,.17],[0,1,0],[.03,.055,.03],null,sb);E.L([0,Y+.166,.17],[0,Y+.12,.17],.003,.003,'m',P.metal,4,sb);E.pd('oct','g',P.glow2,[0,Y+.08,.17],[0,1,0],[.015,.03,.015],null,sb);
-    for(let k=0;k<8;k++){const a=k/8*6.283+.2;let pr=null;for(let i=0;i<5;i++){const r=.23+i*.045,w=Math.sin(i*1.7+k)*.06,t=E.top(Math.sin(a+w)*r,Math.cos(a+w)*r-.02);if(!t)break;const q=E.add(t.p,t.n,.004);
-      if(pr)E.L(pr,q,.009-i*.001,.008-i*.001,'g',i<2?P.glow:P.glowD,3,{vs:1});pr=q}}}
-  if(L>=5){// a beacon flame on the keep, glowing horn tips, a gilded band on the brow
-    E.pd('oct','g',P.glow,[kx-.02,Y+.4,kz],[0,1,0],[.028,.05,.028],null,sb);E.pd('oct','g',P.glow2,[kx-.02,Y+.4,kz],[0,1,0],[.014,.03,.014],null,sb);
-    [-1,1].forEach(s=>E.pd('oct','g',P.glow,[s*.3,.6,.57],[s*-.1,.5,.6],[.012,.026,.012],null,hb));
-    E.L([-.11,.43,.6],[.11,.43,.6],.008,.008,'m',P.trim,5,hb)}
-}
+function er150TitanEvo(E,L,P){}
 // Bogmaw (levels 1, 2, 3, 5): glowing pustules → a moss cloak with glowing spore caps → bone charms on the jaw tendrils,
 // bony brow spurs → a crown of glowing spines down the back, more lures and glowing eye rims
 function er150BogEvo(E,L,P){const M=EVO100_M,moss=0x4a6a2a,hb={bn:'head'},jb={bn:'jaw'};

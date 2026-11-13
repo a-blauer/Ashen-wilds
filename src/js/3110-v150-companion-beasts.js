@@ -123,22 +123,6 @@ var EL150={
   head:['head',0,.7,.5],back:[['neck',0,.645,.36],['chest',0,.62,.27],['chest',0,.6,.17],['spine',0,.59,.07],['spine',0,.6,-.04]]};
 function el150Cols(C){const main=lpMain(C,.3).lerp(new THREE.Color(0x9a7048),.3);return {main,back:main.clone().multiplyScalar(.6),spot:main.clone().multiplyScalar(.3),
   cream:new THREE.Color(0xe0d0b4),black:new THREE.Color(0x15100c),nose:new THREE.Color(0x3a1e1a)}}
-function el150Geo(C){const K=el150Cols(C);
-  const paint=(o,r,s,cc,i)=>{
-    if(r.k=='nose')return o.copy(K.nose);if(r.k=='paw'){o.copy(K.main).lerp(K.cream,.35);if(s<0)o.lerp(K.cream,.5);return}
-    if(r.k=='ank'){o.copy(K.main).lerp(K.cream,.2);return}
-    if(r.k=='leg'){o.copy(K.main);if(s<-.2)o.lerp(K.cream,.35);if((i+Math.round(cc*3))%3==0)o.lerp(K.spot,.4);return}
-    if(r.k=='jaw')return o.copy(s>.3?new THREE.Color(0x5a1a1a):K.cream);
-    if(r.k=='tip')return o.copy(K.black);if(r.k=='tail'){o.copy(K.main);if(s<-.4)o.lerp(K.cream,.5);return}
-    if(r.k=='muz'){o.copy(K.cream).lerp(K.main,.25);if(s>.4)o.lerp(K.main,.55);return}
-    o.copy(K.main);if(s>.6)o.lerp(K.back,.5);
-    if(r.k=='hd'){if(s<-.15)o.lerp(K.cream,.75);if(r.z>.55&&s<.3)o.lerp(K.cream,.4);return}
-    if(s<-.4)o.lerp(K.cream,.7);
-    // the lynx's dark spots
-    else if(((i*7+Math.round(cc*5)*3+Math.round(s*4))%4)==0)o.lerp(K.spot,.72)};
-  const lofts=[{rings:bz150Rows(EL150.body),seg:10,capA:1,capB:1,paint},{rings:bz150Rows(EL150.jaw),seg:7,capA:1,capB:1,paint},bz150Tail(EL150.tail,paint,7)]
-    .concat(bz150Legs('Foxlet',[.054,.036,.028,.048],[.068,.04,.029,.048],paint,{toe:.07,foot:.03,seg:7}));
-  return lpGeo('EL150|'+C,'Foxlet',lofts,73)}
 function el150Kit(k,c,C,red){const K=el150Cols(C),R=EL150.body,cream=K.cream.getHex(),black=0x15100c,eye=red?0xff2a2a:0xd8c040,emb=0xff7a2a,emb2=0xffb040,main=K.main.getHex();
   // forward-facing almond eyes with slit pupils, dark eye-liner, a pale brow streak
   [-1,1].forEach(s=>{const x=s*.044,y=.637,z=bz150Front(R,Math.abs(x),y,.5,.7);

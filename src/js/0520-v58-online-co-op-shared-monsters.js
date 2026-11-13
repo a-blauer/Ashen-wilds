@@ -39,9 +39,7 @@ MP.room.onPeers(ch=>{if(!MP.on)return;(ch.left||[]).forEach(p=>{if(!p.sameTab&&M
 // ---------- remote heroes ----------
 function mpGearE(g){const E={},S5=['weapon','offhand','helm','chest','boots'];(Array.isArray(g)?g:[]).slice(0,5).forEach((q,i)=>{if(Array.isArray(q)){const tp=q[0]|0;if(tp>=0&&tp<ITPL.length)E[S5[i]]={id:-1,tp,r:Math.max(0,Math.min(4,q[1]|0)),lv:1,req:1,up:0,aff:[]}}});return E}
 function mpMyGear(){return ['weapon','offhand','helm','chest','boots'].map(k=>eq[k]?[eq[k].tp,eq[k].r]:0)}
-function mpTagDraw(r){const pr=r.pr,key=(pr.n||'')+'|'+pr.lv+'|'+pr.hp;if(key===r.tk)return;r.tk=key;const c=r.tagC,g=c.getContext('2d');g.clearRect(0,0,c.width,c.height);
-  g.font='700 30px system-ui,sans-serif';g.textAlign='center';g.lineWidth=6;g.strokeStyle='rgba(0,0,0,.85)';const t=String(pr.n||'Adventurer').slice(0,20)+'  ·  Lv '+(pr.lv|0);g.strokeText(t,128,34);g.fillStyle='#9fe3ff';g.fillText(t,128,34);
-  g.fillStyle='rgba(0,0,0,.7)';g.fillRect(48,48,160,12);g.fillStyle=pr.hp>35?'#4ade80':'#f87171';g.fillRect(50,50,156*Math.max(0,Math.min(100,pr.hp|0))/100,8);r.tagT.needsUpdate=true}
+function mpTagDraw(r){}
 function mpModel(r){const pr=r.pr,cls=CLS[pr.c]?pr.c:'warrior',sig=cls+'|'+JSON.stringify(pr.g||[])+'|'+JSON.stringify(pr.lk||0);
   if(!r.m){r.m=buildHero();r.m.mpPeer=r.peer;r.m.position.set(pr.x,GH(pr.x,pr.z),pr.z);scene.add(r.m);
     r.tagC=document.createElement('canvas');r.tagC.width=256;r.tagC.height=64;r.tagT=new THREE.CanvasTexture(r.tagC);

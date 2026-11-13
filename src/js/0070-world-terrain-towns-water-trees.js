@@ -18,9 +18,7 @@ TOWNS.forEach(buildTown);
 {const Wt=[],Rt=[];MAP.forEach((r,y)=>r.forEach((t,x)=>{if(t=='W')Wt.push([x,y]);else if(t=='R'&&!(typeof v124Rim=='function'&&v124Rim(x,y)))Rt.push([x,y])}));
  // timber palisade: pointed logs in a 2x2 cluster per wall tile
  const LG=twPaliLog(),LT=twPaliTip(),lg=inst(LG,Wt.length*4,true),lt=inst(LT,Wt.length*4,true);KDPAL={lg,lt,Wt:Wt.slice()};
- Wt.forEach(([x,y],i)=>{const T=TOWNS[townAt(x,y,0)],wc=T.pal.wood;for(let j=0;j<4;j++){const ox=(j&1?.26:-.26)+(Math.random()-.5)*.12,oz=(j&2?.26:-.26)+(Math.random()-.5)*.12,hh=2.5+Math.random()*1.1,k=i*4+j;
-   d0.rotation.set((Math.random()-.5)*.07,Math.random()*6.28,(Math.random()-.5)*.07);
-   put(lg,k,x+ox,hh*.5-.15,y+oz,1,hh,1,wc,.16);put(lt,k,x+ox,hh-.15+.3,y+oz,1,1,1,wc,.16)}});
+ Wt.forEach(([x,y],i)=>{});
  const rk=inst(NK.rock(1,.28,3),Rt.length*3,true);window.WD_RK=rk;rk.material.flatShading=true;rk.material.vertexColors=true;rk.material.needsUpdate=true;
  const rc=(b,k,sn)=>{const q=b.gnd.map((v,i)=>Math.max(30,Math.min(235,v*.4+[84,80,76][i]*.6*k))).map((v,i)=>v*(1-sn)+[232,238,248][i]*sn);return(q[0]<<16)|(q[1]<<8)|q[2]};
  Rt.forEach(([x,y],i)=>{const b=BIOMES[MAP.bio[y][x]],g0=GH(x,y),sn=smt(10.5,15,g0)*.75;

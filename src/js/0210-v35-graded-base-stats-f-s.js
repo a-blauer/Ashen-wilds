@@ -43,17 +43,5 @@ function rF(){
   const ft=document.querySelector('#fz .wf .dtl');if(ft)ft.textContent='Grades run F · E · D · C · B · A · S. The kept companion resets to level 1.';
 }
 $('fz').addEventListener('click',e=>{const o=e.target.closest('[data-fo]'),s=e.target.closest('[data-fs]');if(o&&!o.disabled){e.stopPropagation();fOpt=o.dataset.fo;rF()}else if(s&&!s.disabled){e.stopPropagation();fStat=s.dataset.fs;rF()}});
-$('doF').onclick=()=>{
-  if(sel.length!=2)return;const a=party[sel[0]],b=party[sel[1]];if(!a||!b||!compat(a,b))return;ivFix(a);ivFix(b);
-  const cat=fCat&&(sup[fCat]||0)>0?fCat:'',v=fuseVal(a,b);let msg='';
-  if(fOpt=='sip'){const k=fStat,o=ivOf(a,k);if(!(ivOf(b,k)>o))return say('Pick a stat that '+b.n+' has a better roll in.');a.iv[k]=o+(ivOf(b,k)-o)*Math.min(1,v);ivSync(a);msg=IVN[k]+' '+grade(o)[1]+' → '+grade(a.iv[k])[1]}
-  else if(fOpt=='bol'){const up=[];IVK.forEach(k=>{const o=ivOf(a,k);if(o<A_LINE){a.iv[k]=Math.min(A_LINE,o+(.025+Math.random()*.02)*v);if(grade(a.iv[k])[1]!=grade(o)[1])up.push(IVS[k]+' '+grade(o)[1]+'→'+grade(a.iv[k])[1])}});ivSync(a);msg='stats bolstered'+(up.length?' ('+up.join(', ')+')':'')}
-  else{a.gs=Math.min(.6,(a.gs||0)+.06*v);msg='growth per level now +'+pctS(a.gs)}
-  a.fz=(a.fz||0)+1;a.fp=Math.min(10,a.fz);a.f=Math.floor(a.fp);
-  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<5&&Math.random()<(cat=='c_ess'?1:.35)){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
-  if(b.tr=='Universal'&&a.tr!='Universal'){}else if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))a.tr='';
-  if(cat){sup[cat]--;say(SUP[cat].i+' '+SUP[cat].n+' was used up.');if(!(sup[cat]>0))fCat=''}
-  if(b.emp)b.emp=false;a.l=1;a.x=0;a.h=M(a);party=party.filter((_,i)=>i!=sel[1]);sel=[];
-  say('Fusion complete! '+nm(a)+': '+msg+'. It starts again at level 1.');$('fz').classList.add('hide');hsDirty();hero.hp=Math.min(hero.hp,heroMax());ui();
-};
+$('doF').onclick=()=>{};
 

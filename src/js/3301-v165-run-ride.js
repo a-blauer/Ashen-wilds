@@ -55,73 +55,20 @@ function sr165Veh(id,drv,gun){const R=svRig();sk165Build(R);svRest(R);try{svMerg
 function sr165Place(V,s,o){const P=sr165Path(),[x,z]=P.at(s,o||0);V.x=x;V.z=z;V.h=P.yaw(s);V.v=0;V.s=s;V.trap=0;V.boost=0;V.lane=o||0;sr165Pose(V,0,performance.now())}
 function sr165Seat(V,j){const p=new THREE.Vector3();V.m.updateMatrixWorld(true);V.R.J[j].getWorldPosition(p);return p}
 // ---------------- driving: the physics (dt), shared by the player, Cheddar and partners' machines ----------------
-function sr165Drive(V,dt){const P=sr165Path(),O=SR165.obs;if(V.wreck)return;
-  const maxV=V.trap>0?4.5:V.boost?26:15;let a=V.thr>0?V.thr*9.5:V.thr*16;if(V.boost&&V.bst>0){a+=10;V.bst=Math.max(0,V.bst-dt*.28);if(V.bst<=0)V.boost=0}else V.bst=Math.min(1,V.bst+dt*.09);
-  V.v+=a*dt;V.v-=V.v*.18*dt;if(V.v>maxV)V.v-=(V.v-maxV)*Math.min(1,dt*2.5);if(V.v<-5)V.v=-5;if(V.thr===0&&Math.abs(V.v)<.3)V.v=0;
-  V.h+=V.st*dt*1.75*Math.max(.3,Math.min(1,Math.abs(V.v)/5))*Math.sign(V.v||1)*(V.boost?.7:1);
-  const nx=V.x+Math.sin(V.h)*V.v*dt,nz=V.z+Math.cos(V.h)*V.v*dt,fx=Math.sin(V.h),fz=Math.cos(V.h),lx=fz,lz=-fx,so=(x,z)=>solid(Math.round(x),Math.round(z));
-  const front=so(nx+fx*3.2,nz+fz*3.2)||so(nx+fx*2.8+lx*1.7,nz+fz*2.8+lz*1.7)||so(nx+fx*2.8-lx*1.7,nz+fz*2.8-lz*1.7);
-  if(front&&V.v>0||so(nx-fx*3.2,nz-fz*3.2)&&V.v<0){const hit=Math.abs(V.v);if(hit>6)sr165Hurt(V,(hit-5)*1.4,'wall');if(hit>3){svSnd('heavy',.5,.8);burst(new THREE.Vector3(nx+fx*3,V.y+.8,nz+fz*3),0xc8a070,16,2,1.5,.5)}
-    V.v=-V.v*.25;V.blk=(V.blk||0)+(hit<4?dt:0);const q=P.near(V.x,V.z,V.s),t=P.yaw(q.s);let d=t-V.h;d=Math.atan2(Math.sin(d),Math.cos(d));V.h+=d*.35;V.bump=.4}
-  else{V.blk=0;const sideL=so(nx+lx*2.2,nz+lz*2.2),sideR=so(nx-lx*2.2,nz-lz*2.2);V.x=nx;V.z=nz;if(sideL||sideR){const s=sideL?-1:1;V.x+=lx*s*.08*Math.max(1,V.v*.15);V.z+=lz*s*.08*Math.max(1,V.v*.15);V.v*=1-dt*1.2;if(V.v>7&&Math.random()<dt*6)sr165Hurt(V,.6,'scrape')}}
-  // never off the course (a hard limit, after any glitch)
-  const q=P.near(V.x,V.z,V.s);V.s=q.s;if(Math.abs(q.o)>SR165C.hw+.5){const [cx,cz]=P.at(q.s,Math.sign(q.o)*(SR165C.hw-1.5));V.x=cx;V.z=cz}
-  // the hazards
-  V.trap=Math.max(0,V.trap-dt);for(const o of O){if(o.gone||Math.abs(o.s-V.s)>12)continue;const d=Math.hypot(o.x-V.x,o.z-V.z);
-    if(o.k=='trap'){if(d<o.r+.8){if(V.trap<=0&&V===SR165.me&&V.drv!=='chd')say('🌀 Sand trap! It grips the runners — gun it to drag yourself out!');V.trap=.5;sr165Hurt(V,dt*5,'trap')}continue}
-    if(d<o.r+1.5){const hit=Math.max(4,Math.abs(V.v)),nowT=performance.now();if(!(o.hT&&nowT-o.hT<1200)){o.hT=nowT;sr165Hurt(V,6+hit*.6,o.k)}svSnd('crack',.7,.9);burst(new THREE.Vector3(o.x,V.y+1,o.z),o.k=='spire'?0xf0e8e0:0xa88458,30,2.6,2,.6);
-      const nx2=(V.x-o.x)/(d||1),nz2=(V.z-o.z)/(d||1);V.x=o.x+nx2*(o.r+1.6);V.z=o.z+nz2*(o.r+1.6);V.v*=.3;V.bump=.5;if(o.k=='spire'){o.gone=1;sr165SpireGone(o)}}}
-  sr165Pose(V,dt,performance.now())}
+function sr165Drive(V,dt){}
 // the machine's look from its state: on the ground, tilted with it, bobbing, the fan, the jet, the dust
-function sr165Pose(V,dt,now){const R=V.R,t=now/1000;V.y=GH(V.x,V.z);const fx=Math.sin(V.h),fz=Math.cos(V.h),lx=fz,lz=-fx;
-  const yf=GH(V.x+fx*2.6,V.z+fz*2.6),yb=GH(V.x-fx*2.6,V.z-fz*2.6),yl=GH(V.x+lx*1.8,V.z+lz*1.8),yr=GH(V.x-lx*1.8,V.z-lz*1.8),sink=V.trap>0?.45:0;
-  V.m.position.set(V.x,V.y-sink,V.z);R.root.rotation.set(-Math.atan2(yf-yb,5.2),V.h,Math.atan2(yl-yr,3.6)*.8);
-  R.J.body.position.y=Math.sin(t*11)*.025*Math.min(1,Math.abs(V.v)/8)+(V.bump>0?Math.sin(V.bump*30)*.06:0);V.bump=Math.max(0,V.bump-(dt||0));
-  R.J.body.rotation.z=-V.st*.06*Math.min(1,Math.abs(V.v)/10);R.J.fan.rotation.z+=(dt||0)*(2+Math.abs(V.v)*1.1+(V.boost?14:0));R.J.wheel.rotation.z=-V.st*1.3;R.J.sail.rotation.y=Math.sin(t*6)*.5;
-  const j=V.boost?.75+.2*Math.sin(t*40):Math.min(.25,Math.abs(V.v)*.012);R.jetM[0].opacity=j;R.jetM[1].opacity=j*.4;R.J.jet.scale.set(1,1,V.boost?1.4+Math.random()*.3:1);
-  R.J.brlL.position.z=R.J.brlL.userData.p0.z-V.rec[0];R.J.brlR.position.z=R.J.brlR.userData.p0.z-V.rec[1];V.rec[0]=Math.max(0,V.rec[0]-(dt||0)*1.5);V.rec[1]=Math.max(0,V.rec[1]-(dt||0)*1.5);
-  R.J.turret.rotation.y=V.aY;R.J.gun.rotation.x=V.aP;
-  if(dt&&Math.abs(V.v)>3&&Math.random()<dt*30)[-1,1].forEach(s=>burst(new THREE.Vector3(V.x-fx*3+lx*s*1.9,V.y+.2,V.z-fz*3+lz*s*1.9),0xd8b080,1,.8+Math.abs(V.v)*.04,.6,.6));
-  if(dt&&V.boost&&Math.random()<dt*40)burst(new THREE.Vector3(V.x-fx*4.6,V.y+1.9,V.z-fz*4.6),Math.random()<.5?0x9ae8ff:0xffffff,1,1.2,.3,.25);
-  if(V.chd)try{V.chd.update(t,dt||0)}catch(_){}}
+function sr165Pose(V,dt,now){}
 function sr165SpireGone(o){if(o.mesh)o.mesh.visible=false;try{sk146Debris(new THREE.Vector3(o.x,GH(o.x,o.z)+1.2,o.z),new THREE.MeshStandardMaterial({color:0xf0e8e0,roughness:.4,flatShading:true}),10,.2,5,6,1.4)}catch(_){}
 }
 function sr165Hurt(V,d,why){if(V.wreck||SR165.ph!=='run')return;if(typeof CHEAT!='undefined'&&CHEAT.god&&V===SR165.me)d*=0;V.hp=Math.max(0,V.hp-d);V.m.flT=performance.now();
   if(d>=6&&V===SR165.me){shake(Math.min(.4,d*.02));popT(gY(V.m.position,3),'-'+Math.round(d),'#ffb070')}if(V.hp<=0)sr165Wreck(V)}
 // ---------------- Cheddar at the helm: keep to the course, pick a clear lane, boost on the straights ----------------
-function sr165Auto(V,dt){const P=sr165Path(),O=SR165.obs;V.laneT-=dt;
-  if(V.laneT<=0){V.laneT=.25;let best=V.lane,bc=1e9;const cur=P.near(V.x,V.z,V.s).o;for(const c of [-8,-6.5,-5,-3.5,-2,0,2,3.5,5,6.5,8]){let cost=Math.abs(c-V.lane)*.8+Math.abs(c)*.2;
-      // where the machine will be across the course when it reaches each hazard, if it heads for lane c now
-      const oAt=ds=>ds<=0?cur:cur+Math.sign(c-cur)*Math.min(Math.abs(c-cur),ds/(V.v>20?3.4:2.1));
-      for(const o of O){if(o.gone)continue;const ds=o.s-V.s;if(ds<-4||ds>55)continue;const need=o.r+(o.k=='trap'?2.9:2.3),gap=Math.abs(oAt(ds)-o.o);if(gap<need)cost+=300*(1+(need-gap)/need)/(1+Math.max(0,ds)/20)}
-      (SR165.wy||[]).forEach(w=>{const ds=w.s-V.s;if(ds<-3||ds>45||w.ph=='gone')return;const oo=oAt(ds);if(oo>Math.min(w.o0,w.o1)-2.5&&oo<Math.max(w.o0,w.o1)+2.5)cost+=200/(1+Math.max(0,ds)/15)});
-      if(cost<bc){bc=cost;best=c}}V.lane=best;V.bc=bc}
-  const look=V.s+6+Math.max(0,V.v)*.42,[tx,tz]=P.at(look,V.lane);let d=Math.atan2(tx-V.x,tz-V.z)-V.h;d=Math.atan2(Math.sin(d),Math.cos(d));V.st=Math.max(-1,Math.min(1,d*3));
-  const bend=Math.abs(Math.atan2(Math.sin(P.yaw(V.s+40)-P.yaw(V.s)),Math.cos(P.yaw(V.s+40)-P.yaw(V.s))));
-  V.thr=Math.abs(d)>.6&&V.v>9?-.4:(V.bc>150&&V.v>8?-.3:1);if(V.trap>0)V.thr=1;
-  // stuck against something: back off a little, turned toward the course
-  if((V.blk||0)>.6){V.rev=.8;V.blk=0}if(V.rev>0){V.rev-=dt;V.thr=-1;V.st=-V.st}
-  const clear=!O.some(o=>!o.gone&&o.s-V.s>-2&&o.s-V.s<75&&Math.abs(o.o-V.lane)<o.r+5.5)&&!(SR165.wy||[]).some(w=>w.s-V.s>-3&&w.s-V.s<70);V.boost=V.bst>.55&&bend<.35&&clear&&V.trap<=0?1:(V.boost&&V.bst>.1&&bend<.5?1:0)}
+function sr165Auto(V,dt){}
 // ---------------- the player at the helm ----------------
-function sr165Input(V){V.thr=(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0)+(-dp[1]||0);V.st=(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0)+(dp[0]||0);V.thr=Math.max(-1,Math.min(1,V.thr));V.st=Math.max(-1,Math.min(1,-V.st));
-  V.boost=(K.shift?1:0)&&V.bst>.05?1:0}
-// ---------------- the guns ----------------
-const SR165RC=new THREE.Raycaster(),SR165PL=new THREE.Plane(new THREE.Vector3(0,1,0),0);
-function sr165Aim(V,dt){const tp=sr165Seat(V,'turret');let A=null;
-  if(mOn){SR165RC.setFromCamera(mnd,cam);SR165PL.constant=-(V.y+.9);const q=new THREE.Vector3();if(SR165RC.ray.intersectPlane(SR165PL,q))A=q}
-  // aim assist: snap to the nearest foe near the cursor (or, with no mouse, the nearest foe ahead)
-  let best=null,bd=A?4.5:40;sr165Foes().forEach(f=>{const p=f.p;const d=A?Math.hypot(p.x-A.x,p.z-A.z):Math.hypot(p.x-tp.x,p.z-tp.z);if(d<bd){bd=d;best=f}});
-  if(best)A=best.p.clone();if(!A){const fx=Math.sin(V.h),fz=Math.cos(V.h);A=new THREE.Vector3(V.x+fx*20,V.y+.9,V.z+fz*20)}V.aim=A;
-  let y=Math.atan2(A.x-tp.x,A.z-tp.z)-V.h;y=Math.atan2(Math.sin(y),Math.cos(y));let d=y-V.aY;d=Math.atan2(Math.sin(d),Math.cos(d));V.aY+=d*Math.min(1,dt*14);
-  const dist=Math.hypot(A.x-tp.x,A.z-tp.z);V.aP=Math.max(-.35,Math.min(.25,Math.atan2(tp.y-(A.y||V.y),dist)*.8))}
-function sr165Fire(V,own){if(V.fT>0||V.wreck)return;V.fT=.21;V.alt^=1;const j=V.alt?'brlL':'brlR',R=V.R;V.rec[V.alt?0:1]=.35;
-  const mz=new THREE.Vector3(0,0,1.95);R.J[j].localToWorld(mz);const A=(V.aim||mz).clone();const d=A.clone().sub(mz);const L=d.length()||1;d.multiplyScalar(1/L);
-  burst(mz,0xffd070,8,2.4,1,.2);burst(mz,0x8a7a6a,6,1.2,1.4,.5);svSnd('heavy',.35,1.7+Math.random()*.2);if(own&&typeof co165Shot=='function')co165Shot(V,A);
-  const o=kqSpr(0xffc060,.9);o.position.copy(mz);scene.add(o);let t=0;const T=Math.min(1.2,L/70+.05),v=d.clone().multiplyScalar(70);
-  kqFx({tick(dt){t+=dt||0;o.position.addScaledVector(v,dt||0);if(Math.random()<.6)burst(o.position,0xffd8a0,1,.2,.1,.2);
-      const hit=sr165Foes().find(f=>f.p.distanceTo(o.position)<f.r+.5);if(hit||t>=T){sr165Burst(o.position.clone(),own);return false}return true},end(){scene.remove(o)}})}
-function sr165Burst(p,own){burst(p,0xffb050,24,3,2.2,.4);burst(p,0x6a5a4a,10,1.6,2.4,.7);ring(p,0xffb050,2.4,260);svSnd('crack',.35,1.2+Math.random()*.3);
-  if(!own)return;sr165Foes().forEach(f=>{const d=f.p.distanceTo(p);if(d<f.r+2.4)try{f.hit(d<f.r+1?1:.6)}catch(err){if(!SR165.err++)console.warn('v165 shell',err)}})}
+function sr165Input(V){}
+function sr165Aim(V,dt){}
+function sr165Fire(V,own){}
+function sr165Burst(p,own){}
 // every foe a shell can hit (3302 fills it: scarabs, scorpions, worms): {p (Vector3), r, hit(k)}
 function sr165Foes(){return typeof sr165FoeList=='function'?sr165FoeList():[]}
 // ---------------- starting, wrecking, checkpoints, the end ----------------
@@ -165,7 +112,7 @@ function sr165Tick(dt,now){if(!SR165.on)return;if(!sr165In()){if(SR165.ph!=='win
   sr165Hud()}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{sr165Tick(dt,now)}catch(e){if(!SR165.err++)console.warn('v165 run tick',e)}return r}}
 // a partner's machine: shown where they say it is (3305 sets V.net = {x,z,h,v,...})
-function sr165NetPose(V,dt,now){const N=V.net,k=Math.min(1,dt*10);V.x+=(N.x-V.x)*k;V.z+=(N.z-V.z)*k;let d=N.h-V.h;d=Math.atan2(Math.sin(d),Math.cos(d));V.h+=d*k;V.v=N.v;V.boost=N.b;V.st=N.st||0;V.hp=N.hp;V.s=N.s;sr165Pose(V,dt,now)}
+function sr165NetPose(V,dt,now){}
 // ---------------- while riding: no walking, dodging, abilities, swings (the left button fires), mounts or recall ----------------
 {const f=walk;walk=function(o,dx,dz){if(SR165.on&&o===pl)return;return f.apply(this,arguments)}}
 {const f=animHero;animHero=function(now,mv,h){if(SR165.on&&(!h||h===pl))return f.call(this,now,false,h);return f.apply(this,arguments)}}

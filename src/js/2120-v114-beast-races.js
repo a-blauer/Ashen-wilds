@@ -111,8 +111,6 @@ function rvLine(rad,o,t0,len,r0,FL,m){let rt=r0*.8;for(let t=t0+.02;t<=Math.min(
 function rvFeather(k,bn,col,base,dir,nrm,len,w,th,t,wt){const V=THREE.Vector3,y=new V(...dir).normalize(),z=new V(...nrm);z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
   const x=new V().crossVectors(y,z),m=new THREE.Matrix4().makeBasis(x.multiplyScalar(w),y.multiplyScalar(len),z.multiplyScalar(th||.004));m.setPosition(new V(...base));
   const p={bn,geo:rvFeatherG(),t:t||'c',col,m};if(wt)p.w=wt;k.P.push(p);return p}
-// a feather direction turned by yaw (about y) then pitch (down from horizontal)
-function rvDir(yaw,pitch){return [Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)]}
 brDef(3,{key:'raven',n:'Raven',cls:'mage',furN:'Plumage',
   fur:['#2a2c35','#262232','#30333a','#3a3029','#5c5e64','#d8d6d0'],eye:['#3a2414','#0e0c0c','#d0a030','#9ec4e0','#9a40e0'],
   cols:L=>{const f=mdC(L.skin),pale=(((f>>16)&255)+((f>>8)&255)+(f&255))>480;

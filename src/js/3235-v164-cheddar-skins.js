@@ -98,12 +98,8 @@ function skn164Patch(m,id,mode,cols){if(!m||!SKN164.D[id])return m;if(!SKN164.O.
   m.customProgramCacheKey=function(){return (o.ck&&o.ck!==THREE.Material.prototype.customProgramCacheKey?o.ck.call(m):'')+'|skn164'};
   m.userData.skn164=id;m.needsUpdate=true;return m}
 function skn164Unpatch(m){if(!m||!SKN164.O.has(m)||!m.userData.skn164)return;const o=SKN164.O.get(m);m.onBeforeCompile=o.ob;m.customProgramCacheKey=o.ck;delete m.userData.skn164;m.needsUpdate=true}
-// a skin copy of a shared material (companions, mounts), cached per material and skin
-function skn164Copy(base,id,mode,cols,tag){const k=base.uuid+'|'+id+'|'+(tag||'');let m=SKN164.MC.get(k);if(m)return m;m=base.clone();SKN164.B.set(m,base);skn164Patch(m,id,mode,cols);SKN164.MC.set(k,m);return m}
-function skn164Fits(m){return m&&!Array.isArray(m)&&m.isMeshStandardMaterial&&m.vertexColors&&(m.metalness||0)<.5}
 
 // ---------------- the hero: fur becomes the sentinel while the model is built; the hero's own material gets the shader ----------------
-function skn164RaceOf(h){try{if(h&&h.mdLook){const id=h.mdLook.skn164;return SKN164.D[id]&&SKN164.D[id].k=='race'?id:null}if(h&&h.mpPeer)return null;return SKN164.e.race}catch(_){return null}}
 {const f=mdLookOf;mdLookOf=function(h,cls){const r=f.apply(this,arguments);try{const id=skn164RaceOf(h);if(id&&r){r.skin=SKN164.SENT;r.skn164=id}}catch(_){}return r}}
 {const f=mdLookKey;mdLookKey=function(L){return f.apply(this,arguments)+(L&&L.skn164?'.s'+L.skn164:'')}}
 {const f=mdHeroApply;mdHeroApply=function(h,cls,E){const r=f.apply(this,arguments);try{const M=h&&h._mdM,L=h&&h.mdL;if(M&&M.c){const id=L&&L.skn164;
@@ -111,28 +107,11 @@ function skn164RaceOf(h){try{if(h&&h.mdLook){const id=h.mdLook.skn164;return SKN
 // co-op: the hero's skin rides in the look array (index 9)
 {const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a))a[9]=SKN164.e.race||0}catch(_){}return a}}
 {const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);try{if(r&&Array.isArray(a)){const id=a[9];r.skn164=SKN164.D[id]&&SKN164.D[id].k=='race'?id:null}}catch(_){}return r}}
-
-// ---------------- companions and the mount: their shared materials are swapped for skin copies ----------------
-function skn164Dress(root,id,mode,cols,tag){if(!root)return;const want=id||null;let nm=0;root.traverse(o=>{if(o.isMesh)nm++});   // re-dress when the model gains meshes (effects added later)
-  const key=want?want+'|'+(tag||'')+'|'+nm:'|'+nm;if(root.userData.skn164k===key)return;root.userData.skn164k=key;
-  root.traverse(o=>{if(!o.isMesh)return;const cur=o.material,base=(cur&&SKN164.B.get(cur))||cur;
-    if(!want){if(cur!==base)o.material=base;return}if(!skn164Fits(base))return;o.material=skn164Copy(base,want,mode,cols,tag)})}
-function skn164MountCols(k){const S=(typeof MDL100_S!='undefined'&&(MDL100_S[k]||MDL100_S.pony))||{};return [S.c,S.c2,S.bel,S.m].filter(c=>c!=null)}
-function skn164Tick(){try{const c=SKN164.e.comp;if(typeof fols!='undefined')fols.forEach(g=>{if(g)skn164Dress(g,c,1)});
-    const m=SKN164.e.mount;if(typeof mModel!='undefined'&&mModel&&typeof riding!='undefined'&&riding){const k=riding.k;skn164Dress(mModel,m,2,skn164MountCols(k),k)}}catch(e){if(!SKN164.err++)console.warn('v164 skins',e)}}
 SKN164.err=0;
 {const f=loop;loop=function(t){SKN164.t.value=performance.now()/1000;if(performance.now()-SKN164.poll>400){SKN164.poll=performance.now();skn164Tick()}return f.apply(this,arguments)}}
 
 // ---------------- earning, wearing ----------------
 function skn164ZoneDone(z){const L=CHQD148[z]||[];return L.length>0&&L.every(q=>{const S=chqS132(q);return S&&S.s===3})}
-function skn164Wear(id,on){const S=SKN164.D[id];if(!S||!SKN164.u.includes(id))return;SKN164.e[S.k]=on?id:(SKN164.e[S.k]===id?null:SKN164.e[S.k]);skn164Refresh()}
-function skn164Refresh(){try{if(SKN164.e.race!==SKN164.lastRace){SKN164.lastRace=SKN164.e.race;heroOutfit(pl,hero.cls)}}catch(e){console.warn('v164 hero skin',e)}skn164Tick()}
-function skn164Unlock(id,silent){const S=SKN164.D[id];if(!S||SKN164.u.includes(id))return false;SKN164.u.push(id);if(!SKN164.e[S.k])SKN164.e[S.k]=id;
-  if(!silent){try{zt116Show(ZT116.Z[S.z]||ZT116.Z[0],'Cheddar’s Reward · '+PMAP[S.z].n,S.n,'Exclusive '+SKN164_KN[S.k].toLowerCase()+' skin unlocked','Wear or take it off at Cheddar’s quest board','z'+S.z)}catch(_){}
-    try{pickup({ic:'✨',t:'Exclusive skin: '+S.n,col:'#'+new THREE.Color(S.e).getHexString(),sub:SKN164_KN[S.k]+' skin · every '+PMAP[S.z].n+' quest done',r:4})}catch(_){}
-    try{mSfx('rare')}catch(_){try{sfx('chime')}catch(__){}}
-    say('🐭✨ Every one of Cheddar’s <b>'+PMAP[S.z].n+'</b> quests is done. Your reward: the exclusive <b>'+S.n+'</b> '+SKN164_KN[S.k].toLowerCase()+' skin'+(SKN164.e[S.k]===id?' (now worn)':'')+'.')}
-  skn164Refresh();return true}
 function skn164Check(silent){let n=0;SKN164_Z.forEach((id,z)=>{if(!SKN164.u.includes(id)&&skn164ZoneDone(z)&&skn164Unlock(id,silent))n++});return n}
 {const f=chqTurnIn132;chqTurnIn132=function(){const r=f.apply(this,arguments);try{skn164Check(false)}catch(e){console.warn('v164 unlock',e)}return r}}
 if(typeof cheatQuests147=='function'){const f=cheatQuests147;cheatQuests147=function(){const r=f.apply(this,arguments);try{skn164Check(false)}catch(_){}return r}}
@@ -142,16 +121,6 @@ if(typeof cheatQuests147=='function'){const f=cheatQuests147;cheatQuests147=func
     if(q){(Array.isArray(q.u)?q.u:[]).forEach(id=>{if(SKN164.D[id]&&!SKN164.u.includes(id))SKN164.u.push(id)});
       if(q.e)for(const k in SKN164.e){const id=q.e[k];if(SKN164.D[id]&&SKN164.D[id].k===k&&SKN164.u.includes(id))SKN164.e[k]=id}}
     skn164Check(true);SKN164.lastRace=undefined;setTimeout(()=>{try{skn164Refresh()}catch(_){}},0)}catch(e){console.warn('v164 skins load',e)}return r}}
-
-// ---------------- Cheddar's board: the zone's skin above its quests ----------------
-function skn164Css(c){return '#'+new THREE.Color(c).getHexString()}
-function skn164Card(z){const id=SKN164_Z[z],S=SKN164.D[id];if(!S)return '';const st=chq148State(z),have=SKN164.u.includes(id),on=SKN164.e[S.k]===id,pc=Math.round(st.dn/Math.max(1,st.n)*100);
-  const who={race:'your hero, whatever its race',comp:'your companions',mount:'the mount you ride'}[S.k];
-  return '<div class="sk164'+(have?' have':'')+(on?' on':'')+'" style="--a:'+skn164Css(S.a)+';--b:'+skn164Css(S.b)+';--e:'+skn164Css(S.e)+'">'+
-    '<div class="sk164sw"><i></i><s></s></div><div class="sk164t"><div class="sk164l">✨ Exclusive '+SKN164_KN[S.k].toLowerCase()+' skin · '+(have?'earned':'finish every quest here')+'</div>'+
-    '<b>'+S.n+'</b><div class="sk164d">'+S.d+' <span class="mut">For '+who+'.</span></div>'+
-    (have?'':'<div class="sk164p"><i style="width:'+pc+'%"></i></div><small>'+st.dn+' of '+st.n+' quests turned in</small>')+'</div>'+
-    (have?'<button class="'+(on?'':'pri ')+'sk164b" data-sk164="'+id+'">'+(on?'Take off':'Wear it')+'</button>':'<span class="sk164lk" title="Locked">🔒</span>')+'</div>'}
 {const f=XR.chq132;XR.chq132=function(){const r=f.apply(this,arguments);try{const z=CHQ148.tab;if(z!=null)$('xwB').insertAdjacentHTML('afterbegin',skn164Card(z))}catch(e){console.warn('v164 card',e)}return r}}
 $('xw').addEventListener('click',e=>{if(xwMode!='chq132')return;const t=e.target.closest('[data-sk164]');if(!t)return;const id=t.dataset.sk164,S=SKN164.D[id];if(!S)return;
   skn164Wear(id,SKN164.e[S.k]!==id);try{sfx('chime')}catch(_){}rX()});

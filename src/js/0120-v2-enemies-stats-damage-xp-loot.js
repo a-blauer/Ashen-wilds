@@ -70,10 +70,10 @@ FAMK.forEach(f=>{const F=FAMD[f];TGI[f]=F.i;FAMC[f]=F.col;FAM[f]=[F.mat,F.mi]});
 Object.assign(hero,{cls:'warrior',lvl:1,xp:0,tal:{},buffs:[],dc:2,sh:0,shT:0,lastHit:-1e9,name:'Hero',cd:{},chan:null});
 let HSc=null,HSt=0;const hsDirty=()=>{HSc=null};
 const zones=[],traps=[];
-function talRank(id){return hero.tal[id]||0}
-function talSpent(b){const T=TAL[hero.cls];let n=0;(b==null?T:[T[b]]).forEach(br=>br.t.forEach(t=>n+=talRank(t[0])));return n}
+function talRank(id){}
+function talSpent(b){}
 const tpFree=()=>atr139Unspent();   // v139: unspent attribute points (talents are gone, 2930)
-function talMods(){const o={};TAL[hero.cls].forEach(br=>br.t.forEach(t=>{const r=talRank(t[0]);if(r)for(const k in t[5])o[k]=(o[k]||0)+t[5][k]*r}));return o}
+function talMods(){}
 function HS_base(){
   const now=performance.now();if(HSc&&now-HSt<80)return HSc;
   const C=CLS[hero.cls],l=hero.lvl,T=talMods(),s={hp:C.base.hp+C.per.hp*(l-1),mp:C.base.mp+C.per.mp*(l-1),pa:C.base.pa+C.per.pa*(l-1),ma:C.base.ma+C.per.ma*(l-1),pd:C.base.pd+C.per.pd*(l-1),md:C.base.md+C.per.md*(l-1),
@@ -236,16 +236,6 @@ function kill_base(e){
 function rolR2(l,mn,bonus){const mx=l<6?1:l<14?2:l<26?3:4,w=[62,26,9,2.6,.4].slice(0,mx+1);let r=Math.random()*w.reduce((a,b)=>a+b,0)*(1-Math.min(.6,(bonus||0)*.15));for(let i=0;i<w.length;i++){r-=w[i];if(r<0)return Math.max(i,Math.min(mn||0,mx))}return Math.min(mn||0,mx)}
 const canUse=it=>{const t=itT(it);return (!t.cls||t.cls==hero.cls)&&(!t.arm||ARMC[t.arm].includes(hero.cls))&&hero.lvl>=it.req};
 const fitsCls=(t,c)=>(!t.cls||t.cls==c)&&(!t.arm||ARMC[t.arm].includes(c));
-function genItem_base(l,o){
-  o=o||{};const T=tierOfLv(l)-1,want=o.cls||(Math.random()<.7?hero.cls:CLSK[R(0,4)]);
-  let pool=ITPL.filter(t=>t.t==T&&fitsCls(t,want));const sl=o.sl;if(sl)pool=pool.filter(t=>t.sl==sl)||pool;
-  const ws=pool.map(t=>t.sl=='weapon'?3:t.sl=='offhand'?1.2:t.sl=='chest'?2:t.sl=='amulet'||t.sl=='ring'?1.2:1.6);let r0=Math.random()*ws.reduce((a,b)=>a+b,0),tp=pool[0];
-  for(let i=0;i<pool.length;i++){r0-=ws[i];if(r0<0){tp=pool[i];break}}
-  const r=rolR2(l,o.minR||0,o.bonus),it={id:uid++,tp:ITPL.indexOf(tp),lv:l,req:Math.max(1,l-2),r,up:0,aff:[]};
-  const keys=Object.keys(AFX).filter(k=>!(tp.sl=='weapon'&&k=='mp'));
-  for(let i=0;i<r;i++){const k=keys.splice(R(0,keys.length-1),1)[0],A_=AFX[k];it.aff.push({k,v:A_[1]=='n'?Math.round(A_[2]*(2+l)*(.8+Math.random()*.5)):+(A_[2]*(1+T*.45)*(.8+Math.random()*.5)).toFixed(4)})}
-  return it;
-}
 const itT=it=>ITPL[it.tp],itName=it=>it.u&&typeof unqName135=='function'&&unqName135(it)?'✦ '+(it.up?'+'+it.up+' ':'')+unqName135(it):(it.lp?'★ ':'')+(it.up?'+'+it.up+' ':'')+itT(it).n+(it.set?' ◆':'');   // v135: uniques (2470) have names of their own
 function itStats(it){
   const tp=itT(it),l=it.lv,rm=[1,1.15,1.32,1.55,1.85][it.r]*(1+.045*(it.up||0)),s={};

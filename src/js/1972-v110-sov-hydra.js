@@ -253,9 +253,7 @@ function hydPool(c,p,r,life){const e=c.e,o=svDecal(p,0x5aff2a,r,life,.5),S2={k:'
 function hydGlob(c,from,q,T,big){const e=c.e,S2={k:'c',r:big?2.4:2},an={x:q.x,z:q.z,a:0};c.M.warn.push(svWarn(S2,an,T));
   const g=new THREE.Mesh(svG('hy_glob',()=>new THREE.IcosahedronGeometry(.35,0)),kqBas(HYD.ven));g.scale.setScalar(big?1.4:1);
   svShot(from,new THREE.Vector3(q.x,GH(q.x,q.z)+.2,q.z),T,HYD.ven,1,4,P=>{if(e.dead||!AF)return;burst(P,HYD.ven,22,2.4,2,.6);svSnd('splash',.6,1.3);svHitNow(e,S2,an,big?.9:.8,{});hydPool(c,P,big?2.2:1.8,4)},g)}
-function hydBreath(c,s,a0,T){const e=c.e,S2={k:'a',r:10,h:.42},o=hydBase(c,s),an={x:o.x,z:o.z,a:c.m.rotation.y+a0};svFlash(S2,an,HYD.ven,700);
-  const m=hydMouth(c,s);for(let k=0;k<26;k++){const d=2+Math.random()*8,a=an.a+(Math.random()-.5)*.8;burst(new THREE.Vector3(o.x+Math.sin(a)*d,GH(o.x,o.z)+1+Math.random()*2.5,o.z+Math.cos(a)*d),HYD.ven,2,1.4,.6,.9)}
-  burst(m,HYD.ven,20,3,1,.6);svSnd('hiss',.9,.8);svHitNow(e,S2,an,1.1,{flash:false,on:()=>dqDebuff('Venom','🟢',{mspd:-.3},2500,'Slowed by venom')})}
+function hydBreath(c,s,a0,T){}
 function hydSplash(p,n){burst(gY(p,.2),0xbfe8e0,n||30,4,4,.7);svShock(p,0xbfe8e0,5,.5)}
 // a short-lived additive mesh (shared geometry, own material) animated by fn(k, mesh, material); removed when done
 function hydFxMesh(geo,col,T,fn,op){const m=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op==null?.7:op,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
@@ -287,12 +285,7 @@ function hydGeyser(c,P,S2,an){const e=c.e;svSnd('splash',1,.8);svSnd('hiss',.6,1
 function hydStreams(c){const e=c.e,M=c.M,g=svG('hy2_strm',()=>{const q=new THREE.CylinderGeometry(.75,.18,1,7,3,true);q.translate(0,.5,0);q.rotateX(Math.PI/2);return q.toNonIndexed()});
   M.st=['L','C','R'].map(s=>{const m=new THREE.MeshBasicMaterial({color:HYD.ven,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}),o=new THREE.Mesh(g,m);o.frustumCulled=false;o.renderOrder=22;o.userData.lpsSkip=1;scene.add(o);return {s,o,m}});
   M.fx.push(()=>{(M.st||[]).forEach(q=>{scene.remove(q.o);q.m.dispose()});M.st=null})}
-function hydStreamTick(c,dt,on){const e=c.e,M=c.M,m=e.m;if(!M.st)return;M.ht=Math.max(0,(M.ht||0)-dt);M.dc=(M.dc||0)+dt;const drop=M.dc>.22;if(drop)M.dc=0;
-  M.st.forEach(q=>{const mo=hydMouth(c,q.s),a=Math.atan2(mo.x-m.position.x,mo.z-m.position.z),gp=new THREE.Vector3(m.position.x+Math.sin(a)*9.5,0,m.position.z+Math.cos(a)*9.5);gp.y=GH(gp.x,gp.z)+.1;
-    q.o.position.copy(mo);const d=gp.clone().sub(mo),L=d.length();q.o.lookAt(gp);q.o.scale.set(1+.15*Math.sin(c.t*31),1+.15*Math.cos(c.t*27),L);q.m.opacity+=((on?.62:0)-q.m.opacity)*Math.min(1,dt*10);
-    if(!on)return;if(Math.random()<.9){const r=3+Math.random()*6.5;burst(new THREE.Vector3(m.position.x+Math.sin(a)*r,GH(m.position.x,m.position.z)+.4,m.position.z+Math.cos(a)*r),HYD.ven,2,1.2,2.4,.6)}
-    if(drop)svDecal(new THREE.Vector3(m.position.x+Math.sin(a)*(4+Math.random()*5),0,m.position.z+Math.cos(a)*(4+Math.random()*5)),0x4adf2a,1.1,2.4,.32);
-    if(M.ht<=0&&svIn({k:'a',r:10,r0:2.8,h:.2},{x:m.position.x,z:m.position.z,a},pl.position,.25)){if(svHitNow(e,{k:'a',r:10,r0:2.8,h:.2},{x:m.position.x,z:m.position.z,a},.75,{flash:false,on:()=>dqDebuff('Venom','🟢',{mspd:-.3},1800,'Slowed by venom')}))M.ht=.5}})}
+function hydStreamTick(c,dt,on){}
 // ---------------- moves ----------------
 var HYDM={
   intro:{dur:2.8,trk:[[.4,'tight','io'],[1.0,'tight','l',.02],[1.6,'roar','o'],[2.4,'roar','l',.02],[2.8,'recC','io']],trn:[[0,2.8,1]],

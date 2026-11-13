@@ -16,7 +16,7 @@ function brkNear(p,r,dir,half){
       if(dir&&L>.4&&Math.acos(Math.max(-1,Math.min(1,(dx*dir.x+dz*dir.z)/L)))>half+.25)return;brkBox(C,b)})});
 }
 function area(p,r,dm,s,dir,half){const out=area_base(p,r,dm,s,dir,half);if(!(s&&s.cc))brkNear(p,r,dir,half);return out}
-function brkShot(p){let hit=false;CAMPS.forEach(C=>{if(hit||!C.boxes||!C.g||!C.g.visible)return;C.boxes.forEach(b=>{if(hit||b.b)return;if(Math.hypot(b.x-p.x,b.z-p.z)<.7){brkBox(C,b);hit=true}})});return hit}
+function brkShot(p){}
 // boxes come back after a few minutes, once you're away from the camp
 setInterval(()=>{const t=nowP();CAMPS.forEach(C=>{if(!C.boxes)return;C.boxes.forEach(b=>{if(b.b&&t-b.b>300000&&Math.hypot(b.x-pl.position.x,b.z-pl.position.z)>40){b.b=0;b.g.visible=true}})})},5000);
 // ---------- Shadow Rush (assassin skill 1): a collision-safe dash that slices through everything in its path ----------
@@ -28,5 +28,4 @@ function shadowRush(dist,raw,mt,fx,sk){
    ()=>{ring(pl.position,0x9a6ae0,1.6,260);if(hit.size>1)popT(pl.position,'×'+hit.size+' RUSH','#c4b5fd')});
 }
 var camDD=null;
-const fntN=(x,z)=>TOWNS.some(t=>Math.abs(x-t.cx)<3.2&&Math.abs(z-t.cy)<3.2);
 

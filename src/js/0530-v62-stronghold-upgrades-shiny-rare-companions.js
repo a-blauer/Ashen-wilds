@@ -40,18 +40,7 @@ function shopCan(o){if(shopBuilt(o.k))return [false,'Built'];if(gold<o.g)return 
 function shopBuy(k){const o=SHOPS.find(q=>q.k==k);if(!o)return;const ok=shopCan(o);if(!ok[0])return say(ok[1]+'.');shPay(o.g,o.m);SH.shop[k]=1;shApply();
   banner('🔨 '+o.n.toUpperCase()+' OPENS',o.d,'Find it in Duskhold');sfx('power');hud();ui();rX();try{saveGame(true)}catch(_){}}
 var shTab='shops';
-XR.hold=()=>{$('xwT').textContent='🏰 Stronghold Steward';$('xwS').textContent='Duskhold · 🪙 '+gold+' · '+bossDone.size+' Sovereigns defeated';
-  const tabs=`<div class="tabs" style="display:flex;gap:6px;margin-bottom:8px"><button class="${shTab=='shops'?'pri':''}" data-sht="shops">🔨 Shops (${SHOPS.filter(o=>shopBuilt(o.k)).length}/${SHOPS.length})</button><button class="${shTab=='up'?'pri':''}" data-sht="up">🏰 Upgrades</button></div>`;
-  let b='';
-  if(shTab=='shops')b='<div class="rows">'+SHOPS.map(o=>{const bt=shopBuilt(o.k),ok=shopCan(o);return `<div class="rw" style="--rc:${bt?'#6ee7b7':'#c9a24a'}"><span class="rn">${o.i} <b>${o.n}</b><small>${o.d}${bt?'':'<br>Cost: '+costH(o.g,o.m)}</small></span>
-    <span class="ra">${bt?'<em style="color:#6ee7b7">✔ Open</em>':`<button class="pri" data-shs="${o.k}" ${ok[0]?'':'disabled'} title="${ok[1]}">Build</button>`}</span></div>`}).join('')+'</div>';
-  else b='<div class="rows">'+SHU.map(u=>{const l=shL(u.k),c=SHC[l+1],ok=shCanBuy(u),pips='◆'.repeat(l)+'◇'.repeat(3-l);
-    const cost=c?costH(c.g,shCost(u,l+1))+(c.b?' · 👑 '+c.b+' Sovereigns':''):'';
-    return `<div class="rw" style="--rc:#${u.col.toString(16).padStart(6,'0')}"><span class="rn">${u.i} <b>${u.n}</b> <span style="color:#f0cc72;letter-spacing:2px">${pips}</span>
-      <small>${l?'Now: '+u.d(l):'Not built yet'}${c?'<br>Next: '+u.d(l+1)+'<br>Cost: '+cost:''}</small></span>
-      <span class="ra">${l>=3?'<em style="color:#6ee7b7">✔ Max</em>':`<button class="pri" data-shb="${u.k}" ${ok[0]?'':'disabled'} title="${ok[1]}">${l?'Upgrade':'Build'}</button>`}</span></div>`}).join('')+'</div>';
-  $('xwB').innerHTML=tabs+b;
-  $('xwF').innerHTML='<span class="mut dtl">'+(shTab=='shops'?'The Trading Post is always open. Every other shop has to be built — gather wood, stone, fibers, glow caps and the like in the portal maps, and collect monster parts like Rock Core, Silk Gland and Ectoplasm.':'Upgrades are permanent and shown as banners around Duskhold. Higher levels need more materials and defeated Sovereigns.')+'</span>'};
+XR.hold=()=>{};
 $('xw').addEventListener('click',e=>{if(xwMode!='hold')return;const t=e.target.closest('[data-shb],[data-shs],[data-sht]');if(!t||t.disabled)return;
   if(t.dataset.sht){shTab=t.dataset.sht;rX()}else if(t.dataset.shs)shopBuy(t.dataset.shs);else shBuy(t.dataset.shb)});
 // the steward and the banners in Duskhold

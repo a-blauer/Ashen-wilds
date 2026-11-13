@@ -26,7 +26,7 @@ function kqslRender(){const T=$('awT');if(!T)return;const m=T.querySelector('.aw
     try{localStorage.removeItem(KQSL.keys[i])}catch(_){}kqslRender()},true)}
   if(!matchMedia('(pointer:coarse)').matches){const b=m.querySelector('[data-aw].p')||m.querySelector('[data-aw]');if(b)setTimeout(()=>b.focus(),60)}}
 // a title still fading out (Continue less than a second ago) would block the new one and then vanish: clear it first
-{const f=awTitle;awTitle=function(){const o=$('awT');if(o&&o.classList.contains('out'))o.remove();const r=f.apply(this,arguments);try{kqslRender()}catch(e){console.warn('slots',e)}return r}}
+{const f=awTitle;awTitle=function(){}}
 // open another slot from the in-game main menu: save, switch, reload, then continue / create there
 function kqslReload(sl,flag,extra){try{saveGame(true)}catch(_){}KQMENU.nosave=1;kqSlotSet(sl);
   try{sessionStorage.setItem(flag,'1');if(extra)sessionStorage.setItem(extra[0],extra[1])}catch(_){}

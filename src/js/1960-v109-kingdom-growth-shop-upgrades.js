@@ -152,13 +152,7 @@ function lotInfo109(P){const c=lotCounts109(),s=kf109().s;
   const r=f.apply(this,arguments);try{kfFixDoors109()}catch(e){console.warn('v109 doors',e)}return r}}
 // ---------------- 2. turning buildings ----------------
 // every built thing's door must be reachable on foot from the spawn: flood fill over the inside of the walls (half-tile grid)
-function kfDoors109(){const T=TOWNS[0],F=kf109(),st=.5,x0=-F.WX+.5,z0=-TS+.5,nx=Math.floor((2*F.WX-1)/st)+1,nz=Math.floor((F.SZ+TS-1)/st)+1,seen=new Uint8Array(nx*nz),q=[];
-  const free=(i,j)=>{const x=T.cx+x0+i*st,z=T.cy+z0+j*st;return !solid(x,z)&&!tcHit(x,z)};
-  const at=(x,z)=>{const i=Math.round((x-T.cx-x0)/st),j=Math.round((z-T.cy-z0)/st);return i<0||j<0||i>=nx||j>=nz?-1:j*nx+i};
-  let s0=at(T.sp[0],T.sp[1]);if(s0<0)return [];seen[s0]=1;q.push(s0);
-  while(q.length){const c=q.pop(),i=c%nx,j=(c/nx)|0;for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const ii=i+a,jj=j+b;if(ii<0||jj<0||ii>=nx||jj>=nz)continue;const k=jj*nx+ii;if(seen[k])continue;seen[k]=free(ii,jj)?1:2;if(seen[k]==1)q.push(k)}}
-  const reach=(x,z)=>{for(let dz=-1;dz<=1;dz+=st)for(let dx=-1;dx<=1;dx+=st){if(dx*dx+dz*dz>1.01)continue;const k=at(x+dx,z+dz);if(k>=0&&seen[k]==1)return true}return false};
-  const bad=[];for(const k in SH.pos){if(!lotBuilt103(k))continue;const l=lotOf103(k);if(!l)continue;const [x,z]=lotDoor103(l);if(!reach(x,z))bad.push(k)}return bad}
+function kfDoors109(){}
 // a new building can close off a turned neighbour's door: such neighbours turn back to face their street
 function kfFixDoors109(){const bad=kfDoors109().filter(k=>SH.rot[k]);if(!bad.length)return;bad.forEach(k=>delete SH.rot[k]);lotSync103();
   say('⟳ '+bad.map(k=>lotName103(k).join(' ')).join(', ')+' turned back to face '+(bad.length>1?'their streets':'its street')+', so the door can be reached.')}

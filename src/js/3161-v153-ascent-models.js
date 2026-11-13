@@ -9,11 +9,7 @@ function ch153R(seed){return ab152R(seed)}
 // ---------------- the course ----------------
 function ch153Arch(){return lgGroup('CH153|arch',q=>{const C=CH153M,R=ch153R(77);[-1,1].forEach(s=>{q.p('','box','c',C.rock[2],s*3.6,2.4,0,1.6,5.2,2.6);for(let i=0;i<3;i++)q.p('','dod','c',C.rock[i],s*(3.4+R()*.6),1+i*1.5,(R()-.5)*1.6,.9,.8,.9,R(),R(),R())});
   q.p('','box','c',C.rock[0],0,5.4,0,8.6,1.4,2.7);for(let i=0;i<4;i++)q.p('','cone','c',C.rock[3],-2.4+i*1.6,4.5,(R()-.5)*1.2,.22,.8,.22,Math.PI,0,0)},0)}
-function ch153Crack(){return lgGroup('CH153|crack',q=>{const C=CH153M,R=ch153R(1313);
-  [-1,1].forEach(s=>{for(let i=0;i<6;i++){const sz=1.6+R()*1.4;q.p('','dod','c',C.rock[i%4],s*(1.7+sz*.7+R()*.6),sz*.8+R()*3,(R()-.5)*2,sz,sz*1.4,sz,R()*3,R()*3,R()*3)}
-    q.p('','box','c',C.rock[2],s*2.6,3.6,-1.0,2.6,7.2,3.6,0,0,s*.06)});
-  q.p('','box','c',C.rock[0],0,7.6,-1,7.6,1.8,4);q.p('','box','c',0x050404,0,1.8,-.5,1.5,3.6,.1);
-  for(let i=0;i<5;i++)q.p('','dod','c',C.rock[3],(R()-.5)*1.4,4.0+i*.5,.2,.25,.4,.25,R(),R(),R())},0)}
+function ch153Crack(){}
 // ---------------- the uphill road at the far edge of Mistmere ----------------
 function ch153GateModel(s){const C=CH153M,g=new THREE.Group();g.userData.psNo=1;
   g.add(lgGroup('CH153|road',q=>{const R=ch153R(808);

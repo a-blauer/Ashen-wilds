@@ -38,13 +38,7 @@ return pl;
 const pl=buildHero();
 let combo=0,comboT=0,hstop=0,shk=0;
 const shake=a=>{if(SET.shake)shk=Math.max(shk,a)};
-function slashFx(d,st,rg){
-  const g=new THREE.Group(),col=st==2?0xffe0a0:0xf2ead8,m=new THREE.Mesh(new THREE.RingGeometry(rg*.42,rg*1.02,28,1,st==2?.35:-1.05,st==2?2.4:2.1),addMat(col));
-  m.material.opacity=.85;g.add(m);g.position.copy(gY(pl.position,st==2?.15:.85));const yaw=Math.atan2(d.x,d.z);
-  if(st==2){m.rotation.y=Math.PI/2;g.rotation.y=yaw;m.position.y=.0}else{m.rotation.x=-Math.PI/2;g.rotation.y=yaw-Math.PI/2;m.rotation.z=0;g.rotation.z=st?-.18:.18}
-  scene.add(g);const s0=st==1?-1:1;
-  tw(st==2?260:200,k=>{m.material.opacity=.85*(1-k);if(st<2)m.rotation.z=s0*(.6-k*.9);else m.rotation.x=-.4+k*.6;g.scale.setScalar(.85+k*.25)},()=>{scene.remove(g);m.geometry.dispose()});
-}
+function slashFx(d,st,rg){}
 pl.position.set(START[0],0,START[1]);scene.add(pl);
 // creatures built from simple shapes
 function cr(c){
@@ -94,5 +88,4 @@ function animC0(g,now,mv,sp){
   g.tails.forEach(tl=>{tl.position.x=Math.sin(now/(mv?120:260)+tl.position.z*3)*(mv?.12:.06)});
   g.b.position.y=mv?Math.abs(Math.sin(t*1.6))*.06:Math.sin(now/350)*.02;
 }
-const shrink=(g,done)=>tw(500,k=>g.scale.setScalar(g.bs*(1-k)),done);
 

@@ -36,9 +36,7 @@ function cbBreak(e,why){if(!(e&&e.atk&&!e.boss&&!e.dead))return;mCancel(e);e.stu
 // companions break a wind-up through the same poise (their hits don't pass heroHit)
 {const f=compHit;compHit=function(c,e){const w=cbWind(e);const r=f.apply(this,arguments);if(w&&cbWind(e)&&cbBreakChk(e))cbBreak(e,'comp');return r}}
 // heavy hit (combo finisher): normal mobs are interrupted, elites take extra poise damage
-function cbHeavy(e){if(!e||e.boss||e.dead)return;
-  if(!e.c.al){const was=!!e.atk;mCancel(e);e.cd=Math.max(e.cd,1);if(was){cbBreakFx(e);kqpLog('finisher')}return}
-  if(cbWind(e)){e.atk.pz=(e.atk.pz||0)+M(e.c)*KQP.fin;if(cbBreakChk(e))cbBreak(e,'finisher')}}
+function cbHeavy(e){}
 // bosses resist stuns for a while after one lands
 {const f=eStatus;eStatus=function(e,fx,atk,src){if(e&&e.boss&&fx&&fx.stun&&!e.dead){const t=nowP();
     if(t<(e.cbImm||0)){fx=Object.assign({},fx);delete fx.stun;if(t-(e.cbRt||0)>700){e.cbRt=t;dn(e.m.position,'RESIST','#e5e7eb',-30,700)}}else e.cbImm=t+KQP.bossImm*1000}

@@ -252,12 +252,7 @@ function argSweepStart(c){const e=c.e,M=c.M,g=argBeamGeo(),L=21;
   const b1=new THREE.Mesh(g,m1),b2=new THREE.Mesh(g,m2),tip=kqSpr(0xffe090,2.6);[b1,b2].forEach(b=>{b.renderOrder=24;b.frustumCulled=false;scene.add(b)});scene.add(tip);
   const B={b1,b2,tip,m1,m2,L,y:argSweepYaw(e),t:0,dc:0,kill(){scene.remove(b1,b2,tip);m1.dispose();m2.dispose()}};M.an.sw=B;M.fx.push(()=>B.kill());
   kqFlash(svWP(e,'brow',0,.02,.3),0xffffff,4,260);svSnd('charge',.5,2.2);svSnd('hum',.8,.8);shake(.2);argSweepTick(c,0)}
-function argSweepTick(c,dt){const e=c.e,M=c.M,B=M.an.sw;if(!B)return;const m=e.m,o=svWP(e,'brow',0,.02,.3),y1=argSweepYaw(e),y0=B.y;B.y=y1;B.t+=dt;
-  const end=new THREE.Vector3(m.position.x+Math.sin(y1)*B.L,0,m.position.z+Math.cos(y1)*B.L);end.y=GH(end.x,end.z)+.3;const len=o.distanceTo(end),w=1+.12*Math.sin(B.t*40);
-  [B.b1,B.b2].forEach(b=>{b.position.copy(o);b.lookAt(end)});B.b1.scale.set(.62*w,.62*w,len);B.b2.scale.set(.2,.2,len);B.tip.position.copy(end);
-  B.dc-=dt;if(B.dc<=0){B.dc=.07;const s=4+c.rnd()*(B.L-4),q=new THREE.Vector3(m.position.x+Math.sin(y1)*s,0,m.position.z+Math.cos(y1)*s);svDecal(end,0x2a1804,1.3,3.2,.6);svDecal(q,0x2a1804,.9,2.4,.45);burst(gY(end,.3),ARG.col,5,2,2.2,.45)}
-  if(!M.an.got&&dt>0&&AF){const da=svAng(y1-y0),an={x:m.position.x,z:m.position.z,a:y0+da/2},S={k:'a',r:B.L+.5,h:Math.abs(da)/2+.07};
-    if(svIn(S,an,pl.position,.35)&&svHitNow(e,S,an,1.5,{flash:false,kb:2}))M.an.got=1}}
+function argSweepTick(c,dt){}
 var ARGM={
   intro:{dur:2.6,trk:[[.3,'low','io'],[.9,'low','io',.01],[1.5,'howl','o'],[2.2,'howl','l',.02],[2.6,'cRec','io']],trn:[[0,2.6,1.5]],
     ev:[[.95,c=>{c.S.eyeF=1.2;svSnd('hum',.6)}],[1.45,c=>{svSnd('roar',1);shake(.35);c.S.bigC=.4;svShock(c.m.position,ARG.col,8,.8)}],[2.4,c=>{c.S.bigC=0}]]},

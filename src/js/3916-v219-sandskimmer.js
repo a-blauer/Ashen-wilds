@@ -108,20 +108,11 @@ function skr218Feel(V,dt,now){const D=skr218Dom(),n=V.cling.length,low=V.hp/V.hp
   // the count of scarabs on the hull, under the bar
   const H=$('sr165H');if(H){let c=$('sk218C');if(!c){c=document.createElement('div');c.id='sk218C';H.appendChild(c)}c.textContent=n?'🪲 ×'+n+' gnawing at the hull — shoot them off or boost!':'';c.style.display=n?'':'none'}}
 // ---------------- the camera ----------------
-function skr218Cam(){const V=SR165.me,C=SKR218.cam;if(!V)return;const fx=Math.sin(V.h),fz=Math.cos(V.h),x=V.x-fx*C.d,z=V.z-fz*C.d;let y=V.y+C.h;y=Math.max(y,GH(x,z)+C.floor,GH((x+V.x)/2,(z+V.z)/2)+C.floor+.6);
-  const p=new THREE.Vector3(x,y,z);if(SKR218.shk>0){p.x+=(Math.random()-.5)*SKR218.shk;p.y+=(Math.random()-.5)*SKR218.shk;SKR218.shk=Math.max(0,SKR218.shk-.03)}
-  cam.position.copy(p);const l=new THREE.Vector3(V.x+fx*C.ahead,V.y+C.ly,V.z+fz*C.ahead);cam.lookAt(l);if(typeof look!='undefined')look.copy(l);try{FADE.cam.value.copy(cam.position)}catch(_){}cam.updateMatrixWorld()}
+function skr218Cam(){}
 {const f=POST.render;POST.render=function(){try{if(SKR218.on&&typeof SR165!='undefined'&&SR165.on&&SR165.me&&sr165In())skr218Cam()}catch(e){if(!SKR218.err++)console.warn('v219 skimmer cam',e)}return f.apply(this,arguments)}}
 // ---------------- aiming at the real ground ----------------
 const SKR218RC=new THREE.Raycaster();
-function skr218Ground(){if(!mOn)return null;SKR218RC.setFromCamera(mnd,cam);const o=SKR218RC.ray.origin,d=SKR218RC.ray.direction,p=new THREE.Vector3();let prev=0;
-  for(let t=1;t<160;t+=1.2){p.copy(o).addScaledVector(d,t);if(p.y<=GH(p.x,p.z)+.5){let a=prev,b=t;for(let i=0;i<6;i++){const m=(a+b)/2;p.copy(o).addScaledVector(d,m);if(p.y<=GH(p.x,p.z)+.5)b=m;else a=m}p.copy(o).addScaledVector(d,b);p.y=GH(p.x,p.z)+.6;return p}prev=t}
-  return null}
-sr165Aim=function(V,dt){const tp=sr165Seat(V,'turret');let A=null;try{A=skr218Ground()}catch(_){}
-  let best=null,bd=A?6:40;sr165Foes().forEach(f=>{const p=f.p,d=A?Math.hypot(p.x-A.x,p.z-A.z):Math.hypot(p.x-tp.x,p.z-tp.z);if(d<bd){bd=d;best=f}});
-  if(best)A=best.p.clone();if(!A){const fx=Math.sin(V.h),fz=Math.cos(V.h);A=new THREE.Vector3(V.x+fx*20,V.y+.9,V.z+fz*20)}V.aim=A;V.lock218=!!best;
-  let y=Math.atan2(A.x-tp.x,A.z-tp.z)-V.h;y=Math.atan2(Math.sin(y),Math.cos(y));let d=y-V.aY;d=Math.atan2(Math.sin(d),Math.cos(d));V.aY+=d*Math.min(1,dt*16);
-  const dist=Math.hypot(A.x-tp.x,A.z-tp.z);V.aP=Math.max(-.35,Math.min(.25,Math.atan2(tp.y-(A.y||V.y),dist)*.8))};
+sr165Aim=function(V,dt){};
 function skr218Ret(V,now){let R=SKR218.ret;const on=SR165.on&&V&&V.gun==='me'&&V.aim&&SR165.ph==='run';
   if(!R){if(!on)return;R=SKR218.ret=new THREE.Mesh(new THREE.RingGeometry(.7,.95,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd070,transparent:true,opacity:.8,depthWrite:false,fog:false}));R.renderOrder=40;R.userData.lpsSkip=1;scene.add(R)}
   R.visible=!!on;if(!on)return;const A=V.aim;R.position.set(A.x,GH(A.x,A.z)+.12,A.z);R.material.color.setHex(V.lock218?0xff4030:0xffd070);R.scale.setScalar(V.lock218?1.3+.15*Math.sin(now/80):1)}

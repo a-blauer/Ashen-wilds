@@ -68,7 +68,7 @@ $('xw').addEventListener('click',e=>{const t=e.target.closest('[data-cs141]');if
 // ---------------- quest progress kept for the changed Kindlelight II quest (iron moved to the second objective) ----------------
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const S=CHQ132.st&&CHQ132.st.k2c;if(S&&S.p&&S.p.length==1&&S.s==1)S.p=[0,S.p[0]]}catch(_){}return r}}
 // R (empower with companion 2) while the second slot is locked
-{const f=toggleEmp;toggleEmp=function(i){if(i>=actN141())return say(cs141Ready()?'🔒 Learn the Companion Bond at the Beast Trainer to bring a second companion.':'🔒 A second companion joins you after two Sovereigns are defeated (Beast Trainer).');return f.apply(this,arguments)}}
+{const f=toggleEmp;toggleEmp=function(i){}}
 // a 2nd companion that empowered you before the slot closed (old saves) stops
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{if(!cs141Has()&&party[1]&&party[1].emp)party[1].emp=false}catch(_){}return r}}
 

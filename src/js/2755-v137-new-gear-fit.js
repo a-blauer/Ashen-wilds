@@ -23,8 +23,6 @@ function a7Sec(Q,y){const H=gkHull(Q);let cx=0,cz=0;H.forEach(q=>{cx+=q[0];cz+=q
   return {H,y,c:[cx,cz],ok:H.length>=3,at(th,clr,yy){const b=((Math.round(th/(Math.PI*2)*N)%N)+N)%N;let r=Math.max(Rb[b],Rb[(b+1)%N],Rb[(b+N-1)%N]);if(!r)r=gkHullR(H,cx,cz,th);
     return {p:[cx+Math.sin(th)*(r+(clr||0)),yy==null?y:yy,cz+Math.cos(th)*(r+(clr||0))],n:[Math.sin(th),0,Math.cos(th)],r}}}}
 function a7Ring(B,y,h,ex,filt){const p=gkPts(B,y-h,y+h,filt,ex),Q=[];for(let i=0;i<p.length;i+=3)Q.push([p[i],p[i+2]]);return a7Sec(Q,y)}
-// highest point of what is built in a box (x0..x1, z0..z1) between y0 and y1
-function a7Top(B,y0,y1,ex,filt){const p=gkPts(B,y0,y1,filt,ex);let b=null;for(let i=0;i<p.length;i+=3)if(!b||p[i+1]>b[1])b=[p[i],p[i+1],p[i+2]];return b}
 // ---------------- placing a small kit in a local frame (origin on the surface, +z out, +y up) ----------------
 function a7M(p,n,u,sc){const V=THREE.Vector3,Z=new V(...n).normalize(),U=new V(...u),Y=U.sub(Z.clone().multiplyScalar(U.dot(Z)));if(Y.lengthSq()<1e-6)Y.set(0,0,1).sub(Z.clone().multiplyScalar(Z.z));Y.normalize();
   const X=new V().crossVectors(Y,Z).normalize();return new THREE.Matrix4().makeBasis(X.multiplyScalar(sc),Y.multiplyScalar(sc),Z.multiplyScalar(sc)).setPosition(p[0],p[1],p[2])}

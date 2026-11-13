@@ -180,8 +180,6 @@ function qs165Move(e,dt){const S=e.sv,ai=QS165B.ai,m=e.m,v=V().subVectors(pl.pos
 // the fight is over when every hero is down or gone from the yard (co-op: 3275 overrides these)
 function qs165End(){if(typeof qs180End=='function')return qs180End();return hero.hp<=0||!qs165Here()||(typeof AWD!='undefined'&&AWD.dead)}
 // solo defaults (3275 replaces them for co-op)
-function qs180Auth(){return true}
-function qs180Glide(e,dt){}
 // no recall, no mount, no leaving once he has risen
 function qs165Held(){return !!(QS165.form||QS165A&&QS165A.f)&&qs165Here()}
 {const f=doRecall;doRecall=function(){if(qs165Held())return say('🏜️ The wall of sand holds you in the yard. There is no escape: kill it, or die.');return f.apply(this,arguments)}}

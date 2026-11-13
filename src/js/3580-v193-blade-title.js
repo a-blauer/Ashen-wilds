@@ -203,21 +203,6 @@ function muCello(f,t,d,v){const a=MU.a,end=t+d+.8,g=a.createGain(),lp=a.createBi
   if(d>.4){const l=muOsc('sine',5.2,t,end),lg=a.createGain();lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*.006,t+Math.min(d,.9));l.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency)}
   lp.connect(g);const at=Math.min(.35,d*.4);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+at);g.gain.setValueAtTime(v*.85,t+Math.max(at,d-.1));g.gain.exponentialRampToValueAtTime(.0001,t+d+.6);
   muNz(t,Math.min(d,1.2),'bandpass',2600,2200,1.5,v*.05,2,.15);muRoute(g,2)}
-var BT193M={bars:16,
-  cello:[[50,8],[53,4],[57,4],[55,8],[53,4],[52,4],[53,12],[50,4],[45,16],[46,8],[50,4],[53,4],[52,8],[49,8],[50,16],[45,16],
-         [57,8],[60,4],[62,4],[58,8],[57,4],[55,4],[57,12],[53,4],[52,16],[53,8],[55,4],[57,4],[58,8],[57,4],[55,4],[57,8],[61,4],[64,4],[62,16]],
-  ch:[[50,53,57],[48,52,55],[50,53,57],[49,52,57],[46,50,53],[49,52,57],[50,53,57],[49,52,57],[50,53,57],[46,50,55],[50,53,57],[49,52,57],[46,50,53],[46,50,55],[49,52,57],[50,53,57]],
-  drone:[38,38,38,38,38,38,38,38,38,38,38,38,43,43,45,38],timp:{8:[0],11:[0],12:[0],14:[0,12,14],15:[0]},bell:{0:62,4:57,8:62,12:69}};
-function bt193Score(t,bar,s){const M=BT193M,b=bar%M.bars,sp=.25;
-  if(s==0){
-    const ch=M.ch[b].map(muF);muPad(ch,t,sp*16,b<8?.014:.034,{cut:b<8?520:850,form:1});
-    if(b>=8)muPad(ch.map(f=>f*2),t,sp*16,.03,{cut:1400,form:1});
-    if(b%2==0||b>=12)muDrone(muF(M.drone[b]),t,sp*(b>=12?16:32),.1);
-    if(M.bell[b]!=null)muBell(muF(M.bell[b]),t,.05)}
-  const tp=M.timp[b];if(tp&&tp.includes(s))MUDR.taiko(t,s?.5:.9);
-  // cello: walk the note list to find a note that starts on this step
-  let at=0,i=0,target=b*16+s;for(;i<M.cello.length;i++){if(at===target)break;at+=M.cello[i][1];if(at>target){i=-1;break}}
-  if(i>=0&&i<M.cello.length){const [n,l]=M.cello[i];muCello(muF(n),t,sp*l*.96,b<8?.16:.13);if(b>=8)muLead(muF(n+12),t,sp*l*.95,.035,{w:'sine',cut:1800,vib:1.2,at:.25,sub:0})}}
 // v193b (owner, Nov 3 2026): the title plays "Ink and Candlelight" (the owner's pick from the music sketches) instead of the
 // cello theme above (kept as bt193Score for later use). A minor, 66 bpm, 12 bars (~44 s) looping: four bars of harp arpeggios
 // over a low viol, then a celesta melody, a soft flute doubling its second half; the last chord (E) leads back into the

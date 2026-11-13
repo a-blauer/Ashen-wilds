@@ -34,12 +34,7 @@ function kn207Wrap(T,v){if(!v||!Object.keys(v).length)return T;const o={};
   try{if(KN207.on!==false&&T&&atkWT()==='knives'&&KN207.cur!=null)return kn207Wrap(T,KN207.V[KN207.cur])}catch(_){}return T}}
 // the throw (3455's one-knife throw, with the variation, a longer wind-up, a gentler blend and an eased turn instead of face())
 function kn207Aim(d){if(d&&(d.x||d.z))KN207.turn={y:Math.atan2(d.x,d.z),t:nowP()+700}}
-WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;KN207.cur=KN207.order[KN207.i++%KN207.order.length];
-  try{kn207Aim(aimDir())}catch(_){}
-  const hp=haPlay;haPlay=function(ms,pose,hitAt,onHit,bi){return hp.call(this,ms,pose,hitAt,onHit,Math.max(bi==null?.22:bi,KN207.bi))};
-  try{swingAnim(0,Math.max(KN207.ms[0],base*KN207.ms[1]),()=>{const d2_=aimDir();kn207Aim(d2_);
-    launch(pl.position,d2_,26,{col:0xd8dde6,arrow:1,mt:'p',basic:1,wfx:'knife',pierce:WB127.knPierce,mpSc:.7},raw*WB127.knife1,.5);const sh=shots[shots.length-1];if(sh)sh.m.scale.set(.7,.7,.55);sfx('stab')})}
-  finally{haPlay=hp}};
+WBEH.knives=function(C,s,raw,d,spdK,base){};
 // v163 turns the hero to the live aim every frame of a wind-up (face(), a snap): for knives that is handed to the eased turn below,
 // which follows the same live aim until the knife leaves
 {const f=swing;swing=function(){const A0=HA.cur,y0=pl.rotation.y;const r=f.apply(this,arguments);
@@ -54,9 +49,6 @@ WBEH.knives=function(C,s,raw,d,spdK,base){atkCd=base;knN++;SWNOL=1;KN207.cur=KN2
     else{const cur=pl.rotation.y,dy=Math.atan2(Math.sin(T.y-cur),Math.cos(T.y-cur));pl.rotation.y=cur+dy*(1-Math.exp(-dt*KN207.turnK));if(Math.abs(dy)<.01)KN207.turn=null}}
   else if(!h||h===pl)KN207.last=now;
   return f.apply(this,arguments)}}
-
-// ---------------- crossbow bolts ----------------
-var BL207={len:.68};
 function bl207Mesh(){return lgGroup('KQ207|bolt',k=>{
   k.L('','c',0x5a4026,[0,0,-.3],[0,0,.25],.024,.022,6);                                         // the shaft
   k.p('','cyl','m',0x4a4e56,0,0,.255,.03,.03,.03,Math.PI/2,0,0);                                  // an iron collar

@@ -111,12 +111,8 @@ function sp152Trk(){const el=$('mqt152');if(!el)return;let I=null;try{I=curIns()
   if(!out){el.classList.add('hide');sp152TrkPos();return}
   let h='<div class="k">⚜ Main quest</div><div class="h">'+out.name+'</div>';(out.lines||[]).forEach(q=>{h+=q[2]?'<div class="o d"><span>'+q[0]+'</span></div>':'<div class="o"><span>'+q[0]+'</span>'+(q[1]!=null?'<b>'+q[1]+'</b>':'')+'</div>'});
   el.innerHTML=h;el.classList.remove('hide');sp152TrkPos()}
-function sp152TrkPos(){const el=$('mqt152'),m=$('mini'),c=$('chqt132');if(!el||!m||!m.offsetParent)return;const mr=m.getBoundingClientRect();let b=mr.bottom;
-  ['locBox','fsBtn','sysBtn','sysmenu','mbtn'].forEach(id=>{const e=$(id);if(!e||!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.width&&r.right>mr.left-40&&r.left<mr.right+40)b=Math.max(b,r.bottom)});
-  if(b+140>innerHeight)b=Math.max(mr.bottom,innerHeight*.35);const top=Math.round(b+10),right=Math.max(8,Math.round(innerWidth-mr.right))+'px';
-  const on=!el.classList.contains('hide');if(on){el.style.top=top+'px';el.style.right=right}
-  if(on&&c&&!c.classList.contains('hide'))c.style.top=(top+el.offsetHeight+8)+'px'}
-{const f=chqTrkPos132;chqTrkPos132=function(){const r=f.apply(this,arguments);try{sp152TrkPos()}catch(_){}return r}}
+function sp152TrkPos(){}
+{const f=chqTrkPos132;chqTrkPos132=function(){}}
 addEventListener('resize',()=>{try{sp152TrkPos()}catch(_){}});
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{sp152GateTick()}catch(e){if(!SP152.err++)console.warn('v152 gates',e)}
   try{if(now-SP152.tt>400){SP152.tt=now;sp152Trk()}}catch(_){}return r}}

@@ -18,7 +18,6 @@ const bossDone=new Set();
 const LOCK={};BOSSES.forEach((b,i)=>b.un.forEach(k=>LOCK[k]=i));
 const locked=k=>LOCK[k]!=null&&!bossDone.has(LOCK[k]);
 const lockBy=k=>BOSSES[LOCK[k]].name;
-const unName=k=>SUP[k]?SUP[k].n+' recipe':k;
 const upCap=()=>2+Math.min(8,[...bossDone].filter(i=>i<8).length);
 // ---------- arena dressing: rune floor that hugs the terrain, columns, seal wall, cover shadows ----------
 const ARN=BOSSES.map((b,i)=>{
@@ -130,14 +129,7 @@ function bossHudX(){
   const e=AF&&bossEnt(AF.i);document.body.classList.toggle('bossf',!!e);if(!e)return;$('boss').classList.remove('hide');$('bossN').textContent=AF.b.i+' '+e.c.n+' · Lv '+e.c.l+' · Phase '+['I','II','III'][e.bs.ph-1];$('bossB').style.width=Math.max(0,100*e.c.h/M(e.c))+'%';
 }
 // ---------- Sovereigns window (J) ----------
-XR.bosses=()=>{
-  $('xwT').textContent='👑 Sovereigns';$('xwS').textContent=bossDone.size+' / 10 defeated · Forge mastery +'+upCap();
-  $('xwB').innerHTML='<div class="rows">'+BOSSES.map((b,i)=>{const d=bossDone.has(i),reach=b.zone==1||bossDone.has(2*(b.zone-1)-1),nx=!d&&reach;
-    return `<div class="rw" style="--rc:${d?'#6ee7b7':nx?'#c9a24a':'transparent'};${reach||d?'':'opacity:.55'}"><span class="rn">${b.i} <b>${b.name}</b> <span class="mut">${b.title}</span>
-      <small>${ZN[b.zone-1]} · Lv ${b.lvl}${b.guard?' · <b style="color:#f0cc72">Zone guardian: opens '+(b.zone<5?ZN[b.zone]:'the end')+'</b>':''} · Power: ${b.pw.i} ${b.pw.n} (${b.pw.d})${b.un.length?'<br>Unlocks: '+b.un.map(unName).join(', '):''}${i<8?' · Forge +1':''}</small></span>
-      <span class="ra">${d?'<em style="color:#6ee7b7">✔ Defeated</em>':nx?'<em style="color:var(--acc)">◆ Ready</em>':'<small>🔒 Zone sealed</small>'}</span></div>`}).join('')+'</div>';
-  $('xwF').innerHTML='<span class="mut dtl">Arenas are marked ◆ on the world map (N). Watch the red ground warnings, dash through shockwaves and beams, and when the Cataclysm comes, get into a glowing blue safe circle.</span>';
-};
+XR.bosses=()=>{};
 function openBosses(){if(!$('xw').classList.contains('hide')&&xwMode=='bosses')return closeX();if(uiOpen()&&$('xw').classList.contains('hide'))return;openX('bosses')}
 $('bossBtn').onclick=()=>openBosses();
 

@@ -70,18 +70,7 @@ CAMPS.forEach(C=>{const r=(C.r||CAMP_R)+1;for(let j=-r;j<=r;j++)for(let i=-r;i<=
 const campAt=(x,z,r)=>CAMPS.find(C=>Math.hypot(C.x-x,C.z-z)<(r||C.r||CAMP_R)); // v123: each camp's own size
 const campAlive=C=>enemies.reduce((n,e)=>n+(e.camp===C&&!e.dead?1:0),0);
 // ---------- spawning ----------
-function spawn(init){
-  const p=pl.position,now=performance.now(),lo=init?14:32;
-  const el=CAMPS.filter(C=>{const d=Math.hypot(C.x-p.x,C.z-p.z);return d>lo&&d<80&&now-C.kt>45000&&campAlive(C)<C.cap});
-  if(!el.length)return;
-  const C=el[R(0,el.length-1)];if(!C.g)buildCamp(C);let x,z,n=0;
-  do{const a=Math.random()*6.283,r=Math.random()*8.5;x=Math.round(C.x+Math.cos(a)*r);z=Math.round(C.z+Math.sin(a)*r);n++}while((solid(x,z)||enemies.some(o=>Math.hypot(o.m.position.x-x,o.m.position.z-z)<1.6))&&n<20);
-  if(n>=20)return;
-  const b=BIOMES[MAP.bio[z][x]],key=pickMem(C.th);if(!EN[key])return;
-  const al=Math.random()<.05+.012*b.t,e=spawnEnemy(key,x,z,Math.min(MAXLV,zoneLv(x,z)+(al?2:0)),{al,zt:b.t});
-  e.camp=C;e.wx=C.x;e.wz=C.z;
-  if(!e.c.al&&!enemies.some(o=>o.camp===C&&o.scout&&!o.dead)&&Math.random()<.3)makeScout(e);
-}
+function spawn(init){}
 const campOnKill=e=>{const C=e&&e.camp;if(!C)return;
   if(e.leader===C){campChest(C);return}
   if(C.raid||campAlive(C)>0)return;

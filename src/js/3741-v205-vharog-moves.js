@@ -44,7 +44,6 @@ function vh205Deaf(){if(hero.hp<=0||hero.iv>0)return;dqDebuff('Deafened','🦇',
 // ---------------- effects ----------------
 var VH205X={m:{}};
 function vh205BloodMat(){return VH205X.m.b||(VH205X.m.b=new THREE.MeshStandardMaterial({color:0x5a0a12,roughness:.3,metalness:.1,flatShading:true}))}
-const VH205_HEM=['Hemorrhage','🩸',{},'Hemorrhage: bleeding'];
 // a pool of blood that opens a wound if you stand in it (one stack a second)
 function vh205Pool(e,p,r,ms){if(!VH205A||!VH205A.f)return;const q=vh205Clamp(p.clone(),.3),y=GH(q.x,q.z);svDecal(q,0x5a0a12,r,(ms||5000)/1000,.75);let t=0,tk=.3;
   const m=new THREE.Mesh(svG('vh_pool',()=>new THREE.CircleGeometry(1,18).rotateX(-Math.PI/2)),new THREE.MeshStandardMaterial({color:0x4a0610,roughness:.15,metalness:.2,transparent:true,opacity:.85,polygonOffset:true,polygonOffsetFactor:-3}));

@@ -128,12 +128,8 @@ function mq143Trk(){const el=$('mqt143');if(!el)return;const here=mq143Here(),hi
   else if(st==2)h+='<div class="o d"><span>The Portal Ripper rolls to the gateway…</span></div>';
   else h+='<div class="o d"><span>Step through the gateway to '+mq143Next()+'</span></div>';
   el.innerHTML=h;el.classList.remove('hide');mq143TrkPos()}
-function mq143TrkPos(){const el=$('mqt143'),m=$('mini'),c=$('chqt132');if(!el||!m||!m.offsetParent)return;const mr=m.getBoundingClientRect();let b=mr.bottom;
-  ['locBox','fsBtn','sysBtn','sysmenu','mbtn'].forEach(id=>{const e=$(id);if(!e||!e.offsetParent)return;const r=e.getBoundingClientRect();if(r.width&&r.right>mr.left-40&&r.left<mr.right+40)b=Math.max(b,r.bottom)});
-  if(b+140>innerHeight)b=Math.max(mr.bottom,innerHeight*.35);const top=Math.round(b+10),right=Math.max(8,Math.round(innerWidth-mr.right))+'px';
-  const on=!el.classList.contains('hide');if(on){el.style.top=top+'px';el.style.right=right}
-  if(c&&!c.classList.contains('hide'))c.style.top=(on?top+el.offsetHeight+8:top)+'px'}
-{const f=chqTrkPos132;chqTrkPos132=function(){const r=f.apply(this,arguments);try{mq143TrkPos()}catch(_){}return r}}
+function mq143TrkPos(){}
+{const f=chqTrkPos132;chqTrkPos132=function(){}}
 addEventListener('resize',()=>{try{mq143TrkPos()}catch(_){}});
 
 // ---------------- the minimap and the N map ----------------
@@ -165,7 +161,7 @@ function mq143Blk(x,z,ry,hx,hz,add){const c=Math.cos(ry),s=Math.sin(ry),r=Math.c
   for(let j=Math.floor(z-r);j<=Math.ceil(z+r);j++)for(let i=Math.floor(x-r);i<=Math.ceil(x+r);i++){const dx=i-x,dz=j-z,lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<=hx&&Math.abs(lz)<=hz)out.push(j*W+i)}
   out.forEach(k=>add?CBLK.add(k):CBLK.delete(k));return out}
 function mq143Halo(col,s){const m=new THREE.Sprite(new THREE.SpriteMaterial({map:SPR,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));m.scale.set(s,s,1);m.userData.psNo=1;return m}
-function mq143Label(t){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:txTex([{t,f:'700 30px'}],440,56,'rgba(8,16,12,.8)','#e6ff9a','rgba(184,216,106,.75)'),transparent:true,depthWrite:false}));sp.scale.set(2.6,.33,1);return sp}
+function mq143Label(t){}
 function mq143Build(){if(MQ143.S)return MQ143.S;const R=mq143Plan(),root=new THREE.Group();root.name='LanternRoad';scene.add(root);
   const S={R,root,lamps:[],war:{},props:[],lights:[],grass:[],t:0,smk:0,rip:null,gate:null};MQ143.S=S;
   const put=(o,x,z,ry)=>{o.position.set(x,GH(x,z),z);o.rotation.y=ry||0;root.add(o);return o};

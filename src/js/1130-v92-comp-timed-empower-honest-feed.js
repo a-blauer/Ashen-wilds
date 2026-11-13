@@ -34,13 +34,7 @@ function emp92Stop(c,quiet){
   if(!quiet)say('⚡ '+nm(c)+' stops empowering you and goes back to fighting. It can empower again in '+Math.ceil(c.empCd)+'s.');
   try{cbarSig='';hud()}catch(_){}
 }
-{const f=toggleEmp;toggleEmp=function(i){
-  const c=party[i];if(!c||c.h<=0)return f.apply(this,arguments);
-  if(c.emp)return emp92Stop(c,false);
-  if(c.empCd>0)return say('⚡ '+nm(c)+' is resting after empowering you. Ready again in '+Math.ceil(c.empCd)+'s.');
-  f.apply(this,arguments);
-  if(c.emp){c.empL=EMP92.dur;c.empCd=0;const sp=CSP[c.sp&&c.sp[0]];say('⚡ '+nm(c)+' empowers you for '+EMP92.dur+'s'+(sp&&sp.emp?': '+sp.emp.d:'.'));try{cbarSig='';hud()}catch(_){}}
-}}
+{const f=toggleEmp;toggleEmp=function(i){}}
 function emp92Tick(dt){
   if(!(dt>0)||!party)return;
   party.forEach((c,i)=>{if(!c)return;

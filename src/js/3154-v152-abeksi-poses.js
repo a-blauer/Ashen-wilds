@@ -57,8 +57,6 @@ var AB152P={
   alert(P,t,S){const q=Math.sin(t*9)*.02;P('spine',.18,0,0);P('chest',.08,(S.ht||0)*.3,0);P('neck',-.1,(S.ht||0)*.3,0);P('head',-.12+q,(S.ht||0)*.35,0);
     P('aR0',-1.0,0,.2);P('aR1',-1.0);P('aL0',-.6,0,-.25);P('aL1',-.8);P('lh0',-.2);P('lh1',.3);P('rh0',.15);P('rh1',.15)},
   caught(P,t,S){P('spine',.22,0,0);P('neck',-.25,0,0);P('head',-.3,0,0);P('aR0',-1.7,0,.3);P('aR1',-.4);P('aL0',-1.2,0,-.3);P('aL1',-.5);P('lh0',-.35);P('lh1',.45);P('rh0',.2)}};
-// tools (rigid, hung on a hand bone)
-var AB152T={};
 function ab152Tool(k){const C=AB152C;switch(k){
   case 'ladle':return lgGroup('AB152T|ladle',q=>{q.L('','c',C.woodL,[0,0,0],[0,-.75,.0],.018,.015,4);q.p('','hem','m',C.ironL,0,-.78,.02,.07,.05,.07,Math.PI,0,0)},0);
   case 'cleaver':return lgGroup('AB152T|cleaver',q=>{q.L('','c',C.woodD,[0,.02,0],[0,-.12,0],.02,.02,4);q.p('','box','m',C.ironL,0,-.24,.05,.02,.2,.14)},0);

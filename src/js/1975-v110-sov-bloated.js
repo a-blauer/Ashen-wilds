@@ -303,7 +303,7 @@ var BLOM={
       burst(gY(pl.position,1.2),0x8a1010,24,2,1.5,.6);svDecal(pl.position,0x3a0606,1.2,2.5,.5)},
       fx:(c,an,hit)=>{if(!hit){const p=new THREE.Vector3(an.x+Math.sin(an.a)*13.5,0,an.z+Math.cos(an.a)*13.5);burst(gY(p,.3),0x8a7a60,14,1.5,1.2,.5);svSnd('crack',.6,.7)}}}],
     ev:[[.45,c=>svSnd('whoosh',.7,.7)],[.75,c=>svSnd('whoosh',.8,.8)],[1.0,c=>svSnd('whoosh',.9,.9)],
-      [1.3,c=>{const a=c.m.rotation.y,p=c.m.position,end=new THREE.Vector3(p.x+Math.sin(a)*14.3,GH(p.x,p.z)+1,p.z+Math.cos(a)*14.3);c.M.an.hk=bloHookFx(c,end,.16);svSnd('swing',1.1,.8);svSnd('crack',.5,1.5)}],
+      [1.3,c=>{}],
       [1.62,c=>{const F=c.M.an.hk;if(F)F.pull(.42);svSnd('crack',.6,.6);if(c.M.an.caught){const m=c.m,a=m.rotation.y;c.M.an.dst={x:m.position.x+Math.sin(a)*3.2,z:m.position.z+Math.cos(a)*3.2}}}]],
     tk(c,dt){const M=c.M;if(M.an.caught&&M.an.dst&&M.t<2.08&&hero.hp>0){const k=Math.min(1,dt*7),dx=M.an.dst.x-pl.position.x,dz=M.an.dst.z-pl.position.z;if(Math.hypot(dx,dz)>.2)walk(pl,dx*k,dz*k)}},
     end(c){const F=c.M.an.hk;if(F)F.dead=true;c.S.hkOut=0},nx:[['hookChop',1,5]],rec:.4},

@@ -3,7 +3,6 @@
 // paws / toes / hooves, tail path TP ([x, y, z, radius] in model space, from the hip out behind the clothes) and how the
 // tail moves. cit: may be picked for citizens (keepers are assigned in 2820).
 function fkCols(L,i,o){const f=L[Math.abs(i|0)%L.length];return fkPal(f[0],Object.assign({},o||{},f[1]||{}))}
-function fkTailPts(y0,pts){return pts.map(p=>[p[0],p[1],p[2],p[3]])}
 // a stripe / patch helper for skull painting: is the face point within the eye mask band
 function fkMask(D,m,w){const e=D.EYEP,z=m.r.p[2];return Math.abs(z-e[2])<w&&m.s>-.25&&m.s<.55&&Math.abs(m.c)>.35}
 // ------------------------------------------------ FOX ------------------------------------------------

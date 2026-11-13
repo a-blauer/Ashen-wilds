@@ -17,7 +17,6 @@ float ob176Bx(vec3 p){float w=0.;for(int i=0;i<8;i++){if(uObBw[i]>0.){vec3 q=max
 float ob176Fr(vec3 p,vec3 c,vec3 h){vec3 ab=h-c;float L2=dot(ab,ab);if(L2<1e-4)return 0.;float t=dot(p-c,ab)/L2;if(t<=0.)return 0.;return smoothstep(-.1,.15,(1.-t)*sqrt(L2));}
 `;
 // give a patched material the uniforms and the GLSL helpers (call inside its onBeforeCompile, before its main is replaced)
-function ob176Shader(sh){for(const k in OB176.U)sh.uniforms[k]=OB176.U[k];sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+OB176.HEAD)}
 // the meshes drawn in the main view whose material can be dithered (userData.ob176); the next scan tests these
 {const ob=THREE.Mesh.prototype.onBeforeRender;THREE.Mesh.prototype.onBeforeRender=function(){if(OB176.live){const M=this.material;let g=false;
     if(Array.isArray(M)){for(const m of M)if(m&&m.userData.ob176){g=true;break}}else g=!!(M&&M.userData.ob176);

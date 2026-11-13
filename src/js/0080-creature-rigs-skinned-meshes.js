@@ -105,7 +105,7 @@ SPEC.Stoneshell=Object.assign(Q({wx:1.15,hy:.6,lz:.85,sn:.6,nk:-.05,rs:1.15,ls:1
   ex:x=>qface(x,{eye:0x222222,es:.6,nose:0x1a2a1a,jaw:0xbac8a0})});
 SPEC.Mossfrog=Object.assign(Q({wx:1.3,hy:.62,lz:.7,sn:.55,rs:1.25,ls:1.1,ts:.15,tl:.1}),{id:'M',st:'scale',pal:{bel:[214,232,168],dk:[30,70,30],tip:[214,232,168],nz:.5},anim:'hop',sc:1.1,hd:[0,.55,.45],bk:QBK,
   sig:(x,C)=>{[-1,1].forEach(s=>x.ax('head',RS,C,s*.085,.67,.5,.062,.062,.062));[[.1,.6,-.1],[-.1,.62,0],[.05,.6,.1]].forEach(a=>x.ax('spine',RS,0x3a7a2a,a[0],a[1],a[2],.03,.03,.03))},
-  ex:x=>{[-1,1].forEach(s=>{x.ax('head',RS,0xe8c030,s*.09,.675,.54,.04,.04,.04);x.ax('head',RS,0x0b0b0b,s*.095,.675,.575,.03,.012,.012)});x.ax('head',RY,0x1c2a16,0,.535,.6,.004,.2,.004,0,Math.PI/2);x.ax('jaw',RS,0xcfe0a0,0,.49,.58,.06,.04,.07)}});
+  ex:x=>{}});
 SPEC.Boneling=Object.assign(Q({wx:.85,hy:1.05,rs:.55,ls:.5,ts:.7,sn:.9}),{id:'B',st:'bone',pal:{bel:[232,224,200],dk:[90,84,70],tip:[232,224,200],nz:.5},anim:'quad',sc:1.05,hd:[0,.7,.5],bk:QBK,
   sig:(x,C)=>{[0,1,2,3].forEach(i=>x.ax('chest',RTO,0xe8e0c8,0,.45,.05+i*.07,.17,.17,.17))},
   ex:x=>{for(let i=0;i<8;i++)x.ax('spine',RS,0xe8e0c8,0,.58,-.3+i*.09,.025,.025,.025);[-1,1].forEach(s=>{x.ax('head',RS,0x0a0a0a,s*.07,.6,.57,.04,.045,.03);x.ax('head',RS,0x6aff9a,s*.07,.6,.59,.02,.02,.02,0,0,1)});x.ax('jaw',RS,0xe8e0c8,0,.505,.665,.04,.02,.08)}});

@@ -132,10 +132,7 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
         if(ii<=1)o.lerp(bruise,.25);o.multiplyScalar(.9)}});
     return L});
   return f.call(this,key+'|186',n,L2,seed)}}
-{const G=LPR.Gloomcap,k0=G.kit;G.kit=function(k,c,C,red){const sp=gc137Sp(c),cap=new THREE.Color(lpMain(C,.12)),scab=cap.clone().lerp(new THREE.Color(0x8a7a6a),.35).getHex(),p0=k.p,L0=k.L;let w=0;
-  k.p=function(bn,geo,t,col,x,y,z,sx,sy,sz,rx,ry,rz){if(geo=='dod'&&t=='c'&&bn=='head'){if(++w>7)return k;return p0.call(k,bn,geo,t,scab,x,y-.004,z,sx*.9,sy*.4,sz*.9,rx,ry,rz)}return p0.apply(k,arguments)};
-  k.L=function(bn,t,col){if(sp=='Sporelord'&&col===0xe8e0c8){const a=Array.prototype.slice.call(arguments);a[2]=0x7a7262;return L0.apply(k,a)}return L0.apply(k,arguments)};
-  try{return k0.apply(this,arguments)}finally{k.p=p0;k.L=L0}}}
+{const G=LPR.Gloomcap,k0=G.kit;G.kit=function(k,c,C,red){}}
 
 // ===================================================================== Bogmaw =====================================================================
 // Six big glowing yellow eyes read as a cartoon; 36 warts plus pustules was noise. The eyes are now small dim embers sunk in
@@ -175,9 +172,7 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
   try{return b0.apply(this,arguments)}finally{E.shell=s0}}}
 // Gloomcap / Sporelord evolution: the twelve glowing dots and eight glow motes scattered over the cap (polka dots again) are
 // gone; the glowing gills, bracket fungi, little toadstools, hanging moss, spore stalks and glowing rim stay
-{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){const pd0=E.pd;
-  E.pd=function(geo,t,col,pos,dir,s){if(t=='g'&&((geo=='sph'&&Array.isArray(s)&&s[1]<=.006)||(geo=='ico'&&s===.014)))return E;return pd0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.pd=pd0}}}
+{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){}}
 // Ashwolf / Direfang war-wolf evolution: the metal spike studs on the saddle plates and the gold crown spikes on the helm are
 // gone (with the ruff, hackles, spikes of the trait and the horns, the back bristled with points from every side)
 {const D=EVO100.D.Ashwolf,b0=D.build;D.build=function(E,L,P,c){if(RV137.cur.Ashwolf=='Skollmaw')return b0.apply(this,arguments);const pd0=E.pd;
@@ -214,7 +209,4 @@ function el150Geo(C){const K=el150Cols(C),sn=(p,f,sd)=>n3Sn(p[0],p[1],p[2],f,sd)
 // Foxlet's extra tails fan wider (they passed through each other and the rump)
 {const t0=EVO100_M.tail;EVO100_M.tail=function(E,T,root,a,up,k,cB,cT,tg,gc){return t0.call(this,E,T,root,a*1.45,up+.06,k,cB,cT,tg,gc)}}
 // Gloomcap L4: three spore stalks instead of five (a pincushion)
-{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){let n=0;const L0=E.L,pd0=E.pd;
-  E.L=function(a,b,r1,r2,t,col,seg,o){if(r1===.014&&r2===.008&&t=='c'&&o&&o.bn=='head'){n++;if(n==2||n==4)return E.__skip=1,E}E.__skip=0;return L0.apply(E,arguments)};
-  E.pd=function(geo,t){if(E.__skip&&geo=='sph'&&t=='g'){E.__skip=0;return E}return pd0.apply(E,arguments)};
-  try{return b0.apply(this,arguments)}finally{E.L=L0;E.pd=pd0;delete E.__skip}}}
+{const D=EVO100.D.Gloomcap,b0=D.build;D.build=function(E,L,P,c){}}

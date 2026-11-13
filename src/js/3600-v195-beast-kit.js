@@ -35,8 +35,6 @@ var BF195={on:true,limbK:1.1,torK:1.04};
 function bf195Use(P){return !!(BF195&&BF195.on&&BR.on&&BR.R&&BR.R.bf&&P&&!P.noTorso)}
 function bf195SS(a,b,x){const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
 function bf195Cl(x,a,b){return x<a?a:x>b?b:x}
-// HSL helpers for palettes (linear colours, as everywhere in the game)
-function bf195HSL(c,s,l){const C=new THREE.Color(mdC(c)),h={};C.getHSL(h);C.setHSL(h.h,s==null?h.s:s,l==null?h.l:l);return C.getHex()}
 function bf195HSLk(c,ks,kl){const C=new THREE.Color(mdC(c)),h={};C.getHSL(h);C.setHSL(h.h,Math.min(1,h.s*ks),Math.min(1,h.l*kl));return C.getHex()}
 // mix as RGB arrays (per-corner colours)
 function bf195Rgb(c){const C=new THREE.Color(mdC(c));return [C.r,C.g,C.b]}

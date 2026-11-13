@@ -72,7 +72,6 @@ chqList132=function(I){return I?(CHQD148[I.z]||[]):[]};
 // v192 (owner: "make Cheddar quests all available for a zone at once, no gated unlocks by quest tier"): every quest of an open zone
 // can be taken at once. Progress already made (CHQ132.st) is untouched, so old saves with half-done tiers keep it.
 function chq148Open(q){return true}
-function chq148Tier(z){const L=CHQD148[z]||[];let t=1;for(const q of L)if(chq148Open(q))t=Math.max(t,q.df||1);return t}
 function chq148State(z){const L=z==null?[].concat(...chq148Zones().map(q=>CHQD148[q]||[])):(CHQD148[z]||[]);let av=0,rd=0,ac=0,dn=0,lk=0;
   L.forEach(q=>{const S=chqS132(q),s=S?S.s:0;if(!s){if(chq148Open(q))av++;else lk++}else if(s==1)ac++;else if(s==2)rd++;else dn++});return {n:L.length,av,rd,ac,dn,lk}}
 chqState132=function(I){return chq148State(I?I.z:null)};
@@ -90,12 +89,7 @@ chqEv132=function(kind,n,arg,z){if(z==null)z=chq148Zone();let ch=0;
       try{pickup({ic:'🐭',t:'Quest complete: '+q.t,col:'#f0cc72',sub:'Turn it in at Cheddar’s board in Duskhold',r:3})}catch(_){}try{sfx('chime')}catch(_){}}}));
   if(ch){CHQ132.trkK='';chqTrk132()}};
 // kills: the camp a kill clears counts by its own index (C.i) for "every camp"
-chqKill132=function(e,C,was){if(!e||e.dprop||e.wv)return;
-  if(C&&!C.raid&&!was&&campCleared(C)){let z=null;try{z=INSL[C.ig].z}catch(_){}chqEv132('camp',1,null,z);chqEv132('allCamps',1,C.i,z)}
-  if(chqRemote132()||e.mir||e.minion)return;
-  chqEv132('kill',1);if(e.c&&e.c.al)chqEv132('elite',1);
-  const b=chqBuffKind132();if(b.comp)chqEv132('empKill',1);if(b.food)chqEv132('foodKill',1);if(b.bard)chqEv132('bardKill',1);
-  const w=typeof eq!='undefined'&&eq.weapon;if(w&&w.up>=2&&e.lhH&&nowP()-e.lhH<3000)chqEv132('forgeKill',1)};
+chqKill132=function(e,C,was){};
 // more gathering kinds (v132 watched wood, stone, glow caps and iron)
 {const f=gFinish;gFinish=function(tg){const K=['fiber','crystal','petals','bone','clay'],a={};K.forEach(k=>a[k]=mats[k]||0);const r=f.apply(this,arguments);
   try{K.forEach(k=>{const d=(mats[k]||0)-a[k];if(d>0)chqEv132(k,d)})}catch(_){}return r}}

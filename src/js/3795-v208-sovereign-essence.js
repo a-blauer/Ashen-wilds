@@ -160,9 +160,6 @@ function se208Claim(i){if(!BOSSES[i]||bossDone.has(i))return;const B=BOSSES[i],A
   try{hud();ui()}catch(_){}try{saveGame(true)}catch(_){}}
 // effects started from a prompt (not a cast) are recorded for partners only inside mpvRun (2170: MPV.cap)
 function se208FxRun(f,a){return typeof mpvRun=='function'?mpvRun(f,null,a):f.apply(null,a)}
-// ---------------- relayed effects (co-op partners replay them with the same plain arguments) ----------------
-// a stream of iridescent motes from a to b over `dur` s (rev: a quick pour that ends in a splash at b)
-var SE208_DOT=null;
 function se208Stream(ax,ay,az,bx,by,bz,col,dur,rev){dur=Math.max(.3,Math.min(4,+dur||1));const N=48,G=new THREE.BufferGeometry(),P=new Float32Array(N*3),Cc=new Float32Array(N*3);
   G.setAttribute('position',new THREE.BufferAttribute(P,3));G.setAttribute('color',new THREE.BufferAttribute(Cc,3));
   const M=new THREE.PointsMaterial({size:.32,map:se208GlowTex(),vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.95});

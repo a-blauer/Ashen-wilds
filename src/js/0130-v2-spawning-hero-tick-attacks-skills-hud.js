@@ -138,11 +138,7 @@ function compCast(c,f,sp,t,ally){
     case 'buff':hero.buffs.push({s:sp.buff,t:performance.now()+(sp.dur||8)*1000,n:sp.n||'',i:sp.i});hsDirty();ring(pl.position,col,2.6,600);break;
   }
 }
-function toggleEmp(i){
-  const c=party[i];if(!c||c.h<=0)return say("That companion can't empower you right now.");
-  const b=heroMax();c.emp=!c.emp;hsDirty();const a=heroMax();hero.hp=c.emp?hero.hp+(a-b):Math.min(hero.hp,a);
-  const sp=CSP[c.sp[0]];say(c.emp?nm(c)+' empowers you'+(sp&&sp.emp?': '+sp.emp.d:'.'):nm(c)+' goes back to fighting.');hud();
-}
+function toggleEmp(i){}
 // ---------------- dash with charges ----------------
 function dodge_base(){
   if(!party.length||(hero.cdD||0)>0||uiOpen()||hero.chan)return;

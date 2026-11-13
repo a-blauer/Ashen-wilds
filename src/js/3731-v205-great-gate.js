@@ -165,7 +165,6 @@ function gg205Brazier(){const g=dt168Group('CQ205|brz',k=>{const P=(geo,t,col,x,
     for(let i=0;i<4;i++){const a=i/4*Math.PI*2;P(dt168Geo('cq_bl',()=>svHorn(.05,.5,0,.18,4,3)),'m',0x2a2628,Math.sin(a)*.5,1.35,Math.cos(a)*.5,-.9,a,0)}
     P(dt168Geo('cq_coal',()=>svLump(.38,0,.4,2081)),'g',0xff6a2a,0,1.42,0,0,0,0,1,.35,1)},{m:{g:[1.2,.35],n:.12,sd:209}});
   const f=kqSpr(0xff7a30,1.8);f.position.y=1.9;g.add(f);g.userData.f=f;g.userData.psNo=1;return g}
-function gg205Open(){const G=GG205.S;return !!G&&G.open>=1}
 function gg205Sync(){const G=GG205.S;if(!G)return;const open=cq205Done(1),S=G.spot;G.tok=(G.tok||0)+1;
   if(!G.tiles){G.tiles=cq205FootTiles(S,G.dims)}G.tiles.T.forEach(k=>{if(open&&G.tiles.D.has(k))CBLK.delete(k);else CBLK.add(k)});
   // doorway tiles stay solid even open (the void is behind): the gate's prompt takes you through

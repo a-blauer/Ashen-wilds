@@ -77,7 +77,6 @@ var HM186={on:true,chev:[-.4,-.58,-.76],
 // gaunt angular legs: a high peak, the knee by the k1 bone, a long shin to the foot
 {const f=CS150.leg;CS150.leg=function(sp,s,i){if(sp!='Hivemother'||!HM186.on)return f.apply(this,arguments);const z=SPID_LZ[i],dz=SPID_LDZ[i],k=(s<0?'a':'b')+i,g=[1.1,1,1,1.12][i];
   return {k,P:[[s*.08,.43,z*.9],[s*.32,.74+(i==1||i==2?.02:0),z+dz*.22*g],[s*.43,.6,z+dz*.36*g],[s*.72,.24,z+dz*.84*g],[s*.86,0,z+dz*1.06*g]]}}}
-function hm186N(a){return [Math.cos(a),Math.sin(a),0]}
 function hm186Rot(d){const l=Math.hypot(...d)||1,e=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(d[0]/l,d[1]/l,d[2]/l)));return [e.x,e.y,e.z]}
 cs150HMGeo=function(C,sp){if(!HM186.on)return;const K=HM186.pal(C),AB=HM186.ab,FR=HM186.fr,T=AB.concat(FR);
   const rings=T.map((q,i)=>({p:[0,q[1],q[0]],rx:q[2],ryT:q[3],ryB:q[4],b:q[0]<-.11?cs150AbB(q[0]):cs150FrB(q[0]),z:q[0],ab:q[0]<-.11,i}));
@@ -93,17 +92,6 @@ cs150HMGeo=function(C,sp){if(!HM186.on)return;const K=HM186.pal(C),AB=HM186.ab,F
       [[k+'0',k+'0',0],[k+'0',k+'0',0],[k+'0',k+'0',0],[k+'0',k+'1',.5],[k+'1',k+'1',0],[k+'1',k+'1',0],[k+'1',k+'2',.5],[k+'2',k+'2',0],[k+'2',k+'2',0]],
       [0,0,0,1,0,0,1,0,0],(o,r,s2)=>{o.copy(K.blk);if(s2>.5)o.copy(K.gloss).multiplyScalar(.85);if(r.jt)o.lerp(K.under,.5);if(s2<-.4)o.lerp(K.under,.3)},6))}));
   return lpGeo('HM186|'+C,'Cryptspider',L,186)};
-// a hatchling clinging to the shell at p (outward normal n), facing f (+1 forward, -1 back)
-function hm186Hatch(k,bn,p,n,f,col,eye){k.p(bn,'sph','c',col,p[0]+n[0]*.014,p[1]+n[1]*.014,p[2]-f*.022,.036,.028,.044);k.p(bn,'sph','c',col,p[0]+n[0]*.012,p[1]+n[1]*.012,p[2]+f*.028,.024,.02,.026);
-  k.p(bn,'sph','g',eye,p[0]+n[0]*.02,p[1]+n[1]*.02,p[2]+f*.04,.005);
-  for(let l=0;l<4;l++)[-1,1].forEach(sd=>{const tz=p[2]+f*(.03-l*.018),tx=-n[1]*sd,ty=n[0]*sd;
-    k.L(bn,'c',col,[p[0]+n[0]*.012,p[1]+n[1]*.012,tz],[p[0]+tx*.06+n[0]*.004,p[1]+ty*.06+n[1]*.004,tz+f*(.014-l*.014)],.007,.004,3)})}
-// a break in the shell: a cluster of glowing egg cells sunk in it, jagged black shards round the edge
-function hm186Break(k,q,K,egg,R){const AB=HM186.ab,[z,a]=q,p=v150Surf(AB,z,a,0),n=hm186N(a),t1=[-n[1],n[0],0],t2=[0,0,1];
-  [[0,0,.044],[.05,.012,.034],[-.045,.025,.036],[.012,-.05,.032],[-.03,-.04,.03]].forEach(([u,v,r],i)=>{const c=[p[0]+t1[0]*u+n[0]*-.012,p[1]+t1[1]*u+n[1]*-.012,p[2]+v];
-    k.p('tail0','sph',i%3==1?'c':'g',i%3==1?dkShade(egg,.55):i%2?egg:dkShade(egg,1.12),c[0],c[1],c[2],r,r*.9,r*1.1)});
-  for(let j=0;j<7;j++){const b=j/7*Math.PI*2,u=Math.cos(b)*.09,v=Math.sin(b)*.09,c=[p[0]+t1[0]*u,p[1]+t1[1]*u,p[2]+v],d=[n[0]+t1[0]*Math.cos(b)*.9,n[1]+t1[1]*Math.cos(b)*.9,Math.sin(b)*.9],r=hm186Rot(d);
-    k.p('tail0','cone4','c',j%2?K.blk.getHex():K.gloss.getHex(),c[0],c[1],c[2],.036,.075+R()*.035,.016,r[0],r[1],r[2])}}
 cs150HMKit=function(k,C,red){const K=HM186.pal(C),AB=HM186.ab,blk=K.blk.getHex(),gl=K.gloss.getHex(),un=K.under.getHex(),egg=red?0xff4a2a:K.egg.getHex(),eggD=red?0x8a1a10:K.eggD.getHex(),eye=red?0xff3a1a:0xffa020,R=dkRng(186),tb='tail0';
   // round 3 (owner: "the abdomen is kind of gross, lets remove those details and add some other accents to make her seem more
   // special"): no broken shell, egg clusters, seams, flank plates or hatchlings. A sleek black abdomen marked with three amber

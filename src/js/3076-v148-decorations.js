@@ -36,8 +36,7 @@ DECO103.push(
     return now=>{const t=now/1000;R.forEach((q,i)=>{q.m.rotation.z=t*(i?-.5:.35)+q.t;q.m.position.y=(i?4.3:3.3)+.08*Math.sin(t*1.1+i)});c.rotation.y=t*.8;c.position.y=6.2+.15*Math.sin(t*1.4)}},
   col(D){return [[0,-9.4,1.3]]}},
  {k:'torches',i:'🔥',n:'Plaza Torches',d:'Tall torches on iron-banded posts in a ring round the plaza. They flicker all night.',
-  spf:F=>{const out=[];let s=null;try{s=chq148Spot()}catch(_){}const T=TOWNS[0];for(let i=0;i<8;i++){const a=i/8*6.283+.3927,x=Math.cos(a)*6.2,z=Math.sin(a)*6.2;
-    if(s&&(Math.hypot(T.cx+x-s.cx,T.cy+z-s.cz)<1.9||Math.hypot(T.cx+x-s.bx,T.cy+z-s.bz)<1.9))continue;out.push([+x.toFixed(2),+z.toFixed(2)])}return out},
+  spf:F=>{},
   b(k,D){D.sp.forEach(([x,z])=>{k.as('bark',()=>k.L('c',TWC.woodD,[x,0,z],[x,2.35,z],.07,'log'));[.6,1.5,2.2].forEach(y=>k.p('m',TWC.iron,'cyl8',x,y,z,.085,.06,.085,0,0,0,0));
     k.p('m',TWC.iron,'frus8',x,2.45,z,.16,.2,.16,Math.PI,0,0,0);k.p('c',0x2a1a10,'cyl8',x,2.52,z,.12,.03,.12,0,0,0,0)})},
   an(g,D){return dc148Fire(g,D.sp.map(([x,z])=>[x,2.53,z,.8]),[])},col(D){return D.sp.map(([x,z])=>[x,z,.16])}},

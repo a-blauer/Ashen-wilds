@@ -82,7 +82,7 @@ function kdSync(){const T=TOWNS[0];if(!T||!T.g)return;const K=kdState();let lamp
 {const f=shBuild;shBuild=function(){const r=f.apply(this,arguments);try{for(const k in SHM.pil){scene.remove(SHM.pil[k].g);SHM.pil[k].g.visible=false}}catch(_){}return r}}
 try{for(const k in SHM.pil)scene.remove(SHM.pil[k].g);if(KGD){KGD.pr=-1;kdSync()}}catch(e){console.warn('v100 kingdom',e)}
 // the Steward's footer text
-{const f=XR.hold;XR.hold=function(){const r=f.apply(this,arguments);try{if(shTab!='shops')$('xwF').innerHTML='<span class="mut dtl">Upgrades are permanent and every level raises something new in Duskhold: walls and gatehouses, the training yard, the scholar\'s tower, the treasury, the beast den, the hatchery — and the more you build in total, the granary, chapel, barracks, keep and statues. Higher levels need more materials and defeated Sovereigns.</span>'}catch(_){}return r}}
+{const f=XR.hold;XR.hold=function(){}}
 
 $('talBtn').onclick=openTal;
 try{paceWrap()}catch(err){console.error('pace wrap',err)}

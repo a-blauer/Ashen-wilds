@@ -36,9 +36,3 @@ function lk180Near(G,p,bone){const P=G.attributes.position.array,I=G.index?G.ind
   // the triangle normal can face in (winding): point it away from the body's centre line
   const out=[bp[0],bp[1]-(G.boundingSphere||(G.computeBoundingSphere(),G.boundingSphere)).center.y,0];if(bn[0]*out[0]+bn[1]*out[1]<0)bn=bn.map(v=>-v);
   return {p:bp,n:bn,d:Math.sqrt(best)}}
-
-// The highest point of a body geometry's surface straight above (x, z), or null when the body does not reach there.
-var LK180M=null;
-function lk180Top(G,x,z){LK180M=LK180M||new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
-  const m=LK180M;m.geometry=G;if(!G.boundingSphere)G.computeBoundingSphere();const rc=new THREE.Raycaster(new THREE.Vector3(x,5,z),new THREE.Vector3(0,-1,0));
-  const h=rc.intersectObject(m,false);return h.length?h[0].point.y:null}

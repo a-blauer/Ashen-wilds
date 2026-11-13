@@ -2,7 +2,7 @@
 // He stands in front of the arrival spot of every field instance and Den (chqSpot132) and, in field instances, a few steps
 // before the gateway at the end of the road (chqSpotEnd135). A small gold mouse-ear mark shows each; it carries a "!" (a quest
 // to accept) or "?" (one ready to turn in) like the sprite over his head.
-function chq135Here(){try{const I=chqHere132();if(!I)return [];const L=[];chqPosts135().forEach(P=>{if(!P.ch||!P.ch.root.visible)return;const s=chqPSpot135(P,I);if(s)L.push({I,s})});return L}catch(_){return []}}
+function chq135Here(){}
 function chq135Mark(g,x,y,k,st){g.save();g.translate(x,y);g.scale(k,k);
   // two round ears and a head, gold with a dark rim
   g.fillStyle='#f4c542';g.strokeStyle='#2a1a06';g.lineWidth=1.4/k;
@@ -10,7 +10,7 @@ function chq135Mark(g,x,y,k,st){g.save();g.translate(x,y);g.scale(k,k);
   g.fillStyle='#ffd9e0';[[-3.6,-3.4],[3.6,-3.4]].forEach(([a,b])=>{g.beginPath();g.arc(a,b,1.2,0,6.28);g.fill()});
   if(st){g.font='900 9px Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=2.5/k;g.strokeStyle='#1a0f06';g.strokeText(st,0,.6);g.fillStyle='#fff2b0';g.fillText(st,0,.6)}
   g.restore()}
-function chq135St(I){try{const S=chqState132(I);return S.rd?'?':S.av?'!':''}catch(_){return ''}}
+function chq135St(I){}
 {const f=miniMarks;miniMarks=function(w,h,vw,vh,cx,cy){f.apply(this,arguments);try{chq135Here().forEach(H_=>{
   const s=H_.s,x=(s.x-(cx-vw/2)+.5)*w/vw,y=(s.z-(cy-vh/2)+.5)*h/vh;if(x<-6||y<-6||x>w+6||y>h+6)return;chq135Mark(mmX,x,y,1,chq135St(H_.I))})}catch(_){}}}
 {const f=openWMap;openWMap=function(){const r0=f.apply(this,arguments);try{chq135Here().forEach(H_=>{const I=H_.I,s=H_.s,c=$('wmc'),g=c.getContext('2d');

@@ -16,7 +16,6 @@
 //  * evolution looks rebuilt per species for the new bodies (EVO100.D.Drakelet / .Gravewyrm), one theme each.
 var DG186={on:true,lv:48,WG:{},WD:{}};
 function dgW(a,b,t){const o={};o[a]=1-(t||0);if(t)o[b]=(o[b]||0)+t;return o}
-function dgMixW(A,B,t){const o={};for(const k in A)o[k]=(o[k]||0)+A[k]*(1-t);for(const k in B)o[k]=(o[k]||0)+B[k]*t;return o}
 function dgSm(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
 // profile rows [z, y, half width, above, below, weights, extra] → the section at z (interpolated)
 function dgAt(T,z){for(let i=0;i<T.length-1;i++){const A=T[i],B=T[i+1],lo=Math.min(A[0],B[0]),hi=Math.max(A[0],B[0]);if(z>=lo&&z<=hi){const t=(z-A[0])/((B[0]-A[0])||1);
@@ -85,8 +84,6 @@ function dgChain(k,bn,pts,r0,r1,c0,c1,seg,t){const N=pts.length-1,C0=new THREE.C
 function dgHornA(base,dir,C,len,n){const d=nrm3(dir),o=[];for(let i=0;i<=n;i++){const u=len*i/n;o.push(add3(add3(base,mul3(d,u)),mul3(C,u*u)))}return o}
 function dgHornK(k,bn,pts,r0,c0,c1,sd){const N=pts.length-1,A=new THREE.Color(c0),B=new THREE.Color(c1);for(let i=0;i<N;i++){const t0=i/N,t1=(i+1)/N;
   k.L(bn,'c',A.clone().lerp(B,Math.pow((t0+t1)/2,1.4)).getHex(),pts[i],pts[i+1],r0*Math.pow(1-t0,1.15)+.0008,r0*Math.pow(1-t1,1.15)+.0008,sd||6)}}
-// a bezier-ish horn: base, dir (unit-ish), bend (added * s^2), length, n segments
-function dgHornPts(base,dir,bend,len,n){const d=nrm3(dir),o=[];for(let i=0;i<=(n||4);i++){const s=i/(n||4);o.push(add3(add3(base,mul3(d,len*s)),mul3(bend,len*s*s)))}return o}
 // a tooth from base along dir
 function dgTooth(k,bn,col,base,dir,len,r){k.L(bn,'c',col,base,add3(base,mul3(nrm3(dir),len)),r,r*.08,4)}
 // an eye set in a socket: a dark socket lens, a glowing almond, a slit pupil, on side s at p looking along the outward normal nrm
@@ -735,7 +732,6 @@ Object.values(DG186.Q).concat(Object.values(DG186.S)).forEach(D=>{if(!D.hp)D.hp=
 DG186.E={};
 function dgHornE(E,pts,r0,c0,c1,o){const N=pts.length-1,A=new THREE.Color(c0),B=new THREE.Color(c1);for(let i=0;i<N;i++){const t0=i/N,t1=(i+1)/N;
   E.L(pts[i],pts[i+1],r0*Math.pow(1-t0,1.15)+.0008,r0*Math.pow(1-t1,1.15)+.0008,'c',A.clone().lerp(B,Math.pow((t0+t1)/2,1.4)).getHex(),5,o)}}
-function dgEH(E,pts,r0,r1,c0,c1,t,o){const N=pts.length-1,A=new THREE.Color(c0),Bc=new THREE.Color(c1);for(let i=0;i<N;i++)E.L(pts[i],pts[i+1],r0+(r1-r0)*i/N,r0+(r1-r0)*(i+1)/N,t||'c',A.clone().lerp(Bc,(i+.5)/N).getHex(),5,o)}
 // a flame tongue: a dark ember root (lit), a glowing tip (one glowing stroke per flame under the EVO186 cap)
 function dgFlame(E,a,b,r,P,o){const m=lerp3(a,b,.5),n=lerp3(a,b,.8);E.L(a,m,r,r*.7,'c',new THREE.Color(P.glowD).multiplyScalar(.25).getHex(),4,o);E.L(m,n,r*.7,r*.38,'c',new THREE.Color(P.glowD).multiplyScalar(.55).getHex(),4,o);E.L(n,b,r*.38,.001,'g',P.glow,4,o)}
 function dgDeepG(P){const g=new THREE.Color(P.glow).lerp(new THREE.Color(0x0c2a0c),.42);return {glow:g.getHex(),glowD:g.clone().multiplyScalar(.55).getHex()}}

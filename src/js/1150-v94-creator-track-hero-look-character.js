@@ -17,7 +17,6 @@ var LOOK_OPT={
   face:['None','Stubble','Short beard','Long beard','Moustache','Scar'],
   build:['Lean','Average','Broad'],sex:['Male','Female']};
 function lkHexA(a){return '#'+a.map(v=>('0'+Math.max(0,Math.min(255,Math.round(v))).toString(16)).slice(-2)).join('')}
-function lkArr(h){const n=parseInt(String(h).slice(1),16);return [n>>16&255,n>>8&255,n&255]}
 // each class's look before v94 (skin from CLS, hair/beard from the v71 dark-fantasy kit)
 function lkClsDef(cls){
   const C=(typeof CLS!='undefined'&&CLS[cls])||null,D=(typeof dkC=='function'&&dkC()[cls])||null,o={};

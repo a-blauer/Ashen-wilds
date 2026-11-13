@@ -16,83 +16,8 @@
 //  * Effects: Blood Wave crescents layered with a dark core and spray, Skyfall spears that crack the floor, Sanguine Nova
 //    throws up a ring of blood geysers, Bat Step is a real swarm of bats, every sword hit sprays blood.
 var VLR146={col:0xff2040,dk:0x5a0010,on:1};
-function vlr146Head(){return svG('v46hd',()=>{const g=new THREE.SphereGeometry(1,20,16),P=g.attributes.position,G=(x,y,cx,cy,sx,sy)=>Math.exp(-((x-cx)*(x-cx))/(sx*sx)-((y-cy)*(y-cy))/(sy*sy));
-  for(let i=0;i<P.count;i++){let x=P.getX(i)*.152,y=P.getY(i)*.25+.125,z=P.getZ(i)*.158;
-    if(y<.07){const k=Math.min(1,(.07-y)/.18);x*=1-.28*k;z*=1-.08*k}                                  // the jaw narrows to the chin
-    if(z>0){const f=z/.158;z+=f*(.028*G(x,y,0,.11,.022,.07)                                           // nose bridge
-      +.02*G(x,y,0,-.07,.05,.03)                                                                    // chin
-      +.012*G(Math.abs(x),y,.09,.085,.03,.03)                                                        // cheekbones
-      +.018*G(x,y,0,.19,.11,.025)                                                                    // brow ridge
-      -.032*G(Math.abs(x),y,.06,.152,.026,.022)                                                      // eye sockets
-      -.012*G(x,y,0,.045,.04,.012)                                                                   // the mouth line
-      -.016*G(Math.abs(x),y,.1,.04,.03,.05));                                                        // hollow cheeks
-      x+=Math.sign(x)*.01*G(Math.abs(x),y,.09,.085,.03,.03)}
-    if(y>.3)z-=.02*(y-.3)/.07;                                                                        // a high, sloped forehead
-    P.setXYZ(i,x,y,z)}
-  const n=g.toNonIndexed();n.computeVertexNormals();return n})}
-// a heavy cape panel: cols folds across, rows down, ragged hem
-function vlr146Cloth(w0,w1,h,rag,seed,dz){const r=svRng(seed),cols=24,rows=4,pos=[],V=[];
-  for(let j=0;j<=rows;j++){const v=j/rows,row=[];for(let i=0;i<=cols;i++){const u=i/cols,w=w0+(w1-w0)*v,x=-w+2*w*u,f=Math.sin(u*Math.PI*6+v*1.3)*(.03+.05*v),c=-.07*Math.sin(u*Math.PI)*(.5+v);
-      let y=.06-h*v;if(j===rows&&rag)y-=(i%2?.08+r()*.22:r()*.06);row.push([x,y,c+f+(dz||0)])}V.push(row)}
-  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){const a=V[j][i],b=V[j][i+1],c=V[j+1][i+1],d=V[j+1][i];pos.push(...a,...c,...b,...a,...d,...c)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g}
-function vlr146Swap(R,key,geo){const G=SVX.gc[key];if(!G)return 0;let n=0;R.root.traverse(o=>{if(o.isMesh&&o.geometry===G){o.geometry=geo;n++}});return n}
-function vlr146Hide(R,key){const G=SVX.gc[key];if(!G)return;const L=[];R.root.traverse(o=>{if(o.isMesh&&o.geometry===G)L.push(o)});L.forEach(o=>o.parent.remove(o))}
-{const f=vlrBuild;vlrBuild=function(R,e){f.apply(this,arguments);try{vlr146Add(R)}catch(err){console.error('v146 vaelric model',err)}}}
-if(SVB[5])SVB[5].build=vlrBuild;   // the registry holds the function itself
-function vlr146Add(R){const J=R.J,G=(k,fn)=>svG('v46'+k,fn),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
-  const mats=R.mats,find=hex=>mats.find(m=>m.color.getHex()===hex),plate=find(0x1c1418),plate2=find(0x4a0c18),gold=find(0xb08a3a),skin=find(0xc4b8c2),hair=find(0xe8e4ec),cape=find(0x3e0610),capeIn=find(0x1a0a10),leath=find(0x24140f);
-  const rune=R.rune,eye=R.glow.find(m=>m.userData.c0===0xff3050)||rune,mail=svMat(R,0x2a2a30,{roughness:.45,metalness:.7}),blood=svMat(R,0x6a0012,{roughness:.15,metalness:.2,emissive:0x2a0006});
-  // ---- the face ----
-  vlr146Hide(R,'v2hd');Mm('head',vlr146Head(),skin);
-  [-1,1].forEach(s=>{Mm('head',G('lid',()=>svLump(.03,0,.1,147)),skin,s*.06,.168,.15,0,0,0,1.25,.45,.7);          // heavy lids
-    Mm('head',G('sk',()=>new THREE.SphereGeometry(.03,6,5)),plate,s*.06,.15,.135,0,0,0,1,1,.5)});  // the dark of the socket
-  Mm('head',G('lip',()=>svLump(.03,0,.12,148)),blood,0,.055,.15,0,0,0,1.7,.35,.5);
-  [-1,1].forEach(s=>Mm('head',G('fg2',()=>svHorn(.009,.045,0,0,4,1)),hair,s*.014,.05,.152,Math.PI/2,0,0));
-  // ---- the hair: a fitted cap swept back from a widow's peak (the old loft read as a bucket), smaller eye glows ----
-  vlr146Hide(R,'v2hr');
-  Mm('head',G('hcap',()=>{const g=new THREE.SphereGeometry(1,22,14),P=g.attributes.position;for(let i=0;i<P.count;i++){let x=P.getX(i),y=P.getY(i),z=P.getZ(i);const a=Math.atan2(x,z),w=1+.06*Math.sin(a*9)*(1-Math.abs(y));
-      x*=.168*w;y=y*.25+.15;z=z*.18*w-.015;const fr=z>.04;if(fr){const peak=.27-.05*Math.exp(-x*x/.0016);if(y<peak){y=peak;z=Math.min(z,.12)}}if(!fr&&y<.0)y=.0+(y-.0)*.3;P.setXYZ(i,x,y,z)}
-    const n=g.toNonIndexed();n.computeVertexNormals();return n}),hair);
-  R.root.traverse(o=>{if(o.isSprite&&o.userData.s0===.2&&o.parent===J.head){o.scale.setScalar(.09);o.userData.s0=.09}});
-  // ---- long hair on a chain of three joints behind the head (they sway) ----
-  J.head&&svJ(R,'hr0','head',0,.22,-.12,.25);svJ(R,'hr1','hr0',0,-.34,-.02,.08);svJ(R,'hr2','hr1',0,-.32,-.02,.06);
-  for(let k=0;k<13;k++){const u=(k-6)/6,w=.035+.01*(k%3);['hr0','hr1','hr2'].forEach((j,q)=>Mm(j,G('lk'+q+(k%3),()=>svBlade([[-w,0],[w,0],[w*.85,-.36],[0,-.42+(q==2?-.06:0)],[-w*.85,-.36]],.012)),hair,u*(.15-q*.02),-.02,-Math.abs(u)*.04+q*-.01,.08+q*.04,u*.35,-u*.06*(q+1)))}
-  // ---- gold filigree along the pauldron edges, scrollwork and studs ----
-  ['L','R'].forEach((L,si)=>{const s=L==='L'?1:-1,j='sh'+L,P=[];for(let k=0;k<=14;k++){const a=-1.3+k/14*2.6;P.push([s*(.1+.24*Math.cos(a)*.9),-.24+.06*Math.sin(a*2),Math.sin(a)*.26])}
-    Mm(j,G('fil'+L,()=>svTube(P,.016,4)),gold);
-    for(let k=0;k<3;k++){const C=[];for(let q=0;q<=8;q++){const a=q/8*Math.PI*1.6;C.push([s*(.22+.04*Math.cos(a)),.02+k*.07+.035*Math.sin(a),-.1+k*.1+.02*Math.cos(a)])}Mm(j,G('scr'+L+k,()=>svTube(C,.009,4)),gold)}
-    for(let k=0;k<6;k++)Mm(j,G('std',()=>new THREE.IcosahedronGeometry(.022,0)),gold,s*(.28+.02*Math.sin(k)),-.12+k*.05,-.16+k*.06);
-    Mm(j,G('pr'+L,()=>svTube([[s*.27,.12,-.12],[s*.3,.0,0],[s*.27,-.12,.12]],.01,4)),rune);
-    // a fourth, flared lame and two more spikes
-    Mm(j,G('pd4',()=>svLump(.2,1,.1,149)),plate,s*.15,-.27,0,0,0,s*.45,.95,.35,.92);
-    [-1,1].forEach(q=>Mm(j,G('ps2',()=>svHorn(.035,.22,0,-.06,4,3)),gold,s*.18,.18,q*.15,-1.1,0,s*-.55))});
-  // ---- a plackart over the breastplate: gold-edged, a blood sigil in a ring ----
-  Mm('chest',G('plk',()=>svLoft([[-.08,.36,.24],[.12,.42,.29],[.28,.38,.27]],12,{cap:false})),plate2,0,0,.035);
-  Mm('chest',G('plt',()=>svLoft([[.27,.385,.272],[.3,.39,.276]],12,{cap:false})),gold,0,0,.035);
-  Mm('chest',G('sgr',()=>new THREE.TorusGeometry(.085,.012,5,18)),gold,0,.13,vlrCS(0,.13)[2]+.04);
-  Mm('chest',G('sgg',()=>new THREE.OctahedronGeometry(.05,0)),rune,0,.13,vlrCS(0,.13)[2]+.05,0,0,0,1,1.4,.5);
-  for(let k=0;k<6;k++){const a=k/6*6.283;Mm('chest',G('sgs',()=>svHorn(.012,.06,0,0,3,1)),gold,Math.sin(a)*.1,.13+Math.cos(a)*.1,vlrCS(0,.13)[2]+.045,-Math.cos(a)*1.57,0,0)}
-  // ---- a chain-mail skirt under the tassets, a riveted hem ----
-  Mm('hips',G('mail',()=>svLoft([[.02,.37,.28],[-.2,.42,.33],[-.44,.46,.36]],16,{cap:false})),mail);
-  for(let k=0;k<16;k++){const a=k/16*6.283;Mm('hips',G('mr',()=>new THREE.IcosahedronGeometry(.018,0)),gold,Math.sin(a)*.46,-.44,Math.cos(a)*.36)}
-  // ---- engraved rune lines on the greaves and vambraces, knee spikes ----
-  ['L','R'].forEach(L=>{Mm('kn'+L,G('gr',()=>svTube([[-.05,-.2,.112],[0,-.4,.118],[.05,-.6,.1]],.008,4)),rune);Mm('kn'+L,G('gr2',()=>svTube([[.05,-.2,.112],[0,-.4,.118],[-.05,-.6,.1]],.008,4)),rune);
-    Mm('kn'+L,G('ksp',()=>svHorn(.03,.16,0,.04,4,2)),plate,0,.06,.15,-.4,0,0);Mm('el'+L,G('vr',()=>svTube([[.06,-.1,.09],[.07,-.25,.1],[.05,-.42,.09]],.008,4)),rune)});
-  // ---- the blade: rune glyphs down the fuller, a second edge bevel ----
-  for(let k=0;k<6;k++)Mm('swd',G('bg',()=>new THREE.OctahedronGeometry(.028,0)),rune,0,.095,.35+k*.24,0,0,0,1,.4,1.6);
-  Mm('swd',G('be',()=>svBlade([[-.006,.1],[.006,.1],[.004,2.25],[-.004,2.25]],.06)),gold,.07,.06,0,Math.PI/2,0,0);
-  // ---- the cape: heavier panels, tatters, an embroidered hem ----
-  [['cp0',.5,.64,0],['cp1',.64,.76,0],['cp2',.76,.86,1]].forEach(([n,w0,w1,rg],q)=>{vlr146Swap(R,'v2c'+n,G('c'+n,()=>vlr146Cloth(w0,w1,.92,rg,5+q,0)));vlr146Swap(R,'v2ci'+n,G('ci'+n,()=>vlr146Cloth(w0-.02,w1-.02,.9,rg,5+q,.025)))});
-  for(let k=0;k<9;k++){const u=(k-4)/4;Mm('cp2',G('tt'+(k%3),()=>svBlade([[-.03,0],[.03,0],[.02,-.32-(k%3)*.08],[0,-.38-(k%3)*.08],[-.02,-.3]],.01)),cape,u*.78,-.9,-.04,0,0,u*.08)}
-  {const P=[];for(let k=0;k<=16;k++){const u=k/16;P.push([-.84+1.68*u,-.62,-.05-.06*Math.sin(u*Math.PI)])}Mm('cp2',G('hem',()=>svTube(P,.02,4)),gold)}
-  for(let k=0;k<5;k++){const u=(k-2)/2;Mm('cp1',G('emb',()=>svBlade([[0,.06],[.05,0],[0,-.08],[-.05,0]],.01)),gold,u*.5,-.5,-.08,0,Math.PI,0)}
-  // ---- Phase II: a halo of blood over the crown, a blood glyph under his feet ----
-  const halo=Mm('head',G('hal',()=>new THREE.TorusGeometry(.26,.018,5,32)),rune,0,.5,0,Math.PI/2,0,0);halo.visible=false;halo.userData.noMerge=1;R.v146halo=halo;
-  {const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.translate(128,128);g.strokeStyle='#fff';g.lineWidth=4;[120,100,60].forEach(r=>{g.beginPath();g.arc(0,0,r,0,6.283);g.stroke()});
-    g.lineWidth=3;g.beginPath();for(let k=0;k<6;k++){const a=k*2/6*6.283;g[k?'lineTo':'moveTo'](Math.cos(a)*100,Math.sin(a)*100)}g.closePath();g.stroke();for(let k=0;k<12;k++){g.save();g.rotate(k/12*6.283);g.fillStyle='#fff';g.fillRect(-3,-116,6,12);g.restore()}
-    const gl=new THREE.Mesh(G('gly',()=>new THREE.PlaneGeometry(4.4,4.4).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:VLR146.col,map:new THREE.CanvasTexture(cv),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
-    gl.position.y=.06;gl.userData.noMerge=1;gl.userData.lpsSkip=1;gl.renderOrder=17;R.root.add(gl);R.v146gly=gl}}
+{const f=vlrBuild;vlrBuild=function(R,e){}}
+if(SVB[5])SVB[5].build=vlrBuild;
 // springs: cape panels, tabard, hair, wings
 {const B=SVB[5];if(B){B.spr={cp0:[55,9,1.4],cp1:[42,7,1.9],cp2:[34,6,2.4],tab:[70,11,1],hr0:[60,10,1.3],hr1:[45,8,1.6],hr2:[36,7,1.9],wgL:[48,8,.7],wgR:[48,8,.7],wfL:[40,7,.8],wfR:[40,7,.8]};
   // post: the halo, the glyph, blood dripping from the blade

@@ -255,4 +255,3 @@ SP152.trk.sanctum=I=>{if(I.sp!=='sanctum')return null;const c=DG165Q.s.cp,P=dg16
 // ---------------- the atmosphere: a crypt lit only by its own fires ----------------
 sp152Theme('sanctum',{nm:'The Hidden Sanctum',sub:'Beneath the Keeper’s grave',a:{fog:.06,fc:0x060a09,fcA:.96,sun:.12,hemi:.36,env:'dark',ex:1.0,sat:.9,vig:1.85,sky:0,pt:'mote',pc:0x9affd0,po:.3}});
 // placeholder for the co-op sender (3318 replaces it)
-function dg165Co(){}

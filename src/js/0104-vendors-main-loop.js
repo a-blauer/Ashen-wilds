@@ -1,11 +1,6 @@
 // ---- vendors, workbench, incubator menus ----
 function openShop(w){if(w=='m'){rS();$('shop').classList.remove('hide')}else{rMS();$('mshop').classList.remove('hide')}}
-const SPR_=[150,500,1800],SLV=[1,8,20],SRN=['Common','Uncommon','Rare'];
-$('mst').onclick=e=>{
-  const b=e.target.closest('[data-ms]');if(!b)return;const m=b.dataset.ms,sp=MOVES[m];if(gold<SPR_[sp.r])return say('Not enough gold.');
-  gold-=SPR_[sp.r];hero.known.push(m);hero.sl[m]=hero.sl[m]||{l:1,x:0};if(hero.sp.length<4)hero.sp.push(m);
-  say('You learned '+m+'!'+(hero.sp.includes(m)?' Press '+(hero.sp.indexOf(m)+1)+' to cast it.':' Equip it in your inventory.'));rMS();hud();
-};
+$('mst').onclick=e=>{};
 $('msClose').onclick=()=>$('mshop').classList.add('hide');
 $('prompt').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
 function sync(){

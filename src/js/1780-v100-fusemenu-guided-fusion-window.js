@@ -27,7 +27,7 @@ function FSM100_pc(v){const x=Math.round(v*1000)/10;return (x%1?x.toFixed(1):Str
 function FSM100_g(v){const g=grade(v);return `<b class="fsm-gl" style="--g:${g[2]}">${g[1]}</b>`}
 function FSM100_fam(c){const f=famOf(c.g[0]);return {f,i:FAMD[f]?FAMD[f].i:'🐾',t:tierSp(c.g[0])}}
 function FSM100_name(c){return FSM100_esc((c.al?'Alpha ':'')+(c.shn?'Shiny ':'')+(c.rv?c.rv+' ':'')+(c.v?c.v+' ':'')+c.n)}
-function FSM100_stars(c){const n=Math.floor(c.fp||c.fz||0);return n?(n>5?'★×'+n:'★'.repeat(n)):''}
+function FSM100_stars(c){}
 // portrait: the HUD head render (CPIC). Big pictures (the chosen companions) ask for one; list rows only use one that
 // already exists (rendering a model per row would be slow on phones) and show the species icon otherwise.
 function FSM100_pic(c,big){let p=null,k='';try{if(typeof cpicKey=='function'){k=cpicKey(c);p=big&&typeof cpic=='function'?cpic(c):(CPIC.cache[k]||null)}}catch(_){}

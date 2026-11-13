@@ -62,8 +62,6 @@ function ev137Evolve(n){const c=hero.cls,s=kqsFind(c,n);if(!s)return false;const
 // the ability reset removes evolutions (their cost is refunded through apSpent)
 {const f=kqsReset;kqsReset=function(){const ev=Object.keys(hero.tal).filter(k=>k.startsWith('__ev:'));if(ev.length&&gold>=kqsResetCost()){ev.forEach(k=>delete hero.tal[k]);EV137.pv=null}
   const r=f.apply(this,arguments);try{hud()}catch(_){}return r}}
-// tests / cheats: evolve every learned ability (rank 5 first)
-function ev137All(on){const c=hero.cls;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))return;if(on===false)delete hero.tal[ev137Key(s.n)];else{hero.tal['ab:'+s.n]=KQR_MAX;hero.tal[ev137Key(s.n)]=1}});hsDirty();KQS.ck=''}
 
 // ---------------- the cast ----------------
 {const f=cast;cast=function(i){i=+i;let A=null,o=null;try{A=heroSkills();o=A&&A[i]}catch(_){}
@@ -77,11 +75,7 @@ function ev137All(on){const c=hero.cls;kqsAll(c).forEach(s=>{if(!kqsUnl(c,s))ret
   finally{if(A[i]===e)A[i]=o;EV137.cur=prev}
   return r}}
 // after an evolved cast went off: the evolved look on the caster, and the old kinds' extra mechanics
-function ev137Fired(e,x){const E=ev137Def(e),C=EV137.cur,P=x.P0||x.P;
-  EV137.busy++;try{ev137CastFx(P,C)}finally{EV137.busy--}
-  if(e.k!='x'&&E.post)E.post(x);
-  if(e.k=='buff'||e.k=='heal'||e.k=='barrier'){try{if(ATK.evoFlex)haPlay(600,ATK.evoFlex,2,null,.12)}catch(_){}}
-  try{ev137Snd(e.k=='buff'||e.k=='heal'||e.k=='barrier'?'buff':'cast')}catch(_){}}
+function ev137Fired(e,x){}
 // old ground skills ask aimPoint for a fixed reach (Leap Slam 7, Meteor 10…): an evolved range lifts it
 {const f=aimPoint;aimPoint=function(maxD){const C=EV137.cur;if(C&&C.sk&&C.sk.rng&&KQS.gp)maxD=Math.max(maxD||0,C.sk.rng);return f.call(this,maxD)}}
 // the new abilities (k:'x'): their handlers get the evolved extras
@@ -91,8 +85,7 @@ Object.keys(KQH).forEach(k=>{const f=KQH[k];KQH[k]=function(c){const sk=c&&c.sk,
   if(r!==false&&E.post&&!E.run)try{E.post(c)}catch(err){console.error('evolved '+sk.n,err)}return r}});
 
 // ---------------- the evolved look of every cast ----------------
-function ev137CastFx(P,C){const p=pl.position,col=C.col,c2=C.c2;
-  ev137Sigil(P,col,2.2,700,0,.7);ev137Column(P,c2,3.2,.42,460,.6);ev137Orbit(P,col,1.05,800);ev137Flare(evxGY(p,1.3),c2,.9,280)}
+function ev137CastFx(P,C){}
 function ev137Ceremony(P,col){const C=ev137Pal(hero.cls);col=col||C[0];
   ev137Sigil(P,col,4.2,1800,0);ev137Column(P,C[1],12,1.1,1400);ev137Column(P,col,7,1.8,1100);ev137Orbit(P,col,1.6,1600);ev137Orbit(P,C[1],2.2,1400);
   setTimeout(()=>{ev137Shock(P,col,6,700);ev137Flare(evxGY(P,1.5),C[1],3.5,600);ev137Shards(P,C[1],12,2.4,1.6,1200)},700);
@@ -139,12 +132,7 @@ function ev137Snd(k){try{if(SET.sfx===false||SET.sfxV!=null&&!(+SET.sfxV>0))retu
   else if(k=='evolve'){[0,.1,.2,.3,.42].forEach((at,j)=>tone('sine',[392,523,659,784,1046][j],at,1.1,.06));tone('sawtooth',98,0,1.4,.05,196);tone('triangle',2093,.5,1,.03)}}catch(_){}}
 
 // ---------------- the Abilities window: evolution box, ✦ marks, preview ----------------
-function ev137Box(s){const c=hero.cls,E=ev137Def(s);if(!E)return '';const un=kqsUnl(c,s),r=un?kqrRank(s):0,on=!!hero.tal[ev137Key(s.n)],w=ev137Why(s),k=ev137Cost(s),pv=EV137.pv===s.n;
-  if(on)return `<div class="ev137-box on"><div class="ev137-h">✦ Evolved · <b>${E.en}</b></div><div class="ev137-d">${E.d}</div><div class="ev137-n">+25% damage and healing · new look</div></div>`;
-  if(r<KQR_MAX)return `<div class="ev137-box lock"><div class="ev137-h">✦ At rank ${KQR_MAX} it can evolve into <b>${E.en}</b></div><div class="ev137-d">${E.d}</div></div>`;
-  return `<div class="ev137-box ready"><div class="ev137-h">✦ Evolution · <b>${E.en}</b></div><div class="ev137-d">${E.d} <span class="ev137-n">+25% damage and healing, new look.</span></div>
-    <div class="ev137-n">Evolving costs ${k} ability points (refunded by Reset abilities).</div>
-    <div class="btns"><button class="${w?'':'pri '}ev137-go" data-ev137="${s.n}" ${w?'disabled':''}>${w?'🔒 '+w:'✦ Evolve · '+k+' ⚡'}</button><button data-ev137pv="${s.n}" class="${pv?'on':''}">${pv?'■ Stop preview':'👁 Preview evolution'}</button></div></div>`}
+function ev137Box(s){}
 {const f=XR.abil;XR.abil=function(){const r=f.apply(this,arguments);try{ev137Decor()}catch(err){console.error(err)}return r}}
 function ev137Decor(){const c=hero.cls,B=$('xwB');if(!B)return;
   document.querySelectorAll('#xwB [data-kqsel]').forEach(row=>{const s=kqsFind(c,row.dataset.kqsel);if(!s||!hero.tal[ev137Key(s.n)])return;row.classList.add('ev137-row');const b=row.querySelector('.rn b');

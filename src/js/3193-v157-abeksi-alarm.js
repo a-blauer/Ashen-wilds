@@ -160,8 +160,7 @@ function ab158Step(a,dt){const S=AB152.S,G=S.G,D=AB158.fl;if(!D)return;let x=Mat
   const sp=ab157Guard(a)?AB158.spd.g:AB158.spd.c,du=bx-a.u,dv=by-a.v,L=Math.hypot(du,dv)||1,st=Math.min(L,sp*dt);
   a.u+=du/L*st;a.v+=dv/L*st;a.mv=sp;a.hy=0;a.t+=dt;ab152Turn(a,Math.atan2(du,dv),7,dt)}
 // the bell calls the n nearest residents (by street) within r steps to hunt
-function ab158Call(n,r){const C=[];for(const a of ab157Res()){if(a.dead||a.e||a.hunt||a.net1)continue;const d=ab158D(a);if(d<=r)C.push([d,a])}
-  C.sort((p,q)=>p[0]-q[0]);let k=0;for(const [,a] of C){if(k>=n)break;a.hunt=1;a.halt=1;a.st='look';a.sus=0;k++}return k}
+function ab158Call(n,r){}
 // one frame of the alarm (the host's world calls, rouses and counts; every client runs the hunters through the streets)
 function ab157AlarmTick(dt,now){const S=AB152.S,H=AB152H,A=AB157A,R=ab157Res(),B=AB158.bell;H.nT=1e9;
   // the fallen: a fighting resident whose enemy died lies where it fell

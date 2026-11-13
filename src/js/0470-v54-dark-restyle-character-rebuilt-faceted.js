@@ -49,45 +49,7 @@ function dkShade(hex,f){const c=new THREE.Color(hex);c.multiplyScalar(f);return 
 var HBO=null;function hbo(){return HBO||(HBO=Object.keys(HB))}
 
 // ---------------- weapons (grip at origin, blade pointing down -y, same footprint as before) ----------------
-function mkWpn(type,col,r){DKBK=DKBK||{};
-  const g=new THREE.Group(),key='W|'+type+'|'+col+'|'+(r||0);
-  if(!DKBK[key]){const k=dkKit(),iron=0x34363c,iron2=0x5a5e66,wood=0x3a2616,wrap=0x24160e,gold=0x8a6a2a,bone=0xb8ad90,B=dkShade(col,1),gl=r>=3?col:null;
-    const grip=(len)=>{k.p('','cyl','c',wood,0,0,0,.032,len||.16,.032);for(let i=0;i<4;i++)k.p('','ring','c',wrap,0,-.05+i*.033,0,.036,.25,.036)};
-    if(type=='sword'){grip();k.p('','oct','m',iron2,0,.11,0,.035,.045,.035);k.p('','box','m',iron,0,-.095,0,.2,.035,.06);[-1,1].forEach(s=>k.p('','cone4','m',iron,s*.12,-.075,0,.022,.07,.022,0,0,-s*1.1));
-      k.p('','box','m',B,0,-.47,0,.06,.72,.016);k.p('','box','m',dkShade(col,.45),0,-.42,0,.016,.56,.02);k.p('','cone4','m',B,0,-.88,0,.043,.12,.011,Math.PI,Math.PI/4);if(gl)k.p('','oct','g',gl,0,-.095,.035,.022)}
-    else if(type=='gs'){k.p('','cyl','c',wood,0,.05,0,.04,.32,.04);for(let i=0;i<7;i++)k.p('','ring','c',wrap,0,-.08+i*.04,0,.044,.25,.044);k.p('','oct','m',iron2,0,.24,0,.05,.06,.05);
-      k.p('','box','m',iron,0,-.14,0,.34,.05,.08);[-1,1].forEach(s=>{k.p('','cone4','m',iron,s*.2,-.11,0,.03,.12,.03,0,0,-s*1.0);k.p('','cone4','m',iron2,s*.06,-.2,0,.02,.1,.02,Math.PI,0,s*.4)});
-      k.p('','box','m',iron2,0,-.24,0,.11,.12,.026);k.p('','box','m',B,0,-.72,0,.1,.96,.02);k.p('','box','m',dkShade(col,.4),0,-.66,0,.022,.72,.026);k.p('','cone4','m',B,0,-1.26,0,.071,.16,.014,Math.PI,Math.PI/4);
-      [-1,1].forEach(s=>[0,1].forEach(i=>k.p('','cone4','m',B,s*.055,-.42-i*.12,0,.012,.05,.008,0,0,-s*1.9)));if(gl)k.p('','oct','g',gl,0,-.14,.045,.03)}
-    else if(type=='ga'||type=='axe'){const big=type=='ga',y=big?-.78:-.62;k.p('','cyl','c',wood,0,-.35,0,.034,big?1.0:.8,.034);[-.1,-.02,.06].forEach(q=>k.p('','ring','m',iron,0,q,0,.04,.3,.04));k.p('','oct','m',iron,0,y-.04*(big?1:0)-.12,0,.04,.07,.04);
-      const sh=new THREE.Shape();sh.moveTo(0,.07);sh.quadraticCurveTo(.16,.1,.3,.24);sh.quadraticCurveTo(.22,0,.3,-.24);sh.quadraticCurveTo(.16,-.1,0,-.07);sh.lineTo(0,.07);
-      const ag=new THREE.ExtrudeGeometry(sh,{depth:.03,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1,curveSegments:4});ag.translate(0,0,-.015);
-      const sc=big?1:.82;k.p('',ag,'m',B,.02,y,0,sc,sc,1);k.p('','box','m',iron,0,y,0,.07,.16*sc,.05);
-      if(big)k.p('',ag,'m',B,-.02,y,0,-sc,sc,1);else k.p('','cone4','m',iron,-.1,y,0,.03,.16,.03,0,0,Math.PI/2);if(gl)k.p('','oct','g',gl,0,y,.035,.025)}
-    else if(type=='mace'){k.p('','cyl','c',wood,0,-.3,0,.03,.7,.03);for(let i=0;i<4;i++)k.p('','ring','c',wrap,0,-.04+i*.035,0,.034,.25,.034);k.p('','oct','m',iron,0,.05,0,.04);
-      k.p('','sph','m',iron,0,-.72,0,.09,.12,.09);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;k.p('','box','m',B,Math.cos(a)*.08,-.72,Math.sin(a)*.08,.1,.2,.02,0,-a,0)}k.p('','cone4','m',B,0,-.88,0,.03,.12,.03,Math.PI);if(gl)k.p('','ico','g',gl,0,-.72,0,.05)}
-    else if(type=='club'){const R=dkRng(5);let p=[0,.05,0];for(let i=0;i<4;i++){const q=[(R()-.5)*.03,-.15-i*.17,(R()-.5)*.03];k.L('','c',0x4a3420,p,q,.035+i*.02,.045+i*.022);p=q}
-      for(let i=0;i<9;i++){const a=R()*6.28,y=-.4-R()*.3;k.p('','cone4','m',0x6a6a70,Math.cos(a)*.09,y,Math.sin(a)*.09,.012,.08,.012,Math.sin(a)*1.4,0,-Math.cos(a)*1.4)}k.p('','ring','m',iron,0,-.3,0,.07,.3,.07)}
-    else if(type=='hammer'){k.p('','cyl','c',wood,0,-.3,0,.035,.75,.035);[0,-.18].forEach(q=>k.p('','ring','m',iron,0,q,0,.042,.3,.042));k.p('','box','m',dkShade(col,.55),0,-.74,0,.4,.22,.22);k.p('','box','m',iron2,0,-.74,0,.42,.07,.24);
-      [-1,1].forEach(s=>k.p('','cone4','m',iron2,s*.24,-.74,0,.07,.1,.07,0,0,-s*Math.PI/2));k.p('','box','g',col,0,-.74,.112,.18,.03,.01);k.p('','box','g',col,0,-.74,-.112,.18,.03,.01)}
-    else if(type=='dagger'){k.p('','cyl','c',wrap,0,0,0,.026,.12,.026);k.p('','oct','m',iron2,0,.075,0,.025);k.p('','box','m',iron,0,-.075,0,.13,.025,.045);[-1,1].forEach(s=>k.p('','cone4','m',iron,s*.075,-.06,0,.015,.05,.015,0,0,-s*1.2));
-      k.p('','box','m',B,0,-.25,0,.045,.32,.012);k.p('','box','m',dkShade(col,.45),0,-.22,0,.01,.22,.016);k.p('','cone4','m',B,0,-.45,0,.032,.1,.008,Math.PI,Math.PI/4);if(gl)k.p('','oct','g',gl,0,-.075,.03,.016)}
-    else if(type=='staff'){const R=dkRng(11);let p=[0,.55,0];for(let i=0;i<5;i++){const q=[(R()-.5)*.05,.55-(i+1)*.29,(R()-.5)*.05];k.L('','c',0x2e2014,p,q,.03,.034);if(i%2)k.p('','sph','c',0x2e2014,q[0],q[1],q[2],.04);p=q}
-      for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4,c=[Math.cos(a)*.03,-.92,Math.sin(a)*.03],t=[Math.cos(a)*.1,-1.06,Math.sin(a)*.1],tt=[Math.cos(a)*.04,-1.16,Math.sin(a)*.04];k.L('','c',0x2e2014,c,t,.022,.016);k.L('','c',bone,t,tt,.014,.003)}
-      [0,1,2].forEach(i=>k.p('','ring','m',gold,0,-.7-i*.04,0,.04,.25,.04));k.p('','oct','g',col,0,-1.06,0,.06,.1,.06);k.p('','ring','g',col,0,-1.06,0,.12,.12,.12,.5,0,.3)}
-    else if(type=='bow'){const pts=[];for(let i=0;i<=10;i++){const a=Math.PI*(.55+i*.09),rr=.55+(i==0||i==10?.03:0);pts.push([Math.cos(a)*rr,Math.sin(a)*rr*1.02,0])}
-      for(let i=0;i<10;i++)k.L('','c',i>3&&i<6?wrap:0x3a2414,pts[i],pts[i+1],i==0||i==9?.012:.022,i==0||i==9?.012:.022,5);
-      [pts[0],pts[10]].forEach((q,i)=>k.L('','c',bone,q,[q[0]+.05,q[1]+(i?-.08:.08),0],.014,.003,4));k.p('','box','m',iron2,-.55,0,0,.03,.12,.03);
-      k.L('','c',0xd8d0b8,[pts[0][0]+.004,pts[0][1],0],[-.08,0,0],.004,.004,3);k.L('','c',0xd8d0b8,[-.08,0,0],[pts[10][0]+.004,pts[10][1],0],.004,.004,3)}
-    else if(type=='sling'){k.L('','c',0x5a4a32,[0,0,0],[0,-.4,0],.01,.01,4);k.p('','sph','c',0x4a3a2a,0,-.42,0,.055);k.p('','ico','c',0x6a6a66,0,-.42,.02,.035)}
-    else if(type=='shield'){const sh=new THREE.Shape();sh.moveTo(0,.5);sh.quadraticCurveTo(.44,.48,.42,.12);sh.quadraticCurveTo(.36,-.34,0,-.62);sh.quadraticCurveTo(-.36,-.34,-.42,.12);sh.quadraticCurveTo(-.44,.48,0,.5);
-      const eg=new THREE.ExtrudeGeometry(sh,{depth:.045,bevelEnabled:true,bevelThickness:.02,bevelSize:.025,bevelSegments:1,curveSegments:5});eg.translate(0,.05,-.0225);
-      const ig=new THREE.ShapeGeometry(new THREE.Shape(sh.getPoints(5).map(p=>p.clone().multiplyScalar(.8))));
-      k.p('',eg,'m',iron,0,0,0,1,1,1);[-1,1].forEach(s=>{k.p('',ig,'c',dkShade(col,.75),0,.06,s*.048,1,1,1,0,s<0?Math.PI:0,0);k.p('','box','m',gold,0,.0,s*.052,.06,.72,.012);k.p('','box','m',gold,0,.2,s*.052,.46,.06,.012);k.p('','sph','m',iron2,0,.2,s*.055,.06,.06,.03)});
-      for(let i=0;i<8;i++){const a=i/8*Math.PI*2;k.p('','sph','m',iron2,Math.cos(a)*.34,.1+Math.sin(a)*.38,-.05,.018)}if(gl)k.p('','oct','g',gl,0,.2,-.075,.035)}
-    else{k.p('','box','m',B,0,-.3,0,.05,.6,.02)}
-    DKBK[key]=dkBake(k.P,null,key+'#')&&DKBK[key+'#']}
-  dkBake([],null,key+'#').forEach(m=>g.add(m));return g}
+function mkWpn(type,col,r){}
 
 // ---------------- shared humanoid pieces (coordinates are the rest pose of the HB skeleton) ----------------
 function DKL(s){return s<0?'l':'r'}function DKA(s){return s<0?'aL':'aR'}

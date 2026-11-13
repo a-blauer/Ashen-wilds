@@ -35,11 +35,4 @@ function enemyWander(e,m,dt,now){
   return [0,0,0];
 }
 // ---------- minimap facing arrow ----------
-function miniArrow(qx,qy){
-  const a=pl.rotation.y,fx=Math.sin(a),fz=Math.cos(a),ca=camYaw,vx=-Math.sin(ca),vz=-Math.cos(ca);
-  // camera view cone
-  mmX.save();mmX.fillStyle='rgba(255,255,255,.13)';mmX.beginPath();mmX.moveTo(qx,qy);const sp=.55,R2=26,base=Math.atan2(vz,vx);mmX.arc(qx,qy,R2,base-sp,base+sp);mmX.closePath();mmX.fill();
-  // facing arrow
-  mmX.translate(qx,qy);mmX.rotate(Math.atan2(fz,fx));mmX.fillStyle='#4ade80';mmX.strokeStyle='#0b1a10';mmX.lineWidth=1.5;
-  mmX.beginPath();mmX.moveTo(8,0);mmX.lineTo(-5,-5);mmX.lineTo(-2.5,0);mmX.lineTo(-5,5);mmX.closePath();mmX.stroke();mmX.fill();mmX.restore();
-}
+function miniArrow(qx,qy){}

@@ -44,17 +44,8 @@ $('bag').addEventListener('click',e=>{
 },true);
 // ---------------- talents window ----------------
 let talSel=null;
-function rTal(){
-  const T=TAL[hero.cls],tp=tpFree();$('talSub').textContent=CLS[hero.cls].i+' '+CLS[hero.cls].n+' · '+tp+' point'+(tp==1?'':'s')+' to spend · 1 point per level';
-  $('talT').innerHTML=T.map((br,bi)=>{const sp=talSpent(bi);return `<div class="talc"><div class="talh">${br.i} ${br.n} <small>${sp} pts</small></div>`+br.t.map((t,ri)=>{const r=talRank(t[0]),lock=sp<ri*3,mx=r>=t[3];
-    return `<button class="taln${lock?' lk':''}${r?' has':''}${mx?' mx':''}${talSel==t[0]?' on':''}" data-t="${t[0]}" data-b="${bi}" data-r="${ri}"><span class="ti">${t[2]}</span><span class="tn">${t[1]}</span><span class="tr">${r}/${t[3]}</span></button>`}).join('')+'</div>'}).join('');
-  const t=talSel&&T.flatMap(b=>b.t).find(x=>x[0]==talSel);
-  if(t){const r=talRank(t[0]),k=Object.keys(t[5])[0],v=t[5][k],fmt=x=>Math.abs(v)<1?(+(x*100).toFixed(1)):x;const ri=T.findIndex(b=>b.t.includes(t)),row=T[ri].t.indexOf(t);
-    $('talInfo').innerHTML=`<b>${t[2]} ${t[1]}</b> (${r}/${t[3]}) — ${t[4].replace('#',fmt(v*Math.max(1,r)))}${r<t[3]?' · next rank: '+t[4].replace('#',fmt(v*(r+1))):''}${talSpent(ri)<row*3?' · <span style="color:#f87171">needs '+row*3+' points in '+T[ri].n+'</span>':''}`}
-  else $('talInfo').textContent='Click a talent to see it, click again to learn a rank. Each row unlocks after 3 points in the rows above it.';
-  $('talReset').textContent='Reset (🪙 '+(40*hero.lvl)+')';
-}
-function openTal(){if(uiOpen())return;if(!party.length)return;talSel=null;rTal();$('tal').classList.remove('hide')}
+function rTal(){}
+function openTal(){}
 $('talClose').onclick=()=>$('tal').classList.add('hide');
 $('talT').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;const id=b.dataset.t,T=TAL[hero.cls],t=T[+b.dataset.b].t[+b.dataset.r];
   if(talSel!=id){talSel=id;rTal();return}
@@ -89,14 +80,7 @@ $('cd').addEventListener('click',e=>{if(e.target.id=='mkEvo'){e.stopImmediatePro
 // ---------------- fusion: same family; a higher-tier base only gets half the value ----------------
 const compat_v2=(a,b)=>famOf(a.g[0])==famOf(b.g[0])||a.tr=='Universal'||b.tr=='Universal';
 function fuseVal_base(a,b){return (tierSp(a.g[0])>tierSp(b.g[0])?.5:1)*((b.mods||[]).includes('Catalyst')?1.6:1)}
-$('doF').onclick=()=>{
-  if(sel.length!=2)return;const a=party[sel[0]],b=party[sel[1]];if(!compat(a,b))return;
-  const v=fuseVal(a,b);a.fp=Math.min(10,(a.fp||0)+v);a.f=Math.floor(a.fp);
-  ['hp','a','d'].forEach(k=>a.iv[k]=Math.max(a.iv[k],a.iv[k]*.75+b.iv[k]*.25+.01));
-  const inh=(b.mods||[]).filter(m=>!(a.mods||[]).includes(m));if(inh.length&&(a.mods||[]).length<5&&Math.random()<.35){const m=inh[R(0,inh.length-1)];a.mods.push(m);say(a.n+' inherited '+MODS[m].i+' '+m+'!')}
-  if(b.tr=='Universal'&&a.tr!='Universal'){}else if(a.tr=='Universal'&&famOf(a.g[0])!=famOf(b.g[0]))a.tr='';
-  a.h=M(a);party=party.filter((_,i)=>i!=sel[1]);say('Fusion complete! '+nm(a)+' grew stronger (+'+Math.round(v*10)+'% stats).');$('fz').classList.add('hide');hsDirty();ui();
-};
+$('doF').onclick=()=>{};
 // ---------------- hatching ----------------
 function hatch_base(e){
   const t=e.tier,hab=0/100,lo0=.82+(e.pa-1)*.5,hi0=1.18+(e.pa-1)*.5,lo=lo0+hab*.22,hi=hi0+hab*.14,rv=()=>lo+Math.random()*(hi-lo),iv={hp:rv(),a:rv(),d:rv()};
@@ -127,12 +111,7 @@ $('sb').onclick=e=>{
   if(k=='pot')pots++;else if(k=='up')mats[UPM[T-1][0]]++;else if(k[0]=='g')gear.push(stock2.gear.splice(n,1)[0]);else{eggs.push(stock2.egg);stock2.egg=null}
   rS();hud();
 };
-$('ss').onclick=e=>{
-  const b=e.target.closest('[data-s]');if(!b)return;const k=b.dataset.s,t=k[0],id=+k.slice(1);
-  if(t=='g'){const i=gear.findIndex(g=>g.id==id);if(i<0)return;gold+=Math.round(itVal(gear[i])*.5);gear.splice(i,1)}
-  if(t=='e'){const i=eggs.findIndex(g=>g.id==id);if(i<0)return;gold+=Math.round(EGV[eggs[i].tier]*.4);eggs.splice(i,1)}
-  rS();hud();
-};
+$('ss').onclick=e=>{};
 let mstock=null;
 function rMS(){
   const T=townTier(),L=shpL109('magic');if(!mstock||mstock.T!=T||mstock.L!==L)mstock={T,L,eggs:Array.from({length:2+L},()=>shpEgg109(T,L))};$('gold3').textContent=gold;
@@ -211,7 +190,7 @@ $('start').innerHTML=`<div class="ccw"><div class="cch"><h2 id="ccT">Create your
  <div class="ccb"><div id="ccList" class="ccl"></div><div class="ccm"><div id="ccPV" class="ccpv"></div></div><div id="ccInfo" class="ccr"></div></div>
  <div class="ccf"><input id="ccName" maxlength="16" placeholder="Hero name"><span style="flex:1"></span><button id="ccBack" class="hide">‹ Back</button><button id="ccNext" class="pri">Next ›</button></div></div>`;
 $('ccList').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.c)ccCls=b.dataset.c;if(b.dataset.s)ccSp=b.dataset.s;ccRender()};
-$('ccNext').onclick=()=>{if(ccStep==0){ccStep=1;ccRender()}else ccBegin()};
-$('ccBack').onclick=()=>{ccStep=0;ccRender()};
+$('ccNext').onclick=()=>{};
+$('ccBack').onclick=()=>{};
 requestAnimationFrame(()=>ccRender());
 

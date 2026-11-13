@@ -125,14 +125,6 @@ function sgHalo(p,col,s,ms,lvl){if(!p)return;s=s||1.4;ms=ms||900;lvl=lvl|0;const
 function sgMark(p,col,ms,lvl){if(!p)return;ms=ms||1000;const m=new THREE.Sprite(new THREE.SpriteMaterial({map:sgTex('mark'),color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
   m.userData.lpsSkip=1;m.renderOrder=36;m.position.copy(gY(p,2.6));scene.add(m);const s=lvl?1.5:1.1;
   sgT(ms,k=>{const u=k<.25?ATK_E.out(k/.25):1;m.scale.setScalar(s*(2.6-1.6*u));m.material.rotation=(1-u)*1.6;m.material.opacity=(k<.25?u:k>.7?1-(k-.7)/.3:1)},()=>sgRm(m))}
-// a falling blade of dark iron with a blood-red edge, slamming down onto p across yaw (Execute)
-function sgGuillotine(p,yaw,col,ms,lvl){if(!p)return;ms=ms||520;lvl=lvl|0;const G=sgG('gblade',()=>{const s=new THREE.Shape();s.moveTo(-.75,-.42);s.lineTo(.75,.12);s.lineTo(.75,1.1);s.lineTo(-.75,1.1);s.closePath();return new THREE.ShapeGeometry(s)}),
-  E=sgG('gedge',()=>{const s=new THREE.Shape();s.moveTo(-.8,-.5);s.lineTo(.8,.08);s.lineTo(.75,.24);s.lineTo(-.75,-.3);s.closePath();return new THREE.ShapeGeometry(s)});
-  const g=new THREE.Group(),bl=sgMesh(G,new THREE.MeshBasicMaterial({color:0x1a0808,transparent:true,opacity:.92,side:THREE.DoubleSide,depthWrite:false}),33),ed=sgMesh(E,sgMat(col,null,1),34);
-  g.add(bl,ed);const s=1+lvl*.45;g.scale.setScalar(s);g.rotation.y=yaw;const b=gY(p,0),y0=b.y+4.2*s,y1=b.y+.35;g.position.set(b.x,y0,b.z);scene.add(g);let hit=0;
-  sgT(ms,k=>{const T=.24,u=k<T?Math.pow(k/T,2.2):1;g.position.y=y0+(y1-y0)*u;const f=k<.34?1:Math.max(0,1-(k-.34)/.3);bl.material.opacity=.92*f;ed.material.opacity=f;
-    if(!hit&&k>=T){hit=1;const q=gY(p,1);fx186Flash(q,0xff1a10,2.4+lvl,260);sgBlood(q,14+lvl*10,3,null);sgSparks(q,col,10+lvl*6,6,2.5,null,6.3,6,.4);
-      ring(p,0x8a0a0a,2+lvl,360);sgCrack(p,yaw+Math.PI/2,col,1.6+lvl,.8,1200);sgCrack(p,yaw-Math.PI/2,col,1.6+lvl,.8,1200)}},()=>sgRm(g))}
 // a thin taut wire from a to b with a noose tightening round b (Garrote)
 function sgWire(a,b,col,ms,lvl){if(!a||!b)return;ms=ms||600;const G=sgG('cyl',()=>{const q=new THREE.CylinderGeometry(1,1,1,18,1,true);q.translate(0,.5,0);return q}),T=sgG('noose',()=>new THREE.TorusGeometry(.32,.025,4,20));
   const w=sgMesh(G,sgMat(col,null,1)),n=sgMesh(T,sgMat(sgLerp(col,0xffffff,.3),null,1)),L=a.distanceTo(b);w.position.copy(a);w.quaternion.setFromUnitVectors(SG.Y,SG.V[0].copy(b).sub(a).normalize());
@@ -196,9 +188,7 @@ function sgSkull(p,yaw,col,lvl){if(!p)return;lvl=lvl|0;const b=gY(p,0);sgBusy(()
   for(let i=0;i<6+lvl*6;i++)try{fxbChunk(gY(p,.3),2.4+lvl,6+lvl*2,.13+Math.random()*.1)}catch(_){}
   sgDust(b,8+lvl*6,2.2);sgBlood(gY(p,1.2),10,2.4,yaw,1.6);sgSparks(gY(p,.6),col,8+lvl*6,5,2.5,null,6.3,6,.35);ring(p,col,1.8+lvl,300)})}
 // Execute: a guillotine of dark iron falls on the target, a blood-red flash; low = it was a killing blow
-function sgExec(p,yaw,col,low,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const b=gY(p,0);
-  sgTrail(new THREE.Vector3(b.x,b.y+1.3,b.z),yaw,0xff2010,1.7+lvl*.3,280,1,2.4,-.7,.3,.55);sgGuillotine(p,yaw,col,520+lvl*120,lvl);
-  if(low){sgLater(130,()=>{sgBlood(gY(p,1),18,3.5,null);fx186Flash(gY(p,1.2),0xff0000,3.2,320)})}})}
+function sgExec(p,yaw,col,low,lvl){}
 // Shield Bash: a shield of light slams forward from the hero, a vertical shock ring, sparks fanned ahead
 function sgBash(p,yaw,col,lvl){if(!p)return;lvl=lvl|0;sgBusy(()=>{const q=gY(p,1.1);sgShieldFx(q,yaw,col,1.3+lvl*.5,340+lvl*80,1.3+lvl*.8);
   if(lvl)sgLater(70,()=>sgShieldFx(q,yaw,sgC2(col),1.9,360,2.4));fx186Flash(q,col,1.8+lvl,200);sgSparks(q,col,12+lvl*8,7,1.5,yaw,1.2,7,.35,4);sgDust(gY(p,0),5,1.6)})}

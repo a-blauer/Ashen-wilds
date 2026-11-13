@@ -145,9 +145,7 @@ var WBEH={
     orbChain(e0,raw);sfx('zap')},base*300)}
 };
 Object.keys(MW).forEach(k=>{WBEH[k]=(C,s,raw,d,spdK,base)=>wMelee(MW[k],C,s,raw,d,spdK,base)});
-function orbChain(e0,raw){let cur=e0,from=pl.position.clone();const hit=new Set();
-  for(let j=0;j<4&&cur;j++){hit.add(cur);bolt(gY(from,1),gY(cur.m.position,.8),0x9ad8ff);heroHit(cur,raw*(j?WB127.orbJump:WB127.orbFirst),'m',{s:{col:0x9ad8ff,basic:j?0:1},proc:j==0});from=cur.m.position.clone();
-    cur=enemies.filter(e=>!e.dead&&!hit.has(e)&&d2(e.m.position,from)<5.5).sort((a,b)=>d2(a.m.position,from)-d2(b.m.position,from))[0]}}
+function orbChain(e0,raw){}
 var WFX={
   knife(e,s,raw){if(Math.random()<.3)wBleed(e,2.5,raw)},
   xbow(e,s,raw){if(e.dead)return;const v=V(e.m.position.x-pl.position.x,0,e.m.position.z-pl.position.z).normalize();wPush(e,v,1.2)},

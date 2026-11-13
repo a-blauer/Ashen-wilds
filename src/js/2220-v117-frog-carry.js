@@ -110,7 +110,6 @@ function fc140Fwd(H){const V=THREE.Vector3,q=H.getWorldQuaternion(new THREE.Quat
 function fc140Scale(H){try{const V=THREE.Vector3,a=H.getWorldScale(new V()).x,b=(H===pl?a:pl.getWorldScale(new V()).x)||1;return a/b||1}catch(_){return 1}}
 function fc118Sign(H,b,Fp){let s=1;H.traverse(o=>{if(!o.isSkinnedMesh||!o.skeleton)return;const i=o.skeleton.bones.indexOf(b);if(i<0)return;
   const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().copy(o.skeleton.boneInverses[i]).invert());s=Fp.e.clone().applyQuaternion(q).z<0?-1:1});return s}
-function fc116Restore2(H,rec){rec.b.forEach(r=>r.o.quaternion.copy(r.q0));rec.w.forEach(r=>{r.o.quaternion.copy(r.q0);r.o.position.copy(r.p0)});H.updateMatrixWorld(true)}
 {const f=animHero;animHero=function(now,mv,h){const H=h||pl;if(H&&H._fc116)fc116Restore(H);const r=f.apply(this,arguments);
   try{if(FC116.on&&H&&fc116Race(H)&&!(H===pl&&typeof riding!='undefined'&&riding)){fc116Apply(H);if(!H._fc116)fc116Apply(H)}}catch(e){if(!FC116.err){FC116.err=1;console.warn('v117 frog hold',e)}}return r}}
 // during attacks and casts the frog's shoulders spread a little (the beast layer's D.atk), so the staff swings clear of his wide head and robe

@@ -20,8 +20,6 @@ function mq145Done(){return mq145N()>=3||insReach(0)>=3}
 function mq145In3(){try{const I=curIns();return !!I&&I.g===2}catch(_){return false}}
 function mq145Den(){try{return PMAP[0].ins[3].n}catch(_){return 'the Den'}}
 function mq145Boss(){try{return BOSSES[0].name}catch(_){return 'the Sovereign'}}
-// wolves per wave: MQ145.total split over the waves, the remainder to the first ones (100 over 4 → 25 each)
-function mq145Per(w){const T=MQ145.total,n=MQ145.waves,b=Math.floor(T/n);return b+(w<T-b*n?1:0)}
 
 // ---------------- where the sigils stand (hoisted: 1680 place() calls mq145Keep while the world is decorated) ----------------
 function mq145Plan(){if(mq145Plan.c)return mq145Plan.c;

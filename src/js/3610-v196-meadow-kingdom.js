@@ -21,8 +21,7 @@ kfAve109=function(x,z,m){m=m||0;const r=Math.hypot(x,z);return Math.abs(x)<KF109
 TWN100_L=function(){const T=TOWNS[0],F=kf109();return {T,R:TS,WX:F.R,IW:F.R,SZ:F.R,st:F.s}};
 // ---------------- the walls ----------------
 // angle a (clockwise from north) on the ring of radius R, town-local
-function dm196P(a,R){return [R*Math.sin(a),-R*Math.cos(a)]}
-var DM196_GZ=1.85; // (v196) half the old gate opening; the v198 exits below replace the two gatehouses
+function dm196P(a,R){return [R*Math.sin(a),-R*Math.cos(a)]} // (v196) half the old gate opening; the v198 exits below replace the two gatehouses
 // ---------------- v198: an open exit through the walls for every portal ----------------
 // owner (Nov 4 2026): "there needs to be an exit area from the duskhold walls for each portal entrance, with a large opening so that
 // players can see which portal is ahead. Right now the castle exits have a low doorway and it blocks the vision of what zone portal

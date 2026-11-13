@@ -9,7 +9,6 @@
 // Phoenix Heart, Unbreakable and the god cheat still save the hero first. Playing solo nothing changes.
 // Net: presence carries dn (1 = downed) and bt (seconds left); the revive itself is an 'ev' entry ['rv', target peer].
 var RV148={T:30,need:3,hp:.4,iv:2.5,reach:2.4,down:0,t:0,since:0,ch:null,lastDn:-1,lastBt:-1};
-function rv148Down(){return !!RV148.down}
 // partners standing (not downed, not dead) in my map
 function rv148Standing(){if(typeof MP=='undefined'||!MP.on)return [];const out=[];
   for(const k in MP.rh){const r=MP.rh[k],p=r.pr;if(p&&p.rg===MP.rg&&MP.rg>-2&&p.hp>0&&!p.dn)out.push(r)}return out}

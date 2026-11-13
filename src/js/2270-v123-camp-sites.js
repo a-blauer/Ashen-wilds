@@ -85,7 +85,6 @@ function cs123Plan(){if(cs123Plan.P)return cs123Plan.P;
   return cs123Plan.P=P}
 function cs123At(z,k,j){return cs123Plan()[z+'_'+k+'_'+j]||null}
 // the radius of camp j in instance I (decoration keep-out rings use it before CAMPS exists)
-function cs123Rad(I,j){const D=I&&I.fld?cs123At(I.z,I.k,j):null;return D?D.r:12}
 // the camp's facing (shelves, tilts and the builders' main axis): seeded by position
 function cs123Ang(x,z){return cs123H(Math.round(x),Math.round(z))*6.283}
 function cs123Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
@@ -102,28 +101,8 @@ function cs123Op(o,dx,dz,d,r,ca,sa,sd,x,y){const q=o[0],a=o[1];
   if(q=='spire'||q=='dip'){const ux=dx-o[2],uz=dz-o[3],e=Math.hypot(ux,uz)/o[4];if(e>=1)return 0;const w=1-e*e;return a*w*w}
   return 0}
 // heights: called from 0045 right after HF is filled (before the terrain mesh, trees, grass and nodes are placed)
-function cs123Terrain(){const P=cs123Plan(),DW=MAP.DW,ix=(i,j)=>(j+HPD)*HW+i+HPD;
-  INSL.forEach(I=>{if(!I.fld)return;I.cl.forEach((c,j)=>{const D=P[I.z+'_'+I.k+'_'+j];if(!D)return;
-    const cx=Math.round(c[0]),cz=Math.round(c[1]),r=D.r,Rb=Math.min(r+4,17),an=cs123Ang(cx,cz),ca=Math.cos(an),sa=Math.sin(an),sd=cs123H(cz,cx)*100,lv=D.lv==null?.85:D.lv;
-    const ok=(x,y)=>x>0&&y>0&&x<W-1&&y<H-1&&MAP[y][x]&&MAP[y][x]!='~'&&DW[y*W+x]<0&&insAt(x,y)===I;
-    let s=0,n=0;const r7=Math.ceil(r*.7);for(let y=cz-r7;y<=cz+r7;y++)for(let x=cx-r7;x<=cx+r7;x++)if(Math.hypot(x-cx,y-cz)<r*.7&&ok(x,y)){s+=HF[ix(x,y)];n++}
-    const base=n?s/n:HF[ix(cx,cz)],R1=Math.ceil(Rb)+1;
-    const L=[];let mn=1e9;
-    for(let y=cz-R1;y<=cz+R1;y++)for(let x=cx-R1;x<=cx+R1;x++){const d=Math.hypot(x-cx,y-cz);if(d>Rb||!ok(x,y))continue;
-      const k=ix(x,y),wl=lv*(1-smt(r*.8,Rb,d));let h=HF[k]*(1-wl)+base*wl,dv=0;
-      for(const o of D.t)dv+=cs123Op(o,x-cx,y-cz,d,r,ca,sa,sd,x,y);
-      h+=dv*(1-smt(r*.92,Rb,d));L.push(k,h,1-smt(r*.92,Rb,d));if(d<r)mn=Math.min(mn,h)}
-    // dry camps stay above the water surface (y .02) everywhere; wet ones sink so their lowest ground is D.wet under it
-    const sh=D.wet?(-D.wet-mn):Math.max(0,.4-mn);
-    for(let i=0;i<L.length;i+=3)HF[L[i]]=L[i+1]+sh*L[i+2]})})}
 // tiles: called at the end of the 0045 map build (only '.', 'g' and 'a' are swapped, so walking, water and nodes don't change)
-function cs123Map(m){const P=cs123Plan();
-  INSL.forEach(I=>{if(!I.fld)return;I.cl.forEach((c,j)=>{const D=P[I.z+'_'+I.k+'_'+j];if(!D||!D.gt)return;const cx=Math.round(c[0]),cz=Math.round(c[1]),R=D.r*.88,R1=Math.ceil(R*1.3);
-    for(let y=cz-R1;y<=cz+R1;y++)for(let x=cx-R1;x<=cx+R1;x++){const t=m[y]&&m[y][x];if(!t||'.ga'.indexOf(t)<0||insAt(x,y)!==I)continue;
-      const a=Math.atan2(y-cz,x-cx),lim=R*(.84+.16*Math.sin(a*3+cx)+.08*Math.sin(a*7+cz));const dd=Math.hypot(x-cx,y-cz);if(dd<lim&&cs123H(x*1.7,y*2.3)<1.15-dd/lim*.7)m[y][x]=D.gt}})})}
 // sizes and seeds on the CAMPS records: called from 0250 right after CAMPS is made
-function cs123Setup(){const n={};CAMPS.forEach(C=>{const I=INSL[C.ig];if(!I)return;const j=n[C.ig]=(n[C.ig]==null?0:n[C.ig]+1),D=I.fld?cs123At(I.z,I.k,j):null;
-  C.j=j;C.key=I.z+'_'+I.k+'_'+j;C.des=D;C.r=D?D.r:12;C.sp=Math.max(4.5,Math.min(9.5,C.r*.62));C.ang=cs123Ang(C.x,C.z);C.seed=1+Math.floor(cs123H(C.x+.5,C.z-.5)*2e6)})}
 
 // ---------------- the set-piece kit ----------------
 // Shared low-poly geometries (never disposed: merges copy them). Animated pieces (CS123.an) and breakable boxes stay

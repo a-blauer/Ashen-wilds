@@ -124,29 +124,20 @@ function dcWall104(){const T=TOWNS[0],K=kdState(),G=K.wg,lv=K.wl|0,rc=new THREE.
   return {lv,F,top:(x,z)=>{let best=null;for(const [dx,dz] of [[0,0],[.2,0],[-.2,0],[0,.2],[0,-.2],[.15,.15],[-.15,-.15]]){const p=hit(new THREE.Vector3(T.cx+x+dx,T.ph+20,T.cy+z+dz),new THREE.Vector3(0,-1,0),30);if(p&&(best==null||p.y-T.ph>best))best=p.y-T.ph}return best},
     faceX:(s,z,y)=>{const p=hit(new THREE.Vector3(T.cx+s*(F.WX-6),T.ph+y,T.cy+z),new THREE.Vector3(s,0,0),12);return p?p.x-T.cx:s*(F.WX-.5)},
     faceZ:(x,y)=>{const p=hit(new THREE.Vector3(T.cx+x,T.ph+y,T.cy+F.SZ-7),new THREE.Vector3(0,0,1),12);return p?p.z-T.cy:F.SZ-.5}}}
-function dcBuild103(D){const T=TOWNS[0],F=dcF104(),fr=!!(D.wall||D.spf);if(D.spf)D.sp=D.spf(F);const W=D.wall?dcWall104():null,key='DECO104|'+D.k+(W?'|w'+W.lv:'')+(fr?'|s'+F.s:'');let k=null;const g=new THREE.Group();g.name='deco_'+D.k;g.position.set(T.cx,T.ph,T.cy);g.userData.wl=W?W.lv:null;g.userData.fs=fr?F.s:null;
-  if(D.b){if(!twHas(key)){k=twKit(1101+D.k.length*7+D.k.charCodeAt(0));D.b(k,D,W)}const s=twGroup(k,key);g.add(s)}
-  if(D.an){const f=D.an(g,D,W);if(f){g.userData.an={x:T.cx,z:T.cy+14,f:now=>{if(g.visible)f(now)}};TANIM.push(g.userData.an)}g.userData.psNo=1}
-  scene.add(g);DC103.g[D.k]=g;
-  DC103.col[D.k]=(D.col?D.col(D):[]).map(q=>q.length==3?{x:T.cx+q[0],z:T.cy+q[1],r:q[2]}:{x:T.cx+q[0],z:T.cy+q[1],hx:q[2],hz:q[3]});return g}
+function dcBuild103(D){}
 function dcDrop104(k){const g=DC103.g[k],T=TOWNS[0];if(!g)return;scene.remove(g);if(g.userData.an){const i=TANIM.indexOf(g.userData.an);if(i>=0)TANIM.splice(i,1)}(DC103.col[k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(i>=0)T.col.splice(i,1)});delete DC103.g[k];delete DC103.col[k]}
 function dc103Sync(){const T=TOWNS[0];if(!T)return;const wl=kdState().wl|0;
   const fs=dcF104().s;DECO103.forEach(D=>{const g=DC103.g[D.k];if(g&&(D.wall&&g.userData.wl!==wl||(D.wall||D.spf)&&g.userData.fs!==fs))dcDrop104(D.k)});
   DECO103.forEach(D=>{const on=dcOn103(D.k);let g=DC103.g[D.k];if(on&&!g)g=dcBuild103(D);if(g)g.visible=on;
   (DC103.col[D.k]||[]).forEach(c=>{const i=T.col.indexOf(c);if(on&&i<0)T.col.push(c);else if(!on&&i>=0)T.col.splice(i,1)})});
   try{if(typeof CZ103!='undefined')CZ103.ver=-1}catch(_){}}
-function dcBuy103(k){const D=DECO103.find(q=>q.k==k);if(!D||SH.deco[k]!=null)return;if(gold<D.g)return say('Not enough gold.');gold-=D.g;SH.deco[k]=1;dc103Sync();
-  banner(D.i+' '+D.n.toUpperCase(),D.d,'You can switch it off and on in the Decorations tab');sfx('power');hud();try{saveGame(true)}catch(_){}}
+function dcBuy103(k){}
 function dcToggle103(k){if(SH.deco[k]==null)return;SH.deco[k]=SH.deco[k]?0:1;dc103Sync();try{saveGame(true)}catch(_){}}
 {const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};o.kdeco=Object.assign({},SH.deco);return o}}
 {const f=x2Load;x2Load=function(s){SH.deco={};if(s&&s.kdeco&&typeof s.kdeco=='object')DECO103.forEach(D=>{const v=s.kdeco[D.k];if(v===0||v===1)SH.deco[D.k]=v});const r=f.apply(this,arguments);dc103Sync();return r}}
 // ---------- the Steward's window: Kingdom | Decorations ----------
 KM103.tab=KM103.tab||'kingdom';
-function dcRender103(){const own=DECO103.filter(D=>SH.deco[D.k]!=null).length,on=DECO103.filter(D=>dcOn103(D.k)).length;
-  const rows=DECO103.map(D=>{const has=SH.deco[D.k]!=null,o=dcOn103(D.k);
-    return `<div class="dccard${has?' own':''}${o?' on':''}"><div class="dci">${D.i}</div><div class="dct"><b>${D.n}</b><small>${D.d}</small></div><div class="dca">${has?`<button class="dctg${o?' on':''}" data-dct="${D.k}" aria-pressed="${o}">${o?'On':'Off'}</button>`:`<button class="pri" data-dcb="${D.k}" ${gold>=D.g?'':'disabled'}>🪙 ${D.g}</button>`}</div></div>`}).join('');
-  $('xwB').innerHTML=`<div class="mut dcsum">${own} of ${DECO103.length} owned · ${on} shown. Decorations stand in fixed spots round the square and never block a building lot.</div><div class="dcgrid">${rows}</div>`;
-  $('xwF').innerHTML='<span class="mut dtl">Bought once, kept forever. Switch any decoration off to hide it, and on again whenever you like.</span>'}
+function dcRender103(){}
 // v117: three tabs — Construction (the plan and the building list), Villagers (vlRender116 in 2150), Decorations
 {const f=XR.hold;XR.hold=function(){const t=KM103.tab;
   if(t=='deco'||t=='vill'){$('xwT').textContent='🏰 Kingdom of Duskhold';$('xwS').textContent='🪙 '+gold+' · 👑 '+bossDone.size+' · 👥 '+HS103.cit.length;try{kmPickEnd103()}catch(_){}if(t=='deco')dcRender103();else vlRender116()}else f.apply(this,arguments);

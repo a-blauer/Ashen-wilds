@@ -1,7 +1,5 @@
 // =============== 15. BESTIARY ===============
 const dex={own:new Set(),egg:new Set(),claim:new Set()};let dexTab='cre';
-const DEXM=[[5,'🪙 500 gold',()=>{gold+=500}],[10,'🔮 A random rune',()=>giveS(RUNEK[R(0,RUNEK.length-1)],1)],[18,'🥚 A tier-2 egg',()=>eggs.push(rollEgg(2))],[26,'📖 Scholar I: +3% XP & loot (permanent)',()=>permBuff('Scholar I',{xp:.03,loot:.03})],
- [35,'🔮🔮 Two runes',()=>{giveS(RUNEK[R(0,RUNEK.length-1)],1);giveS(RUNEK[R(0,RUNEK.length-1)],1)}],[45,'🥚 A tier-4 egg',()=>eggs.push(rollEgg(4))],[55,'📖 Scholar II: +5% XP & loot (permanent)',()=>permBuff('Scholar II',{xp:.05,loot:.05})],[70,'👑 Master Tamer: +5% all stats (permanent)',()=>permBuff('Master Tamer',{hpP:.05,paP:.05,maP:.05,pdP:.05,mdP:.05})]];
 function permBuff(n,s){hero.buffs.push({n,i:'📖',s,t:Infinity,perm:1,d:n});hsDirty()}
 function dexScan(){party.forEach(c=>c&&c.g&&dex.own.add(c.g[0]));eggs.forEach(e=>e&&e.sp&&dex.egg.add(e.sp))}
 function dexPoints(){const enK=Object.keys(EN).filter(k=>!k.startsWith('boss'));return {cre:dex.own.size,en:enK.filter(k=>(kills[k]||0)>=25).length,boss:bossDone.size*2,fish:Object.keys(fishLog).length}}

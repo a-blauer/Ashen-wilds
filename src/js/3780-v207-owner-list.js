@@ -38,9 +38,6 @@ var ML207={on:0,was:0,t:0};
 var HT207={ret:0};
 var AB207={reach:2.6,ang:1.1,n:0};
 var SH207={K:null,prev:null};
-
-// ---------------- 1. Kindlelight boxes ----------------
-function bx207KL(x,z){try{const I=insAt(Math.round(x),Math.round(z));return !!I&&I.z===0}catch(_){return false}}
 {const f=buildCamp;buildCamp=function(C){if(!C||C.g)return f.apply(this,arguments);const kl=String(C.key||'').split('_')[0]==='0',o=CS164.box;
   if(kl){CS164.box=Math.min(o,BX207.kl);CS164.cut=1}
   try{return f.apply(this,arguments)}finally{CS164.box=o;CS164.cut=0;

@@ -172,7 +172,7 @@ function vh205Move(e,dt){const S=e.sv,ai=VH205BOSS.ai,m=e.m,v=V().subVectors(pl.
   if(sp>0&&Math.abs(da)<1.5){m.position.x+=ux*sp*dt;m.position.z+=uz*sp*dt}else sp=0;S.walkSp=sp}
 function vh205End(){if(typeof vh180End=='function')return vh180End();return hero.hp<=0||!vh205Here()||(typeof AWD!='undefined'&&AWD.dead)}
 // solo defaults (3760 replaces them for co-op)
-function vh180Auth(){return true}
+function vh180Auth(){}
 function vh180Glide(e,dt){}
 // no recall, no mount once he is awake
 function vh205Held(){return !!(VH205A&&VH205A.f)&&vh205Here()}
