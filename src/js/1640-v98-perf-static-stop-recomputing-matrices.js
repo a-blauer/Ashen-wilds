@@ -39,6 +39,7 @@ function psChunks(){if(typeof CHL=='undefined')return 0;let n=0;
 // container visibility follows the chunk (chunkVis sets c.on/c.non); runs right before each render
 var PSV=new Set();
 function psChunkVis(){
+  try{lt229Sync()}catch(err){console.warn('v229 lazy ground',err);LT229.on=false}   // v229: the shown chunks get their ground mesh here
   for(const c of PSV)if(!(c.on||c.non)){if(c.g)c.g.visible=false;PSV.delete(c)}
   const L=(typeof CVG!='undefined'&&CVG.live)?CVG.live:CHL;
   for(const c of L)if((c.on||c.non)&&c.g&&!PSV.has(c)){c.g.visible=true;PSV.add(c)}}
