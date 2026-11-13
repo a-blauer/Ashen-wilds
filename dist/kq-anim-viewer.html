@@ -79494,7 +79494,7 @@ function sr227DarkTex(){const c=document.createElement('canvas');c.width=256;c.h
         pos.push(ax,Y(ax,az),az,bx,Y(bx,bz),bz,cx,Y(cx,cz),cz,ax,Y(ax,az),az,cx,Y(cx,cz),cz,dx,Y(dx,dz),dz)}
       const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));const m=new THREE.Mesh(ge,new THREE.MeshBasicMaterial({color:0x6a4a2c,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2}));m.userData.lpsSkip=1;m.frustumCulled=false;g.add(m)}
     // the storm wall
-    {const w=new THREE.Group(),tx=sr227DarkTex();SKR227.wallM=[];for(let k=0;k<5;k++){const mt=new THREE.MeshBasicMaterial({map:tx,color:k%2?0xffe8cc:0xd8b890,transparent:true,opacity:.97,depthWrite:false,fog:false,side:THREE.DoubleSide}),m=new THREE.Mesh(new THREE.PlaneGeometry(120,56),mt);m.position.set((k-2)*9,24-k*1.5,-k*5);m.userData.lpsSkip=1;m.renderOrder=3;w.add(m);SKR227.wallM.push(m)}
+    {const w=new THREE.Group(),tx=sr227DarkTex();tx.wrapS=THREE.RepeatWrapping;tx.repeat.set(3,1);   // wide enough that its ends are never in the pictureSKR227.wallM=[];for(let k=0;k<5;k++){const mt=new THREE.MeshBasicMaterial({map:tx,color:k%2?0xffe8cc:0xd8b890,transparent:true,opacity:.97,depthWrite:false,fog:false,side:THREE.DoubleSide}),m=new THREE.Mesh(new THREE.PlaneGeometry(360,60),mt);m.position.set((k-2)*9,26-k*1.5,-k*5);m.userData.lpsSkip=1;m.renderOrder=3;w.add(m);SKR227.wallM.push(m)}
       const fl=kqSpr(0xfff0c8,30);fl.material=fl.material.clone();fl.material.opacity=0;fl.material.fog=false;fl.position.set(0,20,-8);w.add(fl);SKR227.wallF=fl;w.visible=false;g.add(w);SKR227.wall=w}
     // sand standing in the air
     {const N=120,ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(N*6),3));const m=new THREE.LineSegments(ge,new THREE.LineBasicMaterial({color:0xf2dcb4,transparent:true,opacity:.4,depthWrite:false}));m.frustumCulled=false;m.userData.lpsSkip=1;m.visible=false;g.add(m);
@@ -79509,7 +79509,7 @@ function sr227Streaks(V,dt){const T=SKR227.streak;if(!T)return;const on=SR165.on
   T.m.geometry.attributes.position.needsUpdate=true;T.m.material.opacity=Math.min(.8,.16+.2*Math.min(1,V.v/SKR227.v)+.25*SKR227.bk+.3*close)}
 // the wall behind, its lightning
 function sr227Wall(V,dt,now){const W=SKR227.wall;if(!W)return;const on=SR165.on&&!!V&&V.gap!=null;W.visible=on;if(!on)return;const P=sr165Path(),s=V.s-Math.max(9,V.gap*.62+10),[x,z]=P.at(Math.max(0,s),0),yw=s<0?P.yaw(0):sr227Yaw(s);
-  const bx=s<0?x+Math.sin(yw)*s:x,bz=s<0?z+Math.cos(yw)*s:z;W.position.set(bx,GH(x,z)-2,bz);W.rotation.y=yw;SKR227.wallM.forEach((m,k)=>{m.position.x=(k-2)*9+Math.sin(now/900+k*1.7)*4;m.position.y=24-k*1.5+Math.sin(now/700+k)*1.2});
+  const bx=s<0?x+Math.sin(yw)*s:x,bz=s<0?z+Math.cos(yw)*s:z;W.position.set(bx,GH(x,z)-2,bz);W.rotation.y=yw;SKR227.wallM.forEach((m,k)=>{m.position.x=(k-2)*9+Math.sin(now/900+k*1.7)*4;m.position.y=26-k*1.5+Math.sin(now/700+k)*1.2});
   const F=SKR227.wallF,S=SKR227;S.thT=(S.thT==null?3:S.thT)-dt;if(S.thT<=0&&SR165.ph!=='win'){const c=sr227Close(V);S.thT=(2.2+Math.random()*5)*(1.3-c);S.fl=1;F.position.x=(Math.random()-.5)*60;F.position.y=14+Math.random()*16;skr227Snd('thunder',.35+.65*c,.8+Math.random()*.4)}
   S.fl=Math.max(0,(S.fl||0)-dt*5);F.material.opacity=S.fl*.9}
 // ---------------- what you see of it on the screen: the storm's dark, the boost's streaks, the bars ----------------
@@ -79518,13 +79518,14 @@ function sr227Dom(){const S=SKR227;if(S.dom)return S.dom;const st=$('stage')||do
   const f=document.createElement('div');f.id='sk227F';f.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:28;opacity:0;background:rgba(255,236,200,.5)';st.appendChild(f);
   const c=document.createElement('canvas');c.id='sk227L';c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:28;display:none';st.appendChild(c);
   return S.dom={d,f,c}}
-function sr227Lines(dt,k){const cv=sr227Dom().c;if(k<=.03){if(cv.style.display!=='none')cv.style.display='none';return}const w=cv.clientWidth||cv.parentNode.clientWidth,h=cv.clientHeight||cv.parentNode.clientHeight;if(!w||!h)return;
+function sr227Lines(dt,k){if(!SKR227.dom)return;const cv=SKR227.dom.c;if(k<=.03){if(cv.style.display!=='none')cv.style.display='none';return}const w=cv.clientWidth||cv.parentNode.clientWidth,h=cv.clientHeight||cv.parentNode.clientHeight;if(!w||!h)return;
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}cv.style.display='block';const c=cv.getContext('2d'),L=SKR227.lines,N=Math.round(14+34*k),cx=w*.5,cy=h*.46,D=Math.hypot(w,h)*.5;
   while(L.length<N)L.push({a:Math.random()*6.283,r:.4+Math.random()*.7,s:.6+Math.random()*.8,w:.6+Math.random()*1.4});L.length=Math.min(L.length,N);c.clearRect(0,0,w,h);c.lineCap='round';
   for(const q of L){q.r+=dt*q.s*(1.4+2.8*k);if(q.r>1.15){q.a=Math.random()*6.283;q.r=.42+Math.random()*.25;q.s=.6+Math.random()*.8}
     const ca=Math.cos(q.a),sa=Math.sin(q.a),r0=q.r*D,len=D*(.05+.16*k)*q.s,a=Math.min(1,(q.r-.42)*3)*(.08+.3*k);if(a<=.01)continue;
     c.strokeStyle='rgba(255,232,190,'+a.toFixed(3)+')';c.lineWidth=q.w;c.beginPath();c.moveTo(cx+ca*r0,cy+sa*r0);c.lineTo(cx+ca*(r0+len),cy+sa*(r0+len));c.stroke()}}
-function sr227Screen(V,dt,now){const D=sr227Dom(),S=SKR227,on=SR165.on&&!!V&&SR165.ph!=='win';if(!on){D.d.style.opacity=0;D.f.style.opacity=0;sr227Lines(dt,0);return}
+function sr227Screen(V,dt,now){const S=SKR227,on=SR165.on&&!!V&&SR165.ph!=='win';if(!on){const D=S.dom;if(D){D.d.style.opacity=0;D.f.style.opacity=0;D.d.style.display=D.f.style.display='none';sr227Lines(dt,0)}return}
+  const D=sr227Dom();D.d.style.display=D.f.style.display='';
   const c=sr227Close(V),inn=V.gap<=0?1:0;D.d.style.opacity=Math.min(1,c*(.35+.6*c)+inn*(.1+.08*Math.sin(now/90))).toFixed(3);D.f.style.opacity=((S.fl||0)*(.1+.3*c)).toFixed(3);sr227Lines(dt,SR165.ph==='run'?S.bk*.9+(V.air>0?.25:0):0);
   if(SR165.ph==='run'){if(c>.35&&!S.said.near){S.said.near=1;say('🌪️ The storm is on your tail — <b>boost</b> (Shift) to get clear of it!')}
     if(inn&&!(S.inT>0)){S.inT=6;say('🌪️ The storm has you — it is tearing the hull apart! Boost out!')}S.inT=Math.max(0,(S.inT||0)-dt);
@@ -79545,8 +79546,8 @@ function sr227Screen(V,dt,now){const D=sr227Dom(),S=SKR227,on=SR165.on&&!!V&&SR1
       // the muzzle's light on the hull
       if(V.gun==='me'){if(!S.light||S.light.parent!==V.R.J.gun){try{if(S.light&&S.light.parent)S.light.parent.remove(S.light);S.light=new THREE.PointLight(0xffb060,0,16,2);S.light.position.set(0,.3,2.2);V.R.J.gun.add(S.light)}catch(_){}}
         S.lt=Math.max(0,S.lt-dt*14);if(S.light)S.light.intensity=S.lt*2.2}
-      sr227Streaks(V,dt);sr227Wall(V,dt,now);sr227Screen(V,dt,now);if(typeof snd227Loop=='function')snd227Loop(V,dt)}
-    else{sr227Streaks(null,dt);sr227Wall(null,dt,now);sr227Screen(null,dt,now);if(typeof snd227Loop=='function')snd227Loop(null,dt);sr227FovBack()}}catch(e){if(!S.err++)console.warn('v227 run',e)}return r}}
+      S.was=1;sr227Streaks(V,dt);sr227Wall(V,dt,now);sr227Screen(V,dt,now);if(typeof snd227Loop=='function')snd227Loop(V,dt)}
+    else if(S.was||(typeof SND227!='undefined'&&SND227.L)){S.was=0;sr227Streaks(null,dt);sr227Wall(null,dt,now);sr227Screen(null,dt,now);if(typeof snd227Loop=='function')snd227Loop(null,dt);sr227FovBack()}}catch(e){if(!S.err++)console.warn('v227 run',e)}return r}}
 {const f=sr165End;sr165End=function(){const r=f.apply(this,arguments);try{const S=SKR227;sr227FovBack();cam.up.set(0,1,0);if(S.light&&S.light.parent)S.light.parent.remove(S.light);S.light=null;S.cy=null;S.bk=0;S.roll=0;
     sr227Streaks(null,0);sr227Wall(null,0,0);sr227Screen(null,0,0);if(typeof snd227Loop=='function')snd227Loop(null,0)}catch(_){}return r}}
 {const f=sr165Reset;sr165Reset=function(cp){const S=SKR227;S.hv=0;S.combo=0;S.kick=0;S.inT=0;S.thT=1.2;if(S.streak)S.streak.on.fill(0);SR165.obs.forEach(o=>{o.wh=0;o.hT=0});return f.apply(this,arguments)}}

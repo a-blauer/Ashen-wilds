@@ -20,7 +20,8 @@ JS=r"""async()=>{const o={},V3=THREE.Vector3,wait=ms=>new Promise(r=>setTimeout(
   sr165Go([{id:'v0',drv:'chd',gun:'me'}]);await wait(2600);const V=SR165.me,P=sr165Path();o.run=!!(SR165.on&&V);
   if(V){SR165.ph='run';mOn=false;
     // the half circle: a crosshair at the bottom of the screen points behind the turret: the guns stop at the arc
-    SKR226.rx=0;SKR226.ry=-.97;skr218Cam();for(let i=0;i<60;i++)sr165Aim(V,1/30);o.arc=[+Math.abs(V.aY).toFixed(3),+SKR226.arc.toFixed(3)];
+    SKR227.mT=performance.now();SKR226.rx=0;SKR226.ry=-.97;skr218Cam();   // v227: a mouse has moved (no aim assist)
+    for(let i=0;i<60;i++)sr165Aim(V,1/30);o.arc=[+Math.abs(V.aY).toFixed(3),+SKR226.arc.toFixed(3)];
     {const tp=sr165Seat(V,'turret'),a=V.aim;let y=Math.atan2(a.x-tp.x,a.z-tp.z)-V.h;y=Math.atan2(Math.sin(y),Math.cos(y));o.aimArc=+Math.abs(y).toFixed(3)}
     // mouse-look: the pointer locked, moving the mouse moves the crosshair
     SKR226.rx=0;SKR226.ry=0;Object.defineProperty(document,'pointerLockElement',{configurable:true,get:()=>gl});

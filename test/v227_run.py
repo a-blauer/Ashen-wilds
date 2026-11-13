@@ -59,7 +59,7 @@ JS=r"""async()=>{const o={},errs=[];const oe=console.error,ow=console.warn;conso
     o.loop=await meas(oc=>{const L=snd227Build(oc);L.g.gain.value=1;L.eg.gain.value=.2;L.wg.gain.value=.2;L.sg.gain.value=.5})}
   {const a=AUD;o.loopLive=null;if(a&&a.state==='running'){snd227Loop(V,1/30);o.loopLive=!!SND227.L;snd227Stop();o.loopStop=!SND227.L}}
   // 10 the end of the run puts everything back
-  sr165End();o.fovBack=Math.abs(cam.fov-fov0)<.01;o.overlay=$('sk227S')?+$('sk227S').style.opacity:0;o.err7=SKR227.err;o.errs=errs;return o}"""
+  sr165End();o.fovBack=Math.abs(cam.fov-fov0)<.01;homeTick(1/30,performance.now());o.overlay=$('sk227S')&&$('sk227S').style.display!=='none'?1:0;o.err7=SKR227.err;o.errs=errs;return o}"""
 def s(pg):
     pg.set_default_timeout(1200000)
     pg.click('[data-dev=desktop]',timeout=240000);pg.click('[data-c="warrior"]',timeout=240000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(2500)
@@ -87,7 +87,7 @@ def s(pg):
     ok(r['fovC']>6 and r['fovB']>r['fovC']+8 and 6<r['behind']<16 and r['fovBack'],'the camera rides behind (%s), widens with speed (+%s) and boost (+%s) and is put back'%(r['behind'],r['fovC'],r['fovB']))
     ok(r['hud']['storm'] and r['hud']['heavy'],'the bar shows the storm and the heavy shell %s'%r['hud'])
     ok(r['sndErr']==0 and all(v>.02 for v in r['snd'].values()) and len(r['snd'])>=14,'every sound of the Run renders %s'%r['snd'])
-    g,o=r['gun'],r['old'];ok(g['rms']>o['rms']*1.5 and g['hi']>o['hi']*3 and g['late']<g['rms']*.1,'the gun is louder and brighter than the old one and short (new %s, old %s)'%(g,o))
+    g,o=r['gun'],r['old'];ok(g['pk']>o['pk']*2 and g['rms']>o['rms']*.7 and g['hi']>o['hi']*3 and g['late']<g['rms']*.1,'the gun cracks harder (peak) and brighter than the old one and is short (new %s, old %s)'%(g,o))
     ok(r['loop']['rms']>.01,'the engine loop sounds %s'%r['loop'])
     ok(r['loopLive'] in (None,True) and (r['loopLive'] is None or r['loopStop']),'the engine loop starts and stops (%s)'%r['loopLive'])
     ok(r['overlay']==0,'the storm\'s dark is gone after the run')
