@@ -79189,14 +79189,15 @@ sr165Drive=function(V,dt){const P=sr165Path(),C=SKR227,me=skr227Mine(V);if(V.wre
     if(into>0){V.ov=-into*.3*sg;V.v=Math.max(9,V.v-dt*9);sr165Hurt(V,C.dmg.edge*dt,'scrape');
       if(Math.random()<dt*40){const [ex,ez]=P.at(V.s+(Math.random()-.3)*3,sg*(lim+1.6));burst(new THREE.Vector3(ex,V.y+.6,ez),Math.random()<.4?0xffc070:0xd8b080,2,2.6,1.6,.4)}}}
   V.edT=Math.max(0,(V.edT||0)-dt);
-  V.s=Math.min(P.S,V.s+V.v*dt);const [x,z]=P.at(V.s,V.o);V.x=x;V.z=z;V.h=sr227Yaw(V.s)-Math.atan2(V.ov,Math.max(9,V.v))*.8;
+  const sP=V.s;V.s=Math.min(P.S,V.s+V.v*dt);const [x,z]=P.at(V.s,V.o);V.x=x;V.z=z;V.h=sr227Yaw(V.s)-Math.atan2(V.ov,Math.max(9,V.v))*.8;
   // off the crests
   const gy=GH(x,z);if(V.yy==null){V.yy=gy;V.vy=0}
   if(air){V.vy-=C.g*dt;V.yy+=V.vy*dt;V.air+=dt;
     if(V.yy<=gy){const hit=-V.vy;V.yy=gy;V.air=0;V.vy=0;V.bump=.5;burst(new THREE.Vector3(x,gy+.3,z),0xd8b080,Math.min(60,20+hit*3|0),4,2.4,.7);
       if(me){shake(Math.min(.35,.08+hit*.02));skr227Snd('land',Math.min(1.2,.5+hit*.06));SKR227.camDip=Math.min(1,hit*.08)}}}
-  else{const [bx,bz]=P.at(V.s-1.5,V.o),[ax,az]=P.at(V.s+1,V.o),up=(gy-GH(bx,bz))/1.5*V.v,drop=gy-GH(ax,az);
-    if(up>2.6&&drop>.3&&V.trap<=0){V.air=.001;V.vy=up;V.yy=gy;if(me){skr227Snd('jump',.8,.9+V.v*.012);SKR227.jumps=(SKR227.jumps||0)+1}}else V.yy=gy}
+  else{// crossing a crest's lip (whatever the frame rate): up-speed from the slope it left
+    let R=null;for(const r of sr165Ramps())if(r.s>sP&&r.s<=V.s){R=r;break}
+    if(R&&V.trap<=0&&V.v>8){const [qx,qz]=P.at(R.s,V.o);V.air=.001;V.vy=R.H*1.3/R.L*V.v;V.yy=Math.max(gy,GH(qx,qz))+V.vy*Math.max(0,V.s-R.s)/V.v;if(me){skr227Snd('jump',.8,.9+V.v*.012);SKR227.jumps=(SKR227.jumps||0)+1}}else V.yy=gy}
   const high=V.air>0&&V.yy-gy>1.1;
   // the hazards
   for(const o of SR165.obs){if(o.gone||Math.abs(o.s-V.s)>16)continue;const d=Math.hypot(o.x-x,o.z-z);
