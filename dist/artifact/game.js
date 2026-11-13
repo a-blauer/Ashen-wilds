@@ -78970,7 +78970,7 @@ skr218Cam=function(){const V=SR165.me,S=SKR227,C=S.cam;if(!V)return;const P=sr16
   let orb=0,far=0;if(SR165.ph==='intro'&&SR165.t0>2){const k=Math.max(0,Math.min(1,SR165.t/SR165.t0)),e=k*k*(3-2*k);orb=(1-e)*2.75;far=(1-e)*5}
   else if(SR165.ph==='wreck'||SR165.ph==='wait'){orb=Math.min(1.2,SR165.t*.35);far=3}
   const yaw=S.cy+orb,fx=Math.sin(yaw),fz=Math.cos(yaw),rx=-Math.cos(S.cy),rz=Math.sin(S.cy),lag=(S.co-(V.o||0))*.75,dist=C.d+S.bk*1.5+far;
-  const x=V.x-fx*dist+rx*lag,z=V.z-fz*dist+rz*lag;const low=SR165.ph==='intro'?orb/2.75:0;let y=S.camY+C.h-S.camDip*.5+far*.25-low*3.8;   // the opening looks up past the machine at the wally=Math.max(y,GH(x,z)+C.floor,GH((x+V.x)/2,(z+V.z)/2)+C.floor+.5);
+  const x=V.x-fx*dist+rx*lag,z=V.z-fz*dist+rz*lag;const low=SR165.ph==='intro'?orb/2.75:0;let y=S.camY+C.h-S.camDip*.5+far*.25-low*3.8;y=Math.max(y,GH(x,z)+C.floor,GH((x+V.x)/2,(z+V.z)/2)+C.floor+.5);
   const p=new THREE.Vector3(x,y,z),sp=Math.min(1.5,Math.abs(V.v)/S.v),close=sr227Close(V),buzz=(orb?0:.012*sp+.03*S.bk+.05*close*close);
   if(SKR218.shk>0){p.x+=(Math.random()-.5)*SKR218.shk;p.y+=(Math.random()-.5)*SKR218.shk;SKR218.shk=Math.max(0,SKR218.shk-.03)}
   p.x+=(Math.random()-.5)*buzz;p.y+=(Math.random()-.5)*buzz+S.kick*.02;
@@ -78998,8 +78998,8 @@ function sr227DarkTex(){const c=document.createElement('canvas');c.width=256;c.h
     {const pos=[],N=Math.floor(P.S/2.6);for(let i=0;i<N;i++){const s=8+i*2.6+rn()*2,o=(rn()*2-1)*(hw-1.2),w=1.2+rn()*2.2,[ax,az]=P.at(s,o-w/2),[bx,bz]=P.at(s,o+w/2),[cx,cz]=P.at(s+.3,o+w/2),[dx,dz]=P.at(s+.3,o-w/2),Y=(x,z)=>GH(x,z)+.05;
         pos.push(ax,Y(ax,az),az,bx,Y(bx,bz),bz,cx,Y(cx,cz),cz,ax,Y(ax,az),az,cx,Y(cx,cz),cz,dx,Y(dx,dz),dz)}
       const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));const m=new THREE.Mesh(ge,new THREE.MeshBasicMaterial({color:0x6a4a2c,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2}));m.userData.lpsSkip=1;m.frustumCulled=false;g.add(m)}
-    // the storm wall
-    {const w=new THREE.Group(),tx=sr227DarkTex();tx.wrapS=THREE.RepeatWrapping;tx.repeat.set(3,1);   // wide enough that its ends are never in the pictureSKR227.wallM=[];for(let k=0;k<5;k++){const mt=new THREE.MeshBasicMaterial({map:tx,color:k%2?0xffe8cc:0xd8b890,transparent:true,opacity:.97,depthWrite:false,fog:false,side:THREE.DoubleSide}),m=new THREE.Mesh(new THREE.PlaneGeometry(360,60),mt);m.position.set((k-2)*9,26-k*1.5,-k*5);m.userData.lpsSkip=1;m.renderOrder=3;w.add(m);SKR227.wallM.push(m)}
+    // the storm wall (wide enough that its ends are never in the picture)
+    {const w=new THREE.Group(),tx=sr227DarkTex();tx.wrapS=THREE.RepeatWrapping;tx.repeat.set(3,1);SKR227.wallM=[];for(let k=0;k<5;k++){const mt=new THREE.MeshBasicMaterial({map:tx,color:k%2?0xffe8cc:0xd8b890,transparent:true,opacity:.97,depthWrite:false,fog:false,side:THREE.DoubleSide}),m=new THREE.Mesh(new THREE.PlaneGeometry(360,60),mt);m.position.set((k-2)*9,26-k*1.5,-k*5);m.userData.lpsSkip=1;m.renderOrder=3;w.add(m);SKR227.wallM.push(m)}
       const fl=kqSpr(0xfff0c8,30);fl.material=fl.material.clone();fl.material.opacity=0;fl.material.fog=false;fl.position.set(0,20,-8);w.add(fl);SKR227.wallF=fl;w.visible=false;g.add(w);SKR227.wall=w}
     // sand standing in the air
     {const N=120,ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(N*6),3));const m=new THREE.LineSegments(ge,new THREE.LineBasicMaterial({color:0xf2dcb4,transparent:true,opacity:.4,depthWrite:false}));m.frustumCulled=false;m.userData.lpsSkip=1;m.visible=false;g.add(m);
