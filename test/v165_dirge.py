@@ -37,7 +37,7 @@ JS=r"""async()=>{const out={},wait=ms=>new Promise(r=>setTimeout(r,ms)),errs=[];
   // pendulums: stand in a blade's path long enough to be cut
   tough();goS(80,SP.pend[1].v);let hp=hero.hp;hero.iv=0;for(let i=0;i<120&&hero.hp>=hp;i++){goS(80,SP.pend[1].v);hero.iv=0;tick(.05)}out.pend=hero.hp<hp;
   // spikes: a dropping band and the next rising one never move at the same moment (v226: DG165SP.spkGap apart)
-  {const K=S.spk,prev=Array.from(K.up),up=[],dn=[];for(let t=100;t<108;t+=.01){dg165SSpikes(S,.01,t,-99,-99,false);for(let i=0;i<K.up.length;i++){if(K.up[i]&&!prev[i])up.push(t);if(!K.up[i]&&prev[i])dn.push(t);prev[i]=K.up[i]}}
+  {const K=S.spk;dg165SSpikes(S,.01,99.99,-99,-99,false);const prev=Array.from(K.up),up=[],dn=[];out.spkCfg=[DG165SP.spkStep,DG165SP.spkGap,DG165SP.spkWarn];for(let t=100;t<108;t+=.01){dg165SSpikes(S,.01,t,-99,-99,false);for(let i=0;i<K.up.length;i++){if(K.up[i]&&!prev[i])up.push(t);if(!K.up[i]&&prev[i])dn.push(t);prev[i]=K.up[i]}}
     let md=99;up.forEach(a=>dn.forEach(b=>md=Math.min(md,Math.abs(a-b))));out.spkSep=+md.toFixed(2);out.spkN=[up.length,dn.length]}
   // spikes
   tough();goS(81,95);hp=hero.hp;for(let i=0;i<120&&hero.hp>=hp;i++){hero.iv=0;goS(81,95);tick(.05)}out.spike=hero.hp<hp;
@@ -106,7 +106,7 @@ def s(pg):
     e(r['gst']==2 and 'Sanctum' in r['lk'],'I: the Keeper\'s grave opens on the stair (%s %s)'%(r['gst'],r['lk']))
     e(r['inS'] and r['sst']==1,'Sanctum: the stair leads into it')
     e(r['walk'],'Sanctum: the way from the arrival to the flooded stair is walkable end to end')
-    e(r.get('spkSep',0)>=.5 and min(r.get('spkN',[0,0]))>10,'Sanctum: spikes drop before the next band rises (closest rise/drop %s s apart, %s)'%(r.get('spkSep'),r.get('spkN')))
+    e(r.get('spkSep',0)>=.5 and min(r.get('spkN',[0,0]))>10,'Sanctum: spikes drop before the next band rises (closest rise/drop %s s apart, %s, %s)'%(r.get('spkSep'),r.get('spkN'),r.get('spkCfg')))
     e(r.get('gatePast') and not r.get('gateHud'),'Sanctum: past the portcullis the gate countdown is gone (%s %s)'%(r.get('gatePast'),r.get('gateHud')))
     e(r.get('knights')==8,'Sanctum: eight knights (%s)'%r.get('knights'))
     e(r['pend'] and r['spike'] and r['fire'],'Sanctum: blades, spikes and fire hurt (%s %s %s)'%(r['pend'],r['spike'],r['fire']))

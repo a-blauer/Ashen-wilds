@@ -159,5 +159,5 @@ v220|393[0-9]|shoulder|wardrobe|outfit|hatchery-model|2800|2820|2830|3010|1030-:
 3620|1830|v224: v224_portal_view.py
 v225|owner-fixes|hero-look: v225_checks.py v225_coop.py v213_guard.py v213_coop.py v221_immersion.py v200_stations.py v206_owner.py v218_games.py v196_meadow.py v138_abil_balance.py v117_abilities.py v114_race.py v117_creator.py v140_creator.py v188_coop_look.py v164_skins.py v136_gear.py v178_gear_audit.py
 # v226 owner's list: the Sandstorm Run as a turret fight (3980), sounds (3982), raised floors (3983), the Sanctum (3310, 3314, 3318, 3920)
-3980|3982|3983|v226|3301|3302|3916|3291|3790|0300|2240|0600|3317|0970|1180: v226_owner.py v165_run.py v219_owner.py v219_coop.py v165_coop.py v208_essence.py
+3980|3982|3983|v226|3301|3302|3916|3291|3790|0300|2240|0600|3317|0970|1180: v226_owner.py v226_coop.py v165_run.py v219_owner.py v219_coop.py v165_coop.py v208_essence.py
 3310|3314|3318|3920|sanctum: v165_dirge.py v165_dirge_coop.py v226_owner.py v219_owner.py

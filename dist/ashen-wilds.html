@@ -78893,8 +78893,8 @@ skr218Cam=function(){const V=SR165.me;if(!V)return;const C=V.gun==='me'&&SKR226.
 // ---------------- the creatures: kinds, sizes, how many shells ----------------
 function skr226Kind(e){if(!e||!e.c)return null;if(e.sr165)return e.sr165;if(e.mir&&SR165.on){if(e.c.en==='scarab')return e.c.al?'sb':'sc';if(e.c.en==='scorp')return e.c.al?'gs':'sp'}return null}
 function skr226R(k){return k==='gs'?2.6:k==='sb'?1.6:k==='sp'?1.5:.9}
-// every screen: the alpha scarab is a Shellback (1.4 × the alpha's size), the alpha scorpion a Brood Scorpion (1.75 ×)
-function skr226Sizes(){for(const e of enemies){if(e.dead||e.sz226||!e.c||!e.c.al)continue;const k=skr226Kind(e);if(k==='sb'){e.sz226=1;e.m.bs*=1.4}else if(k==='gs'){e.sz226=1;e.m.bs*=1.75}}}
+// every screen: the alpha scarab is a Shellback (1.4 × the alpha's size), the alpha scorpion a Brood Scorpion (2.4 ×)
+function skr226Sizes(){for(const e of enemies){if(e.dead||e.sz226||!e.c||!e.c.al)continue;const k=skr226Kind(e);if(k==='sb'){e.sz226=1;e.m.bs*=1.4}else if(k==='gs'){e.sz226=1;e.m.bs*=2.4}}}
 sr165FoeList=function(){const L=[];enemies.forEach(e=>{if(e.dead)return;const k=skr226Kind(e);if(!k)return;
     L.push({p:gY(e.m.position,k==='gs'?1.1:.6),r:skr226R(k),e,hit:q=>{try{const H=SKR226.on?SKR226.H[k]:(k==='sp'||k==='gs'?3.3:1.6);e.sh226=(e.sh226||0)+q;SKR226.hm=performance.now();
       if(e.sh226>=H-1e-6)hurt(e,M(e.c)*3+50,{col:0xffc060},true);else hurt(e,Math.max(1,M(e.c)*q/H*.98),{col:0xffc060},Math.random()<.12);

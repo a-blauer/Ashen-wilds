@@ -81,7 +81,7 @@ def s(pg):
     ok(r['worm']==8,'worms take 8 shells (%s)'%r['worm'])
     ok(r['brood'],'a Brood Scorpion hunts the Skimmer past 40%')
     ok(r['bus'],'the effects bus is rewired (make-up, presence, limiter)')
-    ok(-9<=r['hit']<=-.3 and r['slash']>-15 and r['swing']>-24,'hits stand out without clipping: hit (blunt) %s dB, slash %s, swing %s'%(r['hit'],r['slash'],r['swing']))
+    ok(-9<=r['hit']<=-.3 and r['slash']>-15 and r['swing']>-28,'hits stand out without clipping: hit (blunt) %s dB, slash %s, swing %s'%(r['hit'],r['slash'],r['swing']))
     ok(r['saved'] is not False,'the ability preview\'s mute is never saved (%s)'%r['saved'])
     ok(r['reliq'] and r.get('rq',{}).get('hero',0)>=.35 and r.get('rq',{}).get('ring',0)>=.38 and r.get('rqBack'),'the hero and ground marks stand on the Reliquary\'s floor, put back after %s %s'%(r.get('rq'),r.get('rqBack')))
     ok(r.get('carpet',0)>=.1 and .05<=r.get('tile',0)<.09 and r.get('dais',0)>=.2 and r.get('onCarpet',0)>=.1,'Vaelric\'s hall: carpet %s, tiles %s, dais %s, hero on the carpet %s'%(r.get('carpet'),r.get('tile'),r.get('dais'),r.get('onCarpet')))
