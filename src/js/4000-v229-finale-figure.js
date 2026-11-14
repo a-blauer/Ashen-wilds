@@ -325,7 +325,7 @@ function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045
       const key=Math.round(bP.getX(i)*500)+'_'+Math.round(bP.getY(i)*500)+'_'+Math.round(bP.getZ(i)*500);if(seen.has(key))continue;seen.add(key);trunk.push(i)}}
   const near=p=>{let b=-1,bd=1e9;for(let q=0;q<trunk.length;q++){const i=trunk[q],dx=bP.getX(i)-p[0],dy=bP.getY(i)-p[1],dz=bP.getZ(i)-p[2],d=dx*dx+dy*dy*2.5+dz*dz;if(d<bd){bd=d;b=i}}const o=[];for(let k=0;k<4;k++)if(bW[b*4+k]>0)o.push([bI[b*4+k],bW[b*4+k]]);return o};
   const wSkirt=p=>{const lg=ss(J.lh0[1]+.03,J.lh0[1]-.2,p[1])*.74,r=ss(-.07,.07,p[0]),sh=ss(J.rh1[1]+.08,J.rh1[1]-.08,p[1]);return [[ix.pelvis,1-lg],[ix.rh0,lg*r*(1-sh)],[ix.rh1,lg*r*sh],[ix.lh0,lg*(1-r)*(1-sh)],[ix.lh1,lg*(1-r)*sh]]},
-    wChest=()=>[[ix.chest,1]],wMantle=p=>{const a=ss(.13,.22,Math.abs(p[0]))*.5*ss(T[7][0],T[6][0],p[1]);return [[ix.chest,1-a],[ix[p[0]<0?'aL0':'aR0'],a]]},
+    wCollar=p=>{const k=ss(T[7][0]+.005,T[7][0]+.05,p[1])*.8;return [[ix.chest,1-k],[ix.neck,k]]},wMantle=p=>{const a=ss(.13,.22,Math.abs(p[0]))*.5*ss(T[7][0],T[6][0],p[1]);return [[ix.chest,1-a],[ix[p[0]<0?'aL0':'aR0'],a]]},
     wArm=A=>{const a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),l1=d1[0]*d1[0]+d1[1]*d1[1]+d1[2]*d1[2],l2=d2[0]*d2[0]+d2[1]*d2[1]+d2[2]*d2[2];
       return p=>{const s0=((p[0]-a0[0])*d1[0]+(p[1]-a0[1])*d1[1]+(p[2]-a0[2])*d1[2])/l1,s1=((p[0]-a1[0])*d2[0]+(p[1]-a1[1])*d2[1]+(p[2]-a1[2])*d2[2])/l2,fe=ss(-.1,.1,s1),ch=ss(.14,-.1,s0)*.45;return [[ix.chest,ch],[ix[A+'0'],(1-ch)*(1-fe)],[ix[A+'1'],(1-ch)*fe]]}};
   // rings [y, rx, f, b, z] in model space; w(p) → [[bone index, weight] …] for a corner
@@ -343,8 +343,11 @@ function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045
   // body: waist to the shoulder line, a V at the throat
   piece(near,[[T[7][0]+.012,T[7][1]+.016,T[7][2]+.02,T[7][3]+.022,T[7][4]],tr(6,.03),tr(5,.03),tr(4,.03),[T[3][0]+.095,(T[3][1]+T[4][1])*.5+.03,(T[3][2]+T[4][2])*.5+.03,(T[3][3]+T[4][3])*.5+.03],tr(3,.03),[wy-.02,w2[1]+.004,w2[2]+.004,w2[3]+.004]],14,{seed:3,v0:0,v1:.5,skip:(i,j)=>i==0&&(j==0||j==13),lineJ:(j,i)=>(j==0||j==13)&&i>0});
   // a standing collar, a mantle over the shoulders
-  piece(wChest,[[T[7][0]+.105,.082,.07,.085,.0],[T[7][0]+.01,.078,.062,.074,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j==0||j==11});
-  piece(wMantle,[[T[7][0]+.022,.095,.07,.08],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
+  // (owner, Nov 13: "His collar area are still clipping through his neck") the collar was a tight tall tube fixed to the chest, the
+  // same size as the neck: it cut into the neck at rest and the head sank into it when he looked up. Now it is lower (it stops under
+  // the skull and the hair), stands clear of the neck all round, is open wider at the throat, and its top leans with the neck.
+  piece(wCollar,[[T[7][0]+.056,.104,.07,.09,.0],[T[7][0]+.028,.1,.07,.088,.002],[T[7][0]-.002,.096,.07,.086,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j<=1||j>=10});
+  piece(wMantle,[[T[7][0]+.012,.1,.074,.09],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
   // sleeves: one tube from the shoulder to a wide bell at the wrist, bending at the elbow with the arm
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),at=(a,d,t)=>add3(a,mul3(d,t));
     piece(wArm(A),null,10,{seed:6+s,v0:.1,v1:.97,raw:[[-.1,.076,.076],[.3,.07,.07],[.7,.064,.066],[.92,.062,.066]].map(q=>fn229RingD(10,at(a0,d1,q[0]),d1,[0,0,1],q[1],q[2])).concat([[.08,.062,.066],[.4,.068,.074],[.75,.084,.094],[1.06,.1,.118]].map(q=>fn229RingD(10,at(a1,d2,q[0]),d2,[0,0,1],q[1],q[2])))})});
