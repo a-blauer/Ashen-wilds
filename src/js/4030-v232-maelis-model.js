@@ -42,7 +42,7 @@ function ml232Build(R,e){
     Mm('head',G('ck',()=>svHorn(.05,.3,0,0,4,2)),pale,s*.2,-.02,.1,.2,Math.PI+s*.5,0)});
   // upper beak: a deep gold hook; the cere; lower beak on the jaw
   Mm('head',G('bk',()=>svTube([[0,.04,.36],[0,.05,.62],[0,.0,.84],[0,-.12,.98],[0,-.26,.98]],[[.15,.13],[.13,.12],[.1,.1],[.06,.06],[.012,.012]],7)),gold);
-  Mm('head',G('cr',()=>svLump(.11,1,.1,92)),gold2,0,.1,.4,0,0,0,1.2,.6,1);Mm('jaw',G('jw',()=>svLoftZ([[-.02,.13,.05],[.3,.11,.05],[.58,.06,.03],[.68,.02,.015]],6)),gold2);
+  Mm('head',G('cr',()=>svLump(.11,1,.1,92)),gold2,0,.1,.4,0,0,0,1.2,.6,1);Mm('jaw',G('jw',()=>svLoftZ([[-.14,.13,.05],[.3,.11,.05],[.58,.06,.03],[.68,.02,.015]],6)),gold2);
   Mm('jaw',horn('tg',.03,.3,0,.02,4,2),dark,0,.04,.16);
   // the crest: seven long plumes swept back, lightning along their shafts
   [-3,-2,-1,0,1,2,3].forEach((u,i)=>{const l=1.5-Math.abs(u)*.2;Mm('crest',quill,i%2?fB:fC,u*.045,-Math.abs(u)*.02,0,-.5-Math.abs(u)*.06,u*.16,0,.7,1,l);

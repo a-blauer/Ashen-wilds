@@ -207,3 +207,10 @@ v227_coop.py
 v229_finale.py
 v229_coop.py
 v229_lazy_ground.py
+v232_endings.py
+v232_coop.py
+ONLY=oak v232_wardens.py
+ONLY=roc v232_wardens.py
+ONLY=kiln v232_wardens.py
+ONLY=dawn v232_wardens.py
+ONLY=voice v232_wardens.py

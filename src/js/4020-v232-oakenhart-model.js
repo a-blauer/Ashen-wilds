@@ -22,7 +22,7 @@ function ok232Build(R,e){
   // ---------------- the skeleton ----------------
   J('root',null,0,0,0);J('hips','root',0,2.28,-1.0);J('spine','hips',0,.06,.8);J('chest','spine',0,.08,.85);J('neck','chest',0,.42,.5);J('head','neck',0,1.02,.72,.42);J('jaw','head',0,-.13,.06);
   [-1,1].forEach(s=>{const L=s>0?'L':'R';
-    J('ant'+L,'head',s*.2,.3,-.16);J('ear'+L,'head',s*.26,.2,-.2);
+    J('ant'+L,'head',s*.15,.2,-.1);J('ear'+L,'head',s*.26,.2,-.2);
     J('sh'+L,'chest',s*.56,-.3,.12);J('el'+L,'sh'+L,0,-1.02,-.06);J('wr'+L,'el'+L,0,-.9,.06);
     J('th'+L,'hips',s*.52,-.14,-.12);J('kn'+L,'th'+L,0,-.94,.36);J('hk'+L,'kn'+L,0,-.78,-.46);J('ft'+L,'hk'+L,0,-.42,.1)});
   J('tail0','hips',0,.22,-.62);J('tail1','tail0',0,-.1,-.34);
