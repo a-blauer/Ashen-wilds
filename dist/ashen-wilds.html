@@ -80706,6 +80706,12 @@ function yt232Crumble(D,on){const S=D.S,A=D.A,L=D.L;S.rim=on?1:0;if(!A)return;if
     try{sk146Debris(c,D.LS.M.stone,24,.5,9,3,2)}catch(_){}svSnd('crack',1.4,.4);svSnd('heavy',1.4,.4);S.motes=S.motes.filter(m=>{if(Math.hypot(m.x-L.cx,m.z-L.cz)>12.4){yt232MoteFree(m);return false}return true});
     // anyone standing on the rim is thrown inward
     const P=pl.position,d=Math.hypot(P.x-L.cx,P.z-L.cz);if(d>13.4){P.x=L.cx+(P.x-L.cx)/d*13.2;P.z=L.cz+(P.z-L.cz)/d*13.2}}else{A.r=L.r;A.hr=L.hr}}
+// the Hollow's song (3890's place songs: 'sp_<key>'): a slow heavy march in C minor, low brass over taiko, a choir above
+try{MTH.sp_apex={bpm:104,root:48,mode:'aeo',prog:[0,0,5,5,3,3,6,4],pad:{v:.02,cut:900,form:1},fight:1,boom:.9,drone:.05,
+  arp:{e:1,p:[0,2,1,2,0,2,1,3,0,2,1,2,0,3,2,1],oct:0,v:.026,w:'sawtooth'},bass:{v:.11,c:'x...x.x.x...x.xx'},stab:{c:'x.......x.....x.',v:.02},
+  drums:{c:{taiko:'X...g.x.X.g.x.gg',snare:'........X.......',hat:'x.g.x.g.x.g.xgxg'}},toll:{n:8,v:.028,oct:1},
+  tune:{k:'brass',kb:'choir',oct:0,v:.045,vb:.04,form:'AAB',A:'0,8 2,4 3,4|4,12 3,4|5,8 4,4 2,4|3,12 _,4|0,8 2,4 3,4|4,8 7,8|5,4 4,4 3,4 2,4|0,16',
+    B:'7,8 5,4 4,4|5,12 3,4|4,8 2,4 0,4|2,12 _,4|7,8 8,4 7,4|5,8 4,8|3,4 2,4 0,4 -1,4|0,16'}};MU215.names.sp_apex='The Hollow Beneath'}catch(e){console.warn('v232 song',e)}
 // ================= v232 the ending cinematics' engine (names ec232*) =================
 // A small player for the two endings (4070 "the land breathes", 4071 "the crown"), built like the zone cinematics (3860): the
 // main loop waits (IC151.on), every frame is a pure function of t (ec232Seek), so tests draw it frame by frame (ec232Cap).

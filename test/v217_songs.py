@@ -11,7 +11,7 @@ def game(pg):
     pg.click('[data-dev=desktop]',timeout=60000);pg.click('[data-c="warrior"]',timeout=60000);pg.click('#ccNext');pg.wait_for_timeout(300);pg.click('#ccNext');pg.wait_for_timeout(3000)
     keys=ev("()=>Object.keys(MU215.names)")
     print('songs',len(keys))
-    if len(keys)!=35:F('expected 35 new songs, got %d'%len(keys))
+    if len(keys)!=36:F('expected 36 new songs (35 of v217 + v232\'s Hollow Beneath), got %d'%len(keys))
     r=ev("""()=>Object.keys(MU215.names).map(k=>{const th=MTH[k],T=th.tune,e=[];if(!MODES[th.mode])e.push('mode');if(!T)e.push('no tune');else{mu215Tune(th);
         for(const c of T.form){if(c!='-'&&!T.on[c])e.push('part '+c)}if(!MU215.K[T.k])e.push('instrument '+T.k);if(T.kb&&!MU215.K[T.kb])e.push('instrument '+T.kb)}
         for(const s in th.drums||{})for(const n in th.drums[s]){if(!MUDR[n])e.push('drum '+n);if(th.drums[s][n].length!=16)e.push('drum pattern '+n)}
