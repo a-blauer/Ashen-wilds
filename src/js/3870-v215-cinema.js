@@ -43,7 +43,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #cv215 .it .sn{font-size:.68rem;opacity:.6;margin-top:2px}#cv215 .mut{font-size:.74rem}#cv215 .bad{color:#e07a6a}
 </style>`);
 document.body.insertAdjacentHTML('beforeend',`<div id="cv215" class="hide"><div class="win nar">
-  <div class="wh"><h2>Cinematics</h2><span class="wsub">Watch a zone’s arrival again</span><button class="x" id="cv215Close" title="Close">✕</button></div>
+  <div class="wh"><h2>Cinematics</h2><span class="wsub">Watch a cinematic again</span><button class="x" id="cv215Close" title="Close">✕</button></div>
   <div class="wb" style="padding:14px 16px;display:grid;gap:10px"><div class="li" id="cv215L"></div><div class="mut" id="cv215M"></div></div></div></div>`);
 $('cv215Close').onclick=()=>$('cv215').classList.add('hide');
 function cv215Seen(z){try{if(z===0)return !!KC208.seen;if(z===1)return HC208.seen===1;return zc214Seen(z)}catch(_){return false}}
@@ -53,6 +53,7 @@ function cv215Open(){const L=$('cv215L'),M=$('cv215M');M.textContent='';M.classN
     d.querySelector('button').onclick=()=>{const why=cv215Why();if(why){M.textContent=why;M.className='mut bad';return}
       $('cv215').classList.add('hide');try{$('setw').classList.add('hide')}catch(_){}setTimeout(()=>cv215Play(c.z),60)};L.appendChild(d)});
   $('cv215').classList.remove('hide')}
-{const d=$('delSave');if(d){const g=[...document.querySelectorAll('#setw .setg')].find(e=>e.textContent.trim()=='Saved game');const html='<div class="setg">Cinematics</div><button id="cv215B" style="justify-self:start">🎬 Watch cinematics</button>';
-  if(g&&g.classList&&g.classList.contains('setg'))g.insertAdjacentHTML('beforebegin',html);else d.insertAdjacentHTML('beforebegin',html);
-  $('cv215B').onclick=cv215Open}}
+// v230 (owner, Nov 13 2026: "Move the cinematics previews in options to the cheat menu"): the button is a row in Settings → Cheats
+// (inside #cheatBox, so it sits behind the cheat password like every other cheat). Watching still changes nothing in the save.
+{const box=$('cheatBox');if(box){box.insertAdjacentHTML('beforeend','<div class="chr"><span>🎬 Cinematics<small>Watch any cinematic again (nothing is saved)</small></span><span class="chb"><button id="cv215B">Watch…</button></span></div>');
+  $('cv215B').onclick=()=>{try{if(typeof CHU!='undefined'&&!CHU.on)return CHU.deny()}catch(_){}cv215Open()}}}

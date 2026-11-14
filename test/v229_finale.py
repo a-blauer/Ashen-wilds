@@ -49,7 +49,7 @@ def s(pg):
     chk(not r['den'],'the den was left in the scene')
     chk(r['fov']>50 and abs(r['near']-.1)<.05 and r['up']==[0,1,0],'the camera was not put back %s %s'%(r['fov'],r['near']))
     chk(not r['again'],'the pour is offered a second time')
-    chk(r['listed'] is True,'not listed under Settings → Cinematics')
+    chk(r['listed'] is True,'not listed under Settings → Cheats → Cinematics')
     chk(not r['tickErr'],'the man\'s idle tick throws: '+str(r['tickErr']))
     chk(r.get('hero',9)>1.5,'the hero stands inside the man')
     # every frame: errors and the camera's clearance

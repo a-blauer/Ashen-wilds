@@ -354,9 +354,9 @@ function fn229NpcTick(dt){if(FN229.run)return;if((FN229.pt=(FN229.pt||0)-dt)<=0)
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{FN229.seen=s&&s.fn229?1:0}catch(_){}return r}}
 {const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{fn229Npc()}catch(e){console.warn('v229 load',e)}return r}}
 {const f=ccBegin;ccBegin=function(){FN229.seen=0;const r=f.apply(this,arguments);try{fn229Npc()}catch(_){}return r}}
-// Settings → Cinematics: listed once the last essence is poured
+// Settings → Cheats → Cinematics: always listed (v230: it is a cheat preview now, so it no longer waits for the pour)
 (function(){if(typeof CV215=='undefined')return;const E={z:'fn229',n:'The Fountain',s:'The last essence · the Voice beneath Duskhold'};
-  {const f=cv215Open;cv215Open=function(){const i=CV215.L.indexOf(E),want=fn229NpcOwn();if(want&&i<0)CV215.L.push(E);if(!want&&i>=0)CV215.L.splice(i,1);return f.apply(this,arguments)}}
+  CV215.L.push(E);
   {const f=cv215Seen;cv215Seen=function(z){if(z==='fn229')return !!FN229.seen;return f.apply(this,arguments)}}
   {const f=cv215Play;cv215Play=function(z){if(z!=='fn229')return f.apply(this,arguments);const why=cv215Why();if(why){try{say('🎬 '+why)}catch(_){}return false}
     try{const T=TOWNS[0];if(typeof curIns=='function'&&curIns()||Math.hypot(pl.position.x-T.cx,pl.position.z-T.cy)>60){say('🎬 Watch this one from Duskhold.');return false}}catch(_){}

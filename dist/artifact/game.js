@@ -73146,7 +73146,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 #cv215 .it .sn{font-size:.68rem;opacity:.6;margin-top:2px}#cv215 .mut{font-size:.74rem}#cv215 .bad{color:#e07a6a}
 </style>`);
 document.body.insertAdjacentHTML('beforeend',`<div id="cv215" class="hide"><div class="win nar">
-  <div class="wh"><h2>Cinematics</h2><span class="wsub">Watch a zone’s arrival again</span><button class="x" id="cv215Close" title="Close">✕</button></div>
+  <div class="wh"><h2>Cinematics</h2><span class="wsub">Watch a cinematic again</span><button class="x" id="cv215Close" title="Close">✕</button></div>
   <div class="wb" style="padding:14px 16px;display:grid;gap:10px"><div class="li" id="cv215L"></div><div class="mut" id="cv215M"></div></div></div></div>`);
 $('cv215Close').onclick=()=>$('cv215').classList.add('hide');
 function cv215Seen(z){try{if(z===0)return !!KC208.seen;if(z===1)return HC208.seen===1;return zc214Seen(z)}catch(_){return false}}
@@ -73156,9 +73156,10 @@ function cv215Open(){const L=$('cv215L'),M=$('cv215M');M.textContent='';M.classN
     d.querySelector('button').onclick=()=>{const why=cv215Why();if(why){M.textContent=why;M.className='mut bad';return}
       $('cv215').classList.add('hide');try{$('setw').classList.add('hide')}catch(_){}setTimeout(()=>cv215Play(c.z),60)};L.appendChild(d)});
   $('cv215').classList.remove('hide')}
-{const d=$('delSave');if(d){const g=[...document.querySelectorAll('#setw .setg')].find(e=>e.textContent.trim()=='Saved game');const html='<div class="setg">Cinematics</div><button id="cv215B" style="justify-self:start">🎬 Watch cinematics</button>';
-  if(g&&g.classList&&g.classList.contains('setg'))g.insertAdjacentHTML('beforebegin',html);else d.insertAdjacentHTML('beforebegin',html);
-  $('cv215B').onclick=cv215Open}}
+// v230 (owner, Nov 13 2026: "Move the cinematics previews in options to the cheat menu"): the button is a row in Settings → Cheats
+// (inside #cheatBox, so it sits behind the cheat password like every other cheat). Watching still changes nothing in the save.
+{const box=$('cheatBox');if(box){box.insertAdjacentHTML('beforeend','<div class="chr"><span>🎬 Cinematics<small>Watch any cinematic again (nothing is saved)</small></span><span class="chb"><button id="cv215B">Watch…</button></span></div>');
+  $('cv215B').onclick=()=>{try{if(typeof CHU!='undefined'&&!CHU.on)return CHU.deny()}catch(_){}cv215Open()}}}
 // ================= v215 Argus, the Hundred-Eyed — one skinned, painted body and smoother motion (owner, Nov 9 2026) =================
 // Owner: "Argus looks a little too cluttered and outdated compared to our new models. Let's use what we've learned about modeling
 // to improve his visual identity and model, and smooth out all his animations to make him feel in line with our newer models."
@@ -78212,9 +78213,9 @@ function fn229NpcTick(dt){if(FN229.run)return;if((FN229.pt=(FN229.pt||0)-dt)<=0)
 {const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{FN229.seen=s&&s.fn229?1:0}catch(_){}return r}}
 {const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{fn229Npc()}catch(e){console.warn('v229 load',e)}return r}}
 {const f=ccBegin;ccBegin=function(){FN229.seen=0;const r=f.apply(this,arguments);try{fn229Npc()}catch(_){}return r}}
-// Settings → Cinematics: listed once the last essence is poured
+// Settings → Cheats → Cinematics: always listed (v230: it is a cheat preview now, so it no longer waits for the pour)
 (function(){if(typeof CV215=='undefined')return;const E={z:'fn229',n:'The Fountain',s:'The last essence · the Voice beneath Duskhold'};
-  {const f=cv215Open;cv215Open=function(){const i=CV215.L.indexOf(E),want=fn229NpcOwn();if(want&&i<0)CV215.L.push(E);if(!want&&i>=0)CV215.L.splice(i,1);return f.apply(this,arguments)}}
+  CV215.L.push(E);
   {const f=cv215Seen;cv215Seen=function(z){if(z==='fn229')return !!FN229.seen;return f.apply(this,arguments)}}
   {const f=cv215Play;cv215Play=function(z){if(z!=='fn229')return f.apply(this,arguments);const why=cv215Why();if(why){try{say('🎬 '+why)}catch(_){}return false}
     try{const T=TOWNS[0];if(typeof curIns=='function'&&curIns()||Math.hypot(pl.position.x-T.cx,pl.position.z-T.cy)>60){say('🎬 Watch this one from Duskhold.');return false}}catch(_){}
