@@ -1,4 +1,4 @@
-# v215: the Cinematics viewer (3870). Settings → Cheats has the button (v230; locked with the cheats); the window lists six and The Fountain; Watch plays each zone's cinematic again
+# v215: the Cinematics viewer (3870). Settings → Cheats has the button (v230; locked with the cheats); the window lists six, The Fountain and v232's two endings; Watch plays each zone's cinematic again
 # from Duskhold (ZONES=0,1,2,3,4,5), Skip hands the game back, the seen marks are as before, no zone card follows, the hero has
 # not moved; refused during a Sovereign fight. Frames of the opening shot from Duskhold -> <AW_TMP>/v215_<z>.png (FRAMES=0 skips).
 import play,os,json
@@ -15,7 +15,7 @@ def s(pg):
     print('UI',json.dumps(r))
     if not r['inbox'] or not r['btn']:fails.append('no Cinematics button in the cheat menu')
     if not r['hid'] or r['lockedOpen']:fails.append('the Cinematics button works while the cheats are locked')
-    if len(r['list'])!=7 or r['list'][-1]!='The Fountain' or not r['open']:fails.append('the list is not the six zone cinematics and The Fountain '+json.dumps(r))
+    if len(r['list'])!=9 or r['list'][6:]!=['The Fountain','The Land Breathes','The Crown'] or not r['open']:fails.append('the list is not the six zone cinematics, The Fountain and the two endings (v232) '+json.dumps(r))
     for z in ZONES:
         o=pg.evaluate("""async(z)=>{const p0=pl.position.clone(),s0={kc:KC208.seen,hc:HC208.seen,zc:ZC214.seen};const o={};
           o.ok=cv215Play(z);o.run=KC208.run||HC208.run||ZC214.run;await new Promise(r=>setTimeout(r,1200));
