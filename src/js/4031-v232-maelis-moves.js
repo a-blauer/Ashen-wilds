@@ -20,7 +20,7 @@
 //                  each time she does this, so you must cross the eyrie, through wind and bolts, to a fresh rod each time. Ground
 //                  all three and she is struck out of the sky: a long stagger. Each one you miss heals her instead.
 // Weakness: posture (the yellow bar); every break staggers her (+35% damage). Big moves have armour.
-const ML232_DEB=['Shocked','⚡',{mspd:-.2,aspd:-.2},'A jolt runs through you: −20% move and attack speed'];
+const ML232_DEB=['Shocked','⚡',{mspd:-.2,as:-.2},'A jolt runs through you: −20% move and attack speed'];
 function ml232Mats(){const X=WK232.X;return X.ml||(X.ml={quill:new THREE.MeshStandardMaterial({color:0x2f3a4c,roughness:.7,flatShading:true,side:THREE.DoubleSide}),glass:new THREE.MeshStandardMaterial({color:0x1c3a4c,emissive:0x3ab8ff,emissiveIntensity:.9,roughness:.2,flatShading:true})})}
 function ml232Shock(){dqDebuff(ML232_DEB[0],ML232_DEB[1],ML232_DEB[2],2500,ML232_DEB[3])}
 // a bolt from the sky onto p (the hit is the caller's): a jagged streak for an instant, a flash, a scorch

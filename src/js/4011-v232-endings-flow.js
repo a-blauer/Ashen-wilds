@@ -4,3 +4,4 @@
 // path). FN232.crown: crowned and marked (side path, after the fourth Warden).
 var FN232={path:0,n:0,won:0,crown:0,err:0,name:'Ythrael',title:'the Voice Below'};
 function fn232WardenDown(i){FN232.n=Math.max(FN232.n,i+1);try{x2Dirty&&x2Dirty()}catch(_){}}
+function fn232Slain(e){FN232.won=1;try{x2Dirty&&x2Dirty()}catch(_){}}

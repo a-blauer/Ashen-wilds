@@ -45063,12 +45063,15 @@ function sp152Defs(){if(sp152Defs.c)return sp152Defs.c;return sp152Defs.c=[
   {key:'sanctum',g:33,z:4,k:0,x0:112,y0:1660,w:160,h:360,n:'The Hidden Sanctum',rn:'Sanctum',lv:[38,38],
     bio:{n:'Hidden Sanctum',sp:'Boneling',x:0,y:0,t:4,gnd:[26,26,28],grs:[44,52,48],acc:[70,66,62],frs:[22,24,26],wat:[24,48,46],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a3a34,0x4a4a40],amp:.1}},
   {key:'channel',g:34,z:4,k:1,x0:282,y0:1836,w:416,h:190,n:'The Black Channel',rn:'Channel',lv:[40,40],
-    bio:{n:'Black Channel',sp:'Boneling',x:0,y:0,t:4,gnd:[46,50,52],grs:[40,56,50],acc:[62,64,66],frs:[20,26,26],wat:[18,62,54],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a4a50,0x4a5a64],amp:.2}}]}
+    bio:{n:'Black Channel',sp:'Boneling',x:0,y:0,t:4,gnd:[46,50,52],grs:[40,56,50],acc:[62,64,66],frs:[20,26,26],wat:[18,62,54],tree:['dead'],pr:['bones'],den:[0,0,0,0],tc:[0x2a2a30,0x3a4a50,0x4a5a64],amp:.2}},
+  // v232: the Hollow Beneath (the finale's arena under Duskhold, 4062): a disc of black stone in the free strip west of the levels
+  {key:'apex',g:35,z:5,k:2,x0:8,y0:1456,w:96,h:96,n:'The Hollow Beneath',rn:'Hollow',lv:[56,56],
+    bio:{n:'The Hollow',sp:'Foxlet',x:0,y:0,t:5,gnd:[26,22,34],grs:[30,26,40],acc:[44,38,58],frs:[18,16,24],wat:[60,40,90],tree:['dead'],pr:['rock'],den:[0,0,0,0],tc:[0x1a1622,0x241e30,0x2e2640],amp:.05}}]}
 // 0045: paint each level's ground (tiles, DW, biome) — after every seeded step of the world, so nothing else moves
 function sp152Map(m,bio,DW){try{sp152Defs().forEach(I=>{const bi=BIOMES.push(Object.assign({},I.bio))-1;I.bi=bi;
-    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):I.key=='sandrun'?(typeof sr165Map=='function'?sr165Map:null):I.key=='sanctum'?(typeof dg165SanctumMap=='function'?dg165SanctumMap:null):I.key=='channel'?(typeof dg165ChannelMap=='function'?dg165ChannelMap:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
+    const f=I.key=='abeksi'?(typeof ab152Map=='function'?ab152Map:null):I.key=='ascent'?(typeof ch153Map=='function'?ch153Map:null):I.key=='sandrun'?(typeof sr165Map=='function'?sr165Map:null):I.key=='sanctum'?(typeof dg165SanctumMap=='function'?dg165SanctumMap:null):I.key=='channel'?(typeof dg165ChannelMap=='function'?dg165ChannelMap:null):I.key=='apex'?(typeof ap232Map=='function'?ap232Map:null):null;if(f)f(m,bio,DW,I,bi)})}catch(e){console.warn('v152 map',e)}}
 // 0045: a level's own heights (after every other height pass)
-function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I);if(I.key=='sandrun'&&typeof sr165Terrain=='function')sr165Terrain(I);if(I.key=='sanctum'&&typeof dg165SanctumTerrain=='function')dg165SanctumTerrain(I);if(I.key=='channel'&&typeof dg165ChannelTerrain=='function')dg165ChannelTerrain(I)})}catch(e){console.warn('v152 terrain',e)}}
+function sp152Terrain(){try{sp152Defs().forEach(I=>{if(I.key=='ascent'&&typeof ch153Terrain=='function')ch153Terrain(I);if(I.key=='sandrun'&&typeof sr165Terrain=='function')sr165Terrain(I);if(I.key=='sanctum'&&typeof dg165SanctumTerrain=='function')dg165SanctumTerrain(I);if(I.key=='channel'&&typeof dg165ChannelTerrain=='function')dg165ChannelTerrain(I);if(I.key=='apex'&&typeof ap232Terrain=='function')ap232Terrain(I)})}catch(e){console.warn('v152 terrain',e)}}
 // 0070: trees inside a level are scenery, not harvest nodes (hoisted: 0070 runs long before this file)
 function sp152NoNode(x,y){try{return sp152Defs().some(I=>x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)}catch(_){return false}}
 function spIns(x,y){if(!SPI||!SPI.on)return null;const L=SPI.L;for(let i=0;i<L.length;i++){const I=L[i];if(x>=I.x0&&y>=I.y0&&x<I.x0+I.w&&y<I.y0+I.h)return I}return null}
@@ -78870,6 +78873,7 @@ const WK232_M=D=>{D._h141=null;return D};
 // path). FN232.crown: crowned and marked (side path, after the fourth Warden).
 var FN232={path:0,n:0,won:0,crown:0,err:0,name:'Ythrael',title:'the Voice Below'};
 function fn232WardenDown(i){FN232.n=Math.max(FN232.n,i+1);try{x2Dirty&&x2Dirty()}catch(_){}}
+function fn232Slain(e){FN232.won=1;try{x2Dirty&&x2Dirty()}catch(_){}}
 // ================= v232 Oakenhart, the Rootbound Stag — the model, poses and procedural animation =================
 // The first Warden of the Balance (the side-with-him ending; fight and grove in 4022, moves in 4021). A stag the size of a house,
 // grown out of an old oak in autumn: a trunk of dark furrowed bark shingled with bark plates, amber sap glowing in the seams of his
@@ -79367,7 +79371,7 @@ ML232.sheet.boss=()=>{const R=svRig();ml232Build(R,null);svRest(R);svMerge(R);re
 //                  each time she does this, so you must cross the eyrie, through wind and bolts, to a fresh rod each time. Ground
 //                  all three and she is struck out of the sky: a long stagger. Each one you miss heals her instead.
 // Weakness: posture (the yellow bar); every break staggers her (+35% damage). Big moves have armour.
-const ML232_DEB=['Shocked','⚡',{mspd:-.2,aspd:-.2},'A jolt runs through you: −20% move and attack speed'];
+const ML232_DEB=['Shocked','⚡',{mspd:-.2,as:-.2},'A jolt runs through you: −20% move and attack speed'];
 function ml232Mats(){const X=WK232.X;return X.ml||(X.ml={quill:new THREE.MeshStandardMaterial({color:0x2f3a4c,roughness:.7,flatShading:true,side:THREE.DoubleSide}),glass:new THREE.MeshStandardMaterial({color:0x1c3a4c,emissive:0x3ab8ff,emissiveIntensity:.9,roughness:.2,flatShading:true})})}
 function ml232Shock(){dqDebuff(ML232_DEB[0],ML232_DEB[1],ML232_DEB[2],2500,ML232_DEB[3])}
 // a bolt from the sky onto p (the hit is the caller's): a jagged streak for an instant, a flash, a scorch
@@ -80173,4 +80177,377 @@ function sr232Verdict(D,e){const S=D.S,A=D.A,P=pl.position,o=sr232Shade(D,P);
     if(o.uses<=0){o.alive=0;D.sync(D);const q=new THREE.Vector3(o.x,0,o.z);burst(gY(q,2),0xd9d2c2,70,5,4,1);svSnd('crack',1.2,.7);try{sk146Debris(q,D.LS.M.marble2,12,.3,5,5,1.6)}catch(_){}say('☀ The obelisk shatters.')}
     S.ver=0;S.hd=-S.hd;svEndMove(e,true);wk232Wound(e,.04,'#fff2c8');svCast(e,'broken')}
   else{if(hero.hp>0&&wk232Zap(e,2.4,'m'))sr232Judge(8000);wk232Heal(e,.04,0xfff2c8)}}
+// ================= v232 Ythrael, the Voice Below — the finale's boss: the model, poses and procedural animation =================
+// The man from the fountain, grown vast on six Sovereigns' essence (the fight-him ending; fight and arena in 4062, moves in 4061).
+// Phase I and II he is the robed figure of the cinematic at four times the size: a long pale face with white beady eyes and ivory
+// hair, an elegant crimson robe worked with gold thread (high collar, mantle, hanging sleeves, a skirt that sweeps the stone), long
+// pale hands with nails like knives and black fire round them, the essence he drank burning in his breast in the six Sovereigns'
+// colours. In Phase II the ivory wings come out: gangly bone fingers with torn pale membrane. In Phase III the truth shows: the
+// robe splits, the neck and arms stretch, the jaw unhinges on its teeth (yt232Post morphs the rig with S.tru 0..1).
+// Built like a Sovereign (svRig kit; rigid parts on named joints, merged by svMerge). He faces +z.
+// Joints (L = +x): root · hips · spine · chest · neck · head · jaw · shL/R · elL/R · wrL/R · wgL/R (wing arm) · wfL/R (wing fingers) ·
+// sk0 · sk1 (the robe's skirt) · slL/R (the hanging sleeves) · heart. Poses (YT232P): offsets from rest, '~' mirrors.
+var YT232={col:0xc89aff,dark:0x1a0a2a,ess:[0x9aff5a,0x5ad8ff,0xbfe9ff,0xffc24a,0xb8ff3a,0xff4a5a],tris:0,sheet:{}};
+function yt232Build(R,e){
+  const skin=svMat(R,0xcfc6c2,{roughness:.6}),skin2=svMat(R,0xa89a98,{roughness:.65}),hair=svMat(R,0xe6e0d0,{roughness:.7,side:THREE.DoubleSide}),nail=svMat(R,0x1a1418,{roughness:.3,metalness:.3}),
+    robe=svMat(R,0x6a0a14,{roughness:.8,side:THREE.DoubleSide}),robe2=svMat(R,0x3e0610,{roughness:.85,side:THREE.DoubleSide}),lining=svMat(R,0x1c0408,{roughness:.9,side:THREE.DoubleSide}),
+    gold=svMat(R,0xd4a93a,{roughness:.35,metalness:.75,emissive:0x6a4a0a,emissiveIntensity:.35}),gold2=svMat(R,0x8f6c1e,{roughness:.45,metalness:.7}),
+    bone=svMat(R,0xe2dccb,{roughness:.6}),memb=svMat(R,0xbdb4a2,{roughness:.8,side:THREE.DoubleSide,transparent:true,opacity:.9}),tooth=svMat(R,0xefe9d8,{roughness:.4}),maw=svMat(R,0x2a060c,{roughness:.6}),
+    ess=svMat(R,0x1a1020,{roughness:.3,emissive:0xc89aff,emissiveIntensity:1.0}),eye=svGlowMat(R,0xffffff),voidM=svGlowMat(R,0x2a1040,.85);
+  ess.userData.e0=0xc89aff;R.ess=ess;R.eyeM=eye;R.robeM=robe;R.robe2M=robe2;R.membM=memb;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('yt'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const ball=(k,r,det,j)=>G('b'+k,()=>svLump(r,det==null?1:det,j||.08,200+k)),horn=(k,r,l,bx,by,n,seg)=>G('h'+k,()=>svHorn(r,l,bx,by,n||5,seg||3));
+  const tab=(k,w0,w1,l)=>G('tb'+k,()=>{const s=new THREE.Shape();s.moveTo(-w0,0);s.lineTo(w0,0);s.lineTo(w1,-l*.86);s.lineTo(0,-l);s.lineTo(-w1,-l*.86);s.lineTo(-w0,0);return new THREE.ShapeGeometry(s,1)});
+  const band=(k,rx,rz,t)=>G('bd'+k,()=>svLoft([[-t,rx,rz],[t,rx*1.01,rz*1.01]],14,{cap:false}));
+  // ---------------- the skeleton (he stands about 4.9 tall) ----------------
+  J('root',null,0,0,0);J('hips','root',0,2.45,0);J('spine','hips',0,.38,0);J('chest','spine',0,.62,.02);J('neck','chest',0,.74,.02);J('head','neck',0,.34,.03);J('jaw','head',0,-.02,.1);R.J.head.scale.setScalar(1.25);J('heart','chest',0,.2,.3);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*.62,.5,0,0,0,s*.1);J('el'+L,'sh'+L,0,-1.0,0);J('wr'+L,'el'+L,0,-.95,.03);J('sl'+L,'el'+L,0,-.5,-.02);
+    J('wg'+L,'chest',s*.3,.42,-.34,0,0,s*.25);J('wf'+L,'wg'+L,s*1.5,.5,-.1,0,0,s*-.9)});
+  J('sk0','hips',0,-.2,0);J('sk1','sk0',0,-1.15,0);
+  // ---------------- the robe over hips and trunk: a fitted body, gold girdle, thread patterns as raised gold lines ----------------
+  Mm('hips',G('hp',()=>svLoft([[-.3,.5,.4],[0,.56,.44],[.36,.5,.4]],12)),robe);Mm('hips',band(1,.58,.46,.07),gold,0,.04,0);
+  Mm('hips',G('bk',()=>{const g=new THREE.OctahedronGeometry(.13,0);g.scale(1,1.2,.5);return g}),gold,0,.04,.48);Mm('hips',G('bg',()=>new THREE.OctahedronGeometry(.055,0)),ess,0,.04,.54);
+  Mm('spine',G('sp',()=>svLoft([[-.05,.5,.4],[.3,.46,.36],[.62,.56,.42]],12)),robe2);
+  Mm('chest',G('ch',()=>svLoft([[-.06,.56,.42],[.3,.7,.5],[.58,.62,.46],[.76,.3,.28]],12)),robe);
+  // the open breast of the robe: pale skin, ribs, the drunk essence burning under it
+  Mm('chest',G('br',()=>svLoft([[-.05,.3,.08],[.3,.36,.1],[.6,.24,.08]],8)),skin,0,0,.4);for(let k=0;k<4;k++)[-1,1].forEach(s=>Mm('chest',G('rb',()=>svTube([[0,0,0],[.14,-.03,.03],[.26,-.1,-.02]],[.022,.026,.016],4)),skin2,s*.03,.12+k*.11,.49,0,0,0,s,1,1));
+  Mm('heart',ball(1,.17,1,.2),ess);svSpr(R,'heart',YT232.col,1.5,0,0,.16);
+  // gold thread: lapels down the opening, chevrons on the breast, a hem line; the collar and the mantle
+  [-1,1].forEach(s=>{Mm('chest',G('lp',()=>svTube([[.3,.72,.3],[.34,.4,.47],[.3,.1,.47],[.2,-.2,.42]],[.03,.035,.03,.025],4)),gold,0,0,0,0,0,0,s,1,1);
+    for(let k=0;k<3;k++)Mm('chest',G('cv',()=>svTube([[.36,.1,.44],[.5,.2,.36],[.62,.12,.22]],[.014,.014,.014],3)),gold2,0,k*.16,0,0,0,0,s,1,1);
+    for(let k=0;k<4;k++)Mm('spine',G('dm',()=>{const g=new THREE.OctahedronGeometry(.045,0);g.scale(1,1.5,.3);return g}),gold,s*(.2+((k%2)*.14)),.06+k*.14,.36-((k%2)*.04))});
+  Mm('chest',G('cl',()=>svLoft([[.66,.36,.34],[.84,.4,.38],[.98,.47,.43]],10,{cap:false})),robe2);Mm('chest',band(2,.48,.44,.03),gold,0,.98,0);
+  Mm('chest',G('mt',()=>svLoft([[.74,.4,.36],[.6,.84,.56],[.36,.98,.6],[.2,1.0,.58]],14,{cap:false})),robe);Mm('chest',band(3,1.01,.59,.035),gold,0,.2,0);
+  for(let k=0;k<14;k++){const a=k/14*6.283;if(Math.abs(svAng(a))<.5)continue;Mm('chest',G('mz',()=>svTube([[0,0,0],[.05,.09,0],[.1,0,0]],[.013,.013,.013],3)),gold2,Math.sin(a)*.93-.05,.3,Math.cos(a)*.57,0,a+Math.PI/2,0)}
+  // ---------------- neck, head: a long pale face, sunk cheeks, white beady eyes, ivory hair, the jaw with its teeth ----------------
+  Mm('neck',G('nk',()=>svLoft([[-.06,.17,.17],[.18,.14,.14],[.36,.13,.13]],8)),skin);for(let k=0;k<2;k++)Mm('neck',G('tn',()=>svTube([[0,0,.12],[.03,.16,.13],[.02,.3,.11]],[.02,.022,.018],4)),skin2,(k?1:-1)*.07,0,0,0,0,0,k?1:-1,1,1);
+  const hdR=[[-.08,.16,.18],[.1,.22,.24],[.3,.24,.26,0,-.01],[.5,.2,.23,0,-.02],[.64,.1,.13,0,-.03]];Mm('head',G('hd',()=>svLoft(hdR,10)),skin);
+  Mm('head',G('fc',()=>svLoft([[-.06,.13,.06],[.12,.17,.08],[.3,.16,.07],[.46,.1,.04]],8)),skin,0,0,.19);Mm('head',G('ns',()=>svHorn(.035,.2,0,-.03,4,2)),skin2,0,.26,.24,-.4,0,0);
+  Mm('head',G('bw',()=>svLump(.1,1,.1,211)),skin2,0,.36,.2,0,0,0,2.0,.35,.8);
+  [-1,1].forEach(s=>{Mm('head',ball(2,.055,1),maw,s*.09,.31,.235,0,0,0,1.1,.8,.6);Mm('head',G('ey',()=>new THREE.IcosahedronGeometry(.026,1)),eye,s*.09,.31,.262);svSpr(R,'head',0xffffff,.3,s*.09,.31,.28);
+    Mm('head',G('ck',()=>svTube([[0,0,0],[.04,-.1,.02],[.02,-.2,.0]],[.02,.028,.018],4)),skin2,s*.14,.24,.2,0,0,0,s,1,1);Mm('head',G('er',()=>svHorn(.035,.2,0,.04,4,2)),skin,s*.22,.3,.0,-.5,s*1.9,0)});
+  Mm('head',G('mo',()=>new THREE.BoxGeometry(.16,.03,.03)),maw,0,.1,.26);for(let k=0;k<6;k++)Mm('head',horn('tu',.011,.07,0,0,4,2),tooth,-.065+k*.026,.085,.25,Math.PI/2,0,0);
+  Mm('jaw',G('jw',()=>svLoft([[-.14,.12,.06],[-.02,.15,.08],[.06,.13,.05]],8)),skin,0,0,.1);for(let k=0;k<6;k++)Mm('jaw',horn('tu',.011,.08,0,0,4,2),tooth,-.065+k*.026,.07,.16,-Math.PI/2,0,0);Mm('jaw',G('mw',()=>new THREE.BoxGeometry(.2,.02,.14)),maw,0,.05,.1);
+  // hair: a cap swept back, long locks down the back and over the shoulders
+  Mm('head',G('hc',()=>svLump(.25,1,.08,212)),hair,0,.42,-.06,0,0,0,1,.8,1.05);
+  for(let k=0;k<9;k++){const u=(k-4)/4,l=1.5+((k*5)%3)*.3;Mm('head',tab('h'+(k%3),.09,.05,l),hair,u*.2,.46-Math.abs(u)*.06,-.2-Math.abs(u)*-.06,.25+Math.abs(u)*.1,Math.PI+u*.5,0)}
+  [-1,1].forEach(s=>Mm('head',tab('hs',.07,.035,1.25),hair,s*.24,.4,.02,-.1,s*1.3,s*.05));
+  // ---------------- arms: the robe's upper sleeve, a long bare forearm, the hand with nails like knives, the hanging sleeve ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',sh='sh'+L,el='el'+L,wr='wr'+L,sl='sl'+L;
+    Mm(sh,G('pd',()=>svLump(.3,1,.08,213)),robe,0,.04,0,0,0,0,1.15,.8,1.1);Mm(sh,band(4,.31,.31,.03),gold,0,-.14,0,0,0,s*.2);
+    Mm(sh,G('ua',()=>svLoft([[.04,.24,.24],[-.5,.2,.2],[-1.0,.22,.22]],9)),robe2);Mm(sh,band(5,.23,.23,.03),gold,0,-.96,0);
+    Mm(el,ball(3,.13,1),skin2);Mm(el,G('fa',()=>svLoft([[0,.12,.12],[-.5,.1,.1],[-.95,.075,.075]],8)),skin);for(let k=0;k<2;k++)Mm(el,G('vn',()=>svTube([[0,0,0],[.02,-.4,.01],[0,-.8,0]],[.014,.016,.012],3)),skin2,(k?1:-1)*.06,-.08,.08);
+    Mm(sl,G('sl',()=>svLoft([[.5,.24,.24],[0,.34,.3],[-.5,.5,.2,0,-.12],[-1.1,.36,.1,0,-.2]],10,{cap:false})),robe);Mm(sl,G('sli',()=>svLoft([[.45,.22,.22],[0,.31,.27],[-.5,.46,.17,0,-.12],[-1.05,.32,.08,0,-.2]],10,{cap:false})),lining);
+    Mm(sl,G('slh',()=>svLoft([[-1.04,.37,.11,0,-.2],[-1.12,.37,.11,0,-.2]],10,{cap:false})),gold);
+    // the hand: a long palm, four fingers and a thumb in two joints each, a nail on every one; black fire in the palm
+    Mm(wr,G('pm',()=>svLump(.09,1,.08,214)),skin,0,-.1,.01,0,0,0,1,1.5,.6);
+    [[-.07,0,.42],[-.025,.01,.48],[.025,.01,.46],[.07,0,.4],[s*.1,-.02,.3]].forEach(([fx,fz,fl],k)=>{const th=k==4,rz=th?s*.9:fx*-1.2;
+      Mm(wr,G('fg'+k,()=>svTube([[0,0,0],[0,-fl*.5,.03],[0,-fl,.07]],[.024,.02,.014],4)),skin,fx,th?-.08:-.22,fz+.02,-.15,0,rz);
+      Mm(wr,horn('nl',.02,.34,0,-.05,4,3),nail,fx+Math.sin(-rz)*-fl,(th?-.08:-.22)-fl*Math.cos(rz),fz+.1,Math.PI/2+.15,0,rz)});
+    Mm(wr,G('vd',()=>new THREE.IcosahedronGeometry(.11,1)),voidM,0,-.26,.12);svSpr(R,wr,0x7a3aff,.7,0,-.26,.14)});
+  // ---------------- the skirt of the robe: panels to the floor, gold hem, thread running up from it ----------------
+  Mm('sk0',G('sk',()=>svLoft([[.14,.56,.44],[-.5,.66,.56],[-1.15,.8,.72]],14,{cap:false})),robe);Mm('sk1',G('sk2',()=>svLoft([[.02,.8,.72],[-.6,.98,.92],[-1.08,1.12,1.06]],14,{cap:false})),robe2);
+  Mm('sk1',band(6,1.13,1.07,.04),gold,0,-1.06,0);Mm('sk1',band(7,1.05,.99,.02),gold2,0,-.86,0);
+  for(let k=0;k<14;k++){const a=k/14*6.283,r=1.0;Mm('sk1',G('ht',()=>svTube([[0,-1.02,0],[.04,-.8,0],[-.03,-.6,0],[0,-.42,0]],[.014,.014,.014,.008],3)),gold,Math.sin(a)*r*.99,0,Math.cos(a)*r*.93,0,a,0);
+    if(k%2)Mm('sk1',G('hd2',()=>{const g=new THREE.OctahedronGeometry(.05,0);g.scale(1,1.6,.3);return g}),gold2,Math.sin(a)*1.07,-.95,Math.cos(a)*1.0,0,a,0)}
+  [[0,.46,.3,0],[0,-.46,.26,Math.PI]].forEach(([x,z,w,ry],i)=>{Mm('sk0',tab('f'+i,w,w*.8,2.0),robe2,x,.14,z,i?-.2:.2,ry,0);Mm('sk0',tab('g'+i,w*.3,w*.2,1.8),gold,x,.12,z*1.03,i?-.2:.2,ry,0)});
+  // ---------------- wings (hidden until Phase II: yt232Post scales the wing joints from nothing): bone arm, four long fingers, torn membrane ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',wg='wg'+L,wf='wf'+L;
+    Mm(wg,G('wa',()=>svTube([[0,0,0],[.7,.3,-.04],[1.5,.5,-.1]],[.09,.07,.06],6)),bone,0,0,0,0,0,0,s,1,1);Mm(wg,ball(4,.1,1),bone,s*1.5,.5,-.1);
+    const F=[[2.6,.35,.0],[2.9,-.5,-.05],[2.5,-1.3,-.1],[1.7,-1.9,-.1]];
+    F.forEach(([l,dy],k)=>{const p1=[l*.5,dy*.5+.12,0],p2=[l,dy,0];Mm(wf,G('wf'+k,()=>svTube([[0,0,0],p1,p2],[.05,.035,.012],5)),bone,0,0,0,0,0,0,s,1,1);Mm(wf,horn('wc',.02,.22,0,-.05,4,2),nail,s*p2[0],p2[1],0,Math.PI/2,0,s*-.3)});
+    // membrane: fans between neighbouring fingers and from the last finger back to the body, each with a bite out of its edge
+    const tri=(k,a,b,c)=>G('wm'+k,()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,a[0],a[1],0,(a[0]+b[0])*.44,(a[1]+b[1])*.44,0, 0,0,0,(a[0]+b[0])*.44,(a[1]+b[1])*.44,0,b[0],b[1],0, a[0],a[1],0,(a[0]*.75+b[0]*.25)+c,(a[1]*.75+b[1]*.25),0,(a[0]+b[0])*.44,(a[1]+b[1])*.44,0],3));g.computeVertexNormals();return g});
+    for(let k=0;k<3;k++)Mm(wf,tri(k,[F[k][0],F[k][1]],[F[k+1][0],F[k+1][1]],-.2),memb,0,0,-.01,0,0,0,s,1,1);
+    Mm(wf,tri(3,[F[3][0],F[3][1]],[-.6,-1.5],-.1),memb,0,0,-.01,0,0,0,s,1,1)});
+  if(!YT232.tris)YT232.tris=wk232Tris(R);R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]; arms hang -y: rx − raises one forward; wings: wg rz + lifts the left) ----------------
+var YT232P={
+  idle:{},
+  cRec:{hips:[.03,0,0,0,-.05,0],shL:[-.15,0,.08],shR:[-.15,0,-.08]},
+  // Nail Rake: a hand drawn back high across the body and raked down and across; then both hands low, and up in a pillar of black fire
+  rUp:{hips:[0,-.3,0],spine:[0,-.25,0],chest:[-.05,-.35,0],head:[0,.3,0],shR:[-1.9,0,-.9],elR:[-.9,0,0],wrR:[-.3,0,0],shL:[-.3,0,.3],elL:[-.5,0,0],sk0:[0,.15,0]},
+  rCut:{hips:[.08,.35,0,0,-.08,.2],spine:[.1,.3,0],chest:[.15,.45,0],head:[.05,-.3,0],shR:[-.7,0,.7],elR:[-.2,0,0],wrR:[.3,0,0],shL:[.3,0,.2],sk0:[.12,-.15,0]},
+  upLow:{hips:[.3,0,0,0,-.35,0],spine:[.25,0,0],chest:[.2,0,0],head:[-.2,0,0],shL:[.4,0,.3],elL:[-.5,0,0],shR:[.4,0,-.3],elR:[-.5,0,0],sk0:[-.25,0,0]},
+  upCut:{hips:[-.15,0,0,0,.12,.25],spine:[-.2,0,0],chest:[-.3,0,0],head:[-.35,0,0],jaw:[.3,0,0],shL:[-2.6,0,.4],elL:[-.3,0,0],shR:[-2.6,0,-.4],elR:[-.3,0,0],sk0:[.2,0,0]},
+  // Umbral Lance: one arm drawn back, the other levelled at you; the cast
+  lnUp:{hips:[0,-.45,0],spine:[0,-.3,0],chest:[0,-.3,0],head:[0,.7,0],shR:[.4,0,-.5],elR:[-1.7,0,0],shL:[-1.5,0,.1],elL:[-.1,0,0]},
+  lance:{hips:[.06,.3,0,0,-.05,.2],spine:[.05,.2,0],chest:[.08,.3,0],head:[0,-.25,0],shR:[-1.55,0,.1],elR:[-.05,0,0],wrR:[-.4,0,0],shL:[.3,0,.4],elL:[-.4,0,0]},
+  // Robe Whirl: wound to one side, the whirl
+  whUp:{hips:[0,.7,0,0,-.1,0],spine:[0,.4,0],chest:[0,.4,0],head:[0,-.8,0],shL:[-.5,0,.9],elL:[-.4,0,0],shR:[-.9,0,.6],elR:[-1.0,0,0],sk0:[0,.4,0],sk1:[0,.3,0]},
+  whirl:{hips:[0,-1.2,0,0,-.15,0],spine:[0,-.6,0],chest:[0,-.5,0],head:[0,.9,0],shL:[-1.2,0,1.3],elL:[-.1,0,0],shR:[-1.2,0,-1.3],elR:[-.1,0,0],sk0:[.1,-.6,0],sk1:[.1,-.5,0],slL:[0,0,.6],slR:[0,0,-.6]},
+  // Grasping Shadows / Essence Barrage: both hands lifted, palms up; then turned over and pressed down
+  lift:{hips:[-.06,0,0,0,.08,0],chest:[-.15,0,0],head:[-.25,0,0],shL:[-1.2,0,.8],elL:[-1.2,0,0],wrL:[-.6,0,0],shR:[-1.2,0,-.8],elR:[-1.2,0,0],wrR:[-.6,0,0]},
+  press:{hips:[.15,0,0,0,-.15,.1],chest:[.2,0,0],head:[.2,0,0],shL:[-1.0,0,.5],elL:[-.3,0,0],wrL:[.6,0,0],shR:[-1.0,0,-.5],elR:[-.3,0,0],wrR:[.6,0,0],sk0:[-.1,0,0]},
+  // Black Orbs: hands crossed at the breast, flung apart
+  cross:{hips:[.05,0,0],chest:[.12,0,0],head:[.2,0,0],shL:[-1.0,0,-.7],elL:[-1.6,0,0],shR:[-1.0,0,.7],elR:[-1.6,0,0]},
+  fling:{hips:[-.06,0,0,0,.05,.1],chest:[-.15,0,0],head:[-.1,0,0],shL:[-1.4,0,.9],elL:[-.1,0,0],shR:[-1.4,0,-.9],elR:[-.1,0,0],slL:[0,0,.4],slR:[0,0,-.4]},
+  // Voice of Command (and the phase changes): head back, arms wide, the jaw open on the word
+  speak:{hips:[-.12,0,0,0,.08,0],spine:[-.15,0,0],chest:[-.25,0,0],head:[-.45,0,0],jaw:[.55,0,0],shL:[-.5,0,1.3],elL:[-.5,0,0],shR:[-.5,0,-1.3],elR:[-.5,0,0],wgL:[0,.2,.5],wgR:[0,-.2,-.5]},
+  curl:{hips:[.3,0,0,0,-.5,0],spine:[.35,0,0],chest:[.35,0,0],head:[.4,0,0],shL:[-.6,0,-.5],elL:[-1.7,0,0],shR:[-.6,0,.5],elR:[-1.7,0,0],wgL:[0,-.9,-.4],wgR:[0,.9,.4],sk0:[-.3,0,0]},
+  // Thirst: on one knee at the stone, a hand cupped to the mouth
+  kneel:{hips:[.35,0,0,0,-1.0,.1],spine:[.3,0,0],chest:[.25,0,0],head:[.3,0,0],jaw:[.5,0,0],shR:[-1.3,0,.5],elR:[-1.9,0,0],shL:[-.3,0,.5],elL:[-.4,0,0],sk0:[-.5,0,0],sk1:[-.4,0,0],wgL:[0,-.5,-.3],wgR:[0,.5,.3]},
+  // flight (Phase II on): the crouch, the leap, the beat, the stoop, the landing; the wing gale
+  crouch:{hips:[.25,0,0,0,-.55,0],spine:[.2,0,0],chest:[.15,0,0],head:[-.2,0,0],shL:[.3,0,.4],shR:[.3,0,-.4],wgL:[0,.3,.9],wgR:[0,-.3,-.9],sk0:[-.3,0,0]},
+  flyUp:{root:[0,0,0,0,5.2,0],hips:[-.2,0,0],chest:[-.15,0,0],head:[.25,0,0],shL:[-.3,0,.7],elL:[-.5,0,0],shR:[-.3,0,-.7],elR:[-.5,0,0],wgL:[0,.2,1.0],wgR:[0,-.2,-1.0],wfL:[0,0,.3],wfR:[0,0,-.3],sk0:[.25,0,0],sk1:[.2,0,0]},
+  flyDn:{root:[0,0,0,0,4.7,0],hips:[-.12,0,0],chest:[-.1,0,0],head:[.25,0,0],shL:[-.2,0,.5],elL:[-.6,0,0],shR:[-.2,0,-.5],elR:[-.6,0,0],wgL:[0,.2,-.2],wgR:[0,-.2,.2],wfL:[0,0,-.3],wfR:[0,0,.3],sk0:[.1,0,0]},
+  stoop:{root:[0,0,0,0,2.6,0],hips:[.7,0,0],chest:[.2,0,0],head:[-.5,0,0],shL:[-2.4,0,.3],elL:[-.2,0,0],shR:[-2.4,0,-.3],elR:[-.2,0,0],wgL:[0,.9,.6],wgR:[0,-.9,-.6],sk0:[.7,0,0],sk1:[.5,0,0]},
+  land:{hips:[.35,0,0,0,-.7,0],spine:[.3,0,0],chest:[.2,0,0],head:[-.2,0,0],shL:[-.9,0,.3],elL:[-.2,0,0],wrL:[.5,0,0],shR:[-.9,0,-.3],elR:[-.2,0,0],wrR:[.5,0,0],wgL:[0,.2,.6],wgR:[0,-.2,-.6],sk0:[-.4,0,0]},
+  galeUp:{hips:[-.2,0,0,0,.1,-.1],chest:[-.2,0,0],shL:[-.4,0,.8],shR:[-.4,0,-.8],wgL:[0,.8,.9],wgR:[0,-.8,-.9],wfL:[0,.3,.2],wfR:[0,-.3,-.2]},
+  gale:{hips:[.15,0,0,0,-.1,.15],chest:[.2,0,0],shL:[-1.0,0,.4],shR:[-1.0,0,-.4],wgL:[0,-1.2,.1],wgR:[0,1.2,-.1],wfL:[0,-.5,0],wfR:[0,.5,0]},
+  // torn open: on his knees, the essence pouring out; dead: face down, wings spread
+  stag:{hips:[.3,.1,.1,0,-1.15,0],spine:[.3,0,.08],chest:[.3,0,.06],head:[.5,.2,.2],jaw:[.5,0,0],shL:[-.4,0,.3],elL:[-.5,0,0],shR:[-.9,0,-.2],elR:[-1.4,0,0],wgL:[0,.2,-.6],wgR:[0,-.2,.6],sk0:[-.6,0,0],sk1:[-.4,0,0]},
+  dead:{root:[0,0,0,0,-1.9,0],hips:[1.4,0,.1,0,0,.5],spine:[.1,0,0],chest:[.1,0,0],head:[.2,.6,0],jaw:[.6,0,0],shL:[-2.5,0,.6],elL:[-.3,0,0],shR:[-1.8,0,-.7],elR:[-.5,0,0],wgL:[0,.3,.2],wgR:[0,-.3,-.2],sk0:[-.3,0,0]}};
+// ---------------- procedural layer: a gliding walk (the robe hides his legs), breathing, sleeves and skirt trailing, the head following you ----------------
+function yt232Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/2.4),br=Math.sin(t*.95),g=(S.gp=(S.gp||0)+dt*(1+sp*1.5));
+  O.hips[4]+=.03*br+.04*Math.sin(g*2)*a;O.hips[0]+=.06*a;O.chest[0]+=.025*br;O.spine[0]+=.015*br;O.neck[0]+=-.02*br;
+  O.sk0[0]+=.04*Math.sin(t*.9)+.25*a;O.sk1[0]+=.06*Math.sin(t*.9-.7)+.2*a;O.sk0[2]+=.04*Math.sin(g)*a;O.slL[0]+=.1*Math.sin(t*1.1)+.3*a;O.slR[0]+=.1*Math.sin(t*1.1+1)+.3*a;
+  O.shL[0]+=.03*br-.05*a;O.shR[0]+=.03*br-.05*a;O.elL[0]+=-.12-.03*br;O.elR[0]+=-.1-.03*br;O.wrL[0]+=.1*Math.sin(t*1.7);O.wrR[0]+=.1*Math.sin(t*1.7+1.3);
+  // wings: a slow settle on the ground, a beat in the air
+  const air=S.air||0,w=air>.02?Math.sin(t*7)*.5*air:.05*br;O.wgL[2]+=w;O.wgR[2]-=w;O.wfL[2]+=w*.6;O.wfR[2]-=w*.6;
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:(Math.abs(yaw)<1.6?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.8,Math.min(.8,yaw))*k)-(S.hy||0))*Math.min(1,dt*2.5);O.head[1]+=S.hy*.7;O.chest[1]+=S.hy*.12;
+  // Phase III: the body will not hold still
+  const tr=S.tru||0;if(tr>.01){O.head[2]+=.12*tr*Math.sin(t*3.1);O.neck[2]+=.08*tr*Math.sin(t*2.3+1);O.jaw[0]+=.35*tr+.1*tr*Math.sin(t*5);O.shL[2]+=.1*tr*Math.sin(t*2.7);O.shR[2]-=.1*tr*Math.sin(t*2.9+2);O.spine[0]+=.12*tr}}
+// after the pose: the essence in his breast cycles the six colours; wings unfold in Phase II; Phase III stretches him (S.tru)
+function yt232Post(e,S,dt,now){const R=S.R,t=now/1000,ch=S.chg||0,J=R.J;S.air=Math.max(0,Math.min(1,J.root.position.y/3));
+  const ci=Math.floor(t*.5)%6,c0=new THREE.Color(YT232.ess[ci]),c1=new THREE.Color(YT232.ess[(ci+1)%6]);c0.lerp(c1,(t*.5)%1);R.ess.emissive.copy(c0);R.ess.emissiveIntensity=1.0+.3*Math.sin(t*3)+ch*1.6+(S.sat||0)*.25;
+  R.eyeM.color.setHex(ch>.4?0xd8b0ff:0xffffff);
+  // wings: nothing in Phase I, out in II and III
+  S.wk=(S.wk||0)+(((S.ph>1||S.dieM&&S.wk>.5)?1:0)-(S.wk||0))*Math.min(1,dt*2.2);const wk=Math.max(.001,S.wk);['wgL','wgR'].forEach(j=>{J[j].scale.setScalar(wk);J[j].visible=wk>.02});
+  // the truth: longer neck and arms, the robe darkens and its skirt shrinks back, the jaw hangs
+  S.tru=(S.tru||0)+((S.ph>2?1:0)-(S.tru||0))*Math.min(1,dt*1.2);const tr=S.tru;J.neck.scale.set(1,1+.9*tr,1);J.head.scale.setScalar(1.25);['shL','shR'].forEach(j=>{J[j].scale.set(1,1+.15*tr,1)});['elL','elR'].forEach(j=>{J[j].scale.set(1,1+.2*tr,1)});
+  J.sk1.scale.set(1-.25*tr,1-.3*tr,1-.25*tr);R.robeM.color.setHex(0x6a0a14).lerp(new THREE.Color(0x24060c),tr*.8);R.robe2M.color.setHex(0x3e0610).lerp(new THREE.Color(0x14040a),tr*.8);
+  if(!S.dieM&&Math.random()<dt*(4+ch*14+tr*8)){const j=Math.random()<.5?'wrL':'wrR',p=svWP(e,j,0,-.3,.1);burst(p,Math.random()<.5?0x3a1a5a:0x7a3aff,1,.3,.7,.6)}
+  if(!S.dieM&&Math.random()<dt*3){const p=svWP(e,'heart',0,0,.15);burst(p,YT232.ess[(Math.random()*6)|0],1,.3,.5,.6)}}
+YT232.sheet.boss=()=>{const R=svRig();yt232Build(R,null);svRest(R);svMerge(R);return R.root};
+// ================= v232 Ythrael — the moves (Sovereign move format; the kit 4010 points the engine at the Hollow) =================
+// Theme: the thing that drank the Sovereigns: black fire, long nails, a voice that commands — and the essence itself, which is his
+// strength and his weakness. Debuff: Withered (his black fire: you deal less damage).
+// Three phases. I "The Voice" (to 66%): the robed lord, on foot. II "Wings of Ivory" (to 33%): the wings tear out, he takes to the
+// air, and the brink of the stone begins to burn. III "The Gangly Truth": the robe splits, the limbs stretch, the stone's rim falls
+// away; he is frantic and starving.
+//  close, front ── Nail Rake: a hand raked down and across (an arc), the other hand (an arc), then both hands low and up: a pillar
+//                  of black fire along a line in front of him (late).
+//  mid / far    ── Umbral Lance: one arm levelled at you, a breath, and a lance of black fire the length of the stone.
+//  behind/side  ── Robe Whirl: he turns in a sweep of robe and sleeve: a ring (stand close in, or far out).
+//  any          ── Grasping Shadows: his palms lift, and three hands of shadow close out of the floor under you, each aimed ahead
+//                  of you; a pool of void stays where each closed.
+//  far, front   ── Black Orbs: hands crossed at his breast and flung apart: five slow orbs in a fan.
+//  close, any   ── Voice of Command: he speaks one word. A blast round him, then black spikes along eight lanes, then eight more.
+//  Phase II ────── Skyfall (he stoops on you from the air; a ring of force from where he lands), Essence Barrage (six strikes in
+//                  the six Sovereigns' colours fall one after another, each aimed ahead of you) and Wing Gale (a wide cone of
+//                  wind that throws you toward the brink).
+//  Phase III ───── Frenzy (five rakes and a leaping slam), Thousand Nails (three fans of lances in quick succession) and
+//                  everything faster.
+//  Signature ──── Thirst (all phases). His heavy blows spill motes of essence onto the stone, and they lie there. Walk over a mote
+//                  and you take it: it heals you a little and makes you stronger (Stolen Essence, up to six). When enough lie
+//                  about he kneels and DRINKS: every mote left flies to his mouth; each one heals him and makes him stronger.
+//                  Take the sixth mote and the essence in you tears out of him in answer: RUPTURED, a long stagger, a deep wound.
+//                  So the floor is a race: the motes lie where his blows just landed.
+// Weakness: posture (the yellow bar); every break staggers him (+35% damage). Big moves have armour.
+const YT232_DEB=['Withered','🕳',{paP:-.15,maP:-.15},'Black fire eats at you: −15% attack'];
+function yt232Mats(){const X=WK232.X;return X.yt||(X.yt={void:new THREE.MeshStandardMaterial({color:0x0c0614,emissive:0x5a2a9a,emissiveIntensity:.7,roughness:.4,flatShading:true}),dark:new THREE.MeshStandardMaterial({color:0x08060c,roughness:.6,flatShading:true}),orb:new THREE.MeshBasicMaterial({color:0x1a0a2a})})}
+function yt232Wither(ms){try{dqDebuff(YT232_DEB[0],YT232_DEB[1],YT232_DEB[2],ms||3500,YT232_DEB[3])}catch(_){}}
+function yt232Pool(e,p,r,ms){wk232Pool(e,p,r,0x7a3aff,ms||4000,.17,YT232_DEB)}
+// a hand of shadow closing out of the floor (the hit is the move's); a void pool; a mote of essence
+function yt232Grasp(c,p,big){const e=c.e,M=yt232Mats(),s=big?1.3:1;wk232Erupt(e,p,{col:0x7a3aff,s,decal:0x0a0612,snd:'hiss',h:3.4,op:.55});
+  for(let k=0;k<5;k++){const a=k/5*6.283+.3,r=.75*s;svSpike(new THREE.Vector3(p.x+Math.cos(a)*r,0,p.z+Math.sin(a)*r),k%2?M.dark:M.void,(1.9+Math.random()*.5)*s,.14*s,1.3,.75)}
+  burst(gY(p,.6),0x3a1a5a,24,2.5,3,.7);yt232Pool(e,p,1.3*s,3800)}
+function yt232Lance(an,len,w){const g=new THREE.Group(),a=an.a,y=GH(an.x,an.z);g.position.set(an.x,y+1.5,an.z);g.rotation.y=a;
+  const core=new THREE.Mesh(svG('yt_lc',()=>{const q=new THREE.CylinderGeometry(1,1,1,8,1,true);q.rotateX(Math.PI/2);q.translate(0,0,.5);return q}),new THREE.MeshBasicMaterial({color:0x0a0410,transparent:true,opacity:.95,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  const halo=new THREE.Mesh(core.geometry,new THREE.MeshBasicMaterial({color:0x9a5aff,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  core.scale.set(w*.28,w*.28,len);halo.scale.set(w*.6,w*.6,len);[core,halo].forEach(m=>{m.userData.lpsSkip=1;m.renderOrder=22;g.add(m)});scene.add(g);let t=0;
+  for(let k=0;k<len;k+=1.2)burst(new THREE.Vector3(an.x+Math.sin(a)*k,y+1.5,an.z+Math.cos(a)*k),k%2?0x7a3aff:0x1a0a2a,2,1.2,.4,.5);
+  kqFx({tick(dt){t+=dt||0;const k=t/.4;core.scale.x=core.scale.y=w*.28*(1-k);halo.material.opacity=.6*(1-k);halo.scale.x=halo.scale.y=w*.6*(1+k);return k<1},end(){scene.remove(g);core.material.dispose();halo.material.dispose()}})}
+function yt232Orb(c,an,dm,spd){wk232Bolt(c,an,dm,{col:0x9a5aff,spd:spd||8,L:22,w:1.5,y:1.3,gl:2.0,trail:false,mesh:()=>{const g=new THREE.Group(),m=new THREE.Mesh(svG('yt_orb',()=>new THREE.IcosahedronGeometry(.46,1)),yt232Mats().orb);g.add(m);return g},on:()=>yt232Wither(3500)})}
+function yt232Lane(c,an,dm){const M=yt232Mats();wk232Lane(c,an,dm,{mat:M.dark,mat2:M.void,col:0x7a3aff,n:14,step:1.05,h:1.4,on:()=>yt232Wither(2500)})}
+// a strike of one Sovereign's essence from above (the hit is the move's); it leaves a mote
+function yt232Strike(c,p,i){const col=YT232.ess[i%6];try{sk146Column(p,col,0xffffff,1.0,8,.5)}catch(_){}burst(gY(p,.4),col,36,4,3,.7);svShock(p,col,3,.3);svDecal(p,0x0a0612,1.8,3,.5);try{sk146Crack(p,col,2.4,1.6)}catch(_){}svSnd('bell',.5,.6+i*.12);svSnd('heavy',.7,1.1);try{yt232Mote(c.D,p,i)}catch(_){}}
+const YT232_TR=(t0,t1,j)=>[t0,t1,j,[0,-.3,.1],[0,-.9,.2],0x9a5aff,.2];
+function yt232Stoop(tb,o){o=o||{};return {trn:[tb,tb+1.4,6],
+  hit:[{t:tb+2.0,s:{k:'c',r:3.4},o:'tgt',dm:o.dm||1.45,w:.55,kb:4,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);c.m.position.x=p.x;c.m.position.z=p.z;c.S.ghost=0;svShock(p,YT232.col,5.5,.45);burst(gY(p,.4),0x3a1a5a,60,5,3,.7);svDecal(p,0x0a0612,3.2,4,.55);shake(.5);svSnd('heavy',1.4,.7);
+      try{sk146Crack(p,0x9a5aff,4.2,2)}catch(_){}try{sk146RingWave(c.e,p.clone(),2.6,15,1.4,1.1,.95,YT232.col,{on:()=>yt232Wither(2500)})}catch(_){}try{yt232Mote(c.D,p)}catch(_){}}}],
+  trk:[[tb+.3,'crouch','io'],[tb+.48,'crouch','l',.014],[tb+.75,'flyUp','o'],[tb+1.0,'flyDn','io'],[tb+1.25,'flyUp','io'],[tb+1.5,'flyDn','io'],[tb+1.72,'stoop','i'],[tb+2.0,'land','s'],[tb+2.4,'land','l']],
+  ev:[[tb+.5,c=>{c.S.ghost=1;svSnd('whoosh',1.2,.6);burst(gY(c.m.position,.3),0x3a1a5a,30,4,1,.6);svShock(c.m.position,YT232.col,3.5,.35)}],[tb+1.5,c=>svSnd('hiss',.8,.6)]],
+  tk(c,dt){if(c.t>tb+.55&&c.t<tb+1.45){const m=c.m,p=wk232HeroIn(c.D,pl.position.clone());m.position.x+=(p.x-m.position.x)*Math.min(1,dt*2.2);m.position.z+=(p.z-m.position.z)*Math.min(1,dt*2.2)}}}}
+var YT232M={
+  intro:WK232_M({dur:4.0,inv:[0,4.0],armor:1,trn:[[0,4.0,1.5]],trk:[[.9,'cross','io'],[1.7,'cross','l',.01],[2.0,'speak','o'],[3.4,'speak','l',.015],[4.0,'cRec','io']],
+    ev:[[.3,c=>{say('<i>“So. The Upright bites the hand that raised it.”</i>');svSnd('hiss',.8,.5);c.S.chgT=1}],[2.0,c=>{svSnd('roar',1.1,.5);svSnd('bell',.8,.4);shake(.45);svShock(c.m.position,YT232.col,10,.8);burst(gY(c.m.position,3),0x7a3aff,90,6,3,1);c.S.chgT=0}]]}),
+  // Nail Rake
+  rake:WK232_M({wt:10,cd:2.6,r:[0,5.8],a:'f',mel:1,dur:2.9,lock:.4,trn:[[0,.42,5],[.84,.96,5],[1.44,1.74,3.6]],
+    trk:[[.4,'rUp','io'],[.52,'rUp','l',.012],[.64,'rCut','s'],[.86,'rCut','l'],[1.0,'rUp~','io'],[1.12,'rCut~','s'],[1.42,'upLow','io'],[1.76,'upLow','l',.016],[1.9,'upCut','s'],[2.35,'upCut','l'],[2.9,'cRec','io']],
+    rm:[[.56,.66,.8,'o'],[1.04,1.14,.7,'o'],[1.8,1.92,.8,'o']],
+    hit:[{t:.63,s:{k:'a',r:5.0,h:1.15},f:.3,dm:.95},{t:1.11,s:{k:'a',r:5.0,h:1.15},f:.3,dm:.95},
+      {t:1.9,s:{k:'l',w:2.4,l:8.5,b:0},f:.4,dm:1.4,w:.46,on:()=>yt232Wither(3500),fx:(c,an)=>{for(let k=1.5;k<8.5;k+=1.8){const p=new THREE.Vector3(an.x+Math.sin(an.a)*k,0,an.z+Math.cos(an.a)*k);wk232Erupt(c.e,p,{col:0x7a3aff,s:1.1,h:5,op:.55,snd:'hiss'})}shake(.3);svSnd('heavy',1.1,.9);try{yt232Mote(c.D,c.at(5))}catch(_){}}}],
+    tr:[YT232_TR(.55,.72,'wrR'),YT232_TR(1.02,1.2,'wrL'),YT232_TR(1.8,1.96,'wrL'),YT232_TR(1.8,1.96,'wrR')],
+    ev:[[.56,c=>svSnd('swing',.9,.9)],[1.04,c=>svSnd('swing',.9,1)],[1.44,c=>svSnd('hiss',.6,.7)],[1.8,c=>svSnd('whoosh',1,.7)]],nx:[['lance',.25,10],['whirl',.3,6]],rec:.3}),
+  // Umbral Lance
+  lance:WK232_M({wt:(e,L)=>L>4?9:4,cd:5.5,r:[3,40],a:'f',armor:1,dur:2.3,lock:.95,trn:[[0,.95,5]],
+    trk:[[.7,'lnUp','io'],[1.04,'lnUp','l',.014],[1.14,'lance','s'],[1.7,'lance','l'],[2.3,'cRec','io']],
+    hit:[{t:1.16,s:{k:'l',w:1.8,l:34,b:0},f:.8,dm:1.4,w:.8,kb:2,on:()=>yt232Wither(3500),fx:(c,an)=>{yt232Lance(an,34,1.8);shake(.3);svSnd('whoosh',1.3,.6);svSnd('crack',.8,.5)}}],
+    ev:[[.4,c=>{svSnd('charge',.7,.5);svCharge(c.e,'wrL',0x7a3aff,1.2,.7,0,-.3,.1)}]],rec:.35}),
+  // Robe Whirl (from behind or the side)
+  whirl:WK232_M({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5,r:[0,6.2],a:'sb',dur:2.0,lock:.5,trn:[[0,.4,2]],
+    trk:[[.55,'whUp','io'],[.84,'whUp','l',.014],[1.02,'whirl','s'],[1.4,'whirl','l'],[2.0,'cRec','io']],
+    hit:[{t:1.02,s:{k:'r',r0:1.4,r:6.2},dm:1.15,kb:4,w:.8,fx:c=>{svShock(c.m.position,YT232.col,6.5,.4);burst(gY(c.m.position,1.2),0x6a0a14,40,6,1,.5);svSnd('whoosh',1.2,.7)}}],
+    ev:[[.4,c=>svSnd('hiss',.6,.8)]],rec:.35}),
+  // Grasping Shadows: three hands under you, aimed ahead
+  grasp:WK232_M({wt:8,cd:7,r:[2,40],a:'any',armor:1,dur:3.1,lock:.7,trn:[[0,.7,3.5]],
+    trk:[[.65,'lift','io'],[1.1,'lift','l',.012],[1.24,'press','s'],[2.5,'press','l',.006],[3.1,'cRec','io']],
+    hit:[1.6,1.98,2.36].map((t,i)=>({t,s:{k:'c',r:2.0},o:c=>{const p=wk232Aim(c,.45+i*.1);return {x:p.x,z:p.z,a:0}},w:.68,dm:1.05,wc:0x7a3aff,on:()=>yt232Wither(3500),fx:(c,an)=>{yt232Grasp(c,new THREE.Vector3(an.x,0,an.z));if(i==2)try{yt232Mote(c.D,new THREE.Vector3(an.x,0,an.z))}catch(_){}}})),
+    ev:[[.5,c=>{svSnd('hiss',.8,.6);c.S.chgT=.8}],[1.24,c=>{c.S.chgT=0;svSnd('heavy',.9,.8)}]],rec:.4}),
+  // Black Orbs
+  orbs:WK232_M({wt:(e,L)=>L>6?9:3,cd:7,r:[4,40],a:'f',dur:2.3,lock:.95,trn:[[0,.95,4]],
+    trk:[[.75,'cross','io'],[1.0,'cross','l',.012],[1.14,'fling','s'],[1.7,'fling','l'],[2.3,'cRec','io']],
+    hit:[-.56,-.28,0,.28,.56].map(ay=>({t:1.16,s:{k:'l',w:1.5,l:9,b:0},f:1.0,ay,nohit:1,w:.8,wc:0x7a3aff,fx:(c,an)=>yt232Orb(c,an,.95)})),
+    ev:[[.4,c=>svSnd('charge',.5,.6)],[1.14,c=>svSnd('whoosh',.9,.8)]],rec:.35}),
+  // Voice of Command
+  voice:WK232_M({wt:(e,L)=>L<6?9:2,cd:9,r:[0,7],a:'any',armor:1,dur:3.4,trn:[[0,.5,2]],
+    trk:[[.7,'curl','io'],[1.78,'curl','l',.02],[1.9,'speak','s'],[2.8,'speak','l',.012],[3.4,'cRec','io']],
+    hit:[{t:1.9,s:{k:'c',r:3.8},dm:1.3,w:1.3,kb:4,fx:c=>{svShock(c.m.position,YT232.col,5,.35);burst(gY(c.m.position,2),0x7a3aff,70,6,3,.7);shake(.45);svSnd('roar',1.1,.6);svSnd('bell',.8,.4);say('<i>“KNEEL.”</i>');try{yt232Mote(c.D,c.at(2.5))}catch(_){}}}]
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.14,s:{k:'l',w:1.4,l:15,b:-1.4},f:0,ay:k*Math.PI/4,nohit:1,w:.75,wc:0x7a3aff,fx:(c,an)=>yt232Lane(c,an,1.0)})))
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.58,s:{k:'l',w:1.4,l:15,b:-1.4},f:0,ay:k*Math.PI/4+Math.PI/8,nohit:1,w:.6,wc:0x7a3aff,fx:(c,an)=>yt232Lane(c,an,1.0)}))),
+    ev:[[.5,c=>{svSnd('charge',.7,.5);c.S.chgT=1.4}],[1.9,c=>{c.S.chgT=0}]],rec:.45}),
+  // Thirst: he drinks every mote left on the stone (4062)
+  drink:WK232_M({wt:(e)=>{const D=e.wk,n=D.S.motes.length;return n>=5?40:n>=3?16:0},cd:14,r:[0,40],a:'any',armor:1,dur:5.2,trn:[[0,.4,1]],
+    trk:[[.7,'kneel','io'],[4.2,'kneel','l',.014],[4.6,'speak','o'],[5.2,'cRec','io']],
+    go(c){c.S.still=1},ev:[[.2,c=>{svSnd('hiss',1,.5);c.S.chgT=1;try{yt232DrinkStart(c.D,c.e)}catch(err){console.error('yt drink',err)}}],[4.3,c=>{c.S.chgT=0;try{yt232DrinkEnd(c.D,c.e,false)}catch(err){console.error('yt drink end',err)}}]],
+    end(c,silent){c.S.still=0;c.S.chgT=0;try{yt232DrinkEnd(c.D,c.e,true)}catch(_){}},rec:.5}),
+  // ---------------- Phase II: the wings ----------------
+  awaken:WK232_M({dur:4.2,inv:[0,4.2],armor:1,trn:[[0,3.8,1.2]],trk:[[.8,'curl','io'],[1.5,'curl','l',.03],[1.8,'speak','o'],[3.5,'speak','l',.02],[4.2,'cRec','io']],
+    hit:[{t:1.82,s:{k:'c',r:8},dm:.55,kb:7,w:1.3,fx:c=>{svShock(c.m.position,YT232.col,13,.9);burst(gY(c.m.position,3),0xe2dccb,120,8,4,1.1);burst(gY(c.m.position,3),0x7a3aff,60,6,3,1)}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[5],'Ythrael · Phase II','Wings of Ivory','He takes to the air, and the brink of the stone begins to burn','Keep off the edge','z5')}catch(_){}say('<i>“You think this stone is the world? Look UP.”</i>');svSnd('hiss',1,.4);c.S.chgT=1.4}],
+      [1.8,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(200,150,255,.35)')}catch(_){}svSnd('roar',1.3,.5);svSnd('crack',1,.5);shake(.6);try{yt232Brink(c.D,1)}catch(err){console.error('yt brink',err)}}]]}),
+  skyfall:WK232_M((()=>{const d=yt232Stoop(.1);return {wt:(e,L)=>L>4?10:5,cd:8,ph:2,r:[0,40],a:'any',armor:1,dur:3.0,rec:.4,trn:[d.trn],hit:d.hit,trk:d.trk.concat([[3.0,'cRec','io']]),ev:d.ev,tk:d.tk,end(c){c.S.ghost=0}}})()),
+  barrage:WK232_M({wt:8,cd:10,ph:2,r:[0,40],a:'any',armor:1,dur:4.6,trn:[[0,.6,3]],
+    trk:[[.6,'lift','io'],[3.6,'lift','l',.012],[3.9,'press','s'],[4.6,'cRec','io']],
+    hit:[0,1,2,3,4,5].map(i=>({t:1.5+i*.42,s:{k:'c',r:2.1},o:c=>{const p=wk232Aim(c,.4+(i%3)*.12);return {x:p.x,z:p.z,a:0}},w:.7,dm:1.05,wc:YT232.ess[i],fx:(c,an)=>yt232Strike(c,new THREE.Vector3(an.x,0,an.z),i)})),
+    ev:[[.4,c=>{svSnd('charge',.8,.7);c.S.chgT=1;say('<i>“Their strength is MINE.”</i>')}],[3.9,c=>{c.S.chgT=0}]],rec:.45}),
+  gale:WK232_M({wt:(e,L)=>L<9?8:3,cd:8,ph:2,r:[0,11],a:'f',armor:1,dur:2.4,lock:.8,trn:[[0,.8,4]],
+    trk:[[.7,'galeUp','io'],[1.0,'galeUp','l',.016],[1.14,'gale','s'],[1.6,'gale','l'],[2.4,'cRec','io']],
+    hit:[{t:1.14,s:{k:'a',r:11,h:.85},f:.2,dm:1.1,kb:9,w:.8,fx:c=>{burst(gY(c.at(3),1.4),0xe2dccb,50,10,2,.7);burst(gY(c.at(7),1.2),0x3a1a5a,40,10,1,.7);svShock(c.at(1.5),YT232.col,5,.4);shake(.3);svSnd('whoosh',1.5,.5)}}],
+    ev:[[.4,c=>svSnd('whoosh',.7,.7)]],rec:.4}),
+  // ---------------- Phase III: the gangly truth ----------------
+  awaken2:WK232_M({dur:4.6,inv:[0,4.6],armor:1,trn:[[0,4.2,1.2]],trk:[[.8,'kneel','io'],[2.0,'kneel','l',.05],[2.4,'speak','o'],[3.9,'speak','l',.03],[4.6,'cRec','io']],
+    hit:[{t:2.42,s:{k:'c',r:8},dm:.6,kb:7,w:1.5,fx:c=>{svShock(c.m.position,0xffffff,14,.9);burst(gY(c.m.position,3),0x6a0a14,120,8,4,1.2);burst(gY(c.m.position,3),0xcfc6c2,60,6,3,1)}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[5],'Ythrael · Phase III','The Gangly Truth','The robe splits. The rim of the stone falls into the dark','There is less room now','z5')}catch(_){}say('<i>“A thousand years… I will NOT… go back… to the DARK—”</i>');svSnd('shriek',1,.6);c.S.chgT=1.6}],
+      [2.4,c=>{c.S.ph=3;c.e.bs.ph=3;c.S.chgT=0;try{flash('rgba(255,255,255,.4)')}catch(_){}svSnd('roar',1.4,.8);svSnd('shriek',1.2,.5);shake(.8);try{yt232Crumble(c.D,1)}catch(err){console.error('yt crumble',err)}}]]}),
+  frenzy:WK232_M({wt:10,cd:4,ph:3,r:[0,6.4],a:'f',mel:1,dur:3.5,lock:.3,trn:[[0,.3,6],[.62,.7,6],[.96,1.04,6],[1.3,1.38,6],[1.9,2.25,4]],
+    trk:[[.28,'rUp','io'],[.42,'rCut','s'],[.6,'rUp~','io'],[.76,'rCut~','s'],[.94,'rUp','io'],[1.1,'rCut','s'],[1.28,'rUp~','io'],[1.44,'rCut~','s'],[1.9,'flyUp','o'],[2.24,'stoop','i'],[2.4,'land','s'],[2.95,'land','l'],[3.5,'cRec','io']],
+    rm:[[.36,.44,.7,'o'],[.7,.78,.6,'o'],[1.04,1.12,.6,'o'],[1.38,1.46,.6,'o'],[1.86,2.4,'tgt','io',.4,9]],
+    hit:[.42,.76,1.1,1.44].map(t=>({t,s:{k:'a',r:5.2,h:1.15},f:.3,dm:.85})).concat([{t:2.4,s:{k:'c',r:3.4},o:'tgt',dm:1.5,w:.5,on:()=>yt232Wither(3500),fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);svShock(p,YT232.col,5,.45);burst(gY(p,.4),0x3a1a5a,50,4,3,.7);shake(.45);svSnd('heavy',1.3,.9);yt232Grasp(c,p,true);try{yt232Mote(c.D,p)}catch(_){}}}]),
+    tr:[YT232_TR(.34,.48,'wrR'),YT232_TR(.68,.82,'wrL'),YT232_TR(1.02,1.16,'wrR'),YT232_TR(1.36,1.5,'wrL')],
+    ev:[[.36,c=>svSnd('swing',.9,1.2)],[.7,c=>svSnd('swing',.9,1.3)],[1.04,c=>svSnd('swing',.9,1.25)],[1.38,c=>svSnd('swing',.9,1.35)],[1.86,c=>{svSnd('shriek',.7,.9);c.S.ghost=1}],[2.4,c=>{c.S.ghost=0}]],end(c){c.S.ghost=0},rec:.4}),
+  nails:WK232_M({wt:(e,L)=>L>4?10:4,cd:8,ph:3,r:[3,40],a:'f',armor:1,dur:3.8,trn:[[0,.8,5],[1.3,1.5,6],[2.0,2.2,6]],
+    trk:[[.6,'lnUp','io'],[.84,'lnUp','l',.014],[.94,'lance','s'],[1.3,'lnUp~','io'],[1.56,'lance~','s'],[2.0,'lnUp','io'],[2.26,'lance','s'],[3.0,'lance','l'],[3.8,'cRec','io']],
+    hit:[[.96,[-.3,0,.3]],[1.58,[-.45,-.15,.15,.45]],[2.28,[-.3,0,.3]]].flatMap(([t,A],w)=>A.map(ay=>({t,s:{k:'l',w:1.5,l:34,b:0},f:.8,ay,dm:1.15,w:w?.44:.7,wc:0x7a3aff,on:()=>yt232Wither(3000),fx:(c,an)=>{yt232Lance(an,34,1.4);if(ay==A[0]){shake(.25);svSnd('whoosh',1.2,.7+w*.1)}}}))),
+    ev:[[.3,c=>svSnd('charge',.7,.6)]],rec:.45}),
+  // the essence torn back out of him: a long stagger
+  broken:WK232_M({dur:5.2,trk:[[.3,'stag','o'],[4.6,'stag','l',.03],[5.2,'cRec','io']],
+    go(c){c.S.stg=5.2;c.S.ghost=0;svSnd('stag',1.2,.7);svSnd('shriek',1,.6);popT(c.m.position,'RUPTURED','#e8d0ff',true);svShock(c.m.position,0xffffff,7,.5);for(let i=0;i<6;i++)burst(gY(c.m.position,2.5),YT232.ess[i],24,5,4,1)},
+    tk(c,dt){c.S.stg=Math.max(0,5.2-c.t);if(Math.random()<dt*14){const p=svWP(c.e,'heart',0,0,.2);burst(p,YT232.ess[(Math.random()*6)|0],1,1.2,1.5,.8)}},end(c){c.S.stg=0}})};
+// ================= v232 Ythrael — the Hollow Beneath (the finale's arena), Thirst, the brink, the falling rim, the record =================
+// The fight-him ending. The arena is a place of its own (special instance 'apex', g 35, registered in 3150; its ground is painted
+// by ap232Map / ap232Terrain below, which the world build calls): the den of the cinematic, under Duskhold's fountain — a great
+// disc of black stone standing out of a sea of essence, the six Sovereigns' stones round its rim, roots and stalagmites in the
+// dark beyond, the fountain's throat a point of light far overhead with essence still falling from it.
+//  * Thirst (YT.S.motes, YT.S.stolen): motes of essence spilled by his blows lie on the stone for 30 s (nine at most). Walking over
+//    one takes it: +3% health and a stack of Stolen Essence (+6% attack each). The sixth tears the essence back out of him: he
+//    is wounded 6% and 'broken' (RUPTURED). When three or more lie about he may kneel and drink: the motes fly to him (5 a second;
+//    you can still snatch them); each he swallows heals him 2.5% and makes his blows 8% heavier for 20 s (Sated).
+//  * The brink (Phase II; YT.S.brink): the outer 2.2 of the stone burns with essence-fire (damage, Withered).
+//  * The falling rim (Phase III; YT.S.rim): the stone's rim breaks away: the arena shrinks from 17.6 to 13.2 (the brink moves in).
+// Ground: ap232Map paints a round floor (radius 20.5) in the middle of the 96 × 96 instance and solid rock round it; ap232Terrain
+// makes the floor flat at height 20 and drops everything outside it 40 down, so the stone stands like a pillar in the dark.
+function ap232Cfg(){return {F0:20,R:20.5,cx:48,cz:48}}
+function ap232Map(m,bio,DW,I,bi){const C=ap232Cfg();for(let v=0;v<I.h;v++)for(let u=0;u<I.w;u++){const x=I.x0+u,y=I.y0+v;if(!m[y])continue;bio[y][x]=bi;const d=Math.hypot(u+.5-C.cx,v+.5-C.cz);
+    if(d<C.R){m[y][x]='.';DW[y*W+x]=-Math.max(1,C.R-d)}else{m[y][x]='';DW[y*W+x]=Math.max(1,d-C.R)}}}
+function ap232Terrain(I){const C=ap232Cfg();for(let j=I.y0-2;j<I.y0+I.h+2;j++)for(let i=I.x0-2;i<I.x0+I.w+2;i++){const d=Math.hypot(i-I.x0-C.cx,j-I.y0-C.cz),k=Math.max(0,Math.min(1,(d-C.R)/2.5));
+    HF[(j+HPD)*HW+i+HPD]=C.F0-40*k*k*(3-2*k)+(d<C.R?(fbm2(i*.3,j*.3,2)-.5)*.05:0)}}
+try{sp152Theme('apex',{nm:'The Hollow Beneath',sub:'Under the fountain of Duskhold',a:{fog:.02,fc:0x0a0614,fcA:.95,sun:.14,hemi:.42,env:'dark',ex:1.0,sat:1.05,vig:1.75,sky:0,pt:'mote',pc:0xc8a0ff,po:.5}})}catch(e){console.warn('v232 theme',e)}
+try{SP152.R.apex={onLoad(){setTimeout(()=>{try{TWN100_home()}catch(_){}},0)}}}catch(_){}
+var YT232D=(()=>{const I=sp152I('apex');if(!I){console.error('v232: the apex instance is missing');return null}const C=ap232Cfg(),cx=I.x0+C.cx,cz=I.y0+C.cz;
+ return wk232Reg({key:'voice',T:I,center:[cx,cz],Lx:{r:17.6,hr:18.6,ent:{x:cx,z:cz+15.2},exit:{x:cx,z:cz+17.4},home:{x:cx,z:cz-3}},name:'Ythrael',title:'the Voice Below',icon:'👁',lv:56,place:'The Hollow Beneath',base:'akorror',hpK:1.9,dmK:1.3,wake:11,
+  card:['he who drank six Sovereigns','There is no way back up'],restTxt:'the middle of the stone',riftCol:0xe8d0ff,
+  B:{name:'Ythrael',col:YT232.col,body:1.6,ph2:.66,poise:.1,headJ:'head',turnA:3.6,edge:1.6,
+    ai:{pref:4.0,walk:2.5,run:4.6,turn:2.7,rest:[.7,1.25],ph2r:.64,strafe:.5,near:2.2},
+    build:yt232Build,loco:yt232Loco,post:yt232Post,P:YT232P,M:YT232M,
+    stag:[[.3,'stag','o'],[2.2,'stag','l',.025],[2.75,'cRec','io']],stagT:2.75,die:[[.6,'stag','o'],[1.6,'dead','i'],[2.1,'dead','l']]},
+  done:()=>FN232.won>0,
+  S:{motes:[],stolen:0,drink:0,brink:0,rim:0,zT:0,sat:0,satT:0,dm0:1.3},
+  build(D,root,LS){const L=D.L,S=D.S,rn=svRng(2362),y=(x,z)=>GH(x,z),MY=yt232Mats();
+    const M={stone:new THREE.MeshStandardMaterial({color:0x14121a,roughness:.7,metalness:.15,flatShading:true}),stone2:new THREE.MeshStandardMaterial({color:0x1e1a28,roughness:.8,flatShading:true}),root:new THREE.MeshStandardMaterial({color:0x100c12,roughness:.9,flatShading:true})};LS.M=M;
+    // the floor: black stone, violet veins, a great ring with the six Sovereigns' marks cut into it
+    const sig=(c,Sz,glow)=>{const C=Sz/2,R=Sz*.36;c.lineWidth=glow?2.5:3.5;c.strokeStyle=glow?'rgba(200,154,255,.85)':'rgba(70,56,96,.9)';[1,.92,.3].forEach(k=>{c.beginPath();c.arc(C,C,R*k,0,6.283);c.stroke()});
+        c.beginPath();for(let i=0;i<=6;i++){const a=i/6*6.283+.5236;c[i?'lineTo':'moveTo'](C+Math.sin(a)*R*.92,C+Math.cos(a)*R*.92)}c.stroke();c.beginPath();for(let i=0;i<=6;i++){const a=(i*2%6)/6*6.283+.5236+(i>=3?1.0472:0);c[i%3?'lineTo':'moveTo'](C+Math.sin(a)*R*.92,C+Math.cos(a)*R*.92)}c.stroke();
+        if(glow)YT232.ess.forEach((col,i)=>{const a=i/6*6.283+.5236,x=C+Math.sin(a)*R*.92,z=C+Math.cos(a)*R*.92,gr=c.createRadialGradient(x,z,0,x,z,20);gr.addColorStop(0,'#'+col.toString(16).padStart(6,'0'));gr.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gr;c.beginPath();c.arc(x,z,20,0,6.283);c.fill()})};
+    LS.floorM=wk232Floor(D,root,{base:'#121018',seed:2363,R0:22,soft:58,spk:[[30,26,40],[18,16,24]],spkN:420,spkR:12,spkA:.5,crack:'rgba(0,0,0,.6)',crackN:50,rough:.6,metal:.2,em:0xffffff,emI:.5,
+      vein:['rgba(150,90,255,.5)'],veinN:12,paint:(c,r,Sz)=>sig(c,Sz,0),glow:(c,r,Sz)=>sig(c,Sz,1)});
+    // the sea of essence far below, two layers turning against each other
+    {const cv=document.createElement('canvas');cv.width=cv.height=256;const c=cv.getContext('2d');c.fillStyle='#0a0614';c.fillRect(0,0,256,256);const cols=['154,255,90','90,216,255','191,233,255','255,194,74','184,255,58','255,74,90','200,154,255'];
+      for(let i=0;i<90;i++){const x=rn()*256,z=rn()*256,r=14+rn()*40,gr=c.createRadialGradient(x,z,0,x,z,r);gr.addColorStop(0,'rgba('+cols[(rn()*7)|0]+','+(.25+rn()*.3)+')');gr.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gr;c.beginPath();c.arc(x,z,r,0,6.283);c.fill()}
+      const tx=new THREE.CanvasTexture(cv);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(3,3);LS.sea=[0,1].map(k=>{const m=new THREE.Mesh(svG('yt_sea',()=>new THREE.CircleGeometry(70,48).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({map:tx,color:k?0xb090ff:0xffffff,transparent:true,opacity:k?.5:.95,blending:k?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:!k,fog:false}));
+        m.position.set(L.cx,L.y-10-k*.4,L.cz);m.userData.lpsSkip=1;m.material.userData.noFade135=1;root.add(m);return m})}
+    // the stone's flank: a ragged skirt of rock under the rim, so it reads as a pillar
+    for(let i=0;i<40;i++){const a=i/40*6.283,r=20.4+rn()*.8,o=new THREE.Mesh(wk232Lump(50+i%5,1,1,.4),i%2?M.stone:M.stone2);o.position.set(L.cx+Math.sin(a)*r,L.y-2.6-rn()*2,L.cz+Math.cos(a)*r);o.scale.set(2.6+rn(),3.5+rn()*2.5,2.2+rn());o.rotation.set(rn()*.3,a,rn()*.3);root.add(o)}
+    // stalagmites and roots out in the dark, a few great roots arching over
+    for(let i=0;i<34;i++){const a=rn()*6.283,r=27+rn()*26,h=10+rn()*20,o=new THREE.Mesh(svG('yt_sg'+(i%3),()=>svLoft([[0,2.4,2.4],[.5,1.3,1.2],[1,.02,.02]],6,{rot:i})),i%3?M.stone:M.stone2);o.position.set(L.cx+Math.sin(a)*r,L.y-11,L.cz+Math.cos(a)*r);o.scale.set(1+rn(),h,1+rn());o.rotation.set((rn()-.5)*.15,rn()*6,(rn()-.5)*.15);root.add(o)}
+    for(let i=0;i<7;i++){const a=i/7*6.283+rn()*.5,r0=24+rn()*4,o=new THREE.Mesh(svG('yt_rt'+(i%2),()=>svTube([[0,-12,0],[1.5,2,-.5],[-.5,11,-3],[-4,17,-9],[-9,20,-17]],[1.5,1.2,1.0,.8,.5],6)),M.root);o.position.set(L.cx+Math.sin(a)*r0,L.y,L.cz+Math.cos(a)*r0);o.rotation.y=a+Math.PI/2+rn();o.scale.setScalar(1+rn()*.5);root.add(o)}
+    // the throat far overhead: a point of light, essence falling from it into the sea at the back
+    {const sp=kqSpr(0xe8d0ff,26);sp.material=sp.material.clone();sp.material.fog=false;sp.position.set(L.cx,L.y+46,L.cz-10);root.add(sp);
+      const fall=new THREE.Mesh(svG('yt_fl',()=>{const q=new THREE.CylinderGeometry(.5,1.6,56,10,1,true);return q}),new THREE.MeshBasicMaterial({color:0xd8b8ff,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+      fall.position.set(L.cx,L.y+18,L.cz-30);fall.userData.lpsSkip=1;root.add(fall);LS.fall=fall}
+    // the six Sovereigns' stones round the rim
+    LS.sov=YT232.ess.map((col,i)=>{const a=i/6*6.283+.5236,x=L.cx+Math.sin(a)*16.6,z=L.cz+Math.cos(a)*16.6,yy=y(x,z),g=new THREE.Group();g.position.set(x,yy,z);g.rotation.y=a+Math.PI;
+      const st=new THREE.Mesh(svG('yt_ss',()=>svLoft([[-.3,.8,.5],[1.2,.74,.46],[3.6,.6,.36],[5.0,.34,.22],[5.5,.08,.06]],5,{rot:.6})),M.stone);st.castShadow=true;g.add(st);
+      const rm=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide});rm.userData.noFade135=1;
+      [[0,3.4,1.5,.07,0],[0,2.2,.6,.07,1.57],[-.15,4.2,.5,.06,.7],[.15,4.2,.5,.06,-.7]].forEach(([ox,oy,l,w,rz])=>{const p=new THREE.Mesh(svG('yt_rn',()=>new THREE.PlaneGeometry(1,1)),rm);p.position.set(ox,oy,.47-oy*.045);p.scale.set(w,l,1);p.rotation.z=rz;p.userData.lpsSkip=1;g.add(p)});
+      const sh=new THREE.Mesh(svG('yt_sd',()=>{const q=new THREE.OctahedronGeometry(.3,0);q.scale(1,1.8,1);return q}),new THREE.MeshBasicMaterial({color:col}));sh.position.y=6.6;g.add(sh);const gl=kqSpr(col,2.6);gl.position.y=6.6;g.add(gl);root.add(g);
+      CBLK.add(W*Math.round(z)+Math.round(x));return {g,sh,gl,rm,x,z,y0:yy}});
+    wk232Light(D,LS,0xa070ff,1.3,30,L.cx,L.y+7,L.cz);LS.essL=wk232Light(D,LS,0xffffff,1.0,22,L.cx,L.y+3,L.cz-6);
+    // the brink (Phase II) and the fallen rim (Phase III)
+    LS.brink=wk232Disc(root,15.4,17.9,0xb070ff,L.y+.13);LS.brink.position.set(L.cx,L.y+.13,L.cz);
+    {const m=new THREE.Mesh(svG('yt_rim',()=>new THREE.RingGeometry(13.4,23,64,1).rotateX(-Math.PI/2)),new THREE.MeshBasicMaterial({color:0x020104,transparent:true,opacity:0,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-6}));m.material.userData.noFade135=1;m.userData.lpsSkip=1;m.position.set(L.cx,L.y+.17,L.cz);m.visible=false;root.add(m);LS.rim=m;
+      LS.rimE=wk232Disc(root,13.0,13.5,0xe8d0ff,L.y+.19);LS.rimE.position.set(L.cx,L.y+.19,L.cz)}
+    },
+  start(D,e){D.S.stolen=0;yt232Buff(D)},
+  reset(D,won){const S=D.S;yt232MotesClear(D);S.stolen=0;S.drink=0;S.sat=0;D.dmK=S.dm0;yt232Buff(D);yt232Brink(D,0);yt232Crumble(D,0);if(D.A){D.A.r=D.L.r;D.A.hr=D.L.hr}},
+  hud(D,e){return ' · Stolen essence '+D.S.stolen+'/6'},
+  phase(D,e){const S=e.sv;return S.ph===2&&e.c.h/M(e.c)<=.33?'awaken2':null},
+  won(D,e){try{fn232Slain(e)}catch(err){console.error('fn232 slain',err)}},
+  tick(D,dt,now,t){const LS=D.LS,S=D.S,L=D.L,e=D.e;LS.sea[0].rotation.y+=dt*.02;LS.sea[1].rotation.y-=dt*.035;LS.fall.material.opacity=.4+.15*Math.sin(t*3);LS.floorM.emissiveIntensity=.42+.1*Math.sin(t*.8)+(S.brink?.12:0)+(S.rim?.15:0);
+    {const ci=Math.floor(t*.5)%6,c0=new THREE.Color(YT232.ess[ci]),c1=new THREE.Color(YT232.ess[(ci+1)%6]);c0.lerp(c1,(t*.5)%1);LS.essL.color.copy(c0)}
+    LS.sov.forEach((s,i)=>{s.sh.rotation.y+=dt*1.2;s.sh.position.y=6.6+.25*Math.sin(t*1.3+i);s.gl.position.y=s.sh.position.y;s.rm.opacity=.6+.25*Math.sin(t*2+i*1.05);if(S.rim){s.g.position.y+=(s.y0+1.6+.3*Math.sin(t*.9+i)-s.g.position.y)*Math.min(1,dt)}else s.g.position.y+=(s.y0-s.g.position.y)*Math.min(1,dt*2)});
+    if(Math.random()<dt*5){const a=Math.random()*6.283,r=20+Math.random()*20;burst(new THREE.Vector3(L.cx+Math.cos(a)*r,L.y-9,L.cz+Math.sin(a)*r),YT232.ess[(Math.random()*6)|0],1,.3,2.5,2.5)}
+    // brink and rim visuals
+    {const bk=LS.brink,tg=S.brink?.3+.12*Math.sin(t*7):0;bk.material.opacity+=(tg-bk.material.opacity)*Math.min(1,dt*3);bk.visible=bk.material.opacity>.01;const q=S.rim?13.2/17.6:1;bk.scale.set(q,1,q);
+      const rm=LS.rim,rt=S.rim?.96:0;rm.material.opacity+=(rt-rm.material.opacity)*Math.min(1,dt*1.5);rm.visible=rm.material.opacity>.01;LS.rimE.visible=!!S.rim;if(S.rim)LS.rimE.material.opacity=.5+.3*Math.sin(t*5)}
+    // motes: bob, fade at the end of their time, fly to him while he drinks; the hero takes one by touching it
+    for(let i=S.motes.length-1;i>=0;i--){const m=S.motes[i];m.t+=dt;const fl=S.drink&&e&&!e.dead;if(fl){const hp=svWP(e,'head',0,0,.3),dx=hp.x-m.x,dz=hp.z-m.z,d=Math.hypot(dx,dz)||1;m.x+=dx/d*5*dt;m.z+=dz/d*5*dt;m.h+=(Math.min(3.2,3.6-d*.4)-m.h)*Math.min(1,dt*2);
+        if(d<1.1){yt232MoteDrunk(D,e,m);S.motes.splice(i,1);continue}}
+      m.g.position.set(m.x,GH(m.x,m.z)+(fl?Math.max(.7,m.h):.7+.15*Math.sin(t*3+m.ph)),m.z);m.g.rotation.y+=dt*2;const k=m.t>26?Math.max(0,(30-m.t)/4):1;m.g.scale.setScalar(.6+.4*k);
+      if(Math.random()<dt*4)burst(m.g.position,YT232.ess[m.i],1,.25,.5,.5);
+      if(hero.hp>0&&Math.hypot(pl.position.x-m.x,pl.position.z-m.z)<1.15&&(!fl||m.h<2)){yt232MoteTaken(D,e,m);S.motes.splice(i,1);continue}
+      if(m.t>30){yt232MoteFree(m);S.motes.splice(i,1)}}
+    if(S.sat>0){S.satT-=dt;if(S.satT<=0){S.sat=0;D.dmK=S.dm0}}if(e&&e.sv)e.sv.sat=S.sat},
+  fight(D,e,dt,now){const S=D.S,A=D.A;if(S.brink&&hero.hp>0){const d=Math.hypot(pl.position.x-A.cx,pl.position.z-A.cz),lim=(S.rim?13.2:17.6)-2.2;S.zT-=dt;if(d>lim&&S.zT<=0){S.zT=.6;if(wk232Zap(e,.22,'m')){yt232Wither(1500);burst(gY(pl.position,.4),0xb070ff,8,.8,1.2,.5)}}}}})})();
+// ---------------- Thirst ----------------
+function yt232Mote(D,p,i){const S=D.S,A=D.A;if(!A||!A.f||S.motes.length>=9)return;const q=wk232Clamp(D,p.clone(),2.6+(S.brink?2.2:0));if(S.motes.some(m=>Math.hypot(m.x-q.x,m.z-q.z)<1.6))return;
+  i=i==null?(Math.random()*6)|0:i%6;const col=YT232.ess[i],g=new THREE.Group(),o=new THREE.Mesh(svG('yt_mt',()=>new THREE.OctahedronGeometry(.2,0)),new THREE.MeshBasicMaterial({color:col})),gl=kqSpr(col,1.5);g.add(o,gl);g.userData.lpsSkip=1;scene.add(g);
+  S.motes.push({x:q.x,z:q.z,i,g,t:0,h:.7,ph:Math.random()*6});burst(gY(q,.7),col,14,1.6,2,.6)}
+function yt232MoteFree(m){try{scene.remove(m.g);m.g.children[0].material.dispose()}catch(_){}}
+function yt232MotesClear(D){D.S.motes.forEach(yt232MoteFree);D.S.motes=[]}
+function yt232Buff(D){const n=D.S.stolen,i=hero.buffs.findIndex(b=>b.n=='Stolen Essence');if(i>=0)hero.buffs.splice(i,1);if(n>0)hero.buffs.push({n:'Stolen Essence',i:'✨',s:{paP:.06*n,maP:.06*n},t:nowP()+90000,d:'Essence taken back from him: +'+(6*n)+'% attack ('+n+'/6)'});try{hsDirty()}catch(_){}}
+function yt232MoteTaken(D,e,m){const S=D.S,p=m.g.position.clone();yt232MoteFree(m);S.stolen++;burst(p,YT232.ess[m.i],30,2.5,2,.6);try{sfx('chime')}catch(_){}try{const h=Math.round(heroMax()*.03);hero.hp=Math.min(heroMax(),hero.hp+h);dn(pl.position,'+'+h,'#9aff6a',-10,900)}catch(_){}
+  popT(pl.position,'Essence '+S.stolen+'/6','#e8d0ff');yt232Buff(D);
+  if(S.stolen>=6&&e&&!e.dead){S.stolen=0;yt232Buff(D);S.drink=0;const hp=svWP(e,'heart',0,0,.2);try{sk146Beam(()=>gY(pl.position,1.2),()=>hp,0xffffff,.3,.6)}catch(_){}shake(.6);try{flash('rgba(232,208,255,.4)')}catch(_){}svEndMove(e,true);wk232Wound(e,.06,'#e8d0ff');svCast(e,'broken')}}
+function yt232MoteDrunk(D,e,m){const S=D.S;yt232MoteFree(m);wk232Heal(e,.025,YT232.ess[m.i]);S.sat=Math.min(5,S.sat+1);S.satT=20;D.dmK=S.dm0*(1+.08*S.sat);svSnd('squelch',.6,1.4)}
+function yt232DrinkStart(D,e){const S=D.S;S.drink=1;say('👁 Ythrael kneels to drink. <b>Take the motes before he does!</b>');try{banner('⚠ THIRST','Snatch the motes of essence before they reach him','')}catch(_){}}
+function yt232DrinkEnd(D,e,silent){const S=D.S;if(!S.drink)return;S.drink=0;if(silent||!e||e.dead)return;if(S.sat>0)say('👁 He has drunk: his blows are heavier for a while.')}
+function yt232Brink(D,on){D.S.brink=on?1:0}
+function yt232Crumble(D,on){const S=D.S,A=D.A,L=D.L;S.rim=on?1:0;if(!A)return;if(on){A.r=13.2;A.hr=14.0;const c=new THREE.Vector3(L.cx,0,L.cz);for(let i=0;i<60;i++){const a=Math.random()*6.283,r=14+Math.random()*4,p=new THREE.Vector3(L.cx+Math.cos(a)*r,0,L.cz+Math.sin(a)*r);burst(gY(p,.3),0x2a2434,4,3,-2,1.2)}
+    try{sk146Debris(c,D.LS.M.stone,24,.5,9,3,2)}catch(_){}svSnd('crack',1.4,.4);svSnd('heavy',1.4,.4);S.motes=S.motes.filter(m=>{if(Math.hypot(m.x-L.cx,m.z-L.cz)>12.4){yt232MoteFree(m);return false}return true});
+    // anyone standing on the rim is thrown inward
+    const P=pl.position,d=Math.hypot(P.x-L.cx,P.z-L.cz);if(d>13.4){P.x=L.cx+(P.x-L.cx)/d*13.2;P.z=L.cz+(P.z-L.cz)/d*13.2}}else{A.r=L.r;A.hr=L.hr}}
 </script></body></html>
