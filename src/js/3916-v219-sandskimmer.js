@@ -68,11 +68,12 @@ function skr218Scarab(e,dt,now){const m=e.m,[V]=skr218Near(m.position);if(!V)ret
   if(!e.k218){const rx=m.position.x-V.x,rz=m.position.z-V.z;e.k218={st:'run',t:0,side:(rx*lx+rz*lz)>=0?1:-1,f:(Math.random()*2-1)*1.8}}
   const K=e.k218;K.t+=dt;
   const pacing=s=>enemies.filter(o=>o!==e&&o.k218&&o.k218.st!=='run'&&o.k218.side===s&&!o.dead).length;
-  const tx=V.x+fx*(K.f+Math.max(0,V.v)*.08)+lx*K.side*SKR218.side,tz=V.z+fz*(K.f+Math.max(0,V.v)*.08)+lz*K.side*SKR218.side,dx=tx-m.position.x,dz=tz-m.position.z,L=Math.hypot(dx,dz)||1;
+  // v233: K.w / K.fo = this scarab's own place beside the hull (4080 gives the waiting ones a row further out)
+  const sw=K.w||SKR218.side,sf=K.f+(K.fo||0)+Math.max(0,V.v)*.08,tx=V.x+fx*sf+lx*K.side*sw,tz=V.z+fz*sf+lz*K.side*sw,dx=tx-m.position.x,dz=tz-m.position.z,L=Math.hypot(dx,dz)||1;
   if(K.st==='run'||K.st==='pace'){const lim=K.st==='pace'?SKR218.paceMax:Math.min(SKR218.runMax,Math.max(6,Math.max(0,V.v)+SKR218.run)),st=Math.min(L,lim*dt);
     m.position.x+=dx/L*st+(e.vx||0)*dt;m.position.z+=dz/L*st+(e.vz||0)*dt;e.vx=(e.vx||0)*.9;e.vz=(e.vz||0)*.9;m.position.y=GH(m.position.x,m.position.z);
     m.rotation.y=L>.3?Math.atan2(dx,dz):V.h;animC(m,now,true,Math.max(4,lim)*.4);
-    if(K.st==='run'&&L<1.8){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
+    if(K.st==='run'&&L<1.8&&K.q==null){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
     else if(K.st==='pace'){if(L>3.2){K.st='run';K.t=0}else if(K.t>=K.T){if(V.cling.length<SKR218.cling){K.st='leap';K.t=0;K.a=m.position.clone()}else K.t=K.T*.6}}
     return true}
   if(K.st==='leap'){const k=Math.min(1,K.t/SKR218.leap),bx=V.x+fx*K.f+lx*K.side*1.35,bz=V.z+fz*K.f+lz*K.side*1.35,by=V.y+.9;

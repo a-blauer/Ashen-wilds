@@ -19,13 +19,15 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
   k.p(F.bone,'oct',d.G?'g':'m',d.G||d.gem,g.x,g.y,g.z,r*.55,r*.6,r*.45);mdKit(B,k)}}
 {const f=mdAmulet;mdAmulet=function(B,P,d){if(!BR.on)return f.apply(this,arguments);
   const k=mdKP(),ti=d.ti,gold=ti==0?0x7a6a4a:ti>=3?0xd8b050:0xa88848,off=(P.tOff||0)+.008,y=.87,f0=mdTorsoAt(P,y),fz=(f0.z||0)+f0.f+off+.008,sh=d.set?mdHash(d.n)%5:ti,gem=d.gem;
+  // v233: the chain goes round the neck (4081: measured on the body that was just built); the old band if that fails
+  const k0=k.P.length,C233=am233Chain(B,P,k,gold,y);if(!C233){k.P.length=k0;
   // the chain: the height where the torso is as wide as the chain, lying on the surface there
   const top=mdTorsoAt(P,.975),rc=top.rx*.62+off;let yc=.965;for(let yy=.9;yy<=1.03;yy+=.004){if(mdTorsoAt(P,yy).rx<=rc){yc=yy;break}}
   const q=mdTorsoAt(P,yc);k.p('chest','ring','m',gold,0,yc+.004,(q.z||0)+.004,q.rx+off,.22,(q.f+q.b)/2+off,-.12);
   // the two strands from the chain down the chest surface to the pendant
   [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=4;i++){const t=i/4,yy=yc-(yc-y-.02)*t,qq=mdTorsoAt(P,yy),x=s*(q.rx*.55)*(1-t),zz=(qq.z||0)+qq.f*Math.sqrt(Math.max(0,1-(x/qq.rx)**2))+off+.004;pts.push([x,yy,zz])}
-    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});
-  const fz2=fz;
+    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});}
+  const fz2=C233?Math.max(C233.z+.012,fz-.05):fz;
   if(sh==0){k.p('chest','cone4','c',0xe8e0c8,0,y-.015,fz2,.014,.05,.01,Math.PI)}
   else if(sh==1){k.p('chest','oct','m',gold,0,y,fz2,.03,.036,.012);k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,fz2+.006,.02,.026,.01)}
   else if(sh==2){k.p('chest','cyl','m',gold,0,y,fz2,.028,.012,.028,Math.PI/2);k.p('chest','sph',d.G?'g':'m',d.G||gem,0,y,fz2+.008,.012)}

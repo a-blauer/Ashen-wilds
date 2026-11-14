@@ -51,11 +51,12 @@ function j7Put(k,bn,J,c,p,X,Y,Z,s){const t=dkKit();J(t,c);const M=new THREE.Matr
 // the worn amulet: the beast chain (as v114), the item's own pendant at the breast
 {const f=mdAmulet;mdAmulet=function(B,P,d){if(!BR.on||!d||!d.j7)return f.apply(this,arguments);
   const k=mdKP(),ti=d.ti,gold=ti==0?0x7a6a4a:ti>=3?0xd8b050:0xa88848,off=(P.tOff||0)+.008,y=.87,top=mdTorsoAt(P,.975),rc=top.rx*.62+off;let yc=.965;for(let yy=.9;yy<=1.03;yy+=.004){if(mdTorsoAt(P,yy).rx<=rc){yc=yy;break}}
+  const k0=k.P.length,C233=am233Chain(B,P,k,gold,y);if(!C233){k.P.length=k0;   // v233: the chain goes round the neck (4081); the old band if that fails
   const q=mdTorsoAt(P,yc);k.p('chest','ring','m',gold,0,yc+.004,(q.z||0)+.004,q.rx+off,.22,(q.f+q.b)/2+off,-.12);
   [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=4;i++){const t=i/4,yy=yc-(yc-y-.02)*t,qq=mdTorsoAt(P,yy),x=s*(q.rx*.55)*(1-t),zz=(qq.z||0)+qq.f*Math.sqrt(Math.max(0,1-(x/qq.rx)**2))+off+.004;pts.push([x,yy,zz])}
-    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});
+    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});}
   // the pendant: hung from the strands' meeting point, lying on the chest (pushed out by its own depth), as tall as about 7 cm
-  const f0=mdTorsoAt(P,y-.03),fz=(f0.z||0)+f0.f+off+.016;j7Put(k,'chest',J137[d.j7],d.j7c||{},[0,y+.02,fz],[1,0,0],[0,1,0],[0,0,1],.36);mdKit(B,k)}}
+  const f0=mdTorsoAt(P,y-.03),fz=C233?C233.z+.014:(f0.z||0)+f0.f+off+.016;j7Put(k,'chest',J137[d.j7],d.j7c||{},[0,y+.02,fz],[1,0,0],[0,1,0],[0,0,1],.36);mdKit(B,k)}}
 // the worn ring: the item's ring round the first joint of the paw's last finger (as v114)
 {const f=mdRingW;mdRingW=function(B,P,d){if(!BR.on||!d||!d.j7||!BR.R||!BR.R.paw)return f.apply(this,arguments);
   const k=mdKP(),n=BR.R.paw.n,F=brFinger(P,1,n-1),V=THREE.Vector3,c0=F.pts[2].clone().lerp(F.pts[3],.5),dir=F.dirs[2].clone().normalize(),r=(F.rad[2]+F.rad[3])/2*1.3;

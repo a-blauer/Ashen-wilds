@@ -28957,13 +28957,15 @@ function brFinger(P,s,i){const D=BR.R,pw=D.paw,V=THREE.Vector3,a=s<0?'aL1':'aR1'
   k.p(F.bone,'oct',d.G?'g':'m',d.G||d.gem,g.x,g.y,g.z,r*.55,r*.6,r*.45);mdKit(B,k)}}
 {const f=mdAmulet;mdAmulet=function(B,P,d){if(!BR.on)return f.apply(this,arguments);
   const k=mdKP(),ti=d.ti,gold=ti==0?0x7a6a4a:ti>=3?0xd8b050:0xa88848,off=(P.tOff||0)+.008,y=.87,f0=mdTorsoAt(P,y),fz=(f0.z||0)+f0.f+off+.008,sh=d.set?mdHash(d.n)%5:ti,gem=d.gem;
+  // v233: the chain goes round the neck (4081: measured on the body that was just built); the old band if that fails
+  const k0=k.P.length,C233=am233Chain(B,P,k,gold,y);if(!C233){k.P.length=k0;
   // the chain: the height where the torso is as wide as the chain, lying on the surface there
   const top=mdTorsoAt(P,.975),rc=top.rx*.62+off;let yc=.965;for(let yy=.9;yy<=1.03;yy+=.004){if(mdTorsoAt(P,yy).rx<=rc){yc=yy;break}}
   const q=mdTorsoAt(P,yc);k.p('chest','ring','m',gold,0,yc+.004,(q.z||0)+.004,q.rx+off,.22,(q.f+q.b)/2+off,-.12);
   // the two strands from the chain down the chest surface to the pendant
   [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=4;i++){const t=i/4,yy=yc-(yc-y-.02)*t,qq=mdTorsoAt(P,yy),x=s*(q.rx*.55)*(1-t),zz=(qq.z||0)+qq.f*Math.sqrt(Math.max(0,1-(x/qq.rx)**2))+off+.004;pts.push([x,yy,zz])}
-    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});
-  const fz2=fz;
+    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});}
+  const fz2=C233?Math.max(C233.z+.012,fz-.05):fz;
   if(sh==0){k.p('chest','cone4','c',0xe8e0c8,0,y-.015,fz2,.014,.05,.01,Math.PI)}
   else if(sh==1){k.p('chest','oct','m',gold,0,y,fz2,.03,.036,.012);k.p('chest','oct',d.G?'g':'m',d.G||gem,0,y,fz2+.006,.02,.026,.01)}
   else if(sh==2){k.p('chest','cyl','m',gold,0,y,fz2,.028,.012,.028,Math.PI/2);k.p('chest','sph',d.G?'g':'m',d.G||gem,0,y,fz2+.008,.012)}
@@ -35840,11 +35842,12 @@ function j7Put(k,bn,J,c,p,X,Y,Z,s){const t=dkKit();J(t,c);const M=new THREE.Matr
 // the worn amulet: the beast chain (as v114), the item's own pendant at the breast
 {const f=mdAmulet;mdAmulet=function(B,P,d){if(!BR.on||!d||!d.j7)return f.apply(this,arguments);
   const k=mdKP(),ti=d.ti,gold=ti==0?0x7a6a4a:ti>=3?0xd8b050:0xa88848,off=(P.tOff||0)+.008,y=.87,top=mdTorsoAt(P,.975),rc=top.rx*.62+off;let yc=.965;for(let yy=.9;yy<=1.03;yy+=.004){if(mdTorsoAt(P,yy).rx<=rc){yc=yy;break}}
+  const k0=k.P.length,C233=am233Chain(B,P,k,gold,y);if(!C233){k.P.length=k0;   // v233: the chain goes round the neck (4081); the old band if that fails
   const q=mdTorsoAt(P,yc);k.p('chest','ring','m',gold,0,yc+.004,(q.z||0)+.004,q.rx+off,.22,(q.f+q.b)/2+off,-.12);
   [-1,1].forEach(s=>{const pts=[];for(let i=0;i<=4;i++){const t=i/4,yy=yc-(yc-y-.02)*t,qq=mdTorsoAt(P,yy),x=s*(q.rx*.55)*(1-t),zz=(qq.z||0)+qq.f*Math.sqrt(Math.max(0,1-(x/qq.rx)**2))+off+.004;pts.push([x,yy,zz])}
-    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});
+    for(let i=0;i<4;i++)k.L('chest','m',gold,pts[i],pts[i+1],.005,.005,3)});}
   // the pendant: hung from the strands' meeting point, lying on the chest (pushed out by its own depth), as tall as about 7 cm
-  const f0=mdTorsoAt(P,y-.03),fz=(f0.z||0)+f0.f+off+.016;j7Put(k,'chest',J137[d.j7],d.j7c||{},[0,y+.02,fz],[1,0,0],[0,1,0],[0,0,1],.36);mdKit(B,k)}}
+  const f0=mdTorsoAt(P,y-.03),fz=C233?C233.z+.014:(f0.z||0)+f0.f+off+.016;j7Put(k,'chest',J137[d.j7],d.j7c||{},[0,y+.02,fz],[1,0,0],[0,1,0],[0,0,1],.36);mdKit(B,k)}}
 // the worn ring: the item's ring round the first joint of the paw's last finger (as v114)
 {const f=mdRingW;mdRingW=function(B,P,d){if(!BR.on||!d||!d.j7||!BR.R||!BR.R.paw)return f.apply(this,arguments);
   const k=mdKP(),n=BR.R.paw.n,F=brFinger(P,1,n-1),V=THREE.Vector3,c0=F.pts[2].clone().lerp(F.pts[3],.5),dir=F.dirs[2].clone().normalize(),r=(F.rad[2]+F.rad[3])/2*1.3;
@@ -74471,11 +74474,12 @@ function skr218Scarab(e,dt,now){const m=e.m,[V]=skr218Near(m.position);if(!V)ret
   if(!e.k218){const rx=m.position.x-V.x,rz=m.position.z-V.z;e.k218={st:'run',t:0,side:(rx*lx+rz*lz)>=0?1:-1,f:(Math.random()*2-1)*1.8}}
   const K=e.k218;K.t+=dt;
   const pacing=s=>enemies.filter(o=>o!==e&&o.k218&&o.k218.st!=='run'&&o.k218.side===s&&!o.dead).length;
-  const tx=V.x+fx*(K.f+Math.max(0,V.v)*.08)+lx*K.side*SKR218.side,tz=V.z+fz*(K.f+Math.max(0,V.v)*.08)+lz*K.side*SKR218.side,dx=tx-m.position.x,dz=tz-m.position.z,L=Math.hypot(dx,dz)||1;
+  // v233: K.w / K.fo = this scarab's own place beside the hull (4080 gives the waiting ones a row further out)
+  const sw=K.w||SKR218.side,sf=K.f+(K.fo||0)+Math.max(0,V.v)*.08,tx=V.x+fx*sf+lx*K.side*sw,tz=V.z+fz*sf+lz*K.side*sw,dx=tx-m.position.x,dz=tz-m.position.z,L=Math.hypot(dx,dz)||1;
   if(K.st==='run'||K.st==='pace'){const lim=K.st==='pace'?SKR218.paceMax:Math.min(SKR218.runMax,Math.max(6,Math.max(0,V.v)+SKR218.run)),st=Math.min(L,lim*dt);
     m.position.x+=dx/L*st+(e.vx||0)*dt;m.position.z+=dz/L*st+(e.vz||0)*dt;e.vx=(e.vx||0)*.9;e.vz=(e.vz||0)*.9;m.position.y=GH(m.position.x,m.position.z);
     m.rotation.y=L>.3?Math.atan2(dx,dz):V.h;animC(m,now,true,Math.max(4,lim)*.4);
-    if(K.st==='run'&&L<1.8){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
+    if(K.st==='run'&&L<1.8&&K.q==null){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
     else if(K.st==='pace'){if(L>3.2){K.st='run';K.t=0}else if(K.t>=K.T){if(V.cling.length<SKR218.cling){K.st='leap';K.t=0;K.a=m.position.clone()}else K.t=K.T*.6}}
     return true}
   if(K.st==='leap'){const k=Math.min(1,K.t/SKR218.leap),bx=V.x+fx*K.f+lx*K.side*1.35,bz=V.z+fz*K.f+lz*K.side*1.35,by=V.y+.9;
@@ -80655,3 +80659,125 @@ ec232Reg('crown',{len:37.2,cut:35.2,skipT:34,dips:[[9.2,.55]],
     ec232Bell(ac,out,T0+6.6,146.83,.3,6);ec232Bell(ac,out,T0+6.6,587.33,.16,5);ec232Bell(ac,out,T0+C0,73.42,.4,8);
     [[0,[73.42,146.83,174.61,220,293.66]],[6.2,[58.27,116.54,174.61,233.08,293.66]],[12.4,[49,98,146.83,196,233.08]],[18.6,[55,110,164.81,220,277.18,329.63]]].forEach(([d,f],i)=>{ec232Pad(ac,out,T0+C0+.2+d,i===3?9:7.2,f,.4+.03*i,'sawtooth'===0?'sine':'triangle',1.6,2.2);ec232Pad(ac,out,T0+C0+.2+d,i===3?9:7.2,f.slice(2).map(x=>x*2),.12,'sine',2.2,2.6)});
     [3,9.2,15.4,21.6].forEach((d,i)=>ec232Bell(ac,out,T0+C0+d,[293.66,233.08,196,440][i],.14,6));ec232Air(ac,out,T0+C0+.5,25,900,1800,.05)}});
+// ================= v233: the Sandstorm Run — how its creatures move (owner, Nov 14 2026) =================
+// Owner: "The enemy movement and pathing needs to be improved in the duneskimmer level."
+// Measured over a 75 s ride (test/v233_run_paths.py) before this file: swarm scarabs stood inside one another (a whole swarm on
+// one spot for 12,000 creature-frames), ran inside the dune walls (3,100), through boulders and salt spires (260) and through the
+// Skimmer's hull (700); scorpions ran backwards at full speed while they aimed (800); creatures turned on the spot in one frame (530).
+// Every creature's own AI (3302, 3916, 3980, 3990) still decides where it wants to go. This layer, the outermost sr165FoeAI,
+// turns that into a path a creature could run:
+//  * places: only SKR218.perSide scarabs pace right beside the hull; the others wait in rows further out and ahead of it
+//    (rp233Slots: K.w across, K.fo along, read by 3916), move up as places open, change flank when the wall crowds theirs, and
+//    the places squeeze in when the Skimmer hugs a dune.
+//  * room: creatures push each other apart (rp233Apart; the bigger one gives way less), so a swarm is a swarm.
+//  * the way: they run round boulders and spires (rp233Round) and round the hull, never through (a charging Shellback is
+//    meant to hit it), and stay on the sand between the dunes (rp233Keep).
+//  * merging: a scarab from ahead slows, turns and runs with the machine as it arrives, instead of charging back at it and
+//    spinning round beside it.
+//  * facing: the body turns at RP233.turn a second and points the way it runs; a scorpion that aims while running twists
+//    toward the Skimmer by at most RP233.twist.
+// Co-op: creatures are the host's and reach partners as positions and headings, so partners see the same paths (nothing new is sent).
+var RP233={on:true,turn:11,twist:1.15,hull:2.7,gap:.72,row:[6.1,7.8],wall:.8,merge:[1.5,20],n:0,err:0};
+function rp233Wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
+function rp233Busy(e){return !!e.cl||!!(e.k218&&e.k218.st==='leap')}
+// how far the sand reaches on a flank of the machine (side as in K.side: + is the hull's left)
+function rp233Room(V,side){const P=sr165Path(),o=V.o!=null?V.o:P.near(V.x,V.z,V.s).o;return SR165C.hw-RP233.wall+side*o}
+// the scarabs' places beside a machine
+// beside the hull each scarab runs in its own lane along it (K.f), so two never pace on one spot
+function rp233Lane(e,L){const K=e.k218;if(K.ln!=null&&K.lns===K.side)return;let i=0;while(L.some(o=>o!==e&&o.k218.q==null&&o.k218.lns===K.side&&o.k218.ln===i))i++;K.ln=i;K.lns=K.side;K.f=Math.min(2.6,-.4+i*1.5)}
+function rp233Slots(e,V){const K=e.k218;if(!K||K.st==='leap')return;if(!e.q233)e.q233=++RP233.n;const C=RP233,per=SKR218.perSide;let room=rp233Room(V,K.side);
+  if(K.st==='pace'){K.q=null;K.qs=K.side;rp233Lane(e,enemies.filter(o=>!o.dead&&o.sr165==='sc'&&o.k218&&o.k218.side===K.side&&!o.cl&&o.v233===V));K.w=Math.max(3.1,Math.min(SKR218.side,room));K.fo=0;return}
+  const same=s=>enemies.filter(o=>!o.dead&&o.sr165==='sc'&&o.k218&&o.k218.side===s&&!o.cl&&o.v233===V);
+  // the wall crowds this flank: go round to the other one (not back and forth: it must be clearly roomier)
+  K.sw233=Math.max(0,(K.sw233||0)-1/30);if(room<5.2&&!K.sw233){const r2=rp233Room(V,-K.side);if(r2>room+3&&same(-K.side).length<per+6){K.side=-K.side;room=r2;K.sw233=2.5}}
+  // a waiting scarab keeps its place in the rows (K.q, per flank) until one beside the hull opens: the lowest moves up
+  const L=same(K.side),pc=L.filter(o=>o.k218.st!=='run').length,W=L.filter(o=>o!==e&&o.k218.st==='run'&&o.k218.q!=null&&o.k218.qs===K.side),free=Math.max(0,per-pc-L.filter(o=>o!==e&&o.k218.st==='run'&&o.k218.q==null).length);
+  if(K.q==null&&K.qs===K.side){rp233Lane(e,L);K.w=Math.max(3.1,Math.min(SKR218.side,room));K.fo=0;return}   // on its way to a place beside the hull
+  if(K.qs!==K.side)K.q=null;
+  if(free>0&&(K.q==null||!W.some(o=>o.k218.q<K.q))){K.q=null;K.qs=K.side;rp233Lane(e,L);K.w=Math.max(3.1,Math.min(SKR218.side,room));K.fo=0;return}
+  if(K.q==null){let q=0;while(W.some(o=>o.k218.q===q))q++;K.q=q;K.qs=K.side}
+  const r=K.q>>1,c=K.q&1;K.w=Math.max(3.4,Math.min(C.row[c]+(r%2)*.5,room));K.fo=1.6+r*1.9+c*.9-K.f}
+// push apart from the other creatures of the Run
+function rp233Apart(e,p,dt){const Ra=skr226R(e.sr165),k=Math.min(.5,dt*9);let ax=0,az=0;
+  for(const o of enemies){if(o===e||o.dead||!o.sr165||rp233Busy(o))continue;const q=o.m.position,dx=p.x-q.x,dz=p.z-q.z,Rb=skr226R(o.sr165),need=(Ra+Rb)*RP233.gap;if(Math.abs(dx)>need||Math.abs(dz)>need)continue;
+    let d=Math.hypot(dx,dz);if(d>=need)continue;let ux,uz;if(d<.02){const a=((e.q233||(e.q233=++RP233.n))*2.399963)%6.2832;ux=Math.sin(a);uz=Math.cos(a);d=0}else{ux=dx/d;uz=dz/d}
+    const w=(need-d)*k*(2*Rb/(Ra+Rb));ax+=ux*w;az+=uz*w}
+  const m=Math.hypot(ax,az),cap=Math.max(.12,14*dt);if(m>cap){ax*=cap/m;az*=cap/m}p.x+=ax;p.z+=az}
+// out of a round thing at (cx, cz), and on round it the way the creature was going (dx, dz)
+function rp233Round(p,cx,cz,R,dx,dz,st){const rx=p.x-cx,rz=p.z-cz,d=Math.hypot(rx,rz);if(d>=R)return false;const ux=d>.01?rx/d:1,uz=d>.01?rz/d:0;p.x=cx+ux*R;p.z=cz+uz*R;
+  const sg=(dx*uz-dz*ux)>=0?1:-1,tx=uz*sg,tz=-ux*sg,dot=dx*ux+dz*uz;if(dot<0){const s=Math.min(st,.6);p.x+=tx*s;p.z+=tz*s;const r2=Math.hypot(p.x-cx,p.z-cz)||1;p.x=cx+(p.x-cx)/r2*R;p.z=cz+(p.z-cz)/r2*R}return true}
+// on the sand between the dunes
+function rp233Keep(e,p,V){const P=sr165Path(),lim=SR165C.hw-RP233.wall+.1;let q=P.near(p.x,p.z,e.s233!=null?e.s233:null);if(q.d>SR165C.hw+6)q=P.near(p.x,p.z);e.s233=q.s;if(Math.abs(q.o)<=lim)return;
+  // the nearest point of the course line, then out to the limit (near() measures against a sample point: good to a few cm)
+  const [x,z]=P.at(q.s,q.o>0?lim:-lim);p.x=x;p.z=z}
+{const f=sr165FoeAI;sr165FoeAI=function(e,dt,now){if(!RP233.on||!e||!e.m||!SR165.on||SR165.ph!=='run'||rp233Busy(e))return f.apply(this,arguments);
+  let V=null;const m=e.m,p=m.position,x0=p.x,z0=p.z,r0=m.rotation.y;
+  try{V=sr165Near(p)[0];e.v233=V;if(V&&e.sr165==='sc'&&e.k218&&!e.fall226)rp233Slots(e,V)}catch(err){if(!RP233.err++)console.warn('v233 slots',err)}
+  const r=f.apply(this,arguments);
+  try{if(!V||e.dead||rp233Busy(e)||enemies.indexOf(e)<0)return r;const fall=!!e.fall226,dx=p.x-x0,dz=p.z-z0,st=Math.hypot(dx,dz);
+    // a scarab that came out of the sand ahead does not run back at the machine and spin round beside it: it slows as the
+    // Skimmer comes (from RP233.merge[1] ahead of its place), turns and is running with it by the time it is alongside
+    if(!fall&&e.sr165==='sc'&&e.k218){const K=e.k218,fx=Math.sin(V.h),fz=Math.cos(V.h),lead=(p.x-V.x)*fx+(p.z-V.z)*fz-(K.f+(K.fo||0)+Math.max(0,V.v)*.08),a=dx*fx+dz*fz,M0=RP233.merge;
+      if(lead>0){const hv=Math.max(0,V.v)*dt,need=lead>=M0[1]?Math.min(0,a)*Math.min(1,(lead-M0[1])/12):lead>M0[0]?hv*.9*(1-(lead-M0[0])/(M0[1]-M0[0])):hv*(.6+.3*lead/M0[0]);if(a<need){p.x+=fx*(need-a);p.z+=fz*(need-a)}}}
+    rp233Apart(e,p,dt);
+    const R=skr226R(e.sr165)*.75;for(const o of SR165.obs){if(o.gone||o.k==='trap'||Math.abs(o.x-p.x)>6||Math.abs(o.z-p.z)>6)continue;rp233Round(p,o.x,o.z,o.r+R,dx,dz,st)}
+    // the hull (relative to it: what matters is which way the creature passes it)
+    if(!fall&&!(e.sr165==='sb'&&e.k226&&e.k226.st==='charge')&&!(V.air>0)){const vx=Math.sin(V.h)*Math.max(0,V.v)*dt,vz=Math.cos(V.h)*Math.max(0,V.v)*dt;const hx=p.x,hz=p.z;if(rp233Round(p,V.x,V.z,RP233.hull+R*.4,dx-vx,dz-vz,Math.max(Math.hypot(dx-vx,dz-vz),8*dt))){
+        // eased out, not thrown (a scarab whose leap found the hull full drops off beside it)
+        const ex=p.x-hx,ez=p.z-hz,el=Math.hypot(ex,ez),cap=12*dt;if(el>cap){p.x=hx+ex/el*cap;p.z=hz+ez/el*cap}}}
+    rp233Keep(e,p,V);p.y=GH(p.x,p.z);
+    if(fall)return r;
+    // facing: the way it runs, turned at a rate
+    const mx=p.x-x0,mz=p.z-z0,sp=Math.hypot(mx,mz)/Math.max(dt,1e-4);let want=m.rotation.y;
+    if(sp>3){const mv=Math.atan2(mx,mz);if(e.sr165==='sp'||e.sr165==='gs'){const d=rp233Wrap(want-mv);want=mv+Math.max(-RP233.twist,Math.min(RP233.twist,d))}else want=mv}
+    const d=rp233Wrap(want-r0),lim=RP233.turn*dt;m.rotation.y=e.f233?r0+Math.max(-lim,Math.min(lim,d)):want;e.f233=1
+  }catch(err){if(!RP233.err++)console.warn('v233 path',err)}
+  return r}}
+// ================= v233: a worn amulet hangs round the neck (owner, Nov 14 2026) =================
+// Owner: "worn amulets dont seem to go around the neck like they should. Please check placement and fix."
+// What was there (2115, 2790): the "chain" was a flat band 5 cm thick laid at the height where the torso is as wide as the chain
+// — a hoop as wide as the shoulders, lying on them like a yoke (over armour: a second collar), with two short strands to the pendant.
+// Now the chain is a thin loop measured on the hero that was just built (am233Chain, called by 2115 and 2790 in place of the band):
+//  * the body, outfit and armour already in the builder are the surface (their triangles on the trunk and neck: not the head,
+//    arms or legs), found with rays (am233Tris, am233Ray);
+//  * the neck's base is where the neck stops widening into the shoulders (am233Base); the chain passes behind the neck there,
+//    hugs its sides (the first surface out from the neck's middle, or a collar close round it), comes forward over the collar
+//    bones and runs down the chest's surface to the pendant in a V (the front surface, so it lies over armour, never inside it);
+//  * the pendant sits on that same surface.
+// The bind pose is measured, the links ride the chest bone like before. If the measuring fails (no neck found) the old band is built.
+// Co-op: the hero model is built from the equipment a partner already receives, so partners see the same chain.
+var AM233={on:true,r:.0042,lift:.03,drop:.003,a0:.95,capB:1.3,capF:1.3,err:0,last:null};
+function am233Tris(B,y0,y1){const T=[],bad=n=>/^(head|a[LR]\d|lh\d|rh\d|cp\d)/.test(n)&&n!=='chest';
+  for(const t in B.L){const L=B.L[t],p=L.p,si=L.si,sw=L.sw;for(let i=0,v=0;i+8<p.length;i+=9,v+=3){const ya=p[i+1],yb=p[i+4],yc=p[i+7];if(Math.max(ya,yb,yc)<y0||Math.min(ya,yb,yc)>y1)continue;
+      let skip=false;for(let q=0;q<3&&!skip;q++){const o=(v+q)*4;let bi=0,bw=-1;for(let j=0;j<4;j++)if(sw[o+j]>bw){bw=sw[o+j];bi=si[o+j]}if(bad(B.O[bi]))skip=true}
+      if(!skip)T.push(p[i],p[i+1],p[i+2],p[i+3],p[i+4],p[i+5],p[i+6],p[i+7],p[i+8])}}
+  return T}
+// every hit of the ray (o + t·d, t > 0) on the triangles, nearest first
+function am233Ray(T,ox,oy,oz,dx,dy,dz){const H=[];for(let i=0;i<T.length;i+=9){const ax=T[i],ay=T[i+1],az=T[i+2],e1x=T[i+3]-ax,e1y=T[i+4]-ay,e1z=T[i+5]-az,e2x=T[i+6]-ax,e2y=T[i+7]-ay,e2z=T[i+8]-az,
+      px=dy*e2z-dz*e2y,py=dz*e2x-dx*e2z,pz=dx*e2y-dy*e2x,det=e1x*px+e1y*py+e1z*pz;if(det>-1e-12&&det<1e-12)continue;const inv=1/det,tx=ox-ax,ty=oy-ay,tz=oz-az,u=(tx*px+ty*py+tz*pz)*inv;if(u<-1e-6||u>1+1e-6)continue;
+      const qx=ty*e1z-tz*e1y,qy=tz*e1x-tx*e1z,qz=tx*e1y-ty*e1x,w=(dx*qx+dy*qy+dz*qz)*inv;if(w<-1e-6||u+w>1+1e-6)continue;const t=(e2x*qx+e2y*qy+e2z*qz)*inv;if(t>1e-5)H.push(t)}
+  return H.sort((a,b)=>a-b)}
+// the neck's middle at a height (on the line from the neck bone to the head bone)
+function am233Mid(B,y){const n=B.bones.neck,h=B.bones.head,t=(y-n[2])/((h[2]-n[2])||1);return [n[1]+(h[1]-n[1])*t,y,n[3]+(h[3]-n[3])*t]}
+// out from the neck's middle at angle a (0 = forward, + = the hero's left): the surface a chain would lie on (the first one, or
+// one close outside it — a collar, a ruff — up to cap × as far)
+function am233Out(T,B,y,a,cap){const c=am233Mid(B,y),dx=Math.sin(a),dz=Math.cos(a),H=am233Ray(T,c[0],y,c[2],dx,0,dz);if(!H.length)return null;let r=H[0];const lim=r*cap+.012;for(const t of H)if(t<=lim)r=t;return {r,dx,dz,c}}
+// the height of the neck's base: going down from the head, where the neck starts to widen into the shoulders
+function am233Base(T,B){const n=B.bones.neck,h=B.bones.head,R=[];for(let y=h[2];y>=n[2]-.1;y-=.005){const a=am233Out(T,B,y,Math.PI/2,1),b=am233Out(T,B,y,-Math.PI/2,1),f=am233Out(T,B,y,0,1),k=am233Out(T,B,y,Math.PI,1);
+    if(a&&b&&f&&k)R.push([y,(a.r+b.r)/2])}
+  if(R.length<4)return null;let m=1e9;R.forEach(q=>{if(q[1]<m)m=q[1]});let yb=null,yt=null;for(const q of R){if(q[1]<=m*1.3+.004){yb=q[0];if(yt==null)yt=q[0]}else if(yb!=null&&q[1]>m*1.6)break}
+  return yb==null?null:{y:yb,top:yt,r:m}}
+// the chain. k: the kit to add to; yp: the pendant's height. Returns {z: the chest's surface at the pendant} or null (not built).
+function am233Chain(B,P,k,gold,yp){if(!AM233.on)return null;try{const A=AM233,T=am233Tris(B,yp-.12,B.bones.head[2]+.02);A.why='';if(T.length<90){A.why='tris '+T.length;return null}const nb=am233Base(T,B);if(!nb){A.why='base';return null}
+    const front=(x,y)=>{const H=am233Ray(T,x,y,1.5,0,0,-1);return H.length?1.5-H[0]:null},zp=front(0,yp+.02);if(zp==null){A.why='front';return null}
+    // behind and beside the neck: from the nape (a = π) round to a0 either side, sinking from up to lift above the base (never above the neck) to just above it
+    const pts=[],N=8,yn=Math.max(nb.y+.004,Math.min(nb.y+A.lift,nb.top-.003)),ys=nb.y+A.drop,rmax=nb.r*1.4+.012;for(let i=0;i<=N;i++){const u=i/N,a=Math.PI-(Math.PI-A.a0)*u,y=yn+(ys-yn)*u*u,q=am233Out(T,B,y,a,A.capB);if(!q){A.why='loop '+i;return null}const r=Math.min(q.r,rmax)+A.r+.002;pts.push([q.c[0]+q.dx*r,y,q.c[2]+q.dz*r])}
+    // down the chest to the pendant: on the front surface, never behind the line from the neck to the pendant
+    const e=pts[N],M=6,tip=[0,yp+.02,zp+A.r+.004];for(let i=1;i<M;i++){const u=i/M,x=e[0]*(1-u),y=e[1]+(tip[1]-e[1])*(u*.85+u*u*.15),z=front(x,y),zl=e[2]+(tip[2]-e[2])*u;pts.push([x,y,Math.max(zl,z==null?zl:z+A.r+.003)])}
+    pts.push(tip);
+    // no link dives under the next (a collar's edge): ease single dips
+    for(let i=N+1;i<pts.length-1;i++){const m=(pts[i-1][2]+pts[i+1][2])/2;if(pts[i][2]<m-.02)pts[i][2]=m-.02}
+    [1,-1].forEach(s=>{for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(s<0&&i===0&&Math.abs(a[0])<1e-4){k.L('chest','m',gold,a,[-b[0],b[1],b[2]],A.r,A.r,4);continue}k.L('chest','m',gold,[s*a[0],a[1],a[2]],[s*b[0],b[1],b[2]],A.r,A.r,4)}});
+    // a small clasp at the nape
+    k.p('chest','sph','m',gold,pts[0][0],pts[0][1],pts[0][2],A.r*1.9);
+    AM233.last={base:nb,pts,zp};return {z:zp,pts,base:nb}}catch(err){if(!AM233.err++)console.warn('v233 amulet',err);return null}}
