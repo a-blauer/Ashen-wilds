@@ -79861,4 +79861,316 @@ function bm232Melt(D,e){const S=D.S,A=D.A,P=pl.position,c=new THREE.Vector3(A.cx
   if(pool){pool.wet=0;pool.t=45;const q=new THREE.Vector3(pool.x,0,pool.z);burst(gY(q,.6),0xdfe9f0,100,5,6,1.5);svSnd('hiss',1.3,.5);dn(P,'Safe!','#9ae8ff',-20,1400)}
   else if(hero.hp>0){if(wk232Zap(e,2.4,'m'))bm232Sear(5000)}
   e.sv.heat=.3;wk232Heal(e,.05,0xffa040)}
+// ================= v232 Seraphel, the Dawn Arbiter — the model, poses and procedural animation =================
+// The fourth and last Warden of the Balance (fight and court in 4052, moves in 4051). A judge made of morning: a tall figure in
+// ivory plate edged with gold that never touches the floor, a blank gold mask under a crown of rays, a halo turning behind the
+// head, six wings (a great pair, a middle pair, a small low pair) of pale gold-tipped feathers, a skirt of long gold-hemmed
+// tabards that trail to nothing where legs would be, a greatsword of white light in the right hand and a pair of scales hanging
+// from the left. Light lives in the blade, the halo, the eyes of the mask and the seams of the breastplate.
+// Built like a Sovereign (svRig kit; rigid parts on named joints, merged by svMerge). She faces +z and hovers (hips well off the floor).
+// Joints (L = +x): root · hips · spine · chest · neck · head · halo · shL/R · elL/R · wrL/R · blade (in the right hand) · scale (from the
+// left) · panL/panR (the pans) · w1L/R (great wings) · w2L/R · w3L/R · sk0 · sk1 (the trailing skirt). Poses (SR232P): offsets, '~' mirrors.
+var SR232={col:0xffe9a0,light:0xfff6d8,tris:0,sheet:{}};
+function sr232Build(R,e){
+  const ivory=svMat(R,0xe9e2d0,{roughness:.45,metalness:.2}),ivory2=svMat(R,0xcfc6b0,{roughness:.5,metalness:.2}),gold=svMat(R,0xd4a93a,{roughness:.3,metalness:.8}),gold2=svMat(R,0x8f6c1e,{roughness:.4,metalness:.7}),
+    cloth=svMat(R,0xf3eee2,{roughness:.9,side:THREE.DoubleSide}),cloth2=svMat(R,0xb9a36a,{roughness:.8,side:THREE.DoubleSide}),dark=svMat(R,0x2a2620,{roughness:.6}),
+    F=c=>svMat(R,c,{roughness:.75,side:THREE.DoubleSide}),fW=F(0xf4efe2),fC=F(0xe2d8bf),fG=F(0xd4a93a),
+    lit=svMat(R,0x4a3a14,{roughness:.3,emissive:0xffe9a0,emissiveIntensity:1.1,side:THREE.DoubleSide}),bladeM=svGlowMat(R,0xfff6d8,.92),eye=svGlowMat(R,0xffffff),haloM=svGlowMat(R,0xffe9a0,.9);
+  lit.userData.e0=0xffe9a0;R.lit=lit;R.bladeM=bladeM;R.haloM=haloM;R.eyeM=eye;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('sr'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const ball=(k,r,det,j)=>G('b'+k,()=>svLump(r,det==null?1:det,j||.06,160+k)),horn=(k,r,l,bx,by,n,seg)=>G('h'+k,()=>svHorn(r,l,bx,by,n||5,seg||3));
+  const quill=G('ql',()=>{const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(.1,-.1);s.quadraticCurveTo(.17,-.7,.05,-1);s.lineTo(0,-1.05);s.lineTo(-.05,-1);s.quadraticCurveTo(-.17,-.7,-.1,-.1);s.lineTo(0,0);const g=new THREE.ShapeGeometry(s,3);g.rotateX(Math.PI/2);return g});
+  const tab=(k,w0,w1,l)=>G('tb'+k,()=>{const s=new THREE.Shape();s.moveTo(-w0,0);s.lineTo(w0,0);s.lineTo(w1,-l*.85);s.lineTo(0,-l);s.lineTo(-w1,-l*.85);s.lineTo(-w0,0);return new THREE.ShapeGeometry(s,1)});
+  // ---------------- the skeleton ----------------
+  J('root',null,0,0,0);J('hips','root',0,2.5,0);J('spine','hips',0,.3,0);J('chest','spine',0,.55,.02);J('neck','chest',0,.62,.02);J('head','neck',0,.2,.02);J('halo','head',0,.22,-.28);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('sh'+L,'chest',s*.56,.42,0,0,0,s*.18);J('el'+L,'sh'+L,0,-.74,0);J('wr'+L,'el'+L,0,-.7,.02);
+    J('w1'+L,'chest',s*.28,.5,-.34,0,0,s*.55);J('w2'+L,'chest',s*.3,.18,-.36,0,0,s*.1);J('w3'+L,'spine',s*.26,.2,-.32,0,0,s*-.45)});
+  J('blade','wrR',0,-.14,.06,2.64,0,0);J('scale','wrL',0,-.2,.02);J('panL','scale',.42,-.12,0);J('panR','scale',-.42,-.12,0);
+  J('sk0','hips',0,-.25,0);J('sk1','sk0',0,-.9,0);
+  // ---------------- torso: a fluted breastplate, a gorget, a girdle of gold; light in the seams ----------------
+  Mm('hips',G('hp',()=>svLoft([[-.3,.36,.3],[0,.44,.36],[.3,.4,.33]],12)),ivory);Mm('hips',G('gd',()=>svLoft([[-.07,.46,.38],[.07,.47,.39]],12,{cap:false})),gold,0,.02,0);
+  Mm('hips',G('bk',()=>{const g=new THREE.OctahedronGeometry(.11,0);g.scale(1,1.3,.5);return g}),gold,0,.02,.4);Mm('hips',G('bg',()=>new THREE.OctahedronGeometry(.05,0)),lit,0,.02,.46);
+  Mm('spine',G('sp',()=>svLoft([[-.05,.38,.3],[.3,.34,.27],[.58,.44,.34]],12)),ivory2);for(let k=0;k<4;k++)Mm('spine',G('ab',()=>svLoft([[-.05,.3,.07],[.05,.31,.08]],8)),ivory,0,.08+k*.12,.24,-.05,0,0,1-k*.04,1,1);
+  Mm('chest',G('ch',()=>svLoft([[-.08,.44,.34],[.24,.58,.42],[.5,.52,.38],[.66,.26,.24]],12)),ivory);
+  [-1,1].forEach(s=>{for(let k=0;k<3;k++)Mm('chest',G('fl',()=>svTube([[0,.5,.36],[.1,.3,.44],[.16,.05,.4],[.1,-.1,.34]],[.028,.034,.03,.02],4)),k==1?gold:ivory2,s*(.1+k*.13),0,0,0,0,0,s,1,1);
+    Mm('chest',G('sm',()=>new THREE.BoxGeometry(.02,.5,.02)),lit,s*.045,.22,.43,-.08,0,s*.06)});
+  Mm('chest',G('sn',()=>{const g=new THREE.CircleGeometry(.12,12);return g}),lit,0,.3,.435);for(let k=0;k<12;k++){const a=k/12*6.283;Mm('chest',G('ry',()=>new THREE.BoxGeometry(.016,.1,.012)),gold,Math.sin(a)*.19,.3+Math.cos(a)*.19,.432,0,0,-a)}
+  svSpr(R,'chest',SR232.col,1.0,0,.3,.5);Mm('chest',G('gg',()=>svLoft([[.56,.3,.27],[.74,.22,.2]],10)),gold);
+  // ---------------- head: the mask, the crown of rays, the halo ----------------
+  Mm('neck',G('nk',()=>svLoft([[-.05,.13,.13],[.22,.11,.11]],8)),ivory2);
+  Mm('head',G('hd',()=>svLoft([[-.06,.16,.17],[.12,.21,.22],[.32,.19,.2],[.46,.1,.12]],10)),ivory);
+  Mm('head',G('mk',()=>svLoft([[-.08,.12,.05],[.1,.17,.07],[.3,.15,.06],[.42,.06,.03]],8)),gold,0,0,.16);
+  [-1,1].forEach(s=>{Mm('head',G('es',()=>new THREE.BoxGeometry(.1,.022,.02)),eye,s*.075,.2,.235,0,0,s*-.12);svSpr(R,'head',SR232.light,.34,s*.08,.2,.26)});
+  Mm('head',G('ns',()=>new THREE.BoxGeometry(.018,.2,.03)),gold2,0,.12,.232);
+  for(let k=0;k<9;k++){const u=(k-4)/4,l=.5-Math.abs(u)*.18;Mm('head',horn('cr',.035,1,0,0,4,2),k%2?gold:gold2,u*.2,.36-Math.abs(u)*.08,-.02,-Math.PI/2+.25,0,u*-.75,1,1,l)}
+  [-1,1].forEach(s=>Mm('head',G('vl',()=>tab('v',.14,.1,.7)),cloth,s*.17,.3,-.12,.25,s*1.2,0));
+  Mm('halo',G('hl',()=>new THREE.TorusGeometry(.5,.028,5,28)),haloM);Mm('halo',G('hl2',()=>new THREE.TorusGeometry(.62,.012,4,28)),haloM);
+  for(let k=0;k<12;k++){const a=k/12*6.283;Mm('halo',G('hr',()=>new THREE.BoxGeometry(.02,.16,.012)),haloM,Math.sin(a)*.74,Math.cos(a)*.74,0,0,0,-a,1,k%3?1:1.9,1)}
+  svSpr(R,'halo',SR232.col,2.2,0,0,-.05);
+  // ---------------- arms: layered pauldrons, slim plate arms, gauntlets ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',sh='sh'+L,el='el'+L,wr='wr'+L;
+    for(let k=0;k<3;k++)Mm(sh,G('pd'+k,()=>svLump(.26-k*.03,1,.06,170+k)),k==1?gold:ivory,s*(.02+k*.06),.1-k*.1,0,0,0,s*(.15+k*.3),1.2,.48,1.1);
+    Mm(sh,horn('pf',.05,.34,0,.05,4,2),gold,s*.08,.22,0,-Math.PI/2,0,s*-.5);
+    Mm(sh,G('ua',()=>svLoft([[.02,.13,.13],[-.4,.115,.115],[-.74,.1,.1]],8)),ivory2);Mm(el,ball(1,.11,1),gold);Mm(el,G('fa',()=>svLoft([[-.02,.1,.1],[-.36,.125,.12],[-.7,.09,.09]],8)),ivory);
+    Mm(el,G('vb',()=>svLoft([[-.05,.13,.13],[-.3,.15,.14]],8,{cap:false})),gold,0,-.08,0);Mm(wr,G('hn',()=>svLump(.1,1,.08,175)),ivory2,0,-.1,.02,0,0,0,1,1.3,1)});
+  // the sword: a gold hilt, a long narrow blade of light
+  Mm('blade',G('gp',()=>new THREE.CylinderGeometry(.03,.035,.36,6).toNonIndexed()),gold2,0,-.1,0);Mm('blade',G('pm',()=>new THREE.OctahedronGeometry(.06,0)),gold,0,-.31,0);
+  Mm('blade',G('cg',()=>svTube([[-.34,.06,0],[-.15,.1,0],[0,.08,0],[.15,.1,0],[.34,.06,0]],[.02,.035,.045,.035,.02],5)),gold,0,0,0);
+  Mm('blade',G('bl',()=>svBlade([[0,.1],[.085,.2],[.07,2.3],[0,2.75],[-.07,2.3],[-.085,.2]],.03)),bladeM);Mm('blade',G('bc',()=>new THREE.BoxGeometry(.018,2.2,.05)),lit,0,1.3,0);svSpr(R,'blade',SR232.light,.9,0,2.6,0);
+  // the scales: a beam, two chains, two pans
+  Mm('scale',G('sb',()=>svTube([[-.42,-.02,0],[0,.03,0],[.42,-.02,0]],[.018,.028,.018],5)),gold);Mm('scale',G('sh',()=>new THREE.CylinderGeometry(.012,.012,.2,4)),gold2,0,.1,0);
+  ['panL','panR'].forEach(p=>{[-1,1].forEach(q=>Mm(p,G('pc',()=>new THREE.CylinderGeometry(.006,.006,.42,3)),gold2,q*.07,-.2,0,0,0,q*-.16));Mm(p,G('pn',()=>new THREE.SphereGeometry(.13,8,3,0,6.283,1.9,1.2).toNonIndexed()),gold,0,-.3,0);
+    Mm(p,G('pg',()=>new THREE.OctahedronGeometry(.045,0)),lit,0,-.4,0)});
+  // ---------------- wings: three pairs ----------------
+  [[1,'w1',3.0,9,1.25,2.0],[1,'w2',2.2,7,1.0,1.5],[1,'w3',1.5,6,.8,1.1]].forEach(([_,w,span,n,l0,l1],wi)=>{[-1,1].forEach(s=>{const j=w+(s>0?'L':'R');
+      Mm(j,G('wb'+wi,()=>svTube([[0,0,0],[span*.45,.14,0],[span,.05,0]],[.1,.075,.03],6)),ivory2,0,0,0,0,0,0,s,1,1);Mm(j,ball(2,.14,1),gold,0,0,0);
+      for(let k=0;k<n;k++){const u=(k+.5)/n,x=s*u*span,l=l0+(l1-l0)*Math.sin(u*2.4+.5),yaw=s*u*.5;
+        Mm(j,quill,k%2?fW:fC,x,.14*Math.sin(u*3.1)-.02,-.04,-(.9+u*.2),yaw,0,1.25,1,l);Mm(j,quill,fW,x,.14*Math.sin(u*3.1)+.03,0,-.6,yaw*.6,0,1.4,1,l*.5);
+        Mm(j,quill,fG,x+Math.sin(yaw)*-l*.52,.14*Math.sin(u*3.1)-.02-Math.sin(.9+u*.2)*l*.84,-.04-Math.cos(.9+u*.2)*l*.84*Math.cos(yaw),-(.9+u*.2),yaw,0,.9,1,l*.18)}})});
+  // ---------------- the skirt: tabards front, back and sides, an inner robe that fades to strips; no legs ----------------
+  Mm('sk0',G('sk',()=>svLoft([[.12,.42,.34],[-.45,.48,.42],[-.95,.4,.36]],12,{cap:false})),cloth);Mm('sk1',G('sk2',()=>svLoft([[.05,.4,.36],[-.5,.26,.24],[-1.0,.06,.06]],10,{cap:false})),cloth2);
+  [[0,.4,.36,0],[0,-.4,.3,Math.PI],[.44,0,.26,Math.PI/2],[-.44,0,.26,-Math.PI/2]].forEach(([x,z,w,ry],i)=>{Mm('sk0',tab('t'+i,w,w*.7,1.7),i<2?cloth:cloth2,x,.12,z,i==1?-.12:.12,ry,0);
+    Mm('sk0',tab('h'+i,w*.5,w*.34,1.5),i<2?gold:gold2,x*1.02,.1,z*1.03,i==1?-.12:.12,ry,0)});
+  for(let k=0;k<8;k++){const a=k/8*6.283+.4;Mm('sk1',tab('s',.07,.04,.9+((k*5)%4)*.2),k%2?cloth:cloth2,Math.sin(a)*.24,-.3,Math.cos(a)*.22,.1,a,0)}
+  svSpr(R,'sk1',SR232.col,1.6,0,-.9,0);
+  if(!SR232.tris)SR232.tris=wk232Tris(R);R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]; arms hang -y: rx − raises one forward; wings: rz + lifts the left) ----------------
+var SR232P={
+  idle:{},
+  cRec:{hips:[.04,0,0,0,-.06,0],shR:[-.3,0,-.1],elR:[-.3,0,0]},
+  // Blade of Dawn: the sword drawn back across the body, the level cut, the return, then both hands overhead and down
+  cUp:{hips:[0,-.35,0],spine:[0,-.3,0],chest:[0,-.4,0],shR:[-.9,0,-1.2],elR:[-.9,0,0],blade:[.3,0,0],shL:[-.4,0,.5],elL:[-.6,0,0],w1L:[0,.2,.2],w1R:[0,-.2,-.2],sk0:[0,.2,0]},
+  cCut:{hips:[.05,.4,0,0,-.05,.2],spine:[.05,.35,0],chest:[.08,.5,0],shR:[-1.3,0,.7],elR:[-.2,0,0],blade:[.5,0,0],shL:[.2,0,.3],w1L:[0,-.2,-.1],w1R:[0,.2,.1],sk0:[.1,-.2,0]},
+  oUp:{hips:[-.12,0,0,0,.25,-.1],spine:[-.15,0,0],chest:[-.25,0,0],head:[-.2,0,0],shR:[-2.9,0,.25],elR:[-.3,0,0],blade:[.4,0,0],shL:[-2.7,0,-.3],elL:[-.6,0,0],w1L:[0,0,.5],w1R:[0,0,-.5],w2L:[0,0,.3],w2R:[0,0,-.3],sk0:[.15,0,0]},
+  oCut:{hips:[.3,0,0,0,-.5,.3],spine:[.3,0,0],chest:[.3,0,0],head:[.1,0,0],shR:[-.9,0,.25],elR:[-.1,0,0],blade:[.5,0,0],shL:[-.8,0,-.3],elL:[-.2,0,0],w1L:[0,0,-.4],w1R:[0,0,.4],sk0:[-.3,0,0],sk1:[-.3,0,0]},
+  // Lance of Light: the sword levelled back by the hip, the thrust
+  thUp:{hips:[0,-.5,0,0,0,-.15],spine:[0,-.3,0],chest:[0,-.3,0],head:[0,.6,0],shR:[.5,0,-.3],elR:[-1.5,0,0],blade:[.5,0,0],shL:[-1.2,0,.2],elL:[-.2,0,0]},
+  thrust:{hips:[.12,.3,0,0,-.1,.5],spine:[.1,.2,0],chest:[.1,.3,0],head:[0,-.3,0],shR:[-1.5,0,.1],elR:[-.05,0,0],blade:[.5,0,0],shL:[.5,0,.4],elL:[-.3,0,0],sk0:[-.35,0,0],sk1:[-.3,0,0],w1L:[0,.5,.2],w1R:[0,-.5,-.2]},
+  // Wing Flare: the wings folded forward round her, then thrown wide
+  wrap:{hips:[.1,0,0,0,-.2,0],chest:[.15,0,0],head:[.25,0,0],shR:[-.4,0,.5],elR:[-1.4,0,0],shL:[-.4,0,-.5],elL:[-1.4,0,0],w1L:[0,-1.2,-.5],w1R:[0,1.2,.5],w2L:[0,-1.1,-.2],w2R:[0,1.1,.2],w3L:[0,-.9,.2],w3R:[0,.9,-.2]},
+  flare:{hips:[-.15,0,0,0,.25,0],chest:[-.25,0,0],head:[-.3,0,0],shR:[-.3,0,-1.3],elR:[-.1,0,0],shL:[-.3,0,1.3],elL:[-.1,0,0],w1L:[0,.3,.6],w1R:[0,-.3,-.6],w2L:[0,.3,.4],w2R:[0,-.3,-.4],w3L:[0,.3,.3],w3R:[0,-.3,-.3],sk0:[.2,0,0]},
+  // Falling Stars / Verdict: the scales lifted high in the left hand, the sword point down; then the sword raised to the sun
+  weigh:{hips:[-.05,0,0,0,.2,0],chest:[-.1,0,0],head:[-.15,.2,0],shL:[-2.6,0,.35],elL:[-.2,0,0],scale:[0,0,.15],panL:[0,0,-.15],panR:[0,0,-.15],shR:[-.2,0,-.3],elR:[-.2,0,0],blade:[0,0,0]},
+  judge:{root:[0,0,0,0,3.2,0],hips:[-.1,0,0],chest:[-.2,0,0],head:[-.35,0,0],shR:[-3.0,0,.1],elR:[-.05,0,0],blade:[.5,0,0],shL:[-1.4,0,.9],elL:[-.3,0,0],scale:[0,0,-.3],panL:[0,0,.3],panR:[0,0,.3],
+    w1L:[0,.2,.7],w1R:[0,-.2,-.7],w2L:[0,.2,.45],w2R:[0,-.2,-.45],w3L:[0,.2,.3],w3R:[0,-.2,-.3],sk0:[.1,0,0]},
+  smite:{root:[0,0,0,0,2.6,0],hips:[.2,0,0],chest:[.25,0,0],head:[.2,0,0],shR:[-.9,0,.1],elR:[-.1,0,0],blade:[.5,0,0],shL:[-.9,0,.9],elL:[-.3,0,0],w1L:[0,0,-.3],w1R:[0,0,.3],w2L:[0,0,-.2],w2R:[0,0,.2]},
+  // Radiant Orbs: both hands drawn in to the breast, then opened forward
+  gather:{hips:[.05,0,0],chest:[.12,0,0],head:[.2,0,0],shR:[-.9,0,.6],elR:[-1.6,0,0],shL:[-.9,0,-.6],elL:[-1.6,0,0],w1L:[0,-.4,0],w1R:[0,.4,0]},
+  cast:{hips:[-.05,0,0,0,.05,.1],chest:[-.1,0,0],head:[-.1,0,0],shR:[-1.5,0,-.4],elR:[-.1,0,0],shL:[-1.5,0,.4],elL:[-.1,0,0],w1L:[0,.3,.3],w1R:[0,-.3,-.3]},
+  // Dawn Dash: leaning into the line, sword trailing; the cut through
+  dLow:{hips:[.35,-.3,0,0,-.4,-.2],spine:[.15,0,0],chest:[.1,-.2,0],head:[-.3,.3,0],shR:[.6,0,-.6],elR:[-.6,0,0],blade:[.2,0,0],shL:[-.8,0,.2],elL:[-.9,0,0],w1L:[0,.8,-.3],w1R:[0,-.8,.3],w2L:[0,.8,-.2],w2R:[0,-.8,.2],sk0:[.5,0,0],sk1:[.4,0,0]},
+  dCut:{hips:[.3,.4,0,0,-.3,.3],spine:[.1,.3,0],chest:[.1,.4,0],shR:[-1.5,0,.9],elR:[-.1,0,0],blade:[.5,0,0],shL:[.3,0,.3],w1L:[0,.9,-.2],w1R:[0,-.9,.2],sk0:[.6,0,0],sk1:[.5,0,0]},
+  // staggered (the light gone out of her: sunk to the floor, wings fallen); dead
+  stag:{root:[0,0,0,0,-1.45,0],hips:[.35,.1,.1],spine:[.25,0,0],chest:[.3,0,.1],head:[.5,.2,.2],shR:[-.3,0,.3],elR:[-.2,0,0],blade:[0,0,0],shL:[-.2,0,-.2],elL:[-.4,0,0],w1L:[0,.3,-1.0],w1R:[0,-.3,1.0],w2L:[0,.2,-.6],w2R:[0,-.2,.6],w3L:[0,.1,-.3],w3R:[0,-.1,.3],sk0:[.9,0,0],sk1:[.5,0,0],halo:[.6,0,.3,0,-.1,0]},
+  dead:{root:[0,0,0,0,-2.2,0],hips:[1.4,0,.15,0,0,.4],spine:[.1,0,0],chest:[.1,0,0],head:[.2,.5,0],shR:[-2.4,0,.4],elR:[-.2,0,0],shL:[-1.8,0,-.6],elL:[-.4,0,0],w1L:[0,.4,-.9],w1R:[0,-.3,.4],w2L:[0,.3,-.5],w2R:[0,-.3,.5],sk0:[-.3,0,0],halo:[1.2,0,.5,0,-.3,-.2]}};
+// ---------------- procedural layer: the hover, slow wingbeats, the skirt trailing, the scales swinging, the halo turning ----------------
+function sr232Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/2.6),bt=Math.sin(t*1.5),b2=Math.sin(t*1.5-.5),b3=Math.sin(t*1.5-1.0),low=S.stg>0||S.dieM?0:1;
+  O.hips[4]+=.1*Math.sin(t*1.5+.6)*low;O.hips[0]+=.12*a;O.chest[0]+=.02*bt-.05*a;O.head[0]+=-.04*a;
+  O.w1L[2]+=.22*bt*low;O.w1R[2]-=.22*bt*low;O.w2L[2]+=.18*b2*low;O.w2R[2]-=.18*b2*low;O.w3L[2]+=.14*b3*low;O.w3R[2]-=.14*b3*low;O.w1L[1]+=.25*a;O.w1R[1]-=.25*a;
+  O.sk0[0]+=.06*Math.sin(t*1.1)+.4*a;O.sk1[0]+=.1*Math.sin(t*1.1-.8)+.3*a;O.sk0[2]+=.04*Math.sin(t*.8);
+  O.scale[2]+=.1*Math.sin(t*1.3);O.panL[2]-=.1*Math.sin(t*1.3)+.06*Math.sin(t*2.1);O.panR[2]-=.1*Math.sin(t*1.3)-.06*Math.sin(t*2.1);O.halo[2]+=t*.25%6.283;
+  O.shL[0]+=.03*bt;O.shR[0]+=.03*b2;O.elL[0]+=-.12;O.elR[0]+=-.1;
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:(Math.abs(yaw)<1.6?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.8,Math.min(.8,yaw))*k)-(S.hy||0))*Math.min(1,dt*3);O.head[1]+=S.hy*.7;O.chest[1]+=S.hy*.15}
+// after the pose: the light breathes (blazing in Phase II and while charging; almost out while she is staggered), motes rise off the blade
+function sr232Post(e,S,dt,now){const R=S.R,t=now/1000,ph2=S.ph>1,ch=S.chg||0,dim=S.stg>0||S.dieM?.15:1;
+  R.lit.emissiveIntensity=((ph2?1.6:1.0)+.2*Math.sin(t*2)+ch*1.8)*dim;R.bladeM.opacity=(.85+.1*Math.sin(t*9))*Math.max(.3,dim);R.haloM.opacity=(.8+.15*Math.sin(t*2.4))*dim;R.haloM.color.setHex(ch>.4?0xffffff:0xffe9a0);
+  if(!S.dieM&&dim>.5&&Math.random()<dt*(ph2?12:5)+ch*dt*14){const p=svWP(e,'blade',0,.3+Math.random()*2.3,0);burst(p,SR232.light,1,.2,.5,.5)}
+  if(!S.dieM&&dim>.5&&Math.random()<dt*3){const p=svWP(e,'sk1',(Math.random()-.5)*.4,-.8,(Math.random()-.5)*.4);burst(p,SR232.col,1,.2,-.4,.9)}}
+SR232.sheet.boss=()=>{const R=svRig();sr232Build(R,null);svRest(R);svMerge(R);return R.root};
+// ================= v232 Seraphel — the moves (Sovereign move format; the kit 4010 points the engine at her court) =================
+// Theme: daylight as judgement: a blade of light, rays, falling stars, the sun itself; and its opposite, shadow, as the only mercy.
+// Debuff: Judged (marked by the light: you take more damage for a while).
+// Pattern:
+//  close, front ── Blade of Dawn: a level cut (an arc), the return cut (an arc), then the sword raised in both hands and brought
+//                  down a line; the line she cut stays burning and bursts a moment later (don't stand on it).
+//  mid / far    ── Lance of Light: the sword drawn back to the hip and thrust: a narrow ray the length of the court, fast.
+//  behind/side  ── Wing Flare: six wings folded round her, then thrown open: a ring (stand close in, or far out).
+//  any          ── Falling Stars: the scales lifted; four stars fall, one ahead of you and three round you, then four more.
+//  far, front   ── Radiant Orbs: five slow globes of light in a fan; weave between them.
+//  close, any   ── Sunburst: wings wrapped, a breath, then light in all directions: a blast round her, eight rays, eight more in
+//                  the gaps.
+//  Phase II (55%) "High Noon": the sundial wakes. A ray like a clock hand sweeps round the court from the middle (cross it on a
+//                  dodge or keep ahead of it), and the sun climbs, so every shadow is shorter. She rests less and gains Dawn
+//                  Dash (three cuts through you from three sides), Starfall Cross (rays in a + and then a × through where you
+//                  stand) and a double fan of orbs.
+//  Signature ──── Verdict (Phase II): she rises above the court and lifts her sword to the sun. In a few breaths the whole court
+//                  is filled with light: everything not in shadow is judged. Four obelisks stand in the court and each throws a
+//                  shadow away from the sun — and the sun is moving, so the shadows swing as she counts. Be in a shadow when the
+//                  light comes: the obelisk's crystal turns the Verdict back on her (a long stagger, and she is wounded). An
+//                  obelisk can do this twice, then it breaks. Fail and you take the Verdict, are Judged, and she heals.
+// Weakness: posture (the yellow bar); every break staggers her (+35% damage). Big moves have armour.
+const SR232_DEB=['Judged','☀',{pdP:-.2,mdP:-.2},'Marked by the light: −20% defences'];
+function sr232Mats(){const X=WK232.X;return X.sr||(X.sr={light:new THREE.MeshBasicMaterial({color:0xfff2c8}),ray:new THREE.MeshStandardMaterial({color:0xfff6d8,emissive:0xffe9a0,emissiveIntensity:1.2,roughness:.3,flatShading:true})})}
+function sr232Judge(ms){dqDebuff(SR232_DEB[0],SR232_DEB[1],SR232_DEB[2],ms||4000,SR232_DEB[3])}
+// a ray along a line for an instant (the hit is the move's): a bright bar on the floor and a wall of light over it
+function sr232Ray(an,len,w,life){const g=new THREE.Group(),a=an.a,y=GH(an.x,an.z);g.position.set(an.x,y,an.z);g.rotation.y=a;
+  const fl=new THREE.Mesh(svG('sr_rf',()=>{const q=new THREE.PlaneGeometry(1,1);q.rotateX(-Math.PI/2);q.translate(0,0,.5);return q}),new THREE.MeshBasicMaterial({color:0xfff2c8,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  fl.scale.set(w,1,len);fl.position.y=.14;const wl=new THREE.Mesh(svG('sr_rw',()=>{const q=new THREE.PlaneGeometry(1,1);q.rotateY(Math.PI/2);q.translate(0,.5,.5);return q}),new THREE.MeshBasicMaterial({color:0xffe9a0,map:SPR,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+  wl.scale.set(1,3.2,len);[fl,wl].forEach(m=>{m.userData.lpsSkip=1;m.renderOrder=22;g.add(m)});scene.add(g);let t=0;const T=life||.35;
+  for(let k=0;k<len;k+=1.4)burst(new THREE.Vector3(an.x+Math.sin(a)*k,y+.5,an.z+Math.cos(a)*k),0xfff2c8,2,1,1.6,.4);
+  kqFx({tick(dt){t+=dt||0;const k=t/T;fl.material.opacity=.9*(1-k);wl.material.opacity=.5*(1-k);fl.scale.x=w*(1+k*.4);return k<1},end(){scene.remove(g);fl.material.dispose();wl.material.dispose()}})}
+// a star falling onto a spot (the hit is the move's)
+function sr232Star(p,big){const s=big?1.4:1;try{sk146Column(p,0xffe9a0,0xffffff,.9*s,7,.5)}catch(_){}burst(gY(p,.4),0xfff2c8,big?40:24,3.5,3,.6);svShock(p,SR232.col,2.6*s,.3);svDecal(p,0x6a5a2a,1.6*s,3,.4);try{sk146Crack(p,0xffe9a0,2.2*s,1.6)}catch(_){}svSnd('bell',.5,1.6+Math.random()*.4);svSnd('heavy',.6,1.3)}
+function sr232Orb(c,an,dm,spd){wk232Bolt(c,an,dm,{col:0xffe9a0,spd:spd||8.5,L:17,w:1.5,y:1.2,gl:2.2,trail:false,mesh:()=>{const g=new THREE.Group(),m=new THREE.Mesh(svG('sr_orb',()=>new THREE.IcosahedronGeometry(.42,1)),sr232Mats().light);g.add(m);return g},on:()=>sr232Judge(3000)})}
+const SR232_TR=(t0,t1)=>[t0,t1,'blade',[0,.3,0],[0,2.7,0],0xfff2c8,.22];
+var SR232M={
+  intro:WK232_M({dur:3.6,inv:[0,3.6],armor:1,trn:[[0,3.6,1.5]],trk:[[.8,'wrap','io'],[1.5,'wrap','l',.012],[1.8,'flare','o'],[3.0,'flare','l',.015],[3.6,'cRec','io']],
+    ev:[[.5,c=>{svSnd('charge',.6,1.4);c.S.chgT=1}],[1.8,c=>{svSnd('bell',1.2,.8);svSnd('bell',.8,1.2);svSnd('whoosh',1,.8);shake(.3);svShock(c.m.position,SR232.col,9,.8);burst(gY(c.m.position,3),0xfff2c8,80,6,3,1);c.S.chgT=0}]]}),
+  // Blade of Dawn
+  blade:WK232_M({wt:10,cd:2.6,r:[0,5.6],a:'f',mel:1,dur:3.2,lock:.4,trn:[[0,.42,5],[.84,.96,5],[1.44,1.72,3.6]],
+    trk:[[.4,'cUp','io'],[.52,'cUp','l',.01],[.64,'cCut','s'],[.86,'cCut','l'],[1.0,'cCut','io'],[1.12,'cUp','s'],[1.4,'oUp','io'],[1.74,'oUp','l',.014],[1.88,'oCut','s'],[2.6,'oCut','l'],[3.2,'cRec','io']],
+    rm:[[.56,.66,.7,'o'],[1.04,1.14,.6,'o'],[1.78,1.9,1.0,'o']],
+    hit:[{t:.63,s:{k:'a',r:4.8,h:1.15},f:.3,dm:.9},{t:1.11,s:{k:'a',r:4.8,h:1.15},f:.3,dm:.9},
+      {t:1.88,s:{k:'l',w:2.0,l:9,b:0},f:.3,dm:1.35,w:.44,fx:(c,an)=>{sr232Ray(an,9,1.4,.3);shake(.25);svSnd('heavy',1,1.3);svSnd('bell',.6,1.4);c.M.an.cut=an}},
+      {t:2.7,s:{k:'l',w:2.6,l:9,b:0},o:c=>c.M.an.cut||{x:c.m.position.x,z:c.m.position.z,a:c.m.rotation.y},dm:1.2,w:.78,wc:0xffe9a0,on:()=>sr232Judge(4000),fx:(c,an)=>{sr232Ray(an,9,2.6,.45);for(let k=1;k<9;k+=2)sr232Star(new THREE.Vector3(an.x+Math.sin(an.a)*k,0,an.z+Math.cos(an.a)*k));shake(.3)}}],
+    tr:[SR232_TR(.55,.72),SR232_TR(1.02,1.2),SR232_TR(1.78,1.94)],
+    ev:[[.56,c=>svSnd('swing',.85,1.5)],[1.04,c=>svSnd('swing',.85,1.6)],[1.44,c=>svSnd('charge',.4,1.8)],[1.78,c=>svSnd('whoosh',.95,1.3)]],nx:[['lance',.25,10],['flare',.3,6]],rec:.3}),
+  // Lance of Light
+  lance:WK232_M({wt:(e,L)=>L>4?9:4,cd:5.5,r:[3,30],a:'f',armor:1,dur:2.2,lock:.9,trn:[[0,.9,5]],
+    trk:[[.7,'thUp','io'],[1.0,'thUp','l',.014],[1.1,'thrust','s'],[1.6,'thrust','l'],[2.2,'cRec','io']],rm:[[1.04,1.14,1.2,'o']],
+    hit:[{t:1.12,s:{k:'l',w:1.7,l:24,b:0},f:.6,dm:1.35,w:.78,kb:2,fx:(c,an)=>{sr232Ray(an,24,1.3,.4);shake(.25);svSnd('whoosh',1.2,1.5);svSnd('bell',.7,1.8)}}],
+    tr:[SR232_TR(1.02,1.2)],ev:[[.5,c=>{svSnd('charge',.6,1.6);svCharge(c.e,'blade',SR232.col,1,.5,0,2.6,0)}]],rec:.35}),
+  // Wing Flare (from behind or the side)
+  flare:WK232_M({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5,r:[0,5.8],a:'sb',dur:2.0,lock:.5,trn:[[0,.4,2]],
+    trk:[[.55,'wrap','io'],[.86,'wrap','l',.014],[1.0,'flare','s'],[1.4,'flare','l'],[2.0,'cRec','io']],
+    hit:[{t:1.0,s:{k:'r',r0:1.2,r:5.8},dm:1.1,kb:4,w:.8,fx:c=>{svShock(c.m.position,SR232.col,6,.4);burst(gY(c.m.position,1.5),0xfff2c8,50,6,1,.5);svSnd('whoosh',1.1,1);svSnd('bell',.6,1.2)}}],
+    ev:[[.4,c=>svSnd('charge',.4,1.5)]],rec:.35}),
+  // Falling Stars: one ahead of you and three round you, twice
+  stars:WK232_M({wt:8,cd:7,r:[2,30],a:'any',armor:1,dur:3.3,lock:.6,trn:[[0,.6,3]],
+    trk:[[.6,'weigh','io'],[2.5,'weigh','l',.008],[3.3,'cRec','io']],
+    hit:[0,1].flatMap(w=>[0,1,2,3].map(k=>({t:1.5+w*.8+k*.07,s:{k:'c',r:1.8},o:c=>{if(k==0){const p=wk232Aim(c,.5+w*.1);return {x:p.x,z:p.z,a:0}}const a=(k/3+w*.17+c.rnd()*.1)*6.283,q=wk232Clamp(c.D,new THREE.Vector3(pl.position.x+Math.sin(a)*3.1,0,pl.position.z+Math.cos(a)*3.1),.5);return {x:q.x,z:q.z,a:0}},
+      w:.75,dm:1.0,wc:0xffe9a0,fx:(c,an)=>sr232Star(new THREE.Vector3(an.x,0,an.z))}))),
+    ev:[[.4,c=>{svSnd('bell',.7,1.5);c.S.chgT=.6}],[2.5,c=>{c.S.chgT=0}]],rec:.4}),
+  // Radiant Orbs: five slow globes (Phase II: two fans)
+  orbs:WK232_M({wt:(e,L)=>L>6?9:3,cd:7,r:[4,30],a:'f',dur:2.3,lock:.95,trn:[[0,.95,4]],ph1only:1,
+    trk:[[.75,'gather','io'],[1.0,'gather','l',.012],[1.14,'cast','s'],[1.7,'cast','l'],[2.3,'cRec','io']],
+    hit:[-.56,-.28,0,.28,.56].map(ay=>({t:1.16,s:{k:'l',w:1.5,l:9,b:0},f:1.0,ay,nohit:1,w:.8,fx:(c,an)=>sr232Orb(c,an,.95)})),
+    ev:[[.4,c=>svSnd('charge',.5,1.7)],[1.14,c=>svSnd('whoosh',.9,1.4)]],rec:.35}),
+  // Sunburst
+  burst:WK232_M({wt:(e,L)=>L<5.5?9:2,cd:9,r:[0,6.5],a:'any',armor:1,dur:3.3,trn:[[0,.5,2]],
+    trk:[[.7,'wrap','io'],[1.78,'wrap','l',.02],[1.9,'flare','s'],[2.7,'flare','l'],[3.3,'cRec','io']],
+    hit:[{t:1.9,s:{k:'c',r:3.4},dm:1.3,w:1.3,kb:3,fx:c=>{svShock(c.m.position,SR232.col,4.5,.35);burst(gY(c.m.position,1.5),0xfff2c8,70,6,3,.7);shake(.35);svSnd('bell',1.1,.9);svSnd('heavy',.9,1.2)}}]
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.14,s:{k:'l',w:1.5,l:12,b:-1.4},f:0,ay:k*Math.PI/4,w:.75,dm:1.0,wc:0xffe9a0,fx:(c,an)=>sr232Ray({x:an.x+Math.sin(an.a)*1.4,z:an.z+Math.cos(an.a)*1.4,a:an.a},10.6,1.1,.3)})))
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.58,s:{k:'l',w:1.5,l:12,b:-1.4},f:0,ay:k*Math.PI/4+Math.PI/8,w:.6,dm:1.0,wc:0xffe9a0,fx:(c,an)=>sr232Ray({x:an.x+Math.sin(an.a)*1.4,z:an.z+Math.cos(an.a)*1.4,a:an.a},10.6,1.1,.3)}))),
+    ev:[[.5,c=>{svSnd('charge',.7,1.2);c.S.chgT=1.4}],[1.9,c=>{c.S.chgT=0}],[2.14,c=>svSnd('bell',.7,1.5)],[2.58,c=>svSnd('bell',.7,1.7)]],rec:.45}),
+  // ---------------- Phase II ----------------
+  awaken:WK232_M({dur:3.9,inv:[0,3.9],armor:1,trn:[[0,3.5,1.2]],trk:[[.7,'wrap','io'],[1.3,'wrap','l',.02],[1.6,'judge','o'],[3.2,'judge','l',.012],[3.9,'cRec','io']],
+    hit:[{t:1.62,s:{k:'c',r:7},dm:.55,kb:6,w:1.2,fx:c=>{svShock(c.m.position,SR232.col,11,.85);burst(gY(c.m.position,3),0xfff2c8,120,7,4,1)}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[5],'Seraphel · Phase II','High Noon','The sundial wakes: a ray sweeps the court and the shadows shrink','Shadow is the only mercy','z5')}catch(_){}svSnd('charge',.9,1.2);c.S.chgT=1.2}],
+      [1.6,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(255,240,190,.4)')}catch(_){}svSnd('bell',1.3,.7);svSnd('bell',1,1);shake(.5);try{sr232Noon(c.D,1)}catch(err){console.error('sr noon',err)}}]]}),
+  // Dawn Dash: three cuts through you from three sides
+  dash:WK232_M((()=>{const TB=[.2,1.5,2.8];return {wt:9,cd:9,ph:2,r:[0,30],a:'any',armor:1,dur:4.7,rec:.5,trn:TB.map(tb=>[tb,tb+.5,9]),
+    rm:TB.map(tb=>[tb+.82,tb+1.0,'tgt','o',-4.2,14]),
+    hit:TB.map((tb,i)=>({t:tb+.98,s:{k:'l',w:2.4,l:14,b:0},f:0,dm:1.15+i*.1,w:.48,fx:(c,an)=>{sr232Ray(an,14,1.6,.3);svSnd('whoosh',1.2,1.4+i*.1);shake(.2)}})),
+    trk:[].concat(...TB.map(tb=>[[tb+.4,'dLow','io'],[tb+.8,'dLow','l',.012],[tb+.9,'dCut','s'],[tb+1.2,'dCut','l']])).concat([[4.7,'cRec','io']]),
+    ev:TB.map(tb=>[tb+.02,c=>{svSnd('charge',.4,2);/* she steps out of the light to a new side of you */const a=Math.random()*6.283,q=wk232Clamp(c.D,new THREE.Vector3(pl.position.x+Math.sin(a)*6.5,0,pl.position.z+Math.cos(a)*6.5),1.8);
+      if(tb>.3){burst(gY(c.m.position,2),0xfff2c8,40,4,2,.5);c.m.position.x=q.x;c.m.position.z=q.z;c.m.rotation.y=svYawTo(c.m,pl.position);burst(gY(c.m.position,2),0xfff2c8,40,4,2,.5);svShock(c.m.position,SR232.col,3,.3)}}]),
+    tr:TB.map(tb=>SR232_TR(tb+.8,tb+1.05))}})()),
+  // Starfall Cross: rays in a + through where you stand, then a ×
+  cross:WK232_M({wt:8,cd:9,ph:2,r:[0,30],a:'any',armor:1,dur:3.6,trn:[[0,.6,3]],
+    trk:[[.6,'weigh','io'],[1.0,'judge','io'],[2.7,'smite','s'],[3.0,'smite','l'],[3.6,'cRec','io']],
+    hit:[0,1].flatMap(w=>[0,1].map(k=>({t:1.7+w*.75,s:{k:'l',w:2.3,l:26,b:0},o:c=>{if(!c.M.an.cp)c.M.an.cp=wk232HeroIn(c.D,pl.position.clone());const P=c.M.an.cp,a=k*Math.PI/2+w*Math.PI/4;return {x:P.x-Math.sin(a)*13,z:P.z-Math.cos(a)*13,a}},
+      w:w?.6:.85,dm:1.15,wc:0xffe9a0,on:()=>sr232Judge(4000),fx:(c,an)=>{sr232Ray(an,26,2.0,.4);if(k==0){svSnd('bell',.9,1.2+w*.3);shake(.3)}}}))),
+    ev:[[.4,c=>{svSnd('charge',.7,1.5);c.S.chgT=1}],[2.5,c=>{c.S.chgT=0}]],rec:.45}),
+  orbs2:WK232_M({wt:(e,L)=>L>5?10:4,cd:8,ph:2,r:[3.5,30],a:'f',dur:2.9,lock:.95,trn:[[0,.95,4],[1.4,1.55,3]],
+    trk:[[.75,'gather','io'],[1.0,'gather','l',.012],[1.14,'cast','s'],[1.4,'gather','io'],[1.66,'cast','s'],[2.2,'cast','l'],[2.9,'cRec','io']],
+    hit:[-.56,-.28,0,.28,.56].map(ay=>({t:1.16,s:{k:'l',w:1.5,l:9,b:0},f:1.0,ay,nohit:1,w:.8,fx:(c,an)=>sr232Orb(c,an,.9,9)}))
+      .concat([-.7,-.42,-.14,.14,.42,.7].map(ay=>({t:1.68,s:{k:'l',w:1.5,l:9,b:0},f:1.0,ay,nohit:1,w:.45,fx:(c,an)=>sr232Orb(c,an,.9,11)}))),
+    ev:[[.4,c=>svSnd('charge',.5,1.7)],[1.14,c=>svSnd('whoosh',.9,1.4)],[1.66,c=>svSnd('whoosh',.9,1.6)]],rec:.4}),
+  // Verdict: she rises; be in an obelisk's shadow when the light comes (4052)
+  verdict:WK232_M({wt:(e)=>e.sv.sigN?10:30,cd:26,ph:2,r:[0,40],a:'any',armor:1,dur:9.6,inv:[0,7.0],trn:[[0,9.6,2]],
+    trk:[[.6,'weigh','io'],[1.2,'judge','o'],[6.4,'judge','l',.014],[6.6,'smite','s'],[8.4,'smite','l'],[9.0,'cRec','io'],[9.6,'cRec','l']],
+    ev:[[.1,c=>{svSnd('bell',1.2,.6);c.S.chgT=1.6;c.S.ghost=1;c.e.sv.sigN=(c.e.sv.sigN||0)+1;try{sr232VerdictStart(c.D,c.e)}catch(err){console.error('sr verdict',err)}}],[2.0,c=>svSnd('bell',.9,.8)],[3.4,c=>svSnd('bell',.9,1)],[4.8,c=>svSnd('bell',.9,1.25)],[5.8,c=>svSnd('charge',1,1.6)],
+      [9.0,c=>{c.S.ghost=0}]],
+    hit:[{t:6.6,s:{k:'c',r:99},nohit:1,w:0,show:false,fx:c=>{c.S.chgT=0;try{sr232Verdict(c.D,c.e)}catch(err){console.error('sr verdict hit',err)}}}],
+    tk(c,dt){const m=c.m,A=c.D.A;if(c.t>.6&&c.t<6.6){m.position.x+=(A.cx-m.position.x)*Math.min(1,dt*1.6);m.position.z+=(A.cz-m.position.z)*Math.min(1,dt*1.6)}},
+    end(c,silent){c.S.ghost=0;c.S.chgT=0;try{sr232VerdictEnd(c.D)}catch(_){}},rec:.5}),
+  // the Verdict turned back on her: a long stagger
+  broken:WK232_M({dur:5.0,trk:[[.4,'stag','i'],[4.4,'stag','l',.02],[5.0,'cRec','io']],
+    go(c){c.S.stg=5.0;c.S.ghost=0;svSnd('stag',1.2,1);svSnd('bell',1,.5);popT(c.m.position,'JUDGED BY HER OWN LIGHT','#fff2c8',true);burst(gY(c.m.position,3),0xfff2c8,80,5,3,.9);svShock(c.m.position,0xfff2c8,6,.5)},
+    tk(c,dt){c.S.stg=Math.max(0,5.0-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'head',0,.2,0);burst(p,0xffe08a,1,.5,.6,.5)}},end(c){c.S.stg=0}})};
+// ================= v232 Seraphel — the Sunward Court (arena), the sun, the obelisks' shadows, the sundial's hand, the record =================
+// The last Warden's arena is the Citadel's unused Wave Trial instance (insG(5,4)), dressed as a temple court open to the sky: pale
+// veined marble inlaid with a sundial the width of the court in gold, a broken colonnade round it, braziers of white fire, long
+// banners, a low sun — and four gold-banded obelisks with crystal tips standing on the dial, whose shadows are the answer to her
+// Verdict (4051).
+//  * The sun (SR.S.sun, an angle): it creeps round the sky all the time; each obelisk's shadow lies on the floor away from it
+//    (6.5 long; 4.2 at High Noon). During a Verdict it moves four times as fast, so the shadows swing while she counts.
+//  * Verdict: when the light comes, a hero inside a standing obelisk's shadow is spared and that obelisk's crystal turns the light
+//    back: she is wounded 4% and 'broken'. Each obelisk can do it twice, then it shatters. Otherwise: the blow (2.4), Judged, she heals 4%.
+//  * The sundial's hand (Phase II; SR.S.hand): a ray from the middle of the court to its edge, sweeping round (it changes direction
+//    after every Verdict). Touching it burns (once a second) and marks you Judged; a dodge carries you through.
+var SR232D=wk232Reg({key:'dawn',zi:5,name:'Seraphel',title:'the Dawn Arbiter',icon:'☀',lv:55,place:'The Sunward Court',base:'akorror',hpK:1.45,dmK:1.25,
+  card:['last Warden of the Balance','The light closes the way behind you'],restTxt:'the heart of the dial',riftCol:0xfff2c8,
+  B:{name:'Seraphel',col:SR232.col,body:1.3,ph2:.55,poise:.1,headJ:'head',turnA:4.2,edge:1.4,
+    ai:{pref:3.6,walk:2.7,run:5.0,turn:3.2,rest:[.65,1.2],ph2r:.64,strafe:.6,near:1.9},
+    build:sr232Build,loco:sr232Loco,post:sr232Post,P:SR232P,M:SR232M,
+    stag:[[.3,'stag','o'],[2.2,'stag','l',.02],[2.75,'cRec','io']],stagT:2.75,die:[[.5,'stag','o'],[1.6,'dead','i'],[2.1,'dead','l']]},
+  done:()=>FN232.n>3,
+  S:{ob:[],sun:.6,noon:0,hand:0,hd:1,hT:0,ver:0,vk:0,len:6.5},
+  build(D,root,LS){const L=D.L,S=D.S,rn=svRng(2352),y=(x,z)=>GH(x,z);
+    const M={marble:new THREE.MeshStandardMaterial({color:0xd9d2c2,roughness:.5,metalness:.05,flatShading:true}),marble2:new THREE.MeshStandardMaterial({color:0xb9b09c,roughness:.6,flatShading:true}),gold:new THREE.MeshStandardMaterial({color:0xcfa43a,roughness:.3,metalness:.8,flatShading:true}),
+      dark:new THREE.MeshStandardMaterial({color:0x6a6458,roughness:.8,flatShading:true}),cloth:new THREE.MeshStandardMaterial({color:0xe9e2d0,roughness:.9,flatShading:true,side:THREE.DoubleSide}),cloth2:new THREE.MeshStandardMaterial({color:0xb0862a,roughness:.8,flatShading:true,side:THREE.DoubleSide}),
+      fire:new THREE.MeshBasicMaterial({color:0xfff2c8}),crys:new THREE.MeshStandardMaterial({color:0xfff6d8,emissive:0xffe9a0,emissiveIntensity:1.0,roughness:.15,flatShading:true,transparent:true,opacity:.95})};LS.M=M;
+    // the floor: marble, and the sundial in gold (rings, hour marks, rays); the gold holds light and blazes at High Noon
+    const dial=(c,Sz,glow)=>{const C=Sz/2,R=Sz*.39;c.strokeStyle=glow?'rgba(255,225,150,.9)':'rgba(176,134,42,.95)';c.lineWidth=glow?3:4;[1,.86,.5,.16].forEach(k=>{c.beginPath();c.arc(C,C,R*k,0,6.283);c.stroke()});
+        for(let i=0;i<24;i++){const a=i/24*6.283,r0=i%2?.86:.5;c.lineWidth=i%6==0?(glow?4:6):2;c.beginPath();c.moveTo(C+Math.sin(a)*R*r0,C+Math.cos(a)*R*r0);c.lineTo(C+Math.sin(a)*R,C+Math.cos(a)*R);c.stroke()}
+        for(let i=0;i<12;i++){const a=i/12*6.283+.26;c.lineWidth=2;c.beginPath();c.moveTo(C+Math.sin(a)*R*.16,C+Math.cos(a)*R*.16);c.lineTo(C+Math.sin(a+.12)*R*.5,C+Math.cos(a+.12)*R*.5);c.lineTo(C+Math.sin(a+.26)*R*.16,C+Math.cos(a+.26)*R*.16);c.stroke()}
+        c.fillStyle=glow?'rgba(255,235,170,.9)':'rgba(176,134,42,.95)';for(let i=0;i<12;i++){const a=i/12*6.283;c.save();c.translate(C+Math.sin(a)*R*.93,C+Math.cos(a)*R*.93);c.rotate(-a);c.fillRect(-2,-9,4,18);if(i%3==0){c.fillRect(-8,-9,4,18);c.fillRect(4,-9,4,18)}c.restore()}};
+    LS.floorM=wk232Floor(D,root,{base:'#cfc8b8',seed:2353,spk:[[232,226,212],[190,182,166]],spkN:340,spkR:16,spkA:.35,crack:'rgba(120,112,98,.35)',crackN:50,rough:.45,metal:.08,em:0xffe9a0,emI:.3,paint:(c,r,Sz)=>dial(c,Sz,0),glow:(c,r,Sz)=>dial(c,Sz,1)});
+    // the colonnade: fluted columns on plinths, some broken, lintels across a few pairs
+    const colG=svG('sr_col',()=>svLoft([[0,.62,.62],[.3,.62,.62],[.42,.46,.46],[5.6,.4,.4],[5.75,.56,.56],[6.0,.6,.6]],10)),brkG=svG('sr_cbk',()=>svLoft([[0,.62,.62],[.3,.62,.62],[.42,.46,.46],[2.2,.44,.44],[2.6,.3,.38,.1,.05]],10));
+    const tops=[];wk232Around(D,root,16,14.4,14.9,(i,a,x,z,yy,r)=>{const br=i%5==2,o=new THREE.Mesh(br?brkG:colG,i%2?M.marble:M.marble2);o.position.set(x,yy-.1,z);o.rotation.y=r()*6;o.castShadow=true;if(!br)tops.push([x,yy+5.9,z,i]);
+      else for(let k=0;k<3;k++){const d=new THREE.Mesh(wk232Lump(40+k,1,1,.2),M.marble2);d.position.set(x+(r()-.5)*2.4,yy+.2,z+(r()-.5)*2.4);d.scale.set(.5,.36,.44);d.rotation.set(r(),r()*6,r());root.add(d)}return o},2354,.17);
+    for(let k=0;k<tops.length-1;k++){const a=tops[k],b=tops[k+1];if(b[3]-a[3]!==1||k%3==2)continue;const dx=b[0]-a[0],dz=b[2]-a[2],l=Math.hypot(dx,dz),o=new THREE.Mesh(svG('sr_lin',()=>new THREE.BoxGeometry(1,.6,1.1).toNonIndexed()),M.marble);o.position.set((a[0]+b[0])/2,a[1]+.3,(a[2]+b[2])/2);o.scale.x=l+1.2;o.rotation.y=-Math.atan2(dz,dx);root.add(o);
+      const bn=new THREE.Mesh(svG('sr_bn',()=>{const s=new THREE.Shape();s.moveTo(-.6,0);s.lineTo(.6,0);s.lineTo(.6,-3.2);s.lineTo(0,-3.9);s.lineTo(-.6,-3.2);s.lineTo(-.6,0);return new THREE.ShapeGeometry(s,1)}),k%2?M.cloth:M.cloth2);bn.position.set((a[0]+b[0])/2,a[1],(a[2]+b[2])/2);bn.rotation.y=-Math.atan2(dz,dx);root.add(bn)}
+    // braziers of white fire between the columns
+    LS.fires=[];wk232Around(D,root,8,12.9,13.2,(i,a,x,z,yy,r)=>{const g=new THREE.Group();const st=new THREE.Mesh(svG('sr_bz',()=>svLoft([[0,.34,.34],[.2,.14,.14],[1.0,.12,.12],[1.2,.4,.4],[1.36,.46,.46]],8,{cap:false})),M.gold);g.add(st);
+      const f=new THREE.Mesh(svG('sr_bf',()=>svHorn(.3,.9,0,.1,6,3)),M.fire);f.position.y=1.3;f.rotation.x=-Math.PI/2;g.add(f);const gl=kqSpr(0xfff2c8,2.4);gl.position.y=1.7;g.add(gl);LS.fires.push(f);g.position.set(x,yy,z);return g},2355,.3);
+    wk232Light(D,LS,0xfff0c8,1.3,28,L.cx,L.y+8,L.cz);LS.sunL=wk232Light(D,LS,0xffe9a0,0,40,L.cx,L.y+10,L.cz);
+    // the sun: a low disc far out, where the light comes from
+    {const g=kqSpr(0xfff2c8,16);g.material=g.material.clone();g.material.fog=false;root.add(g);LS.sun=g;const c=kqSpr(0xffffff,6);c.material=c.material.clone();c.material.fog=false;root.add(c);LS.sunC=c}
+    // the four obelisks and their shadows
+    S.ob=[0,1,2,3].map(k=>{const a=Math.PI/4+k*Math.PI/2,x=L.cx+Math.sin(a)*5.6,z=L.cz+Math.cos(a)*5.6,yy=y(x,z),g=new THREE.Group(),gb=new THREE.Group();g.position.set(x,yy,z);gb.position.set(x,yy,z);
+      const sh=new THREE.Mesh(svG('sr_ob',()=>svLoft([[0,.62,.62],[.35,.62,.62],[.45,.44,.44],[4.0,.26,.26],[4.3,.02,.02]],4,{rot:Math.PI/4})),M.marble);sh.castShadow=true;g.add(sh);
+      [.9,2.2,3.5].forEach((h,i)=>{const b=new THREE.Mesh(svG('sr_obb',()=>svLoft([[-.06,1,1],[.06,1,1]],4,{rot:Math.PI/4,cap:false})),M.gold);b.position.y=h;b.scale.set(.43-i*.06,1,.43-i*.06);g.add(b)});
+      const cr=new THREE.Mesh(svG('sr_obc',()=>{const q=new THREE.OctahedronGeometry(.26,0);q.scale(1,1.7,1);return q}),M.crys.clone());cr.position.y=4.75;g.add(cr);const gl=kqSpr(0xffe9a0,1.6);gl.position.y=4.75;g.add(gl);
+      const st=new THREE.Mesh(svG('sr_obs',()=>svLoft([[0,.62,.62],[.35,.62,.62],[.45,.44,.44],[1.0,.4,.4],[1.3,.2,.3,.1,.05]],4,{rot:Math.PI/4})),M.marble2);gb.add(st);
+      for(let q=0;q<5;q++){const o=new THREE.Mesh(wk232Lump(40+q%3,1,1,.2),M.marble2),ra=q*1.3;o.position.set(Math.sin(ra)*(1+q*.2),.15,Math.cos(ra)*(.9+q*.15));o.scale.set(.34,.22,.3);o.rotation.set(q,q*2,q);gb.add(o)}gb.visible=false;
+      const shd=new THREE.Mesh(svG('sr_shd',()=>{const q=new THREE.PlaneGeometry(1,1);q.rotateX(-Math.PI/2);q.translate(0,0,.5);return q}),new THREE.MeshBasicMaterial({color:0x06070c,transparent:true,opacity:.5,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-3}));
+      shd.material.userData.noFade135=1;shd.userData.lpsSkip=1;shd.position.set(x,yy+.09,z);root.add(shd);root.add(g,gb);return {x,z,y:yy,g,gb,cr,gl,shd,uses:2,alive:1,k:W*Math.round(z)+Math.round(x)}});
+    // the sundial's hand (Phase II)
+    {const g=new THREE.Group();g.position.set(L.cx,L.y,L.cz);const fl=new THREE.Mesh(svG('sr_hf',()=>{const q=new THREE.PlaneGeometry(1,1);q.rotateX(-Math.PI/2);q.translate(0,0,.5);return q}),new THREE.MeshBasicMaterial({color:0xfff2c8,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-5}));
+      fl.scale.set(1.0,1,12.6);fl.position.y=.15;const wl=new THREE.Mesh(svG('sr_hw',()=>{const q=new THREE.PlaneGeometry(1,1);q.rotateY(Math.PI/2);q.translate(0,.5,.5);return q}),new THREE.MeshBasicMaterial({color:0xffe9a0,map:SPR,transparent:true,opacity:.34,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+      wl.scale.set(1,2.6,12.6);[fl,wl].forEach(m=>{m.userData.lpsSkip=1;m.material.userData.noFade135=1;g.add(m)});g.visible=false;root.add(g);LS.hand=g}
+    LS.glare=wk232Disc(root,0,13.4,0xfff2c8,L.y+.16);LS.glare.position.set(L.cx,L.y+.16,L.cz);
+    D.sync(D)},
+  sync(D){const S=D.S;S.ob.forEach(o=>{o.g.visible=!!o.alive;o.gb.visible=!o.alive;o.shd.visible=!!o.alive;if(o.alive)CBLK.add(o.k);else CBLK.delete(o.k)})},
+  reset(D,won){const S=D.S;sr232Noon(D,0);sr232VerdictEnd(D);S.ob.forEach(o=>{o.alive=1;o.uses=2});D.sync(D)},
+  hud(D,e){return e.sv.ph>1?' · obelisks '+D.S.ob.filter(o=>o.alive).length:''},
+  won(D,e){setTimeout(()=>{try{fn232WardenDown(3)}catch(err){console.error('fn232 warden',err)}},1900)},
+  tick(D,dt,now,t){const LS=D.LS,S=D.S,L=D.L;S.sun+=dt*(S.ver?.42:.1)*S.hd;const sx=Math.sin(S.sun),sz=Math.cos(S.sun);
+    // the sun sits opposite the shadows; the shadows lie along (sx, sz)
+    const up=S.noon?16:9;LS.sun.position.set(L.cx-sx*30,L.y+up,L.cz-sz*30);LS.sunC.position.copy(LS.sun.position);LS.sun.scale.setScalar((S.ver?22:16)+Math.sin(t*2));LS.sunL.position.set(L.cx-sx*9,L.y+9,L.cz-sz*9);LS.sunL.intensity=(S.noon?.9:.4)+(S.ver?1.4*S.vk:0);
+    S.len+=((S.noon?4.2:6.5)-S.len)*Math.min(1,dt*.8);S.ob.forEach((o,i)=>{if(!o.alive)return;o.shd.rotation.y=S.sun;o.shd.scale.set(2.5,1,S.len);o.shd.material.opacity=S.ver?.62+.1*Math.sin(t*8):.42;o.cr.rotation.y+=dt*(S.ver?5:1);o.gl.scale.setScalar((S.ver?2.6:1.6)+.2*Math.sin(t*5+i));
+      o.cr.material.emissiveIntensity=o.uses>1?1.1:.45});
+    LS.fires.forEach((f,i)=>{f.scale.set(1+.15*Math.sin(t*11+i),1+.2*Math.sin(t*13+i*2),1)});LS.floorM.emissiveIntensity=.25+(S.noon?.45:0)+.06*Math.sin(t*1.2)+(S.ver?1.2*S.vk:0);
+    // Verdict: the glare builds on the open floor
+    if(S.ver){S.vk=Math.min(1,S.vk+dt/6.2);LS.glare.visible=true;LS.glare.material.opacity=.05+.3*S.vk*S.vk}else if(LS.glare.visible){LS.glare.material.opacity-=dt*.9;if(LS.glare.material.opacity<=0)LS.glare.visible=false}
+    LS.hand.visible=!!S.noon&&!S.ver;if(LS.hand.visible){LS.hand.rotation.y=S.hand;if(Math.random()<dt*20){const r=Math.random()*12;burst(new THREE.Vector3(L.cx+Math.sin(S.hand)*r,L.y+.4,L.cz+Math.cos(S.hand)*r),0xfff2c8,1,.4,1.2,.4)}}},
+  fight(D,e,dt,now){const S=D.S,A=D.A;if(!S.noon||S.ver||hero.hp<=0)return;S.hand+=dt*.55*S.hd;S.hT-=dt;
+    if(S.hT<=0&&svIn({k:'l',w:1.0,l:12.6,b:0},{x:A.cx,z:A.cz,a:S.hand},pl.position,.1)){if(wk232Zap(e,.6,'m')){S.hT=1;sr232Judge(3000);burst(gY(pl.position,.8),0xfff2c8,16,2,2,.5);svSnd('bell',.5,1.8)}}}});
+function sr232Noon(D,on){const S=D.S;S.noon=on?1:0;S.hand=S.sun+Math.PI;S.hT=1.5}
+function sr232Shade(D,p){const S=D.S,sx=Math.sin(S.sun),sz=Math.cos(S.sun);let best=null;for(const o of S.ob){if(!o.alive)continue;const vx=p.x-o.x,vz=p.z-o.z,al=vx*sx+vz*sz,pe=Math.abs(vx*sz-vz*sx);if(al>.5&&al<S.len+.35&&pe<1.3){best=o;break}}return best}
+function sr232VerdictStart(D,e){const S=D.S;S.ver=1;S.vk=0;const n=S.ob.filter(o=>o.alive).length;
+  say('☀ Seraphel lifts her sword to the sun. '+(n?'<b>Get into an obelisk’s shadow — and stay in it as it swings!</b>':'No obelisk is left standing.'));try{banner('⚠ VERDICT',n?'Stand in an obelisk’s shadow when the light comes':'No shadow is left: brace','')}catch(_){}}
+function sr232VerdictEnd(D){const S=D.S;if(S.ver){S.ver=0;S.hd=-S.hd}S.vk=0}
+function sr232Verdict(D,e){const S=D.S,A=D.A,P=pl.position,o=sr232Shade(D,P);
+  try{flash('rgba(255,246,216,.75)')}catch(_){}shake(.7);svSnd('bell',1.5,.5);svSnd('heavy',1.3,.6);try{sk146Flash(new THREE.Vector3(A.cx,A.y+6,A.cz),0xfff2c8,7,40,500)}catch(_){}
+  for(let i=0;i<60;i++){const a=Math.random()*6.283,r=Math.random()*12.5,q=new THREE.Vector3(A.cx+Math.cos(a)*r,0,A.cz+Math.sin(a)*r);if(sr232Shade(D,q))continue;burst(gY(q,.3),0xfff2c8,3,1.5,4,.7)}
+  if(o){o.uses--;const tip=new THREE.Vector3(o.x,o.y+4.75,o.z),ch=svWP(e,'chest',0,0,0);try{sk146Beam(()=>tip,()=>ch,0xfff6d8,.28,.6)}catch(_){}burst(tip,0xfff2c8,60,5,2,.7);burst(ch,0xfff2c8,60,5,2,.7);dn(P,'Spared','#fff2c8',-20,1400);
+    if(o.uses<=0){o.alive=0;D.sync(D);const q=new THREE.Vector3(o.x,0,o.z);burst(gY(q,2),0xd9d2c2,70,5,4,1);svSnd('crack',1.2,.7);try{sk146Debris(q,D.LS.M.marble2,12,.3,5,5,1.6)}catch(_){}say('☀ The obelisk shatters.')}
+    S.ver=0;S.hd=-S.hd;svEndMove(e,true);wk232Wound(e,.04,'#fff2c8');svCast(e,'broken')}
+  else{if(hero.hp>0&&wk232Zap(e,2.4,'m'))sr232Judge(8000);wk232Heal(e,.04,0xfff2c8)}}
 </script></body></html>
