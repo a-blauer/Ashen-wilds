@@ -78827,3 +78827,643 @@ function ok232RampHit(D,e){const S=D.S,m=e.m,a=m.rotation.y,fx=Math.sin(a),fz=Ma
 // the Rampage ran its course: he heals and the briars grow in
 function ok232RampFail(D,e){const S=D.S;S.ramp=0;wk232Heal(e,.06,0xffc86a);svSnd('roar',1,.7);shake(.3);ok232Leaves(gY(e.m.position,3),60,6,2);
   if(S.briR>8.2){S.briR-=1.2;say('🌿 The briars grow further into the grove.')}}
+// ================= v232 Maelis, the Tempest Roc — the model, poses and procedural animation =================
+// The second Warden of the Balance (fight and arena in 4032, moves in 4031). A storm given the body of a bird of prey: a deep
+// keeled chest and a short heavy body shingled with slate feathers, pale barred underparts, a hooked gold beak, a crest of long
+// plumes that crackle, wings nine paces across with fingered primaries whose tips burn with lightning, feathered thighs, gold
+// scaled legs and black talons, a broad fanned tail. Lightning runs in her crest, wingtips and eyes (brighter in Phase II).
+// Built like a Sovereign (svRig kit; rigid parts on named joints, merged by svMerge). She faces +z.
+// Joints (L = +x): root · hips (the body) · chest · neck · head · jaw · crest · wgL/R (upper wing) · wfL/R (forewing) · whL/R (hand) ·
+// thL/R · knL/R · ftL/R · tail0 · tail1. Poses (ML232P) are offsets from rest, mirrored with '~'.
+var ML232={col:0x7ad8ff,bolt:0xcfeeff,tris:0,sheet:{}};
+function ml232Build(R,e){
+  const sl=svMat(R,0x2f3a4c,{roughness:.8}),sl2=svMat(R,0x435268,{roughness:.8}),sl3=svMat(R,0x1c2330,{roughness:.85}),pale=svMat(R,0xc9d2da,{roughness:.8}),bar=svMat(R,0x7f8b99,{roughness:.8}),
+    gold=svMat(R,0xc8962a,{roughness:.45,metalness:.35}),gold2=svMat(R,0x8a6418,{roughness:.5,metalness:.3}),claw=svMat(R,0x121318,{roughness:.3,metalness:.4}),dark=svMat(R,0x0a0c12,{roughness:.6}),
+    F=c=>svMat(R,c,{roughness:.8,side:THREE.DoubleSide}),fA=F(0x2f3a4c),fB=F(0x435268),fC=F(0x1c2330),fP=F(0xc9d2da),
+    arc=svMat(R,0x0c2a3c,{roughness:.4,emissive:0x3ab8ff,emissiveIntensity:.8,side:THREE.DoubleSide}),eye=svGlowMat(R,0xdff6ff),spk=svGlowMat(R,0xbfeaff,.9);
+  arc.userData.e0=0x3ab8ff;R.arc=arc;R.eyeM=eye;R.spkM=spk;const FM=[sl,sl2,sl3,sl2];
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('ml'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const horn=(k,r,l,bx,by,n,seg)=>G('h'+k,()=>svHorn(r,l,bx,by,n||5,seg||4)),ball=(k,r,det,j)=>G('b'+k,()=>svLump(r,det==null?1:det,j||.15,80+k));
+  // a body feather (plate, rounded tip at -y) and a flight feather (a long flat blade along -z, a raised shaft)
+  const plate=wk232Plate('mlft',[[0,.5],[.3,.3],[.36,-.1],[.24,-.46],[0,-.66],[-.24,-.46],[-.36,-.1],[-.3,.3]],.1,.08);
+  const quill=G('ql',()=>{const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(.09,-.12);s.quadraticCurveTo(.15,-.7,.05,-1);s.lineTo(0,-1.04);s.lineTo(-.05,-1);s.quadraticCurveTo(-.15,-.7,-.09,-.12);s.lineTo(0,0);const g=new THREE.ShapeGeometry(s,3);g.rotateX(Math.PI/2);return g});
+  // ---------------- the skeleton ----------------
+  J('root',null,0,0,0);J('hips','root',0,2.25,-.25,-.42);J('chest','hips',0,.25,.85);J('neck','chest',0,.55,.55,-.25);J('head','neck',0,.72,.3,.55);J('jaw','head',0,-.1,.18);J('crest','head',0,.26,-.12);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';
+    J('wg'+L,'chest',s*.62,.42,-.05,0,0,s*-.5);J('wf'+L,'wg'+L,s*1.55,0,0,0,s*.9,0);J('wh'+L,'wf'+L,s*1.7,0,0,0,s*-1.3,0);
+    J('th'+L,'hips',s*.5,-.3,.1,.42);J('kn'+L,'th'+L,0,-.85,.2);J('ft'+L,'kn'+L,0,-.95,-.05)});
+  J('tail0','hips',0,.0,-.9);J('tail1','tail0',0,0,-.5);
+  // ---------------- body: keeled chest, belly, back; feathers shingled over lofts (z-lofts, tips toward the tail) ----------------
+  const zc=(j,name,rings,o,x,y,z)=>{const h=svJ(R,name,j,x||0,y||0,z||0,Math.PI/2,0,0);return wk232Cover(R,h,rings,plate,Object.assign({lift:.2,th:1,dir:-1},o))};
+  const under=t=>Math.cos(t)<-.35;   // t = 0 is the back (+y after the turn), the belly faces down
+  const bodyR=[[-1.0,.3,.28],[-.6,.6,.56],[0,.76,.74],[.5,.72,.76],[.9,.5,.56]];Mm('hips',G('bd',()=>svLoftZ(bodyR,12)),sl3);
+  zc('hips','hipsC',bodyR,{n:15,rows:7,size:.42,seed:31,mat:(t,u,r,k)=>under(t)?((r+k)%3?pale:bar):FM[(r+k)%4]});
+  const chR=[[-.3,.7,.76],[.1,.68,.8,0,-.06],[.5,.5,.6,0,-.1],[.8,.3,.36,0,-.08]];Mm('chest',G('ch',()=>svLoftZ(chR,12)),sl3);
+  zc('chest','chestC',chR,{n:15,rows:5,size:.4,seed:32,mat:(t,u,r,k)=>under(t)?((r*2+k)%3?pale:bar):FM[(r+k)%4]});
+  Mm('chest',G('kl',()=>svLoftZ([[-.2,.1,.3],[.3,.12,.34],[.7,.06,.2]],6)),pale,0,-.56,0);   // the keel
+  // ---------------- neck, head: a ruff, a flat fierce skull, brow ridges, the hooked beak ----------------
+  const nkP=[[0,-.15,-.1],[0,.25,.08],[0,.72,.3]];Mm('neck',G('nk',()=>svTube(nkP,[[.42,.46],[.3,.34],[.24,.27]],9)),sl3);
+  for(let r=0;r<4;r++)for(let k=0;k<9;k++){const a=k/9*6.283+r*.35,u=r/3,y=.0+u*.6,z=-.04+u*.3,rd=.42-u*.16;Mm('neck',plate,r==0?pale:FM[(r+k)%4],Math.sin(a)*rd,y,z+Math.cos(a)*rd,Math.cos(a)*.9-.25,a,0,.3,.42,.3)}
+  const hdR=[[-.3,.2,.2],[-.08,.27,.24,0,.02],[.18,.25,.2,0,0],[.4,.17,.14,0,-.03]];Mm('head',G('hd',()=>svLoftZ(hdR,9)),sl);
+  Mm('head',G('cp',()=>svLump(.2,1,.1,91)),pale,0,.06,-.06,0,0,0,1.25,.7,1.3);
+  [-1,1].forEach(s=>{Mm('head',G('bw',()=>svHorn(.06,.36,0,-.04,4,3)),sl3,s*.17,.19,.0,.15,s*.22,0,1.5,.8,1);
+    Mm('head',ball(1,.075,1),dark,s*.2,.1,.2,0,0,0,1,.9,1.2);Mm('head',G('ey',()=>new THREE.IcosahedronGeometry(.045,1)),eye,s*.215,.1,.215);svSpr(R,'head',ML232.col,.45,s*.24,.1,.23);
+    Mm('head',G('ck',()=>svHorn(.05,.3,0,0,4,2)),pale,s*.2,-.02,.1,.2,Math.PI+s*.5,0)});
+  // upper beak: a deep gold hook; the cere; lower beak on the jaw
+  Mm('head',G('bk',()=>svTube([[0,.04,.36],[0,.05,.62],[0,.0,.84],[0,-.12,.98],[0,-.26,.98]],[[.15,.13],[.13,.12],[.1,.1],[.06,.06],[.012,.012]],7)),gold);
+  Mm('head',G('cr',()=>svLump(.11,1,.1,92)),gold2,0,.1,.4,0,0,0,1.2,.6,1);Mm('jaw',G('jw',()=>svLoftZ([[-.02,.13,.05],[.3,.11,.05],[.58,.06,.03],[.68,.02,.015]],6)),gold2);
+  Mm('jaw',horn('tg',.03,.3,0,.02,4,2),dark,0,.04,.16);
+  // the crest: seven long plumes swept back, lightning along their shafts
+  [-3,-2,-1,0,1,2,3].forEach((u,i)=>{const l=1.5-Math.abs(u)*.2;Mm('crest',quill,i%2?fB:fC,u*.045,-Math.abs(u)*.02,0,-.5-Math.abs(u)*.06,u*.16,0,.7,1,l);
+    Mm('crest',G('cs',()=>new THREE.BoxGeometry(.012,.012,1)),arc,u*.045+Math.sin(u*.16)*-l*.5,.02-Math.abs(u)*.02+l*.24,-l*.44,-.5-Math.abs(u)*.06,u*.16,0,1,1,l*.9)});
+  svSpr(R,'crest',ML232.col,.7,0,.4,-.7);
+  // ---------------- wings: a shoulder mass, bone and muscle, coverts, long fingered primaries with burning tips ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',wg='wg'+L,wf='wf'+L,wh='wh'+L;
+    Mm(wg,ball(2,.36,1,.15),sl,0,0,0,0,0,0,1.2,.9,1);Mm(wg,G('ua',()=>svTube([[0,0,0],[.8,.05,.02],[1.55,0,0]],[.24,.2,.15],7)),sl3,0,0,0,0,0,0,s,1,1);
+    Mm(wf,G('fa',()=>svTube([[0,0,0],[.9,.03,.02],[1.7,0,0]],[.15,.13,.1],7)),sl3,0,0,0,0,0,0,s,1,1);Mm(wh,G('ha',()=>svTube([[0,0,0],[.7,0,0],[1.3,0,-.05]],[.1,.07,.03],6)),sl3,0,0,0,0,0,0,s,1,1);
+    // feathers: [joint, count, span, first length, last length, sweep at the tip]
+    [[wg,6,1.55,1.5,1.9,.0],[wf,7,1.7,1.9,2.4,.15],[wh,7,1.3,2.4,2.9,.75]].forEach(([j,n,span,l0,l1,sw],wi)=>{for(let k=0;k<n;k++){const u=(k+.5)/n,x=s*u*span,l=l0+(l1-l0)*u,yaw=s*(wi==2?u*sw+.1:sw*u);
+        Mm(j,quill,[fA,fC,fB][(k+wi)%3],x,-.03-(k%2)*.02,-.08,.06+(k%2)*.04,yaw,s*-.04,1.35,1,l);                          // flight feather
+        Mm(j,quill,k%2?fB:fA,x,.05,-.02,-.1,yaw*.6,0,1.6,1,l*.5);                                                         // covert over it
+        if(k%2==0)Mm(j,quill,fP,x,-.09,-.06,.16,yaw,0,1.3,1,l*.42);                                                      // pale lining under
+        if(wi==2&&k>1){Mm(j,quill,arc,x+Math.sin(yaw)*-l*.86,-.045,-.08-Math.cos(yaw)*l*.86,.06,yaw,0,1.0,1,l*.16);        // the burning tip
+          if(k%2)svSpr(R,j,ML232.col,.45,x+Math.sin(yaw)*-l,-.03,-.08-Math.cos(yaw)*l)}}});
+    for(let k=0;k<5;k++)Mm(wg,plate,FM[k%4],s*(.1+k*.3),.14,-.02,-1.3,0,0,.42,.5,.4)});
+  // ---------------- legs: feathered thighs, scaled gold shanks, four black talons each ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',th='th'+L,kn='kn'+L,ft='ft'+L;
+    const tR=[[.2,.36,.4],[-.3,.3,.34],[-.85,.14,.16]];Mm(th,G('tg',()=>svLoft(tR,9)),sl3);wk232Cover(R,th,tR,plate,{n:9,rows:5,size:.3,lift:.3,seed:40+s,mat:(t,u,r,k)=>u<.3?pale:FM[(r+k)%4]});
+    Mm(kn,G('sk',()=>svLoft([[.05,.12,.13],[-.5,.09,.1],[-.95,.1,.11]],7)),gold);for(let k=0;k<5;k++)Mm(kn,G('sc',()=>svLoft([[-.04,.11,.05],[.04,.12,.05]],6,{cap:false})),gold2,0,-.15-k*.16,.07);
+    Mm(ft,ball(3,.15,1,.1),gold2,0,.02,0);
+    [[0,1],[.75,.9],[-.75,.9],[Math.PI,.75]].forEach(([a,l])=>{Mm(ft,G('to',()=>svTube([[0,0,0],[0,-.03,.3],[0,-.08,.55]],[.07,.06,.045],5)),gold,0,0,0,0,a,0,1,1,l);
+      Mm(ft,horn('tl',.05,.4,0,-.2,5,4),claw,Math.sin(a)*.55*l,-.08,Math.cos(a)*.55*l,.15,a,0)})});
+  // ---------------- tail: a fan of nine long feathers, dark bars, pale tips ----------------
+  Mm('tail0',G('tb',()=>svLoftZ([[-.5,.26,.12],[0,.34,.2]],8)),sl3);
+  for(let k=0;k<9;k++){const u=(k-4)/4;Mm('tail1',quill,[fA,fC,fB][k%3],u*.16,-Math.abs(u)*.03,.1,.05,u*.5,0,1.25,1,2.3-Math.abs(u)*.3);Mm('tail1',quill,fP,u*.16+Math.sin(u*.5)*-1.9,-.04-Math.abs(u)*.03,.1-Math.cos(u*.5)*1.9,.05,u*.5,0,1.1,1,.36)}
+  if(!ML232.tris)ML232.tris=wk232Tris(R);R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]). Wings: wg rz + lifts the left wing; wg/wf/wh ry folds / spreads. ----------------
+// The rest pose is wings half open. 'fold' tucks them (the idle and walk), 'open' spreads them wide.
+var ML232P={
+  idle:{wgL:[0,-.5,-.5],wfL:[0,1.1,0],whL:[0,-1.2,0],wgR:[0,.5,.5],wfR:[0,-1.1,0],whR:[0,1.2,0]},
+  cRec:{hips:[.04,0,0,0,-.05,0],wgL:[0,-.4,-.4],wfL:[0,.9,0],whL:[0,-1.0,0],wgR:[0,.4,.4],wfR:[0,-.9,0],whR:[0,1.0,0]},
+  open:{hips:[-.2,0,0],neck:[-.2,0,0],wgL:[0,.25,.75],wfL:[0,-.8,0],whL:[0,1.1,0],wgR:[0,-.25,-.75],wfR:[0,.8,0],whR:[0,-1.1,0],tail1:[-.3,0,0]},
+  // Talon Rake: one foot drawn up, wings out for balance; the kick forward; then the beak raised and driven down
+  rkUp:{hips:[-.45,0,.12,0,.1,-.1],neck:[.2,0,0],head:[.15,0,0],thL:[-.9,0,0],knL:[1.3,0,0],ftL:[-.6,0,0],wgL:[0,.1,.5],wfL:[0,-.5,0],whL:[0,.8,0],wgR:[0,-.1,-.5],wfR:[0,.5,0],whR:[0,-.8,0]},
+  rkCut:{hips:[-.3,0,-.1,0,0,.35],neck:[.3,0,0],head:[.1,0,0],thL:[-1.5,0,0],knL:[.3,0,0],ftL:[.5,0,0],wgL:[0,-.2,.2],wfL:[0,.4,0],wgR:[0,.2,-.2],wfR:[0,-.4,0],tail0:[.3,0,0]},
+  pkUp:{hips:[-.3,0,0,0,.06,-.1],neck:[-.75,0,0],head:[-.5,0,0],jaw:[.5,0,0],wgL:[0,.1,.6],wfL:[0,-.5,0],whL:[0,.8,0],wgR:[0,-.1,-.6],wfR:[0,.5,0],whR:[0,-.8,0]},
+  peck:{hips:[.4,0,0,0,-.25,.4],neck:[.9,0,0],head:[.5,0,0],jaw:[.15,0,0],thL:[-.3,0,0],thR:[-.3,0,0],knL:[.4,0,0],knR:[.4,0,0],wgL:[0,-.3,-.2],wfL:[0,.8,0],wgR:[0,.3,.2],wfR:[0,-.8,0],tail0:[-.4,0,0]},
+  // Wing Buffet: wings hauled back and up, then clapped forward
+  bfUp:{hips:[-.35,0,0,0,.1,-.2],chest:[-.2,0,0],neck:[.1,0,0],wgL:[0,.75,.8],wfL:[0,-.7,0],whL:[0,1.2,0],wgR:[0,-.75,-.8],wfR:[0,.7,0],whR:[0,-1.2,0],tail1:[-.4,0,0]},
+  buff:{hips:[.15,0,0,0,-.1,.2],chest:[.2,0,0],neck:[.25,0,0],wgL:[0,-1.15,-.1],wfL:[0,-.6,0],whL:[0,1.0,0],wgR:[0,1.15,.1],wfR:[0,.6,0],whR:[0,-1.0,0],tail1:[.3,0,0]},
+  // Tail Sweep: she turns her back and fans the tail round
+  tlWind:{hips:[.1,.7,0,0,-.1,0],neck:[0,-.8,0],head:[0,-.4,0],tail0:[-.2,.9,0],tail1:[0,.5,0],wgL:[0,-.5,-.3],wfL:[0,1.0,0],whL:[0,-1.0,0],wgR:[0,.3,.6],wfR:[0,-.6,0],whR:[0,.9,0]},
+  tlWhip:{hips:[.1,-.9,0,0,-.15,0],neck:[0,.8,0],head:[0,.4,0],tail0:[-.2,-1.1,0],tail1:[0,-.6,0],wgL:[0,.3,.6],wfL:[0,-.6,0],whL:[0,.9,0],wgR:[0,.5,.3],wfR:[0,-1.0,0],whR:[0,1.0,0]},
+  // flight: the crouch, the leap (wings up), the hover beat down, the stoop (wings folded, talons out), the landing
+  crouch:{hips:[.25,0,0,0,-.5,0],neck:[.2,0,0],thL:[-.6,0,0],knL:[1.0,0,0],ftL:[-.4,0,0],thR:[-.6,0,0],knR:[1.0,0,0],ftR:[-.4,0,0],wgL:[0,.3,.9],wfL:[0,-.7,0],whL:[0,1.0,0],wgR:[0,-.3,-.9],wfR:[0,.7,0],whR:[0,-1.0,0]},
+  flyUp:{root:[0,0,0,0,5.0,0],hips:[-.5,0,0],neck:[.3,0,0],thL:[.5,0,0],knL:[.5,0,0],thR:[.5,0,0],knR:[.5,0,0],wgL:[0,.3,1.1],wfL:[0,-.8,.2],whL:[0,1.1,0],wgR:[0,-.3,-1.1],wfR:[0,.8,-.2],whR:[0,-1.1,0],tail1:[-.4,0,0]},
+  flyDn:{root:[0,0,0,0,4.6,0],hips:[-.35,0,0],neck:[.2,0,0],thL:[.5,0,0],knL:[.5,0,0],thR:[.5,0,0],knR:[.5,0,0],wgL:[0,.3,-.25],wfL:[0,-.8,-.25],whL:[0,1.1,0],wgR:[0,-.3,.25],wfR:[0,.8,.25],whR:[0,-1.1,0],tail1:[.2,0,0]},
+  stoop:{root:[0,0,0,0,2.4,0],hips:[.8,0,0],neck:[-.3,0,0],head:[-.2,0,0],thL:[-1.2,0,0],knL:[.5,0,0],ftL:[.6,0,0],thR:[-1.2,0,0],knR:[.5,0,0],ftR:[.6,0,0],wgL:[0,-.6,.5],wfL:[0,1.1,0],whL:[0,-1.2,0],wgR:[0,.6,-.5],wfR:[0,-1.1,0],whR:[0,1.2,0],tail0:[.6,0,0]},
+  land:{hips:[.3,0,0,0,-.6,0],neck:[.3,0,0],thL:[-.7,0,0],knL:[1.2,0,0],ftL:[-.5,0,0],thR:[-.7,0,0],knR:[1.2,0,0],ftR:[-.5,0,0],wgL:[0,.2,.5],wfL:[0,-.6,0],whL:[0,1.0,0],wgR:[0,-.2,-.5],wfR:[0,.6,0],whR:[0,-1.0,0]},
+  // Feather Volley: wings swept up and back, then whipped forward and down
+  vArch:{hips:[-.3,0,0,0,.08,-.1],neck:[-.2,0,0],wgL:[0,.6,1.0],wfL:[0,-.8,0],whL:[0,1.2,0],wgR:[0,-.6,-1.0],wfR:[0,.8,0],whR:[0,-1.2,0],tail1:[-.4,0,0]},
+  vSnap:{hips:[.25,0,0,0,-.1,.15],neck:[.3,0,0],wgL:[0,-.9,-.35],wfL:[0,-.7,0],whL:[0,1.1,0],wgR:[0,.9,.35],wfR:[0,.7,0],whR:[0,-1.1,0],tail1:[.3,0,0]},
+  // the screech (intro, Phase II, Thunderclap): body upright, wings full, beak wide to the sky
+  scr:{hips:[-.5,0,0,0,.15,0],chest:[-.15,0,0],neck:[-.5,0,0],head:[-.6,0,0],jaw:[.8,0,0],crest:[-.5,0,0],wgL:[0,.2,.95],wfL:[0,-.85,0],whL:[0,1.2,0],wgR:[0,-.2,-.95],wfR:[0,.85,0],whR:[0,-1.2,0],tail1:[-.5,0,0]},
+  // brought down: sprawled, one wing out; dead
+  stag:{hips:[.5,.15,.2,0,-1.2,0],neck:[.7,.3,0],head:[.4,.3,.3],jaw:[.4,0,0],thL:[-1.2,0,0],knL:[1.6,0,0],thR:[-1.0,0,0],knR:[1.5,0,0],wgL:[0,.2,-.5],wfL:[0,-.5,-.2],whL:[0,.9,0],wgR:[0,.6,.2],wfR:[0,-1.0,0],whR:[0,1.1,0],tail0:[.3,.3,0]},
+  dead:{root:[0,0,0,0,-1.5,0],hips:[.5,0,1.2,.5,0,0],neck:[.6,.6,0],head:[.3,.4,0],jaw:[.5,0,0],thL:[-.6,0,0],knL:[.8,0,0],thR:[.3,0,0],knR:[.6,0,0],wgL:[0,.3,.9],wfL:[0,-.6,0],whL:[0,1.0,0],wgR:[0,.5,.4],wfR:[0,-1.0,0],whR:[0,1.1,0]}};
+// ---------------- procedural layer: breathing, a strutting walk, wingbeats while airborne, crest and tail, head tracking ----------------
+function ml232Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/2.4);S.gp=(S.gp||0)+dt*(1.8+sp*2.0);const g=S.gp,br=Math.sin(t*1.4);
+  O.hips[4]+=.03*br+.08*Math.abs(Math.sin(g))*a;O.chest[0]+=.025*br;O.neck[0]+=.03*br-.12*Math.sin(g*2)*a;O.head[0]+=.1*Math.sin(g*2)*a;
+  ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph),lf=Math.max(0,Math.cos(ph));O['th'+s][0]+=sw*.45*a;O['kn'+s][0]+=lf*.7*a;O['ft'+s][0]+=-lf*.4*a;
+    const sg=j?-1:1;O['wg'+s][2]+=sg*(.03*br+.04*Math.sin(g)*a)});
+  O.hips[2]+=Math.sin(g)*.05*a;O.tail0[1]+=Math.sin(g)*.08*a+Math.sin(t*.9)*.05;O.tail1[0]+=.04*br;O.crest[0]+=.06*Math.sin(t*2.3)+.04*br;
+  // out of moves the wings fold (the rest pose is half open, which the move poses are written against)
+  S.fold=(S.fold==null?1:S.fold)+((S.mv||S.stg>0?0:1)-(S.fold==null?1:S.fold))*Math.min(1,dt*4);{const I=ML232P.idle,f=S.fold;for(const k in I){const v=I[k];O[k][0]+=v[0]*f;O[k][1]+=v[1]*f;O[k][2]+=v[2]*f}}
+  // airborne (a pose lifted her root): the wings beat
+  if((S.air||0)>.02){const w=Math.sin(t*9)*.55*S.air;O.wgL[2]+=w;O.wgR[2]-=w;O.wfL[2]+=w*.5;O.wfR[2]-=w*.5;O.tail1[0]+=.1*Math.sin(t*9+1)*S.air}
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:(Math.abs(yaw)<1.6?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.8,Math.min(.8,yaw))*k)-(S.hy||0))*Math.min(1,dt*4);O.head[1]+=S.hy*.6;O.neck[1]+=S.hy*.4;
+  // quick bird-like head tilts
+  const tl=Math.sin(t*.7)>.6?.25*Math.sin(t*5):0;O.head[2]+=tl*(S.mv?0:1)}
+// after the pose: the lightning in crest and wingtips flickers (stronger in Phase II and while charging), sparks jump
+function ml232Post(e,S,dt,now){const R=S.R,t=now/1000,ph2=S.ph>1,ch=S.chg||0;S.air=Math.max(0,Math.min(1,(R.J.root.position.y)/3));
+  const fl=.5+.5*Math.sin(t*23)*Math.sin(t*7.3);R.arc.emissiveIntensity=(ph2?1.3:.6)+fl*(ph2?.9:.35)+ch*1.6;R.eyeM.color.setHex(ch>.3||ph2?0xffffff:0xdff6ff);
+  if(!S.dieM&&Math.random()<dt*(ph2?9:3)+ch*dt*14){const js=['whL','whR','crest','wfL','wfR'],j=js[(Math.random()*js.length)|0],sx=j[2]=='L'?1:j[2]=='R'?-1:0;
+    const p=svWP(e,j,sx*(.4+Math.random()*.9),0,j=='crest'?-.6:-1.2-Math.random()*1.4);burst(p,ML232.bolt,1,.5,.3,.3)}}
+ML232.sheet.boss=()=>{const R=svRig();ml232Build(R,null);svRest(R);svMerge(R);return R.root};
+// ================= v232 Maelis — the moves (Sovereign move format; the kit 4010 points the engine at her eyrie) =================
+// Theme: the storm: talons, wind, feathers, lightning. Debuff: Shocked (a jolt: slower attacks and movement for a moment).
+// Pattern:
+//  close, front ── Talon Rake: a foot drawn up and raked across (an arc), the other foot (an arc), then the beak reared back and
+//                  hammered down on one spot in front of her (late, heavy).
+//  mid, front   ── Wing Buffet: both wings hauled back, then clapped together: a wide cone of wind that throws you a long way
+//                  (into the edge, in Phase II, where the lightning walks).
+//  behind/side  ── Tail Sweep: she turns and fans her tail round her: a ring (stand close in, or far out).
+//  any, not near ─ Skyfall: she crouches, leaps into the sky and stoops on you: the shadow follows you for a moment, then locks.
+//                  A blast where she lands and a ring of wind rolling out from it.
+//  far, front   ── Feather Volley: wings swept up, then whipped down: five quills in a fan. Stand in a gap.
+//  close, any   ── Thunderclap: she rears screeching, wings wide: a blast round her, then three bolts fall from the sky, each aimed
+//                  ahead of you.
+//  Phase II (55%) "Eye of the Storm": the cloud breaks. Rain, and a wind that drags you sideways round the eyrie; bolts walk the
+//                  ground at random (marked a moment before). She rests less and gains Twin Skyfall (two stoops), Galeblades
+//                  (three walls of wind fired one after another, each through where you stand) and a double Feather Volley.
+//  Signature ──── Static Charge (Phase II): she climbs out of reach and the storm marks YOU. The charge on you bursts after a few
+//                  seconds: a heavy blow. Three copper rods stand round the eyrie: be next to one when it bursts and the rod takes
+//                  it and throws it back at her (she is wounded). She marks you three times and a rod can take only one charge
+//                  each time she does this, so you must cross the eyrie, through wind and bolts, to a fresh rod each time. Ground
+//                  all three and she is struck out of the sky: a long stagger. Each one you miss heals her instead.
+// Weakness: posture (the yellow bar); every break staggers her (+35% damage). Big moves have armour.
+const ML232_DEB=['Shocked','⚡',{mspd:-.2,aspd:-.2},'A jolt runs through you: −20% move and attack speed'];
+function ml232Mats(){const X=WK232.X;return X.ml||(X.ml={quill:new THREE.MeshStandardMaterial({color:0x2f3a4c,roughness:.7,flatShading:true,side:THREE.DoubleSide}),glass:new THREE.MeshStandardMaterial({color:0x1c3a4c,emissive:0x3ab8ff,emissiveIntensity:.9,roughness:.2,flatShading:true})})}
+function ml232Shock(){dqDebuff(ML232_DEB[0],ML232_DEB[1],ML232_DEB[2],2500,ML232_DEB[3])}
+// a bolt from the sky onto p (the hit is the caller's): a jagged streak for an instant, a flash, a scorch
+function ml232Bolt(p,big){const y0=GH(p.x,p.z),N=7,pts=[];let x=p.x+(Math.random()-.5)*5,z=p.z+(Math.random()-.5)*5;for(let i=0;i<=N;i++){const k=i/N;pts.push(new THREE.Vector3(x+(p.x-x)*k+(i&&i<N?(Math.random()-.5)*1.6:0),y0+26*(1-k),z+(p.z-z)*k+(i&&i<N?(Math.random()-.5)*1.6:0)))}
+  const g=new THREE.BufferGeometry().setFromPoints(pts),m=new THREE.LineBasicMaterial({color:0xdff6ff,transparent:true,opacity:1,fog:false}),ln=new THREE.Line(g,m);ln.userData.lpsSkip=1;scene.add(ln);
+  const core=new THREE.Mesh(svG('ml_bc',()=>{const q=new THREE.CylinderGeometry(.16,.3,26,6,1,true);q.translate(0,13,0);return q}),new THREE.MeshBasicMaterial({color:0xbfeaff,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+  core.position.set(p.x,y0,p.z);core.userData.lpsSkip=1;scene.add(core);let t=0;const s=big?1.5:1;
+  burst(gY(p,.4),ML232.bolt,big?50:26,4,3,.5);svShock(p,ML232.col,2.6*s,.3);svDecal(p,0x10161c,1.7*s,4,.6);try{sk146Crack(p,0x7ad8ff,2.2*s,1.6)}catch(_){}try{sk146Flash(gY(p,2),0xbfeaff,big?5:3,16,160)}catch(_){}svSnd('crack',big?1.3:.9,1.5);svSnd('heavy',.6,1.4);
+  kqFx({tick(dt){t+=dt||0;const k=t/.28;m.opacity=1-k;core.material.opacity=.8*(1-k);core.scale.set(1+k*2,1,1+k*2);return k<1},end(){scene.remove(ln);scene.remove(core);g.dispose();m.dispose();core.material.dispose()}})}
+function ml232Quill(c,an,dm,spd){wk232Bolt(c,an,dm,{col:ML232.col,spd:spd||18,w:1.0,y:1.5,mesh:()=>{const g=new THREE.Group(),m=new THREE.Mesh(svG('ml_q',()=>{const s=new THREE.Shape();s.moveTo(0,.8);s.quadraticCurveTo(.16,.2,.1,-.6);s.lineTo(0,-.8);s.lineTo(-.1,-.6);s.quadraticCurveTo(-.16,.2,0,.8);const q=new THREE.ShapeGeometry(s,3);q.rotateX(Math.PI/2);return q}),ml232Mats().quill);g.add(m);return g},on:ml232Shock})}
+// a wall of wind running along a line (Galeblades): hits once, throws you sideways
+function ml232Gale(c,an,dm){const e=c.e,D=e.wk,a=an.a,o=new THREE.Vector3(an.x,0,an.z),L=26,spd=15,g=new THREE.Group();
+  for(let k=0;k<3;k++){const m=new THREE.Mesh(svG('ml_gl',()=>{const q=new THREE.CylinderGeometry(1.5,1.5,2.4,10,1,true,0,Math.PI);q.translate(0,1.2,0);return q}),new THREE.MeshBasicMaterial({color:0xcfeeff,map:SPR,transparent:true,opacity:.35-k*.08,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));m.position.z=-k*.7;m.rotation.y=-Math.PI/2;g.add(m)}
+  g.userData.lpsSkip=1;scene.add(g);let t=0,hit=false;svSnd('whoosh',1,.7);
+  kqFx({tick(dt){t+=dt||0;const d=spd*t,p=new THREE.Vector3(o.x+Math.sin(a)*d,0,o.z+Math.cos(a)*d);g.position.set(p.x,GH(p.x,p.z),p.z);g.rotation.y=a;if(Math.random()<.9)burst(gY(p,.3),0xc8b89a,2,2,1,.4);
+    if(!hit&&!e.dead&&svIn({k:'l',w:3.0,l:1.4,b:.7},{x:p.x,z:p.z,a},pl.position,.2)){hit=true;wk232HitNow(e,{k:'c',r:99},{x:p.x-Math.cos(a)*.5,z:p.z+Math.sin(a)*.5,a},dm,{flash:false,kb:5})}
+    return d<L&&!e.dead},end(){scene.remove(g);g.children.forEach(m=>m.material.dispose())}})}
+const ML232_TR=(t0,t1,j)=>[t0,t1,j,[0,-.1,0],[0,-.3,.6],0xbfeaff,.16];
+// one stoop of a string: leap at tb, shadow locks at tb+1.45, she lands at tb+2.0
+function ml232Stoop(tb,o){o=o||{};return {trn:[tb,tb+1.4,6],
+  hit:[{t:tb+2.0,s:{k:'c',r:3.2},o:'tgt',dm:o.dm||1.4,w:.55,kb:4,fx:(c,an)=>{const p=new THREE.Vector3(an.x,0,an.z);c.m.position.x=p.x;c.m.position.z=p.z;c.S.ghost=0;svShock(p,ML232.col,5,.45);burst(gY(p,.4),0xc8b89a,50,5,3,.7);burst(gY(p,.6),ML232.bolt,30,4,2,.5);
+      svDecal(p,0x10161c,3,4,.55);shake(.45);svSnd('heavy',1.3,.8);try{sk146Crack(p,0x7ad8ff,4,2)}catch(_){}try{sk146RingWave(c.e,p.clone(),2.4,12,1.3,1.1,.9,ML232.col,{})}catch(_){}}}],
+  trk:[[tb+.3,'crouch','io'],[tb+.48,'crouch','l',.014],[tb+.75,'flyUp','o'],[tb+1.0,'flyDn','io'],[tb+1.25,'flyUp','io'],[tb+1.5,'flyDn','io'],[tb+1.72,'stoop','i'],[tb+2.0,'land','s'],[tb+2.35,'land','l']],
+  ev:[[tb+.25,c=>svSnd('hiss',.5,1.3)],[tb+.5,c=>{c.S.ghost=1;svSnd('whoosh',1.2,.7);burst(gY(c.m.position,.3),0xc8b89a,30,4,1,.6);svShock(c.m.position,ML232.col,3.5,.35)}],[tb+1.5,c=>svSnd('shriek',.7,1.2)]],
+  // while she is up she drifts over you; the last half second she is committed
+  tk(c,dt){if(c.t>tb+.55&&c.t<tb+1.45){const m=c.m,p=wk232HeroIn(c.D,pl.position.clone());m.position.x+=(p.x-m.position.x)*Math.min(1,dt*2.2);m.position.z+=(p.z-m.position.z)*Math.min(1,dt*2.2)}}}}
+var ML232M={
+  intro:WK232_M({dur:3.4,inv:[0,3.4],armor:1,trn:[[0,3.4,1.5]],trk:[[.6,'open','io'],[1.3,'open','l',.015],[1.6,'scr','o'],[2.9,'scr','l',.025],[3.4,'cRec','io']],
+    ev:[[.4,c=>svSnd('whoosh',.8,.6)],[1.6,c=>{svSnd('shriek',1.2,.9);svSnd('roar',.6,1.3);shake(.35);svShock(c.m.position,ML232.col,9,.8);burst(gY(c.m.position,3),ML232.bolt,60,6,2,.8);ml232Bolt(c.at(5,3));ml232Bolt(c.at(5,-3))}]]}),
+  // Talon Rake: left foot, right foot, the beak
+  rake:WK232_M({wt:10,cd:2.6,r:[0,5.4],a:'f',mel:1,dur:2.7,lock:.4,trn:[[0,.42,5],[.84,.96,5],[1.44,1.72,3.6]],
+    trk:[[.4,'rkUp','io'],[.52,'rkUp','l',.012],[.64,'rkCut','s'],[.86,'rkCut','l'],[1.0,'rkUp~','io'],[1.12,'rkCut~','s'],[1.4,'pkUp','io'],[1.72,'pkUp','l',.016],[1.86,'peck','s'],[2.25,'peck','l'],[2.7,'cRec','io']],
+    rm:[[.56,.66,.7,'o'],[1.04,1.14,.6,'o'],[1.76,1.88,1.2,'o']],
+    hit:[{t:.63,s:{k:'a',r:4.4,h:1.1},f:.3,dm:.9},{t:1.11,s:{k:'a',r:4.4,h:1.1},f:.3,dm:.9},
+      {t:1.86,s:{k:'c',r:2.3},f:3.4,dm:1.4,w:.44,fx:c=>{const p=c.at(3.4);svShock(p,ML232.col,3,.35);burst(gY(p,.3),0xc8b89a,30,3,2,.5);svDecal(p,0x10161c,2,3,.55);shake(.25);svSnd('heavy',1,1.2);svSnd('crack',.6,1.2)}}],
+    tr:[ML232_TR(.55,.72,'ftL'),ML232_TR(1.02,1.18,'ftR')],
+    ev:[[.56,c=>svSnd('swing',.85,1.3)],[1.04,c=>svSnd('swing',.85,1.4)],[1.44,c=>svSnd('hiss',.5,1.4)],[1.78,c=>svSnd('whoosh',.9,1.2)]],nx:[['buffet',.25,10],['tail',.3,6]],rec:.3}),
+  // Wing Buffet: a wide cone of wind, a long throw
+  buffet:WK232_M({wt:8,cd:6,r:[2.5,10],a:'f',armor:1,dur:2.3,lock:.8,trn:[[0,.8,4]],
+    trk:[[.7,'bfUp','io'],[1.0,'bfUp','l',.016],[1.14,'buff','s'],[1.6,'buff','l'],[2.3,'cRec','io']],
+    hit:[{t:1.14,s:{k:'a',r:9.5,h:.85},f:.2,dm:1.1,kb:8,w:.8,fx:c=>{const p=c.at(3);burst(gY(p,1),0xc8b89a,60,9,2,.7);burst(gY(c.at(6),1),0xdfe9f0,40,9,1,.7);svShock(c.at(1.5),ML232.col,5,.4);shake(.3);svSnd('whoosh',1.4,.6);svSnd('heavy',.8,1)}}],
+    ev:[[.4,c=>svSnd('whoosh',.7,.8)]],rec:.4}),
+  // Tail Sweep: a ring round her (from behind or the side)
+  tail:WK232_M({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5,r:[0,5.8],a:'sb',dur:1.95,lock:.55,trn:[[0,.5,2]],
+    trk:[[.55,'tlWind','io'],[.82,'tlWind','l',.015],[1.0,'tlWhip','s'],[1.36,'tlWhip','l'],[1.95,'cRec','io']],
+    hit:[{t:1.0,s:{k:'r',r0:1.2,r:5.8},dm:1.1,kb:3,w:.8,fx:c=>{svShock(c.m.position,ML232.col,6,.4);burst(gY(c.m.position,.6),0xc8b89a,30,5,1,.5);svSnd('whoosh',1.1,.85);svSnd('swing',.8,.8)}}],
+    tr:[[.88,1.2,'tail1',[0,0,-.6],[0,0,-2.2],0xbfeaff,.22]],ev:[[.4,c=>svSnd('hiss',.6,1.3)]],rec:.35}),
+  // Skyfall: the stoop
+  skyfall:WK232_M((()=>{const d=ml232Stoop(.1);return {wt:(e,L)=>L>4?9:3,cd:8,r:[3,30],a:'any',armor:1,dur:2.9,rec:.4,trn:[d.trn],hit:d.hit,trk:d.trk.concat([[2.9,'cRec','io']]),ev:d.ev,tk:d.tk,end(c){c.S.ghost=0}}})()),
+  // Feather Volley: five in a fan (Phase II: two fans)
+  volley:WK232_M({wt:(e,L)=>L>6?9:3,cd:6.5,r:[4,30],a:'f',dur:2.2,lock:.95,trn:[[0,.95,4]],ph1only:1,
+    trk:[[.75,'vArch','io'],[1.0,'vArch','l',.012],[1.12,'vSnap','s'],[1.6,'vSnap','l'],[2.2,'cRec','io']],
+    hit:[-.5,-.25,0,.25,.5].map(ay=>({t:1.14,s:{k:'l',w:1.1,l:14,b:0},f:1.0,ay,nohit:1,w:.8,fx:(c,an)=>ml232Quill(c,an,.85)})),
+    ev:[[.4,c=>svSnd('whoosh',.6,1.2)],[1.12,c=>svSnd('whoosh',1,1.5)]],rec:.35}),
+  // Thunderclap: a blast round her, then three aimed bolts
+  thunder:WK232_M({wt:(e,L)=>L<5.5?9:3,cd:9,r:[0,30],a:'any',armor:1,dur:3.6,trn:[[0,.5,2]],
+    trk:[[.7,'open','io'],[1.3,'scr','o'],[1.75,'scr','l',.024],[1.88,'buff','s'],[2.9,'open','io'],[3.6,'cRec','io']],
+    hit:[{t:1.88,s:{k:'c',r:3.8},dm:1.2,w:1.2,kb:4,fx:c=>{svShock(c.m.position,ML232.col,5,.4);burst(gY(c.m.position,1.5),ML232.bolt,60,6,3,.6);shake(.4);ml232Bolt(c.m.position.clone(),true)}}]
+      .concat([2.3,2.7,3.1].map((t,i)=>({t,s:{k:'c',r:2.0},o:c=>{const p=wk232Aim(c,.4+i*.12);return {x:p.x,z:p.z,a:0}},w:.65,dm:1.0,wc:0x7ad8ff,on:ml232Shock,fx:(c,an)=>ml232Bolt(new THREE.Vector3(an.x,0,an.z))}))),
+    ev:[[.5,c=>{svSnd('charge',.7,1.2);c.S.chgT=1.2}],[1.3,c=>svSnd('shriek',1,1)],[1.88,c=>{c.S.chgT=0}]],rec:.45}),
+  // ---------------- Phase II ----------------
+  awaken:WK232_M({dur:3.8,inv:[0,3.8],armor:1,trn:[[0,3.5,1.2]],trk:[[.6,'crouch','io'],[1.2,'crouch','l',.025],[1.6,'scr','o'],[3.2,'scr','l',.03],[3.8,'cRec','io']],
+    hit:[{t:1.62,s:{k:'c',r:7},dm:.55,kb:6,w:1.2,fx:c=>{svShock(c.m.position,ML232.col,11,.85);burst(gY(c.m.position,2),ML232.bolt,100,7,4,.9);for(let k=0;k<5;k++){const a=k/5*6.283;ml232Bolt(c.at(Math.cos(a)*5,Math.sin(a)*5))}}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[3],'Maelis · Phase II','Eye of the Storm','The cloud breaks: rain, a dragging wind, bolts that walk the ground','Mind the copper rods','z3')}catch(_){}svSnd('hiss',.8,1.2);c.S.chgT=1.2}],
+      [1.6,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(160,220,255,.32)')}catch(_){}svSnd('shriek',1.3,.8);svSnd('roar',.7,1.2);shake(.55);try{ml232Storm(c.D,1)}catch(err){console.error('ml storm',err)}}]]}),
+  skyfall2:WK232_M((()=>{const A=[ml232Stoop(.1),ml232Stoop(2.45,{dm:1.5})];return {wt:9,cd:10,ph:2,r:[0,30],a:'any',armor:1,dur:5.3,rec:.5,trn:A.map(d=>d.trn),hit:[].concat(...A.map(d=>d.hit)),trk:[].concat(...A.map(d=>d.trk)).concat([[5.3,'cRec','io']]),
+    ev:[].concat(...A.map(d=>d.ev)),tk(c,dt){A.forEach(d=>d.tk(c,dt))},end(c){c.S.ghost=0}}})()),
+  // Galeblades: three walls of wind, each fired through where you stand
+  gale:WK232_M({wt:8,cd:9,ph:2,r:[3,30],a:'any',armor:1,dur:3.7,trn:[[0,.75,5],[1.2,1.45,7],[2.0,2.25,7]],
+    trk:[[.55,'bfUp','io'],[.8,'bfUp','l',.014],[.94,'buff','s'],[1.2,'bfUp','io'],[1.5,'bfUp','l',.014],[1.64,'buff','s'],[2.0,'bfUp','io'],[2.3,'bfUp','l',.014],[2.44,'buff','s'],[3.0,'buff','l'],[3.7,'cRec','io']],
+    hit:[.96,1.66,2.46].map(t=>({t,s:{k:'l',w:3.0,l:24,b:0},f:1.0,nohit:1,w:.52,fx:(c,an)=>ml232Gale(c,an,1.05)})),
+    ev:[[.3,c=>svSnd('whoosh',.6,.9)],[.94,c=>shake(.15)],[1.64,c=>shake(.15)],[2.44,c=>shake(.15)]],rec:.4}),
+  volley2:WK232_M({wt:(e,L)=>L>5?10:4,cd:7,ph:2,r:[3.5,30],a:'f',dur:2.6,lock:.95,trn:[[0,.95,4],[1.35,1.45,3]],
+    trk:[[.75,'vArch','io'],[1.0,'vArch','l',.012],[1.12,'vSnap','s'],[1.3,'vArch','io'],[1.5,'vSnap','s'],[1.95,'vSnap','l'],[2.6,'cRec','io']],
+    hit:[-.5,-.25,0,.25,.5].map(ay=>({t:1.14,s:{k:'l',w:1.1,l:14,b:0},f:1.0,ay,nohit:1,w:.8,fx:(c,an)=>ml232Quill(c,an,.8,19)}))
+      .concat([-.62,-.37,-.12,.12,.37,.62].map(ay=>({t:1.52,s:{k:'l',w:1.1,l:14,b:0},f:1.0,ay,nohit:1,w:.4,fx:(c,an)=>ml232Quill(c,an,.8,19)}))),
+    ev:[[.4,c=>svSnd('whoosh',.7,1.2)],[1.12,c=>svSnd('whoosh',1,1.5)],[1.5,c=>svSnd('whoosh',1,1.65)]],rec:.4}),
+  // Static Charge: she climbs out of reach; ground three charges on three rods (4032)
+  static:WK232_M({wt:(e)=>e.sv.sigN?10:30,cd:26,ph:2,r:[0,40],a:'any',armor:1,dur:18.4,inv:[0,18.4],trn:[[0,18.4,2.5]],
+    trk:[[.4,'crouch','io'],[.8,'flyUp','o'],[1.2,'flyDn','io']].concat(...Array.from({length:19},(_,i)=>[[1.6+i*.8,'flyUp','io'],[2.0+i*.8,'flyDn','io']])).concat([[17.4,'stoop','i'],[17.75,'land','s'],[18.4,'cRec','io']]),
+    ev:[[.3,c=>{svSnd('shriek',1,1);c.S.chgT=1;c.e.sv.sigN=(c.e.sv.sigN||0)+1;c.M.an.from=c.m.position.clone()}],[.8,c=>{c.S.ghost=1;svSnd('whoosh',1.2,.7);try{ml232StaticStart(c.D,c.e)}catch(err){console.error('ml static',err)}}],
+      [17.2,c=>{c.S.chgT=0;try{ml232StaticEnd(c.D,c.e,false)}catch(err){console.error('ml static end',err)}}],[17.75,c=>{c.S.ghost=0;svShock(c.m.position,ML232.col,4,.4);shake(.3);svSnd('heavy',1,.9)}]],
+    tk(c,dt){const m=c.m,A=c.D.A;if(c.t>.8&&c.t<17.2){m.position.x+=(A.cx-m.position.x)*Math.min(1,dt*1.5);m.position.z+=(A.cz-m.position.z)*Math.min(1,dt*1.5);try{ml232StaticTick(c.D,c.e,dt,c.t)}catch(err){if(!WK232.err++)console.error('ml static tick',err)}}},
+    end(c,silent){c.S.ghost=0;c.S.chgT=0;try{ml232StaticEnd(c.D,c.e,true)}catch(_){}},rec:.5}),
+  // struck out of the sky: a long stagger
+  broken:WK232_M({dur:5.0,trk:[[.25,'stoop','i'],[.55,'stag','s'],[4.4,'stag','l',.03],[5.0,'cRec','io']],
+    go(c){c.S.stg=5.0;c.S.ghost=0;svSnd('stag',1.2,.9);svSnd('crack',1.2,1.4);popT(c.m.position,'STRUCK FROM THE SKY','#cfeeff',true);ml232Bolt(c.m.position.clone(),true)},
+    ev:[[.55,c=>{svShock(c.m.position,0xcfeeff,6,.5);burst(gY(c.m.position,.5),0xc8b89a,60,5,3,.8);shake(.5);svSnd('heavy',1.3,.7)}]],
+    tk(c,dt){c.S.stg=Math.max(0,5.0-c.t);if(Math.random()<dt*8){const p=svWP(c.e,'head',0,.2,0);burst(p,0xcfeeff,1,.5,.6,.5)}},end(c){c.S.stg=0}})};
+// ================= v232 Maelis — the Stormcrown (arena), the storm, the copper rods, the record =================
+// The second Warden's arena is the Searing Sands' unused Wave Trial instance (insG(3,4)), dressed as a mesa top under a thunderhead:
+// wind-scoured sandstone scarred with fulgurite, a ring of carved hoodoos and arches, the wreck of a nest the size of a house,
+// a ceiling of turning black cloud that flickers — and three tall copper rods, bound in bone and rope, which answer her Static Charge.
+//  * The storm (Phase II; ML.S.storm): rain; a wind that drags you sideways round the eyrie (it turns about every 12 s); every ~2.4 s
+//    a bolt falls near you, marked on the ground .9 s before (Shocked).
+//  * Static Charge (ML.S.st, 4031 'static'): three charges in a row, 5.2 s each. A ring closes on you; when it bursts, a live rod
+//    within 2.6 takes it (the rod is spent until she lands) and she is wounded 4%; otherwise you take the blow. Three grounded: she
+//    is struck from the sky ('broken'). Each one missed heals her 4%.
+var ML232D=wk232Reg({key:'roc',zi:3,name:'Maelis',title:'the Tempest Roc',icon:'🦅',lv:53,place:'The Stormcrown',base:'akorror',hpK:1.12,dmK:1.08,
+  card:['second Warden of the Balance','The wind closes the pass behind you'],restTxt:'her broken nest',riftCol:0xcfeeff,
+  B:{name:'Maelis',col:ML232.col,body:1.7,ph2:.55,poise:.1,headJ:'head',turnA:3.8,edge:1.7,
+    ai:{pref:3.8,walk:2.6,run:4.6,turn:3.0,rest:[.7,1.25],ph2r:.66,strafe:.55,near:2.0},
+    build:ml232Build,loco:ml232Loco,post:ml232Post,P:ML232P,M:ML232M,
+    stag:[[.25,'stag','o'],[2.2,'stag','l',.025],[2.75,'cRec','io']],stagT:2.75,die:[[.4,'stag','o'],[1.4,'dead','i'],[2.1,'dead','l']]},
+  done:()=>FN232.n>1,
+  S:{rods:[],storm:0,st:null,bT:2,wind:1,wT:12},
+  build(D,root,LS){const L=D.L,S=D.S,rn=svRng(2332),y=(x,z)=>GH(x,z);
+    const M={sand:new THREE.MeshStandardMaterial({color:0x9a7a52,roughness:.95,flatShading:true}),sand2:new THREE.MeshStandardMaterial({color:0x7d6040,roughness:.95,flatShading:true}),dark:new THREE.MeshStandardMaterial({color:0x4a3a2c,roughness:.95,flatShading:true}),
+      copper:new THREE.MeshStandardMaterial({color:0xb87333,roughness:.35,metalness:.75,flatShading:true}),verd:new THREE.MeshStandardMaterial({color:0x4f8a78,roughness:.7,metalness:.3,flatShading:true}),bone:new THREE.MeshStandardMaterial({color:0xd8ccb0,roughness:.7,flatShading:true}),
+      wood:new THREE.MeshStandardMaterial({color:0x3e3026,roughness:.9,flatShading:true}),egg:new THREE.MeshStandardMaterial({color:0xd9dfe6,roughness:.5,flatShading:true})};LS.M=M;
+    // the floor: sandstone slabs, drifted sand, glassy fulgurite scars that hold a little light
+    LS.floorM=wk232Floor(D,root,{base:'#7a6144',seed:2333,spk:[[150,120,84],[104,82,56],[170,140,100]],spkN:520,spkR:14,spkA:.45,crack:'rgba(40,28,18,.6)',crackN:60,
+      vein:['rgba(120,220,255,.75)','rgba(200,240,255,.5)'],veinN:7,blob:['rgba(120,220,255,.7)'],blobN:6,em:0x7ad8ff,emI:.35,rough:.85});
+    // hoodoos: stacks of wind-cut rock round the edge, a few leaning arches
+    wk232Around(D,root,26,13.6,16.2,(i,a,x,z,yy,r)=>{const g=new THREE.Group(),n=3+(i%3),s=1.1+r()*.9;let h=0;for(let k=0;k<n;k++){const w=(1.5-k*.28)*s*(.85+r()*.3),ht=(.9+r()*.9)*s,o=new THREE.Mesh(wk232Lump(10+((i+k)%5),1,1,.3),k%2?M.sand2:M.sand);
+        o.position.set((r()-.5)*.3,h+ht*.5,(r()-.5)*.3);o.scale.set(w,ht*.62,w*.9);o.rotation.y=r()*6;o.castShadow=true;g.add(o);h+=ht*.82}
+      const cap=new THREE.Mesh(wk232Lump(15,1,1,.25),M.dark);cap.position.y=h+.2;cap.scale.set(1.2*s,.3,1.1*s);g.add(cap);g.position.set(x,yy-.2,z);return g},2334,.16);
+    [[1.1,14.0],[3.4,14.3],[5.0,14.1]].forEach(([a,r],i)=>{const x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,o=new THREE.Mesh(svG('ml_ar',()=>svTube([[-2.4,0,0],[-2.0,2.6,0],[-.8,4.2,0],[.8,4.3,0],[2.1,2.8,0],[2.5,0,0]],[.9,.75,.6,.6,.72,.95],6)),i%2?M.sand:M.sand2);
+      o.position.set(x,y(x,z)-.2,z);o.rotation.y=a+Math.PI/2;o.castShadow=true;root.add(o)});
+    // loose rocks and bones inside the ring
+    for(let i=0;i<26;i++){const a=rn()*6.283,r=10.8+rn()*2.6,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r;if(Math.hypot(x-L.exit.x,z-L.exit.z)<2.6)continue;const b=i%4==0,o=new THREE.Mesh(b?svG('ml_bn',()=>svTube([[-.6,0,0],[0,.08,0],[.6,0,0]],[.07,.045,.07],5)):wk232Lump(10+i%5,1,1,.3),b?M.bone:i%2?M.sand2:M.dark);
+      o.position.set(x,y(x,z)+.1,z);if(!b)o.scale.set(.3+rn()*.5,.2+rn()*.3,.3+rn()*.5);o.rotation.set(rn()*.4,rn()*6,rn()*.4);root.add(o)}
+    // the nest at the back: a ring of great timbers and ribs, broken shell
+    {const x=L.cx,z=L.cz-11.2,yy=y(x,z),g=new THREE.Group();g.position.set(x,yy,z);for(let k=0;k<22;k++){const a=k/22*6.283,l=2.2+rn()*1.6,o=new THREE.Mesh(svG('ml_tm',()=>new THREE.CylinderGeometry(.1,.14,1,5).toNonIndexed()),k%4?M.wood:M.bone);
+        o.position.set(Math.sin(a)*2.5,.35+rn()*.5,Math.cos(a)*1.9);o.scale.set(1+rn(),l,1+rn());o.rotation.set(Math.PI/2+(rn()-.5)*.5,a+1.2+(rn()-.5)*.6,(rn()-.5)*.4);g.add(o)}
+      for(let k=0;k<3;k++){const o=new THREE.Mesh(svG('ml_eg',()=>new THREE.SphereGeometry(.5,7,5,0,6.283,0,1.9).toNonIndexed()),M.egg);o.position.set(-.8+k*.8,.3,(k%2)*.5-.2);o.rotation.set(Math.PI+(k-1)*.5,k,0);o.scale.set(1,1.25,1);g.add(o)}root.add(g)}
+    // the cloud: a dark turning ceiling with a bright eye, lumps of cloud round its rim
+    {const cv=document.createElement('canvas');cv.width=cv.height=256;const c=cv.getContext('2d'),gr=c.createRadialGradient(128,128,6,128,128,128);gr.addColorStop(0,'rgba(190,225,255,.95)');gr.addColorStop(.12,'rgba(70,90,120,.9)');gr.addColorStop(.5,'rgba(22,26,36,.95)');gr.addColorStop(1,'rgba(10,12,18,0)');c.fillStyle=gr;c.fillRect(0,0,256,256);
+      c.globalCompositeOperation='source-atop';for(let i=0;i<70;i++){const a=i*.4,r=14+i*1.6;c.strokeStyle=`rgba(${120+rn()*80|0},${150+rn()*60|0},${190+rn()*50|0},${.08+rn()*.1})`;c.lineWidth=3+rn()*6;c.beginPath();c.arc(128,128,r,a,a+1.4+rn());c.stroke()}
+      const m=new THREE.Mesh(svG('ml_cl',()=>new THREE.CircleGeometry(30,40).rotateX(Math.PI/2)),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:.92,depthWrite:false,fog:false,side:THREE.DoubleSide}));
+      m.position.set(L.cx,L.y+17,L.cz);m.userData.lpsSkip=1;root.add(m);LS.cloud=m}
+    wk232Light(D,LS,0x9fd8ff,1.0,26,L.cx,L.y+9,L.cz);LS.flashL=wk232Light(D,LS,0xdff6ff,0,40,L.cx,L.y+12,L.cz);
+    // rain (Phase II): streaks falling through the eyrie
+    {const N=420,pos=new Float32Array(N*6),g=new THREE.BufferGeometry();LS.rainP=[];for(let i=0;i<N;i++){const a=rn()*6.283,r=Math.sqrt(rn())*15;LS.rainP.push([L.cx+Math.cos(a)*r,L.y+rn()*14,L.cz+Math.sin(a)*r,9+rn()*6])}
+      g.setAttribute('position',new THREE.BufferAttribute(pos,3));const ln=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xb8d8f0,transparent:true,opacity:.45,fog:false}));ln.frustumCulled=false;ln.userData.lpsSkip=1;ln.visible=false;root.add(ln);LS.rain=ln}
+    // the three copper rods
+    S.rods=[0,1,2].map(k=>{const a=Math.PI/3+k*Math.PI*2/3,x=L.cx+Math.sin(a)*8.2,z=L.cz+Math.cos(a)*8.2,yy=y(x,z),g=new THREE.Group();g.position.set(x,yy,z);
+      for(let q=0;q<5;q++){const o=new THREE.Mesh(wk232Lump(10+q,1,1,.3),q%2?M.sand2:M.dark),ra=q*1.26;o.position.set(Math.sin(ra)*.5,.2,Math.cos(ra)*.5);o.scale.set(.45,.32,.4);g.add(o)}
+      const pole=new THREE.Mesh(svG('ml_rp',()=>svLoft([[0,.16,.16],[2.2,.11,.11],[4.6,.06,.06],[5.4,.02,.02]],6)),M.copper);pole.castShadow=true;g.add(pole);
+      for(let q=0;q<4;q++){const c=new THREE.Mesh(svG('ml_rc',()=>new THREE.TorusGeometry(1,.16,5,10).rotateX(Math.PI/2)),q%2?M.verd:M.copper);c.position.y=1.5+q*.8;c.scale.setScalar(.34-q*.05);g.add(c)}
+      [[.9,.5],[1.3,-.6],[2.4,.3]].forEach(([h,rz],q)=>{const b=new THREE.Mesh(svG('ml_rb',()=>svTube([[-.5,0,0],[0,.06,0],[.5,0,0]],[.06,.04,.06],5)),M.bone);b.position.y=h;b.rotation.set(0,q*1.1,rz);g.add(b)});
+      const tip=new THREE.Mesh(svG('ml_rt',()=>{const q=new THREE.OctahedronGeometry(.2,0);q.scale(1,2,1);return q}),ml232Mats().glass);tip.position.y=5.5;g.add(tip);const gl=kqSpr(ML232.col,1.6);gl.position.y=5.5;g.add(gl);
+      const ring=wk232Disc(root,2.3,2.6,0x7ad8ff,yy+.12);ring.position.set(x,yy+.12,z);root.add(g);return {x,z,y:yy,g,tip,gl,ring,spent:0,k:W*Math.round(z)+Math.round(x)}});
+    // the mark that follows you in a Static Charge
+    LS.mark=wk232Disc(root,0,1,0x7ad8ff,L.y+.14);LS.markR=wk232Disc(root,.92,1,0xdff6ff,L.y+.15);
+    D.sync(D)},
+  sync(D){const S=D.S;S.rods.forEach(r=>CBLK.add(r.k))},
+  reset(D,won){const S=D.S;ml232Storm(D,0);ml232StaticEnd(D,D.e,true);S.rods.forEach(r=>{r.spent=0})},
+  hud(D,e){const st=D.S.st;return st?' · grounded '+st.ok+'/3':''},
+  won(D,e){setTimeout(()=>{try{fn232WardenDown(1)}catch(err){console.error('fn232 warden',err)}},1900)},
+  tick(D,dt,now,t){const LS=D.LS,S=D.S,L=D.L,on=S.storm;LS.cloud.rotation.y+=dt*(on?.5:.12);LS.floorM.emissiveIntensity=.3+.08*Math.sin(t*1.7)+(on?.15:0);
+    // sheet lightning in the cloud
+    S.fT=(S.fT||0)-dt;if(S.fT<=0){S.fT=(on?.6:2.5)+Math.random()*(on?1.6:5);S.fl=1;if(Math.random()<.5)try{svSnd('heavy',.25,.5)}catch(_){}}S.fl=Math.max(0,(S.fl||0)-dt*4);LS.flashL.intensity=S.fl*(on?2.4:1.2);LS.cloud.material.opacity=.86+.14*S.fl;
+    // rain
+    LS.rain.visible=!!on;if(on){const P=LS.rain.geometry.attributes.position,wx=S.wind*-Math.sin(t*.1)*.0;for(let i=0;i<LS.rainP.length;i++){const q=LS.rainP[i];q[1]-=q[3]*dt*2.2;if(q[1]<L.y){q[1]=L.y+14}P.setXYZ(i*2,q[0],q[1],q[2]);P.setXYZ(i*2+1,q[0]+.12*S.wind,q[1]+.7,q[2])}P.needsUpdate=true}
+    // rods: a soft pulse; spent rods crackle
+    S.rods.forEach((r,i)=>{const live=!!S.st&&!r.spent;r.gl.scale.setScalar(r.spent?2.6+.6*Math.sin(t*31):live?1.8+.4*Math.sin(t*6+i):on?1.2:.7);r.tip.rotation.y+=dt*(r.spent?9:1.5);
+      r.ring.visible=live;if(live)r.ring.material.opacity=.4+.25*Math.sin(t*6+i);if(r.spent&&Math.random()<dt*14)burst(new THREE.Vector3(r.x,r.y+1+Math.random()*4.5,r.z),ML232.bolt,1,.8,.3,.3)})},
+  fight(D,e,dt,now){const S=D.S,A=D.A;if(!S.storm||hero.hp<=0)return;
+    // the wind drags you round the eyrie
+    S.wT-=dt;if(S.wT<=0){S.wT=10+Math.random()*5;S.wind=-S.wind;say('💨 The wind turns.')}
+    {const p=pl.position,dx=p.x-A.cx,dz=p.z-A.cz,d=Math.hypot(dx,dz)||1,k=.95*dt*S.wind;p.x+=-dz/d*k;p.z+=dx/d*k;wk232HeroIn(D,p)}
+    // bolts walk the ground near you
+    S.bT-=dt;if(S.bT<=0){S.bT=S.st?1.9:2.4;const a=Math.random()*6.283,r=Math.random()*4.5,q=wk232Clamp(D,new THREE.Vector3(pl.position.x+Math.cos(a)*r,0,pl.position.z+Math.sin(a)*r),.5),an={x:q.x,z:q.z,a:0},sh={k:'c',r:1.9};
+      svWarn(sh,an,.9,{col:0x7ad8ff});setTimeout(()=>{if(!D.A||!D.A.f||e.dead)return;ml232Bolt(q);wk232HitNow(e,sh,an,.85,{flash:false,on:ml232Shock})},900)}}});
+function ml232Storm(D,on){const S=D.S;S.storm=on?1:0;S.bT=2;S.wT=8}
+function ml232StaticStart(D,e){const S=D.S;S.rods.forEach(r=>{r.spent=0});S.st={i:0,t:0,ok:0,T:5.2,n:-1};
+  say('⚡ Maelis climbs into the storm. <b>The charge is on you: reach a copper rod before it bursts!</b>');try{banner('⚠ STATIC CHARGE','Stand by a copper rod when the ring closes · a fresh rod each time','')}catch(_){}}
+function ml232StaticTick(D,e,dt,t){const S=D.S,st=S.st,LS=D.LS;if(!st||st.i>=3)return;st.t+=dt;const k=Math.min(1,st.t/st.T),p=pl.position,y=GH(p.x,p.z)+.14;
+  LS.mark.visible=LS.markR.visible=true;LS.mark.position.set(p.x,y,p.z);LS.markR.position.set(p.x,y+.01,p.z);const r=3.2*(1-k)+.5;LS.mark.scale.set(r,1,r);LS.mark.material.opacity=.12+.3*k;LS.markR.scale.set(3.7,1,3.7);LS.markR.material.opacity=.5+.3*Math.sin(st.t*10);
+  if(Math.random()<dt*(6+20*k))burst(gY(p,.5+Math.random()*1.5),ML232.bolt,1,.8,.4,.3);
+  const left=Math.ceil(st.T-st.t);if(left!==st.n&&left<=3&&left>0){st.n=left;popT(p,String(left),'#cfeeff',true);svSnd('charge',.5,1.2+.2*(3-left))}
+  if(st.t<st.T)return;
+  // it bursts: a live rod close by takes it, or you do
+  let rod=null,bd=2.6;S.rods.forEach(q=>{if(q.spent)return;const d=Math.hypot(q.x-p.x,q.z-p.z);if(d<bd){bd=d;rod=q}});
+  if(rod){rod.spent=1;st.ok++;const a=new THREE.Vector3(rod.x,rod.y+5.5,rod.z);try{const p0=gY(p,1.2),p1=svWP(e,'chest',0,0,0);sk146Beam(()=>p0,()=>a,0xbfeaff,.14,.35);sk146Beam(()=>a,()=>p1,0xdff6ff,.2,.45)}catch(_){}
+    burst(a,ML232.bolt,50,5,2,.6);svSnd('crack',1.2,1.6);svSnd('bell',.6,1.6);shake(.3);wk232Wound(e,.04,'#cfeeff');popT(p,'GROUNDED '+st.ok+'/3','#cfeeff',true);burst(svWP(e,'chest',0,0,0),ML232.bolt,40,5,2,.6)}
+  else{ml232Bolt(p.clone(),true);if(wk232Zap(e,2.0,'m'))ml232Shock();popT(p,'STRUCK','#ff9a8a',true)}
+  st.i++;st.t=0;st.n=-1;
+  if(st.i>=3){LS.mark.visible=LS.markR.visible=false;if(st.ok>=3){S.st=null;svEndMove(e,true);svCast(e,'broken')}}}
+function ml232StaticEnd(D,e,silent){const S=D.S,LS=D.LS,st=S.st;if(LS&&LS.mark){LS.mark.visible=false;LS.markR.visible=false}S.st=null;S.rods.forEach(r=>{r.spent=0});
+  if(st&&!silent&&e&&!e.dead){const miss=3-st.ok;if(miss>0){wk232Heal(e,.04*miss,0xbfeaff);say('⚡ The storm feeds her: '+miss+' charge'+(miss>1?'s':'')+' went ungrounded.')}}}
+// ================= v232 Brassmaw, the Kiln Colossus — the model, poses and procedural animation =================
+// The third Warden of the Balance (fight and foundry in 4042, moves in 4041). A walking furnace: a barrel chest of black iron
+// plates banded and riveted in brass, a furnace door in the belly with a barred grate (the fire shows through), two smoke stacks
+// on the shoulders, a small helm sunk between them with one glowing slit, arms like piledrivers ending in great hammer fists,
+// short thick legs on broad iron feet, chains, slag crusted in every seam. The seams and the grate glow with his Heat (4042).
+// Built like a Sovereign (svRig kit; rigid parts on named joints, merged by svMerge). He faces +z.
+// Joints (L = +x): root · hips · spine · chest · neck · head · jaw (the grate's lower lip) · door · stkL/R (stacks) · shL/R · elL/R ·
+// wrL/R (fists) · thL/R · knL/R · ftL/R. Poses (BM232P) are offsets from rest, mirrored with '~'.
+var BM232={col:0xff7a2a,hot:0xff5a12,tris:0,sheet:{}};
+function bm232Build(R,e){
+  const iron=svMat(R,0x24262b,{roughness:.55,metalness:.6}),iron2=svMat(R,0x34373e,{roughness:.6,metalness:.55}),soot=svMat(R,0x121316,{roughness:.9,metalness:.2}),
+    brass=svMat(R,0xb08a3a,{roughness:.4,metalness:.75}),brass2=svMat(R,0x7a5c22,{roughness:.5,metalness:.7}),slag=svMat(R,0x3a2a22,{roughness:.95}),
+    fire=svMat(R,0x2a0c02,{roughness:.5,emissive:BM232.hot,emissiveIntensity:.8}),seam=svMat(R,0x180802,{roughness:.6,emissive:BM232.hot,emissiveIntensity:.35}),eye=svGlowMat(R,0xffd08a),ember=svGlowMat(R,0xffa040,.9);
+  fire.userData.e0=BM232.hot;seam.userData.e0=BM232.hot;R.fire=fire;R.seam=seam;R.eyeM=eye;
+  const J=(n,p,x,y,z,rx,ry,rz)=>svJ(R,n,p,x,y,z,rx,ry,rz),G=(k,f)=>svG('bm'+k,f),Mm=(j,g,m,x,y,z,rx,ry,rz,sx,sy,sz)=>svM(R,j,g,m,x,y,z,rx,ry,rz,sx,sy,sz);
+  const ball=(k,r,det,j)=>G('b'+k,()=>svLump(r,det==null?1:det,j||.12,120+k)),box=(k,x,y,z)=>G('x'+k,()=>new THREE.BoxGeometry(x,y,z).toNonIndexed()),
+    cyl=(k,rt,rb,h,n)=>G('c'+k,()=>new THREE.CylinderGeometry(rt,rb,h,n||10,1).toNonIndexed()),rivet=G('rv',()=>new THREE.IcosahedronGeometry(.035,0)),
+    band=(k,r,rz,t)=>G('bd'+k,()=>svLoft([[-t,r,rz],[t,r,rz]],14,{cap:false}));
+  const rivets=(j,r,rz,y,n,m)=>{for(let k=0;k<n;k++){const a=k/n*6.283;Mm(j,rivet,m||brass,Math.sin(a)*r,y,Math.cos(a)*rz)}};
+  // ---------------- the skeleton ----------------
+  J('root',null,0,0,0);J('hips','root',0,1.55,0);J('spine','hips',0,.3,0);J('chest','spine',0,.75,.05);J('neck','chest',0,.95,.12);J('head','neck',0,.12,.06);J('jaw','head',0,-.2,.2);J('door','spine',0,.2,.92);
+  [-1,1].forEach(s=>{const L=s>0?'L':'R';J('stk'+L,'chest',s*.95,.9,-.35,-.1,0,s*-.12);
+    J('sh'+L,'chest',s*1.35,.45,.05,0,0,s*.12);J('el'+L,'sh'+L,0,-1.15,0);J('wr'+L,'el'+L,0,-1.05,.05);
+    J('th'+L,'hips',s*.62,-.1,0);J('kn'+L,'th'+L,0,-.7,.06);J('ft'+L,'kn'+L,0,-.62,0)});
+  // ---------------- hips: an iron skirt of hanging plates, a brass girdle, chains ----------------
+  Mm('hips',G('hp',()=>svLoft([[-.35,.85,.72],[.0,1.0,.86],[.34,1.02,.9]],14)),iron);Mm('hips',band(1,1.04,.9,.09),brass,0,.1,0);rivets('hips',1.06,.92,.1,14);
+  for(let k=0;k<10;k++){const a=k/10*6.283+.31;Mm('hips',box(1,.42,.6,.07),k%2?iron2:iron,Math.sin(a)*.9,-.4,Math.cos(a)*.76,.12,a,0);Mm('hips',rivet,brass,Math.sin(a)*.95,-.2,Math.cos(a)*.8)}
+  // ---------------- the furnace: belly barrel, the door with its barred grate, the fire behind it ----------------
+  const brR=[[-.2,1.0,.88],[.3,1.14,1.0],[.8,1.12,.98],[1.15,.98,.86]];Mm('spine',G('br',()=>svLoft(brR,16)),iron);
+  [.05,.55,1.02].forEach((y,i)=>{Mm('spine',band(2+i,[1.07,1.17,1.06][i],[.94,1.03,.93][i],.07),brass,0,y,0);rivets('spine',[1.09,1.19,1.08][i],[.96,1.05,.95][i],y,16)});
+  for(let k=0;k<12;k++){const a=k/12*6.283+.26;if(Math.abs(svAng(a))<.6)continue;Mm('spine',G('sm',()=>new THREE.BoxGeometry(.035,.44,.03)),seam,Math.sin(a)*1.14,.3,Math.cos(a)*1.0,0,a,0)}
+  Mm('spine',G('fc',()=>svLump(.62,1,.12,131)),fire,0,.3,.52,0,0,0,1,1,.5);svSpr(R,'spine',BM232.col,1.6,0,.3,1.05);
+  Mm('spine',G('fr',()=>svLoft([[-.06,.62,.6],[.06,.66,.64]],12,{cap:false}).rotateX(Math.PI/2)),brass,0,.3,.96);rivets('door',.66,.66,0,0);
+  for(let k=0;k<5;k++)Mm('door',cyl(1,.035,.035,1.1,6),iron2,-.4+k*.2,0,.04,0,0,0,1,1-Math.abs(k-2)*.13,1);                                    // the bars (on the door joint: they lift when he vents)
+  Mm('door',box(2,1.25,.09,.08),brass2,0,.52,.05);Mm('door',box(2,1.25,.09,.08),brass2,0,-.52,.05);
+  // ---------------- chest: the boiler shoulders, a brass collar, gauges, pipes down the back ----------------
+  Mm('chest',G('ch',()=>svLoft([[-.3,1.0,.88],[.2,1.3,.9],[.62,1.34,.84],[.95,.8,.62]],14)),iron2);Mm('chest',band(5,1.33,.9,.08),brass,0,.4,0);rivets('chest',1.35,.92,.4,16);
+  Mm('chest',G('cl',()=>svLoft([[.86,.62,.56],[1.1,.5,.48]],12)),brass2);
+  [-1,1].forEach(s=>{Mm('chest',cyl(2,.14,.14,.06,10),brass,s*.5,.5,.86,Math.PI/2,0,0);Mm('chest',cyl(3,.1,.1,.07,8),soot,s*.5,.5,.87,Math.PI/2,0,0);Mm('chest',box(3,.015,.09,.02),eye,s*.5,.52,.91,0,0,s*.6);
+    Mm('chest',G('pp',()=>svTube([[0,.7,-.5],[.1,.3,-.86],[.12,-.5,-.9],[.05,-1.2,-.7]],[.11,.11,.1,.09],6)),brass2,s*.5,0,0,0,0,0,s,1,1);
+    for(let k=0;k<3;k++)Mm('chest',band(6,.13,.13,.03),brass,s*(.6+k*.01),.2-k*.5,-.88,0,0,0)});
+  Mm('chest',G('tk',()=>svLump(.5,1,.1,132)),iron,0,.1,-.8,0,0,0,1.1,1.5,.7);
+  for(let k=0;k<7;k++){const a=(k-3)*.36;Mm('chest',ball(1,.13,0,.5),slag,Math.sin(a)*1.25,.72+((k*7)%3)*.05,Math.cos(a)*.7-.1,k,k*2,0,1.3,.6,1)}
+  // smoke stacks
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',st='stk'+L;Mm(st,G('st',()=>svLoft([[0,.3,.3],[.8,.25,.25],[1.5,.27,.27],[1.62,.32,.32]],10,{cap:false})),iron);Mm(st,band(7,.3,.3,.05),brass,0,.25,0);Mm(st,band(7,.3,.3,.05),brass,0,1.5,0,0,0,0,1.05,1,1.05);
+    Mm(st,cyl(4,.24,.24,.04,10),fire,0,1.52,0);svSpr(R,st,BM232.col,.9,0,1.7,0)});
+  // ---------------- head: a pot helm sunk in the collar, one slit, a grated jaw ----------------
+  Mm('head',G('hm',()=>svLoft([[-.25,.4,.38],[.1,.44,.42],[.4,.36,.36],[.56,.16,.18]],10)),iron);Mm('head',band(8,.45,.43,.05),brass,0,.1,0);
+  Mm('head',box(4,.52,.06,.05),eye,0,.2,.41);svSpr(R,'head',BM232.col,.9,0,.2,.46);Mm('head',box(5,.07,.5,.08),brass2,0,.22,.42);
+  Mm('head',G('cs',()=>svHorn(.09,.4,0,.1,5,3)),brass2,0,.5,-.1,-1.2,0,0);
+  Mm('jaw',G('jw',()=>svLoft([[-.16,.38,.3],[.02,.4,.32]],10,{cap:false})),iron2,0,0,-.14);for(let k=0;k<5;k++)Mm('jaw',box(6,.04,.2,.04),brass2,-.24+k*.12,-.06,.18-Math.abs(k-2)*.02);
+  // ---------------- arms: pauldron drums, a piston upper arm, a banded forearm, the hammer fist ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',sh='sh'+L,el='el'+L,wr='wr'+L;
+    Mm(sh,G('pd',()=>svLoft([[-.4,.5,.56],[0,.62,.66],[.36,.5,.56]],12).rotateZ(Math.PI/2)),iron,0,.12,0);Mm(sh,band(9,.64,.68,.06).clone().rotateZ(Math.PI/2),brass,0,.12,0);
+    for(let k=0;k<6;k++){const a=k/6*6.283;Mm(sh,rivet,brass,s*.02,.12+Math.sin(a)*.66,Math.cos(a)*.7,0,0,0,1.6)}
+    Mm(sh,G('ua',()=>svLoft([[-.2,.3,.3],[-.7,.26,.26],[-1.15,.3,.3]],9)),soot);Mm(sh,cyl(5,.12,.12,.9,7),brass2,s*.26,-.62,-.1);Mm(sh,cyl(6,.07,.07,1.0,6),iron2,s*.26,-.62,-.1);
+    Mm(el,ball(2,.36,1,.1),iron2);Mm(el,G('fa',()=>svLoft([[-.1,.34,.36],[-.6,.44,.46],[-1.05,.4,.42]],10)),iron);[-.3,-.62,-.94].forEach((y,i)=>{Mm(el,band(10,.43+((i==1)?.03:0),.45+((i==1)?.03:0),.045),brass,0,y,0);});
+    for(let k=0;k<5;k++){const a=k*1.26;Mm(el,G('sm2',()=>new THREE.BoxGeometry(.03,.26,.03)),seam,Math.sin(a)*.44,-.47,Math.cos(a)*.46,0,a,0)}
+    // the fist: a block hammer head with brass striking faces, knuckle studs, slag crust
+    Mm(wr,box(7,.95,.8,1.05),iron2,0,-.42,.05);Mm(wr,box(8,.8,.66,.08),brass,0,-.42,.6);Mm(wr,box(8,.8,.66,.08),brass,0,-.42,-.5);Mm(wr,box(9,.99,.12,1.09),brass2,0,-.08,.05);Mm(wr,box(9,.99,.12,1.09),brass2,0,-.78,.05);
+    for(let k=0;k<4;k++)Mm(wr,G('kn',()=>svHorn(.08,.16,0,0,4,2)),brass,(k-1.5)*.2,-.3,.64);for(let k=0;k<4;k++)Mm(wr,ball(1,.12,0,.5),slag,s*(.3-k*.2),-.84,(k%2)*.4-.1,k,0,k*2,1.2,.5,1.2);
+    Mm(wr,G('sm3',()=>new THREE.BoxGeometry(.78,.035,.02)),seam,0,-.42,.645);Mm(wr,G('ch1',()=>svTube([[0,0,0],[.06,-.3,-.05],[0,-.6,0],[-.05,-.86,.04]],[.03,.03,.03,.03],4)),iron,s*.5,-.1,-.3)});
+  // ---------------- legs: short iron thighs, knee caps, flared shins, broad feet ----------------
+  [-1,1].forEach(s=>{const L=s>0?'L':'R',th='th'+L,kn='kn'+L,ft='ft'+L;
+    Mm(th,G('tg',()=>svLoft([[.05,.44,.46],[-.4,.4,.42],[-.7,.34,.36]],10)),soot);Mm(th,band(11,.45,.47,.05),brass2,0,-.2,0);
+    Mm(kn,G('kc',()=>svLump(.3,1,.1,133)),brass2,0,.02,.26,0,0,0,1,1,.6);Mm(kn,G('sn',()=>svLoft([[.05,.34,.36],[-.3,.38,.42],[-.62,.48,.5]],10)),iron);Mm(kn,band(12,.5,.52,.05),brass,0,-.56,0);
+    Mm(ft,G('ft',()=>svLoft([[.02,.5,.56,0,.08],[-.3,.6,.76,0,.16]],8)),iron2);Mm(ft,box(10,.9,.1,.5),brass2,0,-.26,.66);for(let k=0;k<3;k++)Mm(ft,G('tc',()=>svHorn(.1,.24,0,-.04,4,2)),iron,(k-1)*.3,-.2,.86)});
+  if(!BM232.tris)BM232.tris=wk232Tris(R);R.headJ='head'}
+// ---------------- poses (offsets from rest: [rx, ry, rz, px, py, pz]; an arm hangs down -y: rx − swings it forward and up) ----------------
+var BM232P={
+  idle:{},
+  cRec:{hips:[0,0,0,0,-.05,0],shL:[-.1,0,.06],shR:[-.1,0,-.06]},
+  // Hammer Combo: right hook wound back and thrown across, the left, then both fists overhead and down
+  rUp:{hips:[0,-.3,0],spine:[0,-.3,0],chest:[-.05,-.4,0],shR:[.7,0,-.9],elR:[-1.0,0,0],shL:[-.5,0,.2],elL:[-.7,0,0],thL:[-.3,0,0],knL:[.3,0,0]},
+  rCut:{hips:[.05,.35,0,0,-.08,.25],spine:[.08,.35,0],chest:[.12,.5,0],shR:[-1.35,0,.55],elR:[-.35,0,0],shL:[.3,0,.2],elL:[-.4,0,0],thL:[-.5,0,0],knL:[.45,0,0],thR:[.3,0,0]},
+  ohUp:{hips:[-.12,0,0,0,.06,-.1],spine:[-.2,0,0],chest:[-.3,0,0],head:[-.2,0,0],shL:[-2.7,0,.25],elL:[-.5,0,0],shR:[-2.7,0,-.25],elR:[-.5,0,0],thL:[-.2,0,0],thR:[.1,0,0]},
+  ohSlam:{hips:[.3,0,0,0,-.4,.3],spine:[.35,0,0],chest:[.35,0,0],head:[.15,0,0],shL:[-.75,0,-.2],elL:[-.2,0,0],shR:[-.75,0,.2],elR:[-.2,0,0],thL:[-.8,0,0],knL:[.9,0,0],thR:[-.3,0,0],knR:[.7,0,0]},
+  // Shoulder Charge: low, the left shoulder forward; the run
+  chLow:{hips:[.3,.5,0,0,-.35,-.15],spine:[.2,.2,0],chest:[.2,.2,0],head:[-.2,-.5,0],shL:[-.4,0,.5],elL:[-1.6,0,0],shR:[.6,0,-.3],elR:[-.6,0,0],thL:[-.6,0,0],knL:[.9,0,0],thR:[.1,0,0],knR:[.6,0,0]},
+  chGo:{hips:[.4,.55,0,0,-.25,.35],spine:[.25,.2,0],chest:[.2,.25,0],head:[-.25,-.5,0],shL:[-.5,0,.6],elL:[-1.7,0,0],shR:[.9,0,-.35],elR:[-.4,0,0],thL:[-1.0,0,0],knL:[.7,0,0],thR:[.6,0,0],knR:[.5,0,0]},
+  // Backhand: the right arm wound across the body, then swung out and round behind
+  bkUp:{hips:[0,.6,0],spine:[0,.5,0],chest:[0,.5,0],head:[0,-.7,0],shR:[-.9,0,.9],elR:[-1.1,0,0],shL:[.2,0,.3],thR:[-.2,0,0],knR:[.3,0,0]},
+  bkCut:{hips:[0,-1.0,0,0,-.1,0],spine:[0,-.7,0],chest:[0,-.7,0],head:[0,.8,0],shR:[-1.3,0,-1.2],elR:[-.1,0,0],shL:[-.3,0,.4],elL:[-.5,0,0],thL:[-.2,0,0],knL:[.4,0,0]},
+  // Slag Toss: a scoop low behind, the overarm lob
+  tsUp:{hips:[.15,-.4,0,0,-.2,0],spine:[.15,-.3,0],chest:[.1,-.3,0],shR:[.9,0,-.5],elR:[-.4,0,0],shL:[-.6,0,.2],elL:[-.8,0,0],thL:[-.3,0,0],knL:[.5,0,0]},
+  toss:{hips:[-.05,.35,0,0,.05,.15],spine:[-.1,.3,0],chest:[-.1,.35,0],head:[-.2,0,0],shR:[-2.5,0,.15],elR:[-.2,0,0],shL:[.3,0,.2],thR:[.2,0,0]},
+  // Furnace Breath / venting: leaning in, arms spread, the door bars lifted, the jaw dropped
+  brIn:{hips:[-.12,0,0,0,.05,-.1],spine:[-.15,0,0],chest:[-.2,0,0],head:[-.15,0,0],shL:[.3,0,.7],elL:[-.9,0,0],shR:[.3,0,-.7],elR:[-.9,0,0],door:[0,0,0,0,.25,0]},
+  breath:{hips:[.2,0,0,0,-.2,.15],spine:[.22,0,0],chest:[.15,0,0],head:[.1,0,0],jaw:[.6,0,0],shL:[.5,0,1.0],elL:[-.5,0,0],shR:[.5,0,-1.0],elR:[-.5,0,0],door:[0,0,0,0,.95,0],thL:[-.4,0,0],knL:[.5,0,0],thR:[-.4,0,0],knR:[.5,0,0]},
+  // Ground Pound: a knee raised high; the stomp
+  stUp:{hips:[-.1,0,.1,0,.1,0],spine:[-.1,0,-.08],chest:[-.1,0,0],shL:[-.9,0,.8],elL:[-.6,0,0],shR:[-.9,0,-.8],elR:[-.6,0,0],thR:[-1.4,0,0],knR:[1.5,0,0],ftR:[-.3,0,0]},
+  stomp:{hips:[.15,0,-.05,0,-.3,.1],spine:[.12,0,0],chest:[.1,0,0],shL:[.2,0,.5],elL:[-.3,0,0],shR:[.2,0,-.5],elR:[-.3,0,0],thR:[-.5,0,0],knR:[.7,0,0],thL:[-.2,0,0],knL:[.5,0,0]},
+  // the roar; overheating (hunched, shaking, bars up); quenched (on one knee, fists on the floor)
+  roar:{hips:[-.15,0,0,0,.06,0],spine:[-.2,0,0],chest:[-.25,0,0],head:[-.4,0,0],jaw:[.7,0,0],shL:[-.6,0,1.2],elL:[-.9,0,0],shR:[-.6,0,-1.2],elR:[-.9,0,0],door:[0,0,0,0,.5,0]},
+  heat:{hips:[.25,0,0,0,-.45,0],spine:[.3,0,0],chest:[.25,0,0],head:[.3,0,0],jaw:[.4,0,0],shL:[-.2,0,.5],elL:[-1.5,0,0],shR:[-.2,0,-.5],elR:[-1.5,0,0],door:[0,0,0,0,.95,0],thL:[-.7,0,0],knL:[1.0,0,0],thR:[-.7,0,0],knR:[1.0,0,0]},
+  blast:{hips:[-.2,0,0,0,.12,0],spine:[-.3,0,0],chest:[-.35,0,0],head:[-.5,0,0],jaw:[.8,0,0],shL:[-1.0,0,1.4],elL:[-.1,0,0],shR:[-1.0,0,-1.4],elR:[-.1,0,0],door:[0,0,0,0,.95,0]},
+  stag:{hips:[.3,.1,.08,0,-.75,0],spine:[.35,0,.06],chest:[.3,0,.05],head:[.45,.2,.1],jaw:[.3,0,0],shL:[-.5,0,.15],elL:[-.2,0,0],shR:[-.4,0,-.2],elR:[-.3,0,0],thL:[-1.3,0,0],knL:[1.5,0,0],thR:[.2,0,0],knR:[1.3,0,0],ftR:[-.6,0,0]},
+  dead:{root:[0,0,0,0,-.9,0],hips:[1.35,0,.1,0,0,.6],spine:[.1,0,0],chest:[.1,0,0],head:[.3,.4,0],jaw:[.5,0,0],shL:[-2.2,0,.5],elL:[-.3,0,0],shR:[-1.6,0,-.8],elR:[-.6,0,0],thL:[-.3,0,.15],knL:[.5,0,0],thR:[.2,0,-.1],knR:[.3,0,0]}};
+// ---------------- procedural layer: a heavy two-beat walk, the boiler breathing, stacks rattling, the head tracking ----------------
+function bm232Loco(e,S,O,dt,now){const t=now/1000,sp=S.spd||0,a=Math.min(1,sp/1.8);S.gp=(S.gp||0)+dt*(1.2+sp*1.9);const g=S.gp,br=Math.sin(t*.9);
+  O.hips[4]+=.02*br-.1*Math.abs(Math.sin(g))*a;O.chest[0]+=.02*br;O.spine[0]+=.015*br;
+  ['L','R'].forEach((s,j)=>{const ph=g+j*Math.PI,sw=Math.sin(ph),lf=Math.max(0,Math.cos(ph)),sg=j?-1:1;O['th'+s][0]+=sw*.4*a;O['kn'+s][0]+=lf*.6*a;O['ft'+s][0]+=-lf*.25*a;
+    O['sh'+s][0]+=-sw*.16*a+.02*br;O['el'+s][0]+=-.1*a-.03*br;O['sh'+s][2]+=sg*.03*br});
+  O.hips[2]+=Math.sin(g)*.07*a;O.spine[2]+=-Math.sin(g)*.04*a;O.hips[1]+=Math.sin(g)*.05*a;
+  const rt=.012*Math.sin(t*31)*(.3+a+(S.chg||0)*2);O.stkL[2]+=rt;O.stkR[2]-=rt;O.jaw[0]+=.05+.04*br;O.door[4]+=.03*Math.max(0,br);
+  const m=e.m,hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,yaw=svAng(Math.atan2(hx,hz)-m.rotation.y),k=S.mv?0:(Math.abs(yaw)<1.6?1:0);
+  S.hy=(S.hy||0)+((Math.max(-.9,Math.min(.9,yaw))*k)-(S.hy||0))*Math.min(1,dt*2.2);O.head[1]+=S.hy*.8;O.chest[1]+=S.hy*.15}
+// after the pose: fire and seams follow his Heat (S.heat 0..1, 4042), smoke from the stacks, embers from the grate
+function bm232Post(e,S,dt,now){const R=S.R,t=now/1000,h=Math.max(0,Math.min(1,S.heat||0)),ch=S.chg||0,ph2=S.ph>1;
+  R.fire.emissiveIntensity=.7+h*1.3+.15*Math.sin(t*7)+ch*1.2;R.seam.emissiveIntensity=.12+h*1.5+ch*1.2;const c=h>.85||ch>.6?0xffd27a:h>.5?0xff7a2a:BM232.hot;R.fire.emissive.setHex(c);R.seam.emissive.setHex(c);R.eyeM.color.setHex(h>.85?0xffffff:0xffd08a);
+  if(!S.dieM&&Math.random()<dt*(4+h*10)){const j=Math.random()<.5?'stkL':'stkR',p=svWP(e,j,0,1.7,0);burst(p,h>.6?0xff9a40:0x3a3836,1,.25,1.6+h,1.2)}
+  if(!S.dieM&&Math.random()<dt*(2+h*12+ch*10)){const p=svWP(e,'spine',(Math.random()-.5)*.8,.3+(Math.random()-.5)*.6,1.0);burst(p,0xffa040,1,.5,.8,.5)}}
+BM232.sheet.boss=()=>{const R=svRig();bm232Build(R,null);svRest(R);svMerge(R);return R.root};
+// ================= v232 Brassmaw — the moves (Sovereign move format; the kit 4010 points the engine at his foundry) =================
+// Theme: the forge: hammer blows, slag, furnace fire, steam. Debuff: Seared (burning: damage over time, weaker defence).
+// Pattern:
+//  close, front ── Hammer Fall: a right hook (an arc), a left hook (an arc), then both fists over his head and down on one spot
+//                  (late, heavy; a pool of slag stays).
+//  mid, front   ── Shoulder Charge: he drops his left shoulder and runs through you; the floor burns where he passed.
+//  behind/side  ── Backhand: the right fist wound across his body and swung out behind: a ring (stand close in, or far out).
+//  far          ── Slag Toss: he scoops from his own belly and lobs three gobs of slag, each aimed ahead of you; each leaves a
+//                  burning pool.
+//  mid, front   ── Furnace Breath: the door bars lift, he leans in and breathes a jet that sweeps from one side to the other:
+//                  five wedges in turn (run with it, or step through behind it).
+//  close, any   ── Ground Pound: a knee raised high and stamped down: a blast round him, then the floor cracks open along eight
+//                  lanes, then eight more in the gaps.
+//  Phase II (55%) "Meltdown": a roar; the foundry floor itself heats: its four quarters glow and then burn one after another, one
+//                  always cool (4042). He rests less, his Heat climbs faster, and he gains Triple Pound (three stamps, a ring of
+//                  force from each), Slag Rain (six gobs, three aimed, three wild) and a Furnace Breath that sweeps there and back.
+//  Signature ──── Heat (both phases; the bar says how hot he is). It climbs all the time. Two quench pools are sunk in the floor.
+//                  * Lead him into a pool with water in it: steam bursts, his Heat drops to nothing and his plates crack cold:
+//                    QUENCHED, a long stagger. The pool is boiled dry for a while.
+//                  * If his Heat fills he kneels, shaking, and melts down: a blast across the whole foundry. Only someone standing
+//                    in a pool with water in it is spared (and that pool boils dry too). Then he heals a little and starts again.
+//                  So water is both your sword and your shield, and there are only two pools.
+// Weakness: posture (the yellow bar); every break staggers him (+35% damage). Big moves have armour.
+const BM232_DEB=['Seared','🔥',{pdP:-.15},'Seared: −15% physical defence'];
+function bm232Mats(){const X=WK232.X;return X.bm||(X.bm={slag:new THREE.MeshStandardMaterial({color:0x2a1a12,emissive:0xff5a12,emissiveIntensity:.9,roughness:.5,flatShading:true}),iron:new THREE.MeshStandardMaterial({color:0x24262b,roughness:.55,metalness:.6,flatShading:true}),
+  rock:new THREE.MeshStandardMaterial({color:0x1c1a1a,roughness:.9,flatShading:true})})}
+function bm232Sear(ms){try{dqDebuff(BM232_DEB[0],BM232_DEB[1],{pdP:-.15},ms||3000,BM232_DEB[3])}catch(_){}}
+function bm232Pool(e,p,r,ms){wk232Pool(e,p,r,0xff6a1a,ms||4200,.17,['Seared','🔥',{pdP:-.15},BM232_DEB[3]])}
+// a gob of slag lobbed from his fist to a spot; lands as a burst and a pool (the hit is the move's)
+function bm232Gob(c,an,from){const p=new THREE.Vector3(an.x,0,an.z),a=from||c.wp('wrR',0,-.4,0),b=gY(p,.2),ms=new THREE.Mesh(svG('bm_gob',()=>svLump(.34,1,.3,141)),bm232Mats().slag);ms.userData.lpsSkip=1;
+  svShot(a,b,.62,0xff8a3a,1.6,5,()=>{},ms)}
+function bm232Land(e,p,big){const s=big?1.3:1;wk232Erupt(e,p,{col:0xff6a1a,s,mat:bm232Mats().rock,decal:0x1a0e08,snd:'splash',h:2.6,op:.6});burst(gY(p,.4),0xffa040,30,3,3,.7);try{sk146Drops(p,0xff8a3a,10,3,4,{})}catch(_){}bm232Pool(e,p,1.35*s,4200)}
+function bm232Lane(c,an,dm){wk232Lane(c,an,dm,{mat:bm232Mats().rock,mat2:bm232Mats().slag,col:0xff8a3a,n:10,step:1.05,on:()=>bm232Sear(2500)})}
+// the breath: one wedge of flame (the hit is the move's)
+function bm232Jet(c,an){const N=16;for(let k=0;k<N;k++){const d=1.5+k*.55,w=(Math.random()-.5)*.5*(d/8),p=new THREE.Vector3(an.x+Math.sin(an.a+w)*d,0,an.z+Math.cos(an.a+w)*d);burst(gY(p,.8+Math.random()*.6),k%3?0xff8a2a:0xffd27a,2,1.2,.8,.45)}
+  svSnd('hiss',.5,.6)}
+const BM232_TR=(t0,t1,j)=>[t0,t1,j,[0,-.1,.5],[0,-.8,.5],0xffa040,.2];
+var BM232M={
+  intro:WK232_M({dur:3.4,inv:[0,3.4],armor:1,trn:[[0,3.4,1.5]],trk:[[.7,'heat','io'],[1.4,'heat','l',.02],[1.7,'roar','o'],[2.9,'roar','l',.025],[3.4,'cRec','io']],
+    ev:[[.4,c=>{svSnd('hiss',.9,.5);c.S.chgT=.8}],[1.7,c=>{svSnd('roar',1.2,.5);svSnd('heavy',.8,.6);shake(.45);svShock(c.m.position,BM232.col,9,.8);burst(gY(c.m.position,2),0xffa040,80,6,4,1);c.S.chgT=0}]]}),
+  // Hammer Fall
+  combo:WK232_M({wt:10,cd:2.8,r:[0,5.4],a:'f',mel:1,dur:3.0,lock:.45,trn:[[0,.5,4.5],[.98,1.1,4.5],[1.6,1.95,3.2]],
+    trk:[[.48,'rUp','io'],[.62,'rUp','l',.012],[.76,'rCut','s'],[1.0,'rCut','l'],[1.14,'rUp~','io'],[1.28,'rCut~','s'],[1.6,'ohUp','io'],[1.98,'ohUp','l',.018],[2.12,'ohSlam','s'],[2.55,'ohSlam','l'],[3.0,'cRec','io']],
+    rm:[[.66,.78,.6,'o'],[1.18,1.3,.5,'o'],[2.02,2.14,1.0,'o']],
+    hit:[{t:.75,s:{k:'a',r:4.6,h:1.15},f:.3,dm:1.0},{t:1.27,s:{k:'a',r:4.6,h:1.15},f:.3,dm:1.0},
+      {t:2.12,s:{k:'c',r:2.8},f:3.2,dm:1.55,w:.5,kb:3,fx:c=>{const p=c.at(3.2);svShock(p,BM232.col,4,.4);burst(gY(p,.3),0xffa040,40,4,3,.6);svDecal(p,0x1a0e08,2.6,4,.6);shake(.4);svSnd('heavy',1.3,.7);svSnd('bell',.5,.5);try{sk146Crack(p,0xff7a2a,3.4,2.4)}catch(_){}bm232Pool(c.e,p,1.6,3800)}}],
+    tr:[BM232_TR(.66,.84,'wrR'),BM232_TR(1.18,1.36,'wrL'),BM232_TR(2.02,2.18,'wrL'),BM232_TR(2.02,2.18,'wrR')],
+    ev:[[.66,c=>svSnd('swing',1,.6)],[1.18,c=>svSnd('swing',1,.65)],[1.62,c=>svSnd('hiss',.5,.7)],[2.02,c=>svSnd('whoosh',1.1,.6)]],nx:[['charge',.25,10],['back',.3,6]],rec:.35}),
+  // Shoulder Charge
+  charge:WK232_M({wt:8,cd:6.5,r:[4,13],a:'f',armor:1,dur:2.4,lock:.85,trn:[[0,.85,4]],
+    trk:[[.65,'chLow','io'],[.95,'chLow','l',.016],[1.08,'chGo','s'],[1.5,'chGo','l'],[2.4,'cRec','io']],
+    rm:[[1.04,1.46,'tgt','o',-1.6,12]],hit:[{t:1.4,s:{k:'l',w:3.0,l:12.5,b:0},f:0,dm:1.4,w:.8,kb:4}],
+    ev:[[.4,c=>{svSnd('hiss',.7,.6);burst(gY(c.m.position,.3),0x3a3836,14,2,1,.5)}],[1.04,c=>{svSnd('whoosh',1.2,.55);shake(.2)}],[1.48,c=>{svSnd('heavy',1.1,.75);shake(.3);burst(gY(c.m.position,.4),0xffa040,24,3,1.5,.6)}]],
+    tk(c){const M=c.M;if(c.t<1.04||c.t>1.5)return;const p=c.m.position;if(!M.an.lp)M.an.lp=p.clone();if(p.distanceTo(M.an.lp)>1.7){M.an.lp=p.clone();bm232Pool(c.e,p.clone(),1.0,4200);svSnd('heavy',.4,1)}},rec:.4}),
+  // Backhand (from behind or the side)
+  back:WK232_M({wt:(e,L,side)=>side==='b'?14:side==='s'?6:0,cd:5,r:[0,5.8],a:'sb',dur:2.1,lock:.6,trn:[[0,.5,2]],
+    trk:[[.6,'bkUp','io'],[.9,'bkUp','l',.015],[1.08,'bkCut','s'],[1.45,'bkCut','l'],[2.1,'cRec','io']],
+    hit:[{t:1.08,s:{k:'r',r0:1.3,r:5.8},dm:1.2,kb:4,w:.85,fx:c=>{svShock(c.m.position,BM232.col,6,.4);burst(gY(c.m.position,1),0xffa040,30,5,1,.5);svSnd('whoosh',1.2,.6);svSnd('heavy',.7,1)}}],
+    tr:[BM232_TR(.96,1.3,'wrR')],ev:[[.45,c=>svSnd('hiss',.6,.7)]],rec:.4}),
+  // Slag Toss: three gobs aimed ahead of you
+  toss:WK232_M({wt:(e,L)=>L>6?9:4,cd:7,r:[4,30],a:'fs',dur:3.3,trn:[[0,.7,4],[1.4,1.5,4],[2.1,2.2,4]],
+    trk:[[.55,'tsUp','io'],[.75,'tsUp','l',.014],[.9,'toss','s'],[1.25,'tsUp','io'],[1.48,'tsUp','l',.014],[1.62,'toss','s'],[1.96,'tsUp','io'],[2.2,'tsUp','l',.014],[2.34,'toss','s'],[2.8,'toss','l'],[3.3,'cRec','io']],
+    hit:[.92,1.64,2.36].map((t,i)=>({t:t+.62,s:{k:'c',r:1.9},o:c=>{const p=wk232Aim(c,.5+i*.08);return {x:p.x,z:p.z,a:0}},w:.62,dm:1.05,on:()=>bm232Sear(3000),fx:(c,an)=>bm232Land(c.e,new THREE.Vector3(an.x,0,an.z))})),
+    ev:[.92,1.64,2.36].map((t,i)=>[t,c=>{const an=c.M.an['h'+i]||{x:pl.position.x,z:pl.position.z};bm232Gob(c,an);svSnd('whoosh',.8,.9)}]),rec:.4}),
+  // Furnace Breath: a jet sweeping across (five wedges)
+  breath:WK232_M({wt:(e,L)=>L>3&&L<9?9:3,cd:8,r:[2,11],a:'f',armor:1,dur:3.7,ph1only:1,trn:[[0,.9,3.5]],
+    trk:[[.7,'brIn','io'],[1.15,'brIn','l',.018],[1.3,'breath','s'],[3.0,'breath','l',.008],[3.7,'cRec','io']],
+    hit:[-.84,-.42,0,.42,.84].map((ay,i)=>({t:1.45+i*.32,s:{k:'a',r:10,h:.27},f:.6,ay,w:.55,dm:1.0,wc:0xff7a2a,on:()=>bm232Sear(3000),fx:(c,an)=>bm232Jet(c,an)})),
+    ev:[[.5,c=>{svSnd('charge',.8,.5);c.S.chgT=1.2}],[1.3,c=>{svSnd('roar',.8,.7)}],[3.05,c=>{c.S.chgT=0}]],rec:.45}),
+  // Ground Pound
+  pound:WK232_M({wt:(e,L)=>L<5.5?9:2,cd:9,r:[0,6.5],a:'any',armor:1,dur:3.2,trn:[[0,.5,2]],
+    trk:[[.7,'stUp','io'],[1.7,'stUp','l',.02],[1.84,'stomp','s'],[2.6,'stomp','l'],[3.2,'cRec','io']],
+    hit:[{t:1.84,s:{k:'c',r:3.4},dm:1.35,w:1.25,kb:4,fx:c=>{svShock(c.m.position,BM232.col,4.5,.4);burst(gY(c.m.position,.5),0xffa040,60,5,3,.7);svDecal(c.m.position,0x1a0e08,3.6,3,.55);shake(.5);svSnd('heavy',1.4,.6);svSnd('bell',.6,.4);try{sk146Crack(c.m.position.clone(),0xff7a2a,5,2.4)}catch(_){}}}]
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.06,s:{k:'l',w:1.4,l:10.6,b:-1.2},f:0,ay:k*Math.PI/4,nohit:1,w:.75,fx:(c,an)=>bm232Lane(c,an,1.0)})))
+      .concat([0,1,2,3,4,5,6,7].map(k=>({t:2.5,s:{k:'l',w:1.4,l:10.6,b:-1.2},f:0,ay:k*Math.PI/4+Math.PI/8,nohit:1,w:.6,fx:(c,an)=>bm232Lane(c,an,1.0)}))),
+    ev:[[.5,c=>{svSnd('hiss',.7,.6);c.S.chgT=1}],[1.84,c=>{c.S.chgT=0}]],rec:.45}),
+  // ---------------- Phase II ----------------
+  awaken:WK232_M({dur:3.8,inv:[0,3.8],armor:1,trn:[[0,3.5,1.2]],trk:[[.7,'heat','io'],[1.3,'heat','l',.03],[1.6,'blast','o'],[3.2,'roar','l',.03],[3.8,'cRec','io']],
+    hit:[{t:1.62,s:{k:'c',r:7},dm:.55,kb:6,w:1.2,fx:c=>{svShock(c.m.position,BM232.col,11,.85);burst(gY(c.m.position,2),0xffa040,120,7,4,1);svDecal(c.m.position,0x1a0e08,6,5,.55)}}],
+    ev:[[.05,c=>{try{zt116Show(ZT116.Z[4],'Brassmaw · Phase II','Meltdown','The foundry floor heats: its quarters burn one after another','Keep to the cool quarter · mind the water','z4')}catch(_){}svSnd('hiss',1,.4);c.S.chgT=1.2}],
+      [1.6,c=>{c.S.ph=2;c.e.bs.ph=2;c.S.chgT=0;try{flash('rgba(255,130,40,.3)')}catch(_){}svSnd('roar',1.3,.45);shake(.6);try{bm232Floor(c.D,1)}catch(err){console.error('bm floor',err)}}]]}),
+  pound3:WK232_M({wt:9,cd:10,ph:2,r:[0,30],a:'any',armor:1,dur:4.6,trn:[[0,.5,3],[1.5,1.8,3],[2.6,2.9,3]],
+    trk:[[.6,'stUp','io'],[1.0,'stUp','l',.02],[1.12,'stomp','s'],[1.5,'stUp~','io'],[2.1,'stUp~','l',.02],[2.22,'stomp~','s'],[2.6,'stUp','io'],[3.2,'stUp','l',.02],[3.32,'stomp','s'],[4.0,'stomp','l'],[4.6,'cRec','io']],
+    hit:[1.12,2.22,3.32].map((t,i)=>({t,s:{k:'c',r:3.2},dm:1.2,w:.8,kb:3,fx:c=>{const p=c.m.position.clone();svShock(p,BM232.col,4,.4);burst(gY(p,.5),0xffa040,40,5,3,.6);shake(.4);svSnd('heavy',1.3,.6+i*.08);try{sk146Crack(p,0xff7a2a,4,2)}catch(_){}
+      try{sk146RingWave(c.e,p,2.4,13,1.5-i*.15,1.1,1.0,BM232.col,{on:()=>bm232Sear(2500)})}catch(_){}}})),
+    ev:[[.4,c=>svSnd('hiss',.7,.6)]],rec:.5}),
+  rain:WK232_M({wt:8,cd:10,ph:2,r:[0,30],a:'any',dur:3.6,trn:[[0,.6,3]],
+    trk:[[.5,'tsUp','io'],[.8,'toss','s'],[1.1,'tsUp~','io'],[1.4,'toss~','s'],[1.7,'tsUp','io'],[2.0,'toss','s'],[2.9,'toss','l'],[3.6,'cRec','io']],
+    hit:[0,1,2,3,4,5].map(i=>({t:1.6+i*.3,s:{k:'c',r:1.9},o:c=>{if(i%2==0){const p=wk232Aim(c,.4+i*.06);return {x:p.x,z:p.z,a:0}}const a=c.rnd()*6.283,r=2+c.rnd()*4,q=wk232Clamp(c.D,new THREE.Vector3(pl.position.x+Math.cos(a)*r,0,pl.position.z+Math.sin(a)*r),.5);return {x:q.x,z:q.z,a:0}},w:.8,dm:1.0,on:()=>bm232Sear(3000),
+      pre:(c,an)=>{},fx:(c,an)=>bm232Land(c.e,new THREE.Vector3(an.x,0,an.z))})),
+    ev:[.8,1.4,2.0].map(t=>[t,c=>{for(let k=0;k<2;k++){const a=c.wp('wrR',0,-.4,0),b=a.clone();b.y+=14;b.x+=(Math.random()-.5)*4;b.z+=(Math.random()-.5)*4;const ms=new THREE.Mesh(svG('bm_gob',()=>svLump(.34,1,.3,141)),bm232Mats().slag);ms.userData.lpsSkip=1;svShot(a,b,.5,0xff8a3a,1.4,2,()=>{},ms)}svSnd('whoosh',.8,.8)}]),rec:.45}),
+  breath2:WK232_M({wt:(e,L)=>L>3&&L<10?10:3,cd:9,ph:2,r:[2,12],a:'f',armor:1,dur:5.2,trn:[[0,.9,3.5]],
+    trk:[[.7,'brIn','io'],[1.15,'brIn','l',.018],[1.3,'breath','s'],[4.5,'breath','l',.008],[5.2,'cRec','io']],
+    hit:[-.84,-.42,0,.42,.84,.84,.42,0,-.42,-.84].map((ay,i)=>({t:1.45+i*.3,s:{k:'a',r:10.5,h:.27},f:.6,ay,w:i==5?.3:.5,dm:1.0,wc:0xff7a2a,on:()=>bm232Sear(3000),fx:(c,an)=>bm232Jet(c,an)})),
+    ev:[[.5,c=>{svSnd('charge',.8,.5);c.S.chgT=1.2}],[1.3,c=>svSnd('roar',.8,.7)],[4.5,c=>{c.S.chgT=0}]],rec:.5}),
+  // Meltdown: his Heat is full (4042 casts this through the record's phase hook). Stand in water.
+  meltdown:WK232_M({dur:7.0,armor:1,inv:[0,5.2],trn:[[0,.5,1]],
+    trk:[[.6,'heat','io'],[4.3,'heat','l',.05],[4.5,'blast','s'],[5.4,'blast','l',.02],[6.2,'stag','io'],[7.0,'cRec','io']],
+    hit:[{t:4.5,s:{k:'c',r:99},nohit:1,w:0,show:false,fx:c=>{try{bm232Melt(c.D,c.e)}catch(err){console.error('bm melt',err)}}}],
+    go(c){c.S.chgT=1.6;c.S.still=1;try{bm232MeltWarn(c.D,c.e)}catch(_){}},
+    ev:[[.1,c=>{svSnd('charge',1,.4);svSnd('hiss',1,.4)}],[2.2,c=>svSnd('charge',1,.6)],[3.6,c=>svSnd('charge',1,.9)]],
+    tk(c,dt){if(c.t<4.5){c.S.heat=1;if(Math.random()<dt*30){const a=Math.random()*6.283;burst(c.wp('spine',Math.sin(a)*1.2,.3+Math.random(),Math.cos(a)*1.2),0xffd27a,1,1.5,1.5,.5)}}},
+    end(c){c.S.chgT=0;c.S.still=0;try{bm232MeltEnd(c.D)}catch(_){}},rec:.6}),
+  // quenched: steam, cracked plates, a long stagger
+  broken:WK232_M({dur:5.0,trk:[[.3,'stag','o'],[4.4,'stag','l',.03],[5.0,'cRec','io']],
+    go(c){c.S.stg=5.0;svSnd('stag',1.2,.7);svSnd('hiss',1.3,.5);popT(c.m.position,'QUENCHED','#bfe9ff',true);burst(gY(c.m.position,2),0xdfe9f0,90,5,5,1.4);svShock(c.m.position,0xbfe9ff,6,.5)},
+    tk(c,dt){c.S.stg=Math.max(0,5.0-c.t);if(Math.random()<dt*14){const p=svWP(c.e,'chest',(Math.random()-.5)*2,Math.random(),(Math.random()-.5)*1.6);burst(p,0xdfe9f0,1,.4,1.6,1)}},end(c){c.S.stg=0}})};
+// ================= v232 Brassmaw — the Sunken Foundry (arena), Heat, the quench pools, the hot floor, the record =================
+// The third Warden's arena is the Dirge's unused Wave Trial instance (insG(4,4)), dressed as a foundry sunk in the earth: a floor
+// of black iron plates with fire in the seams round a great grate, a ring of furnace stacks with glowing mouths, gears, chains,
+// slag heaps, anvils and moulds, a crucible on a gantry — and two stone quench pools sunk in the floor, east and west.
+//  * Heat (e.sv.heat 0..1, on the boss bar): climbs all the time (a full bar in ~75 s; ~48 s in Phase II), not while he is staggered.
+//  * Quench pools (BM.S.pools): a pool with water in it and Brassmaw within 1.9 of its middle (Heat ≥ 30%): steam, Heat to nothing,
+//    he is wounded 4% and 'broken' (QUENCHED, a long stagger); the pool is dry for 45 s.
+//  * Meltdown (Heat full → the 'meltdown' move): 4.5 s of warning, then a blast across the whole foundry (2.4). Standing within 2.0
+//    of a pool with water in it spares you; that pool boils dry too. He heals 5%, Heat starts again at 30%.
+//  * The hot floor (Phase II; BM.S.fl): the four quarters heat in turn: 2 s glowing, 3.5 s burning (damage, Seared), then cool.
+var BM232D=wk232Reg({key:'kiln',zi:4,name:'Brassmaw',title:'the Kiln Colossus',icon:'⚒',lv:54,place:'The Sunken Foundry',base:'akorror',hpK:1.28,dmK:1.16,
+  card:['third Warden of the Balance','The gate drops behind you'],restTxt:'the great grate',riftCol:0xffc890,
+  B:{name:'Brassmaw',col:BM232.col,body:2.0,ph2:.55,poise:.1,headJ:'head',turnA:2.8,edge:2.0,
+    ai:{pref:3.3,walk:2.0,run:3.4,turn:2.2,rest:[.8,1.4],ph2r:.68,strafe:.3,near:2.2},
+    build:bm232Build,loco:bm232Loco,post:bm232Post,P:BM232P,M:BM232M,
+    stag:[[.25,'stag','o'],[2.2,'stag','l',.025],[2.75,'cRec','io']],stagT:2.75,die:[[.5,'stag','o'],[1.6,'dead','i'],[2.1,'dead','l']]},
+  done:()=>FN232.n>2,
+  S:{pools:[],fl:0,q:0,qT:0,qS:0,zT:0},
+  build(D,root,LS){const L=D.L,S=D.S,rn=svRng(2342),y=(x,z)=>GH(x,z),MB=bm232Mats();
+    const M={iron:new THREE.MeshStandardMaterial({color:0x26282d,roughness:.6,metalness:.55,flatShading:true}),iron2:new THREE.MeshStandardMaterial({color:0x383b42,roughness:.65,metalness:.5,flatShading:true}),soot:new THREE.MeshStandardMaterial({color:0x121214,roughness:.95,flatShading:true}),
+      brass:new THREE.MeshStandardMaterial({color:0xa8822e,roughness:.45,metalness:.7,flatShading:true}),brick:new THREE.MeshStandardMaterial({color:0x4a2a20,roughness:.95,flatShading:true}),stone:new THREE.MeshStandardMaterial({color:0x4a4a4c,roughness:.9,flatShading:true}),
+      glow:new THREE.MeshBasicMaterial({color:0xff8a2a}),water:new THREE.MeshStandardMaterial({color:0x1c4a5a,emissive:0x2a8ab0,emissiveIntensity:.55,roughness:.1,metalness:.2,transparent:true,opacity:.9,polygonOffset:true,polygonOffsetFactor:-3})};LS.M=M;M.water.userData.noFade135=1;
+    // the floor: iron plates, rivets, fire in the seams, the grate in the middle
+    LS.floorM=wk232Floor(D,root,{base:'#1b1c20',seed:2343,spk:[[44,46,52],[26,26,30]],spkN:260,spkR:9,spkA:.4,rough:.55,metal:.5,em:0xff6a1a,emI:.5,
+      paint(c,r,Sz){const N=11,w=Sz/N;c.strokeStyle='rgba(0,0,0,.8)';c.lineWidth=3;for(let i=0;i<=N;i++){c.beginPath();c.moveTo(i*w,0);c.lineTo(i*w,Sz);c.stroke();c.beginPath();c.moveTo(0,i*w);c.lineTo(Sz,i*w);c.stroke()}
+        c.fillStyle='rgba(150,120,60,.8)';for(let i=0;i<N;i++)for(let j=0;j<N;j++)[[.12,.12],[.88,.12],[.12,.88],[.88,.88]].forEach(([u,v])=>{c.beginPath();c.arc((i+u)*w,(j+v)*w,2.2,0,6.283);c.fill()});
+        c.strokeStyle='rgba(120,96,48,.9)';c.lineWidth=5;c.beginPath();c.arc(Sz/2,Sz/2,Sz*.115,0,6.283);c.stroke();c.fillStyle='rgba(8,8,10,.9)';c.beginPath();c.arc(Sz/2,Sz/2,Sz*.105,0,6.283);c.fill();
+        c.strokeStyle='rgba(70,72,80,1)';c.lineWidth=4;for(let k=-5;k<=5;k++){c.beginPath();c.moveTo(Sz/2+k*9,Sz/2-Math.sqrt(Math.max(0,(Sz*.105)**2-(k*9)**2)));c.lineTo(Sz/2+k*9,Sz/2+Math.sqrt(Math.max(0,(Sz*.105)**2-(k*9)**2)));c.stroke()}},
+      glow(c,r,Sz){const N=11,w=Sz/N;c.strokeStyle='rgba(255,120,30,.55)';c.lineWidth=1.6;for(let i=0;i<=N;i++){c.beginPath();c.moveTo(i*w,0);c.lineTo(i*w,Sz);c.stroke();c.beginPath();c.moveTo(0,i*w);c.lineTo(Sz,i*w);c.stroke()}
+        const gr=c.createRadialGradient(Sz/2,Sz/2,0,Sz/2,Sz/2,Sz*.105);gr.addColorStop(0,'rgba(255,150,50,.9)');gr.addColorStop(1,'rgba(255,90,20,.25)');c.fillStyle=gr;c.beginPath();c.arc(Sz/2,Sz/2,Sz*.105,0,6.283);c.fill()}});
+    // furnace stacks round the wall: brick drums with a glowing mouth, iron bands, a chimney
+    wk232Around(D,root,12,14.4,15.4,(i,a,x,z,yy,r)=>{const g=new THREE.Group(),s=1+r()*.3;const dr=new THREE.Mesh(svG('bm_fd',()=>svLoft([[0,1.7,1.7],[2.4,1.6,1.6],[3.6,1.1,1.1],[8.5,.7,.7]],10)),i%2?M.brick:M.soot);dr.scale.set(s,1,s);dr.castShadow=true;g.add(dr);
+      [.9,2.2].forEach(h=>{const b=new THREE.Mesh(svG('bm_fb',()=>svLoft([[-.1,1.72,1.72],[.1,1.72,1.72]],10,{cap:false})),M.iron);b.position.y=h;b.scale.set(s,1,s);g.add(b)});
+      const mo=new THREE.Mesh(svG('bm_fm',()=>{const q=new THREE.CircleGeometry(.75,10,0,Math.PI);q.scale(1,1.5,1);return q}),M.glow);mo.position.set(0,.35,1.62*s);g.add(mo);const gl=kqSpr(0xff7a2a,2.6);gl.position.set(0,.9,1.8*s);g.add(gl);
+      g.position.set(x,yy-.1,z);g.rotation.y=a+Math.PI;return g},2344,.2);
+    // gears, slag heaps, anvils, moulds between them
+    wk232Around(D,root,20,12.6,13.8,(i,a,x,z,yy,r)=>{const k=i%4,g=new THREE.Group();
+      if(k==0){const gr=new THREE.Mesh(svG('bm_gr',()=>{const s=new THREE.Shape();for(let q=0;q<24;q++){const aa=q/24*6.283,rr=q%2?1:.82;q?s.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr):s.moveTo(rr,0)}const h=new THREE.Path();h.absarc(0,0,.3,0,6.283,true);s.holes.push(h);return new THREE.ExtrudeGeometry(s,{depth:.22,bevelEnabled:false})}),r()<.5?M.brass:M.iron2);gr.scale.setScalar(1.3+r());gr.rotation.set(-.3-r()*.5,r()*6,0);gr.position.y=.5;g.add(gr)}
+      else if(k==1){for(let q=0;q<4;q++){const o=new THREE.Mesh(wk232Lump(20+q,1,1,.4),q%2?MB.rock:M.soot);o.position.set((r()-.5)*1.2,.2+q*.12,(r()-.5)*1.2);o.scale.set(.8-q*.12,.4,.7-q*.1);g.add(o)}const e2=new THREE.Mesh(wk232Lump(24,1,1,.4),MB.slag);e2.position.y=.5;e2.scale.set(.3,.16,.28);g.add(e2)}
+      else if(k==2){const b=new THREE.Mesh(svG('bm_an',()=>svLoft([[0,.5,.34],[.3,.3,.22],[.6,.26,.2],[.72,.62,.3],[.95,.66,.3]],4,{rot:.785})),M.iron);b.castShadow=true;g.add(b);const st=new THREE.Mesh(svG('bm_as',()=>new THREE.CylinderGeometry(.42,.48,.5,7).toNonIndexed()),M.stone);st.position.y=-.05;g.add(st)}
+      else{for(let q=0;q<3;q++){const o=new THREE.Mesh(svG('bm_ig',()=>new THREE.BoxGeometry(.7,.16,.3).toNonIndexed()),q==1?MB.slag:M.brass);o.position.set(0,.1+q*.17,(q%2)*.1);o.rotation.y=q*.5;g.add(o)}}
+      g.position.set(x,yy,z);g.rotation.y=r()*6;return g},2345,.22);
+    // chains hanging from the dark, and the crucible on its gantry at the back
+    for(let i=0;i<10;i++){const a=rn()*6.283,r=11.5+rn()*2.5,x=L.cx+Math.sin(a)*r,z=L.cz+Math.cos(a)*r,o=new THREE.Mesh(svG('bm_cn',()=>new THREE.CylinderGeometry(.05,.05,1,4).toNonIndexed()),M.iron2),l=5+rn()*4;o.position.set(x,y(x,z)+10-l/2,z);o.scale.set(1,l,1);root.add(o);
+      const hk=new THREE.Mesh(svG('bm_hk',()=>new THREE.TorusGeometry(.22,.05,4,8,4.2)),M.iron);hk.position.set(x,y(x,z)+10-l-.2,z);root.add(hk)}
+    {const x=L.cx,z=L.cz-12.2,yy=y(x,z),g=new THREE.Group();g.position.set(x,yy,z);[-2.2,2.2].forEach(ox=>{const p=new THREE.Mesh(svG('bm_gp',()=>new THREE.BoxGeometry(.4,6,.4).toNonIndexed()),M.iron);p.position.set(ox,3,0);g.add(p)});
+      const bm=new THREE.Mesh(svG('bm_gb',()=>new THREE.BoxGeometry(5,.4,.5).toNonIndexed()),M.iron2);bm.position.y=6;g.add(bm);const cr=new THREE.Mesh(svG('bm_cr',()=>svLoft([[0,.6,.6],[.5,1.1,1.1],[1.6,1.2,1.2]],10,{cap:false})),M.soot);cr.position.y=3.4;cr.rotation.x=.25;g.add(cr);
+      const mt=new THREE.Mesh(svG('bm_cm',()=>new THREE.CircleGeometry(1.1,10).rotateX(-Math.PI/2)),M.glow);mt.position.set(0,4.85,.35);mt.rotation.x=.25;g.add(mt);const gl=kqSpr(0xff8a2a,5);gl.position.y=5.2;g.add(gl);root.add(g);LS.cruc=gl}
+    wk232Light(D,LS,0xff8a3a,1.5,24,L.cx,L.y+5,L.cz);wk232Light(D,LS,0xff6a1a,1.2,14,L.cx,L.y+4,L.cz-10);
+    // the two quench pools
+    S.pools=[-1,1].map(s=>{const x=L.cx+s*6.6,z=L.cz+.4,yy=y(x,z),g=new THREE.Group();g.position.set(x,yy,z);
+      for(let k=0;k<12;k++){const a=k/12*6.283,o=new THREE.Mesh(wk232Lump(30+k%4,1,1,.25),k%3?M.stone:M.iron2);o.position.set(Math.sin(a)*2.2,.1,Math.cos(a)*2.2);o.scale.set(.46,.26,.36);o.rotation.y=a;g.add(o)}
+      const bed=new THREE.Mesh(svG('bm_pb',()=>new THREE.CircleGeometry(2.05,24).rotateX(-Math.PI/2)),M.soot);bed.position.y=.05;g.add(bed);
+      const wm=M.water.clone();wm.userData.noFade135=1;const w=new THREE.Mesh(svG('bm_pw',()=>new THREE.CircleGeometry(2.0,24).rotateX(-Math.PI/2)),wm);w.position.y=.1;w.userData.noFade135=1;g.add(w);const gl=kqSpr(0x6ad0ff,2.6);gl.position.y=.6;g.add(gl);
+      const ring=wk232Disc(root,1.9,2.15,0x8ae0ff,yy+.14);ring.position.set(x,yy+.14,z);root.add(g);return {x,z,y:yy,g,w,gl,ring,wet:1,t:0}});
+    // the hot floor: four quarter overlays
+    LS.q=[0,1,2,3].map(k=>{const g=new THREE.CircleGeometry(13.2,20,k*Math.PI/2+Math.PI/4,Math.PI/2);g.rotateX(-Math.PI/2);const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,polygonOffset:true,polygonOffsetFactor:-4}));
+      m.material.userData.noFade135=1;m.userData.lpsSkip=1;m.position.set(L.cx,L.y+.11,L.cz);m.visible=false;root.add(m);return m});
+    D.sync(D)},
+  sync(D){},
+  start(D,e){e.sv.heat=0},
+  reset(D,won){const S=D.S;bm232Floor(D,0);S.pools.forEach(p=>{p.wet=1;p.t=0});if(D.e&&D.e.sv)D.e.sv.heat=0;bm232MeltEnd(D)},
+  hud(D,e){return ' · Heat '+Math.round(Math.max(0,Math.min(1,e.sv.heat||0))*100)+'%'},
+  phase(D,e){return (e.sv.heat||0)>=1?'meltdown':null},
+  won(D,e){setTimeout(()=>{try{fn232WardenDown(2)}catch(err){console.error('fn232 warden',err)}},1900)},
+  tick(D,dt,now,t){const LS=D.LS,S=D.S,L=D.L,e=D.e,h=e&&e.sv?(e.sv.heat||0):0;LS.floorM.emissiveIntensity=.35+.1*Math.sin(t*1.1)+h*.35+(S.fl?.2:0);LS.cruc.scale.setScalar(5+.5*Math.sin(t*3));
+    S.pools.forEach((p,i)=>{if(!p.wet){p.t-=dt;if(p.t<=0&&!(D.A&&D.A.f&&S.melt)){p.wet=1;burst(new THREE.Vector3(p.x,p.y+.3,p.z),0x8ae0ff,24,2,2,.7);if(D.A&&D.A.f)say('💧 A quench pool has filled again.')}}
+      p.w.visible=!!p.wet;p.gl.visible=!!p.wet;p.w.material.emissiveIntensity=.5+.15*Math.sin(t*2+i);p.ring.visible=!!p.wet&&!!(D.A&&D.A.f);if(p.ring.visible)p.ring.material.opacity=(S.melt?.75:.3)+.2*Math.sin(t*(S.melt?10:3)+i);
+      if(Math.random()<dt*(p.wet?2:5))burst(new THREE.Vector3(p.x+(Math.random()-.5)*2.5,p.y+.3,p.z+(Math.random()-.5)*2.5),p.wet?0xbfe9ff:0x8a8a8a,1,.2,1.2,1.2)});
+    // quarters: glow while warming, bright while burning
+    LS.q.forEach((m,k)=>{const st=S.fl&&S.q===k?S.qS:0,tg=st==1?.16+.1*Math.sin(t*9):st==2?.5+.1*Math.sin(t*14):0;m.material.opacity+=(tg-m.material.opacity)*Math.min(1,dt*5);m.visible=m.material.opacity>.01;
+      if(st==2&&Math.random()<dt*20){const a=k*Math.PI/2+Math.PI/4+Math.random()*Math.PI/2,r=Math.random()*12.5;burst(new THREE.Vector3(L.cx+Math.cos(a)*r,L.y+.2,L.cz-Math.sin(a)*r),0xff8a2a,1,.4,2,.6)}})},
+  fight(D,e,dt,now){const S=D.S,A=D.A,V=e.sv,mid=V.mv&&V.mv.id,busy=mid==='meltdown'||mid==='broken'||mid==='intro'||mid==='awaken'||mid==='stagger';
+    if(!busy&&!(V.stg>0))V.heat=Math.min(1,(V.heat||0)+dt/(V.ph>1?48:75));
+    // quench: he walked (or ran) into water
+    if(!busy&&(V.heat||0)>=.3)for(const p of S.pools){if(!p.wet||Math.hypot(e.m.position.x-p.x,e.m.position.z-p.z)>1.9)continue;p.wet=0;p.t=45;V.heat=0;const q=new THREE.Vector3(p.x,0,p.z);
+      burst(gY(q,.6),0xdfe9f0,120,6,6,1.6);svShock(q,0xbfe9ff,6,.5);shake(.5);svSnd('hiss',1.4,.4);svSnd('splash',1.2,.7);try{sk146Wall(q,0xdfe9f0,3,5,1.4)}catch(_){}svEndMove(e,true);wk232Wound(e,.04,'#bfe9ff');svCast(e,'broken');return}
+    // the hot floor (Phase II)
+    if(S.fl){S.qT-=dt;if(S.qT<=0){if(S.qS==0){S.qS=1;S.qT=2}else if(S.qS==1){S.qS=2;S.qT=3.5;svSnd('hiss',.6,.5)}else{S.qS=1;S.qT=2;S.q=(S.q+1+((Math.random()*2)|0))%4}}
+      if(S.qS==2&&hero.hp>0){const dx=pl.position.x-A.cx,dz=pl.position.z-A.cz,ang=Math.atan2(-dz,dx),k=Math.floor((((ang-Math.PI/4)%(Math.PI*2))+Math.PI*2)%(Math.PI*2)/(Math.PI/2));S.zT-=dt;
+        const inPool=S.pools.some(p=>p.wet&&Math.hypot(pl.position.x-p.x,pl.position.z-p.z)<2);
+        if(k===S.q&&!inPool&&S.zT<=0){S.zT=.6;if(wk232Zap(e,.22,'m')){bm232Sear(1500);burst(gY(pl.position,.3),0xff8a2a,8,.8,1.4,.5)}}}}}});
+function bm232Floor(D,on){const S=D.S;S.fl=on?1:0;S.q=(Math.random()*4)|0;S.qS=0;S.qT=1.5;if(D.LS&&!on)D.LS.q.forEach(m=>{m.material.opacity=0;m.visible=false})}
+function bm232MeltWarn(D,e){D.S.melt=1;const wet=D.S.pools.some(p=>p.wet);say('⚒ Brassmaw’s core is going to burst! '+(wet?'<b>Get into a quench pool!</b>':'No pool has water left!'));try{banner('⚠ MELTDOWN',wet?'Stand in a quench pool that still has water':'No water is left: brace','')}catch(_){}}
+function bm232MeltEnd(D){D.S.melt=0}
+function bm232Melt(D,e){const S=D.S,A=D.A,P=pl.position,c=new THREE.Vector3(A.cx,0,A.cz),bp=e.m.position.clone();let pool=null;S.pools.forEach(p=>{if(p.wet&&Math.hypot(P.x-p.x,P.z-p.z)<2.0)pool=p});
+  svShock(bp,0xffd27a,16,1);svShock(bp,BM232.col,12,.7);shake(.8);svSnd('heavy',1.6,.4);svSnd('roar',1.2,.5);try{flash('rgba(255,170,60,.5)')}catch(_){}try{sk146Flash(gY(bp,3),0xffb050,6,30,400)}catch(_){}
+  for(let i=0;i<50;i++){const a=Math.random()*6.283,r=Math.random()*12.5;burst(gY(new THREE.Vector3(A.cx+Math.cos(a)*r,0,A.cz+Math.sin(a)*r),.3),0xff8a2a,3,2,4,.8)}
+  if(pool){pool.wet=0;pool.t=45;const q=new THREE.Vector3(pool.x,0,pool.z);burst(gY(q,.6),0xdfe9f0,100,5,6,1.5);svSnd('hiss',1.3,.5);dn(P,'Safe!','#9ae8ff',-20,1400)}
+  else if(hero.hp>0){if(wk232Zap(e,2.4,'m'))bm232Sear(5000)}
+  e.sv.heat=.3;wk232Heal(e,.05,0xffa040)}
