@@ -113,10 +113,10 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     try{animHero(now,false)}catch(_){}
     if(first){
       // the hero lifts the essence between his hands, then lets it go to the fountain
-      ev('raise',.15,()=>kqsPose('raise',3300));ev('cast',TT.a2+.05,()=>kqsPose('cast',1500));ev('s0',.3,()=>sfx('siphon'));
+      ev('raise',.15,()=>kqsPose('raise',3300));ev('cast',TT.a2+.05,()=>kqsPose('cast',1500));
       const grow=Sm(K(t,.5,2.6))*(1-Sm(K(t,TT.a2+.2,TT.a2+1.5))),hp=g(0,1.72+.1*Math.sin(t*2.2),FN229.mark[1]-.5);S.orb.visible=grow>.01;S.orb.position.copy(hp);S.orb.scale.setScalar(Math.max(.01,grow));S.orb.rotation.y=t*1.3;
-      ev('stream',TT.a2+.2,()=>{se208FxRun(se208Stream,[hp.x,hp.y,hp.z,T.cx,y0+2.95,T.cy,S.col,1.7,1]);sfx('pour')});
-      ev('flare',TT.a2+1.95,()=>{if(typeof ftn208Flare=='function')ftn208Flare(S.col);sfx('essence')});
+      ev('stream',TT.a2+.2,()=>{se208FxRun(se208Stream,[hp.x,hp.y,hp.z,T.cx,y0+2.95,T.cy,S.col,1.7,1])});
+      ev('flare',TT.a2+1.95,()=>{if(typeof ftn208Flare=='function')ftn208Flare(S.col)});
       if(n=='a1'){const q=Sm(k);p=g(sg*(5.7-.8*q),1.5,4.3-.3*q);l=g(sg*.5,1.22,2.9-.2*q);fov=40-3*q}
       else{const q1=Io(K(u,0,2.6)),q2=Sm(K(u,2.2,4.4));p=g(sg*(1.5-1.2*q1),2.0+3.4*q1-1.3*q2,5.6-2.0*q1-1.3*q2);l=g(0,2.9-2.3*q2,0+.9*q2);fov=50-18*q2}
       fn229LightTown(S)}
@@ -125,7 +125,7 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
       F.root.visible=true;if(F.root.parent!==scene)scene.add(F.root);st.robe=1;st.eye=1;st.vein=0;st.thread=0;st.spasm=0;fn229Shape(F,1);fn229LightTown(S);
       const E=S.E,M=S.M,top=new V(E.x,y0+12.2,E.z+2.2),tE=TT.f1+.9,rise=Oc(K(t,tE+.35,TT.f2-.2));let pos=new V(),yaw=0,pit=0;st.lit=1;
       // the burst
-      ev('burst',tE,()=>{try{burst(gY(E,.4),0x2a2430,90,7,9,1.3);burst(gY(E,.6),0xc060ff,50,5,8,1);ring(E,0xb060ff,6,700);kqFlash(gY(E,1.5),0xd8b0ff,7,380);if(typeof svShock=='function')svShock(E,0x9a50e0,9,.8)}catch(_){}try{sfx('rift')}catch(_){}});
+      ev('burst',tE,()=>{try{burst(gY(E,.4),0x2a2430,90,7,9,1.3);burst(gY(E,.6),0xc060ff,50,5,8,1);ring(E,0xb060ff,6,700);kqFlash(gY(E,1.5),0xd8b0ff,7,380);if(typeof svShock=='function')svShock(E,0x9a50e0,9,.8)}catch(_){}});
       const eu=t-tE;S.holeG.visible=eu>=0;S.erR.forEach(q=>{const d=q.userData,v=eu;if(v<0){q.visible=false;return}const y=d.p0.y+d.v.y*v-11*v*v;q.visible=y>y0-.2||v<.2;q.position.set(d.p0.x+d.v.x*v,Math.max(y0+.05,y),d.p0.z+d.v.z*v);if(y>y0)q.rotation.set(d.w.x*v,d.w.y*v,d.w.z*v)});
       S.erS.material.uniforms.op.value=.75*Sm(K(eu,0,.4))*(1-Sm(K(eu,3,7)));S.erP.material.uniforms.op.value=.9*Sm(K(eu,0,.3))*(1-Sm(K(eu,1.2,3)));
       if(t<TT.f2){pos.set(E.x,y0-3+rise*(top.y-y0+3),E.z+rise*rise*2.2);yaw=0;pit=-.25*(1-rise);wing.open=Sm(K(rise,.12,.5));wing.flap=rise<.75?-.6+1.5*rise:Math.sin((t-TT.f1)*5)*.5;P=mix(PO.coil,PO.fly,Sm(K(rise,.05,.4)));F.root.visible=eu>.3}
@@ -157,10 +157,11 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     L.hemiS.value.setRGB(.028,.032,.055);L.hemiG.value.setRGB(.045,.05,.085);L.keyC.value.setRGB(0,0,0);L.rimC.value.setRGB(.15,.14,.26);L.rimP.value=3;
     const at=S.at,A=(x,y,z)=>dw(at.x+x,at.y+y,at.z+z);
     // --- the figure's state over the whole den sequence ---
-    const k1=Sm(K(t,TT.d1+2.0,TT.d2))*.74,k2=Sm(K(t,TT.d2+.2,TT.d2+2.6))*.26,kk=k1+k2;st.robe=K(t,TT.d3+.5,TT.d3+3.9);st.thread=Math.sin(Sm(K(t,TT.d3+3.4,TT.d3+5.2))*Math.PI);
+    // v231: the creature only draws in during d1 (to .6); the man's body takes over on the cut to d2 (.64 →), behind the black dip, never in a shot
+    const kk=t<TT.d2?Sm(K(t,TT.d1+2.0,TT.d2))*.6:.64+.36*Sm(K(t,TT.d2+.2,TT.d2+2.6));st.robe=K(t,TT.d3+.5,TT.d3+3.9);st.thread=Math.sin(Sm(K(t,TT.d3+3.4,TT.d3+5.2))*Math.PI);
     st.vein=1.5*Sm(K(t,TT.c3+.6,TT.c3+2.4))*(1-.6*Sm(K(t,TT.d1+3.6,TT.d2))-.4*Sm(K(t,TT.d2,TT.d2+2.2)));st.eye=Sm(K(t,TT.c1+1.3,TT.c1+1.6))*(1+.6*Sm(K(t,TT.c3+.9,TT.c3+1.6))*(1-Sm(K(t,TT.d2,TT.d2+2))));
     st.wing=Oc(K(t,TT.e2+.55,TT.e2+1.3));st.lit=t<TT.c1?.16:Lp(.05,1,Sm(K(t,TT.c1+1.9,TT.c1+3.9)));st.flut=t>TT.e3?1:.12+.5*Sm(K(t,TT.e1+1.8,TT.e1+2.4));
-    const tw=(a)=>(ic151H(Math.floor(t*17)+a)-.5),cv=Sm(K(t,TT.d1+1.6,TT.d1+2.4))*(1-Sm(K(t,TT.d2+1.6,TT.d2+2.6)));let rootY=0,rootYaw=0;st.spasm=cv;fn229Shape(F,kk);const isMan=fn229Act(F)===F.man,CL=isMan?PO.clutchM:PO.clutch;
+    const tw=(a)=>(fn229Nz(t*1.15+a*3.71,a*1.93,.5)-.5)*.9,cv=Sm(K(t,TT.d1+1.6,TT.d1+2.4))*(1-Sm(K(t,TT.d2+1.6,TT.d2+2.6)));let rootY=0,rootYaw=0;st.spasm=cv;fn229Shape(F,kk);const isMan=fn229Act(F)===F.man,CL=isMan?PO.clutchM:PO.clutch;
     if(t<TT.c2){const q=Sm(K(t,TT.c1+2.0,TT.c1+3.6));P=mix(PO.lurk,PO.crouch,q);const lift=Math.sin(K(t,TT.c1+2.0,TT.c1+3.3)*Math.PI);P.hR[1]+=.4*lift;P.hd[1]=.1*Math.sin(t*.7)}
     else if(t<TT.c3){const q=Io(K(u,.3,2.6)),bob=Math.sin(Math.max(0,u-2.6)*4.2)*.03;P=mix(PO.crouch,PO.drink,q);P.pos[1]+=bob;P.jaw=Lp(.25,.55,q)+.2*Math.sin(Math.max(0,u-2.6)*8.4)*q}
     else if(t<TT.d1){const q=Io(K(u,.4,1.9));P=mix(PO.drink,PO.bliss,q);const br=Math.sin(u*2.3)*.03;P.ch[0]+=br;P.nk[2]=.12*Math.sin(u*1.3)*q;P.hd[2]=.1*Math.sin(u*1.7+1)*q}
@@ -192,14 +193,14 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     // the bead of essence falling down the throat and into the pool
     {const yT=D.shaftY[1]-2,by=n=='b1'?Lp(yT-9,D.shaftY[0]-6,Math.pow(k,1.6)):n=='b2'?Lp(D.shaftY[0]-6,-.1,Math.pow(K(u,0,2.4),1.4)):-5;S.bead.visible=(n=='b1'||n=='b2')&&by>0;S.bead.position.set(0,by,0);
       if(S.bead.visible)fn229Lt(1,O.x,O.y+by,O.z,1.5,1.25,2.0,n=='b1'?22:50)}
-    ev('land',TT.b2+2.4,()=>{sfx('essence')});ev('lance',TT.e1+1.45,()=>{try{sfx('zap')}catch(_){}});ev('boom',tB,()=>{try{sfx('rift')}catch(_){}});
+    // (v231: no stock game sounds in the film; fn229Score voices the landing, the lance and the roof itself)
     // --- cameras ---
     if(n=='b1'){const y=Lp(D.shaftY[1]-5,D.shaftY[0]+2.5,Math.pow(k,1.6)),a=t*.55;p=dw(Math.sin(a)*.95,y,Math.cos(a)*.95);l=dw(0,y-10,0);fov=62;roll=a+1.2;shake=.03}
     else if(n=='b2'){const q=Io(K(u,0,4.6));p=dw(Lp(3.6,11.5,q),Lp(31.5,7.5,q),Lp(6.4,25,q));l=dw(0,Lp(22,4.2,Sm(K(u,0,3.6))),Lp(0,-5,q));fov=56-4*q}
     else if(n=='c1'){const q=Sm(k);p=dw(4.7-.8*q,.6+.12*q,7.7-.6*q);l=dw(-.5,1.9+1.5*q,-8.5);fov=42}
     else if(n=='c2'){const q=Sm(k);p=dw(13.6-1.4*q,2.9-.7*q,-3.2-.6*q);l=dw(0,2.5-.5*q,-6.8);fov=38}
     else if(n=='c3'){const q=Sm(K(u,.3,2.4)),cb=F.J.chest.getWorldPosition(new V());p=cb.clone().add(new V(3.2-.6*q,1.2+.9*q,5.2-.6*q));l=hd.clone().add(new V(0,.1,.2));fov=34;shake=.02*st.vein}
-    else if(n=='d1'){const q=Sm(k),a=.75-1.35*q,r=Lp(6.7,3.5,k1/.74);p=A(Math.sin(a)*r,1.0+.7*q,Math.cos(a)*r);const hy=Lp(4.2,(hd.y-O.y-at.y)*.66,Sm(K(u,0,1.5)));l=A(0,hy,0);fov=62-6*q;shake=.06*cv}
+    else if(n=='d1'){const q=Sm(k),a=.75-1.35*q,r=Lp(6.7,3.5,Math.min(1,kk/.6));p=A(Math.sin(a)*r,1.0+.7*q,Math.cos(a)*r);const hy=Lp(4.2,(hd.y-O.y-at.y)*.66,Sm(K(u,0,1.5)));l=A(0,hy,0);fov=62-6*q;shake=.06*cv}
     else if(n=='d2'){const q=Sm(k),q3=Sm(K(u,2.2,3.4));p=hd.clone().add(new V(.5*sc,(-.12+.1*q)*sc,(1.55-.3*q)*sc));l=hd.clone().add(new V(.03*sc,-.09*sc*(1-q3),0));fov=34;shake=.012*cv}
     else if(n=='d3'){const q=Sm(K(u,.3,5.2));p=A(Lp(-2.3,-.75,q),Lp(.85,1.56,q),Lp(4.4,1.9,q));l=A(0,Lp(.95,1.62,q),0);fov=42-6*q}
     else if(n=='e1'){const q=Sm(K(t,tB-.1,tB+.6));p=A(.95,.32,2.6);l=A(0,Lp(1.55,9,q),0);fov=60+8*q;shake=.28*Math.max(0,1-Math.abs(t-tB-.25)/1.1)}
@@ -229,7 +230,7 @@ function fn229Layer(S){fn229Css();const el=document.createElement('div');el.id='
 function fn229Dom(S,t){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm,T=FN229.T,C=FN229.cut;
   const lb=(11*Sm(K(t,0,1))*(1-Sm(K(t,C+.5,FN229.len-.3))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
   // black: short dips on the hard cuts inside the den, a hard cut at the end, then the game fades back in
-  let bk=0;[T.c1,T.c2,T.d2,T.e2].forEach(a=>{bk=Math.max(bk,1-Math.abs(t-a)/.22)});{const ts=T.d1+2+.735*(T.d2-T.d1-2);bk=Math.max(bk,.9*(1-Math.abs(t-ts)/.2))}bk=Math.max(bk,0);if(t>=C)bk=1-K(t,C+.3,C+1.7);D.fk.style.opacity=bk.toFixed(3);
+  let bk=0;[T.c1,T.c2,T.d2,T.e2].forEach(a=>{bk=Math.max(bk,1-Math.abs(t-a)/.22)});bk=Math.max(bk,0);if(t>=C)bk=1-K(t,C+.3,C+1.7);D.fk.style.opacity=bk.toFixed(3);
   // white: into the basin, out of the throat's light; into the sky through the roof, out over Duskhold
   const fl=Math.max(Sm(K(t,T.b1-.75,T.b1-.05))*(1-Sm(K(t,T.b1,T.b1+.8))),Sm(K(t,T.f1-.9,T.f1-.1))*(1-Sm(K(t,T.f1,T.f1+.7))),.8*Math.max(0,1-Math.abs(t-(T.e1+2.3))/.3));D.fl.style.opacity=fl.toFixed(3);
   D.vg.style.opacity=(t>=T.b1&&t<T.f1?1:0).toFixed(2);
@@ -248,36 +249,42 @@ function fn229Score(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.g
   const noise=(a,dur,pk,at,rel,o)=>{if(T(a)<ac.currentTime-.01)return;o=o||{};const s=ac.createBufferSource();s.buffer=nb;s.loop=true;const fl=ac.createBiquadFilter();fl.type=o.type||'bandpass';fl.frequency.setValueAtTime(o.f||800,T(a));if(o.f2)fl.frequency.exponentialRampToValueAtTime(o.f2,T(a+dur));fl.Q.value=o.q||1;
     const g=G(0);g.gain.setValueAtTime(0,T(a));g.gain.linearRampToValueAtTime(pk,T(a+at));g.gain.setValueAtTime(pk,T(a+Math.max(at,dur-rel)));g.gain.linearRampToValueAtTime(0,T(a+dur));s.connect(fl);fl.connect(g);g.connect(out);if(o.wet){const w=G(o.wet);g.connect(w);w.connect(rv)}s.start(T(a));s.stop(T(a+dur+.05))};
   const hit=(a,f,pk)=>{osc('sine',f,a,2.6,pk,.01,2.5,{wet:.7});osc('triangle',f*2,a,1.2,pk*.35,.005,1.1,{lp:600,wet:.4});noise(a,.5,pk*.5,.005,.45,{type:'lowpass',f:220,wet:.5})};
-  // Duskhold: a clear rising fifth as the essence is lifted, the pour
-  [146.83,220,293.66].forEach((f,i)=>osc('sine',f,.3+i*.5,X.b1-.2,.035,2.2,1.4,{wet:1.2,dry:.4}));osc('sine',587.3,X.a2+.2,3.6,.03,1.6,1.8,{wet:1.5,dry:.3,f2:880});
-  noise(X.a2+.2,4.2,.05,1.2,1.6,{f:2400,f2:500,q:.7,wet:.8});
-  // the fall: wind in the throat, a tone sliding down
-  noise(X.b1-.5,4.4,.16,.8,1.2,{f:500,f2:160,q:.6,wet:.5});osc('sawtooth',196,X.b1-.3,4.2,.035,.6,1.4,{f2:49,lp:500,wet:.8});hit(X.b1,55,.2);
-  // the den: the Voice's drone (D, as in the intro), a far choir, the thread of essence singing
+  // v231 (owner: "Some sound effects used sound cheesy- make it a serious tone"): no chimes, pings, rising sweeps or arcade sounds
+  // (the film also plays none of the game's stock effects now). Low strings in D minor, sub hits, a tolling bell, wind and stone.
+  const toll=(a,f,pk)=>{[[1,1,5.2],[2,.5,3.8],[2.76,.3,2.8],[5.4,.08,1.5]].forEach(q=>osc('sine',f*q[0],a,q[2],pk*q[1],.006,q[2]-.01,{wet:1.1,dry:.6}))};
+  const pad=(fs,a,dur,pk,at,rel,lp)=>fs.forEach((f,i)=>[-6,7].forEach(d=>osc('sawtooth',f,a+i*.12,dur,pk,at,rel,{lp:lp||420,wet:.9,dry:.7,det:d})));
+  // Duskhold: a low pedal under the lifted essence, the pour as a breath of air, one soft bell as the basin takes it
+  osc('sine',73.42,.2,X.b1,.07,2.4,1.2,{wet:.6});pad([73.42,110,146.83],.6,X.b1-.6,.012,2.6,1.4,360);
+  noise(X.a2+.2,4.2,.045,1.4,1.8,{type:'lowpass',f:1300,f2:300,wet:.8});toll(X.a2+1.95,146.83,.045);
+  // the fall: wind in the throat, the dark opening under it
+  noise(X.b1-.5,4.6,.17,.9,1.3,{f:420,f2:140,q:.6,wet:.5});osc('sine',55,X.b1-.3,4.4,.1,2.6,1.2,{f2:36.71,wet:.5});hit(X.b1,55,.2);
+  // the den: the Voice's drone (D, as in the intro), low strings far off, the essence landing
   [36.71,55,73.42].forEach((f,i)=>osc('sawtooth',f,X.b2-.2,X.e3-X.b2+2,.034-i*.006,3,2,{lp:260,wet:.5,det:i*6}));
-  [293.66,349.23,440].forEach((f,i)=>osc('sine',f,X.b2+.5+i*.6,X.d1-X.b2,.011,3.5,2,{wet:1.4,dry:.35,det:i%2?7:-7}));hit(X.b2+2.4,49,.14);
-  // his hand, his eyes
-  hit(X.c1+2.0,41.2,.16);osc('sine',1244,X.c1+1.35,1.6,.02,.01,1.5,{wet:1.4,dry:.3});
-  // drinking: wet gulps; the heart, faster and faster through the euphoria
-  for(let i=0;i<5;i++)noise(X.c2+2.7+i*.75,.3,.12,.03,.22,{f:320+60*(i%2),q:4,wet:.5});
+  [146.83,174.61,220].forEach((f,i)=>osc('sine',f,X.b2+.5+i*.6,X.d1-X.b2,.012,3.5,2,{wet:1.4,dry:.35,det:i%2?7:-7}));hit(X.b2+2.4,49,.14);toll(X.b2+2.4,73.42,.07);
+  // his hand, his eyes: a sub hit, a close cold cluster in the low strings
+  hit(X.c1+2.0,41.2,.16);pad([138.59,146.83],X.c1+1.3,2.0,.016,.08,1.7,620);
+  // drinking: dull swallows; the heart, faster and faster through the euphoria; the strings tighten a half step
+  for(let i=0;i<4;i++){const a=X.c2+2.7+i*.95;noise(a,.3,.11,.05,.22,{type:'lowpass',f:150,wet:.4});osc('sine',62,a,.26,.12,.03,.22,{f2:44,wet:.3})}
   {let a=X.c3+.3,gap=.95;while(a<X.d1+2.2){osc('sine',52,a,.22,.3,.008,.2,{f2:38,wet:.25});osc('sine',48,a+.16,.2,.2,.008,.18,{f2:36,wet:.25});a+=gap;gap=Math.max(.36,gap*.86)}}
-  [311.13,369.99,466.16,622.25].forEach((f,i)=>osc('sine',f,X.c3+.5+i*.25,X.d1-X.c3+1.5,.02,1.6,1.2,{wet:1.5,dry:.4,f2:f*1.06,ft:4}));
-  // the change: a grinding swell, bones (cracks), the black fire
-  [58.27,61.74,87.31,92.5].forEach((f,i)=>osc('sawtooth',f,X.d1,X.d2-X.d1+2.2,.036,2,1.6,{lp:380+70*i,wet:.7,det:i*9,f2:f*.84}));noise(X.d1,6,.1,1.6,2,{f:180,f2:1400,q:.8,wet:.6});
-  for(let i=0;i<16;i++){const a=X.d1+1.9+i*.33+.12*R();noise(a,.07,.2,.004,.06,{f:1500+2400*R(),q:7,wet:.35});osc('square',85+60*R(),a,.05,.05,.003,.045,{lp:900})}
-  hit(X.d1+1.5,36.7,.26);hit(X.d2,43.6,.14);
-  // the robe: a warm chord, a shimmer as the gold takes
-  [146.83,185,220,293.66].forEach((f,i)=>osc('sine',f,X.d3+.4+i*.3,5.2,.028,1.6,2,{wet:1.3,dry:.5}));for(let i=0;i<9;i++)osc('sine',1174.7*Math.pow(1.122,i%5),X.d3+3.3+i*.13,.9,.012,.01,.85,{wet:1.5,dry:.4});
-  // the lance and the roof
-  osc('sawtooth',70,X.e1+.5,1.8,.06,1.5,.1,{f2:420,lp:1400,wet:.5});hit(X.e1+2.25,32.7,.4);noise(X.e1+2.25,2.8,.28,.01,2.6,{type:'lowpass',f:900,f2:90,wet:.7});
+  pad([77.78,116.54,155.56],X.c3+.5,X.d1-X.c3+1.5,.014,1.8,1.3,520);
+  // the change: a grinding swell, bone (dry cracks, no tone), the black fire, a bell as the man stands in his place
+  [58.27,61.74,87.31,92.5].forEach((f,i)=>osc('sawtooth',f,X.d1,X.d2-X.d1+2.2,.036,2,1.6,{lp:380+70*i,wet:.7,det:i*9,f2:f*.84}));noise(X.d1,6,.09,1.8,2.2,{type:'lowpass',f:160,f2:700,wet:.6});
+  for(let i=0;i<10;i++){const a=X.d1+2.0+i*.4+.14*R();noise(a,.06,.15,.004,.052,{f:500+800*R(),q:5,wet:.3})}
+  hit(X.d1+1.5,36.7,.26);hit(X.d2,43.6,.16);toll(X.d2+.1,73.42,.08);
+  // the robe: the low strings settle on D minor, a breath of air as the gold takes
+  pad([73.42,110,146.83,174.61],X.d3+.4,5.4,.013,1.8,2.2,480);noise(X.d3+3.2,2.4,.022,1,1.3,{type:'highpass',f:2600,wet:1.2});toll(X.d3+3.5,110,.05);
+  // the lance and the roof: pressure building, a dull crack, stone
+  noise(X.e1+.4,1.9,.16,1.7,.12,{type:'lowpass',f:110,f2:520,wet:.5});osc('sine',41.2,X.e1+.4,1.9,.2,1.7,.1,{wet:.4});
+  noise(X.e1+1.45,.7,.2,.01,.6,{type:'lowpass',f:700,f2:160,wet:.6});osc('sine',58,X.e1+1.45,.6,.26,.008,.55,{f2:34,wet:.4});
+  hit(X.e1+2.25,32.7,.4);noise(X.e1+2.25,2.8,.28,.01,2.6,{type:'lowpass',f:900,f2:90,wet:.7});
   for(let i=0;i<8;i++)noise(X.e1+2.7+i*.28+.1*R(),.22,.12,.005,.2,{type:'lowpass',f:260,wet:.5});
-  // wings: tearing, then two great beats; the leap
-  noise(X.e2+.5,.7,.16,.02,.5,{f:900,f2:2600,q:2,wet:.5});hit(X.e2+.6,49,.2);[1.2,2.1].forEach(d=>noise(X.e2+d,.7,.14,.2,.45,{type:'lowpass',f:380,wet:.4}));
-  noise(X.e3+.55,2.2,.2,.25,1.4,{type:'lowpass',f:300,f2:1200,wet:.5});[110,164.8,220,277.2].forEach((f,i)=>osc('sawtooth',f,X.e3+.4,2.6,.03,1.8,.2,{lp:900,wet:.9,f2:f*2,ft:2.6}));
-  // Duskhold: rumble, the burst, a dark triumphant chord while he hangs over the town, wing beats, the landing, the last word
-  noise(X.f1,1.2,.14,.7,.3,{type:'lowpass',f:90,wet:.3});hit(X.f1+.9,32.7,.42);noise(X.f1+.9,2.4,.26,.01,2.2,{type:'lowpass',f:1100,f2:120,wet:.6});
-  [73.42,110,146.83,174.61,220].forEach((f,i)=>osc('sawtooth',f,X.f1+1.4,X.f4-X.f1,.03,1.4,2.4,{lp:700,wet:.9,det:i*5}));[293.66,349.23,440,587.33].forEach((f,i)=>osc('sine',f,X.f2+i*.2,X.f4-X.f2+1,.014,1.6,2.2,{wet:1.5,dry:.4}));
-  for(let a=X.f2+.3;a<X.f3+2.6;a+=1.2)noise(a,.75,.1,.22,.45,{type:'lowpass',f:340,wet:.4});hit(X.f3+3.0,49,.18);
+  // wings: sinew tearing (low, dry), then two great beats; the leap
+  noise(X.e2+.5,.8,.15,.03,.6,{f:420,f2:1100,q:1.6,wet:.5});hit(X.e2+.6,49,.2);[1.2,2.1].forEach(d=>noise(X.e2+d,.7,.14,.2,.45,{type:'lowpass',f:380,wet:.4}));
+  noise(X.e3+.55,2.2,.2,.25,1.4,{type:'lowpass',f:300,f2:1000,wet:.5});pad([55,82.41,110],X.e3+.3,2.8,.02,1.9,.3,560);hit(X.e3+.6,41.2,.2);
+  // Duskhold: rumble, the burst, D minor low and wide while he hangs over the town, wing beats, the landing, the last word
+  noise(X.f1,1.2,.14,.7,.3,{type:'lowpass',f:90,wet:.3});hit(X.f1+.9,32.7,.42);noise(X.f1+.9,2.4,.26,.01,2.2,{type:'lowpass',f:1100,f2:120,wet:.6});toll(X.f1+1.0,73.42,.1);
+  [73.42,110,146.83,174.61,220].forEach((f,i)=>osc('sawtooth',f,X.f1+1.4,X.f4-X.f1,.03,1.4,2.4,{lp:560,wet:.9,det:i*5}));[293.66,349.23].forEach((f,i)=>osc('sine',f,X.f2+i*.2,X.f4-X.f2+1,.008,1.8,2.2,{wet:1.5,dry:.4}));
+  for(let a=X.f2+.3;a<X.f3+2.6;a+=1.2)noise(a,.75,.1,.22,.45,{type:'lowpass',f:340,wet:.4});hit(X.f3+3.0,49,.18);toll(X.f3+3.05,73.42,.07);
   [36.71,73.42].forEach(f=>osc('sine',f,X.f4,E-X.f4,.12,1.2,.05,{wet:.5}));osc('sine',36.7,E,2.8,.34,.01,2.7,{wet:.6});osc('sine',73.4,E+.02,2.3,.05,.01,2.2,{wet:1})}
 
 // ---------------- play / skip / finish ----------------

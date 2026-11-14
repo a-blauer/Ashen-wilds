@@ -77796,11 +77796,11 @@ function fn229Sh(c,k){return [c[0]*k,c[1]*k,c[2]*k]}
 
 // ---------------- the lit shader ----------------
 var FN229_SH={
-  v:'attribute float em;attribute float rv;uniform float t,flut;varying vec3 vC,vV,vO,vW;varying float vE,vR;varying vec2 vU;varying vec3 vN;\n#include <skinning_pars_vertex>\n#include <fog_pars_vertex>\n'+
-    'void main(){vC=color;vE=em;vR=rv;vU=uv;vO=position;vec3 p=position;\n'+
+  v:'attribute float em;attribute float rv;uniform float t,flut;varying vec3 vC,vV,vO,vW;varying float vE,vR;varying vec2 vU;varying vec3 vN;\n#ifdef HIDE\nattribute float hd;varying float vH;\n#endif\n#include <skinning_pars_vertex>\n#include <fog_pars_vertex>\n'+
+    'void main(){vC=color;vE=em;vR=rv;vU=uv;vO=position;vec3 p=position;\n#ifdef HIDE\nvH=hd;\n#endif\n'+
     '#ifdef ROBE\n{float w=flut*uv.y*uv.y;p.x+=sin(t*3.1+position.y*5.+uv.x*12.566)*.05*w;p.z+=cos(t*2.6+position.y*4.+uv.x*18.85)*.05*w+flut*uv.y*uv.y*uv.y*.0;}\n#endif\n'+
     'vec3 transformed=p;\n#include <skinbase_vertex>\n#include <skinning_vertex>\nvec3 objectNormal=normal;\n#include <skinnormal_vertex>\nvN=normalMatrix*objectNormal;\nvec4 w4=modelMatrix*vec4(transformed,1.);vW=w4.xyz;vec4 mvPosition=viewMatrix*w4;vV=mvPosition.xyz;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
-  f:'uniform vec3 hemiS,hemiG,keyD,keyC,rimC,emC;uniform vec3 lp[4];uniform vec3 lc[4];uniform float lr[4];uniform float t,rimP,rimK,emK,iri,op,rev,gr,gold,flash,lit,vein,tintK,smK;uniform vec3 tintC;varying vec3 vC,vV,vO,vW,vN;varying float vE,vR;varying vec2 vU;\n#include <fog_pars_fragment>\n'+
+  f:'uniform vec3 hemiS,hemiG,keyD,keyC,rimC,emC;uniform vec3 lp[4];uniform vec3 lc[4];uniform float lr[4];uniform float t,rimP,rimK,emK,iri,op,rev,gr,gold,flash,lit,vein,tintK,smK;uniform vec3 tintC;varying vec3 vC,vV,vO,vW,vN;varying float vE,vR;varying vec2 vU;\n#ifdef HIDE\nuniform float hide;varying float vH;\n#endif\n#include <fog_pars_fragment>\n'+
     'float h3(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}'+
     'float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}'+
     'vec3 pal(float h){return .55+.45*cos(6.2832*(h+vec3(0.,.33,.67)));}\n'+
@@ -77819,7 +77819,7 @@ var FN229_SH={
     ' g=max(max(b1,dia),max(sc,curl));\n'+
     ' vec2 q=vec2(fract(x*7.)-.5,fract(v*9.+floor(x*7.)*.5)-.5);float sp=smoothstep(.05,.0,abs(abs(q.x)+abs(q.y)-.11))+smoothstep(.02,.0,length(q));g=max(g,sp*step(v,.7)*step(.06,v)*.85);\n'+
     ' return clamp(g,0.,1.);}\n#endif\n'+
-    'void main(){vec3 N=normalize(cross(dFdx(vV),dFdy(vV)));if(smK>0.){vec3 sn=normalize(vN);if(dot(sn,N)<0.)sn=-sn;N=normalize(mix(N,sn,smK));}vec3 Nw=normalize((vec4(N,0.)*viewMatrix).xyz);vec3 V=normalize(-vV);\n'+
+    'void main(){\n#ifdef HIDE\nif(vH>0.&&vH<hide)discard;\n#endif\nvec3 N=normalize(cross(dFdx(vV),dFdy(vV)));if(smK>0.){vec3 sn=normalize(vN);if(dot(sn,N)<0.)sn=-sn;N=normalize(mix(N,sn,smK));}vec3 Nw=normalize((vec4(N,0.)*viewMatrix).xyz);vec3 V=normalize(-vV);\n'+
     ' vec3 alb=vC;float g1=n3(vO*9.),g2=n3(vO*2.3+7.);alb*=1.-gr+gr*(.55*g1+.75*g2);float vm=0.;\n#ifdef SKIN\n{float shd;float h=skinH(vO,vm,shd);float dk=dot(alb,vec3(.34));alb=mix(alb,veinC,vm*veinA*smoothstep(.05,.3,dk))*shd;\n  vec3 dpx=dFdx(vV),dpy=dFdy(vV);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dpy,N),r2=cross(N,dpx);float det=dot(dpx,r1);vec3 gd=sign(det)*(hx*r1+hy*r2);N=normalize(abs(det)*N-bump*gd);Nw=normalize((vec4(N,0.)*viewMatrix).xyz);}\n#endif\nalb=mix(alb,tintC*(alb.r+alb.g+alb.b)*.4,tintK);float spec=0.;float glow=0.;vec3 glowC=vec3(1.,.8,.4);\n'+
     '#ifdef ROBE\n{float d=vR-(rev*1.25-.125)+(n3(vO*14.)-.5)*.12;if(d>0.)discard;float th=thread(vU)*gold;vec3 au=vec3(.95,.7,.26)*(.75+.5*n3(vO*60.));alb=mix(alb,au,th);spec=th;'+
     '  float edge=smoothstep(-.07,0.,d);glow=edge*2.6+th*flash*2.2;float wv=.9+.1*sin(vU.x*220.)*sin(vU.y*260.);alb*=mix(1.,wv,1.-th);}\n#endif\n'+
@@ -77834,9 +77834,9 @@ var FN229_SH={
 function fn229Mat(o){o=o||{};const L=FN229.L,U=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{}]);
   ['hemiS','hemiG','keyD','keyC','rimC','rimP','lp','lc','lr','t'].forEach(k=>U[k]=L[k]);
   Object.assign(U,{emC:{value:new THREE.Color(o.em==null?0xffffff:o.em)},emK:{value:o.emK||0},iri:{value:o.iri||0},op:{value:o.op==null?1:o.op},rimK:{value:o.rim==null?1:o.rim},
-    rev:{value:o.rev==null?2:o.rev},gr:{value:o.grime==null?.2:o.grime},flut:{value:0},gold:{value:o.gold==null?1:o.gold},flash:{value:0},lit:{value:1},vein:{value:0},tintK:{value:0},tintC:{value:new THREE.Color(1,1,1)},lm:{value:new THREE.Vector4(1.6,.046,1.7,1.2)},bump:{value:.004},det:{value:o.det==null?1:o.det},smK:{value:o.smooth||0},veinA:{value:o.veinA==null?.6:o.veinA},veinC:{value:new THREE.Color(o.veinC==null?0x34315a:o.veinC)}});
+    rev:{value:o.rev==null?2:o.rev},gr:{value:o.grime==null?.2:o.grime},flut:{value:0},gold:{value:o.gold==null?1:o.gold},flash:{value:0},lit:{value:1},vein:{value:0},tintK:{value:0},tintC:{value:new THREE.Color(1,1,1)},lm:{value:new THREE.Vector4(1.6,.046,1.7,1.2)},bump:{value:.004},det:{value:o.det==null?1:o.det},smK:{value:o.smooth||0},hide:{value:-1},veinA:{value:o.veinA==null?.6:o.veinA},veinC:{value:new THREE.Color(o.veinC==null?0x34315a:o.veinC)}});
   const m=new THREE.ShaderMaterial({uniforms:U,vertexShader:FN229_SH.v,fragmentShader:FN229_SH.f,vertexColors:true,fog:true,side:o.side==null?THREE.DoubleSide:o.side,
-    skinning:!!o.skin,transparent:!!o.tr,depthWrite:o.dw==null?true:o.dw,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,extensions:{derivatives:true},defines:Object.assign({},o.robe?{ROBE:1}:{},o.skin?{SKIN:1}:{},o.beast?{BEAST:1}:{})});
+    skinning:!!(o.skin||o.sk),transparent:!!o.tr,depthWrite:o.dw==null?true:o.dw,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,extensions:{derivatives:true},defines:Object.assign({},o.robe?{ROBE:1}:{},o.skin?{SKIN:1}:{},o.beast?{BEAST:1}:{},o.hide?{HIDE:1}:{})});
   m.userData.fn229=1;m.userData.lps=1;m.userData.lpsSkip=1;return m}
 
 // ---------------- triangle soup with a colour per face (flat, faceted) ----------------
@@ -77884,8 +77884,9 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
   // skull without a lower jaw (base head coordinates): skull base, palate, the upper jaw's rim far forward, muzzle, nose pits,
   // under the eyes, eye line, brow ridge, then the long cranium going up and back
   // (the back radii carry the back of the skull down in one curve into the neck: no shelf under the cranium)
-  const HEAD=[[1.508,.05,.03,.098,-.07],[1.522,.056,.03,.104,-.06],[1.533,.064,.022,.108,-.04],[1.542,.073,.112,.108,.022],[1.554,.071,.117,.114,.028],[1.57,.064,.106,.112,.024],[1.588,.076,.094,.106,.018],[1.606,.072,.088,.1,.012],
-    [1.622,.079,.103,.1,.01],[1.642,.074,.09,.1,.002],[1.664,.066,.076,.094,-.006],[1.684,.05,.056,.078,-.012],[1.698,.026,.03,.046,-.016]];
+  // v231 (owner: "still a hard angle edge on the back of the creatures head"): the back radii now put the back of every ring on
+  // one curve (z - rb: -.058 at the crown … -.166 at the neck); before, the skull's back stopped .06 short of the base rings, a ledge
+  const HEAD=[[1.508,.05,.03,.096,-.07],[1.522,.056,.03,.103,-.06],[1.533,.064,.022,.119,-.04],[1.542,.073,.112,.177,.022],[1.554,.071,.117,.18,.028],[1.57,.064,.106,.173,.024],[1.588,.076,.094,.163,.018],[1.606,.072,.088,.151,.012],[1.622,.079,.103,.142,.01],[1.642,.074,.09,.123,.002],[1.664,.066,.076,.1,-.006],[1.684,.05,.056,.074,-.012],[1.698,.026,.03,.042,-.016]];
   // (owner, Nov 13: "I do not like the long round head ... his body should be way bigger proportionate to his head. He should be a
   // massive menacing gangly creature") a small angular skull on a huge frame: wide bony shoulders, a deep ribcage, a long back
   const S=cgHuman({h:1.3,w:1.0,d:.92,rw:[.7,.8,.42,.8,1.08,1.16,1.3,1.0],rf:[.74,.72,.36,.94,1.1,1.0,.9,.8],rb:[.78,.8,.54,.9,1.14,1.22,1.24,1.0],
@@ -77981,8 +77982,8 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
     const F=FN229B.fit.man={eye:[],S};[-1,1].forEach(s=>{const q=S.hp(s*EX,EY,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});F.eye.push(p?[p[0],p[1],p[2]+.0015]:[q[0],q[1],q[2]+.085])})})})();
 
 // ---------------- at run time: one body, wearing this file's shader ----------------
-function fn229Body(key){const beast=key=='fn229beast',g=mkHumanoid(key),h=g.h,M=mdMats(),mat=fn229Mat(beast?{skin:1,beast:1,grime:.16,rim:.9,veinA:.5,veinC:0x2c2a52,smooth:.4}:{skin:1,grime:.06,rim:.7,veinA:0,veinC:0x7a6a7c,det:.1,smooth:.6}),Bd={key,g,h,bones:h.bones,mat,pins:[],fit:FN229B.fit[key=='fn229man'?'man':'beast']};g.scale.setScalar(1);g.userData.psNo=1;
-  h.children.forEach(o=>{if(!o.isSkinnedMesh)return;fn229Smooth(o.geometry);o.castShadow=false;o.frustumCulled=false;o.userData.lpsSkip=1;if(o.material!==M.g)o.material=mat;if(!Bd.bm)Bd.bm=o});
+function fn229Body(key){const beast=key=='fn229beast',g=mkHumanoid(key),h=g.h,M=mdMats(),mat=fn229Mat(beast?{skin:1,beast:1,grime:.16,rim:.9,veinA:.5,veinC:0x2c2a52,smooth:.4}:{skin:1,hide:1,grime:.06,rim:.7,veinA:0,veinC:0x7a6a7c,det:.1,smooth:.6}),Bd={key,g,h,bones:h.bones,mat,pins:[],fit:FN229B.fit[key=='fn229man'?'man':'beast']};g.scale.setScalar(1);g.userData.psNo=1;
+  h.children.forEach(o=>{if(!o.isSkinnedMesh)return;fn229Smooth(o.geometry);o.castShadow=false;o.frustumCulled=false;o.userData.lpsSkip=1;if(o.material!==M.g)o.material=mat;if(!Bd.bm)Bd.bm=o});if(!beast)fn229Under(Bd);
   Bd.S=Bd.fit.S;if(beast&&Bd.fit.lm)mat.uniforms.lm.value.fromArray(Bd.fit.lm);g.updateMatrixWorld(true);Bd.rest={};for(const n in h.bones){const b=h.bones[n];Bd.rest[n]={p:b.position.clone(),q:b.quaternion.clone()}}
   Bd.eyeM=new THREE.MeshBasicMaterial({color:0xffffff,fog:true});Bd.eyeM.userData.lpsSkip=1;Bd.eyes=Bd.fit.eye.map(p=>{const pin=fn229Pin(Bd,'head',p),m=new THREE.Mesh(FN229B.eyeG||(FN229B.eyeG=new THREE.IcosahedronGeometry(1,1)),Bd.eyeM);m.userData.lpsSkip=1;pin.add(m);return m});
   return Bd}
@@ -78011,7 +78012,7 @@ function fn229Jaw(Bd,mk){const F=Bd.fit,S=F.S,hs=S.hs,C={skin:[.6,.59,.66],dark:
   // and two cheek plates stand up from the jaw into the skull (they slide out of it as the jaw drops), and a dark gullet hangs
   // from the skull behind the hinge, so nothing shows through the open mouth but the dark of his throat
   {const y0=-.03*hs,y1=.105*hs,xs=[-.86,-.45,0,.45,.86].map(q=>q*W);for(let i=0;i<4;i++){const z=q=>.006*hs+.012*hs*(1-Math.abs(q)/W);fn229Quad(B,[xs[i],y0,z(xs[i])],[xs[i+1],y0,z(xs[i+1])],[xs[i+1]*.8,y1,z(xs[i+1])],[xs[i]*.8,y1,z(xs[i])],fn229Sh(C.maw,.7+.3*(i%2)))}
-    [-1,1].forEach(sd=>{const a=[sd*W*.86,-.004*hs,.002],b=[sd*W*.93,-.004*hs,L*.62],c=[sd*W*.8,.09*hs,L*.3],d=[sd*W*.72,y1,.006*hs];fn229Tri(B,a,b,c,fn229Sh(C.gum,.55));fn229Tri(B,a,c,d,fn229Sh(C.maw,1.1))})}
+    [-1,1].forEach(sd=>{const a=[sd*W*.86,-.004*hs,.002],b=[sd*W*.93,-.004*hs,L*.62],c=[sd*W*.6,.066*hs,L*.22],d=[sd*W*.58,y1*.8,.006*hs];fn229Tri(B,a,b,c,fn229Sh(C.gum,.55));fn229Tri(B,a,c,d,fn229Sh(C.maw,1.1))})}
   const m=new THREE.Mesh(fn229Geo(B),mk);m.userData.lpsSkip=1;m.frustumCulled=false;pin.add(m);Bd.jaw=pin;Bd.jawQ=pin.quaternion.clone();
   {const G=fn229Buf(),gp=fn229Pin(Bd,'head',H),R=[[.012,W*.84,.0],[-.05,W*.8,-.012],[-.11,W*.62,-.03],[-.16,W*.36,-.05]].map(q=>[[-q[1],q[0]*hs,q[2]*hs+.006],[-q[1]*.5,q[0]*hs,q[2]*hs+.02*hs],[q[1]*.5,q[0]*hs,q[2]*hs+.02*hs],[q[1],q[0]*hs,q[2]*hs+.006]]);
     for(let i=0;i<R.length-1;i++)for(let j=0;j<3;j++)fn229Quad(G,R[i][j],R[i][j+1],R[i+1][j+1],R[i+1][j],fn229Sh(C.maw,.5+.25*((i+j)%2)));
@@ -78036,7 +78037,7 @@ function fn229Act(F){return F.cre&&F.k<FN229B.swap?F.cre:F.man}
 // swap, the man's skin still corpse-pale just after it; eyes, veins, light
 function fn229Shape(F,k){F.k=k=Math.max(0,Math.min(1,k));const st=F.st,B=FN229B,sw=B.swap,act=fn229Act(F),H=fn229Lerp(B.SC.beast,B.SC.man,fn229Sm(k)),hb=B.Sb?B.Sb.hp(0,1.698,0)[1]:2.6,hm=B.Sm.hp(0,1.73,0)[1];
   F.size=H/B.SC.man;if(F.cre){F.cre.g.visible=act===F.cre;F.cre.g.scale.setScalar(H/hb)}F.man.g.visible=act===F.man;F.man.g.scale.setScalar(H/hm);
-  if(F.cre&&act===F.cre){const q=fn229Sm(k/sw),b=F.cre.bones,sp=st.spasm||0,j=i=>1+(ic151H(Math.floor(FN229.L.t.value*19)+i*7.3)-.5)*.22*sp;
+  if(F.cre&&act===F.cre){const q=fn229Sm(k/sw),b=F.cre.bones,sp=st.spasm||0,j=i=>1+(fn229Nz(FN229.L.t.value*1.4+i*5.3,i*2.1,.5)-.5)*.16*sp;
     ['aL0','aR0'].forEach((n,i)=>b[n].scale.setScalar(fn229Lerp(1,.66,q)*j(i)));['lh0','rh0'].forEach((n,i)=>b[n].scale.setScalar(fn229Lerp(1,.86,q)*j(2+i)));b.neck.scale.setScalar(fn229Lerp(1,.84,q)*j(5));b.head.scale.setScalar(fn229Lerp(1,.86,q));
     const U=F.cre.mat.uniforms;U.tintC.value.setRGB(.82,.68,.62);U.tintK.value=.5*q;U.vein.value=st.vein;U.lit.value=st.lit;F.mats.keen.uniforms.lit.value=st.lit;
     const e=.0085*F.cre.S.hs*st.eye;F.cre.eyes.forEach(m=>m.scale.set(Math.max(1e-4,e),Math.max(1e-4,e),Math.max(1e-4,e*.6)));F.cre.eyeM.color.setRGB(1.2,1.2,1.28);F.cre.mat.uniforms.bump.value=.0042*F.cre.g.scale.x}
@@ -78072,31 +78073,55 @@ function fn229Pose(F,Pin){const Bd=fn229Act(F),b=Bd.bones,R=Bd.rest,P=Object.ass
   Bd.g.updateMatrixWorld(true)}
 
 // ---------------- the robe: crimson, with gold thread (the ROBE variant of the shader draws the thread and weaves the cloth in) ----------------
-// built round the man's own torso rings, each piece hung on the bone it follows; reveal rv 0 at the hem … 1 at the collar;
-// uv.x round the body, uv.y 0 at the top of a piece … 1 at its hem
-function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045],deep:[.22,.012,.028],line:[.12,.008,.022]},mr=F.mats.robe=fn229Mat({robe:1,rev:0,grime:.1,rim:.55,gold:1}),R=F.robe={m:[],C},top=T[7][0]+.07;
-  const tr=(i,o)=>[T[i][0],T[i][1]+o,T[i][2]+o,T[i][3]+o,T[i][4]||0];
-  // rings [y, rx, f, b, z] in model space, hung on bone at pin point pt
-  const piece=(bone,pt,rings,n,o)=>{o=o||{};const B=fn229Buf(),Rg=(o.raw||rings.map((q,i)=>fn229Ring(n,q[0],q[1],q[2],q[3]==null?q[2]:q[3],0,q[4]||0,(p,j,a)=>{const fo=o.fold?1+o.fold*(i/(rings.length-1))*Math.sin(a*o.fn+i*.7):1;return [p[0]*fo,p[1],(p[2]-(q[4]||0))*fo+(q[4]||0)]}))).map(r=>r.map(p=>[p[0]-pt[0],p[1]-pt[1],p[2]-pt[2]]));
+// v231 (owner: "his clothing clips into his body frequently"): the robe is skinned to the man's own skeleton (it used to be rigid
+// pieces, each hung on one bone, so a bent knee, elbow or waist came through the cloth), and the body under the cloth is not drawn
+// while the robe is on (fn229Under). Built round the man's torso rings in model space; reveal rv 0 at the hem … 1 at the collar;
+// uv.x round the body, uv.y 0 at the top of a piece … 1 at its hem.
+// fn229Under: a number per body corner (attribute hd): 0 = always drawn (head, neck, hands, the skin in the V of the collar, the hair
+// above the mantle), else its height / the collar's (so the body goes as the cloth weaves up over it). Once per cached geometry.
+function fn229Under(Bd){const g=Bd.bm.geometry;if(g.attributes.hd)return;const S=Bd.fit.S,T=S.torso,top=T[7][0]+.07,P=g.attributes.position,C=g.attributes.color,SI=g.attributes.skinIndex.array,SW=g.attributes.skinWeight.array,n=P.count,H=new Float32Array(n),lock=new Uint8Array(n),
+    nm=Bd.bm.skeleton.bones.map(b=>{for(const k in Bd.bones)if(Bd.bones[k]===b)return k;return ''}),keep=new Uint8Array(n);
+  for(let i=0;i<n;i++){let bi=0,bw=-1;for(let k=0;k<4;k++)if(SW[i*4+k]>bw){bw=SW[i*4+k];bi=SI[i*4+k]}const b=nm[bi],x=P.getX(i),y=P.getY(i),z=P.getZ(i),hair=C.getY(i)/Math.max(1e-4,C.getX(i))>.95&&C.getX(i)>.3;
+    keep[i]=b=='head'||b=='neck'||b=='aL2'||b=='aR2'||(b=='chest'&&(y>T[7][0]+.004||(z>.02&&Math.abs(x)<.07&&y>T[6][0]-.012)||(hair&&z<-.05)))?1:0;
+    // the hair down his back goes under the mantle when he is robed (cut at the mantle's top edge, a little after the cloth gets there)
+    lock[i]=hair&&z<-.05&&(b=='chest'||b=='neck'||b=='head')?1:0}
+  for(let i=0;i<n;i+=3){const k=keep[i]||keep[i+1]||keep[i+2],lk=lock[i]||lock[i+1]||lock[i+2];for(let q=0;q<3;q++)H[i+q]=lk?Math.max(.002,P.getY(i+q)/top+1.04-(T[7][0]+.016)/top):k?0:Math.max(.002,P.getY(i+q)/top)}
+  g.setAttribute('hd',new THREE.BufferAttribute(H,1))}
+function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045],deep:[.22,.012,.028],line:[.12,.008,.022]},mr=F.mats.robe=fn229Mat({robe:1,sk:1,rev:0,grime:.1,rim:.55,gold:1}),R=F.robe={m:[],C},top=T[7][0]+.07;
+  const tr=(i,o)=>[T[i][0],T[i][1]+o,T[i][2]+o,T[i][3]+o,T[i][4]||0],ss=(a,b,x)=>{const k=Math.max(0,Math.min(1,(x-a)/(b-a)));return k*k*(3-2*k)};
+  const bg=Bd.bm.geometry,bP=bg.attributes.position,bI=bg.attributes.skinIndex.array,bW=bg.attributes.skinWeight.array,sb=Bd.bm.skeleton.bones,ix={};for(const k in Bd.bones)ix[k]=sb.indexOf(Bd.bones[k]);
+  // the trunk's own corners (pelvis, spine, chest): cloth lying on the trunk takes the weights of the nearest one
+  const trunk=[];{const ok=[ix.pelvis,ix.spine,ix.chest],seen=new Set();for(let i=0;i<bP.count;i++){let bi=0,bw=-1;for(let k=0;k<4;k++)if(bW[i*4+k]>bw){bw=bW[i*4+k];bi=bI[i*4+k]}if(ok.indexOf(bi)<0)continue;
+      const key=Math.round(bP.getX(i)*500)+'_'+Math.round(bP.getY(i)*500)+'_'+Math.round(bP.getZ(i)*500);if(seen.has(key))continue;seen.add(key);trunk.push(i)}}
+  const near=p=>{let b=-1,bd=1e9;for(let q=0;q<trunk.length;q++){const i=trunk[q],dx=bP.getX(i)-p[0],dy=bP.getY(i)-p[1],dz=bP.getZ(i)-p[2],d=dx*dx+dy*dy*2.5+dz*dz;if(d<bd){bd=d;b=i}}const o=[];for(let k=0;k<4;k++)if(bW[b*4+k]>0)o.push([bI[b*4+k],bW[b*4+k]]);return o};
+  const wSkirt=p=>{const lg=ss(J.lh0[1]+.03,J.lh0[1]-.2,p[1])*.74,r=ss(-.07,.07,p[0]),sh=ss(J.rh1[1]+.08,J.rh1[1]-.08,p[1]);return [[ix.pelvis,1-lg],[ix.rh0,lg*r*(1-sh)],[ix.rh1,lg*r*sh],[ix.lh0,lg*(1-r)*(1-sh)],[ix.lh1,lg*(1-r)*sh]]},
+    wChest=()=>[[ix.chest,1]],wMantle=p=>{const a=ss(.13,.22,Math.abs(p[0]))*.5*ss(T[7][0],T[6][0],p[1]);return [[ix.chest,1-a],[ix[p[0]<0?'aL0':'aR0'],a]]},
+    wArm=A=>{const a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),l1=d1[0]*d1[0]+d1[1]*d1[1]+d1[2]*d1[2],l2=d2[0]*d2[0]+d2[1]*d2[1]+d2[2]*d2[2];
+      return p=>{const s0=((p[0]-a0[0])*d1[0]+(p[1]-a0[1])*d1[1]+(p[2]-a0[2])*d1[2])/l1,s1=((p[0]-a1[0])*d2[0]+(p[1]-a1[1])*d2[1]+(p[2]-a1[2])*d2[2])/l2,fe=ss(-.1,.1,s1),ch=ss(.14,-.1,s0)*.45;return [[ix.chest,ch],[ix[A+'0'],(1-ch)*(1-fe)],[ix[A+'1'],(1-ch)*fe]]}};
+  // rings [y, rx, f, b, z] in model space; w(p) → [[bone index, weight] …] for a corner
+  const piece=(w,rings,n,o)=>{o=o||{};const B=fn229Buf(),Rg=o.raw||rings.map((q,i)=>fn229Ring(n,q[0],q[1],q[2],q[3]==null?q[2]:q[3],0,q[4]||0,(p,j,a)=>{const fo=o.fold?1+o.fold*(i/(rings.length-1))*Math.sin(a*o.fn+i*.7):1;return [p[0]*fo,p[1],(p[2]-(q[4]||0))*fo+(q[4]||0)]}));
     const nr=Rg.length;fn229Loft(B,Rg,(i,j,c)=>{const a=(j+.5)/n*6.283;if(o.skip&&o.skip(i,j,a))return null;let col=fn229Mx(C.red,C.deep,.5-.5*Math.cos(a*(o.fn||6)+i*.9));col=fn229Sh(col,.84+.3*fn229Fbm(c[0]*5+(o.seed||0),c[1]*5,c[2]*5));if(o.lineJ&&o.lineJ(j,i))col=C.line;return col},
-      {cap0:false,cap1:!!o.cap,rv:p=>Math.max(0,Math.min(1,(p[1]+pt[1])/top)),uv:(i,j)=>[j/n,o.v0+(o.v1-o.v0)*(i/(nr-1))]});
-    const m=new THREE.Mesh(fn229Geo(B),mr);m.userData.lpsSkip=1;m.frustumCulled=false;fn229Pin(Bd,bone,pt).add(m);R.m.push(m);return m};
+      {cap0:false,cap1:!!o.cap,rv:p=>Math.max(0,Math.min(1,p[1]/top)),uv:(i,j)=>[j/n,o.v0+(o.v1-o.v0)*(i/(nr-1))]});
+    const g=fn229Geo(B),nv=B.p.length/3,SI=new Uint16Array(nv*4),SW=new Float32Array(nv*4),memo=new Map();
+    for(let i=0;i<nv;i++){const p=[B.p[i*3],B.p[i*3+1],B.p[i*3+2]],key=p[0].toFixed(4)+'_'+p[1].toFixed(4)+'_'+p[2].toFixed(4);let ws=memo.get(key);
+      if(!ws){ws=w(p).filter(q=>q[1]>1e-4).sort((a,b)=>b[1]-a[1]).slice(0,4);let t=0;ws.forEach(q=>{t+=q[1]});ws=ws.map(q=>[q[0],q[1]/t]);memo.set(key,ws)}ws.forEach((q,k)=>{SI[i*4+k]=q[0];SW[i*4+k]=q[1]})}
+    g.setAttribute('skinIndex',new THREE.BufferAttribute(SI,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(SW,4));
+    const m=new THREE.SkinnedMesh(g,mr);m.userData.lpsSkip=1;m.frustumCulled=false;m.castShadow=false;Bd.bm.add(m);m.bind(Bd.bm.skeleton,Bd.bm.bindMatrix);R.m.push(m);return m};
   const wy=T[2][0],hip=T[1],w2=tr(2,.03),h1=tr(1,.034);
-  // skirt: from the waist to the floor, folds deepening to the hem (pelvis)
-  piece('pelvis',J.pelvis,[w2,h1,[T[0][0]-.06,hip[1]+.05,hip[2]+.06,hip[3]+.075],[.52,.24,.2,.25],[.26,.29,.25,.33],[.035,.33,.29,.4,-.02]],18,{fold:.1,fn:6,seed:1,v0:.5,v1:1,lineJ:j=>j==0||j==17});
-  // body: waist to the shoulder line, a V at the throat (chest)
-  piece('chest',J.chest,[[T[7][0]+.012,T[7][1]+.016,T[7][2]+.02,T[7][3]+.022,T[7][4]],tr(6,.03),tr(5,.03),tr(4,.03),tr(3,.03),[wy-.02,w2[1]+.004,w2[2]+.004,w2[3]+.004]],14,{seed:3,v0:0,v1:.5,skip:(i,j)=>i==0&&(j==0||j==13),lineJ:(j,i)=>(j==0||j==13)&&i>0});
+  // skirt: from the waist to the floor, folds deepening to the hem; it follows the thighs and shins most of the way
+  piece(wSkirt,[w2,h1,[T[0][0]-.06,hip[1]+.05,hip[2]+.06,hip[3]+.075],[.72,.2,.17,.2],[.52,.24,.2,.25],[.26,.29,.25,.33],[.035,.33,.29,.4,-.02]],18,{fold:.1,fn:6,seed:1,v0:.5,v1:1,lineJ:j=>j==0||j==17});
+  // body: waist to the shoulder line, a V at the throat
+  piece(near,[[T[7][0]+.012,T[7][1]+.016,T[7][2]+.02,T[7][3]+.022,T[7][4]],tr(6,.03),tr(5,.03),tr(4,.03),[T[3][0]+.095,(T[3][1]+T[4][1])*.5+.03,(T[3][2]+T[4][2])*.5+.03,(T[3][3]+T[4][3])*.5+.03],tr(3,.03),[wy-.02,w2[1]+.004,w2[2]+.004,w2[3]+.004]],14,{seed:3,v0:0,v1:.5,skip:(i,j)=>i==0&&(j==0||j==13),lineJ:(j,i)=>(j==0||j==13)&&i>0});
   // a standing collar, a mantle over the shoulders
-  piece('chest',J.chest,[[T[7][0]+.105,.082,.07,.085,.0],[T[7][0]+.01,.078,.062,.074,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j==0||j==11});
-  piece('chest',J.chest,[[T[7][0]+.022,.095,.07,.08],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
-  // sleeves: close on the upper arm, a wide bell at the wrist
+  piece(wChest,[[T[7][0]+.105,.082,.07,.085,.0],[T[7][0]+.01,.078,.062,.074,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j==0||j==11});
+  piece(wMantle,[[T[7][0]+.022,.095,.07,.08],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
+  // sleeves: one tube from the shoulder to a wide bell at the wrist, bending at the elbow with the arm
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),at=(a,d,t)=>add3(a,mul3(d,t));
-    piece(A+'0',a0,null,9,{seed:6,v0:.1,v1:.4,raw:[[-.1,.074],[.45,.066],[1.06,.06]].map(q=>fn229RingD(9,at(a0,d1,q[0]),d1,[0,0,1],q[1]))});
-    piece(A+'1',a1,null,10,{seed:8,v0:.6,v1:.97,raw:[[-.06,.062,.062],[.35,.066,.07],[.75,.084,.094],[1.06,.1,.118]].map(q=>fn229RingD(10,at(a1,d2,q[0]),d2,[0,0,1],q[1],q[2]))})});
+    piece(wArm(A),null,10,{seed:6+s,v0:.1,v1:.97,raw:[[-.1,.076,.076],[.3,.07,.07],[.7,.064,.066],[.92,.062,.066]].map(q=>fn229RingD(10,at(a0,d1,q[0]),d1,[0,0,1],q[1],q[2])).concat([[.08,.062,.066],[.4,.068,.074],[.75,.084,.094],[1.06,.1,.118]].map(q=>fn229RingD(10,at(a1,d2,q[0]),d2,[0,0,1],q[1],q[2])))})});
   // sash
-  piece('pelvis',J.pelvis,[[wy+.035,w2[1]+.012,w2[2]+.012,w2[3]+.012],[wy-.03,h1[1]*.5+w2[1]*.5+.014,h1[2]*.5+w2[2]*.5+.014,h1[3]*.5+w2[3]*.5+.014]],14,{seed:11,v0:.9,v1:.96});
+  piece(near,[[wy+.035,w2[1]+.012,w2[2]+.012,w2[3]+.012],[wy-.03,h1[1]*.5+w2[1]*.5+.014,h1[2]*.5+w2[2]*.5+.014,h1[3]*.5+w2[3]*.5+.014]],14,{seed:11,v0:.9,v1:.96});
   R.m.forEach(m=>{m.visible=false})}
-function fn229RobeSet(F){const st=F.st,U=F.mats.robe.uniforms;U.rev.value=st.robe;F.robe.m.forEach(m=>{m.visible=st.robe>.002});U.flut.value=st.flut||0;U.flash.value=st.thread||0;U.lit.value=st.lit}
+function fn229RobeSet(F){const st=F.st,U=F.mats.robe.uniforms;U.rev.value=st.robe;F.man.mat.uniforms.hide.value=st.robe*1.25-.125-.085;F.robe.m.forEach(m=>{m.visible=st.robe>.002});U.flut.value=st.flut||0;U.flash.value=st.thread||0;U.lit.value=st.lit}
 
 // ---------------- wings: ivory, long-boned, the skin between the fingers thin and torn (on the man's back) ----------------
 var FN229W={arm:.72,fore:.95,fing:[1.28,1.12,.9,.62]};
@@ -78130,7 +78155,7 @@ function fn229WingSet(F,o){const st=F.st,em=st.wing,C=F.wC,V=THREE.Vector3;F.mat
         put(org,m0,m1,shd*.8);const o0=torn<1?m0.clone().lerp(prev,.3):prev,o1=torn<1?m1.clone().lerp(p,.3):p;put(m0,o0,o1,shd+.14);put(m0,o1,m1,shd+.06);prev=p.clone()}});
     put(sh,el,hip,.34);put(el,wr,tips[3],.4);
     for(;n<P.length/3;n++){P[n*3]=P[n*3+1]=P[n*3+2]=0}W.mesh.geometry.attributes.position.needsUpdate=true;W.mesh.geometry.attributes.color.needsUpdate=true})}
-function fn229FigFree(F){if(!F)return;if(F.root.parent)F.root.parent.remove(F.root);fn229BodyFree(F.cre);fn229BodyFree(F.man);for(const k in F.mats)if(F.mats[k]&&F.mats[k].dispose)F.mats[k].dispose()}
+function fn229FigFree(F){if(!F)return;if(F.root.parent)F.root.parent.remove(F.root);if(F.robe)F.robe.m.forEach(m=>{if(m.parent)m.parent.remove(m);m.geometry.dispose()});fn229BodyFree(F.cre);fn229BodyFree(F.man);for(const k in F.mats)if(F.mats[k]&&F.mats[k].dispose)F.mats[k].dispose()}
 // ================= v229: the fountain's finale, part 2 of 3 — the den under Duskhold =================
 // "Follows the essence down inside the fountain — underneath the duskhold. It is a massive underground den" where the Voice waits.
 // One group (FN229D.Y below the town, nothing else is drawn while the camera is in it): the fountain's throat (a stone well shaft the
@@ -78366,10 +78391,10 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     try{animHero(now,false)}catch(_){}
     if(first){
       // the hero lifts the essence between his hands, then lets it go to the fountain
-      ev('raise',.15,()=>kqsPose('raise',3300));ev('cast',TT.a2+.05,()=>kqsPose('cast',1500));ev('s0',.3,()=>sfx('siphon'));
+      ev('raise',.15,()=>kqsPose('raise',3300));ev('cast',TT.a2+.05,()=>kqsPose('cast',1500));
       const grow=Sm(K(t,.5,2.6))*(1-Sm(K(t,TT.a2+.2,TT.a2+1.5))),hp=g(0,1.72+.1*Math.sin(t*2.2),FN229.mark[1]-.5);S.orb.visible=grow>.01;S.orb.position.copy(hp);S.orb.scale.setScalar(Math.max(.01,grow));S.orb.rotation.y=t*1.3;
-      ev('stream',TT.a2+.2,()=>{se208FxRun(se208Stream,[hp.x,hp.y,hp.z,T.cx,y0+2.95,T.cy,S.col,1.7,1]);sfx('pour')});
-      ev('flare',TT.a2+1.95,()=>{if(typeof ftn208Flare=='function')ftn208Flare(S.col);sfx('essence')});
+      ev('stream',TT.a2+.2,()=>{se208FxRun(se208Stream,[hp.x,hp.y,hp.z,T.cx,y0+2.95,T.cy,S.col,1.7,1])});
+      ev('flare',TT.a2+1.95,()=>{if(typeof ftn208Flare=='function')ftn208Flare(S.col)});
       if(n=='a1'){const q=Sm(k);p=g(sg*(5.7-.8*q),1.5,4.3-.3*q);l=g(sg*.5,1.22,2.9-.2*q);fov=40-3*q}
       else{const q1=Io(K(u,0,2.6)),q2=Sm(K(u,2.2,4.4));p=g(sg*(1.5-1.2*q1),2.0+3.4*q1-1.3*q2,5.6-2.0*q1-1.3*q2);l=g(0,2.9-2.3*q2,0+.9*q2);fov=50-18*q2}
       fn229LightTown(S)}
@@ -78378,7 +78403,7 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
       F.root.visible=true;if(F.root.parent!==scene)scene.add(F.root);st.robe=1;st.eye=1;st.vein=0;st.thread=0;st.spasm=0;fn229Shape(F,1);fn229LightTown(S);
       const E=S.E,M=S.M,top=new V(E.x,y0+12.2,E.z+2.2),tE=TT.f1+.9,rise=Oc(K(t,tE+.35,TT.f2-.2));let pos=new V(),yaw=0,pit=0;st.lit=1;
       // the burst
-      ev('burst',tE,()=>{try{burst(gY(E,.4),0x2a2430,90,7,9,1.3);burst(gY(E,.6),0xc060ff,50,5,8,1);ring(E,0xb060ff,6,700);kqFlash(gY(E,1.5),0xd8b0ff,7,380);if(typeof svShock=='function')svShock(E,0x9a50e0,9,.8)}catch(_){}try{sfx('rift')}catch(_){}});
+      ev('burst',tE,()=>{try{burst(gY(E,.4),0x2a2430,90,7,9,1.3);burst(gY(E,.6),0xc060ff,50,5,8,1);ring(E,0xb060ff,6,700);kqFlash(gY(E,1.5),0xd8b0ff,7,380);if(typeof svShock=='function')svShock(E,0x9a50e0,9,.8)}catch(_){}});
       const eu=t-tE;S.holeG.visible=eu>=0;S.erR.forEach(q=>{const d=q.userData,v=eu;if(v<0){q.visible=false;return}const y=d.p0.y+d.v.y*v-11*v*v;q.visible=y>y0-.2||v<.2;q.position.set(d.p0.x+d.v.x*v,Math.max(y0+.05,y),d.p0.z+d.v.z*v);if(y>y0)q.rotation.set(d.w.x*v,d.w.y*v,d.w.z*v)});
       S.erS.material.uniforms.op.value=.75*Sm(K(eu,0,.4))*(1-Sm(K(eu,3,7)));S.erP.material.uniforms.op.value=.9*Sm(K(eu,0,.3))*(1-Sm(K(eu,1.2,3)));
       if(t<TT.f2){pos.set(E.x,y0-3+rise*(top.y-y0+3),E.z+rise*rise*2.2);yaw=0;pit=-.25*(1-rise);wing.open=Sm(K(rise,.12,.5));wing.flap=rise<.75?-.6+1.5*rise:Math.sin((t-TT.f1)*5)*.5;P=mix(PO.coil,PO.fly,Sm(K(rise,.05,.4)));F.root.visible=eu>.3}
@@ -78410,10 +78435,11 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     L.hemiS.value.setRGB(.028,.032,.055);L.hemiG.value.setRGB(.045,.05,.085);L.keyC.value.setRGB(0,0,0);L.rimC.value.setRGB(.15,.14,.26);L.rimP.value=3;
     const at=S.at,A=(x,y,z)=>dw(at.x+x,at.y+y,at.z+z);
     // --- the figure's state over the whole den sequence ---
-    const k1=Sm(K(t,TT.d1+2.0,TT.d2))*.74,k2=Sm(K(t,TT.d2+.2,TT.d2+2.6))*.26,kk=k1+k2;st.robe=K(t,TT.d3+.5,TT.d3+3.9);st.thread=Math.sin(Sm(K(t,TT.d3+3.4,TT.d3+5.2))*Math.PI);
+    // v231: the creature only draws in during d1 (to .6); the man's body takes over on the cut to d2 (.64 →), behind the black dip, never in a shot
+    const kk=t<TT.d2?Sm(K(t,TT.d1+2.0,TT.d2))*.6:.64+.36*Sm(K(t,TT.d2+.2,TT.d2+2.6));st.robe=K(t,TT.d3+.5,TT.d3+3.9);st.thread=Math.sin(Sm(K(t,TT.d3+3.4,TT.d3+5.2))*Math.PI);
     st.vein=1.5*Sm(K(t,TT.c3+.6,TT.c3+2.4))*(1-.6*Sm(K(t,TT.d1+3.6,TT.d2))-.4*Sm(K(t,TT.d2,TT.d2+2.2)));st.eye=Sm(K(t,TT.c1+1.3,TT.c1+1.6))*(1+.6*Sm(K(t,TT.c3+.9,TT.c3+1.6))*(1-Sm(K(t,TT.d2,TT.d2+2))));
     st.wing=Oc(K(t,TT.e2+.55,TT.e2+1.3));st.lit=t<TT.c1?.16:Lp(.05,1,Sm(K(t,TT.c1+1.9,TT.c1+3.9)));st.flut=t>TT.e3?1:.12+.5*Sm(K(t,TT.e1+1.8,TT.e1+2.4));
-    const tw=(a)=>(ic151H(Math.floor(t*17)+a)-.5),cv=Sm(K(t,TT.d1+1.6,TT.d1+2.4))*(1-Sm(K(t,TT.d2+1.6,TT.d2+2.6)));let rootY=0,rootYaw=0;st.spasm=cv;fn229Shape(F,kk);const isMan=fn229Act(F)===F.man,CL=isMan?PO.clutchM:PO.clutch;
+    const tw=(a)=>(fn229Nz(t*1.15+a*3.71,a*1.93,.5)-.5)*.9,cv=Sm(K(t,TT.d1+1.6,TT.d1+2.4))*(1-Sm(K(t,TT.d2+1.6,TT.d2+2.6)));let rootY=0,rootYaw=0;st.spasm=cv;fn229Shape(F,kk);const isMan=fn229Act(F)===F.man,CL=isMan?PO.clutchM:PO.clutch;
     if(t<TT.c2){const q=Sm(K(t,TT.c1+2.0,TT.c1+3.6));P=mix(PO.lurk,PO.crouch,q);const lift=Math.sin(K(t,TT.c1+2.0,TT.c1+3.3)*Math.PI);P.hR[1]+=.4*lift;P.hd[1]=.1*Math.sin(t*.7)}
     else if(t<TT.c3){const q=Io(K(u,.3,2.6)),bob=Math.sin(Math.max(0,u-2.6)*4.2)*.03;P=mix(PO.crouch,PO.drink,q);P.pos[1]+=bob;P.jaw=Lp(.25,.55,q)+.2*Math.sin(Math.max(0,u-2.6)*8.4)*q}
     else if(t<TT.d1){const q=Io(K(u,.4,1.9));P=mix(PO.drink,PO.bliss,q);const br=Math.sin(u*2.3)*.03;P.ch[0]+=br;P.nk[2]=.12*Math.sin(u*1.3)*q;P.hd[2]=.1*Math.sin(u*1.7+1)*q}
@@ -78445,14 +78471,14 @@ function fn229Frame(S,t){const V=THREE.Vector3,K=fn229K,Sm=fn229Sm,Lp=fn229Lerp,
     // the bead of essence falling down the throat and into the pool
     {const yT=D.shaftY[1]-2,by=n=='b1'?Lp(yT-9,D.shaftY[0]-6,Math.pow(k,1.6)):n=='b2'?Lp(D.shaftY[0]-6,-.1,Math.pow(K(u,0,2.4),1.4)):-5;S.bead.visible=(n=='b1'||n=='b2')&&by>0;S.bead.position.set(0,by,0);
       if(S.bead.visible)fn229Lt(1,O.x,O.y+by,O.z,1.5,1.25,2.0,n=='b1'?22:50)}
-    ev('land',TT.b2+2.4,()=>{sfx('essence')});ev('lance',TT.e1+1.45,()=>{try{sfx('zap')}catch(_){}});ev('boom',tB,()=>{try{sfx('rift')}catch(_){}});
+    // (v231: no stock game sounds in the film; fn229Score voices the landing, the lance and the roof itself)
     // --- cameras ---
     if(n=='b1'){const y=Lp(D.shaftY[1]-5,D.shaftY[0]+2.5,Math.pow(k,1.6)),a=t*.55;p=dw(Math.sin(a)*.95,y,Math.cos(a)*.95);l=dw(0,y-10,0);fov=62;roll=a+1.2;shake=.03}
     else if(n=='b2'){const q=Io(K(u,0,4.6));p=dw(Lp(3.6,11.5,q),Lp(31.5,7.5,q),Lp(6.4,25,q));l=dw(0,Lp(22,4.2,Sm(K(u,0,3.6))),Lp(0,-5,q));fov=56-4*q}
     else if(n=='c1'){const q=Sm(k);p=dw(4.7-.8*q,.6+.12*q,7.7-.6*q);l=dw(-.5,1.9+1.5*q,-8.5);fov=42}
     else if(n=='c2'){const q=Sm(k);p=dw(13.6-1.4*q,2.9-.7*q,-3.2-.6*q);l=dw(0,2.5-.5*q,-6.8);fov=38}
     else if(n=='c3'){const q=Sm(K(u,.3,2.4)),cb=F.J.chest.getWorldPosition(new V());p=cb.clone().add(new V(3.2-.6*q,1.2+.9*q,5.2-.6*q));l=hd.clone().add(new V(0,.1,.2));fov=34;shake=.02*st.vein}
-    else if(n=='d1'){const q=Sm(k),a=.75-1.35*q,r=Lp(6.7,3.5,k1/.74);p=A(Math.sin(a)*r,1.0+.7*q,Math.cos(a)*r);const hy=Lp(4.2,(hd.y-O.y-at.y)*.66,Sm(K(u,0,1.5)));l=A(0,hy,0);fov=62-6*q;shake=.06*cv}
+    else if(n=='d1'){const q=Sm(k),a=.75-1.35*q,r=Lp(6.7,3.5,Math.min(1,kk/.6));p=A(Math.sin(a)*r,1.0+.7*q,Math.cos(a)*r);const hy=Lp(4.2,(hd.y-O.y-at.y)*.66,Sm(K(u,0,1.5)));l=A(0,hy,0);fov=62-6*q;shake=.06*cv}
     else if(n=='d2'){const q=Sm(k),q3=Sm(K(u,2.2,3.4));p=hd.clone().add(new V(.5*sc,(-.12+.1*q)*sc,(1.55-.3*q)*sc));l=hd.clone().add(new V(.03*sc,-.09*sc*(1-q3),0));fov=34;shake=.012*cv}
     else if(n=='d3'){const q=Sm(K(u,.3,5.2));p=A(Lp(-2.3,-.75,q),Lp(.85,1.56,q),Lp(4.4,1.9,q));l=A(0,Lp(.95,1.62,q),0);fov=42-6*q}
     else if(n=='e1'){const q=Sm(K(t,tB-.1,tB+.6));p=A(.95,.32,2.6);l=A(0,Lp(1.55,9,q),0);fov=60+8*q;shake=.28*Math.max(0,1-Math.abs(t-tB-.25)/1.1)}
@@ -78482,7 +78508,7 @@ function fn229Layer(S){fn229Css();const el=document.createElement('div');el.id='
 function fn229Dom(S,t){const D=S.dom;if(!D)return;const K=ic151K,Sm=ic151Sm,T=FN229.T,C=FN229.cut;
   const lb=(11*Sm(K(t,0,1))*(1-Sm(K(t,C+.5,FN229.len-.3))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
   // black: short dips on the hard cuts inside the den, a hard cut at the end, then the game fades back in
-  let bk=0;[T.c1,T.c2,T.d2,T.e2].forEach(a=>{bk=Math.max(bk,1-Math.abs(t-a)/.22)});{const ts=T.d1+2+.735*(T.d2-T.d1-2);bk=Math.max(bk,.9*(1-Math.abs(t-ts)/.2))}bk=Math.max(bk,0);if(t>=C)bk=1-K(t,C+.3,C+1.7);D.fk.style.opacity=bk.toFixed(3);
+  let bk=0;[T.c1,T.c2,T.d2,T.e2].forEach(a=>{bk=Math.max(bk,1-Math.abs(t-a)/.22)});bk=Math.max(bk,0);if(t>=C)bk=1-K(t,C+.3,C+1.7);D.fk.style.opacity=bk.toFixed(3);
   // white: into the basin, out of the throat's light; into the sky through the roof, out over Duskhold
   const fl=Math.max(Sm(K(t,T.b1-.75,T.b1-.05))*(1-Sm(K(t,T.b1,T.b1+.8))),Sm(K(t,T.f1-.9,T.f1-.1))*(1-Sm(K(t,T.f1,T.f1+.7))),.8*Math.max(0,1-Math.abs(t-(T.e1+2.3))/.3));D.fl.style.opacity=fl.toFixed(3);
   D.vg.style.opacity=(t>=T.b1&&t<T.f1?1:0).toFixed(2);
@@ -78501,36 +78527,42 @@ function fn229Score(ac,out,T0){const T=x=>T0+x,G=v=>{const g=ac.createGain();g.g
   const noise=(a,dur,pk,at,rel,o)=>{if(T(a)<ac.currentTime-.01)return;o=o||{};const s=ac.createBufferSource();s.buffer=nb;s.loop=true;const fl=ac.createBiquadFilter();fl.type=o.type||'bandpass';fl.frequency.setValueAtTime(o.f||800,T(a));if(o.f2)fl.frequency.exponentialRampToValueAtTime(o.f2,T(a+dur));fl.Q.value=o.q||1;
     const g=G(0);g.gain.setValueAtTime(0,T(a));g.gain.linearRampToValueAtTime(pk,T(a+at));g.gain.setValueAtTime(pk,T(a+Math.max(at,dur-rel)));g.gain.linearRampToValueAtTime(0,T(a+dur));s.connect(fl);fl.connect(g);g.connect(out);if(o.wet){const w=G(o.wet);g.connect(w);w.connect(rv)}s.start(T(a));s.stop(T(a+dur+.05))};
   const hit=(a,f,pk)=>{osc('sine',f,a,2.6,pk,.01,2.5,{wet:.7});osc('triangle',f*2,a,1.2,pk*.35,.005,1.1,{lp:600,wet:.4});noise(a,.5,pk*.5,.005,.45,{type:'lowpass',f:220,wet:.5})};
-  // Duskhold: a clear rising fifth as the essence is lifted, the pour
-  [146.83,220,293.66].forEach((f,i)=>osc('sine',f,.3+i*.5,X.b1-.2,.035,2.2,1.4,{wet:1.2,dry:.4}));osc('sine',587.3,X.a2+.2,3.6,.03,1.6,1.8,{wet:1.5,dry:.3,f2:880});
-  noise(X.a2+.2,4.2,.05,1.2,1.6,{f:2400,f2:500,q:.7,wet:.8});
-  // the fall: wind in the throat, a tone sliding down
-  noise(X.b1-.5,4.4,.16,.8,1.2,{f:500,f2:160,q:.6,wet:.5});osc('sawtooth',196,X.b1-.3,4.2,.035,.6,1.4,{f2:49,lp:500,wet:.8});hit(X.b1,55,.2);
-  // the den: the Voice's drone (D, as in the intro), a far choir, the thread of essence singing
+  // v231 (owner: "Some sound effects used sound cheesy- make it a serious tone"): no chimes, pings, rising sweeps or arcade sounds
+  // (the film also plays none of the game's stock effects now). Low strings in D minor, sub hits, a tolling bell, wind and stone.
+  const toll=(a,f,pk)=>{[[1,1,5.2],[2,.5,3.8],[2.76,.3,2.8],[5.4,.08,1.5]].forEach(q=>osc('sine',f*q[0],a,q[2],pk*q[1],.006,q[2]-.01,{wet:1.1,dry:.6}))};
+  const pad=(fs,a,dur,pk,at,rel,lp)=>fs.forEach((f,i)=>[-6,7].forEach(d=>osc('sawtooth',f,a+i*.12,dur,pk,at,rel,{lp:lp||420,wet:.9,dry:.7,det:d})));
+  // Duskhold: a low pedal under the lifted essence, the pour as a breath of air, one soft bell as the basin takes it
+  osc('sine',73.42,.2,X.b1,.07,2.4,1.2,{wet:.6});pad([73.42,110,146.83],.6,X.b1-.6,.012,2.6,1.4,360);
+  noise(X.a2+.2,4.2,.045,1.4,1.8,{type:'lowpass',f:1300,f2:300,wet:.8});toll(X.a2+1.95,146.83,.045);
+  // the fall: wind in the throat, the dark opening under it
+  noise(X.b1-.5,4.6,.17,.9,1.3,{f:420,f2:140,q:.6,wet:.5});osc('sine',55,X.b1-.3,4.4,.1,2.6,1.2,{f2:36.71,wet:.5});hit(X.b1,55,.2);
+  // the den: the Voice's drone (D, as in the intro), low strings far off, the essence landing
   [36.71,55,73.42].forEach((f,i)=>osc('sawtooth',f,X.b2-.2,X.e3-X.b2+2,.034-i*.006,3,2,{lp:260,wet:.5,det:i*6}));
-  [293.66,349.23,440].forEach((f,i)=>osc('sine',f,X.b2+.5+i*.6,X.d1-X.b2,.011,3.5,2,{wet:1.4,dry:.35,det:i%2?7:-7}));hit(X.b2+2.4,49,.14);
-  // his hand, his eyes
-  hit(X.c1+2.0,41.2,.16);osc('sine',1244,X.c1+1.35,1.6,.02,.01,1.5,{wet:1.4,dry:.3});
-  // drinking: wet gulps; the heart, faster and faster through the euphoria
-  for(let i=0;i<5;i++)noise(X.c2+2.7+i*.75,.3,.12,.03,.22,{f:320+60*(i%2),q:4,wet:.5});
+  [146.83,174.61,220].forEach((f,i)=>osc('sine',f,X.b2+.5+i*.6,X.d1-X.b2,.012,3.5,2,{wet:1.4,dry:.35,det:i%2?7:-7}));hit(X.b2+2.4,49,.14);toll(X.b2+2.4,73.42,.07);
+  // his hand, his eyes: a sub hit, a close cold cluster in the low strings
+  hit(X.c1+2.0,41.2,.16);pad([138.59,146.83],X.c1+1.3,2.0,.016,.08,1.7,620);
+  // drinking: dull swallows; the heart, faster and faster through the euphoria; the strings tighten a half step
+  for(let i=0;i<4;i++){const a=X.c2+2.7+i*.95;noise(a,.3,.11,.05,.22,{type:'lowpass',f:150,wet:.4});osc('sine',62,a,.26,.12,.03,.22,{f2:44,wet:.3})}
   {let a=X.c3+.3,gap=.95;while(a<X.d1+2.2){osc('sine',52,a,.22,.3,.008,.2,{f2:38,wet:.25});osc('sine',48,a+.16,.2,.2,.008,.18,{f2:36,wet:.25});a+=gap;gap=Math.max(.36,gap*.86)}}
-  [311.13,369.99,466.16,622.25].forEach((f,i)=>osc('sine',f,X.c3+.5+i*.25,X.d1-X.c3+1.5,.02,1.6,1.2,{wet:1.5,dry:.4,f2:f*1.06,ft:4}));
-  // the change: a grinding swell, bones (cracks), the black fire
-  [58.27,61.74,87.31,92.5].forEach((f,i)=>osc('sawtooth',f,X.d1,X.d2-X.d1+2.2,.036,2,1.6,{lp:380+70*i,wet:.7,det:i*9,f2:f*.84}));noise(X.d1,6,.1,1.6,2,{f:180,f2:1400,q:.8,wet:.6});
-  for(let i=0;i<16;i++){const a=X.d1+1.9+i*.33+.12*R();noise(a,.07,.2,.004,.06,{f:1500+2400*R(),q:7,wet:.35});osc('square',85+60*R(),a,.05,.05,.003,.045,{lp:900})}
-  hit(X.d1+1.5,36.7,.26);hit(X.d2,43.6,.14);
-  // the robe: a warm chord, a shimmer as the gold takes
-  [146.83,185,220,293.66].forEach((f,i)=>osc('sine',f,X.d3+.4+i*.3,5.2,.028,1.6,2,{wet:1.3,dry:.5}));for(let i=0;i<9;i++)osc('sine',1174.7*Math.pow(1.122,i%5),X.d3+3.3+i*.13,.9,.012,.01,.85,{wet:1.5,dry:.4});
-  // the lance and the roof
-  osc('sawtooth',70,X.e1+.5,1.8,.06,1.5,.1,{f2:420,lp:1400,wet:.5});hit(X.e1+2.25,32.7,.4);noise(X.e1+2.25,2.8,.28,.01,2.6,{type:'lowpass',f:900,f2:90,wet:.7});
+  pad([77.78,116.54,155.56],X.c3+.5,X.d1-X.c3+1.5,.014,1.8,1.3,520);
+  // the change: a grinding swell, bone (dry cracks, no tone), the black fire, a bell as the man stands in his place
+  [58.27,61.74,87.31,92.5].forEach((f,i)=>osc('sawtooth',f,X.d1,X.d2-X.d1+2.2,.036,2,1.6,{lp:380+70*i,wet:.7,det:i*9,f2:f*.84}));noise(X.d1,6,.09,1.8,2.2,{type:'lowpass',f:160,f2:700,wet:.6});
+  for(let i=0;i<10;i++){const a=X.d1+2.0+i*.4+.14*R();noise(a,.06,.15,.004,.052,{f:500+800*R(),q:5,wet:.3})}
+  hit(X.d1+1.5,36.7,.26);hit(X.d2,43.6,.16);toll(X.d2+.1,73.42,.08);
+  // the robe: the low strings settle on D minor, a breath of air as the gold takes
+  pad([73.42,110,146.83,174.61],X.d3+.4,5.4,.013,1.8,2.2,480);noise(X.d3+3.2,2.4,.022,1,1.3,{type:'highpass',f:2600,wet:1.2});toll(X.d3+3.5,110,.05);
+  // the lance and the roof: pressure building, a dull crack, stone
+  noise(X.e1+.4,1.9,.16,1.7,.12,{type:'lowpass',f:110,f2:520,wet:.5});osc('sine',41.2,X.e1+.4,1.9,.2,1.7,.1,{wet:.4});
+  noise(X.e1+1.45,.7,.2,.01,.6,{type:'lowpass',f:700,f2:160,wet:.6});osc('sine',58,X.e1+1.45,.6,.26,.008,.55,{f2:34,wet:.4});
+  hit(X.e1+2.25,32.7,.4);noise(X.e1+2.25,2.8,.28,.01,2.6,{type:'lowpass',f:900,f2:90,wet:.7});
   for(let i=0;i<8;i++)noise(X.e1+2.7+i*.28+.1*R(),.22,.12,.005,.2,{type:'lowpass',f:260,wet:.5});
-  // wings: tearing, then two great beats; the leap
-  noise(X.e2+.5,.7,.16,.02,.5,{f:900,f2:2600,q:2,wet:.5});hit(X.e2+.6,49,.2);[1.2,2.1].forEach(d=>noise(X.e2+d,.7,.14,.2,.45,{type:'lowpass',f:380,wet:.4}));
-  noise(X.e3+.55,2.2,.2,.25,1.4,{type:'lowpass',f:300,f2:1200,wet:.5});[110,164.8,220,277.2].forEach((f,i)=>osc('sawtooth',f,X.e3+.4,2.6,.03,1.8,.2,{lp:900,wet:.9,f2:f*2,ft:2.6}));
-  // Duskhold: rumble, the burst, a dark triumphant chord while he hangs over the town, wing beats, the landing, the last word
-  noise(X.f1,1.2,.14,.7,.3,{type:'lowpass',f:90,wet:.3});hit(X.f1+.9,32.7,.42);noise(X.f1+.9,2.4,.26,.01,2.2,{type:'lowpass',f:1100,f2:120,wet:.6});
-  [73.42,110,146.83,174.61,220].forEach((f,i)=>osc('sawtooth',f,X.f1+1.4,X.f4-X.f1,.03,1.4,2.4,{lp:700,wet:.9,det:i*5}));[293.66,349.23,440,587.33].forEach((f,i)=>osc('sine',f,X.f2+i*.2,X.f4-X.f2+1,.014,1.6,2.2,{wet:1.5,dry:.4}));
-  for(let a=X.f2+.3;a<X.f3+2.6;a+=1.2)noise(a,.75,.1,.22,.45,{type:'lowpass',f:340,wet:.4});hit(X.f3+3.0,49,.18);
+  // wings: sinew tearing (low, dry), then two great beats; the leap
+  noise(X.e2+.5,.8,.15,.03,.6,{f:420,f2:1100,q:1.6,wet:.5});hit(X.e2+.6,49,.2);[1.2,2.1].forEach(d=>noise(X.e2+d,.7,.14,.2,.45,{type:'lowpass',f:380,wet:.4}));
+  noise(X.e3+.55,2.2,.2,.25,1.4,{type:'lowpass',f:300,f2:1000,wet:.5});pad([55,82.41,110],X.e3+.3,2.8,.02,1.9,.3,560);hit(X.e3+.6,41.2,.2);
+  // Duskhold: rumble, the burst, D minor low and wide while he hangs over the town, wing beats, the landing, the last word
+  noise(X.f1,1.2,.14,.7,.3,{type:'lowpass',f:90,wet:.3});hit(X.f1+.9,32.7,.42);noise(X.f1+.9,2.4,.26,.01,2.2,{type:'lowpass',f:1100,f2:120,wet:.6});toll(X.f1+1.0,73.42,.1);
+  [73.42,110,146.83,174.61,220].forEach((f,i)=>osc('sawtooth',f,X.f1+1.4,X.f4-X.f1,.03,1.4,2.4,{lp:560,wet:.9,det:i*5}));[293.66,349.23].forEach((f,i)=>osc('sine',f,X.f2+i*.2,X.f4-X.f2+1,.008,1.8,2.2,{wet:1.5,dry:.4}));
+  for(let a=X.f2+.3;a<X.f3+2.6;a+=1.2)noise(a,.75,.1,.22,.45,{type:'lowpass',f:340,wet:.4});hit(X.f3+3.0,49,.18);toll(X.f3+3.05,73.42,.07);
   [36.71,73.42].forEach(f=>osc('sine',f,X.f4,E-X.f4,.12,1.2,.05,{wet:.5}));osc('sine',36.7,E,2.8,.34,.01,2.7,{wet:.6});osc('sine',73.4,E+.02,2.3,.05,.01,2.2,{wet:1})}
 
 // ---------------- play / skip / finish ----------------

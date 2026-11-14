@@ -26,11 +26,11 @@ function fn229Sh(c,k){return [c[0]*k,c[1]*k,c[2]*k]}
 
 // ---------------- the lit shader ----------------
 var FN229_SH={
-  v:'attribute float em;attribute float rv;uniform float t,flut;varying vec3 vC,vV,vO,vW;varying float vE,vR;varying vec2 vU;varying vec3 vN;\n#include <skinning_pars_vertex>\n#include <fog_pars_vertex>\n'+
-    'void main(){vC=color;vE=em;vR=rv;vU=uv;vO=position;vec3 p=position;\n'+
+  v:'attribute float em;attribute float rv;uniform float t,flut;varying vec3 vC,vV,vO,vW;varying float vE,vR;varying vec2 vU;varying vec3 vN;\n#ifdef HIDE\nattribute float hd;varying float vH;\n#endif\n#include <skinning_pars_vertex>\n#include <fog_pars_vertex>\n'+
+    'void main(){vC=color;vE=em;vR=rv;vU=uv;vO=position;vec3 p=position;\n#ifdef HIDE\nvH=hd;\n#endif\n'+
     '#ifdef ROBE\n{float w=flut*uv.y*uv.y;p.x+=sin(t*3.1+position.y*5.+uv.x*12.566)*.05*w;p.z+=cos(t*2.6+position.y*4.+uv.x*18.85)*.05*w+flut*uv.y*uv.y*uv.y*.0;}\n#endif\n'+
     'vec3 transformed=p;\n#include <skinbase_vertex>\n#include <skinning_vertex>\nvec3 objectNormal=normal;\n#include <skinnormal_vertex>\nvN=normalMatrix*objectNormal;\nvec4 w4=modelMatrix*vec4(transformed,1.);vW=w4.xyz;vec4 mvPosition=viewMatrix*w4;vV=mvPosition.xyz;gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
-  f:'uniform vec3 hemiS,hemiG,keyD,keyC,rimC,emC;uniform vec3 lp[4];uniform vec3 lc[4];uniform float lr[4];uniform float t,rimP,rimK,emK,iri,op,rev,gr,gold,flash,lit,vein,tintK,smK;uniform vec3 tintC;varying vec3 vC,vV,vO,vW,vN;varying float vE,vR;varying vec2 vU;\n#include <fog_pars_fragment>\n'+
+  f:'uniform vec3 hemiS,hemiG,keyD,keyC,rimC,emC;uniform vec3 lp[4];uniform vec3 lc[4];uniform float lr[4];uniform float t,rimP,rimK,emK,iri,op,rev,gr,gold,flash,lit,vein,tintK,smK;uniform vec3 tintC;varying vec3 vC,vV,vO,vW,vN;varying float vE,vR;varying vec2 vU;\n#ifdef HIDE\nuniform float hide;varying float vH;\n#endif\n#include <fog_pars_fragment>\n'+
     'float h3(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}'+
     'float n3(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}'+
     'vec3 pal(float h){return .55+.45*cos(6.2832*(h+vec3(0.,.33,.67)));}\n'+
@@ -49,7 +49,7 @@ var FN229_SH={
     ' g=max(max(b1,dia),max(sc,curl));\n'+
     ' vec2 q=vec2(fract(x*7.)-.5,fract(v*9.+floor(x*7.)*.5)-.5);float sp=smoothstep(.05,.0,abs(abs(q.x)+abs(q.y)-.11))+smoothstep(.02,.0,length(q));g=max(g,sp*step(v,.7)*step(.06,v)*.85);\n'+
     ' return clamp(g,0.,1.);}\n#endif\n'+
-    'void main(){vec3 N=normalize(cross(dFdx(vV),dFdy(vV)));if(smK>0.){vec3 sn=normalize(vN);if(dot(sn,N)<0.)sn=-sn;N=normalize(mix(N,sn,smK));}vec3 Nw=normalize((vec4(N,0.)*viewMatrix).xyz);vec3 V=normalize(-vV);\n'+
+    'void main(){\n#ifdef HIDE\nif(vH>0.&&vH<hide)discard;\n#endif\nvec3 N=normalize(cross(dFdx(vV),dFdy(vV)));if(smK>0.){vec3 sn=normalize(vN);if(dot(sn,N)<0.)sn=-sn;N=normalize(mix(N,sn,smK));}vec3 Nw=normalize((vec4(N,0.)*viewMatrix).xyz);vec3 V=normalize(-vV);\n'+
     ' vec3 alb=vC;float g1=n3(vO*9.),g2=n3(vO*2.3+7.);alb*=1.-gr+gr*(.55*g1+.75*g2);float vm=0.;\n#ifdef SKIN\n{float shd;float h=skinH(vO,vm,shd);float dk=dot(alb,vec3(.34));alb=mix(alb,veinC,vm*veinA*smoothstep(.05,.3,dk))*shd;\n  vec3 dpx=dFdx(vV),dpy=dFdy(vV);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dpy,N),r2=cross(N,dpx);float det=dot(dpx,r1);vec3 gd=sign(det)*(hx*r1+hy*r2);N=normalize(abs(det)*N-bump*gd);Nw=normalize((vec4(N,0.)*viewMatrix).xyz);}\n#endif\nalb=mix(alb,tintC*(alb.r+alb.g+alb.b)*.4,tintK);float spec=0.;float glow=0.;vec3 glowC=vec3(1.,.8,.4);\n'+
     '#ifdef ROBE\n{float d=vR-(rev*1.25-.125)+(n3(vO*14.)-.5)*.12;if(d>0.)discard;float th=thread(vU)*gold;vec3 au=vec3(.95,.7,.26)*(.75+.5*n3(vO*60.));alb=mix(alb,au,th);spec=th;'+
     '  float edge=smoothstep(-.07,0.,d);glow=edge*2.6+th*flash*2.2;float wv=.9+.1*sin(vU.x*220.)*sin(vU.y*260.);alb*=mix(1.,wv,1.-th);}\n#endif\n'+
@@ -64,9 +64,9 @@ var FN229_SH={
 function fn229Mat(o){o=o||{};const L=FN229.L,U=THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{}]);
   ['hemiS','hemiG','keyD','keyC','rimC','rimP','lp','lc','lr','t'].forEach(k=>U[k]=L[k]);
   Object.assign(U,{emC:{value:new THREE.Color(o.em==null?0xffffff:o.em)},emK:{value:o.emK||0},iri:{value:o.iri||0},op:{value:o.op==null?1:o.op},rimK:{value:o.rim==null?1:o.rim},
-    rev:{value:o.rev==null?2:o.rev},gr:{value:o.grime==null?.2:o.grime},flut:{value:0},gold:{value:o.gold==null?1:o.gold},flash:{value:0},lit:{value:1},vein:{value:0},tintK:{value:0},tintC:{value:new THREE.Color(1,1,1)},lm:{value:new THREE.Vector4(1.6,.046,1.7,1.2)},bump:{value:.004},det:{value:o.det==null?1:o.det},smK:{value:o.smooth||0},veinA:{value:o.veinA==null?.6:o.veinA},veinC:{value:new THREE.Color(o.veinC==null?0x34315a:o.veinC)}});
+    rev:{value:o.rev==null?2:o.rev},gr:{value:o.grime==null?.2:o.grime},flut:{value:0},gold:{value:o.gold==null?1:o.gold},flash:{value:0},lit:{value:1},vein:{value:0},tintK:{value:0},tintC:{value:new THREE.Color(1,1,1)},lm:{value:new THREE.Vector4(1.6,.046,1.7,1.2)},bump:{value:.004},det:{value:o.det==null?1:o.det},smK:{value:o.smooth||0},hide:{value:-1},veinA:{value:o.veinA==null?.6:o.veinA},veinC:{value:new THREE.Color(o.veinC==null?0x34315a:o.veinC)}});
   const m=new THREE.ShaderMaterial({uniforms:U,vertexShader:FN229_SH.v,fragmentShader:FN229_SH.f,vertexColors:true,fog:true,side:o.side==null?THREE.DoubleSide:o.side,
-    skinning:!!o.skin,transparent:!!o.tr,depthWrite:o.dw==null?true:o.dw,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,extensions:{derivatives:true},defines:Object.assign({},o.robe?{ROBE:1}:{},o.skin?{SKIN:1}:{},o.beast?{BEAST:1}:{})});
+    skinning:!!(o.skin||o.sk),transparent:!!o.tr,depthWrite:o.dw==null?true:o.dw,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,extensions:{derivatives:true},defines:Object.assign({},o.robe?{ROBE:1}:{},o.skin?{SKIN:1}:{},o.beast?{BEAST:1}:{},o.hide?{HIDE:1}:{})});
   m.userData.fn229=1;m.userData.lps=1;m.userData.lpsSkip=1;return m}
 
 // ---------------- triangle soup with a colour per face (flat, faceted) ----------------
@@ -114,8 +114,9 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
   // skull without a lower jaw (base head coordinates): skull base, palate, the upper jaw's rim far forward, muzzle, nose pits,
   // under the eyes, eye line, brow ridge, then the long cranium going up and back
   // (the back radii carry the back of the skull down in one curve into the neck: no shelf under the cranium)
-  const HEAD=[[1.508,.05,.03,.098,-.07],[1.522,.056,.03,.104,-.06],[1.533,.064,.022,.108,-.04],[1.542,.073,.112,.108,.022],[1.554,.071,.117,.114,.028],[1.57,.064,.106,.112,.024],[1.588,.076,.094,.106,.018],[1.606,.072,.088,.1,.012],
-    [1.622,.079,.103,.1,.01],[1.642,.074,.09,.1,.002],[1.664,.066,.076,.094,-.006],[1.684,.05,.056,.078,-.012],[1.698,.026,.03,.046,-.016]];
+  // v231 (owner: "still a hard angle edge on the back of the creatures head"): the back radii now put the back of every ring on
+  // one curve (z - rb: -.058 at the crown … -.166 at the neck); before, the skull's back stopped .06 short of the base rings, a ledge
+  const HEAD=[[1.508,.05,.03,.096,-.07],[1.522,.056,.03,.103,-.06],[1.533,.064,.022,.119,-.04],[1.542,.073,.112,.177,.022],[1.554,.071,.117,.18,.028],[1.57,.064,.106,.173,.024],[1.588,.076,.094,.163,.018],[1.606,.072,.088,.151,.012],[1.622,.079,.103,.142,.01],[1.642,.074,.09,.123,.002],[1.664,.066,.076,.1,-.006],[1.684,.05,.056,.074,-.012],[1.698,.026,.03,.042,-.016]];
   // (owner, Nov 13: "I do not like the long round head ... his body should be way bigger proportionate to his head. He should be a
   // massive menacing gangly creature") a small angular skull on a huge frame: wide bony shoulders, a deep ribcage, a long back
   const S=cgHuman({h:1.3,w:1.0,d:.92,rw:[.7,.8,.42,.8,1.08,1.16,1.3,1.0],rf:[.74,.72,.36,.94,1.1,1.0,.9,.8],rb:[.78,.8,.54,.9,1.14,1.22,1.24,1.0],
@@ -211,8 +212,8 @@ var FN229B={fit:{},SC:{beast:9.2,man:1.93},swap:.62};
     const F=FN229B.fit.man={eye:[],S};[-1,1].forEach(s=>{const q=S.hp(s*EX,EY,0),p=cgRay(M,[q[0],q[1],q[2]+.5],[0,0,-1],{head:1});F.eye.push(p?[p[0],p[1],p[2]+.0015]:[q[0],q[1],q[2]+.085])})})})();
 
 // ---------------- at run time: one body, wearing this file's shader ----------------
-function fn229Body(key){const beast=key=='fn229beast',g=mkHumanoid(key),h=g.h,M=mdMats(),mat=fn229Mat(beast?{skin:1,beast:1,grime:.16,rim:.9,veinA:.5,veinC:0x2c2a52,smooth:.4}:{skin:1,grime:.06,rim:.7,veinA:0,veinC:0x7a6a7c,det:.1,smooth:.6}),Bd={key,g,h,bones:h.bones,mat,pins:[],fit:FN229B.fit[key=='fn229man'?'man':'beast']};g.scale.setScalar(1);g.userData.psNo=1;
-  h.children.forEach(o=>{if(!o.isSkinnedMesh)return;fn229Smooth(o.geometry);o.castShadow=false;o.frustumCulled=false;o.userData.lpsSkip=1;if(o.material!==M.g)o.material=mat;if(!Bd.bm)Bd.bm=o});
+function fn229Body(key){const beast=key=='fn229beast',g=mkHumanoid(key),h=g.h,M=mdMats(),mat=fn229Mat(beast?{skin:1,beast:1,grime:.16,rim:.9,veinA:.5,veinC:0x2c2a52,smooth:.4}:{skin:1,hide:1,grime:.06,rim:.7,veinA:0,veinC:0x7a6a7c,det:.1,smooth:.6}),Bd={key,g,h,bones:h.bones,mat,pins:[],fit:FN229B.fit[key=='fn229man'?'man':'beast']};g.scale.setScalar(1);g.userData.psNo=1;
+  h.children.forEach(o=>{if(!o.isSkinnedMesh)return;fn229Smooth(o.geometry);o.castShadow=false;o.frustumCulled=false;o.userData.lpsSkip=1;if(o.material!==M.g)o.material=mat;if(!Bd.bm)Bd.bm=o});if(!beast)fn229Under(Bd);
   Bd.S=Bd.fit.S;if(beast&&Bd.fit.lm)mat.uniforms.lm.value.fromArray(Bd.fit.lm);g.updateMatrixWorld(true);Bd.rest={};for(const n in h.bones){const b=h.bones[n];Bd.rest[n]={p:b.position.clone(),q:b.quaternion.clone()}}
   Bd.eyeM=new THREE.MeshBasicMaterial({color:0xffffff,fog:true});Bd.eyeM.userData.lpsSkip=1;Bd.eyes=Bd.fit.eye.map(p=>{const pin=fn229Pin(Bd,'head',p),m=new THREE.Mesh(FN229B.eyeG||(FN229B.eyeG=new THREE.IcosahedronGeometry(1,1)),Bd.eyeM);m.userData.lpsSkip=1;pin.add(m);return m});
   return Bd}
@@ -241,7 +242,7 @@ function fn229Jaw(Bd,mk){const F=Bd.fit,S=F.S,hs=S.hs,C={skin:[.6,.59,.66],dark:
   // and two cheek plates stand up from the jaw into the skull (they slide out of it as the jaw drops), and a dark gullet hangs
   // from the skull behind the hinge, so nothing shows through the open mouth but the dark of his throat
   {const y0=-.03*hs,y1=.105*hs,xs=[-.86,-.45,0,.45,.86].map(q=>q*W);for(let i=0;i<4;i++){const z=q=>.006*hs+.012*hs*(1-Math.abs(q)/W);fn229Quad(B,[xs[i],y0,z(xs[i])],[xs[i+1],y0,z(xs[i+1])],[xs[i+1]*.8,y1,z(xs[i+1])],[xs[i]*.8,y1,z(xs[i])],fn229Sh(C.maw,.7+.3*(i%2)))}
-    [-1,1].forEach(sd=>{const a=[sd*W*.86,-.004*hs,.002],b=[sd*W*.93,-.004*hs,L*.62],c=[sd*W*.8,.09*hs,L*.3],d=[sd*W*.72,y1,.006*hs];fn229Tri(B,a,b,c,fn229Sh(C.gum,.55));fn229Tri(B,a,c,d,fn229Sh(C.maw,1.1))})}
+    [-1,1].forEach(sd=>{const a=[sd*W*.86,-.004*hs,.002],b=[sd*W*.93,-.004*hs,L*.62],c=[sd*W*.6,.066*hs,L*.22],d=[sd*W*.58,y1*.8,.006*hs];fn229Tri(B,a,b,c,fn229Sh(C.gum,.55));fn229Tri(B,a,c,d,fn229Sh(C.maw,1.1))})}
   const m=new THREE.Mesh(fn229Geo(B),mk);m.userData.lpsSkip=1;m.frustumCulled=false;pin.add(m);Bd.jaw=pin;Bd.jawQ=pin.quaternion.clone();
   {const G=fn229Buf(),gp=fn229Pin(Bd,'head',H),R=[[.012,W*.84,.0],[-.05,W*.8,-.012],[-.11,W*.62,-.03],[-.16,W*.36,-.05]].map(q=>[[-q[1],q[0]*hs,q[2]*hs+.006],[-q[1]*.5,q[0]*hs,q[2]*hs+.02*hs],[q[1]*.5,q[0]*hs,q[2]*hs+.02*hs],[q[1],q[0]*hs,q[2]*hs+.006]]);
     for(let i=0;i<R.length-1;i++)for(let j=0;j<3;j++)fn229Quad(G,R[i][j],R[i][j+1],R[i+1][j+1],R[i+1][j],fn229Sh(C.maw,.5+.25*((i+j)%2)));
@@ -266,7 +267,7 @@ function fn229Act(F){return F.cre&&F.k<FN229B.swap?F.cre:F.man}
 // swap, the man's skin still corpse-pale just after it; eyes, veins, light
 function fn229Shape(F,k){F.k=k=Math.max(0,Math.min(1,k));const st=F.st,B=FN229B,sw=B.swap,act=fn229Act(F),H=fn229Lerp(B.SC.beast,B.SC.man,fn229Sm(k)),hb=B.Sb?B.Sb.hp(0,1.698,0)[1]:2.6,hm=B.Sm.hp(0,1.73,0)[1];
   F.size=H/B.SC.man;if(F.cre){F.cre.g.visible=act===F.cre;F.cre.g.scale.setScalar(H/hb)}F.man.g.visible=act===F.man;F.man.g.scale.setScalar(H/hm);
-  if(F.cre&&act===F.cre){const q=fn229Sm(k/sw),b=F.cre.bones,sp=st.spasm||0,j=i=>1+(ic151H(Math.floor(FN229.L.t.value*19)+i*7.3)-.5)*.22*sp;
+  if(F.cre&&act===F.cre){const q=fn229Sm(k/sw),b=F.cre.bones,sp=st.spasm||0,j=i=>1+(fn229Nz(FN229.L.t.value*1.4+i*5.3,i*2.1,.5)-.5)*.16*sp;
     ['aL0','aR0'].forEach((n,i)=>b[n].scale.setScalar(fn229Lerp(1,.66,q)*j(i)));['lh0','rh0'].forEach((n,i)=>b[n].scale.setScalar(fn229Lerp(1,.86,q)*j(2+i)));b.neck.scale.setScalar(fn229Lerp(1,.84,q)*j(5));b.head.scale.setScalar(fn229Lerp(1,.86,q));
     const U=F.cre.mat.uniforms;U.tintC.value.setRGB(.82,.68,.62);U.tintK.value=.5*q;U.vein.value=st.vein;U.lit.value=st.lit;F.mats.keen.uniforms.lit.value=st.lit;
     const e=.0085*F.cre.S.hs*st.eye;F.cre.eyes.forEach(m=>m.scale.set(Math.max(1e-4,e),Math.max(1e-4,e),Math.max(1e-4,e*.6)));F.cre.eyeM.color.setRGB(1.2,1.2,1.28);F.cre.mat.uniforms.bump.value=.0042*F.cre.g.scale.x}
@@ -302,31 +303,55 @@ function fn229Pose(F,Pin){const Bd=fn229Act(F),b=Bd.bones,R=Bd.rest,P=Object.ass
   Bd.g.updateMatrixWorld(true)}
 
 // ---------------- the robe: crimson, with gold thread (the ROBE variant of the shader draws the thread and weaves the cloth in) ----------------
-// built round the man's own torso rings, each piece hung on the bone it follows; reveal rv 0 at the hem … 1 at the collar;
-// uv.x round the body, uv.y 0 at the top of a piece … 1 at its hem
-function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045],deep:[.22,.012,.028],line:[.12,.008,.022]},mr=F.mats.robe=fn229Mat({robe:1,rev:0,grime:.1,rim:.55,gold:1}),R=F.robe={m:[],C},top=T[7][0]+.07;
-  const tr=(i,o)=>[T[i][0],T[i][1]+o,T[i][2]+o,T[i][3]+o,T[i][4]||0];
-  // rings [y, rx, f, b, z] in model space, hung on bone at pin point pt
-  const piece=(bone,pt,rings,n,o)=>{o=o||{};const B=fn229Buf(),Rg=(o.raw||rings.map((q,i)=>fn229Ring(n,q[0],q[1],q[2],q[3]==null?q[2]:q[3],0,q[4]||0,(p,j,a)=>{const fo=o.fold?1+o.fold*(i/(rings.length-1))*Math.sin(a*o.fn+i*.7):1;return [p[0]*fo,p[1],(p[2]-(q[4]||0))*fo+(q[4]||0)]}))).map(r=>r.map(p=>[p[0]-pt[0],p[1]-pt[1],p[2]-pt[2]]));
+// v231 (owner: "his clothing clips into his body frequently"): the robe is skinned to the man's own skeleton (it used to be rigid
+// pieces, each hung on one bone, so a bent knee, elbow or waist came through the cloth), and the body under the cloth is not drawn
+// while the robe is on (fn229Under). Built round the man's torso rings in model space; reveal rv 0 at the hem … 1 at the collar;
+// uv.x round the body, uv.y 0 at the top of a piece … 1 at its hem.
+// fn229Under: a number per body corner (attribute hd): 0 = always drawn (head, neck, hands, the skin in the V of the collar, the hair
+// above the mantle), else its height / the collar's (so the body goes as the cloth weaves up over it). Once per cached geometry.
+function fn229Under(Bd){const g=Bd.bm.geometry;if(g.attributes.hd)return;const S=Bd.fit.S,T=S.torso,top=T[7][0]+.07,P=g.attributes.position,C=g.attributes.color,SI=g.attributes.skinIndex.array,SW=g.attributes.skinWeight.array,n=P.count,H=new Float32Array(n),lock=new Uint8Array(n),
+    nm=Bd.bm.skeleton.bones.map(b=>{for(const k in Bd.bones)if(Bd.bones[k]===b)return k;return ''}),keep=new Uint8Array(n);
+  for(let i=0;i<n;i++){let bi=0,bw=-1;for(let k=0;k<4;k++)if(SW[i*4+k]>bw){bw=SW[i*4+k];bi=SI[i*4+k]}const b=nm[bi],x=P.getX(i),y=P.getY(i),z=P.getZ(i),hair=C.getY(i)/Math.max(1e-4,C.getX(i))>.95&&C.getX(i)>.3;
+    keep[i]=b=='head'||b=='neck'||b=='aL2'||b=='aR2'||(b=='chest'&&(y>T[7][0]+.004||(z>.02&&Math.abs(x)<.07&&y>T[6][0]-.012)||(hair&&z<-.05)))?1:0;
+    // the hair down his back goes under the mantle when he is robed (cut at the mantle's top edge, a little after the cloth gets there)
+    lock[i]=hair&&z<-.05&&(b=='chest'||b=='neck'||b=='head')?1:0}
+  for(let i=0;i<n;i+=3){const k=keep[i]||keep[i+1]||keep[i+2],lk=lock[i]||lock[i+1]||lock[i+2];for(let q=0;q<3;q++)H[i+q]=lk?Math.max(.002,P.getY(i+q)/top+1.04-(T[7][0]+.016)/top):k?0:Math.max(.002,P.getY(i+q)/top)}
+  g.setAttribute('hd',new THREE.BufferAttribute(H,1))}
+function fn229Robe(F){const Bd=F.man,S=Bd.S,T=S.torso,J=S.J,C={red:[.4,.028,.045],deep:[.22,.012,.028],line:[.12,.008,.022]},mr=F.mats.robe=fn229Mat({robe:1,sk:1,rev:0,grime:.1,rim:.55,gold:1}),R=F.robe={m:[],C},top=T[7][0]+.07;
+  const tr=(i,o)=>[T[i][0],T[i][1]+o,T[i][2]+o,T[i][3]+o,T[i][4]||0],ss=(a,b,x)=>{const k=Math.max(0,Math.min(1,(x-a)/(b-a)));return k*k*(3-2*k)};
+  const bg=Bd.bm.geometry,bP=bg.attributes.position,bI=bg.attributes.skinIndex.array,bW=bg.attributes.skinWeight.array,sb=Bd.bm.skeleton.bones,ix={};for(const k in Bd.bones)ix[k]=sb.indexOf(Bd.bones[k]);
+  // the trunk's own corners (pelvis, spine, chest): cloth lying on the trunk takes the weights of the nearest one
+  const trunk=[];{const ok=[ix.pelvis,ix.spine,ix.chest],seen=new Set();for(let i=0;i<bP.count;i++){let bi=0,bw=-1;for(let k=0;k<4;k++)if(bW[i*4+k]>bw){bw=bW[i*4+k];bi=bI[i*4+k]}if(ok.indexOf(bi)<0)continue;
+      const key=Math.round(bP.getX(i)*500)+'_'+Math.round(bP.getY(i)*500)+'_'+Math.round(bP.getZ(i)*500);if(seen.has(key))continue;seen.add(key);trunk.push(i)}}
+  const near=p=>{let b=-1,bd=1e9;for(let q=0;q<trunk.length;q++){const i=trunk[q],dx=bP.getX(i)-p[0],dy=bP.getY(i)-p[1],dz=bP.getZ(i)-p[2],d=dx*dx+dy*dy*2.5+dz*dz;if(d<bd){bd=d;b=i}}const o=[];for(let k=0;k<4;k++)if(bW[b*4+k]>0)o.push([bI[b*4+k],bW[b*4+k]]);return o};
+  const wSkirt=p=>{const lg=ss(J.lh0[1]+.03,J.lh0[1]-.2,p[1])*.74,r=ss(-.07,.07,p[0]),sh=ss(J.rh1[1]+.08,J.rh1[1]-.08,p[1]);return [[ix.pelvis,1-lg],[ix.rh0,lg*r*(1-sh)],[ix.rh1,lg*r*sh],[ix.lh0,lg*(1-r)*(1-sh)],[ix.lh1,lg*(1-r)*sh]]},
+    wChest=()=>[[ix.chest,1]],wMantle=p=>{const a=ss(.13,.22,Math.abs(p[0]))*.5*ss(T[7][0],T[6][0],p[1]);return [[ix.chest,1-a],[ix[p[0]<0?'aL0':'aR0'],a]]},
+    wArm=A=>{const a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),l1=d1[0]*d1[0]+d1[1]*d1[1]+d1[2]*d1[2],l2=d2[0]*d2[0]+d2[1]*d2[1]+d2[2]*d2[2];
+      return p=>{const s0=((p[0]-a0[0])*d1[0]+(p[1]-a0[1])*d1[1]+(p[2]-a0[2])*d1[2])/l1,s1=((p[0]-a1[0])*d2[0]+(p[1]-a1[1])*d2[1]+(p[2]-a1[2])*d2[2])/l2,fe=ss(-.1,.1,s1),ch=ss(.14,-.1,s0)*.45;return [[ix.chest,ch],[ix[A+'0'],(1-ch)*(1-fe)],[ix[A+'1'],(1-ch)*fe]]}};
+  // rings [y, rx, f, b, z] in model space; w(p) → [[bone index, weight] …] for a corner
+  const piece=(w,rings,n,o)=>{o=o||{};const B=fn229Buf(),Rg=o.raw||rings.map((q,i)=>fn229Ring(n,q[0],q[1],q[2],q[3]==null?q[2]:q[3],0,q[4]||0,(p,j,a)=>{const fo=o.fold?1+o.fold*(i/(rings.length-1))*Math.sin(a*o.fn+i*.7):1;return [p[0]*fo,p[1],(p[2]-(q[4]||0))*fo+(q[4]||0)]}));
     const nr=Rg.length;fn229Loft(B,Rg,(i,j,c)=>{const a=(j+.5)/n*6.283;if(o.skip&&o.skip(i,j,a))return null;let col=fn229Mx(C.red,C.deep,.5-.5*Math.cos(a*(o.fn||6)+i*.9));col=fn229Sh(col,.84+.3*fn229Fbm(c[0]*5+(o.seed||0),c[1]*5,c[2]*5));if(o.lineJ&&o.lineJ(j,i))col=C.line;return col},
-      {cap0:false,cap1:!!o.cap,rv:p=>Math.max(0,Math.min(1,(p[1]+pt[1])/top)),uv:(i,j)=>[j/n,o.v0+(o.v1-o.v0)*(i/(nr-1))]});
-    const m=new THREE.Mesh(fn229Geo(B),mr);m.userData.lpsSkip=1;m.frustumCulled=false;fn229Pin(Bd,bone,pt).add(m);R.m.push(m);return m};
+      {cap0:false,cap1:!!o.cap,rv:p=>Math.max(0,Math.min(1,p[1]/top)),uv:(i,j)=>[j/n,o.v0+(o.v1-o.v0)*(i/(nr-1))]});
+    const g=fn229Geo(B),nv=B.p.length/3,SI=new Uint16Array(nv*4),SW=new Float32Array(nv*4),memo=new Map();
+    for(let i=0;i<nv;i++){const p=[B.p[i*3],B.p[i*3+1],B.p[i*3+2]],key=p[0].toFixed(4)+'_'+p[1].toFixed(4)+'_'+p[2].toFixed(4);let ws=memo.get(key);
+      if(!ws){ws=w(p).filter(q=>q[1]>1e-4).sort((a,b)=>b[1]-a[1]).slice(0,4);let t=0;ws.forEach(q=>{t+=q[1]});ws=ws.map(q=>[q[0],q[1]/t]);memo.set(key,ws)}ws.forEach((q,k)=>{SI[i*4+k]=q[0];SW[i*4+k]=q[1]})}
+    g.setAttribute('skinIndex',new THREE.BufferAttribute(SI,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(SW,4));
+    const m=new THREE.SkinnedMesh(g,mr);m.userData.lpsSkip=1;m.frustumCulled=false;m.castShadow=false;Bd.bm.add(m);m.bind(Bd.bm.skeleton,Bd.bm.bindMatrix);R.m.push(m);return m};
   const wy=T[2][0],hip=T[1],w2=tr(2,.03),h1=tr(1,.034);
-  // skirt: from the waist to the floor, folds deepening to the hem (pelvis)
-  piece('pelvis',J.pelvis,[w2,h1,[T[0][0]-.06,hip[1]+.05,hip[2]+.06,hip[3]+.075],[.52,.24,.2,.25],[.26,.29,.25,.33],[.035,.33,.29,.4,-.02]],18,{fold:.1,fn:6,seed:1,v0:.5,v1:1,lineJ:j=>j==0||j==17});
-  // body: waist to the shoulder line, a V at the throat (chest)
-  piece('chest',J.chest,[[T[7][0]+.012,T[7][1]+.016,T[7][2]+.02,T[7][3]+.022,T[7][4]],tr(6,.03),tr(5,.03),tr(4,.03),tr(3,.03),[wy-.02,w2[1]+.004,w2[2]+.004,w2[3]+.004]],14,{seed:3,v0:0,v1:.5,skip:(i,j)=>i==0&&(j==0||j==13),lineJ:(j,i)=>(j==0||j==13)&&i>0});
+  // skirt: from the waist to the floor, folds deepening to the hem; it follows the thighs and shins most of the way
+  piece(wSkirt,[w2,h1,[T[0][0]-.06,hip[1]+.05,hip[2]+.06,hip[3]+.075],[.72,.2,.17,.2],[.52,.24,.2,.25],[.26,.29,.25,.33],[.035,.33,.29,.4,-.02]],18,{fold:.1,fn:6,seed:1,v0:.5,v1:1,lineJ:j=>j==0||j==17});
+  // body: waist to the shoulder line, a V at the throat
+  piece(near,[[T[7][0]+.012,T[7][1]+.016,T[7][2]+.02,T[7][3]+.022,T[7][4]],tr(6,.03),tr(5,.03),tr(4,.03),[T[3][0]+.095,(T[3][1]+T[4][1])*.5+.03,(T[3][2]+T[4][2])*.5+.03,(T[3][3]+T[4][3])*.5+.03],tr(3,.03),[wy-.02,w2[1]+.004,w2[2]+.004,w2[3]+.004]],14,{seed:3,v0:0,v1:.5,skip:(i,j)=>i==0&&(j==0||j==13),lineJ:(j,i)=>(j==0||j==13)&&i>0});
   // a standing collar, a mantle over the shoulders
-  piece('chest',J.chest,[[T[7][0]+.105,.082,.07,.085,.0],[T[7][0]+.01,.078,.062,.074,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j==0||j==11});
-  piece('chest',J.chest,[[T[7][0]+.022,.095,.07,.08],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
-  // sleeves: close on the upper arm, a wide bell at the wrist
+  piece(wChest,[[T[7][0]+.105,.082,.07,.085,.0],[T[7][0]+.01,.078,.062,.074,.004]],12,{seed:4,v0:.86,v1:.97,skip:(i,j)=>j==0||j==11});
+  piece(wMantle,[[T[7][0]+.022,.095,.07,.08],[T[6][0]+.012,T[6][1]+.075,T[6][2]+.05,T[6][3]+.052],[T[5][0]-.02,T[5][1]+.1,T[5][2]+.055,T[5][3]+.06],[T[4][0]-.01,T[4][1]+.105,T[4][2]+.05,T[4][3]+.058]],14,{seed:5,v0:.74,v1:.97,fold:.03,fn:7,skip:(i,j)=>i==0&&(j==0||j==13)});
+  // sleeves: one tube from the shoulder to a wide bell at the wrist, bending at the elbow with the arm
   [-1,1].forEach(s=>{const A=s<0?'aL':'aR',a0=J[A+'0'],a1=J[A+'1'],a2=J[A+'2'],d1=sub3(a1,a0),d2=sub3(a2,a1),at=(a,d,t)=>add3(a,mul3(d,t));
-    piece(A+'0',a0,null,9,{seed:6,v0:.1,v1:.4,raw:[[-.1,.074],[.45,.066],[1.06,.06]].map(q=>fn229RingD(9,at(a0,d1,q[0]),d1,[0,0,1],q[1]))});
-    piece(A+'1',a1,null,10,{seed:8,v0:.6,v1:.97,raw:[[-.06,.062,.062],[.35,.066,.07],[.75,.084,.094],[1.06,.1,.118]].map(q=>fn229RingD(10,at(a1,d2,q[0]),d2,[0,0,1],q[1],q[2]))})});
+    piece(wArm(A),null,10,{seed:6+s,v0:.1,v1:.97,raw:[[-.1,.076,.076],[.3,.07,.07],[.7,.064,.066],[.92,.062,.066]].map(q=>fn229RingD(10,at(a0,d1,q[0]),d1,[0,0,1],q[1],q[2])).concat([[.08,.062,.066],[.4,.068,.074],[.75,.084,.094],[1.06,.1,.118]].map(q=>fn229RingD(10,at(a1,d2,q[0]),d2,[0,0,1],q[1],q[2])))})});
   // sash
-  piece('pelvis',J.pelvis,[[wy+.035,w2[1]+.012,w2[2]+.012,w2[3]+.012],[wy-.03,h1[1]*.5+w2[1]*.5+.014,h1[2]*.5+w2[2]*.5+.014,h1[3]*.5+w2[3]*.5+.014]],14,{seed:11,v0:.9,v1:.96});
+  piece(near,[[wy+.035,w2[1]+.012,w2[2]+.012,w2[3]+.012],[wy-.03,h1[1]*.5+w2[1]*.5+.014,h1[2]*.5+w2[2]*.5+.014,h1[3]*.5+w2[3]*.5+.014]],14,{seed:11,v0:.9,v1:.96});
   R.m.forEach(m=>{m.visible=false})}
-function fn229RobeSet(F){const st=F.st,U=F.mats.robe.uniforms;U.rev.value=st.robe;F.robe.m.forEach(m=>{m.visible=st.robe>.002});U.flut.value=st.flut||0;U.flash.value=st.thread||0;U.lit.value=st.lit}
+function fn229RobeSet(F){const st=F.st,U=F.mats.robe.uniforms;U.rev.value=st.robe;F.man.mat.uniforms.hide.value=st.robe*1.25-.125-.085;F.robe.m.forEach(m=>{m.visible=st.robe>.002});U.flut.value=st.flut||0;U.flash.value=st.thread||0;U.lit.value=st.lit}
 
 // ---------------- wings: ivory, long-boned, the skin between the fingers thin and torn (on the man's back) ----------------
 var FN229W={arm:.72,fore:.95,fing:[1.28,1.12,.9,.62]};
@@ -360,4 +385,4 @@ function fn229WingSet(F,o){const st=F.st,em=st.wing,C=F.wC,V=THREE.Vector3;F.mat
         put(org,m0,m1,shd*.8);const o0=torn<1?m0.clone().lerp(prev,.3):prev,o1=torn<1?m1.clone().lerp(p,.3):p;put(m0,o0,o1,shd+.14);put(m0,o1,m1,shd+.06);prev=p.clone()}});
     put(sh,el,hip,.34);put(el,wr,tips[3],.4);
     for(;n<P.length/3;n++){P[n*3]=P[n*3+1]=P[n*3+2]=0}W.mesh.geometry.attributes.position.needsUpdate=true;W.mesh.geometry.attributes.color.needsUpdate=true})}
-function fn229FigFree(F){if(!F)return;if(F.root.parent)F.root.parent.remove(F.root);fn229BodyFree(F.cre);fn229BodyFree(F.man);for(const k in F.mats)if(F.mats[k]&&F.mats[k].dispose)F.mats[k].dispose()}
+function fn229FigFree(F){if(!F)return;if(F.root.parent)F.root.parent.remove(F.root);if(F.robe)F.robe.m.forEach(m=>{if(m.parent)m.parent.remove(m);m.geometry.dispose()});fn229BodyFree(F.cre);fn229BodyFree(F.man);for(const k in F.mats)if(F.mats[k]&&F.mats[k].dispose)F.mats[k].dispose()}

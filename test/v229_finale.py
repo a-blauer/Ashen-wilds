@@ -34,6 +34,18 @@ def s(pg):
     print('RUN',json.dumps(r))
     def chk(ok,msg):
         if not ok:fails.append(msg)
+    # v231: the robe is cloth skinned to his skeleton, the body under it is not drawn, the film plays no stock game sound,
+    # and the creature's body is never swapped for the man's inside a shot (only on the cut to d2)
+    v=pg.evaluate("""()=>{const F=fn229Figure({only:'man'}),o={};o.sk=F.robe.m.length>0&&F.robe.m.every(m=>m.isSkinnedMesh&&m.skeleton===F.man.bm.skeleton);
+      const g=F.man.bm.geometry,H=g.attributes.hd;o.hd=!!H;let hid=0,keep=0;if(H)for(let i=0;i<H.count;i++){if(H.getX(i)>0)hid++;else keep++}o.hid=hid;o.keep=keep;
+      F.st.robe=1;fn229Shape(F,1);o.hide=F.man.mat.uniforms.hide.value;F.st.robe=0;fn229Shape(F,1);o.hide0=F.man.mat.uniforms.hide.value;
+      let bad=0;F.robe.m.forEach(m=>{const W=m.geometry.attributes.skinWeight.array;for(let i=0;i<W.length;i+=4){const t=W[i]+W[i+1]+W[i+2]+W[i+3];if(!(Math.abs(t-1)<1e-3))bad++}});o.badW=bad;fn229FigFree(F);
+      const src=fn229Frame.toString()+fn229Play.toString();o.sfx=/sfx\(/.test(src);const T=FN229.T,sw=FN229B.swap;o.swap=[];
+      return o}""")
+    print('V231',json.dumps(v))
+    chk(v['sk'] and v['badW']==0,'the robe is not skinned to the man (or has bad weights) '+json.dumps(v))
+    chk(v['hd'] and v['hid']>3000 and v['keep']>3000 and v['hide']>.9 and v['hide0']<0,'the body under the robe is not hidden / shown as it should be '+json.dumps(v))
+    chk(not v['sfx'],'the film plays stock game sounds again')
     chk(not r['npc0'],'the man stands by the fountain before the last essence is poured')
     chk(r['plain'] and r['plainDone'] and r['plainNpc'],'the plain pour (no cinematic) no longer works or leaves no man')
     chk(r['npcGone'],'the man stays when the last Sovereign is not in bossDone')
