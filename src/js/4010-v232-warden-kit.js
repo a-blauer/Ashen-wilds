@@ -38,7 +38,7 @@ function wk232HitNow(e,s,an,dm,o){const D=e.wk,A=D.A;if(!A||!A.f||e.dead)return 
 // a plain hit on the hero from an arena hazard (no shape): k = damage as a share of a boss hit
 function wk232Zap(e,k,mt){if(!e||e.dead||hero.hp<=0||hero.iv>0)return false;hitHero(e,k*(e.wk.dmK||1),mt||e.c.mt);return true}
 // ---------------- spawn, start, reset, win ----------------
-function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.done())return null;const L=D.L,key='wk_'+D.key;
+function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.done()&&!wkn232Want(D))return null;const L=D.L,key='wk_'+D.key;
   if(!EN[key])EN[key]=Object.assign({},EN[D.base]||EN.akorror,{n:D.name,e:D.icon});try{MSET[key]=[]}catch(_){}
   const c=enemyC(key,D.lv,{boss:1});c.n=D.name;c.st.hp=Math.round(c.st.hp*(D.hpK||1));c.h=c.st.hp;const m=cr(c);m.position.set(L.home.x,0,L.home.z);m.rotation.y=0;scene.add(m);
   const hb=bar(true);hb.scale.setScalar(3);
@@ -50,16 +50,16 @@ function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.
 function wk232Start(D,e){const S=e.sv,A=D.A;if(!A||A.f)return;A.f=true;e.agg=1;S.on=false;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;D.ft=0;wk232Sync(D);
   if(riding)try{dismount()}catch(_){}try{setTarget(e)}catch(_){}
   try{const cd=D.card||[];zt116Show(ZT116.Z[D.zi==null?5:D.zi],D.place,D.name,D.title+(cd[0]?' · '+cd[0]:''),cd[1]||'The way out is sealed','z'+(D.zi==null?5:D.zi))}catch(_){}
-  if(D.start)try{D.start(D,e)}catch(err){console.error('wk start',D.key,err)}}
+  if(D.start)try{D.start(D,e)}catch(err){console.error('wk start',D.key,err)}try{wkn232Send(D,[5])}catch(_){}}
 function wk232Reset(D,why){const e=D.e,A=D.A;if(A)A.f=false;wk232AddsClear(D);if(D.reset)try{D.reset(D)}catch(err){console.error('wk reset',D.key,err)}wk232Sync(D);if(!e||e.dead)return;const S=e.sv;
   svEndMove(e,true);S.stgM=null;S.on=false;S.ph=1;e.bs.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};S.dr=0;S.chg=0;S.chgT=0;S.last=[];S.sigN=0;S.ghost=0;e.agg=0;e.c.h=M(e.c);
   e.m.position.set(D.L.home.x,0,D.L.home.z);e.m.rotation.y=0;if(why)setTimeout(()=>say(D.icon+' '+D.name+' returns to '+(D.restTxt||'the heart of the arena')+' and waits.'),900)}
-function wk232Won(D,e){const A=D.A;if(A)A.f=false;wk232AddsClear(D);if(D.reset)try{D.reset(D,true)}catch(_){}
+function wk232Won(D,e){const A=D.A;if(A)A.f=false;D.slain=1;try{if(!D.mir)wkn232Send(D,[3])}catch(_){}D.netWin=0;wk232AddsClear(D);if(D.reset)try{D.reset(D,true)}catch(_){}
   try{D.won&&D.won(D,e)}catch(err){console.error('wk won',D.key,err)}wk232Sync(D);try{hud()}catch(_){}}
 function wk232Sync(D){const LS=D.LS;if(LS&&LS.seal)LS.seal.visible=!!(D.A&&D.A.f);if(LS&&LS.rift)LS.rift.visible=!(D.A&&D.A.f);if(D.sync)try{D.sync(D)}catch(_){}}
-function wk232Heal(e,f,col){if(!e||e.dead)return;const h=Math.round(M(e.c)*f);e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#9aff6a',-20,1400);burst(gY(e.m.position,1.5),col||0x9aff6a,40,3,2,.7)}
+function wk232Heal(e,f,col){if(!e||e.dead)return;const h=Math.round(M(e.c)*f);if(!e.wk.mir)e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#9aff6a',-20,1400);burst(gY(e.m.position,1.5),col||0x9aff6a,40,3,2,.7)}
 // he takes a share of his health as damage (mechanics that wound him), never the killing blow
-function wk232Wound(e,f,col){if(!e||e.dead)return;const d=Math.round(M(e.c)*f);e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,col||'#ffe9a0',-20,1200)}
+function wk232Wound(e,f,col,mine){if(!e||e.dead)return;const d=Math.round(M(e.c)*f);if(!e.wk.mir||mine)e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,col||'#ffe9a0',-20,1200)}
 // ---------------- mechanic props: enemies with a hidden model, no AI and their own death ----------------
 // wk232Add(D, x, z, {n, hp (share of the boss's health), g (a group shown instead of the creature), pop(s), tick(s, t), base})
 function wk232Add(D,x,z,o){let s=null;try{s=spawnEnemy(o.base||'goo',x,z,D.lv,{minion:1})}catch(err){console.error('wk add',err)}if(!s)return null;
@@ -69,7 +69,7 @@ function wk232AddPop(s){if(s.popped)return;s.popped=1;s.dead=1;s.c.h=0;try{s.hb.
   const A=s.wkAdd,i=A.D.adds.indexOf(s);if(i>=0)A.D.adds.splice(i,1);setTimeout(()=>{try{removeE(s)}catch(_){}},60);try{A.o.pop&&A.o.pop(s)}catch(err){console.error('wk add pop',err)}}
 function wk232AddsClear(D){D.adds.slice().forEach(s=>{try{if(!s.dead)removeE(s)}catch(_){}});D.adds=[]}
 // ---------------- the AI (3033's controller, per record) ----------------
-function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;if(e.hb)e.hb.visible=false;const here=wk232In(D);m.visible=here;
+function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;const mir=!!D.mir;if(e.hb)e.hb.visible=false;const here=wk232In(D);m.visible=here;
   const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>12?0:ms)-S.spd)*Math.min(1,dt*8);
   for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);
   if(!S.chgHold)S.chg=(S.chg||0)+((S.chgT||0)-(S.chg||0))*Math.min(1,dt*3);
@@ -79,13 +79,14 @@ function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;if
     e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.2);S.po=0;
     if(here&&hero.hp>0&&!D.done()&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<(D.wake||9.5))wk232Start(D,e);
     svApply(e,dt,now);return}
-  if(hero.hp<=0||!here||(typeof AWD!='undefined'&&AWD.dead)){wk232Reset(D,true);svApply(e,dt,now);return}
+  if(!here||((hero.hp<=0||(typeof AWD!='undefined'&&AWD.dead))&&!mir)){wk232Reset(D,true);svApply(e,dt,now);return}
   D.ft+=dt;e.agg=1;
-  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;svCast(e,'intro')}
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(!mir)svCast(e,'intro')}
   if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.1);
   if(S.mv)svTickMove(e,dt,now);
-  else{let ph=null;if(S.ph===1&&e.c.h/M(e.c)<=B.ph2)ph='awaken';else if(D.phase)try{ph=D.phase(D,e)}catch(_){}
+  else if(!mir){let ph=null;if(S.ph===1&&e.c.h/M(e.c)<=B.ph2)ph='awaken';else if(D.phase)try{ph=D.phase(D,e)}catch(_){}
     if(ph)svCast(e,ph);else{if(!S.still)wk232Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}}
+  if(mir)try{wkn232Follow(D,e,dt)}catch(_){}
   if(!S.free)wk232Clamp(D,m.position,B.edge);
   {const p=pl.position,hx=p.x-A.cx,hz=p.z-A.cz,hd=Math.hypot(hx,hz);if(hd>A.hr){p.x=A.cx+hx/hd*A.hr;p.z=A.cz+hz/hd*A.hr}}
   if(!S.ghost&&!S.rmOn&&hero.hp>0){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=R0-hl;pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}
@@ -127,12 +128,12 @@ function wk232Lair(D){if(D.LS)return D.LS;const L=D.L,root=new THREE.Group();roo
 function wk232Leave(D){fadeTo(()=>{try{TWN100_home()}catch(err){console.error('wk leave',err)}})}
 {const f=worldPrompt;worldPrompt=function(){try{const D=wk232Here();if(D&&!(D.A&&D.A.f)){const P=pl.position,L=D.L;if(Math.hypot(P.x-L.exit.x,P.z-L.exit.z)<2.3)return {label:'F · Step through the rift to Duskhold',fn:()=>wk232Leave(D)};
       if(D.prompt){const r=D.prompt(D);if(r)return r}}}catch(e){if(!WK232.err++)console.warn('wk prompt',e)}return f.apply(this,arguments)}}
-function wk232Tick(dt,now){const t=now/1000;for(let i=0;i<WK232.list.length;i++){const D=WK232.list[i],here=wk232In(D);
-    if(here){if(!D.LS)wk232Lair(D);if(!D.done()&&!(D.e&&enemies.includes(D.e)))try{wk232Spawn(D)}catch(err){console.error('wk spawn',D.key,err);WK232.err++}}
-    else if(D.A&&D.A.f)wk232Reset(D);
+function wk232Tick(dt,now){const t=now/1000;for(let i=0;i<WK232.list.length;i++){const D=WK232.list[i],here=wk232In(D);try{wkn232Roles(D,here,dt)}catch(err){if(!WK232.err++)console.error('wk net',err)}
+    if(here){if(!D.LS)wk232Lair(D);if((!D.done()||wkn232Want(D))&&!D.slain&&!(D.e&&enemies.includes(D.e)))try{wk232Spawn(D)}catch(err){console.error('wk spawn',D.key,err);WK232.err++}}
+    else{D.slain=0;if(D.A&&D.A.f)wk232Reset(D)}
     const LS=D.LS;if(!LS)continue;LS.root.visible=here;LS.lights.forEach(l=>{if(!here){if(l.userData.wk0==null)l.userData.wk0=l.intensity;l.intensity=0}else if(l.userData.wk0!=null){l.intensity=l.userData.wk0;l.userData.wk0=null}});
     if(!here)continue;LS.t=t;if(LS.riftT){LS.riftT.scale.x=1+.12*Math.sin(t*3.1);LS.riftT.material.opacity=.4+.12*Math.sin(t*2.3);LS.rift.rotation.y=Math.atan2(cam.position.x-LS.rift.position.x,cam.position.z-LS.rift.position.z)}
-    if(LS.seal&&LS.seal.visible){LS.seal.rotation.y+=dt*.4;LS.seal.material.opacity=.26+.1*Math.sin(t*4)}
+    if(LS.seal&&LS.seal.visible){LS.seal.rotation.y+=dt*.4;LS.seal.material.opacity=(.26+.1*Math.sin(t*4))*Math.max(0,Math.min(1,(Math.hypot(cam.position.x-LS.seal.position.x,cam.position.z-LS.seal.position.z)-3.5)/4))}
     if(D.tick)try{D.tick(D,dt,now,t)}catch(err){if(!WK232.err++)console.error('wk tick',D.key,err)}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{wk232Tick(dt,now)}catch(err){if(!WK232.err++)console.error('wk tick',err)}return r}}
 // travel: into a Warden's arena (from anywhere)

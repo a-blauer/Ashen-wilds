@@ -121,6 +121,6 @@ var YT232M={
     hit:[[.96,[-.3,0,.3]],[1.58,[-.45,-.15,.15,.45]],[2.28,[-.3,0,.3]]].flatMap(([t,A],w)=>A.map(ay=>({t,s:{k:'l',w:1.5,l:34,b:0},f:.8,ay,dm:1.15,w:w?.44:.7,wc:0x7a3aff,on:()=>yt232Wither(3000),fx:(c,an)=>{yt232Lance(an,34,1.4);if(ay==A[0]){shake(.25);svSnd('whoosh',1.2,.7+w*.1)}}}))),
     ev:[[.3,c=>svSnd('charge',.7,.6)]],rec:.45}),
   // the essence torn back out of him: a long stagger
-  broken:WK232_M({dur:5.2,trk:[[.3,'stag','o'],[4.6,'stag','l',.03],[5.2,'cRec','io']],
+  broken:WK232_M({req:1,dur:5.2,trk:[[.3,'stag','o'],[4.6,'stag','l',.03],[5.2,'cRec','io']],
     go(c){c.S.stg=5.2;c.S.ghost=0;svSnd('stag',1.2,.7);svSnd('shriek',1,.6);popT(c.m.position,'RUPTURED','#e8d0ff',true);svShock(c.m.position,0xffffff,7,.5);for(let i=0;i<6;i++)burst(gY(c.m.position,2.5),YT232.ess[i],24,5,4,1)},
     tk(c,dt){c.S.stg=Math.max(0,5.2-c.t);if(Math.random()<dt*14){const p=svWP(c.e,'heart',0,0,.2);burst(p,YT232.ess[(Math.random()*6)|0],1,1.2,1.5,.8)}},end(c){c.S.stg=0}})};

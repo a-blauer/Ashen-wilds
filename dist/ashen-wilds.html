@@ -78693,7 +78693,7 @@ function wk232HitNow(e,s,an,dm,o){const D=e.wk,A=D.A;if(!A||!A.f||e.dead)return 
 // a plain hit on the hero from an arena hazard (no shape): k = damage as a share of a boss hit
 function wk232Zap(e,k,mt){if(!e||e.dead||hero.hp<=0||hero.iv>0)return false;hitHero(e,k*(e.wk.dmK||1),mt||e.c.mt);return true}
 // ---------------- spawn, start, reset, win ----------------
-function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.done())return null;const L=D.L,key='wk_'+D.key;
+function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.done()&&!wkn232Want(D))return null;const L=D.L,key='wk_'+D.key;
   if(!EN[key])EN[key]=Object.assign({},EN[D.base]||EN.akorror,{n:D.name,e:D.icon});try{MSET[key]=[]}catch(_){}
   const c=enemyC(key,D.lv,{boss:1});c.n=D.name;c.st.hp=Math.round(c.st.hp*(D.hpK||1));c.h=c.st.hp;const m=cr(c);m.position.set(L.home.x,0,L.home.z);m.rotation.y=0;scene.add(m);
   const hb=bar(true);hb.scale.setScalar(3);
@@ -78705,16 +78705,16 @@ function wk232Spawn(D){if(D.e&&!D.e.dead&&enemies.includes(D.e))return D.e;if(D.
 function wk232Start(D,e){const S=e.sv,A=D.A;if(!A||A.f)return;A.f=true;e.agg=1;S.on=false;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;D.ft=0;wk232Sync(D);
   if(riding)try{dismount()}catch(_){}try{setTarget(e)}catch(_){}
   try{const cd=D.card||[];zt116Show(ZT116.Z[D.zi==null?5:D.zi],D.place,D.name,D.title+(cd[0]?' · '+cd[0]:''),cd[1]||'The way out is sealed','z'+(D.zi==null?5:D.zi))}catch(_){}
-  if(D.start)try{D.start(D,e)}catch(err){console.error('wk start',D.key,err)}}
+  if(D.start)try{D.start(D,e)}catch(err){console.error('wk start',D.key,err)}try{wkn232Send(D,[5])}catch(_){}}
 function wk232Reset(D,why){const e=D.e,A=D.A;if(A)A.f=false;wk232AddsClear(D);if(D.reset)try{D.reset(D)}catch(err){console.error('wk reset',D.key,err)}wk232Sync(D);if(!e||e.dead)return;const S=e.sv;
   svEndMove(e,true);S.stgM=null;S.on=false;S.ph=1;e.bs.ph=1;S.po=0;S.stg=0;S.inv=0;S.cd={};S.dr=0;S.chg=0;S.chgT=0;S.last=[];S.sigN=0;S.ghost=0;e.agg=0;e.c.h=M(e.c);
   e.m.position.set(D.L.home.x,0,D.L.home.z);e.m.rotation.y=0;if(why)setTimeout(()=>say(D.icon+' '+D.name+' returns to '+(D.restTxt||'the heart of the arena')+' and waits.'),900)}
-function wk232Won(D,e){const A=D.A;if(A)A.f=false;wk232AddsClear(D);if(D.reset)try{D.reset(D,true)}catch(_){}
+function wk232Won(D,e){const A=D.A;if(A)A.f=false;D.slain=1;try{if(!D.mir)wkn232Send(D,[3])}catch(_){}D.netWin=0;wk232AddsClear(D);if(D.reset)try{D.reset(D,true)}catch(_){}
   try{D.won&&D.won(D,e)}catch(err){console.error('wk won',D.key,err)}wk232Sync(D);try{hud()}catch(_){}}
 function wk232Sync(D){const LS=D.LS;if(LS&&LS.seal)LS.seal.visible=!!(D.A&&D.A.f);if(LS&&LS.rift)LS.rift.visible=!(D.A&&D.A.f);if(D.sync)try{D.sync(D)}catch(_){}}
-function wk232Heal(e,f,col){if(!e||e.dead)return;const h=Math.round(M(e.c)*f);e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#9aff6a',-20,1400);burst(gY(e.m.position,1.5),col||0x9aff6a,40,3,2,.7)}
+function wk232Heal(e,f,col){if(!e||e.dead)return;const h=Math.round(M(e.c)*f);if(!e.wk.mir)e.c.h=Math.min(M(e.c),e.c.h+h);dn(e.m.position,'+'+h,'#9aff6a',-20,1400);burst(gY(e.m.position,1.5),col||0x9aff6a,40,3,2,.7)}
 // he takes a share of his health as damage (mechanics that wound him), never the killing blow
-function wk232Wound(e,f,col){if(!e||e.dead)return;const d=Math.round(M(e.c)*f);e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,col||'#ffe9a0',-20,1200)}
+function wk232Wound(e,f,col,mine){if(!e||e.dead)return;const d=Math.round(M(e.c)*f);if(!e.wk.mir||mine)e.c.h=Math.max(1,e.c.h-d);dn(e.m.position,d,col||'#ffe9a0',-20,1200)}
 // ---------------- mechanic props: enemies with a hidden model, no AI and their own death ----------------
 // wk232Add(D, x, z, {n, hp (share of the boss's health), g (a group shown instead of the creature), pop(s), tick(s, t), base})
 function wk232Add(D,x,z,o){let s=null;try{s=spawnEnemy(o.base||'goo',x,z,D.lv,{minion:1})}catch(err){console.error('wk add',err)}if(!s)return null;
@@ -78724,7 +78724,7 @@ function wk232AddPop(s){if(s.popped)return;s.popped=1;s.dead=1;s.c.h=0;try{s.hb.
   const A=s.wkAdd,i=A.D.adds.indexOf(s);if(i>=0)A.D.adds.splice(i,1);setTimeout(()=>{try{removeE(s)}catch(_){}},60);try{A.o.pop&&A.o.pop(s)}catch(err){console.error('wk add pop',err)}}
 function wk232AddsClear(D){D.adds.slice().forEach(s=>{try{if(!s.dead)removeE(s)}catch(_){}});D.adds=[]}
 // ---------------- the AI (3033's controller, per record) ----------------
-function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;if(e.hb)e.hb.visible=false;const here=wk232In(D);m.visible=here;
+function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;const mir=!!D.mir;if(e.hb)e.hb.visible=false;const here=wk232In(D);m.visible=here;
   const dx=m.position.x-S.lp.x,dz=m.position.z-S.lp.z;S.lp.copy(m.position);const ms=dt>0?Math.hypot(dx,dz)/dt:0;S.spd+=((ms>12?0:ms)-S.spd)*Math.min(1,dt*8);
   for(const k in S.cd)S.cd[k]=Math.max(0,S.cd[k]-dt);S.inv=Math.max(0,S.inv-dt);
   if(!S.chgHold)S.chg=(S.chg||0)+((S.chgT||0)-(S.chg||0))*Math.min(1,dt*3);
@@ -78734,13 +78734,14 @@ function wk232AI(e,dt,now){const D=e.wk,S=e.sv,A=D.A,m=e.m,B=D.B;if(!A)return;if
     e.c.h=Math.min(M(e.c),e.c.h+M(e.c)*dt*.2);S.po=0;
     if(here&&hero.hp>0&&!D.done()&&Math.hypot(pl.position.x-m.position.x,pl.position.z-m.position.z)<(D.wake||9.5))wk232Start(D,e);
     svApply(e,dt,now);return}
-  if(hero.hp<=0||!here||(typeof AWD!='undefined'&&AWD.dead)){wk232Reset(D,true);svApply(e,dt,now);return}
+  if(!here||((hero.hp<=0||(typeof AWD!='undefined'&&AWD.dead))&&!mir)){wk232Reset(D,true);svApply(e,dt,now);return}
   D.ft+=dt;e.agg=1;
-  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;svCast(e,'intro')}
+  if(!S.on){S.on=true;S.ph=1;e.bs.ph=1;S.rest=1;S.po=0;if(!mir)svCast(e,'intro')}
   if(now-S.poT>3500)S.po=Math.max(0,S.po-dt*.1);
   if(S.mv)svTickMove(e,dt,now);
-  else{let ph=null;if(S.ph===1&&e.c.h/M(e.c)<=B.ph2)ph='awaken';else if(D.phase)try{ph=D.phase(D,e)}catch(_){}
+  else if(!mir){let ph=null;if(S.ph===1&&e.c.h/M(e.c)<=B.ph2)ph='awaken';else if(D.phase)try{ph=D.phase(D,e)}catch(_){}
     if(ph)svCast(e,ph);else{if(!S.still)wk232Move(e,dt);S.rest-=dt;if(S.rest<=0){const id=svPick(e);if(id)svCast(e,id);else S.rest=.25}}}
+  if(mir)try{wkn232Follow(D,e,dt)}catch(_){}
   if(!S.free)wk232Clamp(D,m.position,B.edge);
   {const p=pl.position,hx=p.x-A.cx,hz=p.z-A.cz,hd=Math.hypot(hx,hz);if(hd>A.hr){p.x=A.cx+hx/hd*A.hr;p.z=A.cz+hz/hd*A.hr}}
   if(!S.ghost&&!S.rmOn&&hero.hp>0){const hx=pl.position.x-m.position.x,hz=pl.position.z-m.position.z,hl=Math.hypot(hx,hz),R0=S.body;if(hl<R0&&hl>.001){const k=R0-hl;pl.position.x+=hx/hl*k;pl.position.z+=hz/hl*k}}
@@ -78782,12 +78783,12 @@ function wk232Lair(D){if(D.LS)return D.LS;const L=D.L,root=new THREE.Group();roo
 function wk232Leave(D){fadeTo(()=>{try{TWN100_home()}catch(err){console.error('wk leave',err)}})}
 {const f=worldPrompt;worldPrompt=function(){try{const D=wk232Here();if(D&&!(D.A&&D.A.f)){const P=pl.position,L=D.L;if(Math.hypot(P.x-L.exit.x,P.z-L.exit.z)<2.3)return {label:'F · Step through the rift to Duskhold',fn:()=>wk232Leave(D)};
       if(D.prompt){const r=D.prompt(D);if(r)return r}}}catch(e){if(!WK232.err++)console.warn('wk prompt',e)}return f.apply(this,arguments)}}
-function wk232Tick(dt,now){const t=now/1000;for(let i=0;i<WK232.list.length;i++){const D=WK232.list[i],here=wk232In(D);
-    if(here){if(!D.LS)wk232Lair(D);if(!D.done()&&!(D.e&&enemies.includes(D.e)))try{wk232Spawn(D)}catch(err){console.error('wk spawn',D.key,err);WK232.err++}}
-    else if(D.A&&D.A.f)wk232Reset(D);
+function wk232Tick(dt,now){const t=now/1000;for(let i=0;i<WK232.list.length;i++){const D=WK232.list[i],here=wk232In(D);try{wkn232Roles(D,here,dt)}catch(err){if(!WK232.err++)console.error('wk net',err)}
+    if(here){if(!D.LS)wk232Lair(D);if((!D.done()||wkn232Want(D))&&!D.slain&&!(D.e&&enemies.includes(D.e)))try{wk232Spawn(D)}catch(err){console.error('wk spawn',D.key,err);WK232.err++}}
+    else{D.slain=0;if(D.A&&D.A.f)wk232Reset(D)}
     const LS=D.LS;if(!LS)continue;LS.root.visible=here;LS.lights.forEach(l=>{if(!here){if(l.userData.wk0==null)l.userData.wk0=l.intensity;l.intensity=0}else if(l.userData.wk0!=null){l.intensity=l.userData.wk0;l.userData.wk0=null}});
     if(!here)continue;LS.t=t;if(LS.riftT){LS.riftT.scale.x=1+.12*Math.sin(t*3.1);LS.riftT.material.opacity=.4+.12*Math.sin(t*2.3);LS.rift.rotation.y=Math.atan2(cam.position.x-LS.rift.position.x,cam.position.z-LS.rift.position.z)}
-    if(LS.seal&&LS.seal.visible){LS.seal.rotation.y+=dt*.4;LS.seal.material.opacity=.26+.1*Math.sin(t*4)}
+    if(LS.seal&&LS.seal.visible){LS.seal.rotation.y+=dt*.4;LS.seal.material.opacity=(.26+.1*Math.sin(t*4))*Math.max(0,Math.min(1,(Math.hypot(cam.position.x-LS.seal.position.x,cam.position.z-LS.seal.position.z)-3.5)/4))}
     if(D.tick)try{D.tick(D,dt,now,t)}catch(err){if(!WK232.err++)console.error('wk tick',D.key,err)}}}
 {const f=homeTick;homeTick=function(dt,now,al){const r=f.apply(this,arguments);try{wk232Tick(dt,now)}catch(err){if(!WK232.err++)console.error('wk tick',err)}return r}}
 // travel: into a Warden's arena (from anywhere)
@@ -78867,13 +78868,167 @@ function wk232PoseRig(R,P,name){const B={P},Q=svPose(B,name);for(const k in Q){c
 function wk232Tris(R){let n=0;R.root.traverse(o=>{if(o.isMesh){const g=o.geometry;n+=g.index?g.index.count/3:g.attributes.position.count/3}});return Math.round(n)}
 // keep the wind-up speed-up of v141 off: Warden timings are designed as they are (3032's MB144_NO141)
 const WK232_M=D=>{D._h141=null;return D};
-// ================= v232 the two endings — state, the talk at the fountain, travel, saves =================
-// (see docs/FINALE_PLAN.md while this is being built; README gets the full entry when it ships)
-// FN232.path: 0 not chosen · 1 fight him · 2 side with him. FN232.n: Wardens beaten (0–4, side path). FN232.won: he is slain (fight
-// path). FN232.crown: crowned and marked (side path, after the fourth Warden).
+// ================= v232 the two endings: the choice at the fountain, the roads to the fights, the crown =================
+// Owner (Nov 13 2026): "When talking to this new being at the fountain- give the player the option to either fight him (players
+// transport to an epic finale fight …) Or side with him and be transported to an area where you have to defeat a roster of new,
+// original bosses … players can return to duskhold to shop, upgrade and grind levels as normal between bosses. When the whole
+// roster is cleared he crowns you as markes you as devoted to him."
+// FN232 (saved as x2.fn232 = [path, n, won, crown]; older saves load as "not chosen"):
+//   path  0 not chosen · 1 against him · 2 with him (final once made)
+//   n     Wardens beaten on his road, in order (0–4): Oakenhart, Maelis, Brassmaw, Seraphel (the records are in 4022–4052)
+//   won   Ythrael slain (4062): the "land breathes" ending has played (4070); he is gone from the fountain
+//   crown crowned (4071): the hero wears his crown and mark, and partners see them (look array, index 20)
+// F by him at the fountain opens the talk window (fn232Talk). Each fight is reached from there (wk232Enter) and left through its
+// rift back to Duskhold, so the town's shops, upgrades and the zones stay open between fights.
+// Co-op: the choice and the progress are each player's own. A partner fighting in one of the arenas can be followed from the
+// same window; everyone in an arena fights the same boss (4012). A helper's own road only moves when the boss is their next one.
 var FN232={path:0,n:0,won:0,crown:0,err:0,name:'Ythrael',title:'the Voice Below'};
-function fn232WardenDown(i){FN232.n=Math.max(FN232.n,i+1);try{x2Dirty&&x2Dirty()}catch(_){}}
-function fn232Slain(e){FN232.won=1;try{x2Dirty&&x2Dirty()}catch(_){}}
+function fn232Roster(){const L=[];try{L.push(OK232D,ML232D,BM232D,SR232D)}catch(_){}return L.filter(Boolean)}
+function fn232Final(){try{return typeof YT232D!='undefined'?YT232D:null}catch(_){return null}}
+function fn232Keep(){try{saveGame(true)}catch(_){}}
+function fn232WardenDown(i){if(FN232.path!==2||i!==FN232.n)return;FN232.n=i+1;fn232Keep();const R=fn232Roster(),nx=R[FN232.n];
+  setTimeout(()=>{try{say(nx?'👁 <i>“Good. '+(R.length-FN232.n)+' still hold what is mine. Come back to me when you are ready.”</i>':'👁 <i>“It is done. Come to the fountain, and kneel.”</i>')}catch(_){}},3200)}
+function fn232Slain(e){if(FN232.path!==1||FN232.won)return;FN232.won=1;fn232Keep();setTimeout(()=>{try{fn232EndA()}catch(err){console.error('fn232 ending',err)}},2800)}
+// the fight-him ending: the essence goes back into the ground (4070); then the hero stands in Duskhold and he is gone
+function fn232EndA(){const home=()=>{try{TWN100_home()}catch(_){}try{fn229Npc()}catch(_){}fn232Keep()};
+  let ok=false;try{ok=typeof ec232Play=='function'&&ec232Play('breath',{then:home})}catch(err){console.error('fn232 breath',err)}if(!ok)fadeTo(home)}
+// the crowning (4071), then the crown and the mark stay
+function fn232EndB(){const done=()=>{FN232.crown=1;fn232Keep();try{fn232Regalia(pl,1)}catch(_){}try{MP.lastPres=''}catch(_){}
+    setTimeout(()=>{try{banner('👑 DEVOTED','You wear the crown of '+FN232.name+', '+FN232.title,'')}catch(_){}},1200)};
+  let ok=false;try{ok=typeof ec232Play=='function'&&ec232Play('crown',{then:done})}catch(err){console.error('fn232 crown',err)}if(!ok)done()}
+// he is gone from the fountain once slain
+{const f=fn229NpcOwn;fn229NpcOwn=function(){if(FN232.won)return false;return f.apply(this,arguments)}}
+// ---------------- saves ----------------
+{const f=x2Save;x2Save=function(){const o=f.apply(this,arguments)||{};try{o.fn232=[FN232.path|0,FN232.n|0,FN232.won?1:0,FN232.crown?1:0]}catch(_){}return o}}
+{const f=x2Load;x2Load=function(s){const r=f.apply(this,arguments);try{const a=s&&Array.isArray(s.fn232)?s.fn232:[0,0,0,0];FN232.path=[0,1,2].includes(a[0])?a[0]:0;FN232.n=Math.max(0,Math.min(4,a[1]|0));FN232.won=a[2]?1:0;FN232.crown=a[3]?1:0}catch(_){}return r}}
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{fn232Regalia(pl,FN232.crown)}catch(e){console.warn('v232 load',e)}return r}}
+{const f=ccBegin;ccBegin=function(){FN232.path=0;FN232.n=0;FN232.won=0;FN232.crown=0;const r=f.apply(this,arguments);try{fn232Regalia(pl,0)}catch(_){}return r}}
+// ---------------- the crown and the mark ----------------
+// A gold circlet with six points, each tipped with one Sovereign's essence, and his mark burning on the brow. Hung on the head
+// bone of a hero model (your own, and a partner's from their look array).
+function fn232CrownGeo(){if(FN232.cg)return FN232.cg;const G=[],put=(g,m)=>{G.push([g,m])};
+  const band=new THREE.CylinderGeometry(1,1.04,.34,12,1,true);put(band,'gold');const lip=new THREE.TorusGeometry(1.03,.05,4,12);lip.rotateX(Math.PI/2);lip.translate(0,-.17,0);put(lip,'gold');
+  for(let i=0;i<6;i++){const a=i/6*6.2832,x=Math.sin(a),z=Math.cos(a),sp=new THREE.ConeGeometry(.2,i%2?.62:.9,4);sp.translate(0,.17+(i%2?.31:.45),0);sp.rotateY(a);sp.translate(x,0,z);put(sp,'gold');
+    const gm=new THREE.OctahedronGeometry(.13,0);gm.translate(x*1.02,.17+(i%2?.66:.95),z*1.02);put(gm,'g'+i);const st=new THREE.OctahedronGeometry(.09,0);st.scale(1,1.3,.6);st.rotateY(a);st.translate(x*1.07,0,z*1.07);put(st,'g'+((i+3)%6))}
+  return FN232.cg=G}
+function fn232Mark(){if(FN232.mk)return FN232.mk;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.strokeStyle='#fff';x.lineWidth=3.5;x.lineCap='round';
+  x.beginPath();x.moveTo(8,32);x.quadraticCurveTo(32,10,56,32);x.quadraticCurveTo(32,54,8,32);x.stroke();x.beginPath();x.arc(32,32,6.5,0,6.2832);x.fillStyle='#fff';x.fill();
+  x.lineWidth=2.5;[[32,4,32,12],[32,52,32,60]].forEach(q=>{x.beginPath();x.moveTo(q[0],q[1]);x.lineTo(q[2],q[3]);x.stroke()});return FN232.mk=new THREE.CanvasTexture(c)}
+function fn232Head(m){if(!m)return null;if(m.bones&&m.bones.head)return m.bones.head;let h=null;m.traverse(o=>{if(!h&&o.bones&&o.bones.head)h=o.bones.head});return h}
+function fn232Regalia(m,on){if(!m)return;const hd=on?fn232Head(m):null,R=m.userData.fn232;
+  if(R&&(!on||R.g.parent!==hd)){if(R.g.parent)R.g.parent.remove(R.g);R.mats.forEach(q=>q.dispose());m.userData.fn232=null}
+  if(!on||!hd||m.userData.fn232)return;const g=new THREE.Group(),mats=[],ess=(typeof YT232!='undefined'&&YT232.ess)||[0x9aff5a,0x5ad8ff,0xbfe9ff,0xffc24a,0xb8ff3a,0xff4a5a];g.name='fn232regalia';
+  const gold=new THREE.MeshStandardMaterial({color:0xe2b24a,roughness:.32,metalness:.85,emissive:0x5a3a08,emissiveIntensity:.55,flatShading:true,side:THREE.DoubleSide});mats.push(gold);
+  const gem=ess.map(c=>{const q=new THREE.MeshBasicMaterial({color:c});mats.push(q);return q});
+  const cr=new THREE.Group();fn232CrownGeo().forEach(([geo,k])=>{const o=new THREE.Mesh(geo,k=='gold'?gold:gem[+k.slice(1)]);o.castShadow=true;cr.add(o)});
+  const C=FN232.crownAt||[0,.178,.012,.122];cr.position.set(C[0],C[1],C[2]);cr.scale.setScalar(C[3]);cr.rotation.x=-.06;g.add(cr);
+  const mm=new THREE.MeshBasicMaterial({map:fn232Mark(),color:0xc89aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});mats.push(mm);
+  const K=FN232.markAt||[0,.14,.118,.07],mk=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mm);mk.position.set(K[0],K[1],K[2]);mk.scale.setScalar(K[3]);g.add(mk);
+  hd.add(g);m.userData.fn232={g,mats,mm,cr}}
+function fn232RegTick(dt){FN232.rt=(FN232.rt||0)-dt;const t=performance.now()/1000;
+  const beat=m=>{const R=m&&m.userData.fn232;if(R)R.mm.opacity=.7+.3*Math.sin(t*2.2)};beat(pl);
+  if(FN232.rt>0)return;FN232.rt=1;try{fn232Regalia(pl,FN232.crown)}catch(_){}
+  try{if(typeof MP!='undefined'&&MP.on)for(const k in MP.rh){const r=MP.rh[k];if(r.m)fn232Regalia(r.m,r.m.mdLook&&r.m.mdLook.fn232?1:0)}}catch(_){}}
+{const f=homeTick;homeTick=function(dt,now){const r=f.apply(this,arguments);try{fn232RegTick(dt||0)}catch(e){if(!FN232.err++)console.warn('v232 regalia',e)}return r}}
+// partners: the crown rides at the end of the look array (index 20; older versions ignore it)
+{const f=mpLookOut;mpLookOut=function(){const a=f.apply(this,arguments);try{if(Array.isArray(a)){while(a.length<20)a.push(0);a[20]=FN232.crown?1:0}}catch(_){}return a}}
+{const f=mpLookIn;mpLookIn=function(a){const r=f.apply(this,arguments);try{if(r&&Array.isArray(a))r.fn232=a[20]===1?1:0}catch(_){}return r}}
+// ---------------- the talk window ----------------
+document.head.insertAdjacentHTML('beforeend',`<style>
+#fn232{position:fixed;inset:0;z-index:62;display:flex;align-items:center;justify-content:center;background:rgba(4,2,8,.8)}#fn232.hide{display:none}
+#fn232 .win{width:min(560px,96vw);border-color:rgba(200,154,255,.55)}#fn232 .wb{padding:16px 18px;display:grid;gap:12px}
+#fn232 .sp{font-family:"IM Fell English",Georgia,serif;font-size:1.02rem;line-height:1.45;color:#eadcff;font-style:italic}
+#fn232 .nt{font-size:.8rem;opacity:.82;line-height:1.4}#fn232 .ro{display:grid;gap:4px;font-size:.84rem}#fn232 .ro span.d{opacity:.55;text-decoration:line-through}#fn232 .ro span.n{color:#f0dfb8}
+#fn232 .bt{display:grid;gap:8px}#fn232 .bt button{padding:10px 12px;font-family:Cinzel,Georgia,serif;letter-spacing:.04em;text-align:left;cursor:pointer}
+#fn232 .bt button small{display:block;font-family:inherit;letter-spacing:0;opacity:.75;font-size:.72rem;margin-top:2px}
+#fn232 .bt button.k{border-color:rgba(255,120,120,.6)}#fn232 .bt button.g{border-color:rgba(240,200,110,.7)}
+</style>`);
+document.body.insertAdjacentHTML('beforeend',`<div id="fn232" class="hide"><div class="win nar"><div class="wh"><h2 id="fn232H"></h2><span class="wsub" id="fn232S"></span><button class="x" id="fn232X" title="Close">✕</button></div>
+  <div class="wb"><div class="sp" id="fn232P"></div><div class="ro" id="fn232R"></div><div class="nt" id="fn232N"></div><div class="bt" id="fn232B"></div></div></div></div>`);
+function fn232Close(){$('fn232').classList.add('hide')}
+$('fn232X').onclick=fn232Close;
+function fn232Open(){return !$('fn232').classList.contains('hide')}
+// a partner fighting (or waiting) in one of the arenas right now
+function fn232Friends(){const out=[];try{if(typeof MP=='undefined'||!MP.on)return out;const L=fn232Roster().concat(fn232Final()||[]);for(const k in MP.rh){const r=MP.rh[k];if(!r.pr)continue;const D=L.find(d=>d.T&&d.T.g===r.pr.rg);if(D)out.push({D,n:mpName(k)})}}catch(_){}return out}
+function fn232Go(D){fn232Close();try{if(riding)dismount()}catch(_){}wk232Enter(D,()=>{try{say(D.icon+' <b>'+D.place+'</b>. '+D.name+', '+D.title+' waits. The rift behind you leads back to Duskhold.')}catch(_){}})}
+function fn232Draw(view){const H=$('fn232H'),S=$('fn232S'),P=$('fn232P'),R=$('fn232R'),N=$('fn232N'),B=$('fn232B'),own=fn229NpcOwn(),W=fn232Roster(),F=fn232Final();
+  R.innerHTML='';N.innerHTML='';B.innerHTML='';const btn=(html,cls,fn)=>{const b=document.createElement('button');b.innerHTML=html;if(cls)b.className=cls;b.onclick=fn;B.appendChild(b);return b};
+  const known=FN232.path>0;H.textContent=known?FN232.name:'The Stranger';S.textContent=known?FN232.title:'at the fountain of Duskhold';
+  const friends=()=>fn232Friends().forEach(f=>btn('👥 Follow '+mpEsc(f.n)+' to '+f.D.place+'<small>Fight '+f.D.name+' at their side</small>','',()=>fn232Go(f.D)));
+  if(!own){P.textContent='“My business is with the one who carried the last of it to me. Not with you. Not yet.”';N.textContent='He came for the hero who poured the last essence. Pour your own to hear his offer.';friends();btn('Leave','',fn232Close);return}
+  if(view==='fight'||view==='side'){const k=view==='fight';
+    P.textContent=k?'“Then come down, little cup, and try to take back what you poured. I have drunk six Sovereigns. You will be the seventh thing I swallow.”':'“Wise. Four Wardens still keep what is mine: the grove, the storm, the forge and the dawn. Break them for me, one by one, and I will set a crown on you.”';
+    N.innerHTML='<b>This choice is final for this hero.</b> '+(k?'You will fight '+FN232.name+' in the Hollow Beneath (level 56). You can leave, grow stronger and come back as often as you need.':'You will fight four Wardens (levels 52 to 55), each harder than the last. Between them you return here to shop, upgrade and level as usual.');
+    btn(k?'⚔ I stand against you':'👑 I kneel','k'+(k?'':' g'),()=>{FN232.path=k?1:2;fn232Keep();fn232Draw()});btn('Let me think','',()=>fn232Draw());return}
+  if(FN232.path===0){P.textContent='“A thousand years under this stone, waiting for one upright thing to carry it all to me. You did. So you may have what no Sovereign was offered: a choice. Stand with me… or stand in my way.”';
+    N.textContent='Whatever you choose, Duskhold and the zones stay open.';
+    btn('⚔ Stand against him<small>Follow him down for the last fight</small>','k',()=>fn232Draw('fight'));btn('👑 Kneel to him<small>Hunt the four Wardens who defy him</small>','g',()=>fn232Draw('side'));friends();btn('Not yet','',fn232Close);return}
+  if(FN232.path===1){P.textContent='“Still here? The way down is open. I am waiting where you poured them.”';N.textContent='The Hollow Beneath · '+FN232.name+', '+FN232.title+' · level 56. Three phases. Shop and level first if you need to: you can always come back up.';
+    if(F)btn('⚔ Descend into the Hollow Beneath<small>The last fight</small>','k',()=>fn232Go(F));friends();btn('Not yet','',fn232Close);return}
+  // his road
+  W.forEach((D,i)=>{const s=document.createElement('span');s.className=i<FN232.n?'d':i===FN232.n?'n':'';s.textContent=(i<FN232.n?'✓ ':i===FN232.n?'➤ ':'· ')+D.name+', '+D.title+' · '+D.place+' · level '+D.lv;R.appendChild(s)});
+  const nx=W[FN232.n];
+  if(nx){P.textContent=['“The grove first. Oakenhart has grown fat on what should be mine.”','“The storm next. Maelis thinks the sky is far enough from me.”','“Now the forge. Brassmaw burns my essence for heat. Put it out.”','“One left. Seraphel calls herself my judge. Bring me her verdict.”'][FN232.n]||'“Go.”';
+    N.textContent='Between Wardens, shop, upgrade and level as usual. Each rift brings you back here.';btn(nx.icon+' Go to '+nx.place+'<small>'+nx.name+', '+nx.title+' · level '+nx.lv+'</small>','g',()=>fn232Go(nx))}
+  else if(!FN232.crown){P.textContent='“All four. Kneel, then. Let them see whose you are.”';btn('👑 Kneel and be crowned','g',()=>{fn232Close();fn232EndB()})}
+  else{P.textContent='“My devoted. The fountain runs for us now.”';N.textContent='You wear his crown and his mark.';btn('🎬 See the palace again','',()=>{fn232Close();try{ec232Play('crown',{rp:1})}catch(_){}})}
+  friends();btn('Leave','',fn232Close)}
+function fn232Talk(){try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}fn232Draw();$('fn232').classList.remove('hide')}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&fn232Open()){e.stopPropagation();fn232Close()}},true);
+{const f=worldPrompt;worldPrompt=function(){try{const N=FN229.npc;if(N&&N.F.root.visible&&!FN229.run&&!fn232Open()&&!(typeof EC232!='undefined'&&EC232.run)&&Math.hypot(pl.position.x-N.x,pl.position.z-N.z)<3.4)
+      return {label:'F · Speak with '+(FN232.path?FN232.name:'the stranger'),fn:fn232Talk}}catch(e){if(!FN232.err++)console.warn('v232 prompt',e)}return f.apply(this,arguments)}}
+// ---------------- cheats (Settings → Cheats, behind the password) ----------------
+{const box=$('cheatBox');if(box){box.insertAdjacentHTML('beforeend','<div class="chr"><span>👁 The Voice\'s offer<small>Reset the choice, or mark the next Warden beaten</small></span><span class="chb"><button id="fn232C0">Reset</button> <button id="fn232C1">+1 Warden</button></span></div>');
+  const ok=()=>{try{if(typeof CHU!='undefined'&&!CHU.on){CHU.deny();return false}}catch(_){}return true};
+  $('fn232C0').onclick=()=>{if(!ok())return;FN232.path=0;FN232.n=0;FN232.won=0;FN232.crown=0;try{fn232Regalia(pl,0);fn229Npc();MP.lastPres=''}catch(_){}fn232Keep();say('👁 The choice is open again.')};
+  $('fn232C1').onclick=()=>{if(!ok())return;FN232.path=2;FN232.n=Math.min(4,FN232.n+1);fn232Keep();say('👁 Wardens beaten: '+FN232.n+'/4.')}}}
+// ================= v232 the Warden kit in co-op: one fight, shared by everyone in the arena =================
+// Bosses are not part of the shared-monster system (mpElig leaves them out) and the kit's arenas are not Sovereign dens (ARN), so
+// the kit carries its own small relay, on the 'ev' topic beside Duskhold's messages (r -7: older versions ignore the entries).
+// Everyone standing in an arena fights the same boss:
+//  * the LEADER is the living player there with the lowest id (wkn232Roles; the same rule as the Sovereigns' mpBossAuth). Only the
+//    leader's game runs the AI, picks moves and owns his health;
+//  * ['wk232', key, 1, fighting, hp, x, z, ry, phase] four times a second: partners (D.mir) follow his place and health;
+//  * ['wk232', key, 2, move, seed, x, z, ry] on every cast: partners play the same move with the same seed (their own hero is what it
+//    is aimed at, and each game judges the hits on its own hero);
+//  * ['wk232', key, 4, damage] partners send the damage they deal (their own copy never dies on its own: see the kill hook);
+//  * ['wk232', key, 3] he is slain: everyone's copy dies and each player gets their own reward;
+//  * ['wk232', key, 5] the fight has started; ['wk232', key, 6, move] a partner's own deed asks the leader for a move (wk232Req:
+//    only moves marked req:1).
+// A partner who has already beaten this boss still gets a copy to fight (wkn232Want), so friends can help each other.
+var WKN232={pend:0,tS:0,tH:0};
+function wkn232On(){try{return typeof MP!='undefined'&&!!MP.on&&!!MP.room&&Object.keys(MP.rh||{}).length>0}catch(_){return false}}
+function wkn232Send(D,a){if(!wkn232On())return;try{MP.room.emit('ev',{r:-7,l:[['wk232',D.key].concat(a)]}).catch(()=>{})}catch(_){}}
+function wkn232Want(D){const N=D.net;return !!(N&&N.f&&performance.now()-N.t<3000)}
+function wkn232Peers(D){const out=[];if(!wkn232On())return out;let rg;try{rg=mpCurRg()}catch(_){return out}const L=D.L;
+  for(const k in MP.rh){const r=MP.rh[k];if(r.pr&&r.pr.rg===rg&&r.m&&Math.hypot(r.m.position.x-L.cx,r.m.position.z-L.cz)<L.hr+8)out.push({k,alive:r.pr.hp>0})}return out}
+function wkn232Roles(D,here,dt){if(!here||!wkn232On()){D.mir=0;D.auth=null;return}
+  let h=hero.hp>0?MP.me:null;wkn232Peers(D).forEach(p=>{if(p.alive&&(h===null||p.k<h))h=p.k});D.auth=h;D.mir=h&&h!==MP.me?1:0;
+  const e=D.e,A=D.A,now=performance.now();if(!e||e.dead||!A)return;
+  if(!D.mir&&h===MP.me){if(now-WKN232.tS>250&&(A.f||now-(D.netF||0)<1500)){WKN232.tS=now;if(A.f)D.netF=now;const r=v=>Math.round(v*100)/100;wkn232Send(D,[1,A.f?1:0,Math.round(e.c.h),r(e.m.position.x),r(e.m.position.z),r(e.m.rotation.y),e.sv.ph])}}
+  else if(D.mir&&WKN232.pend>=1&&now-WKN232.tH>250){WKN232.tH=now;const d=Math.round(WKN232.pend);WKN232.pend=0;wkn232Send(D,[4,d])}}
+// a partner's copy: follow the leader's place, count the damage dealt here
+function wkn232Follow(D,e,dt){const N=D.net,S=e.sv,m=e.m;if(!N)return;if(N.h!=null){const dl=N.h-e.c.h;if(dl>0)WKN232.pend+=dl}N.h=e.c.h;
+  if(performance.now()-N.t>1500||!isFinite(N.x))return;const k=Math.min(1,dt*(S.mv?3:7));m.position.x+=(N.x-m.position.x)*k;m.position.z+=(N.z-m.position.z)*k;
+  if(!S.mv){m.rotation.y+=svAng(N.ry-m.rotation.y)*Math.min(1,dt*6);if(N.ph&&N.ph!==S.ph){S.ph=N.ph;e.bs.ph=N.ph;if(D.phSync)try{D.phSync(D,N.ph)}catch(_){}}}}
+// a move asked for by a player's own deed (not by the AI): the leader casts it; a partner asks the leader
+function wk232Req(e,id){const D=e.wk;if(D.mir){wkn232Send(D,[6,id]);return}svEndMove(e,true);svCast(e,id)}
+function wkn232In(peer,q){const D=WK232.D[q[1]],ty=q[2];if(!D||typeof peer!='string'||!wk232In(D))return;const N=D.net||(D.net={t:0}),e=D.e,A=D.A,ok=e&&!e.dead&&A&&enemies.includes(e);
+  if(ty===1){if(D.auth!=null&&peer!==D.auth)return;if(!isFinite(q[4])||!isFinite(q[5])||!isFinite(q[6]))return;N.t=performance.now();N.f=q[3]?1:0;N.hp=+q[4];N.x=+q[5];N.z=+q[6];N.ry=+q[7]||0;N.ph=q[8]|0;
+    if(!ok||!D.mir)return;e.c.h=Math.max(1,Math.min(M(e.c),N.hp-WKN232.pend));N.h=e.c.h;
+    if(N.f&&!A.f&&hero.hp>0)wk232Start(D,e);else if(!N.f&&A.f&&D.ft>2.5)wk232Reset(D,true)}
+  else if(ty===2){const id=q[3];if(!ok||!D.mir||peer!==D.auth||typeof id!='string'||!Object.prototype.hasOwnProperty.call(D.B.M,id))return;if(!A.f){if(hero.hp<=0)return;wk232Start(D,e)}
+    const S=e.sv;if(S.mv)svEndMove(e,true);if(isFinite(q[5])&&isFinite(q[6])){e.m.position.x=+q[5];e.m.position.z=+q[6];e.m.rotation.y=+q[7]||0}S.on=true;svStart(e,id,Math.max(1,Math.min(998,q[4]|0)))}
+  else if(ty===3){if(!ok||D.auth===MP.me&&hero.hp>0&&!D.mir&&peer>MP.me)return;D.netWin=1;e.c.h=0;e.dead=1;try{e.hb.visible=false}catch(_){}kill(e)}
+  else if(ty===4){const d=+q[3];if(!ok||D.mir||!(d>0))return;if(!A.f)wk232Start(D,e);e.c.h-=Math.min(d,M(e.c)*.25);e.m.flT=nowP();e.agg=1;if(e.c.h<=0){e.c.h=0;e.dead=1;try{e.hb.visible=false}catch(_){}kill(e)}}
+  else if(ty===5){if(ok&&!A.f&&hero.hp>0)wk232Start(D,e)}
+  else if(ty===6){const id=q[3];if(!ok||D.mir||!A.f||typeof id!='string'||!Object.prototype.hasOwnProperty.call(D.B.M,id)||!D.B.M[id].req)return;svEndMove(e,true);svCast(e,id)}}
+if(typeof mpOnEV=='function'){const f=mpOnEV;mpOnEV=function(msg){try{const d=msg&&msg.data;if(MP.on&&!msg.sameTab&&d&&d.r===-7&&Array.isArray(d.l))for(const q of d.l.slice(0,8))if(Array.isArray(q)&&q[0]==='wk232')wkn232In(msg.peer,q)}catch(e){if(!WK232.err++)console.error('wk net in',e)}return f.apply(this,arguments)}}
+// the leader relays every cast; a partner's copy never picks a move itself
+{const f=svCast;svCast=function(e,id,seed){if(e&&e.wk&&wkn232On()){const D=e.wk;if(D.mir)return;seed=Math.max(1,Math.min(998,Math.round(seed||(1+Math.random()*997))));const r=f.call(this,e,id,seed);
+    const q=v=>Math.round(v*100)/100;wkn232Send(D,[2,id,seed,q(e.m.position.x),q(e.m.position.z),q(e.m.rotation.y)]);return r}return f.apply(this,arguments)}}
+// a partner's copy dies only when the leader says so
+{const f=kill;kill=function(e){if(e&&e.wk&&e.wk.mir&&!e.wk.netWin){e.dead=0;e.c.h=1;return}return f.apply(this,arguments)}}
 // ================= v232 Oakenhart, the Rootbound Stag — the model, poses and procedural animation =================
 // The first Warden of the Balance (the side-with-him ending; fight and grove in 4022, moves in 4021). A stag the size of a house,
 // grown out of an old oak in autumn: a trunk of dark furrowed bark shingled with bark plates, amber sap glowing in the seams of his
@@ -80444,7 +80599,7 @@ var YT232M={
     hit:[[.96,[-.3,0,.3]],[1.58,[-.45,-.15,.15,.45]],[2.28,[-.3,0,.3]]].flatMap(([t,A],w)=>A.map(ay=>({t,s:{k:'l',w:1.5,l:34,b:0},f:.8,ay,dm:1.15,w:w?.44:.7,wc:0x7a3aff,on:()=>yt232Wither(3000),fx:(c,an)=>{yt232Lance(an,34,1.4);if(ay==A[0]){shake(.25);svSnd('whoosh',1.2,.7+w*.1)}}}))),
     ev:[[.3,c=>svSnd('charge',.7,.6)]],rec:.45}),
   // the essence torn back out of him: a long stagger
-  broken:WK232_M({dur:5.2,trk:[[.3,'stag','o'],[4.6,'stag','l',.03],[5.2,'cRec','io']],
+  broken:WK232_M({req:1,dur:5.2,trk:[[.3,'stag','o'],[4.6,'stag','l',.03],[5.2,'cRec','io']],
     go(c){c.S.stg=5.2;c.S.ghost=0;svSnd('stag',1.2,.7);svSnd('shriek',1,.6);popT(c.m.position,'RUPTURED','#e8d0ff',true);svShock(c.m.position,0xffffff,7,.5);for(let i=0;i<6;i++)burst(gY(c.m.position,2.5),YT232.ess[i],24,5,4,1)},
     tk(c,dt){c.S.stg=Math.max(0,5.2-c.t);if(Math.random()<dt*14){const p=svWP(c.e,'heart',0,0,.2);burst(p,YT232.ess[(Math.random()*6)|0],1,1.2,1.5,.8)}},end(c){c.S.stg=0}})};
 // ================= v232 Ythrael — the Hollow Beneath (the finale's arena), Thirst, the brink, the falling rim, the record =================
@@ -80468,7 +80623,7 @@ function ap232Terrain(I){const C=ap232Cfg();for(let j=I.y0-2;j<I.y0+I.h+2;j++)fo
 try{sp152Theme('apex',{nm:'The Hollow Beneath',sub:'Under the fountain of Duskhold',a:{fog:.02,fc:0x0a0614,fcA:.95,sun:.14,hemi:.42,env:'dark',ex:1.0,sat:1.05,vig:1.75,sky:0,pt:'mote',pc:0xc8a0ff,po:.5}})}catch(e){console.warn('v232 theme',e)}
 try{SP152.R.apex={onLoad(){setTimeout(()=>{try{TWN100_home()}catch(_){}},0)}}}catch(_){}
 var YT232D=(()=>{const I=sp152I('apex');if(!I){console.error('v232: the apex instance is missing');return null}const C=ap232Cfg(),cx=I.x0+C.cx,cz=I.y0+C.cz;
- return wk232Reg({key:'voice',T:I,center:[cx,cz],Lx:{r:17.6,hr:18.6,ent:{x:cx,z:cz+15.2},exit:{x:cx,z:cz+17.4},home:{x:cx,z:cz-3}},name:'Ythrael',title:'the Voice Below',icon:'👁',lv:56,place:'The Hollow Beneath',base:'akorror',hpK:1.9,dmK:1.3,wake:11,
+ return wk232Reg({key:'voice',T:I,center:[cx,cz],Lx:{r:17.6,hr:18.6,ent:{x:cx,z:cz+16},exit:{x:cx,z:cz+19.3},home:{x:cx,z:cz-3}},name:'Ythrael',title:'the Voice Below',icon:'👁',lv:56,place:'The Hollow Beneath',base:'akorror',hpK:1.9,dmK:1.3,wake:11,
   card:['he who drank six Sovereigns','There is no way back up'],restTxt:'the middle of the stone',riftCol:0xe8d0ff,
   B:{name:'Ythrael',col:YT232.col,body:1.6,ph2:.66,poise:.1,headJ:'head',turnA:3.6,edge:1.6,
     ai:{pref:4.0,walk:2.5,run:4.6,turn:2.7,rest:[.7,1.25],ph2r:.64,strafe:.5,near:2.2},
@@ -80513,6 +80668,7 @@ var YT232D=(()=>{const I=sp152I('apex');if(!I){console.error('v232: the apex ins
     },
   start(D,e){D.S.stolen=0;yt232Buff(D)},
   reset(D,won){const S=D.S;yt232MotesClear(D);S.stolen=0;S.drink=0;S.sat=0;D.dmK=S.dm0;yt232Buff(D);yt232Brink(D,0);yt232Crumble(D,0);if(D.A){D.A.r=D.L.r;D.A.hr=D.L.hr}},
+  phSync(D,ph){yt232Brink(D,ph>=2?1:0);if(!!D.S.rim!==(ph>=3))yt232Crumble(D,ph>=3?1:0)},
   hud(D,e){return ' · Stolen essence '+D.S.stolen+'/6'},
   phase(D,e){const S=e.sv;return S.ph===2&&e.c.h/M(e.c)<=.33?'awaken2':null},
   won(D,e){try{fn232Slain(e)}catch(err){console.error('fn232 slain',err)}},
@@ -80541,7 +80697,7 @@ function yt232MotesClear(D){D.S.motes.forEach(yt232MoteFree);D.S.motes=[]}
 function yt232Buff(D){const n=D.S.stolen,i=hero.buffs.findIndex(b=>b.n=='Stolen Essence');if(i>=0)hero.buffs.splice(i,1);if(n>0)hero.buffs.push({n:'Stolen Essence',i:'✨',s:{paP:.06*n,maP:.06*n},t:nowP()+90000,d:'Essence taken back from him: +'+(6*n)+'% attack ('+n+'/6)'});try{hsDirty()}catch(_){}}
 function yt232MoteTaken(D,e,m){const S=D.S,p=m.g.position.clone();yt232MoteFree(m);S.stolen++;burst(p,YT232.ess[m.i],30,2.5,2,.6);try{sfx('chime')}catch(_){}try{const h=Math.round(heroMax()*.03);hero.hp=Math.min(heroMax(),hero.hp+h);dn(pl.position,'+'+h,'#9aff6a',-10,900)}catch(_){}
   popT(pl.position,'Essence '+S.stolen+'/6','#e8d0ff');yt232Buff(D);
-  if(S.stolen>=6&&e&&!e.dead){S.stolen=0;yt232Buff(D);S.drink=0;const hp=svWP(e,'heart',0,0,.2);try{sk146Beam(()=>gY(pl.position,1.2),()=>hp,0xffffff,.3,.6)}catch(_){}shake(.6);try{flash('rgba(232,208,255,.4)')}catch(_){}svEndMove(e,true);wk232Wound(e,.06,'#e8d0ff');svCast(e,'broken')}}
+  if(S.stolen>=6&&e&&!e.dead){S.stolen=0;yt232Buff(D);S.drink=0;const hp=svWP(e,'heart',0,0,.2);try{sk146Beam(()=>gY(pl.position,1.2),()=>hp,0xffffff,.3,.6)}catch(_){}shake(.6);try{flash('rgba(232,208,255,.4)')}catch(_){}wk232Wound(e,.06,'#e8d0ff',1);wk232Req(e,'broken')}}
 function yt232MoteDrunk(D,e,m){const S=D.S;yt232MoteFree(m);wk232Heal(e,.025,YT232.ess[m.i]);S.sat=Math.min(5,S.sat+1);S.satT=20;D.dmK=S.dm0*(1+.08*S.sat);svSnd('squelch',.6,1.4)}
 function yt232DrinkStart(D,e){const S=D.S;S.drink=1;say('👁 Ythrael kneels to drink. <b>Take the motes before he does!</b>');try{banner('⚠ THIRST','Snatch the motes of essence before they reach him','')}catch(_){}}
 function yt232DrinkEnd(D,e,silent){const S=D.S;if(!S.drink)return;S.drink=0;if(silent||!e||e.dead)return;if(S.sat>0)say('👁 He has drunk: his blows are heavier for a while.')}
@@ -80550,4 +80706,341 @@ function yt232Crumble(D,on){const S=D.S,A=D.A,L=D.L;S.rim=on?1:0;if(!A)return;if
     try{sk146Debris(c,D.LS.M.stone,24,.5,9,3,2)}catch(_){}svSnd('crack',1.4,.4);svSnd('heavy',1.4,.4);S.motes=S.motes.filter(m=>{if(Math.hypot(m.x-L.cx,m.z-L.cz)>12.4){yt232MoteFree(m);return false}return true});
     // anyone standing on the rim is thrown inward
     const P=pl.position,d=Math.hypot(P.x-L.cx,P.z-L.cz);if(d>13.4){P.x=L.cx+(P.x-L.cx)/d*13.2;P.z=L.cz+(P.z-L.cz)/d*13.2}}else{A.r=L.r;A.hr=L.hr}}
+// ================= v232 the ending cinematics' engine (names ec232*) =================
+// A small player for the two endings (4070 "the land breathes", 4071 "the crown"), built like the zone cinematics (3860): the
+// main loop waits (IC151.on), every frame is a pure function of t (ec232Seek), so tests draw it frame by frame (ec232Cap).
+// A plan (ec232Reg(key, plan)):
+//   len, cut (the game is handed back here, under black), skipT, dips [[t, half-width]] (short dips to black on the cuts),
+//   lines [{a, b, s}] (subtitles), title {a, b, h, s} (a big card), build(S), frame(S, t, dt, now) → {p, l, fov, F (the spot whose
+//   land is drawn), set (true: the plan shows its own set, no land), grade (css filter)}, after(S, t, c) (after the sky settles:
+//   fog, light), score(ac, out, T0, S), back(S) (put everything back).
+// ec232Play(key, {then, rp}): then() runs when the game is handed back (not on a replay: rp); a replay puts the hero back
+// where they stood. Skip: the button, Esc, Enter or Space. Local: a co-op partner sees the hero stand still meanwhile.
+var EC232={run:false,S:null,P:{},err:'',noDraw:0};
+function ec232Reg(key,plan){plan.key=key;EC232.P[key]=plan}
+function ec232Css(){if(document.getElementById('ec232css'))return;try{ic151Css();ic151DCss()}catch(_){}const s=document.createElement('style');s.id='ec232css';s.textContent=
+  '#ec232{position:fixed;inset:0;z-index:2147483000;overflow:hidden;cursor:none;user-select:none;pointer-events:auto;background:transparent}'+
+  '#ec232 .lb{position:absolute;left:0;right:0;height:11vh;background:#000;z-index:3;pointer-events:none}#ec232 .lb.t{top:0}#ec232 .lb.b{bottom:0}'+
+  '#ec232 .fk{position:absolute;inset:0;background:#000;z-index:4;pointer-events:none}'+
+  '#ec232 .sub{position:absolute;left:6%;right:6%;bottom:16vh;text-align:center;z-index:5;pointer-events:none;font-family:"IM Fell English SC","Cinzel Decorative",Georgia,serif;font-size:clamp(18px,2.8vw,40px);letter-spacing:.05em;color:#fff;line-height:1.2;text-shadow:0 0 4px rgba(0,0,0,.95),0 0 16px rgba(0,0,0,.8)}'+
+  '#ec232 .ttl{position:absolute;left:0;right:0;top:36%;text-align:center;z-index:5;pointer-events:none;color:#fff;font-family:"Cinzel Decorative",Cinzel,Georgia,serif;text-shadow:0 0 6px rgba(0,0,0,.9),0 0 30px rgba(0,0,0,.7)}'+
+  '#ec232 .ttl b{display:block;font-size:clamp(34px,7vw,96px);letter-spacing:.14em;font-weight:700}#ec232 .ttl i{display:block;font-style:normal;font-size:clamp(14px,1.8vw,26px);letter-spacing:.3em;margin-top:.6em;opacity:.9}'+
+  '#ec232 .skip{position:absolute;right:22px;bottom:calc(11vh + 14px);z-index:6;cursor:pointer;background:rgba(10,8,16,.45);color:#e8e0d0;border:1px solid rgba(232,224,208,.35);border-radius:4px;font:600 13px/1 "Cinzel Decorative",Georgia,serif;letter-spacing:.08em;padding:8px 14px;opacity:.7}'+
+  '#ec232 .skip:hover{opacity:1;background:rgba(30,24,40,.7)}';document.head.appendChild(s)}
+function ec232Layer(S){ec232Css();const el=document.createElement('div');el.id='ec232';
+  el.innerHTML='<div class="lb t"></div><div class="lb b"></div><div class="sub"></div><div class="ttl"><b></b><i></i></div><div class="fk"></div><button class="skip">Skip ›</button>';
+  document.body.appendChild(el);S.dom={el,lt:el.querySelector('.lb.t'),lb:el.querySelector('.lb.b'),sub:el.querySelector('.sub'),ttl:el.querySelector('.ttl'),fk:el.querySelector('.fk'),skip:el.querySelector('.skip'),cur:null}}
+function ec232Dom(S,t){const D=S.dom,P=S.P;if(!D)return;const K=ic151K,Sm=ic151Sm,C=P.cut;
+  const lb=(11*(1-Sm(K(t,C+.5,P.len-.3))))+'vh';D.lt.style.height=lb;D.lb.style.height=lb;
+  let fk=t<C?1-K(t,0,1.4):1-K(t,C+.3,P.len-.2);if(t<C){(P.dips||[]).forEach(([a,w])=>{fk=Math.max(fk,K(t,a-w,a)*(1-K(t,a,a+w*1.4)))});fk=Math.max(fk,K(t,C-1.2,C))}
+  D.fk.style.opacity=fk.toFixed(3);D.fk.style.background=P.fade||'#000';
+  const L=(P.lines||[]).find(x=>t>=x.a&&t<x.b+.7);if(L!==D.cur){D.cur=L;D.sub.textContent=L?L.s:''}
+  if(L)D.sub.style.opacity=(Sm(K(t,L.a,L.a+.7))*(1-Sm(K(t,L.b,L.b+.7)))).toFixed(3);
+  const T=P.title;if(T){const o=Sm(K(t,T.a,T.a+1.4))*(1-Sm(K(t,T.b-1,T.b)));D.ttl.style.opacity=o.toFixed(3);if(!D.tt){D.tt=1;if(T.top)D.ttl.style.top=T.top;D.ttl.firstChild.textContent=T.h;D.ttl.lastChild.textContent=T.s||''}D.ttl.style.letterSpacing=(.02*K(t,T.a,T.b))+'em'}else D.ttl.style.opacity=0;
+  D.skip.style.visibility=t<P.skipT?'':'hidden'}
+function ec232Frame(S,t){const P=S.P,now=3e6+t*1000,dt=Math.max(0,Math.min(.1,S.lt==null?0:t-S.lt));S.lt=t;
+  const c=P.frame(S,t,dt,now);if(!c)return;
+  if(!c.set)c.p.y=Math.max(c.p.y,GH(c.p.x,c.p.z)+.5);
+  cam.position.copy(c.p);cam.up.set(0,1,0);cam.lookAt(c.l);cam.fov=c.fov||50;cam.updateProjectionMatrix();if(typeof look!='undefined')look.copy(c.l);
+  const F=c.F||c.l;hc208Focus(F,()=>{if(!c.set)try{chunkVis()}catch(_){}
+    try{if(S.si!==c.i){for(let n=0;n<40;n++)atmos(.05,now)}else atmos(dt,now)}catch(_){}
+    try{townLights(F)}catch(_){}});
+  S.si=c.i;try{WIND.t.value=now/1000}catch(_){}try{torch.position.set(F.x,(c.set?F.y:GH(F.x,F.z))+2.4,F.z+.3)}catch(_){}
+  try{FADE.cam.value.copy(cam.position);FADE.pl.value.copy(cam.position)}catch(_){}
+  if(P.after)try{P.after(S,t,c)}catch(e){if(!S.ae){S.ae=1;console.warn('ec232 after',e)}}
+  try{const cv=ren.domElement,g=c.grade||'';if(cv.style.filter!==g){cv.style.transition='none';cv.style.filter=g}}catch(_){}
+  try{fxStep(dt)}catch(_){}
+  if(!EC232.noDraw)try{POST.render()}catch(e){if(!S.re){S.re=1;console.warn('ec232 draw',e)}}}
+function ec232Build(key,o){const P=EC232.P[key];if(!P)throw new Error('no plan '+key);const S={P,o:o||{},t:0,lt:null,si:-1,ev:{},vm:new Map(),own:[]};
+  S.save={p:pl.position.clone(),ry:pl.rotation.y,vis:pl.visible,yaw:typeof camYaw!='undefined'?camYaw:0,fov:cam.fov,near:cam.near,far:cam.far,tod:typeof TOD!='undefined'?TOD:0};P.build(S);return S}
+// remember how a thing was shown before the cinematic touched it
+function ec232Vis(S,o,on){if(!o)return;if(!S.vm.has(o))S.vm.set(o,o.visible);o.visible=!!on}
+// a thing the cinematic made itself: removed and freed when it ends
+function ec232Own(S,o,parent){(parent||scene).add(o);S.own.push(o);return o}
+function ec232Play(key,o){if(EC232.run)return false;try{if(typeof IC151!='undefined'&&(IC151.run||IC151.on))return false}catch(_){}let S;try{S=ec232Build(key,o)}catch(e){console.warn('ec232 build',e);EC232.err=String(e&&e.stack||e);return false}
+  EC232.S=S;EC232.run=true;IC151.on=true;document.body.classList.add('ic151d');ec232Layer(S);
+  const L=S.live={t0:performance.now(),off:0,raf:0,ac:null};
+  try{const AC=window.AudioContext||window.webkitAudioContext,ac=L.ac=new AC(),out=ac.createGain(),cp=ac.createDynamicsCompressor();out.gain.value=.9*Math.max(.15,Math.min(1,typeof SET!='undefined'&&SET.sfxV!=null?+SET.sfxV*1.4:1));out.connect(cp);cp.connect(ac.destination);L.out=out;if(ac.resume)ac.resume();if(S.P.score)S.P.score(ac,out,ac.currentTime+.05,S)}catch(e){console.warn('ec232 sound',e)}
+  try{if(typeof MU!='undefined'&&MU.g&&MU.a){L.mu=1;MU.g.gain.setTargetAtTime(0,MU.a.currentTime,.1)}}catch(_){}
+  const onKey=e=>{if(!EC232.run)return;e.stopImmediatePropagation();e.preventDefault();if(e.type=='keydown'&&/^(Escape|Enter| |Spacebar)$/.test(e.key))ec232Skip()};L.onKey=onKey;
+  addEventListener('keydown',onKey,true);addEventListener('keyup',onKey,true);S.dom.skip.onclick=e=>{e.stopPropagation();ec232Skip()};
+  S.dom.el.addEventListener('mousemove',()=>{S.dom.el.style.cursor='default';clearTimeout(L.cur);L.cur=setTimeout(()=>{if(S.dom)S.dom.el.style.cursor=''},1500)});
+  const tick=now=>{if(!EC232.run)return;L.raf=requestAnimationFrame(tick);ec232Seek(Math.max(L.off,(now-L.t0)/1000+L.off));
+    try{if(MP&&MP.on&&party.length&&now-(L.pt||0)>500){L.pt=now;mpPresence(now)}}catch(_){}};
+  L.raf=requestAnimationFrame(tick);return true}
+function ec232Seek(t){const S=EC232.S;if(!S)return;S.t=t;const P=S.P;
+  if(t<P.cut){IC151.on=true;try{ec232Frame(S,t)}catch(e){console.warn('ec232 frame',e);EC232.err=String(e&&e.stack||e);if(S.live)S.live.off+=P.cut-t;t=P.cut}}
+  if(t>=P.cut&&!S.back)ec232Back(S);
+  ec232Dom(S,t);if(t>=P.len)ec232End()}
+function ec232Skip(){const S=EC232.S,L=S&&S.live;if(!L)return;const t=(performance.now()-L.t0)/1000+L.off;if(t>=S.P.skipT)return;L.off+=S.P.skipT-t;
+  try{if(L.out){L.out.gain.cancelScheduledValues(L.ac.currentTime);L.out.gain.setTargetAtTime(0,L.ac.currentTime,.12)}}catch(_){}}
+function ec232Back(S){if(S.back)return;S.back=1;const sv=S.save;
+  try{S.P.back&&S.P.back(S)}catch(e){console.warn('ec232 plan back',e)}
+  try{S.own.forEach(o=>{if(o.parent)o.parent.remove(o);o.traverse(q=>{if(q.geometry&&!(q.geometry.userData&&(q.geometry.userData.lps||q.geometry.userData.keep)))q.geometry.dispose();const m=q.material;if(m&&!(m.userData&&m.userData.keep)){if(m.map&&!(m.map.userData&&m.map.userData.keep)&&m.map!==(typeof SPR!='undefined'?SPR:null))m.map.dispose();m.dispose()}})});S.own=[]}catch(e){console.warn('ec232 free',e)}
+  try{S.vm.forEach((v,o)=>{o.visible=v});S.vm.clear()}catch(_){}
+  try{ren.domElement.style.filter=''}catch(_){}try{if(typeof TOD!='undefined')TOD=sv.tod}catch(_){}
+  try{pl.visible=sv.vis;pl.position.copy(sv.p);pl.rotation.y=sv.ry;if(typeof camYaw!='undefined')camYaw=sv.yaw}catch(_){}
+  if(!S.o.rp&&S.o.then)try{S.o.then()}catch(e){console.warn('ec232 then',e)}
+  try{document.body.classList.remove('ic151d');cam.fov=sv.fov||58;cam.near=sv.near||.1;cam.far=sv.far||260;cam.up.set(0,1,0);cam.updateProjectionMatrix();snapCam();chunkVis();for(let n=0;n<40;n++)atmos(.05,performance.now())}catch(e){console.warn('ec232 back',e)}
+  IC151.on=false;try{if(S.live&&S.live.mu&&typeof muVol=='function')muVol()}catch(_){}try{if(typeof K!='undefined')for(const k in K)K[k]=false}catch(_){}}
+function ec232End(){if(!EC232.run)return;const S=EC232.S,L=S&&S.live;EC232.run=false;
+  try{if(S&&!S.back)ec232Back(S)}catch(_){}
+  try{if(L){cancelAnimationFrame(L.raf);removeEventListener('keydown',L.onKey,true);removeEventListener('keyup',L.onKey,true);clearTimeout(L.cur);
+    if(L.ac){const ac=L.ac;try{L.out.gain.setTargetAtTime(0,ac.currentTime,.3)}catch(_){}setTimeout(()=>{try{ac.close()}catch(_){}},1500)}}}catch(_){}
+  try{if(S&&S.dom)S.dom.el.remove()}catch(_){}EC232.S=null}
+// capture mode for tests and stills: build, no sound, no clock; then ec232Seek(t) per frame, ec232End() when done
+function ec232Cap(key,o){if(EC232.run)return null;const S=ec232Build(key,Object.assign({rp:1},o||{}));EC232.S=S;EC232.run=true;IC151.on=true;document.body.classList.add('ic151d');ec232Layer(S);S.dom.skip.style.display='none';return {len:S.P.len,cut:S.P.cut}}
+// ---------------- sound helpers: a slow pad, a bell, a breath of noise ----------------
+function ec232Pad(ac,out,t,dur,freqs,vol,type,at,dec){freqs.forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;o.detune.value=(i%2?5:-5);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol/freqs.length,t+(at||dur*.4));g.gain.setValueAtTime(vol/freqs.length,t+dur-(dec||dur*.35));g.gain.linearRampToValueAtTime(0,t+dur);o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+.1)})}
+function ec232Bell(ac,out,t,f,vol,len){[1,2.01,2.99,4.2].forEach((h,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=f*h;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol/(1+i*1.6),t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+(len||3)/(1+i*.5));o.connect(g);g.connect(out);o.start(t);o.stop(t+(len||3)+.1)})}
+function ec232Air(ac,out,t,dur,f0,f1,vol){const n=ac.sampleRate*2,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;const s=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();s.buffer=b;s.loop=true;fl.type='bandpass';fl.Q.value=.8;fl.frequency.setValueAtTime(f0,t);fl.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+dur*.45);g.gain.linearRampToValueAtTime(0,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.1)}
+// ---------------- the Cinematics list (Settings → Cheats) ----------------
+(function(){if(typeof CV215=='undefined')return;
+  CV215.L.push({z:'ec232a',n:'The Land Breathes',s:'The ending against him · the essence returns to the ground'},{z:'ec232b',n:'The Crown',s:'The ending at his side · the gilded palace'});
+  {const f=cv215Seen;cv215Seen=function(z){if(z==='ec232a')return !!FN232.won;if(z==='ec232b')return !!FN232.crown;return f.apply(this,arguments)}}
+  {const f=cv215Play;cv215Play=function(z){if(z!=='ec232a'&&z!=='ec232b')return f.apply(this,arguments);const why=cv215Why();if(why){try{say('🎬 '+why)}catch(_){}return false}return ec232Play(z==='ec232a'?'breath':'crown',{rp:1})}}
+  {const f=cv215Busy;cv215Busy=function(){return EC232.run||f.apply(this,arguments)}}})();
+// ================= v232 ending A: "the land breathes" (the fight-him ending; plan 'breath' on 4069's player) =================
+// Owner (Nov 13 2026): "After killing him- the essence is released from him and is absorbed back into the ground- the camera pans
+// to different areas throughout the game and shows life being breathed back into the land- eluding to the restoration of the
+// natural balance."
+//   0     the Hollow Beneath: Ythrael on his knees on the stone; the six essences pour out of him in six streams, arc over and sink
+//         into the six marks of the floor; he empties, falls and fades; a last ring of light runs out over the stone
+//   1–6   the six zones in the game's order (the road of each zone's first instance): a wave of that zone's essence runs over the
+//         ground ahead of the camera; behind it grass and flowers stand up, motes rise, the fog thins and the colour comes back
+//   7     Duskhold: the hero by the fountain in morning light, the camera lifts to the sky; the title card
+// Everything is a function of t. What it shows it builds itself (a stand-in Ythrael, sprites, sprouts) and frees at the end;
+// the Hollow's own dressing is only shown for shot 0 (built first if the hero has never stood there).
+var EB232={T0:9.0,dz:4.4,T7:35.4,
+  pal:[[0xdff5c8,0xffffff,0x9be36a],[0xffe36a,0xff9ad0,0x8fe07a],[0xcfeaff,0xffffff,0x9fe0d0],[0xffb04a,0xff6a5a,0x9fd66a],[0xe8dcff,0xffffff,0x9ad0a0],[0xff5a6a,0xffe0e0,0x8fd07a]],
+  words:['The bog remembers green.','The hills, their rain.','The peak, its thaw.','The sands, their wells.','The graves, their quiet.','The court, its dawn.']};
+function eb232H(i){return ic151H(i*1.37+.11)}
+function eb232Merge(L){const A=[];L.forEach(g=>{const q=g.index?g.toNonIndexed():g,P=q.attributes.position.array;for(let i=0;i<P.length;i++)A.push(P[i]);g.dispose()});const o=new THREE.BufferGeometry();o.setAttribute('position',new THREE.Float32BufferAttribute(A,3));return o}
+function eb232SprMat(col,op){const m=kqSpr(col,1).material.clone();m.opacity=op==null?1:op;m.fog=false;m.depthWrite=false;return m}
+// one zone's patch of new life round O: sprouts (two instanced meshes), motes and the wave's ring of lights
+function eb232Patch(S,z,O,f){const g=new THREE.Group(),pal=EB232.pal[z],ess=YT232.ess[z],V=THREE.Vector3,ins=(()=>{try{const J=insAt(Math.round(O.x),Math.round(O.z));return J?J.g:null}catch(_){return null}})();
+  const pts=[];for(let i=0;i<900&&pts.length<340;i++){const a=eb232H(i+z*977)*6.2832,r=2+Math.sqrt(eb232H(i*3+z*31))*46,x=O.x+Math.sin(a)*r,zz=O.z+Math.cos(a)*r;let b=false;try{b=zc214Blk(x,zz,ins)}catch(_){}if(b)continue;pts.push({x,z:zz,y:GH(x,zz),d:r,k:eb232H(i*7+z),s:.7+eb232H(i*11+z)*.9,ry:eb232H(i*13)*6.28})}
+  const tuftG=(()=>{const q=[];for(let b=0;b<4;b++){const c=new THREE.ConeGeometry(.07,.5+b*.12,3);c.translate(0,.25+b*.06,0);c.rotateZ((b-1.5)*.32);c.rotateY(b*1.7);q.push(c)}return eb232Merge(q)})();
+  const bloomG=(()=>{const st=new THREE.ConeGeometry(.03,.55,3);st.translate(0,.275,0);const hd=new THREE.OctahedronGeometry(.13,0);hd.scale(1,.6,1);hd.translate(0,.6,0);return eb232Merge([st,hd])})();
+  const A=pts.filter(p=>p.k<.62),B=pts.filter(p=>p.k>=.62),mk=(geo,L,cols)=>{const m=new THREE.InstancedMesh(geo,new THREE.MeshBasicMaterial({color:0xffffff}),Math.max(1,L.length));m.frustumCulled=false;const c=new THREE.Color();L.forEach((p,i)=>{c.setHex(cols[(p.k*97|0)%cols.length]);c.multiplyScalar(.75+.25*p.s/1.6);m.setColorAt(i,c)});if(m.instanceColor)m.instanceColor.needsUpdate=true;g.add(m);return m};
+  const tm=mk(tuftG,A,[pal[2],0x6fbf5a,0x9fd66a]),bm=mk(bloomG,B,[pal[0],pal[1],pal[0]]);
+  const mm=eb232SprMat(pal[0],.9),motes=pts.filter((p,i)=>i%4===0).map(p=>{const s=new THREE.Sprite(mm);s.scale.setScalar(.22);g.add(s);return {s,p}});
+  const wm=eb232SprMat(ess,.95),wave=[];for(let i=0;i<56;i++){const s=new THREE.Sprite(wm);g.add(s);wave.push(s)}
+  g.visible=false;ec232Own(S,g);return {g,A,B,tm,bm,motes,wave,O,f,M:new THREE.Matrix4(),Q:new THREE.Quaternion(),E:new THREE.Euler(),P:new V(),Sc:new V()}}
+function eb232PatchTick(Z,k,t){const R=2+46*ic151Oc(Math.min(1,k*1.25)),set=(m,L)=>{L.forEach((p,i)=>{let s=Math.max(0,Math.min(1,(R-p.d)/4));s=s<=0?0:(1+.35*Math.sin(Math.min(1,s)*Math.PI))*s*p.s*(1+.06*Math.sin(t*2.4+p.ry));
+      Z.E.set(0,p.ry,.08*Math.sin(t*1.7+p.ry));Z.Q.setFromEuler(Z.E);Z.P.set(p.x,p.y,p.z);Z.Sc.set(s,s,s);Z.M.compose(Z.P,Z.Q,Z.Sc);m.setMatrixAt(i,Z.M)});m.instanceMatrix.needsUpdate=true};
+  set(Z.tm,Z.A);set(Z.bm,Z.B);
+  Z.motes.forEach(({s,p},i)=>{const on=R>p.d+1,u=(t*.22+eb232H(i*5))%1;s.visible=on;if(on){s.position.set(p.x+.3*Math.sin(t+i),p.y+.3+u*4.2,p.z+.3*Math.cos(t*1.3+i));s.scale.setScalar(.16+.14*Math.sin(u*Math.PI))}});
+  const fade=1-ic151K(k,.72,.95);Z.wave.forEach((s,i)=>{const a=i/Z.wave.length*6.2832+t*.15,x=Z.O.x+Math.sin(a)*R,z=Z.O.z+Math.cos(a)*R;s.position.set(x,GH(x,z)+.5+.25*Math.sin(t*5+i),z);s.scale.setScalar((2.2+.8*Math.sin(t*6+i*1.7))*fade+.01);s.visible=fade>.01})}
+ec232Reg('breath',{len:44.6,cut:42.6,skipT:41.4,fade:'#000',
+  dips:[[9.0,.5],[13.4,.3],[17.8,.3],[22.2,.3],[26.6,.3],[31.0,.3],[35.4,.45]],
+  lines:[{a:1.2,b:4.2,s:'It was never his.'},{a:5.0,b:8.2,s:'What he drank, the ground takes back.'}].concat([0,1,2,3,4,5].map(i=>({a:9.7+i*4.4,b:12.6+i*4.4,s:['The bog remembers green.','The hills, their rain.','The peak, its thaw.','The sands, their wells.','The graves, their quiet.','The court, its dawn.'][i]}))).concat([{a:36.2,b:39.2,s:'No Sovereign. No Voice. Only the land, breathing.'}]),
+  title:{a:39.4,b:42.6,h:'The Wilds Breathe',s:'THE BALANCE IS RESTORED'},
+  build(S){const V=THREE.Vector3,D=YT232D,L=D.L;S.D=D;
+    // shot 0: the Hollow (its dressing built if need be), a stand-in Ythrael, the streams
+    if(!D.LS)try{wk232Lair(D)}catch(e){console.warn('eb232 lair',e)}S.ls=D.LS;if(D.e&&D.e.m)ec232Vis(S,D.e.m,false);
+    const v=S.v=zc214Rig(D.B,L.cx,L.cz+1.5,0);v.sv.ph=3;v.sv.wk=1;v.sv.tru=1;S.own.push(v.m);
+    S.vmats=[];v.sv.R.root.traverse(o=>{if(o.material&&!S.vmats.includes(o.material))S.vmats.push(o.material)});
+    const g0=S.g0=new THREE.Group();ec232Own(S,g0);S.str=YT232.ess.map((col,i)=>{const m=eb232SprMat(col,.95),a=i/6*6.2832+.5236,sp=[];for(let j=0;j<26;j++){const s=new THREE.Sprite(m);g0.add(s);sp.push(s)}
+      const ring=new THREE.Mesh(new THREE.RingGeometry(.82,1,40,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));ring.position.set(L.cx+Math.sin(a)*7.6,L.y+.2,L.cz+Math.cos(a)*7.6);g0.add(ring);
+      return {sp,ring,a,to:new V(L.cx+Math.sin(a)*7.6,L.y+.15,L.cz+Math.cos(a)*7.6)}});
+    S.big=new THREE.Mesh(new THREE.RingGeometry(.9,1,72,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide}));S.big.position.set(L.cx,L.y+.25,L.cz);g0.add(S.big);
+    // shots 1–6: a patch of new life on each zone's road
+    S.Z=[0,1,2,3,4,5].map(z=>{try{const g=insG(z,0),R=zc214Road(g,z===0?.3:.36),O=new V(R.x+R.fx*15,0,R.z+R.fz*15);return Object.assign(eb232Patch(S,z,O,R),{R,gi:g})}catch(e){console.warn('eb232 zone',z,e);return null}});
+    // shot 7: Duskhold
+    const T=TOWNS[0];S.T=T;S.y0=GH(T.cx,T.cy);S.H=new V(T.cx+2.4,0,T.cy+3.6);S.H.y=GH(S.H.x,S.H.z);
+    S.Z7=eb232Patch(S,1,new V(T.cx,0,T.cy),{fx:0,fz:-1})},
+  frame(S,t,dt,now){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,D=S.D,L=D.L,E=EB232;let i=0,k=0,c;
+    if(t<E.T0){i=0;k=t/E.T0}else if(t<E.T7){i=1+Math.min(5,Math.floor((t-E.T0)/E.dz));k=(t-E.T0-(i-1)*E.dz)/E.dz}else{i=7;k=K(t,E.T7,42.6)}
+    try{TOD=i===0?S.save.tod:i<7?.07+.012*i:.1+.06*k}catch(_){}
+    if(S.ls){S.ls.root.visible=i===0;S.ls.lights.forEach(l=>{if(i===0){if(l.userData.wk0!=null){l.intensity=l.userData.wk0;l.userData.wk0=null}}else{if(l.userData.wk0==null)l.userData.wk0=l.intensity;l.intensity=0}})}
+    S.v.m.visible=i===0;S.g0.visible=i===0;S.Z.forEach((Z,j)=>{if(Z)Z.g.visible=i===j+1});S.Z7.g.visible=i===7;
+    if(i===0){pl.visible=false;try{D.tick&&D.tick(D,dt,now,t)}catch(_){}
+      // he kneels, is torn open, empties, falls
+      zc214RigPose(S.v,[[0,'kneel','l'],[1.6,'stag','io'],[5.6,'stag','l',.03],[7.2,'dead','i']],t,dt,now);
+      const fd=1-Sm(K(t,5.8,8.2));S.vmats.forEach(m=>{if(m.userData.eb0==null){m.userData.eb0=m.opacity==null?1:m.opacity;m.transparent=true}m.opacity=m.userData.eb0*fd});S.v.m.scale.setScalar(1-.12*(1-fd));
+      const hp=svWP(S.v,'heart',0,0,.2),flow=Sm(K(t,1.5,2.4))*(1-Sm(K(t,6.6,7.8)));
+      S.str.forEach((Q,si)=>{const mid=new V((hp.x+Q.to.x)/2+Math.sin(Q.a+1.2)*2.2,L.y+8.5,(hp.z+Q.to.z)/2+Math.cos(Q.a+1.2)*2.2);
+        Q.sp.forEach((s,j)=>{const u=(t*.42+j/Q.sp.length+si*.13)%1,a=1-u,x=a*a*hp.x+2*a*u*mid.x+u*u*Q.to.x,y=a*a*hp.y+2*a*u*mid.y+u*u*(Q.to.y-.8),z=a*a*hp.z+2*a*u*mid.z+u*u*Q.to.z,w=.16*Math.sin(t*9+j*2.1);
+          s.position.set(x+w,y,z+w);s.scale.setScalar((.5+.9*Math.sin(u*Math.PI))*flow+.001);s.visible=flow>.01});
+        const rk=((t-2.6)*.5+si*.17)%1;Q.ring.scale.setScalar(.4+rk*4.2);Q.ring.material.opacity=t>2.6?.75*(1-rk)*Math.min(1,flow+.25*(1-K(t,7.4,8.4))):0});
+      const bk=K(t,6.9,8.9);S.big.scale.setScalar(.5+bk*24);S.big.material.opacity=.9*Math.sin(bk*Math.PI);
+      try{if(S.ls.floorM)S.ls.floorM.emissiveIntensity=.5+1.1*flow+1.4*Math.sin(bk*Math.PI)}catch(_){}
+      const q=Io(K(t,0,8.8));c={p:new V(L.cx+2.6+3.6*q,L.y+1.7+14.5*q,L.cz+8+10.5*q),l:new V(L.cx,L.y+2.2-1.9*q,L.cz+1.2-1.2*q),fov:46+6*q,F:new V(L.cx,L.y,L.cz),i}}
+    else if(i<7){const Z=S.Z[i-1];pl.visible=false;if(!Z){c={p:new V(S.T.cx,S.y0+9,S.T.cy+14),l:new V(S.T.cx,S.y0+2,S.T.cy),fov:50,i}}else{eb232PatchTick(Z,k,t);const R=Z.R,e=Io(k),px=R.x+R.fx*(-7+13*e)+R.sx*3.2,pz=R.z+R.fz*(-7+13*e)+R.sz*3.2,lx=R.x+R.fx*(15+9*e),lz=R.z+R.fz*(15+9*e);
+        c={p:new V(px,GH(px,pz)+7.2-1.8*e,pz),l:new V(lx,GH(lx,lz)+1.2,lz),fov:52,F:new V(R.x+R.fx*8,0,R.z+R.fz*8),i,grade:'saturate('+(.5+.95*Sm(K(k,.1,.8))).toFixed(3)+') brightness('+(.78+(.4+[.75,0,0,0,.45,.5][i-1])*Sm(K(k,.1,.8))).toFixed(3)+')',fogK:1-(.7+[.2,0,0,0,.15,.15][i-1])*Sm(K(k,.15,.85))}}}
+    else{const T=S.T,y0=S.y0;pl.visible=true;pl.position.copy(S.H);pl.rotation.y=Math.atan2(T.cx-S.H.x,T.cy-S.H.z);try{animHero(now,false)}catch(_){}eb232PatchTick(S.Z7,Math.min(1,k*1.5),t);const e=Io(k);
+      c={p:new V(T.cx+6.5-2*e,y0+2.2+9*e,T.cy+10.5+3.5*e),l:new V(T.cx+.6,y0+1.8+9*e*e,T.cy-9*e),fov:50,F:new V(T.cx,0,T.cy),i,grade:'saturate('+(1.05+.3*e).toFixed(3)+') brightness('+(1.02+.14*e).toFixed(3)+')',fogK:1-.6*e}}
+    return c},
+  after(S,t,c){if(c.fogK!=null)try{scene.fog.density*=c.fogK}catch(_){}},
+  back(S){try{const R=S.v.sv.R;R.mats.forEach(m=>m.dispose());R.glow.forEach(m=>m.dispose())}catch(_){}
+    try{const D=S.D,here=wk232In(D);if(S.ls){S.ls.root.visible=here;if(S.ls.floorM)S.ls.floorM.emissiveIntensity=.42}}catch(_){}},
+  score(ac,out,T0,S){const E=EB232,D=[146.83,220,293.66,369.99,440];
+    ec232Air(ac,out,T0,9,180,1400,.22);ec232Pad(ac,out,T0+.2,9.2,[73.42,110,146.83],.3,'triangle',3,3);ec232Bell(ac,out,T0+7,293.66,.18,5);
+    [0,1,2,3,4,5].forEach(i=>{const t=T0+E.T0+i*E.dz,f=[146.83,164.81,185,196,220,246.94][i];ec232Bell(ac,out,t+.15,f*2,.16,4);ec232Pad(ac,out,t,E.dz+1.2,[f,f*1.5,f*2,f*2.52],.2+.02*i,'sine',1.4,1.6);ec232Air(ac,out,t+.3,3.4,500,2600,.07)});
+    ec232Pad(ac,out,T0+E.T7-.2,9.6,[146.83,220,293.66,369.99,440,587.33],.42,'sine',2.5,4);ec232Pad(ac,out,T0+E.T7,9,[73.42,146.83],.2,'triangle',2,4);[0,1.2,2.4,3.9].forEach((d,j)=>ec232Bell(ac,out,T0+E.T7+1+d,[587.33,739.99,880,1174.66][j],.12,5))}});
+// ================= v232 ending B: "the crown" (the side-with-him ending; plan 'crown' on 4069's player) =================
+// Owner (Nov 13 2026): "When the whole roster is cleared he crowns you as markes you as devoted to him. The camera cuts to a gilded
+// palace where he sits on a large thrown with you at his side, with a outrageously elaborate fountain of essence in the middle of
+// the room."
+//   0  Duskhold's fountain: the hero kneels before him; a crown comes down in a shaft of light and settles; his mark lights
+//   1  a hard cut to the palace (a set of its own, built high over the town and freed at the end; the world is hidden for it):
+//      a round gilded hall under a painted dome, twelve columns and banners with his mark, braziers of essence; in the middle the
+//      fountain (four tiers, six serpent spouts, six lesser fountains feeding the great one through the air and through channels in
+//      the floor, a crystal at its head and a column of essence rising to the oculus); at the far end the dais and the throne,
+//      Ythrael seated, the crowned hero standing at his right hand. The camera walks in, climbs round the fountain and comes to rest
+//      on the two of them; the title card.
+var EK232={cut0:9.2,Y:620,R:27};
+function ek232Tex(w,h,fn,rep){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}t.anisotropy=4;return t}
+function ek232Hex(c){return '#'+('00000'+c.toString(16)).slice(-6)}
+function ek232Eye(x,cx,cy,s,col){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=s*.09;x.lineCap='round';x.beginPath();x.moveTo(cx-s,cy);x.quadraticCurveTo(cx,cy-s*.85,cx+s,cy);x.quadraticCurveTo(cx,cy+s*.85,cx-s,cy);x.stroke();x.beginPath();x.arc(cx,cy,s*.24,0,6.2832);x.fill();
+  [[0,-1.1,0,-.8],[0,.8,0,1.1]].forEach(q=>{x.beginPath();x.moveTo(cx+q[0]*s,cy+q[1]*s);x.lineTo(cx+q[2]*s,cy+q[3]*s);x.stroke()})}
+function ek232Set(S){const V=THREE.Vector3,g=new THREE.Group(),R=EK232.R,ess=YT232.ess,P={g,spin:[],falls:[],jets:[],drops:[],sat:[],flames:[],feed:[],motes:[],mist:[]};g.name='ek232palace';
+  const std=(col,em,ei,o)=>new THREE.MeshStandardMaterial(Object.assign({color:col,roughness:.36,metalness:.55,emissive:em,emissiveIntensity:ei,flatShading:true},o||{}));
+  const gold=std(0xc29232,0x4a2c06,.32),gold2=std(0x8a6220,0x2a1804,.3),dark=new THREE.MeshBasicMaterial({color:0x221630}),velvet=new THREE.MeshBasicMaterial({color:0x35103c}),crimson=std(0x6a0c1c,0x2a0408,.7,{metalness:0,roughness:.9});
+  const add=(geo,m,x,y,z,par)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);(par||g).add(o);return o},glowM=(col,op)=>new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op==null?.7:op,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+  const sprM={},spr=(col,s,x,y,z,op)=>{const k=col+'|'+(op||1),m=sprM[k]||(sprM[k]=eb232SprMat(col,op==null?.9:op)),o=new THREE.Sprite(m);o.scale.setScalar(s);o.position.set(x,y,z);g.add(o);return o};
+  // ---- the shell: floor, wall, dome (painted) ----
+  const floorT=ek232Tex(1024,1024,(x,w)=>{const C=w/2,u=C/R;let gr=x.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'#3a2440');gr.addColorStop(.45,'#1c1024');gr.addColorStop(1,'#0c0612');x.fillStyle=gr;x.fillRect(0,0,w,w);
+      for(let i=0;i<1400;i++){x.fillStyle='rgba(255,220,160,'+(.02+eb232H(i)*.05)+')';x.fillRect(eb232H(i*3)*w,eb232H(i*7)*w,1+eb232H(i*5)*3,1)}
+      x.strokeStyle='#d9a53a';[7.6,8.2,11,14.2,18.5,19.1,24,25.4].forEach((r,i)=>{x.lineWidth=i%2?2:5;x.beginPath();x.arc(C,C,r*u,0,6.2832);x.stroke()});
+      for(let i=0;i<48;i++){const a=i/48*6.2832;x.lineWidth=i%4?1.2:3;x.globalAlpha=i%4?.5:.9;x.beginPath();x.moveTo(C+Math.sin(a)*8.2*u,C+Math.cos(a)*8.2*u);x.lineTo(C+Math.sin(a)*(i%2?18.5:24)*u,C+Math.cos(a)*(i%2?18.5:24)*u);x.stroke()}x.globalAlpha=1;
+      for(let i=0;i<72;i++){const a=i/72*6.2832,a2=(i+1)/72*6.2832;if(i%2)continue;x.fillStyle='rgba(217,165,58,.5)';x.beginPath();x.moveTo(C+Math.sin(a)*24*u,C+Math.cos(a)*24*u);x.lineTo(C+Math.sin(a2)*24*u,C+Math.cos(a2)*24*u);x.lineTo(C+Math.sin(a2)*25.4*u,C+Math.cos(a2)*25.4*u);x.lineTo(C+Math.sin(a)*25.4*u,C+Math.cos(a)*25.4*u);x.fill()}
+      // the six channels: the lesser fountains feed the great one
+      ess.forEach((col,i)=>{const a=i/6*6.2832+.5236,x0=C+Math.sin(a)*6.8*u,y0=C-Math.cos(a)*6.8*u,x1=C+Math.sin(a)*12.6*u,y1=C-Math.cos(a)*12.6*u;x.lineCap='round';x.strokeStyle=ek232Hex(col);x.globalAlpha=.25;x.lineWidth=26;x.beginPath();x.moveTo(x0,y0);x.lineTo(x1,y1);x.stroke();x.globalAlpha=1;x.lineWidth=7;x.beginPath();x.moveTo(x0,y0);x.lineTo(x1,y1);x.stroke();
+        x.strokeStyle='#d9a53a';x.lineWidth=3;x.beginPath();x.arc(x1,y1,2.4*u,0,6.2832);x.stroke()})});
+  add(new THREE.CircleGeometry(R+.5,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:floorT}),0,0,0);
+  const wallT=ek232Tex(512,1024,(x,w,h)=>{let gr=x.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#3a2250');gr.addColorStop(.6,'#24122e');gr.addColorStop(1,'#140a1a');x.fillStyle=gr;x.fillRect(0,0,w,h);
+      x.fillStyle='#c8963a';x.fillRect(0,0,w,60);x.fillRect(0,h-90,w,90);x.fillStyle='#8a6220';for(let i=0;i<8;i++){x.fillRect(i*64+8,14,48,10);x.fillRect(i*64+8,36,48,10);x.fillRect(i*64+20,h-66,24,44)}
+      x.strokeStyle='#d9a53a';x.lineWidth=10;x.beginPath();x.moveTo(70,h-90);x.lineTo(70,360);x.quadraticCurveTo(70,150,256,120);x.quadraticCurveTo(442,150,442,360);x.lineTo(442,h-90);x.stroke();
+      gr=x.createLinearGradient(0,120,0,h);gr.addColorStop(0,'#16081c');gr.addColorStop(1,'#080410');x.fillStyle=gr;x.beginPath();x.moveTo(84,h-90);x.lineTo(84,360);x.quadraticCurveTo(84,170,256,138);x.quadraticCurveTo(428,170,428,360);x.lineTo(428,h-90);x.fill();
+      for(let i=0;i<60;i++){x.fillStyle='rgba(255,220,150,'+(.1+eb232H(i*9)*.3)+')';x.beginPath();x.arc(100+eb232H(i)*312,190+eb232H(i*5)*640,1+eb232H(i*3)*1.6,0,6.2832);x.fill()}},[12,1]);
+  add(new THREE.CylinderGeometry(R,R,17,48,1,true),new THREE.MeshBasicMaterial({map:wallT,side:THREE.BackSide}),0,8.5,0);
+  const domeT=ek232Tex(1024,1024,(x,w)=>{const C=w/2;let gr=x.createRadialGradient(C,C,0,C,C,C);gr.addColorStop(0,'#f6e6ff');gr.addColorStop(.07,'#b88aff');gr.addColorStop(.2,'#3a2060');gr.addColorStop(.7,'#1c1034');gr.addColorStop(1,'#3a2250');x.fillStyle=gr;x.fillRect(0,0,w,w);
+      x.strokeStyle='#d9a53a';for(let i=0;i<24;i++){const a=i/24*6.2832;x.lineWidth=i%2?2:5;x.beginPath();x.moveTo(C+Math.sin(a)*40,C+Math.cos(a)*40);x.lineTo(C+Math.sin(a)*C,C+Math.cos(a)*C);x.stroke()}[60,150,270,400,500].forEach(r=>{x.lineWidth=4;x.beginPath();x.arc(C,C,r,0,6.2832);x.stroke()});
+      for(let i=0;i<500;i++){const a=eb232H(i)*6.2832,r=70+eb232H(i*3)*430;x.fillStyle='rgba(255,236,190,'+(.3+eb232H(i*7)*.7)+')';x.beginPath();x.arc(C+Math.sin(a)*r,C+Math.cos(a)*r,.8+eb232H(i*5)*2,0,6.2832);x.fill()}
+      for(let i=0;i<12;i++){const a=(i+.5)/12*6.2832;ek232Eye(x,C+Math.sin(a)*335,C+Math.cos(a)*335,26,'#d9a53a')}});
+  {const q=new THREE.SphereGeometry(R,48,12,0,6.2832,0,Math.PI/2);q.scale(1,.62,1);const uv=q.attributes.uv,ps=q.attributes.position;for(let i=0;i<uv.count;i++){uv.setXY(i,.5+ps.getX(i)/R*.5,.5+ps.getZ(i)/R*.5)}add(q,new THREE.MeshBasicMaterial({map:domeT,side:THREE.BackSide}),0,17,0)}
+  // ---- columns, arches, banners ----
+  const banT=ek232Tex(128,384,(x,w,h)=>{let gr=x.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#7a1030');gr.addColorStop(1,'#3a0828');x.fillStyle=gr;x.fillRect(0,0,w,h);x.fillStyle='#d9a53a';x.fillRect(0,0,w,10);x.fillRect(0,0,7,h);x.fillRect(w-7,0,7,h);for(let i=0;i<8;i++){x.beginPath();x.moveTo(i*16,h-26);x.lineTo(i*16+8,h);x.lineTo(i*16+16,h-26);x.fill()}ek232Eye(x,64,150,38,'#f0c860');x.strokeStyle='#f0c860';x.lineWidth=3;x.beginPath();x.arc(64,150,52,0,6.2832);x.stroke()}),banM=new THREE.MeshBasicMaterial({map:banT,side:THREE.DoubleSide});
+  const colG=new THREE.CylinderGeometry(.72,.86,12.6,8),baseG=new THREE.BoxGeometry(2.2,1,2.2),capG=new THREE.BoxGeometry(2.3,.9,2.3),ringG=new THREE.TorusGeometry(.9,.14,4,10).rotateX(Math.PI/2),archG=new THREE.TorusGeometry(6.35,.42,4,12,Math.PI),banG=new THREE.PlaneGeometry(3.6,10.4);
+  for(let i=0;i<12;i++){const a=(i+.5)/12*6.2832,x=Math.sin(a)*24.7,z=Math.cos(a)*24.7;add(baseG,gold2,x,.5,z).rotation.y=a;add(colG,i%2?gold:gold2,x,7.3,z);add(capG,gold,x,14.05,z).rotation.y=a;add(ringG,gold,x,1.3,z);add(ringG,gold,x,13.3,z);
+    const am=i/12*6.2832,ar=add(archG,gold,Math.sin(am)*23.9,14.4,Math.cos(am)*23.9);ar.rotation.y=am;
+    if(i!==6){const b=add(banG,banM,Math.sin(am)*26.2,8.2,Math.cos(am)*26.2);b.rotation.y=am+Math.PI}}
+  // ---- braziers of essence ----
+  for(let i=0;i<6;i++){const a=i/6*6.2832,x=Math.sin(a)*17.2,z=Math.cos(a)*17.2;add(new THREE.CylinderGeometry(.16,.5,2.2,6),gold2,x,1.1,z);add(new THREE.CylinderGeometry(.85,.3,.6,8),gold,x,2.5,z);
+    for(let j=0;j<3;j++)P.flames.push({s:spr(ess[(i+3)%6],1.6-j*.35,x,3.1+j*.55,z,.85),y:3.1+j*.55,i,j})}
+  // ---- the carpet, the dais, the throne ----
+  const carT=ek232Tex(64,256,(x,w,h)=>{x.fillStyle='#5a0a1c';x.fillRect(0,0,w,h);x.fillStyle='#d9a53a';x.fillRect(0,0,5,h);x.fillRect(w-5,0,5,h);x.fillStyle='rgba(217,165,58,.35)';for(let i=0;i<8;i++){x.beginPath();x.moveTo(32,i*32+4);x.lineTo(44,i*32+16);x.lineTo(32,i*32+28);x.lineTo(20,i*32+16);x.fill()}},[1,6]),carM=new THREE.MeshBasicMaterial({map:carT});
+  add(new THREE.PlaneGeometry(3.6,17).rotateX(-Math.PI/2),carM,0,.03,16.6);add(new THREE.PlaneGeometry(3.6,5).rotateX(-Math.PI/2),carM,0,.03,-10.2);
+  [[8.8,.45],[7.6,.9],[6.4,1.35]].forEach(([r,h],i)=>{add(new THREE.CylinderGeometry(r,r+.15,.45,40),i===2?dark:gold2,0,h-.225,-19.5);add(new THREE.TorusGeometry(r,.09,4,48).rotateX(Math.PI/2),gold,0,h,-19.5)});
+  add(new THREE.PlaneGeometry(3.2,5.4).rotateX(-Math.PI/2),carM,0,1.37,-17.2);
+  const TH=new THREE.Group();TH.position.set(0,1.35,-21.4);g.add(TH);P.TH=TH;
+  add(new THREE.BoxGeometry(3.1,.72,2.8),gold,0,.36,0,TH);add(new THREE.BoxGeometry(2.1,.16,2.2),velvet,0,.8,.12,TH);
+  [-1,1].forEach(s=>{add(new THREE.BoxGeometry(.5,.6,2.6),gold2,s*1.3,1.02,.05,TH);add(new THREE.SphereGeometry(.34,6,5),gold,s*1.3,1.42,1.3,TH);add(new THREE.OctahedronGeometry(.14,0),new THREE.MeshBasicMaterial({color:ess[s>0?5:1]}),s*1.3,1.42,1.62,TH);
+    const fin=new THREE.Shape();fin.moveTo(0,0);fin.lineTo(1.5,0);fin.lineTo(.5,6.6);fin.lineTo(0,5.2);const fg=new THREE.ExtrudeGeometry(fin,{depth:.3,bevelEnabled:false});const f=add(fg,gold2,s*2.15,0,-1.5,TH);f.scale.x=s});
+  {const sh=new THREE.Shape();sh.moveTo(-1.95,0);sh.lineTo(1.95,0);sh.lineTo(1.95,6.1);sh.quadraticCurveTo(1.6,8.6,0,9.9);sh.quadraticCurveTo(-1.6,8.6,-1.95,6.1);add(new THREE.ExtrudeGeometry(sh,{depth:.55,bevelEnabled:false}),gold,0,0,-1.55,TH);
+    const s2=new THREE.Shape();s2.moveTo(-1.4,.9);s2.lineTo(1.4,.9);s2.lineTo(1.4,5.8);s2.quadraticCurveTo(1.1,7.6,0,8.5);s2.quadraticCurveTo(-1.1,7.6,-1.4,5.8);add(new THREE.ExtrudeGeometry(s2,{depth:.12,bevelEnabled:false}),velvet,0,0,-1.02,TH);
+    const em=add(new THREE.PlaneGeometry(1.5,1.5),new THREE.MeshBasicMaterial({map:fn232Mark(),color:0xf0c860,transparent:true,side:THREE.DoubleSide}),0,7.0,-.86,TH);P.thMark=em}
+  for(let i=0;i<9;i++){const a=(i-4)/4*1.25,l=3.2+(i%2?0:1.5)+(i===4?1.2:0),c=new THREE.ConeGeometry(.3,l,4);c.translate(0,l/2,0);const o=add(c,gold,Math.sin(a)*1.7,7.6+Math.cos(a)*1.9,-1.3,TH);o.rotation.z=-a;
+    const tip=new V(Math.sin(a)*(1.7+l),7.6+Math.cos(a)*(1.9+l),-1.3);add(new THREE.OctahedronGeometry(.2,0),new THREE.MeshBasicMaterial({color:ess[i%6]}),tip.x,tip.y,tip.z,TH);const sg=spr(ess[i%6],1.5,0,0,0,.8);TH.add(sg);sg.position.copy(tip)}
+  {const halo=add(new THREE.TorusGeometry(5.4,.2,5,48),gold,0,7.4,-2.4,TH);const h2=new THREE.Group();h2.position.set(0,7.4,-2.2);TH.add(h2);P.spin.push([h2,'z',.25]);add(new THREE.TorusGeometry(4.6,.1,4,48),gold2,0,0,0,h2);
+    ess.forEach((c,i)=>{const a=i/6*6.2832;add(new THREE.OctahedronGeometry(.3,0),new THREE.MeshBasicMaterial({color:c}),Math.sin(a)*4.6,Math.cos(a)*4.6,0,h2);const s=spr(c,2,0,0,0,.7);h2.add(s);s.position.set(Math.sin(a)*4.6,Math.cos(a)*4.6,0)})}
+  // ---- the great fountain ----
+  const lathe=(pts,m,seg)=>add(new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),seg||24),m,0,0,0);
+  lathe([[6.3,0],[6.95,0],[7.1,.3],[6.9,.95],[6.5,1.05],[6.3,.8],[6.3,0]],gold);lathe([[1.7,0],[1.3,.7],[.85,1.5],[1.15,2.3],[.75,2.75]],gold2,12);
+  lathe([[.7,2.6],[2.6,2.95],[4.3,3.35],[4.45,3.6],[4.1,3.52],[2.4,3.15],[.7,2.9]],gold);lathe([[.95,3.4],[.62,4.3],[.95,5.1]],gold2,12);
+  lathe([[.6,4.95],[1.8,5.25],[2.9,5.6],[3.0,5.82],[2.7,5.75],[1.6,5.45],[.6,5.2]],gold);lathe([[.7,5.6],[.45,6.4],[.7,7.1]],gold2,12);
+  lathe([[.45,7.0],[1.1,7.2],[1.75,7.5],[1.82,7.68],[1.6,7.62],[1.0,7.4],[.45,7.25]],gold);lathe([[.5,7.5],[.3,8.3],[.62,8.9],[.2,9.2]],gold2,10);
+  for(let i=0;i<24;i++){const a=i/24*6.2832;add(new THREE.ConeGeometry(.16,.5,4),gold,Math.sin(a)*6.72,1.28,Math.cos(a)*6.72);if(i%4===0)add(new THREE.OctahedronGeometry(.16,0),new THREE.MeshBasicMaterial({color:ess[(i/4)%6]}),Math.sin(a)*6.72,1.66,Math.cos(a)*6.72)}
+  for(let i=0;i<6;i++){const a=i/6*6.2832;add(new THREE.ConeGeometry(.12,.7,4),gold,Math.sin(a)*.62,9.1,Math.cos(a)*.62).rotation.set(Math.cos(a)*.5,0,-Math.sin(a)*.5)}
+  const seaT=ek232Tex(256,256,(x,w)=>{x.fillStyle='#1a0c26';x.fillRect(0,0,w,w);const cols=['154,255,90','90,216,255','191,233,255','255,194,74','184,255,58','255,74,90','200,154,255'];for(let i=0;i<70;i++){const px=eb232H(i)*w,py=eb232H(i*3)*w,r=14+eb232H(i*7)*36,gr=x.createRadialGradient(px,py,0,px,py,r);gr.addColorStop(0,'rgba('+cols[i%7]+','+(.4+eb232H(i*5)*.4)+')');gr.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gr;x.beginPath();x.arc(px,py,r,0,6.2832);x.fill()}});
+  [[6.35,.82],[4.15,3.5],[2.75,5.72],[1.62,7.6]].forEach(([r,y],i)=>{const m=add(new THREE.CircleGeometry(r,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:seaT,color:0xffffff}),0,y,0);P.spin.push([m,'y',(i%2?-1:1)*(.12+.05*i)])});
+  // falls between the tiers (strands of each essence)
+  const strand=new THREE.PlaneGeometry(1,1);strand.translate(0,-.5,0);[[4.3,3.5,.85,20],[2.9,5.75,3.55,14],[1.75,7.62,5.8,10]].forEach(([r,y0,y1,n],ti)=>{for(let j=0;j<n;j++){const a=(j+ti*.5)/n*6.2832,m=glowM(ess[j%6],.6),o=add(strand,m,Math.sin(a)*r,y0,Math.cos(a)*r);o.scale.set(.42-.06*ti,y0-y1,1);o.rotation.y=a;P.falls.push({o,m,j})}});
+  // six serpent spouts on the pool's rim, each arcing its own essence into the first bowl
+  ess.forEach((c,i)=>{const a=i/6*6.2832,sn=Math.sin(a),cs=Math.cos(a),G=new THREE.Group();G.position.set(sn*6.7,1.0,cs*6.7);G.rotation.y=a;g.add(G);
+    add(svTube([[0,0,0],[0,.9,.35],[0,1.7,.1],[0,2.3,-.45],[0,2.6,-.95]],[.34,.3,.26,.24,.3],6),gold,0,0,0,G);add(new THREE.ConeGeometry(.34,.7,5).rotateX(-Math.PI/2-.35),gold2,0,2.66,-1.2,G);add(new THREE.OctahedronGeometry(.1,0),new THREE.MeshBasicMaterial({color:c}),.2,2.82,-1.0,G);add(new THREE.OctahedronGeometry(.1,0),new THREE.MeshBasicMaterial({color:c}),-.2,2.82,-1.0,G);
+    const A=new V(sn*5.3,3.55,cs*5.3),C=new V(sn*3.4,3.6,cs*3.4),B=new V(sn*4.4,5.4,cs*4.4),pts=[];for(let k=0;k<=10;k++){const u=k/10,w=1-u;pts.push([w*w*A.x+2*w*u*B.x+u*u*C.x,w*w*A.y+2*w*u*B.y+u*u*C.y,w*w*A.z+2*w*u*B.z+u*u*C.z])}
+    const jm=glowM(c,.75);add(svTube(pts,pts.map((_,k)=>.1+.05*Math.sin(k/10*Math.PI)),5),jm,0,0,0);P.jets.push({m:jm,i});for(let k=0;k<4;k++)P.drops.push({s:spr(c,.5,0,0,0,.95),A,B,C,ph:k/4+i*.13})});
+  // six lesser fountains round it, one per essence, feeding the crystal through the air
+  ess.forEach((c,i)=>{const a=i/6*6.2832+.5236,x=Math.sin(a)*12.6,z=Math.cos(a)*12.6;const G=new THREE.Group();G.position.set(x,0,z);g.add(G);
+    add(new THREE.LatheGeometry([[1.7,0],[2.05,0],[2.15,.5],[1.9,.62],[1.75,.4],[1.7,0]].map(p=>new THREE.Vector2(p[0],p[1])),14),gold,0,0,0,G);add(new THREE.CircleGeometry(1.76,18).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:c}),0,.46,0,G).material.color.multiplyScalar(.75);
+    add(new THREE.LatheGeometry([[.5,0],[.3,.8],[.22,1.6],[.9,1.95],[1.0,2.1],[.8,2.05],[.2,1.8]].map(p=>new THREE.Vector2(p[0],p[1])),10),gold2,0,0,0,G);add(new THREE.OctahedronGeometry(.26,0),new THREE.MeshBasicMaterial({color:c}),0,2.75,0,G);
+    const jet=add(new THREE.CylinderGeometry(.09,.2,2.4,6,1,true),glowM(c,.7),0,3.3,0,G),gl=spr(c,3.2,x,2.8,z,.6);P.sat.push({jet,gl,i});
+    const A=new V(x,3.0,z),C=new V(0,9.9,0),B=new V(x*.62,14.5,z*.62),sp=[];for(let k=0;k<12;k++)sp.push(spr(c,.6,0,0,0,.95));P.feed.push({sp,A,B,C,i})});
+  // the crystal at its head and the column to the oculus
+  const cry=add(new THREE.OctahedronGeometry(.62,0),new THREE.MeshBasicMaterial({color:0xffffff}),0,9.95,0);cry.scale.set(1,1.7,1);P.cry=cry;P.cryG=spr(0xffffff,6.5,0,9.95,0,.75);P.cryM=P.cryG.material=P.cryG.material.clone();
+  P.col=add(new THREE.CylinderGeometry(1.5,.45,22,12,1,true),glowM(0xd8b8ff,.3),0,21,0);P.col2=add(new THREE.CylinderGeometry(.5,.2,22,8,1,true),glowM(0xffffff,.45),0,21,0);
+  for(let i=0;i<46;i++)P.motes.push({s:spr(ess[i%6],.4,0,0,0,.95),ph:eb232H(i*3),r:.5+eb232H(i*7)*1.5,a:eb232H(i*11)*6.28});
+  for(let i=0;i<12;i++){const a=i/12*6.2832;P.mist.push({s:spr(ess[i%6],7.5,Math.sin(a)*6.2,1.4,Math.cos(a)*6.2,.12),a})}
+  g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false}});return P}
+function ek232SetTick(P,t){const ess=YT232.ess,c0=new THREE.Color(),c1=new THREE.Color();P.spin.forEach(([o,ax,v])=>{o.rotation[ax]=t*v});
+  P.falls.forEach(({m,j})=>{m.opacity=.38+.3*Math.abs(Math.sin(t*3.1+j*1.9))});P.jets.forEach(({m,i})=>{m.opacity=.55+.25*Math.sin(t*4+i)});
+  P.drops.forEach(D=>{const u=(t*.9+D.ph)%1,w=1-u;D.s.position.set(w*w*D.A.x+2*w*u*D.B.x+u*u*D.C.x,w*w*D.A.y+2*w*u*D.B.y+u*u*D.C.y,w*w*D.A.z+2*w*u*D.B.z+u*u*D.C.z)});
+  P.sat.forEach(({jet,gl,i})=>{jet.scale.y=.85+.2*Math.sin(t*5+i*1.3);gl.scale.setScalar(3+.5*Math.sin(t*3+i))});
+  P.feed.forEach(F=>{F.sp.forEach((s,k)=>{const u=(t*.3+k/F.sp.length+F.i*.11)%1,w=1-u;s.position.set(w*w*F.A.x+2*w*u*F.B.x+u*u*F.C.x,w*w*F.A.y+2*w*u*F.B.y+u*u*F.C.y,w*w*F.A.z+2*w*u*F.B.z+u*u*F.C.z);s.scale.setScalar(.3+.5*Math.sin(u*Math.PI))})});
+  const ci=Math.floor(t*.7)%6;c0.setHex(ess[ci]);c1.setHex(ess[(ci+1)%6]);c0.lerp(c1,(t*.7)%1);P.cry.material.color.copy(c0).lerp(c1.setRGB(1,1,1),.35);P.cry.rotation.y=t*.9;P.cry.position.y=9.95+.18*Math.sin(t*1.4);P.cryM.color.copy(c0);P.cryG.position.y=P.cry.position.y;
+  P.col.material.color.copy(c0);P.col.material.opacity=.24+.08*Math.sin(t*2.3);P.col.rotation.y=t*.3;
+  P.motes.forEach(M=>{const u=(t*.16+M.ph)%1,a=M.a+t*1.2+u*5;M.s.position.set(Math.sin(a)*M.r*(1-.5*u),10+u*20,Math.cos(a)*M.r*(1-.5*u));M.s.scale.setScalar(.25+.3*Math.sin(u*Math.PI))});
+  P.mist.forEach((M,i)=>{M.s.position.set(Math.sin(M.a+t*.05)*6.2,1.4+.4*Math.sin(t*.6+i),Math.cos(M.a+t*.05)*6.2)});
+  P.flames.forEach(F=>{F.s.position.y=F.y+.12*Math.sin(t*9+F.i*2+F.j);F.s.scale.setScalar((1.6-F.j*.35)*(.85+.25*Math.sin(t*11+F.i+F.j*2)))})}
+// the camera's road through the hall (Catmull-Rom through the keys; set-local)
+var EK232_CAM=[[9.2,[0,1.5,25.6],[0,4.2,0]],[13.5,[0,2.4,18.5],[0,5.2,0]],[17.2,[7.5,4.6,13.2],[0,6,0]],[20.6,[13.2,8.6,3.5],[0,6.2,0]],[23.8,[10.6,10.2,-6.5],[0,5.2,-8]],[27.2,[4.8,5.6,-7.5],[.8,3.4,-21]],[30.6,[2.7,3.35,-15.2],[1.15,2.85,-21]],[34.2,[2.4,3.25,-16.3],[1.2,2.8,-21]]];
+function ek232Cam(t){const K=EK232_CAM,n=K.length;let i=0;while(i<n-2&&t>=K[i+1][0])i++;const a=K[Math.max(0,i-1)],b=K[i],c=K[i+1],d=K[Math.min(n-1,i+2)],u=Math.max(0,Math.min(1,(t-b[0])/(c[0]-b[0])));
+  const cr=(j,q)=>{const p0=a[j][q],p1=b[j][q],p2=c[j][q],p3=d[j][q];return .5*((2*p1)+(-p0+p2)*u+(2*p0-5*p1+4*p2-p3)*u*u+(-p0+3*p1-3*p2+p3)*u*u*u)};
+  return {p:new THREE.Vector3(cr(1,0),cr(1,1),cr(1,2)),l:new THREE.Vector3(cr(2,0),cr(2,1),cr(2,2))}}
+function ek232HeroBones(){let h=null;try{if(pl.bones&&pl.bones.head)h=pl;else pl.traverse(o=>{if(!h&&o.bones&&o.bones.head)h=o})}catch(_){}return h&&h.bones}
+ec232Reg('crown',{len:37.2,cut:35.2,skipT:34,dips:[[9.2,.55]],
+  lines:[{a:1.0,b:3.6,s:'All four. Broken.'},{a:4.4,b:7.4,s:'Wear what is mine. Be what is mine.'},{a:10.6,b:14.2,s:'Once, this was a hole under a town.'},{a:16.0,b:20.2,s:'Now every drop they hoarded runs for me.'},{a:23.2,b:26.6,s:'And for the one who knelt.'},{a:28.0,b:31.0,s:'Stand at my side. Always.'}],
+  title:{a:31.4,b:35.2,h:'Devoted',s:'CROWNED BY THE VOICE BELOW',top:'15%'},
+  build(S){const V=THREE.Vector3,T=TOWNS[0];S.T=T;S.y0=GH(T.cx,T.cy);let N=FN229.npc;if(!N)try{N=fn229Npc()}catch(_){}S.N=N;
+    const nx=N?N.x:T.cx+4.4,nz=N?N.z:T.cy+.2,ry=N?N.F.ry0:Math.atan2(nx-T.cx,nz-T.cy);S.nx=nx;S.nz=nz;S.nry=ry;S.H=new V(nx+Math.sin(ry)*1.75,0,nz+Math.cos(ry)*1.75);S.H.y=GH(S.H.x,S.H.z);S.hry=ry+Math.PI;
+    // the crown that comes down (shot 0)
+    const cg=S.cg=new THREE.Group(),gold=new THREE.MeshStandardMaterial({color:0xe2b24a,roughness:.3,metalness:.8,emissive:0x8a5a10,emissiveIntensity:.9,flatShading:true,side:THREE.DoubleSide}),gm=YT232.ess.map(c=>new THREE.MeshBasicMaterial({color:c}));
+    fn232CrownGeo().forEach(([geo,k])=>{geo.userData.keep=1;cg.add(new THREE.Mesh(geo,k=='gold'?gold:gm[+k.slice(1)]))});cg.scale.setScalar(.2);ec232Own(S,cg);
+    S.cgl=new THREE.Sprite(eb232SprMat(0xe8d0ff,.9));ec232Own(S,S.cgl);S.shaft=new THREE.Mesh(new THREE.CylinderGeometry(.22,.5,14,10,1,true),new THREE.MeshBasicMaterial({color:0xc89aff,map:SPR,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));S.shaft.position.set(S.H.x,S.H.y+7,S.H.z);ec232Own(S,S.shaft);
+    // the palace (shot 1) and the seated Ythrael
+    S.O=new V(T.cx,EK232.Y,T.cy);S.set=ek232Set(S);S.set.g.position.copy(S.O);S.set.g.visible=false;ec232Own(S,S.set.g);
+    try{const F=S.F=fn229Figure({only:'man'});F.st.robe=1;F.st.eye=1;F.st.flut=.04;fn229Shape(F,1);F.root.scale.setScalar(1.45);F.root.position.set(S.O.x,S.O.y+1.35,S.O.z-20.42);F.root.rotation.y=0;fn229WingSet(F,{open:0});F.root.visible=false;scene.add(F.root)}catch(e){console.warn('ek232 figure',e);S.F=null}
+    S.hp=new V(S.O.x+2.75,S.O.y+1.35,S.O.z-19.9)},
+  frame(S,t,dt,now){const V=THREE.Vector3,K=ic151K,Sm=ic151Sm,Io=ic151Io,T=S.T,y0=S.y0,pal=t>=EK232.cut0,L=FN229.L;let c;
+    // the world is hidden while the palace is shown
+    if(pal&&!S.kids){S.kids=[];scene.children.forEach(q=>{if(q.isLight||q===S.set.g||q===pl||(S.F&&q===S.F.root))return;S.kids.push([q,q.visible]);q.visible=false})}
+    S.set.g.visible=pal;if(S.F)S.F.root.visible=pal;S.cg.visible=!pal;S.shaft.visible=!pal;S.cgl.visible=!pal;try{L.t.value=t}catch(_){}
+    pl.visible=true;
+    if(!pal){try{TOD=S.save.tod}catch(_){}
+      const kn=Sm(K(t,.4,1.8)),land=6.6,dn=Io(K(t,2.4,land));pl.position.copy(S.H);pl.rotation.y=S.hry;try{animHero(now,false)}catch(_){}
+      // the hero kneels: one knee down, the head bowed
+      try{const B=ek232HeroBones();if(B){if(S.py0==null&&B.pelvis)S.py0=B.pelvis.position.y;if(B.pelvis)B.pelvis.position.y=S.py0-.3*kn;if(B.lh0)B.lh0.rotation.x+=-1.3*kn;if(B.lh1)B.lh1.rotation.x+=1.45*kn;if(B.rh0)B.rh0.rotation.x+=.3*kn;if(B.rh1)B.rh1.rotation.x+=1.35*kn;if(B.spine)B.spine.rotation.x+=.22*kn;if(B.head)B.head.rotation.x+=.32*kn}}catch(_){}
+      // he lifts a hand over the kneeling hero
+      if(S.N){const F=S.N.F;F.root.visible=true;F.root.rotation.y=S.nry;const r=Sm(K(t,1.2,3)),br=Math.sin(t*1.3);
+        try{fn229Pose(F,Object.assign({},FN229POSE.idle,{ch:[.06*r+.012*br,0,0],nk:[.2*r,0,0],hd:[.14*r,0,0],hR:[.07+.1*r,1.03+.55*r,.21+.42*r],eR:[1,-.2-.3*r,-.2+.4*r],hL:[-.07,1.06+.004*br,.2]}));fn229LightTown({T,y0})}catch(_){}}
+      const hy=S.H.y+1.34-.3*kn,cy=hy+.2+(1-dn)*3.4;S.cg.position.set(S.H.x,cy,S.H.z);S.cg.rotation.y=t*1.6*(1-dn)+S.hry;S.cg.visible=t<land;S.cgl.position.set(S.H.x,cy+.1,S.H.z);S.cgl.scale.setScalar(t<land?1.6+.4*Math.sin(t*6):3.2*(1-K(t,land,land+1.4))+.01);
+      S.shaft.material.opacity=.5*Sm(K(t,1.6,3))*(1-.6*K(t,land,land+2));S.shaft.rotation.y=t*.4;
+      if(t>=land&&!S.reg){S.reg=1;try{fn232Regalia(pl,1)}catch(_){}}else if(t<land&&S.reg){S.reg=0;try{fn232Regalia(pl,FN232.crown)}catch(_){}}
+      const e=Io(K(t,0,land)),e2=Sm(K(t,land-1.2,EK232.cut0)),mx=(S.nx+S.H.x)/2,mz=(S.nz+S.H.z)/2,sx=Math.cos(S.nry),sz=-Math.sin(S.nry);
+      const dxn=(S.nx-S.H.x)/1.75,dzn=(S.nz-S.H.z)/1.75,pw=new V(mx+sx*(3.9-1.0*e),y0+1.55+.3*e,mz+sz*(3.9-1.0*e)),pc=new V(S.H.x+sx*2.1+dxn*.9,y0+1.3,S.H.z+sz*2.1+dzn*.9),p=pw.lerp(pc,e2),l=new V(mx,y0+1.3,mz).lerp(new V(S.H.x,y0+1.02,S.H.z),e2);
+      const fl=t>=land?Math.max(0,1-(t-land)/.7):0;c={p,l,fov:44-8*e2,F:new V(T.cx,0,T.cy),i:0,grade:fl>0?'brightness('+(1+1.1*fl).toFixed(3)+')':''}}
+    else{try{TOD=.2}catch(_){}ek232SetTick(S.set,t);if(!S.reg){S.reg=1;try{fn232Regalia(pl,1)}catch(_){}}
+      pl.position.copy(S.hp);pl.rotation.y=-.18;try{animHero(now,false)}catch(_){}try{const B=ek232HeroBones();if(B&&B.pelvis&&S.py0!=null)B.pelvis.position.y=S.py0}catch(_){}
+      if(S.F){const F=S.F,br=Math.sin(t*1.1);try{fn229Pose(F,Object.assign({},FN229POSE.idle,{pos:[0,-.4,0],pr:[-.1,0,0],sp:[-.04+.008*br,0,0],ch:[.02+.01*br,0,0],nk:[.1,.1*Math.sin(t*.3),0],hd:[.06,.12*Math.sin(t*.3),0],fL:[-.17,0,.6],fR:[.17,0,.56],kL:[-.25,0,1],kR:[.25,0,1],hL:[-.22,.68,.44],hR:[.22,.68,.44],eL:[-1,-.3,-.4],eR:[1,-.3,-.4]}))}catch(_){}
+        try{const O=S.O;L.hemiS.value.setRGB(.62,.5,.46);L.hemiG.value.setRGB(.32,.2,.16);L.keyD.value.set(.25,.7,.65).normalize();L.keyC.value.setRGB(1.0,.82,.55);L.rimC.value.setRGB(.6,.4,.9);L.rimP.value=2.5;
+          fn229Lt(0,O.x,O.y+9,O.z,.8,.6,1.0,34);fn229Lt(1,O.x+2,O.y+5,O.z-15,1.0,.75,.4,14);fn229Lt(2,O.x-4,O.y+6,O.z-19,.7,.4,.9,12);fn229Lt(3,O.x,O.y+9,O.z-23,1.0,.8,.4,10)}catch(_){}}
+      const q=ek232Cam(Math.min(t,34.2));c={p:q.p.add(S.O),l:q.l.add(S.O),fov:50-9*Sm(K(t,26,31)),F:new V(S.O.x,S.O.y,S.O.z),set:true,i:1,grade:'saturate(1.12)'}}
+    return c},
+  after(S,t,c){if(!c.set)return;try{scene.fog.density=.0035;scene.fog.color.setRGB(.2,.12,.2)}catch(_){}
+    try{const O=S.O;sun.color.setRGB(1,.86,.62);sun.intensity=1.7;sun.position.set(O.x+12,O.y+40,O.z+22);sun.target.position.set(O.x,O.y+3,O.z-8);sun.target.updateMatrixWorld();hemi.color.setRGB(1,.85,.7);hemi.groundColor.setRGB(.42,.26,.3);hemi.intensity=.62}catch(_){}
+    try{ren.setClearColor(0x0a0610,1)}catch(_){}},
+  back(S){try{if(S.kids)S.kids.forEach(([q,v])=>{q.visible=v});S.kids=null}catch(_){}
+    try{if(S.F)fn229FigFree(S.F)}catch(_){}
+    try{const B=ek232HeroBones();if(B&&B.pelvis&&S.py0!=null)B.pelvis.position.y=S.py0}catch(_){}
+    try{fn232Regalia(pl,FN232.crown)}catch(_){}
+    try{if(S.N){const N=S.N;N.F.root.rotation.y=N.ry=N.F.ry0;fn229Pose(N.F,FN229POSE.idle)}}catch(_){}},
+  score(ac,out,T0,S){const C0=EK232.cut0;
+    ec232Pad(ac,out,T0,C0+.6,[73.42,110,146.83],.3,'triangle',2.5,2);ec232Pad(ac,out,T0+2.4,5,[293.66,349.23,440],.14,'sine',2.5,1.5);ec232Air(ac,out,T0+2.4,4.4,300,2400,.1);
+    ec232Bell(ac,out,T0+6.6,146.83,.3,6);ec232Bell(ac,out,T0+6.6,587.33,.16,5);ec232Bell(ac,out,T0+C0,73.42,.4,8);
+    [[0,[73.42,146.83,174.61,220,293.66]],[6.2,[58.27,116.54,174.61,233.08,293.66]],[12.4,[49,98,146.83,196,233.08]],[18.6,[55,110,164.81,220,277.18,329.63]]].forEach(([d,f],i)=>{ec232Pad(ac,out,T0+C0+.2+d,i===3?9:7.2,f,.4+.03*i,'sawtooth'===0?'sine':'triangle',1.6,2.2);ec232Pad(ac,out,T0+C0+.2+d,i===3?9:7.2,f.slice(2).map(x=>x*2),.12,'sine',2.2,2.6)});
+    [3,9.2,15.4,21.6].forEach((d,i)=>ec232Bell(ac,out,T0+C0+d,[293.66,233.08,196,440][i],.14,6));ec232Air(ac,out,T0+C0+.5,25,900,1800,.05)}});
 </script></body></html>

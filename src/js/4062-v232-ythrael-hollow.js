@@ -19,7 +19,7 @@ function ap232Terrain(I){const C=ap232Cfg();for(let j=I.y0-2;j<I.y0+I.h+2;j++)fo
 try{sp152Theme('apex',{nm:'The Hollow Beneath',sub:'Under the fountain of Duskhold',a:{fog:.02,fc:0x0a0614,fcA:.95,sun:.14,hemi:.42,env:'dark',ex:1.0,sat:1.05,vig:1.75,sky:0,pt:'mote',pc:0xc8a0ff,po:.5}})}catch(e){console.warn('v232 theme',e)}
 try{SP152.R.apex={onLoad(){setTimeout(()=>{try{TWN100_home()}catch(_){}},0)}}}catch(_){}
 var YT232D=(()=>{const I=sp152I('apex');if(!I){console.error('v232: the apex instance is missing');return null}const C=ap232Cfg(),cx=I.x0+C.cx,cz=I.y0+C.cz;
- return wk232Reg({key:'voice',T:I,center:[cx,cz],Lx:{r:17.6,hr:18.6,ent:{x:cx,z:cz+15.2},exit:{x:cx,z:cz+17.4},home:{x:cx,z:cz-3}},name:'Ythrael',title:'the Voice Below',icon:'👁',lv:56,place:'The Hollow Beneath',base:'akorror',hpK:1.9,dmK:1.3,wake:11,
+ return wk232Reg({key:'voice',T:I,center:[cx,cz],Lx:{r:17.6,hr:18.6,ent:{x:cx,z:cz+16},exit:{x:cx,z:cz+19.3},home:{x:cx,z:cz-3}},name:'Ythrael',title:'the Voice Below',icon:'👁',lv:56,place:'The Hollow Beneath',base:'akorror',hpK:1.9,dmK:1.3,wake:11,
   card:['he who drank six Sovereigns','There is no way back up'],restTxt:'the middle of the stone',riftCol:0xe8d0ff,
   B:{name:'Ythrael',col:YT232.col,body:1.6,ph2:.66,poise:.1,headJ:'head',turnA:3.6,edge:1.6,
     ai:{pref:4.0,walk:2.5,run:4.6,turn:2.7,rest:[.7,1.25],ph2r:.64,strafe:.5,near:2.2},
@@ -64,6 +64,7 @@ var YT232D=(()=>{const I=sp152I('apex');if(!I){console.error('v232: the apex ins
     },
   start(D,e){D.S.stolen=0;yt232Buff(D)},
   reset(D,won){const S=D.S;yt232MotesClear(D);S.stolen=0;S.drink=0;S.sat=0;D.dmK=S.dm0;yt232Buff(D);yt232Brink(D,0);yt232Crumble(D,0);if(D.A){D.A.r=D.L.r;D.A.hr=D.L.hr}},
+  phSync(D,ph){yt232Brink(D,ph>=2?1:0);if(!!D.S.rim!==(ph>=3))yt232Crumble(D,ph>=3?1:0)},
   hud(D,e){return ' · Stolen essence '+D.S.stolen+'/6'},
   phase(D,e){const S=e.sv;return S.ph===2&&e.c.h/M(e.c)<=.33?'awaken2':null},
   won(D,e){try{fn232Slain(e)}catch(err){console.error('fn232 slain',err)}},
@@ -92,7 +93,7 @@ function yt232MotesClear(D){D.S.motes.forEach(yt232MoteFree);D.S.motes=[]}
 function yt232Buff(D){const n=D.S.stolen,i=hero.buffs.findIndex(b=>b.n=='Stolen Essence');if(i>=0)hero.buffs.splice(i,1);if(n>0)hero.buffs.push({n:'Stolen Essence',i:'✨',s:{paP:.06*n,maP:.06*n},t:nowP()+90000,d:'Essence taken back from him: +'+(6*n)+'% attack ('+n+'/6)'});try{hsDirty()}catch(_){}}
 function yt232MoteTaken(D,e,m){const S=D.S,p=m.g.position.clone();yt232MoteFree(m);S.stolen++;burst(p,YT232.ess[m.i],30,2.5,2,.6);try{sfx('chime')}catch(_){}try{const h=Math.round(heroMax()*.03);hero.hp=Math.min(heroMax(),hero.hp+h);dn(pl.position,'+'+h,'#9aff6a',-10,900)}catch(_){}
   popT(pl.position,'Essence '+S.stolen+'/6','#e8d0ff');yt232Buff(D);
-  if(S.stolen>=6&&e&&!e.dead){S.stolen=0;yt232Buff(D);S.drink=0;const hp=svWP(e,'heart',0,0,.2);try{sk146Beam(()=>gY(pl.position,1.2),()=>hp,0xffffff,.3,.6)}catch(_){}shake(.6);try{flash('rgba(232,208,255,.4)')}catch(_){}svEndMove(e,true);wk232Wound(e,.06,'#e8d0ff');svCast(e,'broken')}}
+  if(S.stolen>=6&&e&&!e.dead){S.stolen=0;yt232Buff(D);S.drink=0;const hp=svWP(e,'heart',0,0,.2);try{sk146Beam(()=>gY(pl.position,1.2),()=>hp,0xffffff,.3,.6)}catch(_){}shake(.6);try{flash('rgba(232,208,255,.4)')}catch(_){}wk232Wound(e,.06,'#e8d0ff',1);wk232Req(e,'broken')}}
 function yt232MoteDrunk(D,e,m){const S=D.S;yt232MoteFree(m);wk232Heal(e,.025,YT232.ess[m.i]);S.sat=Math.min(5,S.sat+1);S.satT=20;D.dmK=S.dm0*(1+.08*S.sat);svSnd('squelch',.6,1.4)}
 function yt232DrinkStart(D,e){const S=D.S;S.drink=1;say('👁 Ythrael kneels to drink. <b>Take the motes before he does!</b>');try{banner('⚠ THIRST','Snatch the motes of essence before they reach him','')}catch(_){}}
 function yt232DrinkEnd(D,e,silent){const S=D.S;if(!S.drink)return;S.drink=0;if(silent||!e||e.dead)return;if(S.sat>0)say('👁 He has drunk: his blows are heavier for a while.')}
