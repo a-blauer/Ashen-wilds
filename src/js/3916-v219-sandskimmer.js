@@ -74,7 +74,7 @@ function skr218Scarab(e,dt,now){const m=e.m,[V]=skr218Near(m.position);if(!V)ret
     m.position.x+=dx/L*st+(e.vx||0)*dt;m.position.z+=dz/L*st+(e.vz||0)*dt;e.vx=(e.vx||0)*.9;e.vz=(e.vz||0)*.9;m.position.y=GH(m.position.x,m.position.z);
     m.rotation.y=L>.3?Math.atan2(dx,dz):V.h;animC(m,now,true,Math.max(4,lim)*.4);
     if(K.st==='run'&&L<1.8&&K.q==null){if(pacing(K.side)<SKR218.perSide){K.st='pace';K.t=0;K.T=SKR218.pace[0]+Math.random()*(SKR218.pace[1]-SKR218.pace[0])}else if(pacing(-K.side)<SKR218.perSide)K.side=-K.side}
-    else if(K.st==='pace'){if(L>3.2){K.st='run';K.t=0}else if(K.t>=K.T){if(V.cling.length<SKR218.cling){K.st='leap';K.t=0;K.a=m.position.clone()}else K.t=K.T*.6}}
+    else if(K.st==='pace'){if(L>4.4){K.st='run';K.t=0}else if(K.t>=K.T){if(V.cling.length<SKR218.cling){K.st='leap';K.t=0;K.a=m.position.clone()}else K.t=K.T*.6}}
     return true}
   if(K.st==='leap'){const k=Math.min(1,K.t/SKR218.leap),bx=V.x+fx*K.f+lx*K.side*1.35,bz=V.z+fz*K.f+lz*K.side*1.35,by=V.y+.9;
     m.position.set(K.a.x+(bx-K.a.x)*k,K.a.y+(by-K.a.y)*k+Math.sin(k*Math.PI)*1.6,K.a.z+(bz-K.a.z)*k);m.rotation.y=Math.atan2(bx-K.a.x,bz-K.a.z);animC(m,now,true,6);

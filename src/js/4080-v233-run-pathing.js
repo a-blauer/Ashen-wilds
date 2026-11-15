@@ -16,6 +16,9 @@
 //  * facing: the body turns at RP233.turn a second and points the way it runs; a scorpion that aims while running twists
 //    toward the Skimmer by at most RP233.twist.
 // Co-op: creatures are the host's and reach partners as positions and headings, so partners see the same paths (nothing new is sent).
+// v234: how a scarab follows its place (g: how hard it closes on it, 1/s; hr: how fast it notices the machine's speed, 1/s;
+// acc: m/s²; weave: along / across, m)
+var RP234={on:true,g:[2.1,3.4],hr:[2.4,4.2],acc:38,weave:[.9,.55]};
 var RP233={on:true,turn:11,twist:1.15,hull:2.7,gap:.72,row:[6.1,7.8],wall:.8,merge:[1.5,20],n:0,err:0};
 function rp233Wrap(a){return Math.atan2(Math.sin(a),Math.cos(a))}
 function rp233Busy(e){return !!e.cl||!!(e.k218&&e.k218.st==='leap')}
@@ -54,10 +57,19 @@ function rp233Keep(e,p,V){const P=sr165Path(),lim=SR165C.hw-RP233.wall+.1;let q=
   try{V=sr165Near(p)[0];e.v233=V;if(V&&e.sr165==='sc'&&e.k218&&!e.fall226)rp233Slots(e,V)}catch(err){if(!RP233.err++)console.warn('v233 slots',err)}
   const r=f.apply(this,arguments);
   try{if(!V||e.dead||rp233Busy(e)||enemies.indexOf(e)<0)return r;const fall=!!e.fall226,dx=p.x-x0,dz=p.z-z0,st=Math.hypot(dx,dz);
-    // a scarab that came out of the sand ahead does not run back at the machine and spin round beside it: it slows as the
-    // Skimmer comes (from RP233.merge[1] ahead of its place), turns and is running with it by the time it is alongside
-    if(!fall&&e.sr165==='sc'&&e.k218){const K=e.k218,fx=Math.sin(V.h),fz=Math.cos(V.h),lead=(p.x-V.x)*fx+(p.z-V.z)*fz-(K.f+(K.fo||0)+Math.max(0,V.v)*.08),a=dx*fx+dz*fz,M0=RP233.merge;
-      if(lead>0){const hv=Math.max(0,V.v)*dt,need=lead>=M0[1]?Math.min(0,a)*Math.min(1,(lead-M0[1])/12):lead>M0[0]?hv*.9*(1-(lead-M0[0])/(M0[1]-M0[0])):hv*(.6+.3*lead/M0[0]);if(a<need){p.x+=fx*(need-a);p.z+=fz*(need-a)}}}
+    // v234 a scarab runs on its own legs (owner: "the creatures mimic any exact movement the duneskimmer makes"): its place
+    // beside the hull is where it is heading, not where it is. It has its own speed (it gains and loses it at RP234.acc),
+    // its own idea of how fast the machine is going (a second or so old: a boost leaves it behind, braking lets it run on),
+    // closes on its place at its own pace (K.g) and weaves about it. One from ahead slows, turns and runs along (no spin).
+    if(!fall&&e.sr165==='sc'&&e.k218&&RP234.on){const K=e.k218,C=RP234,fx=Math.sin(V.h),fz=Math.cos(V.h),lx=fz,lz=-fx,hv=Math.max(0,V.v);
+      if(K.g==null){const h=((e.q233||(e.q233=++RP233.n))*.618034)%1;K.g=C.g[0]+(C.g[1]-C.g[0])*h;K.ph=h*6.2832;K.wf=.7+h*.9;K.hr=C.hr[0]+(C.hr[1]-C.hr[0])*((h*7.13)%1);K.hv=hv;K.vx=dx/Math.max(dt,1e-4);K.vz=dz/Math.max(dt,1e-4);K.tw=0}
+      K.tw+=dt;K.hv+=(hv-K.hv)*Math.min(1,dt*K.hr);const pace=K.st==='pace',wk=pace?.6:1,
+        sf=K.f+(K.fo||0)+hv*.08+Math.sin(K.tw*K.wf+K.ph)*C.weave[0]*wk,sw=(K.w||SKR218.side)+Math.cos(K.tw*K.wf*.73+K.ph*1.7)*C.weave[1]*wk,
+        tx=V.x+fx*sf+lx*K.side*sw,tz=V.z+fz*sf+lz*K.side*sw,g=K.g*(pace?1.9:1);
+      // toward its place no faster than it can still pull up from (or it would run on past the machine and be lost behind it)
+      let rx=(tx-x0)*g,rz=(tz-z0)*g;{const D=Math.hypot(tx-x0,tz-z0),rl=Math.hypot(rx,rz),rm=Math.sqrt(2*C.acc*.6*D);if(rl>rm&&rl>0){rx*=rm/rl;rz*=rm/rl}}
+      let wx=fx*K.hv+rx,wz=fz*K.hv+rz;const top=pace?SKR218.paceMax:SKR218.runMax+4,wl=Math.hypot(wx,wz);if(wl>top){wx*=top/wl;wz*=top/wl}
+      let ax=wx-K.vx,az=wz-K.vz;const al=Math.hypot(ax,az),am=C.acc*dt;if(al>am){ax*=am/al;az*=am/al}K.vx+=ax;K.vz+=az;p.x=x0+K.vx*dt;p.z=z0+K.vz*dt}
     rp233Apart(e,p,dt);
     const R=skr226R(e.sr165)*.75;for(const o of SR165.obs){if(o.gone||o.k==='trap'||Math.abs(o.x-p.x)>6||Math.abs(o.z-p.z)>6)continue;rp233Round(p,o.x,o.z,o.r+R,dx,dz,st)}
     // the hull (relative to it: what matters is which way the creature passes it)
@@ -72,3 +84,7 @@ function rp233Keep(e,p,V){const P=sr165Path(),lim=SR165C.hw-RP233.wall+.1;let q=
     const d=rp233Wrap(want-r0),lim=RP233.turn*dt;m.rotation.y=e.f233?r0+Math.max(-lim,Math.min(lim,d)):want;e.f233=1
   }catch(err){if(!RP233.err++)console.warn('v233 path',err)}
   return r}}
+// ================= v234: no damage numbers in the Sandstorm Run (owner, Nov 14 2026: "remove the damage text while inside that instance") =================
+// Every floating number (hits on creatures, the hull's losses, shield soaks) is dropped while you are in the Run, on every screen;
+// words ("Driven under!", "Flung off!") and the kill streak (×5) stay. Outermost wrapper of dn (popT draws through it).
+{const f=dn;dn=function(p,t){try{if(RP234.on&&/\d/.test(String(t))&&String(t).charAt(0)!=='×'&&sr165In())return}catch(_){}return f.apply(this,arguments)}}

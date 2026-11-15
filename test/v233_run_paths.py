@@ -3,6 +3,8 @@
 # none inside the dune walls, none through a boulder or spire, swarms not standing inside one another, none through the hull
 # (a charging Shellback and a jump over them aside), no turning on the spot in one frame, scorpions not running backwards.
 # Before 4080 the same ride gave: wall 3115, rock 264, stack 12241, overlap 41159, snap 531, inHull 715, scorpions sideways 798.
+# v234 (owner: "the creatures mimic any exact movement the duneskimmer makes" · "remove the damage text while inside that
+# instance"): scarabs beside the hull are not in step with it frame by frame; no damage numbers in the Run.
 #   python3 v233_run_paths.py
 import play,json,os
 fails=[]
@@ -25,6 +27,8 @@ def s(pg):
     ok(st['inHull']<=n*.004,'none run through the hull (%s; 715 before)'%st['inHull'])
     ok(st['snap']<=n*.0006,'none turn on the spot in one frame (%s; 531 before)'%st['snap'])
     sp=per.get('sp',{}).get('crab',0)+per.get('gs',{}).get('crab',0);ok(sp<=max(40,(k.get('sp',0)+k.get('gs',0))*.03),'scorpions run the way they face (%s frames sideways or backwards; 1000 before)'%sp)
+    ok(st.get('near',0)>2000 and st.get('lock',0)<=st['near']*.03,'scarabs beside the hull run on their own legs, not locked to its every move (%s of %s frames in step with it; 13%% before v234)'%(st.get('lock',0),st.get('near',0)))
+    ok(r.get('inRun') and r.get('dnNum')==0 and r.get('dnWord')==2,'no damage numbers in the Run, words and the kill streak stay (in the Run %s, numbers %s, words %s)'%(r.get('inRun'),r.get('dnNum'),r.get('dnWord')))
     ok(not r['errs'] and r['err']==[0,0,0,0,0],'no errors %s %s'%(r['errs'],r['err']))
 play.run(s)
 print('v233 run paths:','ALL PASS' if not fails else 'FAILED %d'%len(fails))
