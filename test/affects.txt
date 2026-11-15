@@ -172,3 +172,5 @@ v232|3150-|3050-|1970-: v232_endings.py v232_coop.py v232_wardens.py
 v235|0110-|0120-|needH|rollHero|compHit: v235_tune.py v96_econ.py
 # v236 co-op difficulty (enemy health by player count) and the Unsealing's targets
 4090|v236|cs236|0520-|3733|3283: v236_coop_scale.py v205_unsealing.py v205_coop.py v165_coop.py
+# v237 the Unsealing eased: spawn points, wave timer, Cheddar heals, stuck creatures
+4091|v237|3733|3732|3731: v237_unseal.py v205_unsealing.py v205_coop.py

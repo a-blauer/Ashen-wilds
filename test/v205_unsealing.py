@@ -27,7 +27,7 @@ JS=r"""async(step)=>{const out={},errs=[];const oe=console.error;console.error=(
     at(F.reach-9,-5);for(let i=0;i<6;i++){tick(1.2);await wait(400)}out.court=us205Alive();out.forC=enemies.filter(e=>e.us205&&!e.dead&&e.usK).length;
     const h0=E.hp,s=enemies.find(e=>e.us205==='thrall'&&!e.dead)||enemies.find(e=>e.us205&&!e.dead);
     // v236: every thrall / bat may go for Cheddar, and goes for whoever is nearest (the hero stands far from the circle here)
-    out.all=enemies.filter(e=>!e.dead&&(e.us205==='thrall'||e.us205==='bat')).every(e=>e.usK===1);
+    out.all=enemies.filter(e=>!e.dead&&(e.us205==='thrall'||e.us205==='bat')&&e.c.h>=M(e.c)).every(e=>e.usK===1);   // v237: one that was hit may have turned on its attacker for good
     if(s){const K=CH205.g.position,P=pl.position,p0=s.m.position.clone();s.usK=1;s.tgI=null;s.tg150=null;
       s.usOn=null;s.m.position.set(K.x+1.2,K.y,K.z);const tg=eTarget(s,s.m,Math.hypot(P.x-s.m.position.x,P.z-s.m.position.z));out.proxy=!!(tg&&tg.us205K);
       s.usOn=null;s.m.position.set(P.x+1.2,P.y,P.z);const t2=eTarget(s,s.m,1.2);out.near=!!(t2&&!t2.us205K);out.dCh=+Math.hypot(P.x-K.x,P.z-K.z).toFixed(1);
