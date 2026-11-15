@@ -183,7 +183,9 @@ def s(pg):
                     V=V.reshape(-1,3)
                     if pn=='idle':
                         lo=V[:,1].min()
-                        if lo<-.01 or lo>.025:fails.append('%s idle: lowest point %.3f m (feet should touch the ground)'%(lab,lo))
+                        # v233: -1.3 cm (was -1): the idle starts at a random phase and the Blacksmith's deepest dip is 1.06 cm, so 3 runs
+                        # in 10 failed on an unchanged build (measured on v232: -0.0100, -0.0104, -0.0105 of ten)
+                        if lo<-.013 or lo>.025:fails.append('%s idle: lowest point %.3f m (feet should touch the ground)'%(lab,lo))
                     bad=floating(V,thr)
                     for c,n,cc,d in bad:fails.append('%s %s: floating piece (%d tris) at (%.3f, %.3f, %.3f), %.1f mm from the body'%(lab,pn,n,cc[0],cc[1],cc[2],d*1000))
                 print('checked',lab,it['sp'],flush=True)
