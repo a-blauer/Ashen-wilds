@@ -4077,7 +4077,10 @@ $('doF').onclick=()=>{};
 // =====================================================================================
 const TIERS=[[1,9],[10,19],[20,29],[30,39],[40,49]],MAXLV=50;
 const tierOfLv=l=>Math.max(1,Math.min(5,Math.floor(l/10)+1));
-const needH=l=>Math.round(8*l*l+20*l+20);
+// v235 (owner, Nov 15 2026: "leveling at later levels takes too long"): past level 10 each level needs less XP than the old curve,
+// 4% less per level above 10 (level 20 ÷1.4, 30 ÷1.8, 40 ÷2.2, 49 ÷2.56); levels 1–10 unchanged. Hero and companions.
+var NEED235={from:10,k:.04};
+const needH=l=>Math.round((8*l*l+20*l+20)/(1+NEED235.k*Math.max(0,l-NEED235.from)));
 const KD=l=>40+9*l;
 // ---------------- classes ----------------
 const CLS={
@@ -4372,7 +4375,7 @@ function rollMod(c){const pool=MODK.filter(m=>!(c.mods||[]).includes(m));if(!poo
 // ---------------- damage pipeline ----------------
 function rollHero(e,raw,mt,o){
   const s=HS(),c=e.c,def=mt=='m'?cMD(c):cPD(c);let d=raw*(1-def/(def+KD(hero.lvl)));
-  const gap=c.l-hero.lvl;if(gap>0)d*=Math.max(.15,1-.1*gap);
+  // v235 (owner, Nov 15 2026: "let's remove the penalty"): no damage loss against a higher-level enemy
   const hpr=c.h/M(c);if(hpr<.35)d*=1+s.exec;if(hpr>=.999)d*=1+s.first;if(s.berserk&&hero.hp<heroMax()*.5)d*=1+s.berserk;
   if(e.wk>0)d*=1.2;if(e.mark>0)d*=1+(e.markV||.35);
   let crit=false;if((o&&o.crit)||Math.random()<s.crit){crit=true;d*=1+s.cdm}
@@ -4393,7 +4396,7 @@ function heroHit_base(e,raw,mt,o){
 }
 function compHit_base(c,e,mult,fx){
   if(!e||e.dead)return 0;const s=HS();let d=dmgCE(c,e.c,mult)*(1+s.compP);if(e.wk>0)d*=1.2;if(e.mark>0)d*=1+(e.markV||.35);
-  const gap=e.c.l-c.l;if(gap>0)d*=Math.max(.2,1-.08*gap);d=Math.max(1,Math.round(d));hurt(e,d,{col:0xffd24a},false);
+  d=Math.max(1,Math.round(d));hurt(e,d,{col:0xffd24a},false);
   if((c.mods||[]).includes('Vampiric'))c.h=Math.min(M(c),c.h+Math.round(d*.06));
   if(fx){const atk=xMt(c)=='m'?cStat(c,'ma'):cStat(c,'pa');eStatus(e,fx,atk*.3);if(fx.drain){const hv=Math.round(d*fx.drain);if(c.emp)healHero(hv);else c.h=Math.min(M(c),c.h+hv)}}
   return d;
@@ -4723,7 +4726,7 @@ function tgtHud(){
   $('tgB').style.width=Math.max(0,Math.min(100,100*e.c.h/mx))+'%';$('tgH').textContent=hp+' / '+mx;
   const st=[e.enr?'🔥 Enraged':'',e.stun>0?'💫 Stunned':'',e.root>0?'🕸️ Rooted':'',e.ch>0?'🐌 Slowed':'',e.wk>0?'💔 Weakened':'',e.mark>0?'☠️ Marked':'',...(e.dots||[]).map(d=>({burn:'🔥 Burning',poison:'🧪 Poisoned',bleed:'🩸 Bleeding'})[d.k])].filter(Boolean),s=$('tgS');
   if(e.atk&&e.atk.ph==0){s.className='tgs warn';s.textContent='⚠ '+(MVN[e.atk.n]||e.atk.n)+' incoming — dodge!'}
-  else{s.className='tgs';s.textContent=st.length?st.join(' · '):gap>=5?'Far too strong for you — your hits barely land':(en.mt=='m'?'Magic attacker':'Physical attacker')+' · '+(MSET[e.c.g[0]]||[]).map(n=>MVN[n]||n).join(' · ')}
+  else{s.className='tgs';s.textContent=st.length?st.join(' · '):gap>=5?'Far above your level — it hits much harder':(en.mt=='m'?'Magic attacker':'Physical attacker')+' · '+(MSET[e.c.g[0]]||[]).map(n=>MVN[n]||n).join(' · ')}
 }
 Object.assign(MVN,{strike:'Strike',throw:'Throw',bolt:'Bolt',rainfire:'Fire Rain'});
 // ---------------- inventory ----------------

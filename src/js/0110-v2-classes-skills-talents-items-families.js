@@ -3,7 +3,10 @@
 // =====================================================================================
 const TIERS=[[1,9],[10,19],[20,29],[30,39],[40,49]],MAXLV=50;
 const tierOfLv=l=>Math.max(1,Math.min(5,Math.floor(l/10)+1));
-const needH=l=>Math.round(8*l*l+20*l+20);
+// v235 (owner, Nov 15 2026: "leveling at later levels takes too long"): past level 10 each level needs less XP than the old curve,
+// 4% less per level above 10 (level 20 ÷1.4, 30 ÷1.8, 40 ÷2.2, 49 ÷2.56); levels 1–10 unchanged. Hero and companions.
+var NEED235={from:10,k:.04};
+const needH=l=>Math.round((8*l*l+20*l+20)/(1+NEED235.k*Math.max(0,l-NEED235.from)));
 const KD=l=>40+9*l;
 // ---------------- classes ----------------
 const CLS={

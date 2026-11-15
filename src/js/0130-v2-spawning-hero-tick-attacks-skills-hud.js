@@ -183,6 +183,6 @@ function tgtHud(){
   $('tgB').style.width=Math.max(0,Math.min(100,100*e.c.h/mx))+'%';$('tgH').textContent=hp+' / '+mx;
   const st=[e.enr?'🔥 Enraged':'',e.stun>0?'💫 Stunned':'',e.root>0?'🕸️ Rooted':'',e.ch>0?'🐌 Slowed':'',e.wk>0?'💔 Weakened':'',e.mark>0?'☠️ Marked':'',...(e.dots||[]).map(d=>({burn:'🔥 Burning',poison:'🧪 Poisoned',bleed:'🩸 Bleeding'})[d.k])].filter(Boolean),s=$('tgS');
   if(e.atk&&e.atk.ph==0){s.className='tgs warn';s.textContent='⚠ '+(MVN[e.atk.n]||e.atk.n)+' incoming — dodge!'}
-  else{s.className='tgs';s.textContent=st.length?st.join(' · '):gap>=5?'Far too strong for you — your hits barely land':(en.mt=='m'?'Magic attacker':'Physical attacker')+' · '+(MSET[e.c.g[0]]||[]).map(n=>MVN[n]||n).join(' · ')}
+  else{s.className='tgs';s.textContent=st.length?st.join(' · '):gap>=5?'Far above your level — it hits much harder':(en.mt=='m'?'Magic attacker':'Physical attacker')+' · '+(MSET[e.c.g[0]]||[]).map(n=>MVN[n]||n).join(' · ')}
 }
 Object.assign(MVN,{strike:'Strike',throw:'Throw',bolt:'Bolt',rainfire:'Fire Rain'});

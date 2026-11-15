@@ -168,3 +168,5 @@ v225|owner-fixes|hero-look: v225_checks.py v225_coop.py v213_guard.py v213_coop.
 # v232 the two endings: the Warden kit and its co-op relay, the five bosses, the choice, the crown, the ending films
 v232|3150-|3050-|1970-: v232_endings.py v232_coop.py v232_wardens.py
 4081|v233-amulet|2115|2790|mdamulet: v233_amulet.py v137_items.py
+# v235 no level penalty on damage dealt; the gentler XP curve past level 10
+v235|0110-|0120-|needH|rollHero|compHit: v235_tune.py v96_econ.py
