@@ -7788,19 +7788,19 @@ function mpSendES(now){
     let d=Math.hypot(x-pl.position.x,z-pl.position.z);rs.forEach(p=>{d=Math.min(d,Math.hypot(x-p.x,z-p.z))});if(d<75)L.push([d,e])});
   L.sort((a,b)=>a[0]-b[0]);const l=[];
   for(const q of L.slice(0,45)){const e=q[1];if(!e.nid){e.nid=MP.pfx+'.'+(MP.nid++).toString(36);MP.emap[e.nid]=e}
-    l.push([e.nid,e.c.en,e.c.l,mpR2(e.m.position.x),mpR2(e.m.position.z),mpR2(e.m.rotation.y),Math.round(e.c.h),e.c.al?1:0,e.trait||'',Math.round(e.sh||0),e.c.zt||0])}
+    l.push([e.nid,e.c.en,e.c.l,mpR2(e.m.position.x),mpR2(e.m.position.z),mpR2(e.m.rotation.y),Math.round(e.c.h),e.c.al?1:0,e.trait||'',Math.round(e.sh||0),e.c.zt||0,Math.round((e.c._cs||1)*100)])}   // v236: 12th field = the co-op health factor × 100 (4090)
   let s=JSON.stringify({r:MP.rg,l});while(s.length>3900&&l.length){l.pop();s=JSON.stringify({r:MP.rg,l})}
   MP.room.emit('es',{r:MP.rg,l}).catch(()=>{});
 }
 function mpOnES(msg){
   if(!MP.on||msg.sameTab)return;const d=msg.data;if(!d||d.r!==MP.rg||MP.rg<0||msg.peer!==MP.host||!Array.isArray(d.l))return;
   const now=performance.now(),seen={};
-  for(const q of d.l){if(!Array.isArray(q))continue;const [id,key,lv,x,z,ry,h,al,tr,sh,zt]=q;if(typeof id!=='string'||id.length>24||!EN[key]||typeof x!=='number'||typeof z!=='number'||!isFinite(x)||!isFinite(z))continue;
+  for(const q of d.l){if(!Array.isArray(q))continue;const [id,key,lv,x,z,ry,h,al,tr,sh,zt,cs]=q;if(typeof id!=='string'||id.length>24||!EN[key]||typeof x!=='number'||typeof z!=='number'||!isFinite(x)||!isFinite(z))continue;
     seen[id]=1;let e=MP.emap[id];if(e&&(e.dead||enemies.indexOf(e)<0)){delete MP.emap[id];e=null}
     if(!e){if(MP.dead[id]||Math.hypot(x-pl.position.x,z-pl.position.z)>70)continue;
       MP.mkTr=typeof tr==='string'?tr:'';try{e=spawnEnemy(key,x,z,Math.max(1,Math.min(MAXLV,lv|0)),{al:!!al,zt:zt|0||undefined})}finally{MP.mkTr=undefined}
       if(!e)continue;e.nid=id;e.mir=1;MP.emap[id]=e;e.m.rotation.y=+ry||0}
-    e.nx=x;e.nz=z;e.nry=+ry||0;e.mst=now;e.sh=Math.max(0,+sh||0);
+    e.nx=x;e.nz=z;e.nry=+ry||0;e.mst=now;if(typeof cs236Mir=='function')cs236Mir(e,cs);e.sh=Math.max(0,+sh||0);
     const hh=Math.max(0,Math.min(M(e.c),+h||0));e.c.h=now-(e.lhT||0)<600?Math.min(e.c.h,Math.max(1,hh)):Math.max(1,hh);
     if(Math.hypot(e.m.position.x-pl.position.x,e.m.position.z-pl.position.z)>30){e.m.position.x=x;e.m.position.z=z}}
   for(const id in MP.emap){const e=MP.emap[id];if(e.mir&&!seen[id]&&now-(e.mst||0)>1500){if(!e.dead)removeE(e);delete MP.emap[id]}}
@@ -52734,7 +52734,8 @@ function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   if(E.go){E.pulse-=dt;if(E.pulse<=0){E.pulse=12;const p=K.m.position;ring(p,0x60f0d0,4.8,600);burst(gY(p,1),0x60f0d0,40,3,1.5,.6);svSnd('gong',.5,1.4);
     enemies.forEach(s=>{if(!s.rf165||s.dead)return;const dx=s.m.position.x-p.x,dz=s.m.position.z-p.z,L=Math.hypot(dx,dz);if(L<4.8&&L>.01){s.vx+=dx/L*9;s.vz+=dz/L*9;try{eStatus(s,{stun:1.2},0,'h')}catch(_){}}})}}
   // the cult (host only)
-  if(host&&E.go){E.sp-=dt;const cap=E.esc?RF165.cap+7:RF165.cap;if(E.sp<=0){const alive=rf165Alive();E.sp=E.esc?.55:2.4-1.5*k;if(alive<cap)rf165Spawn(Math.min(cap-alive,E.esc?3:1+Math.floor(Math.random()*(1+k*2.2))))}}
+  if(host&&E.go){E.sp-=dt;const cap=(E.esc?RF165.cap+7:RF165.cap)+(typeof cs236EvCap=='function'?cs236EvCap(0):0);if(E.sp<=0){const alive=rf165Alive();E.sp=(E.esc?.55:2.4-1.5*k)*(typeof cs236EvRate=='function'?cs236EvRate():1);   // v236 (4090)
+    if(alive<cap)rf165Spawn(Math.min(cap-alive,E.esc?3:1+Math.floor(Math.random()*(1+k*2.2))))}}
   // words while he works
   [[.25,'🐜 Kheprit: “The way is stubborn… keep them from me!”'],[.5,'🐜 Kheprit: “Half-way. I can see the salt beyond.”'],[.8,'🐜 Kheprit: “Almost… almost!”']].forEach(([q,s])=>{if(k>=q&&!E.said[q]){E.said[q]=1;say(s)}});
   // the rift opens: run
@@ -70037,8 +70038,10 @@ CQ205L.push(()=>{if(CH205.g){CH205.to=null;ch205Sync()}});
 //                                otherwise the blow falls on Cheddar (and you, if you are in it). The last 20 s, "the seal
 //                                screams": Nightwing Dives, lanes of bats from the edge to Cheddar: stand in a lane to take the
 //                                swarm yourself, or it tears into him.
-//    About half of the thralls / bats / stalkers go for Cheddar (a proxy target beside him, the rf165 way); hit one and it may turn
-//    on you. Cheddar's Ward Flare (every US205.flare s) throws back and stuns whatever is at him. Inside his circle the light burns
+//    v236 (owner, Nov 15 2026: "all enemies directly target cheddar from when they spawn … the player cant prevent those"):
+//    thralls and bats go for whoever is nearest: a hero, a companion or Cheddar (a proxy target beside him, the rf165 way;
+//    us205Near), so standing in their way draws them; thralls do not Mist Step during the event. Stalkers and the Gate-Breaker
+//    still make for Cheddar. Hit one that is on Cheddar and it may turn on you for good. Cheddar's Ward Flare (every US205.flare s) throws back and stuns whatever is at him. Inside his circle the light burns
 //    them: they take +25% damage there (US205.ward).
 //  * Fail: Cheddar falls (0 health): the rings knit back, the court melts into mist, he gets up after a while ('fell': speak with
 //    him to try again; the keys stay in the bowls). Leaving, recalling or dying (solo) stops it quietly.
@@ -70116,7 +70119,7 @@ function us205Spawn(kind,at){const L=us205Spots(),p=at||L[Math.floor(Math.random
   e.us205=kind==='vamp'?'thrall':kind==='bloodbat'?'bat':kind;e.agg=1;e.hunt=1;e.usP=new THREE.Object3D();e.usP.us205K=1;
   // the swarm is many and weak; the specials are sturdier
   const hk=e.us205==='thrall'?.55:e.us205==='bat'?.45:e.us205==='siph'?.8:e.us205==='mist'?.7:2.6;try{e.c.st.hp*=hk;e.c.h=Math.max(1,Math.round(M(e.c)))}catch(_){}
-  e.usK=e.us205==='bat'?(Math.random()<.7?1:0):e.us205==='thrall'?(Math.random()<.5?1:0):0;
+  e.usK=e.us205==='bat'||e.us205==='thrall'?1:0;   // v236: may go for Cheddar (when he is the nearest, us205Near); was a 70% / 50% roll for Cheddar only
   if(e.us205==='siph'){e.usS={st:'walk',t:0,to:us205SiphSpot()};e.c.n='Blood Siphoner'}
   if(e.us205==='mist'){e.usM={st:'mist',t:0};e.c.n='Mist Stalker';e.m.visible=false;if(e.hb)e.hb.visible=false;e.usK=1}
   if(e.us205==='brk'){e.usB={st:'march',t:0,cd:2};e.c.n='Ser Morvaine, the Gate-Breaker';try{e.m.scale.multiplyScalar(1.3)}catch(_){}e.usK=1}
@@ -70157,7 +70160,8 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   // the eclipse (III): dark for a while
   E.ecl=q===2&&k<.68?1:0;
   // the court (host): keep the mix coming, faster as it goes
-  if(host){E.sp-=dt;const cap=(typeof co151On=='function'&&co151On())?US205.capC:US205.cap;if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k);const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
+  if(host){E.sp-=dt;const cap=((typeof co151On=='function'&&co151On())?US205.capC:US205.cap)+(typeof cs236EvCap=='function'?cs236EvCap(1):0);if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k)*(typeof cs236EvRate=='function'?cs236EvRate():1);   // v236: more, sooner, per extra player (4090)
+    const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
         let n=1+Math.floor(Math.random()*(1.4+k*2.2));for(let j=0;j<n&&alive+j<cap;j++){let u=Math.random()*tot,kind=mix[0][0];for(const m of mix){u-=m[1];if(u<=0){kind=m[0];break}}
           if(kind==='siph'&&us205Count('siph')>=(q>=3?3:2))kind='vamp';if(kind==='mist'&&us205Count('mist')>=4)kind='bloodbat';us205Spawn(kind)}}}
     // the Gate-Breaker comes once, at the start of IV
@@ -70228,8 +70232,18 @@ function us205Sky(dt,t){const E=US205.E,here=cq205Here(0),M=US205.moon;const wan
       const fc=US205.fc||(US205.fc=new THREE.Color(0x1a0206));scene.fog.color.lerp(fc,.75*d);scene.background=scene.fog.color;scene.fog.density*=1+.35*d;
       try{const su=SKY.material.uniforms;su.top.value.lerp(fc,.85*d);su.hor.value.lerp(fc,.75*d)}catch(_){}}}catch(_){}return r}}
 // ---------------- hooks ----------------
-// half of them go for Cheddar: a proxy target beside him
-{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.us205&&e.usK&&US205.E&&CH205.g){const K=CH205.g.position,dx=m.position.x-K.x,dz=m.position.z-K.z,L=Math.hypot(dx,dz)||1;e.usP.position.set(K.x+dx/L*.9,K.y,K.z+dz/L*.9);return e.usP}return f.apply(this,arguments)}}
+// Cheddar as a target: a proxy beside him. Stalkers and the Gate-Breaker always go for him; v236: thralls and bats go for the
+// nearest of the heroes, the companions (whatever the game's own choice `tg` is) and Cheddar. US205.keep m of stickiness so
+// one does not flip between two targets at the same distance. Returns true when Cheddar is the one.
+US205.keep=1.5;
+function us205Near(e,m,dpl,tg,L){if(e.us205!=='thrall'&&e.us205!=='bat')return true;
+  let d=1e9;if(tg===pl){if(hero.hp>0)d=dpl}else if(tg&&tg.position)d=Math.hypot(tg.position.x-m.position.x,tg.position.z-m.position.z);
+  const on=e.usOn==null?L<d:e.usOn?L<d+US205.keep:L<d-US205.keep;e.usOn=on?1:0;return on}
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.us205&&e.usK&&US205.E&&CH205.g){const K=CH205.g.position,dx=m.position.x-K.x,dz=m.position.z-K.z,L=Math.hypot(dx,dz)||1;
+    let tg=null;if(e.us205==='thrall'||e.us205==='bat')tg=f.apply(this,arguments);
+    if(us205Near(e,m,dpl,tg,L)){e.usP.position.set(K.x+dx/L*.9,K.y,K.z+dz/L*.9);return e.usP}return tg}return f.apply(this,arguments)}}
+// v236 (owner: "have the thralls teleport attack not work during this event"): no Mist Step for the court's thralls
+{const f=ePick;ePick=function(e,ok){if(e&&e.us205&&US205.E){ok=ok.filter(n=>n!=='miststep');if(!ok.length)return null}return f.call(this,e,ok)}}
 {const f=hitTarget;hitTarget=function(e,tg,mult,mt){if(tg&&tg.us205K){const E=US205.E;if(!E||!us205Host())return;const d=(e&&e.us205==='bat'?1.1:1.5)*(mult||1);E.hp-=d;CH205.hit=.3;
     if(CH205.g)burst(gY(CH205.g.position,.6),0xff3a3a,6,.8,.8,.4);return}return f.apply(this,arguments)}}
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.us205){if(e.us205==='mist'&&e.usM&&e.usM.st!=='hunt')return;
@@ -81295,6 +81309,64 @@ function am233Chain(B,P,k,gold,yp){if(!AM233.on)return null;try{const A=AM233,T=
     // a small clasp at the nape
     k.p('chest','sph','m',gold,pts[0][0],pts[0][1],pts[0][2],A.r*1.9);
     AM233.last={base:nb,pts,zp};return {z:zp,pts,base:nb}}catch(err){if(!AM233.err++)console.warn('v233 amulet',err);return null}}
+// ================= v236 co-op difficulty: the game gets harder for every extra player in your zone instance =================
+// The owner (Nov 15 2026): "think of a system that makes the game harder when you are playing with multiple people. The game
+// should get harder for each additional person to accomidate for the extra damage and pets." Approved numbers:
+//   per extra player in the same instance (MP.others, at most CS236.max):
+//     normal enemies            +60% health                              (CS236.r.norm)
+//     elites, camp leaders      +75% health                              (CS236.r.elite)
+//     Sovereigns, mini bosses,  +85% health (the posture bar is a share of health, so staggers keep their pace),
+//     Wardens (boss flag / the  +8% damage dealt                         (CS236.r.boss, CS236.dmg)
+//     v141 Sovereign kit e.sv)
+//     defence events            +4 creatures on the field at once, spawning 30% faster (CS236.ev, CS236.evS; the Unsealing 3733
+//                               already allowed 6 more for the first partner, the Rift 3283). Their creatures keep their health
+//                               (Ser Morvaine counts as an elite).
+// How: the factor multiplies the creature's own max health (c.st.hp; c._cs = the factor on it now, c._csX = extra players it
+// stands for). It only ever changes while the creature is at full health (cs236Upd, twice a second from eTick): a partner who
+// joins or leaves mid-fight does not move a health bar that has already been hurt; a creature that resets to full takes the
+// count of that moment.
+// Co-op:
+//   * shared monsters (mpElig: the region host's): the host sets the factor and sends it as the 12th field of each 'es' entry
+//     (factor × 100; 0520). A partner's copy takes it from there (cs236Mir). An older partner ignores the field: its bar reads
+//     full until the health falls under its own smaller maximum.
+//   * bosses and other creatures every game makes for itself (Sovereigns, mini bosses, Wardens, minions): each game works the
+//     factor out from the players it sees in the instance. So that a late joiner agrees with a fight already under way, a game
+//     with a hurt boss says so in its presence (p.cs236 = players counted, 0 = none); the others take the count of the lowest
+//     peer id that says one (cs236Fight).
+//   * the target frame shows 👥×N on a scaled creature (tgtHud wrapper).
+var CS236={r:{norm:.6,elite:.75,boss:.85},dmg:.08,max:3,ev:4,evS:.3,err:0};
+// extra players in my zone instance right now
+function cs236Live(){try{if(typeof MP=='undefined'||!MP.on||!(MP.rg>=0))return 0;return Math.max(0,Math.min(CS236.max,MP.others|0))}catch(_){return 0}}
+function cs236Kind(e){if(!e||!e.c||!e.c.st||e.bfx)return null;
+  if(e.us205)return e.us205==='brk'?'elite':null;if(e.rf165)return null;
+  if(e.boss||e.sv)return 'boss';return e.c.al?'elite':'norm'}
+// the count a hurt boss in this game is locked to (players, 0 = none): goes out in my presence
+function cs236Lock(){let v=0;try{enemies.forEach(e=>{if(!e||e.dead||e.mir||!e.c||mpElig(e)||!cs236Kind(e))return;if(e.c.h<M(e.c)-1)v=Math.max(v,(e.c._csX|0)+1)})}catch(_){}return v}
+// extra players for the creatures every game makes for itself
+function cs236Fight(){try{if(typeof MP=='undefined'||!MP.on||!(MP.rg>=0))return 0;let id=null,n=0;const v=cs236Lock();if(v){id=MP.me;n=v}
+    for(const k in MP.rh){const r=MP.rh[k],c=r&&r.pr&&r.pr.rg===MP.rg?r.pr.cs236|0:0;if(c>0&&(id===null||k<id)){id=k;n=c}}
+    return n?Math.max(0,Math.min(CS236.max,n-1)):cs236Live()}catch(_){return 0}}
+function cs236Set(e,k,x){const c=e.c,cur=c._cs||1;if(!(k>0)||!isFinite(k))return;if(Math.abs(k-cur)>1e-6){c.st.hp*=k/cur;if(e.sh>0)e.sh*=k/cur}c._cs=k;c._csX=x|0}
+function cs236Upd(e){if(e.mir)return;const kind=cs236Kind(e);if(!kind)return;const c=e.c;let x;
+  if(mpElig(e)){if(typeof MP!='undefined'&&MP.on&&MP.others&&MP.host!==MP.me)return;x=cs236Live()}else x=cs236Fight();
+  const want=1+CS236.r[kind]*x,cur=c._cs||1;if(Math.abs(want-cur)<1e-6){c._csX=x;return}
+  if(c.h<M(c)-1)return;   // hurt: it keeps what it has
+  cs236Set(e,want,x);c.h=M(c)}
+// a partner's copy of a shared monster: the host's factor (× 100)
+function cs236Mir(e,cs){if(!e||!e.c||!e.c.st)return;const k=typeof cs==='number'&&cs>=100&&cs<=100*(1+CS236.r.boss*CS236.max)+1?cs/100:1,kind=cs236Kind(e)||'norm';
+  if(Math.abs(k-(e.c._cs||1))>1e-6||e.c._csX==null)cs236Set(e,k,Math.round((k-1)/CS236.r[kind]))}
+{const f=eTick;eTick=function(e,dt,now){try{if(e&&!e.dead&&e.c&&now-(e._csT||0)>500){e._csT=now;cs236Upd(e)}}catch(err){if(!CS236.err++)console.warn('v236 scaling',err)}return f.apply(this,arguments)}}
+// bosses hit harder: +8% per extra player (the hero through hitHero, companions through hitTarget)
+function cs236Dmg(e){return e&&e.c&&e.c._csX>0&&cs236Kind(e)==='boss'?1+CS236.dmg*e.c._csX:1}
+{const f=hitHero;hitHero=function(e,mult,mt){try{const k=cs236Dmg(e);if(k!==1&&typeof mult=='number'){const a=Array.prototype.slice.call(arguments);a[1]=mult*k;return f.apply(this,a)}}catch(_){}return f.apply(this,arguments)}}
+{const f=hitTarget;hitTarget=function(e,tg,mult,mt){try{const k=tg!==pl?cs236Dmg(e):1;if(k!==1){const a=Array.prototype.slice.call(arguments);a[2]=(mult||1)*k;return f.apply(this,a)}}catch(_){}return f.apply(this,arguments)}}
+// defence events: more creatures at once, and sooner (base = the partners the event already allows for)
+function cs236EvCap(base){return CS236.ev*Math.max(0,cs236Live()-(base|0))}
+function cs236EvRate(){return 1/(1+CS236.evS*cs236Live())}
+// my presence: the count my hurt boss is locked to
+{const f=MP.room.presence;MP.room.presence=function(p){if(p&&typeof p=='object'&&typeof p.x=='number'){try{p.cs236=cs236Lock()}catch(_){p.cs236=0}}return f.apply(this,arguments)}}
+// the target frame says so
+{const f=tgtHud;tgtHud=function(){const r=f.apply(this,arguments);try{const e=tgt,L=$('tgL');if(e&&e.c&&e.c._cs>1&&L&&!e.bfx)L.insertAdjacentHTML('beforeend',' <span class="cs236" title="Tougher: '+((e.c._csX|0)+1)+' players here" style="color:#9fd0ff;font-size:.85em">👥×'+((e.c._csX|0)+1)+'</span>')}catch(_){}return r}}
 </script><script>// ================= Kill Quest animation viewer =================
 // Runs AFTER the game script, on the real game code: real models, real attack/ability code, real effects.
 // Four tabs:

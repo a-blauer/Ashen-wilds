@@ -217,3 +217,4 @@ ONLY=voice v232_wardens.py
 v233_run_paths.py
 v233_amulet.py
 v235_tune.py
+v236_coop_scale.py

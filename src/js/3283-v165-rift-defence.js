@@ -74,7 +74,8 @@ function rf165Tick(dt,now){const E=RF165.E,t=now/1000;
   if(E.go){E.pulse-=dt;if(E.pulse<=0){E.pulse=12;const p=K.m.position;ring(p,0x60f0d0,4.8,600);burst(gY(p,1),0x60f0d0,40,3,1.5,.6);svSnd('gong',.5,1.4);
     enemies.forEach(s=>{if(!s.rf165||s.dead)return;const dx=s.m.position.x-p.x,dz=s.m.position.z-p.z,L=Math.hypot(dx,dz);if(L<4.8&&L>.01){s.vx+=dx/L*9;s.vz+=dz/L*9;try{eStatus(s,{stun:1.2},0,'h')}catch(_){}}})}}
   // the cult (host only)
-  if(host&&E.go){E.sp-=dt;const cap=E.esc?RF165.cap+7:RF165.cap;if(E.sp<=0){const alive=rf165Alive();E.sp=E.esc?.55:2.4-1.5*k;if(alive<cap)rf165Spawn(Math.min(cap-alive,E.esc?3:1+Math.floor(Math.random()*(1+k*2.2))))}}
+  if(host&&E.go){E.sp-=dt;const cap=(E.esc?RF165.cap+7:RF165.cap)+(typeof cs236EvCap=='function'?cs236EvCap(0):0);if(E.sp<=0){const alive=rf165Alive();E.sp=(E.esc?.55:2.4-1.5*k)*(typeof cs236EvRate=='function'?cs236EvRate():1);   // v236 (4090)
+    if(alive<cap)rf165Spawn(Math.min(cap-alive,E.esc?3:1+Math.floor(Math.random()*(1+k*2.2))))}}
   // words while he works
   [[.25,'🐜 Kheprit: “The way is stubborn… keep them from me!”'],[.5,'🐜 Kheprit: “Half-way. I can see the salt beyond.”'],[.8,'🐜 Kheprit: “Almost… almost!”']].forEach(([q,s])=>{if(k>=q&&!E.said[q]){E.said[q]=1;say(s)}});
   // the rift opens: run

@@ -91,19 +91,19 @@ function mpSendES(now){
     let d=Math.hypot(x-pl.position.x,z-pl.position.z);rs.forEach(p=>{d=Math.min(d,Math.hypot(x-p.x,z-p.z))});if(d<75)L.push([d,e])});
   L.sort((a,b)=>a[0]-b[0]);const l=[];
   for(const q of L.slice(0,45)){const e=q[1];if(!e.nid){e.nid=MP.pfx+'.'+(MP.nid++).toString(36);MP.emap[e.nid]=e}
-    l.push([e.nid,e.c.en,e.c.l,mpR2(e.m.position.x),mpR2(e.m.position.z),mpR2(e.m.rotation.y),Math.round(e.c.h),e.c.al?1:0,e.trait||'',Math.round(e.sh||0),e.c.zt||0])}
+    l.push([e.nid,e.c.en,e.c.l,mpR2(e.m.position.x),mpR2(e.m.position.z),mpR2(e.m.rotation.y),Math.round(e.c.h),e.c.al?1:0,e.trait||'',Math.round(e.sh||0),e.c.zt||0,Math.round((e.c._cs||1)*100)])}   // v236: 12th field = the co-op health factor × 100 (4090)
   let s=JSON.stringify({r:MP.rg,l});while(s.length>3900&&l.length){l.pop();s=JSON.stringify({r:MP.rg,l})}
   MP.room.emit('es',{r:MP.rg,l}).catch(()=>{});
 }
 function mpOnES(msg){
   if(!MP.on||msg.sameTab)return;const d=msg.data;if(!d||d.r!==MP.rg||MP.rg<0||msg.peer!==MP.host||!Array.isArray(d.l))return;
   const now=performance.now(),seen={};
-  for(const q of d.l){if(!Array.isArray(q))continue;const [id,key,lv,x,z,ry,h,al,tr,sh,zt]=q;if(typeof id!=='string'||id.length>24||!EN[key]||typeof x!=='number'||typeof z!=='number'||!isFinite(x)||!isFinite(z))continue;
+  for(const q of d.l){if(!Array.isArray(q))continue;const [id,key,lv,x,z,ry,h,al,tr,sh,zt,cs]=q;if(typeof id!=='string'||id.length>24||!EN[key]||typeof x!=='number'||typeof z!=='number'||!isFinite(x)||!isFinite(z))continue;
     seen[id]=1;let e=MP.emap[id];if(e&&(e.dead||enemies.indexOf(e)<0)){delete MP.emap[id];e=null}
     if(!e){if(MP.dead[id]||Math.hypot(x-pl.position.x,z-pl.position.z)>70)continue;
       MP.mkTr=typeof tr==='string'?tr:'';try{e=spawnEnemy(key,x,z,Math.max(1,Math.min(MAXLV,lv|0)),{al:!!al,zt:zt|0||undefined})}finally{MP.mkTr=undefined}
       if(!e)continue;e.nid=id;e.mir=1;MP.emap[id]=e;e.m.rotation.y=+ry||0}
-    e.nx=x;e.nz=z;e.nry=+ry||0;e.mst=now;e.sh=Math.max(0,+sh||0);
+    e.nx=x;e.nz=z;e.nry=+ry||0;e.mst=now;if(typeof cs236Mir=='function')cs236Mir(e,cs);e.sh=Math.max(0,+sh||0);
     const hh=Math.max(0,Math.min(M(e.c),+h||0));e.c.h=now-(e.lhT||0)<600?Math.min(e.c.h,Math.max(1,hh)):Math.max(1,hh);
     if(Math.hypot(e.m.position.x-pl.position.x,e.m.position.z-pl.position.z)>30){e.m.position.x=x;e.m.position.z=z}}
   for(const id in MP.emap){const e=MP.emap[id];if(e.mir&&!seen[id]&&now-(e.mst||0)>1500){if(!e.dead)removeE(e);delete MP.emap[id]}}

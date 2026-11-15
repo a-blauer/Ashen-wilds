@@ -170,3 +170,5 @@ v232|3150-|3050-|1970-: v232_endings.py v232_coop.py v232_wardens.py
 4081|v233-amulet|2115|2790|mdamulet: v233_amulet.py v137_items.py
 # v235 no level penalty on damage dealt; the gentler XP curve past level 10
 v235|0110-|0120-|needH|rollHero|compHit: v235_tune.py v96_econ.py
+# v236 co-op difficulty (enemy health by player count) and the Unsealing's targets
+4090|v236|cs236|0520-|3733|3283: v236_coop_scale.py v205_unsealing.py v205_coop.py v165_coop.py

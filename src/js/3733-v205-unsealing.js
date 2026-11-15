@@ -138,7 +138,8 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   // the eclipse (III): dark for a while
   E.ecl=q===2&&k<.68?1:0;
   // the court (host): keep the mix coming, faster as it goes
-  if(host){E.sp-=dt;const cap=(typeof co151On=='function'&&co151On())?US205.capC:US205.cap;if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k);const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
+  if(host){E.sp-=dt;const cap=((typeof co151On=='function'&&co151On())?US205.capC:US205.cap)+(typeof cs236EvCap=='function'?cs236EvCap(1):0);if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k)*(typeof cs236EvRate=='function'?cs236EvRate():1);   // v236: more, sooner, per extra player (4090)
+    const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
         let n=1+Math.floor(Math.random()*(1.4+k*2.2));for(let j=0;j<n&&alive+j<cap;j++){let u=Math.random()*tot,kind=mix[0][0];for(const m of mix){u-=m[1];if(u<=0){kind=m[0];break}}
           if(kind==='siph'&&us205Count('siph')>=(q>=3?3:2))kind='vamp';if(kind==='mist'&&us205Count('mist')>=4)kind='bloodbat';us205Spawn(kind)}}}
     // the Gate-Breaker comes once, at the start of IV
