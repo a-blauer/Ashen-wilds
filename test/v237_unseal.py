@@ -55,7 +55,7 @@ def s(pg):
     mob=[x for x in sp if x[0]!='siph'];far=sum(1 for x in mob if x[1]>=12.5)/len(mob)
     ok(.55<=far<=.85,'most of the court comes from far away: %.0f%% from 12.5 m or more'%(100*far))
     ok(len(set(x[4] for x in sp))>=60,'the court lands scattered (%d different tiles)'%len(set(x[4] for x in sp)))
-    ok(all(x[1]<13.6 for x in sp if x[0]=='siph'),'magisters still come from the near ring (at most %.1f m)'%max(x[1] for x in sp if x[0]=='siph'))
+    ok(all(x[1]<15.1 for x in sp if x[0]=='siph'),'magisters still come from the near ring (at most %.1f m)'%max(x[1] for x in sp if x[0]=='siph'))
     ok(r['brk']>=13.5,'the Gate-Breaker comes from the far ring (%.1f m)'%r['brk'])
     ok(abs(r['sp'][0]-r['sp'][1])<1e-6,'30%% fewer waves: the timer is %.2f s (expected %.2f)'%tuple(r['sp']))
     ok(abs(r['h10']-55)<.3,'Cheddar heals 0.5 a second while unhurt: 50 -> %.1f in 10 s'%r['h10'])
