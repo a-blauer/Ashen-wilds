@@ -25,7 +25,14 @@ JS=r"""async(step)=>{const out={},errs=[];const oe=console.error;console.error=(
   if(step==='start'){CHEAT.god=true;hero.hp=heroMax();ch205Talk();const b=$('xwF').querySelector('[data-ch205="begin"]');out.begin=!!b;if(b)b.click();const E=US205.E;out.E=!!E;
     tick(6);out.go=E&&E.go;out.pose=CH205.pose;const c=ch205Spots().circ;out.dC=+Math.hypot(CH205.g.position.x-c.x,CH205.g.position.z-c.z).toFixed(2);out.dark=+US205.dk.toFixed(2);out.moon=!!(US205.moon&&US205.moon.g.visible);
     at(F.reach-9,-5);for(let i=0;i<6;i++){tick(1.2);await wait(400)}out.court=us205Alive();out.forC=enemies.filter(e=>e.us205&&!e.dead&&e.usK).length;
-    const h0=E.hp,s=enemies.find(e=>e.us205&&!e.dead);if(s){s.usK=1;const tg=eTarget(s,s.m,9);out.proxy=!!(tg&&tg.us205K);hitTarget(s,tg,1)}out.dHp=+(h0-E.hp).toFixed(2);
+    const h0=E.hp,s=enemies.find(e=>e.us205==='thrall'&&!e.dead)||enemies.find(e=>e.us205&&!e.dead);
+    // v236: every thrall / bat may go for Cheddar, and goes for whoever is nearest (the hero stands far from the circle here)
+    out.all=enemies.filter(e=>!e.dead&&(e.us205==='thrall'||e.us205==='bat')).every(e=>e.usK===1);
+    if(s){const K=CH205.g.position,P=pl.position,p0=s.m.position.clone();s.usK=1;s.tgI=null;s.tg150=null;
+      s.usOn=null;s.m.position.set(K.x+1.2,K.y,K.z);const tg=eTarget(s,s.m,Math.hypot(P.x-s.m.position.x,P.z-s.m.position.z));out.proxy=!!(tg&&tg.us205K);
+      s.usOn=null;s.m.position.set(P.x+1.2,P.y,P.z);const t2=eTarget(s,s.m,1.2);out.near=!!(t2&&!t2.us205K);out.dCh=+Math.hypot(P.x-K.x,P.z-K.z).toFixed(1);
+      out.step=[ePick(s,['miststep']),MSET.vamp.includes('miststep')];s.bu=0;s.buN=9;out.step2=ePick(s,['strike','miststep']);
+      s.m.position.copy(p0);s.usOn=null;hitTarget(s,tg,1)}out.dHp=+(h0-E.hp).toFixed(2);
     out.hud=!!document.getElementById('us205H')&&document.getElementById('us205H').style.display!='none';out.trk=JSON.stringify((SP152.trk.citadel(curIns())||{}).lines||[]);out.t=+E.t.toFixed(1);out.errs=errs;return out}
   if(step==='siph'){const E=US205.E;E.hp=US205.hpM;E.t=US205.T*.3;tick(.2);const s=us205Spawn('siph');out.siph=!!s;s.usS.to={x:s.m.position.x,z:s.m.position.z};eTickAll(.5);out.st=s.usS.st;tick(.2);out.siN=E.siN;out.teth=US205T.length;
     const t0=E.t,h0=E.hp;tick(2);out.stall=+(E.t-t0).toFixed(2);out.drain=+(h0-E.hp).toFixed(2);hurt(s,1e9,{col:0xffffff},false);tick(.3);out.siN2=E.siN;out.teth2=US205T.filter(t=>t.m.visible).length;const t1=E.t;tick(1);out.go2=+(E.t-t1).toFixed(2);
@@ -71,6 +78,8 @@ def s(pg):
     if st['dark']<.3 or not st['moon']:F('the sky did not darken / no moon: %s'%st)
     if st['court']<3:F('the court did not come (%s)'%st['court'])
     if not st['proxy'] or st['dHp']<=0:F('the court cannot hurt Cheddar: %s'%st)
+    if not st.get('all') or not st.get('near') or st.get('dCh',0)<4:F('v236: a thrall next to the hero (%.1f m from Cheddar) should go for the hero, and every thrall / bat may go for Cheddar: %s'%(st.get('dCh',0),st))
+    if st.get('step')!=[None,True] or st.get('step2')!='strike':F('v236: the court\'s thralls must not Mist Step (alone %s, with strike %s)'%(st.get('step'),st.get('step2')))
     if not st['hud'] or 'Protect Cheddar' not in st['trk']:F('no HUD / tracker for the unbinding: %s'%st)
     sp=R['siph']
     if not sp['siph'] or sp['st']!='drain' or sp['siN']!=1 or sp['teth']!=1:F('the siphon did not tether Cheddar: %s'%sp)

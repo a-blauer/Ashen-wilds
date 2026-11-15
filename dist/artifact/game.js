@@ -69542,8 +69542,10 @@ CQ205L.push(()=>{if(CH205.g){CH205.to=null;ch205Sync()}});
 //                                otherwise the blow falls on Cheddar (and you, if you are in it). The last 20 s, "the seal
 //                                screams": Nightwing Dives, lanes of bats from the edge to Cheddar: stand in a lane to take the
 //                                swarm yourself, or it tears into him.
-//    About half of the thralls / bats / stalkers go for Cheddar (a proxy target beside him, the rf165 way); hit one and it may turn
-//    on you. Cheddar's Ward Flare (every US205.flare s) throws back and stuns whatever is at him. Inside his circle the light burns
+//    v236 (owner, Nov 15 2026: "all enemies directly target cheddar from when they spawn … the player cant prevent those"):
+//    thralls and bats go for whoever is nearest: a hero, a companion or Cheddar (a proxy target beside him, the rf165 way;
+//    us205Near), so standing in their way draws them; thralls do not Mist Step during the event. Stalkers and the Gate-Breaker
+//    still make for Cheddar. Hit one that is on Cheddar and it may turn on you for good. Cheddar's Ward Flare (every US205.flare s) throws back and stuns whatever is at him. Inside his circle the light burns
 //    them: they take +25% damage there (US205.ward).
 //  * Fail: Cheddar falls (0 health): the rings knit back, the court melts into mist, he gets up after a while ('fell': speak with
 //    him to try again; the keys stay in the bowls). Leaving, recalling or dying (solo) stops it quietly.
@@ -69621,7 +69623,7 @@ function us205Spawn(kind,at){const L=us205Spots(),p=at||L[Math.floor(Math.random
   e.us205=kind==='vamp'?'thrall':kind==='bloodbat'?'bat':kind;e.agg=1;e.hunt=1;e.usP=new THREE.Object3D();e.usP.us205K=1;
   // the swarm is many and weak; the specials are sturdier
   const hk=e.us205==='thrall'?.55:e.us205==='bat'?.45:e.us205==='siph'?.8:e.us205==='mist'?.7:2.6;try{e.c.st.hp*=hk;e.c.h=Math.max(1,Math.round(M(e.c)))}catch(_){}
-  e.usK=e.us205==='bat'?(Math.random()<.7?1:0):e.us205==='thrall'?(Math.random()<.5?1:0):0;
+  e.usK=e.us205==='bat'||e.us205==='thrall'?1:0;   // v236: may go for Cheddar (when he is the nearest, us205Near); was a 70% / 50% roll for Cheddar only
   if(e.us205==='siph'){e.usS={st:'walk',t:0,to:us205SiphSpot()};e.c.n='Blood Siphoner'}
   if(e.us205==='mist'){e.usM={st:'mist',t:0};e.c.n='Mist Stalker';e.m.visible=false;if(e.hb)e.hb.visible=false;e.usK=1}
   if(e.us205==='brk'){e.usB={st:'march',t:0,cd:2};e.c.n='Ser Morvaine, the Gate-Breaker';try{e.m.scale.multiplyScalar(1.3)}catch(_){}e.usK=1}
@@ -69733,8 +69735,18 @@ function us205Sky(dt,t){const E=US205.E,here=cq205Here(0),M=US205.moon;const wan
       const fc=US205.fc||(US205.fc=new THREE.Color(0x1a0206));scene.fog.color.lerp(fc,.75*d);scene.background=scene.fog.color;scene.fog.density*=1+.35*d;
       try{const su=SKY.material.uniforms;su.top.value.lerp(fc,.85*d);su.hor.value.lerp(fc,.75*d)}catch(_){}}}catch(_){}return r}}
 // ---------------- hooks ----------------
-// half of them go for Cheddar: a proxy target beside him
-{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.us205&&e.usK&&US205.E&&CH205.g){const K=CH205.g.position,dx=m.position.x-K.x,dz=m.position.z-K.z,L=Math.hypot(dx,dz)||1;e.usP.position.set(K.x+dx/L*.9,K.y,K.z+dz/L*.9);return e.usP}return f.apply(this,arguments)}}
+// Cheddar as a target: a proxy beside him. Stalkers and the Gate-Breaker always go for him; v236: thralls and bats go for the
+// nearest of the heroes, the companions (whatever the game's own choice `tg` is) and Cheddar. US205.keep m of stickiness so
+// one does not flip between two targets at the same distance. Returns true when Cheddar is the one.
+US205.keep=1.5;
+function us205Near(e,m,dpl,tg,L){if(e.us205!=='thrall'&&e.us205!=='bat')return true;
+  let d=1e9;if(tg===pl){if(hero.hp>0)d=dpl}else if(tg&&tg.position)d=Math.hypot(tg.position.x-m.position.x,tg.position.z-m.position.z);
+  const on=e.usOn==null?L<d:e.usOn?L<d+US205.keep:L<d-US205.keep;e.usOn=on?1:0;return on}
+{const f=eTarget;eTarget=function(e,m,dpl){if(e&&e.us205&&e.usK&&US205.E&&CH205.g){const K=CH205.g.position,dx=m.position.x-K.x,dz=m.position.z-K.z,L=Math.hypot(dx,dz)||1;
+    let tg=null;if(e.us205==='thrall'||e.us205==='bat')tg=f.apply(this,arguments);
+    if(us205Near(e,m,dpl,tg,L)){e.usP.position.set(K.x+dx/L*.9,K.y,K.z+dz/L*.9);return e.usP}return tg}return f.apply(this,arguments)}}
+// v236 (owner: "have the thralls teleport attack not work during this event"): no Mist Step for the court's thralls
+{const f=ePick;ePick=function(e,ok){if(e&&e.us205&&US205.E){ok=ok.filter(n=>n!=='miststep');if(!ok.length)return null}return f.call(this,e,ok)}}
 {const f=hitTarget;hitTarget=function(e,tg,mult,mt){if(tg&&tg.us205K){const E=US205.E;if(!E||!us205Host())return;const d=(e&&e.us205==='bat'?1.1:1.5)*(mult||1);E.hp-=d;CH205.hit=.3;
     if(CH205.g)burst(gY(CH205.g.position,.6),0xff3a3a,6,.8,.8,.4);return}return f.apply(this,arguments)}}
 {const f=hurt;hurt=function(e,d,s,crit,dot){if(e&&e.us205){if(e.us205==='mist'&&e.usM&&e.usM.st!=='hunt')return;
