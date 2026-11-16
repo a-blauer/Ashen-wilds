@@ -75314,7 +75314,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 html body.kq .modal.w{background:radial-gradient(ellipse at 50% 45%,rgba(8,6,4,.5),rgba(3,2,1,.84))}
 html body.kq .win{--kq-ink:#2a2118;--kq-ink2:#3a2e20;--kq-mut:#54473a;--kq-dim:#6e604c;--kq-gold:#8a5a12;--kq-gold2:#7a2a1a;--kq-bronze:#6a4a22;--kq-good:#3a6a30;--kq-bad:#9a2a1a;--kq-mana:#2c5484;
   --kq-line:rgba(58,44,28,.22);--kq-line2:rgba(58,44,28,.42);--ink:#2a2118;--mut:#54473a;--acc:#8c2f1f;--gold:#8a5a12;--line:rgba(58,44,28,.22);--lg-red:#8c2f1f;--lg-rule:rgba(58,44,28,.5);
-  background:${LG222.circle} right -70px bottom -80px/280px 280px no-repeat,${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#dccba4 0%,#cdb98e 46%,#b29a6c 100%) no-repeat;background-blend-mode:normal,multiply,normal;
+  background:${LG222.stain} center/100% 100% no-repeat,radial-gradient(130% 110% at 28% 16%,#dccba4 0%,#cdb98e 46%,#b29a6c 100%) no-repeat;background-blend-mode:multiply,normal;   /* v238: no alchemist's circle (owner: "remove the large rune symbol on the bottom right of the menus") */
   border:0;border-image:none;border-radius:2px;color:#2a2118;font-family:'EB Garamond',Georgia,'Times New Roman',serif;font-size-adjust:.5;
   box-shadow:0 0 0 1px #4a3826,0 0 0 5px #1c140c,0 0 0 6px #6a4e2c,0 26px 64px rgba(0,0,0,.7),inset 0 0 90px rgba(92,64,30,.42)}
 html body.kq .win::before{display:none}
@@ -75328,6 +75328,12 @@ html body.kq .win .wh h2,html body.kq.psx .win .wh h2#xwT{font:400 1.5rem/1.1 'I
 html body.kq .win .wh h2::before,html body.kq .win .wh h2::after{display:none}
 html body.kq .win .wh h2::first-letter{color:var(--lg-red);font-size:1.32em}
 html body.kq .wsub,html body.kq .win .wsub{color:var(--kq-mut);font-style:italic;font-size:.82rem}
+html body.kq #fz .fsm-steps button{background:rgba(58,44,28,.07)!important;border:1px solid rgba(58,44,28,.32)!important;color:#3a2c1e!important;opacity:1!important;filter:none!important;text-shadow:none!important}   /* v238: the step tabs read on paper */
+html body.kq #fz .fsm-steps button b{background:transparent!important;color:#3a2c1e!important;border-color:rgba(58,44,28,.5)!important}
+html body.kq #fz .fsm-steps button:disabled:not(.on):not(.done){color:#6a5844!important;font-style:italic}html body.kq #fz .fsm-steps button:disabled:not(.on):not(.done) b{color:#6a5844!important;border-color:rgba(58,44,28,.3)!important}
+html body.kq #fz .fsm-steps button.on{background:linear-gradient(180deg,#5a3e22,#2e2013)!important;border-color:#8a6230!important;color:#f8dc98!important}html body.kq #fz .fsm-steps button.on b{background:#e6bf6a!important;color:#22160a!important;border-color:#fbe3a2!important}
+html body.kq #fz .fsm-steps button.done{background:rgba(62,90,42,.16)!important;border-color:rgba(62,90,42,.55)!important;color:#25401a!important}html body.kq #fz .fsm-steps button.done b{background:#3e5a2a!important;color:#e6ffd8!important;border-color:#7aa85a!important}
+html body.kq #fz .fsm-gs span{background:rgba(58,44,28,.08);border:1px solid rgba(58,44,28,.28)}html body.kq #fz .fsm-gs small{font-weight:600}   /* v238: was a dark box that washed out the stat name */
 html body.kq .win .wh .x{width:32px;height:32px;border-radius:47% 53% 50% 50%/52% 46% 54% 48%;border:0;background:radial-gradient(circle at 36% 30%,#c4553e,#8c2f1f 52%,#5e1a10);color:#f1dfc0;font-size:.78rem;text-shadow:0 1px 0 rgba(0,0,0,.4);
   box-shadow:0 1px 3px rgba(0,0,0,.5),inset 0 0 0 3px rgba(94,26,16,.55),inset 0 2px 2px rgba(255,200,170,.3);position:relative;z-index:4;flex:none}
 html body.kq .win .wh .x:hover{background:radial-gradient(circle at 36% 30%,#d9664c,#a03624 52%,#6e2014);color:#fff3dc;border:0}
@@ -75405,6 +75411,15 @@ html body.kq .win .ch139-pvw{background:radial-gradient(ellipse at 50% 68%,#3b32
 
 // ---------------- the ink pass ----------------
 function lg222Rgb(s){const m=/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?/.exec(s||'');if(!m)return null;let a=m[4]==null?1:(/%$/.test(m[4])?parseFloat(m[4])/100:+m[4]);return [+m[1],+m[2],+m[3],a]}
+// v238: contrast ratio (WCAG) and a colour of the same hue that reaches a contrast k against bg
+LG222.minK=3.6;LG222.fitK=4.5;
+function lg222RL(c){const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])}
+function lg222K(a,b){const x=lg222RL(a),y=lg222RL(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
+function lg222Fit(c,bg,k){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;const l0=(mx+mn)/2,s=d?d/(1-Math.abs(2*l0-1)):0;
+  if(d){h=mx==r?((g-b)/d)%6:mx==g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360}
+  const rgb=l=>{const C=(1-Math.abs(2*l-1))*s,X=C*(1-Math.abs((h/60)%2-1)),m=l-C/2;let q=h<60?[C,X,0]:h<120?[X,C,0]:h<180?[0,C,X]:h<240?[0,X,C]:h<300?[X,0,C]:[C,0,X];return q.map(v=>Math.round((v+m)*255))};
+  const dark=lg222RL(bg)>.18;let l=l0;for(let i=0;i<60;i++){l=dark?Math.max(0,l-.015):Math.min(1,l+.015);if(lg222K(rgb(l),bg)>=k||l<=0||l>=1)break}
+  const o=rgb(l);return 'rgb('+o[0]+','+o[1]+','+o[2]+')'}
 function lg222Lum(c){return (.2126*c[0]+.7152*c[1]+.0722*c[2])/255}
 function lg222Over(b,c){const a=c[3];return [b[0]+(c[0]-b[0])*a,b[1]+(c[1]-b[1])*a,b[2]+(c[2]-b[2])*a]}
 // a light colour as ink of the same hue
@@ -75430,7 +75445,11 @@ function lg222Walk(el,bg,depth){if(depth>40)return;const bg0=bg;const tag=el.tag
   let txt=false;for(let n=el.firstChild;n;n=n.nextSibling){if(n.nodeType===3&&n.nodeValue.trim()){txt=true;break}}
   if(txt||el.childElementCount===0){const c=lg222Rgb(cs.color);if(c){const lb=lg222Lum(bg),lc=lg222Lum(c);
       if(lb>.42&&lc>.42){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color=lg222ToInk(c);LG222.fix.add(el)}
-      else if(lb<.3&&lc<.3){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color='#eadfc6';LG222.fix.add(el)}}}
+      else if(lb<.3&&lc<.3){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color='#eadfc6';LG222.fix.add(el)}
+      // v238 (owner: "some ui text is extremely hard to read … check and make sure this isnt a problem in any other menus"): text on a
+      // mid-tone plate fell between the two rules above. Anything still under LG222.minK contrast is darkened (on a light plate) or
+      // lightened (on a dark one) in its own hue until it reaches LG222.fitK.
+      if(c[3]>=.5){const c2=lg222Rgb(getComputedStyle(el).color)||c;if(lg222K(c2,bg)<LG222.minK){if(el._lg0===undefined)el._lg0=el.style.color||'';el.style.color=lg222Fit(c2,bg,LG222.fitK);LG222.fix.add(el)}}}}
   for(let c=el.firstElementChild;c;c=c.nextElementSibling)lg222Walk(c,bg,depth+1)}
 function lg222Kick(){if(!LG222.raf)LG222.raf=requestAnimationFrame(lg222Ink)}
 try{new MutationObserver(recs=>{for(const r of recs){const t=r.target;if(t&&t.closest&&t.closest('.modal,#cd213w,#gm218w')){lg222Kick();return}}})
@@ -80876,7 +80895,7 @@ function cs236EvRate(){return 1/(1+CS236.evS*cs236Live())}
 // ================= v237 the Unsealing, easier (owner, Nov 15 2026) =================
 // "The unsealing quest is too hard. Reduce spawn rates by 30%, make them spawn more scattered and have most spawn farther away and
 //  make cheddar's health regen slowly. enemies are also getting stuck in the corner next to the sealed gate."
-//  * Spawn rate: the time between waves ×US205.spK (1/0.7: 30% fewer spawns a minute; 3733's us205Tick reads it).
+//  * Spawn rate: the time between waves ×US205.spK (1/0.49 since v238: two 30% cuts, 49% of the old spawns a minute; 3733's us205Tick reads it).
 //  * Where they come from: the six old mist pools sat on the gate side of the clearing, two in the narrow neck beside the gate
 //    towers. Now (us205Spots, replaced) a near ring of six pools, 8.5–12 m from Cheddar, spread over the road side and never in
 //    the gate's neck (local a ≤ F.reach − US237.gate), and (us205Far) a far ring of up to ten points 14–22 m out on the road side.
@@ -80892,7 +80911,8 @@ function cs236EvRate(){return 1/(1+CS236.evS*cs236Live())}
 // Co-op: the host spawns and moves the court (3760: partners' copies follow its positions) and owns Cheddar's health, so a
 // partner sees the same.
 var US237={gate:7,far:.7,sc:3,st:.25,stT:1.5,dT:.9,dsp:1.7,near:1.9,err:0};   // near: closer than this to its target counts as arrived (thralls and bats fight from ~1.3 m)
-US205.spK=1/0.7;US205.rg=.5;US205.rgW=4;
+US205.spK=1/(0.7*0.7);   // v238 (owner, Nov 15 2026: "Reduce enemy spawns during the unsealing by an additional 30% during the phase spawns"): 0.7 × 0.7 = 49% of the v236 rate
+US205.rg=.5;US205.rgW=4;
 // open ground with room round it: every tile within r m (plus the walker's body) open, inside this instance, not in the cliffs
 function us237Room(x,z,r){const F=cq205F(0);for(let dx=-r;dx<=r+1e-6;dx+=.5)for(let dz=-r;dz<=r+1e-6;dz+=.5){if(dx*dx+dz*dz>r*r+1e-6)continue;
     const X=Math.round(x+dx),Z=Math.round(z+dz);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;if(solid(X,Z))return false;const J=insAt(X,Z);if(!J||J.g!==F.I.g)return false;if(MAP.DW[Z*W+X]>-1.3)return false}

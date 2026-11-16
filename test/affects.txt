@@ -174,3 +174,5 @@ v235|0110-|0120-|needH|rollHero|compHit: v235_tune.py v96_econ.py
 4090|v236|cs236|0520-|3733|3283: v236_coop_scale.py v205_unsealing.py v205_coop.py v165_coop.py
 # v237 the Unsealing eased: spawn points, wave timer, Cheddar heals, stuck creatures
 4091|v237|3733|3732|3731: v237_unseal.py v205_unsealing.py v205_coop.py
+# v238 menu text contrast (the ink pass fits low-contrast text), no rune circle, fusion chips and steps
+3950|v238|lg222|1780-|0210-: v238_ui.py v222_ledger.py v100_fusemenu.py

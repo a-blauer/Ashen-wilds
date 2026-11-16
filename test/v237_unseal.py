@@ -20,7 +20,7 @@ JS=r"""async()=>{const o={};const F=cq205F(0),R=ch205Spots(),c=R.circ,Lc=(x,z)=>
  for(let i=0;i<240;i++){const k=['vamp','bloodbat','mist','siph'][i%4];const e=us205Spawn(k);if(!e)continue;const p=e.m.position;got.push([k,Math.hypot(p.x-c.x,p.z-c.z),Lc(p.x,p.z)[0],us237Free(p)?1:0,Math.round(p.x)+','+Math.round(p.z)]);removeE(e)}
  o.spawn=got;const bk=us205Spawn('brk');o.brk=bk?Math.hypot(bk.m.position.x-c.x,bk.m.position.z-c.z):0;if(bk)removeE(bk);
  // the wave timer is 30% longer
- E.sp=0;const k=Math.min(1,E.t/US205.T);us205Tick(1/30,T);o.sp=[E.sp,Math.max(.7,2.4-1.4*k)/0.7];E.sp=keep;
+ E.sp=0;const k=Math.min(1,E.t/US205.T);us205Tick(1/30,T);o.sp=[E.sp,Math.max(.7,2.4-1.4*k)/0.49];E.sp=keep;
  // Cheddar heals while unhurt and unsiphoned; a hit stops it for 4 s
  enemies.filter(e=>e.us205).forEach(e=>removeE(e));E.sp=99;const tk=s=>{for(let i=0;i<Math.round(s*30);i++){T+=33;us205Tick(1/30,T);E.sp=99}};
  E.hp=50;E.lhp=50;E.rgT=0;tk(10);o.h10=E.hp;E.hp-=5;const h1=E.hp;tk(3);o.hurtGap=E.hp-h1;tk(4);o.after=E.hp-h1;
@@ -57,7 +57,7 @@ def s(pg):
     ok(len(set(x[4] for x in sp))>=60,'the court lands scattered (%d different tiles)'%len(set(x[4] for x in sp)))
     ok(all(x[1]<15.1 for x in sp if x[0]=='siph'),'magisters still come from the near ring (at most %.1f m)'%max(x[1] for x in sp if x[0]=='siph'))
     ok(r['brk']>=13.5,'the Gate-Breaker comes from the far ring (%.1f m)'%r['brk'])
-    ok(abs(r['sp'][0]-r['sp'][1])<1e-6,'30%% fewer waves: the timer is %.2f s (expected %.2f)'%tuple(r['sp']))
+    ok(abs(r['sp'][0]-r['sp'][1])<1e-6,'49%% of the old waves (two 30%% cuts): the timer is %.2f s (expected %.2f)'%tuple(r['sp']))
     ok(abs(r['h10']-55)<.3,'Cheddar heals 0.5 a second while unhurt: 50 -> %.1f in 10 s'%r['h10'])
     ok(abs(r['hurtGap'])<.01 and r['after']>0,'a hit stops the healing for 4 s, then it goes on (%.2f after 3 s, %.2f after 7 s)'%(r['hurtGap'],r['after']))
     ok(not r['in0'] and r['in1'],'a creature inside a blocked tile gets back onto open ground (%s -> %s)'%(r['in0'],r['in1']))

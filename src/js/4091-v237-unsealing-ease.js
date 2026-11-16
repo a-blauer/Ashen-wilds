@@ -1,7 +1,7 @@
 // ================= v237 the Unsealing, easier (owner, Nov 15 2026) =================
 // "The unsealing quest is too hard. Reduce spawn rates by 30%, make them spawn more scattered and have most spawn farther away and
 //  make cheddar's health regen slowly. enemies are also getting stuck in the corner next to the sealed gate."
-//  * Spawn rate: the time between waves ×US205.spK (1/0.7: 30% fewer spawns a minute; 3733's us205Tick reads it).
+//  * Spawn rate: the time between waves ×US205.spK (1/0.49 since v238: two 30% cuts, 49% of the old spawns a minute; 3733's us205Tick reads it).
 //  * Where they come from: the six old mist pools sat on the gate side of the clearing, two in the narrow neck beside the gate
 //    towers. Now (us205Spots, replaced) a near ring of six pools, 8.5–12 m from Cheddar, spread over the road side and never in
 //    the gate's neck (local a ≤ F.reach − US237.gate), and (us205Far) a far ring of up to ten points 14–22 m out on the road side.
@@ -17,7 +17,8 @@
 // Co-op: the host spawns and moves the court (3760: partners' copies follow its positions) and owns Cheddar's health, so a
 // partner sees the same.
 var US237={gate:7,far:.7,sc:3,st:.25,stT:1.5,dT:.9,dsp:1.7,near:1.9,err:0};   // near: closer than this to its target counts as arrived (thralls and bats fight from ~1.3 m)
-US205.spK=1/0.7;US205.rg=.5;US205.rgW=4;
+US205.spK=1/(0.7*0.7);   // v238 (owner, Nov 15 2026: "Reduce enemy spawns during the unsealing by an additional 30% during the phase spawns"): 0.7 × 0.7 = 49% of the v236 rate
+US205.rg=.5;US205.rgW=4;
 // open ground with room round it: every tile within r m (plus the walker's body) open, inside this instance, not in the cliffs
 function us237Room(x,z,r){const F=cq205F(0);for(let dx=-r;dx<=r+1e-6;dx+=.5)for(let dz=-r;dz<=r+1e-6;dz+=.5){if(dx*dx+dz*dz>r*r+1e-6)continue;
     const X=Math.round(x+dx),Z=Math.round(z+dz);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;if(solid(X,Z))return false;const J=insAt(X,Z);if(!J||J.g!==F.I.g)return false;if(MAP.DW[Z*W+X]>-1.3)return false}
