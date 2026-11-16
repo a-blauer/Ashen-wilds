@@ -11,7 +11,7 @@ function mkC(n,l,f,v,iv){const c=mkC_base(n,l,f,v,iv);ivFix(c);c.h=M(c);return c
 // creature stats: each stat uses its own roll; fusion growth raises the per-level gain
 function cStat(c,k){
   if(c.st)return c.st[k];
-  const n=c.g[0],F=FAMD[famOf(n)],t=tierSp(n),TM=1+.55*(t-1),GM=1+.2*(t-1);
+  const n=c.g[0],F=FAMD[famOf(n)],t=tierSp(n),TM=1+.55*(t-1),GM=1;   // v239 (owner, Nov 16 2026: "Make each tier gain the same amount per level"): was GM=1+.2*(t-1); the tier still raises the starting stats (TM). Enemies carry their own c.st, so only companions change
   let v=(CBS[k]*TM+CGS[k]*GM*((c.l||1)-1)*(1+(c.gs||0)))*F.w[k];
   v*=ivOf(c,k);
   {const sm=typeof SPM!='undefined'&&SPM[n];if(sm&&sm[k])v*=sm[k]}

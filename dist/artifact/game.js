@@ -5486,7 +5486,7 @@ function mkC(n,l,f,v,iv){const c=mkC_base(n,l,f,v,iv);ivFix(c);c.h=M(c);return c
 // creature stats: each stat uses its own roll; fusion growth raises the per-level gain
 function cStat(c,k){
   if(c.st)return c.st[k];
-  const n=c.g[0],F=FAMD[famOf(n)],t=tierSp(n),TM=1+.55*(t-1),GM=1+.2*(t-1);
+  const n=c.g[0],F=FAMD[famOf(n)],t=tierSp(n),TM=1+.55*(t-1),GM=1;   // v239 (owner, Nov 16 2026: "Make each tier gain the same amount per level"): was GM=1+.2*(t-1); the tier still raises the starting stats (TM). Enemies carry their own c.st, so only companions change
   let v=(CBS[k]*TM+CGS[k]*GM*((c.l||1)-1)*(1+(c.gs||0)))*F.w[k];
   v*=ivOf(c,k);
   {const sm=typeof SPM!='undefined'&&SPM[n];if(sm&&sm[k])v*=sm[k]}
@@ -80965,3 +80965,8 @@ function us237Unstick(e,dt,now){if(e.us205==='mist'&&e.usM&&e.usM.st!=='hunt')re
 {const f=eTick;eTick=function(e,dt,now){try{if(e&&e.us205&&!e.dead&&!e.mir&&US205.E&&dt>0)us237Unstick(e,dt,now)}catch(err){if(!US237.err++)console.warn('v237 unstick',err)}return f.apply(this,arguments)}}
 // the far points get mist pools too (the court rises out of them)
 {const f=us205MistMake;us205MistMake=function(){if(US205.mist.length)return f.apply(this,arguments);const o=us205Spots();us205Spots.c=o.concat(us205Far());try{return f.apply(this,arguments)}finally{us205Spots.c=o}}}
+// ================= v239 every companion tier gains the same per level (owner, Nov 16 2026) =================
+// "Make each tier gain the same amount per level": cStat's growth multiplier GM is 1 for every tier (0210; was 1 + 0.2 per tier above 1).
+// The tier still raises the starting stats (TM, 1 + 0.55 per tier). Enemies carry their own c.st and never use this formula.
+// A companion saved before v239 can carry more health than its new maximum: trim it when the game loads.
+{const f=loadGame;loadGame=function(){const r=f.apply(this,arguments);try{(party||[]).forEach(c=>{if(c&&c.g&&!c.st&&c.h>M(c))c.h=M(c)})}catch(e){console.warn('v239 load',e)}return r}}
