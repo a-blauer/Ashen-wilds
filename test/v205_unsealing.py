@@ -34,7 +34,7 @@ JS=r"""async(step)=>{const out={},errs=[];const oe=console.error;console.error=(
       out.step=[ePick(s,['miststep']),MSET.vamp.includes('miststep')];s.bu=0;s.buN=9;out.step2=ePick(s,['strike','miststep']);
       s.m.position.copy(p0);s.usOn=null;hitTarget(s,tg,1)}out.dHp=+(h0-E.hp).toFixed(2);
     out.hud=!!document.getElementById('us205H')&&document.getElementById('us205H').style.display!='none';out.trk=JSON.stringify((SP152.trk.citadel(curIns())||{}).lines||[]);out.t=+E.t.toFixed(1);out.errs=errs;return out}
-  if(step==='siph'){const E=US205.E;E.hp=US205.hpM;E.t=US205.T*.3;tick(.2);const s=us205Spawn('siph');out.siph=!!s;s.usS.to={x:s.m.position.x,z:s.m.position.z};eTickAll(.5);out.st=s.usS.st;tick(.2);out.siN=E.siN;out.teth=US205T.length;
+  if(step==='siph'){const E=US205.E;E.hp=US205.hpM;E.t=US205.T*.3;tick(.2);const s=us205Spawn('siph');out.siph=!!s;s.usS.to={x:s.m.position.x,z:s.m.position.z};eTickAll(.5);out.chan=s.usS.st;eTickAll(US205.siC+.2);out.st=s.usS.st;tick(.2);   /* v240: a channel first */ out.siN=E.siN;out.teth=US205T.length;
     const t0=E.t,h0=E.hp;tick(2);out.stall=+(E.t-t0).toFixed(2);out.drain=+(h0-E.hp).toFixed(2);hurt(s,1e9,{col:0xffffff},false);tick(.3);out.siN2=E.siN;out.teth2=US205T.filter(t=>t.m.visible).length;const t1=E.t;tick(1);out.go2=+(E.t-t1).toFixed(2);
     out.rings=gg205RingsUp();out.errs=errs;return out}
   if(step==='eclipse'){const E=US205.E;E.t=US205.T*.52;tick(3);out.ecl=E.ecl;out.dk=+US205.dk.toFixed(2);out.moonEc=+US205.moon.ec.toFixed(2);out.rings=gg205RingsUp();
@@ -42,8 +42,8 @@ JS=r"""async(step)=>{const out={},errs=[];const oe=console.error;console.error=(
   if(step==='breaker'){const E=US205.E;E.hp=US205.hpM;E.t=US205.T*.76;tick(.5);let b=enemies.find(e=>e.us205==='brk'&&!e.dead);out.brk=!!b;if(!b){b=us205Spawn('brk')}
     const c=us205C();b.m.position.set(c.x+2,0,c.z);b.usB.cd=0;eTickAll(.2);out.wind=b.usB.st;const h0=b.c.h;hurt(b,Math.ceil(M(b.c)*.2),{col:0xffffff},false);eTickAll(.1);out.reel=b.usB.st;
     b.usB.st='march';b.usB.cd=0;b.m.position.set(c.x+2,0,c.z);eTickAll(.2);const hp0=E.hp;eTickAll(2.4);out.hitC=+(hp0-E.hp).toFixed(1);out.rings=gg205RingsUp();out.errs=errs;return out}
-  if(step==='dive'){const E=US205.E;enemies.filter(e=>e.us205).forEach(e=>removeE(e));E.sp=99;E.hp=US205.hpM;E.t=US205.T*.85;E.dive=null;us205Dive();const l=E.dive.lanes[0];toPos(l.x+Math.sin(l.a)*l.len*.5,l.z+Math.cos(l.a)*l.len*.5);const h0=E.hp,hh=hero.hp;CHEAT.god=false;hero.hp=heroMax();tick(2.3);out.shield=+(E.hp-h0).toFixed(1);CHEAT.god=true;
-    E.dive=null;us205Dive();at(-8,0);const h1=E.hp;tick(2.3);out.noShield=+(h1-E.hp).toFixed(1);out.errs=errs;return out}
+  if(step==='dive'){const E=US205.E;enemies.filter(e=>e.us205).forEach(e=>removeE(e));E.sp=99;E.hp=US205.hpM;E.t=US205.T*.85;E.dive=null;us205Dive();const l=E.dive.lanes[0];toPos(l.x+Math.sin(l.a)*l.len*.5,l.z+Math.cos(l.a)*l.len*.5);const h0=E.hp,hh=hero.hp;CHEAT.god=false;hero.hp=heroMax();tick(US205.dvT+.6);out.shield=+(E.hp-h0).toFixed(1);CHEAT.god=true;
+    E.dive=null;us205Dive();at(-8,0);const h1=E.hp;tick(US205.dvT+.6);out.noShield=+(h1-E.hp).toFixed(1);out.errs=errs;return out}
   if(step==='fall'){const E=US205.E;E.hp=0;tick(.3);out.E=!!US205.E;out.pose=CH205.pose;out.rings=gg205RingsUp();out.st=CQ205.c1.st;tick(3);out.left=us205Alive();tick(5);out.pose2=CH205.pose;
     ch205Talk();out.again=!!$('xwF').querySelector('[data-ch205="begin"]');closeX();out.errs=errs;return out}
   if(step==='win'){out.start=us205Start(true);tick(6);US205.E.t=US205.T-.05;tick(.5);out.E=!!US205.E;out.st=CQ205.c1.st;tick(7);out.open=GG205.S.open;out.doorRot=+GG205.S.doors[0].rotation.y.toFixed(2);
@@ -82,6 +82,7 @@ def s(pg):
     if st.get('step')!=[None,True] or st.get('step2')!='strike':F('v236: the court\'s thralls must not Mist Step (alone %s, with strike %s)'%(st.get('step'),st.get('step2')))
     if not st['hud'] or 'Protect Cheddar' not in st['trk']:F('no HUD / tracker for the unbinding: %s'%st)
     sp=R['siph']
+    if sp.get('chan')!='chan':F('v240: a siphoner channels before it drains: %s'%sp)
     if not sp['siph'] or sp['st']!='drain' or sp['siN']!=1 or sp['teth']!=1:F('the siphon did not tether Cheddar: %s'%sp)
     if sp['stall']>.01 or sp['drain']<=0:F('the siphon did not stall the seal / drain him: %s'%sp)
     if sp['siN2']!=0 or sp['go2']<.9:F('killing the siphoner did not free the seal: %s'%sp)
@@ -93,7 +94,8 @@ def s(pg):
     if b['wind']!='wind' or b['reel']!='reel':F('the Gate-Breaker cannot be interrupted: %s'%b)
     if b['hitC']<15:F('the Gate-Breaker’s blow did not land on Cheddar: %s'%b)
     d=R['dive']
-    if d['shield']<0 or d['noShield']<5:F('Nightwing dives: shielding / not shielding wrong: %s'%d)
+    if d['shield']<0 or d['noShield']<3:   # v240: a dive hits for 4 (was 7)
+       F('Nightwing dives: shielding / not shielding wrong: %s'%d)
     f=R['fall']
     if f['E'] or f['pose']!='down' or f['rings']!=4 or f['st']!=2:F('his fall did not end it and reseal: %s'%f)
     if f['left']!=0 or f['pose2']=='down' or not f['again']:F('the court did not melt / he did not rise to retry: %s'%f)

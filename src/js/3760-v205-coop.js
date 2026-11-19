@@ -36,19 +36,20 @@ function co205Ev(k){if(co151On())co205Send(['c5u',k])}
 function co205USync(now){const E=US205.E;if(!E||!co151On()||!co151Host()||now-CO205.tU<150)return;CO205.tU=now;const sl=[];(E.sl||[]).forEach(p=>sl.push(co205R(p.x),co205R(p.z)));
   co205Send(['c5ue',Math.round(E.t*10),Math.round(E.hp),E.go|0].concat(sl));
   // the specials' states, for partners' copies
-  enemies.forEach(e=>{if(!e.us205||e.dead||!e.nid)return;const st=e.us205==='mist'?(e.usM&&e.usM.st||''):e.us205==='brk'?(e.usB&&e.usB.st||''):'';if(!st)return;const k=e.nid+':'+st;if(e.co205k===k)return;e.co205k=k;co205Send(['c5us',e.nid,e.us205,st])})}
+  enemies.forEach(e=>{if(!e.us205||e.dead||!e.nid)return;const st=e.us205==='mist'?(e.usM&&e.usM.st||''):e.us205==='brk'?(e.usB&&e.usB.st||''):e.us205==='siph'?(e.usS&&e.usS.st||''):'';   /* v240: siphoners too (their channel ring) */ if(!st)return;const k=e.nid+':'+st;if(e.co205k===k)return;e.co205k=k;co205Send(['c5us',e.nid,e.us205,st])})}
 function co205OnU(q){if(co151Host()||!cq205Here(0)||hero.hp<=0||(typeof RV148!='undefined'&&RV148.down))return;let E=US205.E;if(!E){if(CQ205.c1.st!==2||!CH205.C)return;co205Rx(()=>us205Start(false));E=US205.E;if(!E)return}
   E.t=Math.max(0,(q[1]|0)/10);E.hp=Math.max(0,Math.min(US205.hpM,q[2]|0));if(q[3]&&!E.go&&!CH205.to){E.go=1;CH205.pose='cast'}const sl=[];for(let i=4;i+1<q.length;i+=2)if(isFinite(q[i])&&isFinite(q[i+1]))sl.push({x:+q[i],z:+q[i+1]});E.sl=sl}
 function co205OnUS(q){const e=MP.emap&&MP.emap[q[1]];if(!e)return;e.co205us=q[2]+':'+q[3];
-  if(q[2]==='mist'&&q[3]==='form'){svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},.9,{col:0xb01020})}
+  if(q[2]==='mist'&&q[3]==='form'){svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},US205.fmT,{col:0xb01020})}
+  if(q[2]==='siph'&&q[3]==='chan'){svWarn({k:'c',r:1.4},{x:e.m.position.x,z:e.m.position.z,a:0},US205.siC,{col:0xff2a3a})}   // v240
   if(q[2]==='brk'&&q[3]==='wind'){const c=us205C();if(c)svWarn({k:'c',r:2.4},{x:c.x,z:c.z,a:0},2.2,{col:0xd01808})}}
 // a partner's copy of a Mist Stalker hides while the host's is mist
 {const f=eTick;eTick=function(e,dt,now){if(e&&e.mir&&e.co205us){if(e.co205us==='mist:mist'||e.co205us==='mist:form'){e.m.visible=false;if(e.hb)e.hb.visible=false;if(Math.random()<.6)burst(gY(e.m.position,.4),0x7a0a16,1,.6,.6,.6)}}return f.apply(this,arguments)}}
 // the dives: lanes go out from the host; whoever stands in one takes the swarm and says so; the host hurts Cheddar only if no one did
 function co205Dive(lanes){if(!co151On()||!co151Host())return;const E=US205.E;if(!E||!E.dive)return;E.dive.id=(CO205.dvN=(CO205.dvN||0)+1);const l=['c5dv',E.dive.id];lanes.forEach(L=>l.push(co205R(L.x),co205R(L.z),co205R(L.a),co205R(L.len)));co205Send(l)}
 function co205OnDive(q){if(co151Host()||!US205.E)return;const lanes=[];for(let i=2;i+3<q.length;i+=4)lanes.push({x:+q[i],z:+q[i+1],a:+q[i+2],len:+q[i+3]});const id=q[1]|0;
-  lanes.forEach(L=>svWarn({k:'l',w:2.2,l:L.len,b:0},{x:L.x,z:L.z,a:L.a},1.7,{col:0xb01020}));
-  cq205After(1.7,()=>{lanes.forEach(L=>{const P=pl.position,dx=P.x-L.x,dz=P.z-L.z,f=dx*Math.sin(L.a)+dz*Math.cos(L.a),s=Math.abs(dx*Math.cos(L.a)-dz*Math.sin(L.a));
+  lanes.forEach(L=>svWarn({k:'l',w:2.2,l:L.len,b:0},{x:L.x,z:L.z,a:L.a},US205.dvT,{col:0xb01020}));
+  cq205After(US205.dvT,()=>{lanes.forEach(L=>{const P=pl.position,dx=P.x-L.x,dz=P.z-L.z,f=dx*Math.sin(L.a)+dz*Math.cos(L.a),s=Math.abs(dx*Math.cos(L.a)-dz*Math.sin(L.a));
     try{sk146Swarm(new THREE.Vector3(L.x,GH(L.x,L.z)+1,L.z),new THREE.Vector3(L.x+Math.sin(L.a)*L.len,GH(L.x,L.z)+1,L.z+Math.cos(L.a)*L.len),20,0x1a0a10,'bat',.5,{spread:1})}catch(_){}
     if(hero.hp>0&&f>-.4&&f<L.len-1.2&&s<1.3){const src=enemies.find(e=>!e.dead)||{c:{mt:'p',l:US205.lv},m:{position:P}};try{hitTarget(src,pl,.9)}catch(_){}popT(P,'SHIELDED HIM','#ffe0a0',true);co205Send(['c5sh',id])}})})}
 // the host defers Cheddar's hurt from a dive by a moment, and skips it if a partner shielded him

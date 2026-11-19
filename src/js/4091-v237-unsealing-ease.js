@@ -16,9 +16,9 @@
 //    sideways for US237.dT s (it slides round a key bowl or a tower), trying the other side next time.
 // Co-op: the host spawns and moves the court (3760: partners' copies follow its positions) and owns Cheddar's health, so a
 // partner sees the same.
-var US237={gate:7,far:.7,sc:3,st:.25,stT:1.5,dT:.9,dsp:1.7,near:1.9,err:0};   // near: closer than this to its target counts as arrived (thralls and bats fight from ~1.3 m)
+var US237={gate:7,far:.7,sc:3,minR:9.5,st:.25,stT:1.5,dT:.9,dsp:1.7,near:1.9,err:0};   // near: closer than this to its target counts as arrived (thralls and bats fight from ~1.3 m)
 US205.spK=1/(0.7*0.7);   // v238 (owner, Nov 15 2026: "Reduce enemy spawns during the unsealing by an additional 30% during the phase spawns"): 0.7 × 0.7 = 49% of the v236 rate
-US205.rg=.5;US205.rgW=4;
+US205.rg=.8;US205.rgW=3;   // v240: was 0.5 / 4 s
 // open ground with room round it: every tile within r m (plus the walker's body) open, inside this instance, not in the cliffs
 function us237Room(x,z,r){const F=cq205F(0);for(let dx=-r;dx<=r+1e-6;dx+=.5)for(let dz=-r;dz<=r+1e-6;dz+=.5){if(dx*dx+dz*dz>r*r+1e-6)continue;
     const X=Math.round(x+dx),Z=Math.round(z+dz);if(X<1||Z<1||X>=W-1||Z>=H-1)return false;if(solid(X,Z))return false;const J=insAt(X,Z);if(!J||J.g!==F.I.g)return false;if(MAP.DW[Z*W+X]>-1.3)return false}
@@ -29,13 +29,13 @@ function us237Ring(th,rs,n,sep){const F=cq205F(0),c=ch205Spots().circ,[ca,cb]=F.
     if(!us237Room(x,z,1.6))continue;if(out.some(o=>Math.hypot(o.x-x,o.z-z)<sep))continue;out.push({x,z,y:GH(x,z),a:Math.atan2(c.x-x,c.z-z)});break}});
   return out}
 us205Spots=function(){if(us205Spots.c)return us205Spots.c;const D=Math.PI/180;
-  let L=us237Ring([-105,-63,-21,21,63,105].map(d=>d*D),[10,9,11,12,8.5],6,4);
-  if(L.length<4)L=L.concat(us237Ring([-125,-84,-42,0,42,84,125].map(d=>d*D),[9.5,11,8.5,12.5],6-L.length,3.5));   // a narrow clearing: fill in
+  let L=us237Ring([-105,-63,-21,21,63,105].map(d=>d*D),[11,12,10.5,12.5],6,4);   // v240: was 8.5–12 m
+  if(L.length<4)L=L.concat(us237Ring([-125,-84,-42,0,42,84,125].map(d=>d*D),[11,12.5,10.5,13],6-L.length,3.5));   // a narrow clearing: fill in
   return us205Spots.c=L};
 function us205Far(){if(us205Far.c)return us205Far.c;const D=Math.PI/180,th=[];for(let i=0;i<10;i++)th.push((-75+i*150/9)*D);
   let L=us237Ring(th,[18,16,20,14,22],10,4);if(L.length<3)L=L.concat(us205Spots());return us205Far.c=L}
 // a scattered landing place round point p: open with room for the spawn's own ±1 m jitter
-function us237Land(p){for(let i=0;i<12;i++){const u=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*US237.sc,x=p.x+Math.cos(u)*r,z=p.z+Math.sin(u)*r;if(us237Room(x,z,1.5))return {x,z,y:GH(x,z),a:p.a}}return p}
+function us237Land(p){const c=ch205Spots().circ;for(let i=0;i<16;i++){const u=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*US237.sc,x=p.x+Math.cos(u)*r,z=p.z+Math.sin(u)*r;if(Math.hypot(x-c.x,z-c.z)<US237.minR)continue;if(us237Room(x,z,1.5))return {x,z,y:GH(x,z),a:p.a}}return p}   // v240: never inside minR of Cheddar
 {const f=us205Spawn;us205Spawn=function(kind,at){try{if(!at){const far=us205Far(),near=us205Spots();let L;
       if(kind==='brk'){const c=us205C();L=[far.reduce((a,p)=>!a||!c||Math.hypot(p.x-c.x,p.z-c.z)>Math.hypot(a.x-c.x,a.z-c.z)?p:a,null)]}
       else L=kind==='siph'?near:Math.random()<US237.far?far:near;

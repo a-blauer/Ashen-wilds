@@ -26,7 +26,12 @@
 //  * Win: the last ring, the chains and the sigil burst, the doors grind open (gg205Shatter); the light comes back, the moon fades.
 //    Event creatures give half XP and drop loot 35% of the time.
 // Co-op (3760): the region host runs it (spawns, Cheddar's health, the specials) and sends its state; anyone may begin it.
-var US205={T:120,hpM:100,E:null,cap:14,capC:20,ward:1.25,flare:15,brkI:.12,err:0,sp:null,moon:null,mist:[],lb:null,dk:0,
+// v240 (owner, Nov 18 2026: "still nearly impossible- cheddar always dies and mobs spawning … directly on top of him and attacking
+// immediately- theres no counterplay to prevent damage"): every source of harm to Cheddar can now be stopped. Stalkers drift slower
+// (stV), surface stR m from him after a fmT warning and no longer hurt him on surfacing (they must walk in); siphoners channel siC s
+// (a ring at their feet, sayable) before the drain starts, drain siD a second each, at most siMax at once; dives warn dvT s and hit
+// for dvD; a wave brings at most wvMax creatures.
+var US205={T:120,hpM:100,E:null,stV:4.5,stR:4.5,fmT:1.6,siC:2.5,siD:1,siMax:2,dvT:2.3,dvD:4,wvMax:2,cap:14,capC:20,ward:1.25,flare:15,brkI:.12,err:0,sp:null,moon:null,mist:[],lb:null,dk:0,
   lv:45,said:{},Q:['The court stirs','Blood Siphons','The Eclipse','The Gate-Breaker'],
   // the four kinds that come: thrall / bat (I…), siphon (II…), stalker (III…), the breaker (IV, one)
   mix:[[['vamp',6],['bloodbat',4]],[['vamp',5],['bloodbat',3],['siph',2]],[['vamp',4],['bloodbat',3],['siph',2],['mist',3]],[['vamp',4],['bloodbat',4],['siph',2],['mist',3]]]};
@@ -125,7 +130,7 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   const sl=[];enemies.forEach(e=>{if(e.us205==='siph'&&!e.dead&&e.usS&&e.usS.st==='drain')sl.push({x:e.m.position.x,z:e.m.position.z})});if(host)E.sl=sl;us205Tethers(E.sl||sl);E.siN=(E.sl||sl).length;
   if(E.siN){if(!E.said.si){E.said.si=1;say('🩸 A magister’s blood siphon locks onto Cheddar — while it holds, the seal will not unwind. Kill the caster!')}}
   // progress (stalls under a siphon) and his health (host)
-  if(host){if(!E.siN)E.t+=dt;else{E.stall+=dt;E.hp-=dt*1.6*E.siN}}
+  if(host){if(!E.siN)E.t+=dt;else{E.stall+=dt;E.hp-=dt*US205.siD*E.siN}}
   // threads of gold from his paws into the seal
   if(Math.random()<dt*20&&GG205.S&&GG205.S.seal){const a=new THREE.Vector3(c.x,c.y+1.3,c.z),b=new THREE.Vector3();GG205.S.seal.g.getWorldPosition(b);b.x+=(Math.random()-.5)*5;b.y+=(Math.random()-.5)*5;burst(a.clone().lerp(b,Math.random()),E.siN?0xff3a3a:0xffe0a0,1,.3,.3,.5)}
   // his ward dome
@@ -141,8 +146,8 @@ function us205Tick(dt,now){const E=US205.E,t=now/1000;us205Sky(dt,t);
   if(host){E.sp-=dt;const cap=((typeof co151On=='function'&&co151On())?US205.capC:US205.cap)+(typeof cs236EvCap=='function'?cs236EvCap(1):0);if(E.sp<=0){E.sp=Math.max(.7,2.4-1.4*k)*(US205.spK||1)*(typeof cs236EvRate=='function'?cs236EvRate():1);   // v237: US205.spK (4091)
        // v236: more, sooner, per extra player (4090)
     const alive=us205Alive();if(alive<cap){const mix=US205.mix[q];let tot=0;mix.forEach(m=>tot+=m[1]);
-        let n=1+Math.floor(Math.random()*(1.4+k*2.2));for(let j=0;j<n&&alive+j<cap;j++){let u=Math.random()*tot,kind=mix[0][0];for(const m of mix){u-=m[1];if(u<=0){kind=m[0];break}}
-          if(kind==='siph'&&us205Count('siph')>=(q>=3?3:2))kind='vamp';if(kind==='mist'&&us205Count('mist')>=4)kind='bloodbat';us205Spawn(kind)}}}
+        let n=Math.min(US205.wvMax,1+Math.floor(Math.random()*(1.4+k*2.2)));for(let j=0;j<n&&alive+j<cap;j++){let u=Math.random()*tot,kind=mix[0][0];for(const m of mix){u-=m[1];if(u<=0){kind=m[0];break}}
+          if(kind==='siph'&&us205Count('siph')>=US205.siMax)kind='vamp';if(kind==='mist'&&us205Count('mist')>=4)kind='bloodbat';us205Spawn(kind)}}}
     // the Gate-Breaker comes once, at the start of IV
     if(q>=3&&!E.brkDone){E.brkDone=1;const L=us205Spots();const far=L.reduce((a,p)=>!a||Math.hypot(p.x-c.x,p.z-c.z)>Math.hypot(a.x-c.x,a.z-c.z)?p:a,null);us205Spawn('brk',far)}
     // Nightwing Dives in the last stretch
@@ -172,14 +177,16 @@ function us205Bolt(){const S=gg205Spot(),F=S.F,[x,z]=F.W2(F.reach+4+Math.random(
 // ---------------- the specials' own minds ----------------
 function us205AI(e,dt,now){const E=US205.E,c=us205C();if(!E||!c)return false;
   if(e.us205==='siph'){const S=e.usS;S.t+=dt;if(S.st==='walk'){const dx=S.to.x-e.m.position.x,dz=S.to.z-e.m.position.z,L=Math.hypot(dx,dz);if(L>.3&&S.t<8){const st=Math.min(L,dt*2.6);walkM(e.m,dx/L*st,dz/L*st);e.m.rotation.y=Math.atan2(dx,dz);animC(e.m,now,true,2.6);}
-      else{S.st='drain';S.t=0;e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);svSnd('hiss',.6,.7)}return true}
+      else{S.st='chan';S.t=0;e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);S.W=svWarn({k:'c',r:1.4},{x:e.m.position.x,z:e.m.position.z,a:0},US205.siC,{col:0xff2a3a});svSnd('hiss',.6,.7);
+        if(US205.E&&!US205.E.said.chan){US205.E.said.chan=1;say('🩸 A magister begins a blood rite — strike him before it takes hold!')}}return true}
+    if(S.st==='chan'){e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);animC(e.m,now,false,0);if(Math.random()<dt*6)burst(gY(e.m.position,1.2),0xff2a3a,2,.5,.6,.4);if(S.t>=US205.siC){S.st='drain';S.t=0;svSnd('hiss',.9,.5)}return true}
     if(S.st==='drain'){e.m.rotation.y=Math.atan2(c.x-e.m.position.x,c.z-e.m.position.z);animC(e.m,now,false,0);if(Math.random()<dt*3)burst(gY(e.m.position,1.6),0xff2a3a,2,.4,.6,.5);return true}return false}
   if(e.us205==='mist'){const S=e.usM;if(S.st==='mist'){S.t+=dt;e.m.visible=false;if(e.hb)e.hb.visible=false;const dx=c.x-e.m.position.x,dz=c.z-e.m.position.z,L=Math.hypot(dx,dz);
-      if(L>2.4&&S.t<5){const st=Math.min(L-2.2,dt*7.5);e.m.position.x+=dx/L*st;e.m.position.z+=dz/L*st;if(Math.random()<.9)burst(new THREE.Vector3(e.m.position.x+(Math.random()-.5),GH(e.m.position.x,e.m.position.z)+.3+Math.random()*.6,e.m.position.z+(Math.random()-.5)),0x7a0a16,2,.6,.6,.6);
+      if(L>US205.stR+.2&&S.t<7){const st=Math.min(L-US205.stR,dt*US205.stV);e.m.position.x+=dx/L*st;e.m.position.z+=dz/L*st;if(Math.random()<.9)burst(new THREE.Vector3(e.m.position.x+(Math.random()-.5),GH(e.m.position.x,e.m.position.z)+.3+Math.random()*.6,e.m.position.z+(Math.random()-.5)),0x7a0a16,2,.6,.6,.6);
         if(Math.random()<.2)burst(gY(e.m.position,1.2),0xff2030,1,.05,.05,.3)}
-      else{S.st='form';S.t=0;S.W=svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},.9,{col:0xb01020});svSnd('hiss',.8,.5)}return true}
-    if(S.st==='form'){S.t+=dt;if(S.t>=.9){S.st='hunt';e.m.visible=true;burst(gY(e.m.position,1),0x8a0a1a,40,2,1.6,.7);const P=pl.position;if(hero.hp>0&&Math.hypot(P.x-e.m.position.x,P.z-e.m.position.z)<1.6)hitTarget(e,pl,1.1);
-        try{CH205.hit=.4;if(us205Host()&&US205.E)US205.E.hp-=4}catch(_){}}return true}return false}
+      else{S.st='form';S.t=0;S.W=svWarn({k:'c',r:1.6},{x:e.m.position.x,z:e.m.position.z,a:0},US205.fmT,{col:0xb01020});svSnd('hiss',.8,.5)}return true}
+    if(S.st==='form'){S.t+=dt;if(S.t>=US205.fmT){S.st='hunt';e.m.visible=true;burst(gY(e.m.position,1),0x8a0a1a,40,2,1.6,.7);const P=pl.position;if(hero.hp>0&&Math.hypot(P.x-e.m.position.x,P.z-e.m.position.z)<1.6)hitTarget(e,pl,1.1);
+        }return true}return false}   // v240: no longer hurts Cheddar on surfacing
   if(e.us205==='brk'){const S=e.usB;S.cd=Math.max(0,S.cd-dt);const dx=c.x-e.m.position.x,dz=c.z-e.m.position.z,L=Math.hypot(dx,dz);
     if(S.st==='march'){if(L>2.6){e.m.rotation.y=Math.atan2(dx,dz);const st=Math.min(L-2.4,dt*2.0);walkM(e.m,dx/L*st,dz/L*st);animC(e.m,now,true,2);if(Math.random()<dt*2)svSnd('step',.9,.6);return true}
       if(S.cd<=0){S.st='wind';S.t=0;S.h0=e.c.h;E.brk={wind:1,W:svWarn({k:'c',r:2.4},{x:c.x,z:c.z,a:0},2.2,{col:0xd01808})};svSnd('swing',.9,.5);svSnd('roar',.5,.7);if(!E.said.brk){E.said.brk=1;say('⚔️ He raises the greatsword over Cheddar — hurt him before it falls!')}}animC(e.m,now,false,0);return true}
@@ -191,17 +198,17 @@ function us205AI(e,dt,now){const E=US205.E,c=us205C();if(!E||!c)return false;
   return false}
 // ---------------- Nightwing Dives: lanes of bats from the edge into Cheddar ----------------
 function us205Dive(){const E=US205.E,c=us205C();if(!E||!c)return;const L=us205Spots(),n=E.t/US205.T>.92?2:1,W=[],lanes=[];
-  for(let i=0;i<n;i++){const p=L[Math.floor(Math.random()*L.length)],a=Math.atan2(c.x-p.x,c.z-p.z),len=Math.hypot(c.x-p.x,c.z-p.z);lanes.push({x:p.x,z:p.z,a,len});W.push(svWarn({k:'l',w:2.2,l:len,b:0},{x:p.x,z:p.z,a},1.7,{col:0xb01020}))}
+  for(let i=0;i<n;i++){const p=L[Math.floor(Math.random()*L.length)],a=Math.atan2(c.x-p.x,c.z-p.z),len=Math.hypot(c.x-p.x,c.z-p.z);lanes.push({x:p.x,z:p.z,a,len});W.push(svWarn({k:'l',w:2.2,l:len,b:0},{x:p.x,z:p.z,a},US205.dvT,{col:0xb01020}))}
   E.dive={t:0,lanes,W,fired:0};if(!E.said.dive){E.said.dive=1;say('🦇 The seal screams. Bats mass at the edge — stand in their lane to take the swarm yourself!')}svSnd('shriek',.7,.8);if(typeof co205Dive=='function')co205Dive(lanes)}
 function us205DiveTick(dt){const E=US205.E;if(!E||!E.dive)return;const D=E.dive,c=us205C();D.t+=dt;
-  if(!D.fired&&D.t>=1.7){D.fired=1;D.lanes.forEach(l=>{const P=pl.position,dx=P.x-l.x,dz=P.z-l.z,f=dx*Math.sin(l.a)+dz*Math.cos(l.a),s=Math.abs(dx*Math.cos(l.a)-dz*Math.sin(l.a)),inL=hero.hp>0&&f>-.4&&f<l.len-1.2&&s<1.3;
+  if(!D.fired&&D.t>=US205.dvT){D.fired=1;D.lanes.forEach(l=>{const P=pl.position,dx=P.x-l.x,dz=P.z-l.z,f=dx*Math.sin(l.a)+dz*Math.cos(l.a),s=Math.abs(dx*Math.cos(l.a)-dz*Math.sin(l.a)),inL=hero.hp>0&&f>-.4&&f<l.len-1.2&&s<1.3;
       // the swarm streaks down the lane
       for(let i=0;i<26;i++){const u=Math.random()*(inL?Math.max(1,f):l.len);burst(new THREE.Vector3(l.x+Math.sin(l.a)*u+(Math.random()-.5),GH(l.x,l.z)+.8+Math.random()*1.4,l.z+Math.cos(l.a)*u+(Math.random()-.5)),0x2a0a10,2,1.2,.6,.5)}
       try{sk146Swarm(new THREE.Vector3(l.x,GH(l.x,l.z)+1.2,l.z),new THREE.Vector3(l.x+Math.sin(l.a)*(inL?Math.max(1,f):l.len),GH(l.x,l.z)+1,l.z+Math.cos(l.a)*(inL?Math.max(1,f):l.len)),22,0x1a0a10,'bat',.45,{spread:1.1,arc:.6})}catch(_){}svSnd('shriek',.9,1.1);
       if(inL){const src=enemies.find(s=>s.us205&&!s.dead)||{c:{mt:'p',l:US205.lv},m:{position:P}};try{hitTarget(src,pl,.9)}catch(_){}popT(P,'SHIELDED HIM','#ffe0a0',true);
         if(us205Host())E.hp=Math.min(US205.hpM,E.hp+1)}
-      else if(us205Host()){E.hp-=7;CH205.hit=.5;burst(gY(c,.9),0xff2030,20,1.2,1.2,.5)}})}
-  E.diveFlag=D.t<1.7;if(D.t>2.2)E.dive=null}
+      else if(us205Host()){E.hp-=US205.dvD;CH205.hit=.5;burst(gY(c,.9),0xff2030,20,1.2,1.2,.5)}})}
+  E.diveFlag=D.t<US205.dvT;if(D.t>US205.dvT+.5)E.dive=null}
 // ---------------- the darkness, the moon, lightning (atmos) ----------------
 function us205Sky(dt,t){const E=US205.E,here=cq205Here(0),M=US205.moon;const want=E&&here?(E.ecl?1:.72):0;US205.dk+=(want-US205.dk)*Math.min(1,dt*(want>US205.dk?.7:.35));
   if(M){M.k+=((E&&here?1:0)-M.k)*Math.min(1,dt*.5);M.ec+=((E&&E.ecl?1:0)-M.ec)*Math.min(1,dt*.8);M.g.visible=M.k>.01&&here;M.m.material.opacity=M.k*.95;M.sh.material.opacity=M.ec*.97;M.sh.position.x=(1-M.ec)*30}
@@ -229,7 +236,7 @@ function us205Near(e,m,dpl,tg,L){if(e.us205!=='thrall'&&e.us205!=='bat')return t
     const c=us205C();if(c&&US205.E&&Math.hypot(e.m.position.x-c.x,e.m.position.z-c.z)<ch205Spots().r+.3)d*=US205.ward;
     if(e.usK&&e.us205!=='brk'&&!dot&&Math.random()<.35)e.usK=0}return f.apply(this,arguments)}}
 {const f=eTick;eTick=function(e,dt,now){if(e&&e.us205&&US205.E){try{if(us205AI(e,dt,now))return true}catch(err){if(!US205.err++)console.error('v205 ai',err)}}return f.apply(this,arguments)}}
-{const f=kill;kill=function(e){if(e&&e.usM&&e.usM.W)try{e.usM.W.kill()}catch(_){}if(e&&e.us205==='brk'&&US205.E&&US205.E.brk){try{US205.E.brk.W.kill()}catch(_){}US205.E.brk=null}return f.apply(this,arguments)}}
+{const f=kill;kill=function(e){if(e&&e.usM&&e.usM.W)try{e.usM.W.kill()}catch(_){}if(e&&e.usS&&e.usS.W)try{e.usS.W.kill()}catch(_){}if(e&&e.us205==='brk'&&US205.E&&US205.E.brk){try{US205.E.brk.W.kill()}catch(_){}US205.E.brk=null}return f.apply(this,arguments)}}
 // half XP, loot 35% of the time
 {const f=gw150X;gw150X=function(e){const k=f.apply(this,arguments);return e&&e.us205?k*.5:k}}
 {const f=lootE;lootE=function(e){if(e&&e.us205&&Math.random()>.35)return;return f.apply(this,arguments)}}
