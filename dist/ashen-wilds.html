@@ -81331,7 +81331,7 @@ us205Spots=function(){if(us205Spots.c)return us205Spots.c;const D=Math.PI/180;
 function us205Far(){if(us205Far.c)return us205Far.c;const D=Math.PI/180,th=[];for(let i=0;i<10;i++)th.push((-75+i*150/9)*D);
   let L=us237Ring(th,[18,16,20,14,22],10,4);if(L.length<3)L=L.concat(us205Spots());return us205Far.c=L}
 // a scattered landing place round point p: open with room for the spawn's own ±1 m jitter
-function us237Land(p){const c=ch205Spots().circ;for(let i=0;i<16;i++){const u=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*US237.sc,x=p.x+Math.cos(u)*r,z=p.z+Math.sin(u)*r;if(Math.hypot(x-c.x,z-c.z)<US237.minR)continue;if(us237Room(x,z,1.5))return {x,z,y:GH(x,z),a:p.a}}return p}   // v240: never inside minR of Cheddar
+function us237Land(p){const c=ch205Spots().circ;for(let i=0;i<16;i++){const u=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*US237.sc,x=p.x+Math.cos(u)*r,z=p.z+Math.sin(u)*r;if(Math.hypot(x-c.x,z-c.z)<US237.minR+1.45)continue;   /* us205Spawn nudges up to 1.41 m after this */ if(us237Room(x,z,1.5))return {x,z,y:GH(x,z),a:p.a}}return p}   // v240: never inside minR of Cheddar
 {const f=us205Spawn;us205Spawn=function(kind,at){try{if(!at){const far=us205Far(),near=us205Spots();let L;
       if(kind==='brk'){const c=us205C();L=[far.reduce((a,p)=>!a||!c||Math.hypot(p.x-c.x,p.z-c.z)>Math.hypot(a.x-c.x,a.z-c.z)?p:a,null)]}
       else L=kind==='siph'?near:Math.random()<US237.far?far:near;
