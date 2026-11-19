@@ -37,7 +37,7 @@ PASSIVE=r"""async(arg)=>{const o={};const F=cq205F(0),R=ch205Spots(),c=R.circ;wi
  const fh=hitTarget;hitTarget=function(e,tg,m){if(tg&&tg.us205K&&US205.E){const h0=US205.E.hp;const r=fh.apply(this,arguments);add('hit:'+(e&&e.us205),h0-US205.E.hp);return r}return fh.apply(this,arguments)};
  const sv0=svWarn;svWarn=function(a,b,d,o2){const W=sv0.apply(this,arguments);try{if(a&&a.k==='c'&&a.r===1.6)add('stalker surfaces',1);if(a&&a.k==='l')add('dive lanes',1)}catch(_){}return W};const P0=F.W2(1.2,1.2);let last=E.hp,step=0,spawns={},near0=[];const sp0=us205Spawn;us205Spawn=function(k){const e=sp0.apply(this,arguments);if(e){spawns[k]=(spawns[k]||0)+1}return e};
  const KILLR=arg&&arg.r||4.5,RATE=arg&&arg.rate||8;
- for(let i=0;i<30*130&&US205.E;i++){T+=33;const h0=US205.E.hp;
+ for(let i=0;i<30*220&&US205.E;i++){T+=33;const h0=US205.E.hp;
    const sn={}; // snapshot of other damage
    loop(T);toPos(P0[0],P0[1]);hero.hp=heroMax();
    const X=US205.E;if(!X)break;const dl=h0-X.hp;if(dl>0){add('total',dl);if(X.siN)add('siph drain',Math.min(dl,X.siN*1.6/30))}
