@@ -61,6 +61,7 @@ def s(pg):
     ok(a['result']!='fell' and a['end']=='over','A: a hero who guards him and runs down the siphoners wins')
     hp=min(x[1] for x in a['trace']);ok(hp>=50,'A: Cheddar never drops below 50 health (lowest %d)'%hp)
     ok(a['tally'].get('stalker surfaces',0)>=3,'A: the stalkers did come (%d)'%a['tally'].get('stalker surfaces',0))
+    pg.evaluate("()=>{try{saveGame=()=>{}}catch(_){};localStorage.clear()}")   # a fresh start (no 'continue' screen)
     pg.reload(wait_until='domcontentloaded',timeout=180000);pg.wait_for_timeout(3000);start(pg)
     b=pg.evaluate(PASSIVE,{'r':4.5,'rate':8});print('B',json.dumps({k:b[k] for k in ('tally','end','result')}))
     ok(b['result']=='fell','B: ignoring the siphoners still loses (they are the thing to stop)')
